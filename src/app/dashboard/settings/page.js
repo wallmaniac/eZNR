@@ -12,6 +12,11 @@ import {
   getSystemStats, APP_VERSION, APP_BUILD_DATE, CHANGELOG,
   clearDismissedNotifications,
 } from '@/lib/systemMonitor';
+import {
+  getUserLog, getAdminLog, clearUserLog, clearAdminLog,
+  getUserLogCount, getAdminLogCount, formatLogTime, getSeverityColors,
+  getOnlineUsers, LOG_CATEGORY, humanizePage,
+} from '@/lib/activityLog';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -38,6 +43,13 @@ export default function SettingsPage() {
 
   // Stats (admin only)
   const stats = useMemo(() => isAdmin ? getSystemStats() : null, [isAdmin]);
+
+  // Activity log state
+  const [logFilter, setLogFilter] = useState(null);
+  const [logRefresh, setLogRefresh] = useState(0);
+  const userLog = useMemo(() => getUserLog(100, logFilter), [logFilter, logRefresh]);
+  const adminLog = useMemo(() => getAdminLog(100, logFilter), [logFilter, logRefresh]);
+  const onlineUsers = useMemo(() => getOnlineUsers(), [logRefresh]);
 
   // Load profile data
   useEffect(() => {
@@ -142,7 +154,10 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { key: 'system', label: lang === 'bs' ? 'Sistem' : 'System', icon: '🛡️' },
       { key: 'statistics', label: lang === 'bs' ? 'Statistika' : 'Statistics', icon: '📊' },
-    ] : []),
+      { key: 'activity', label: lang === 'bs' ? 'Aktivnost' : 'Activity', icon: '📋' },
+    ] : [
+      { key: 'activity', label: lang === 'bs' ? 'Aktivnost' : 'Activity', icon: '📋' },
+    ]),
   ];
 
   // ── Toggle component ──
@@ -638,7 +653,7 @@ export default function SettingsPage() {
               {/* Top companies */}
               {stats.topCompanies?.length > 0 && (
                 <>
-                  <SectionHeader icon="🏆" title={lang === 'bs' ? 'Top kompanijep po broju radnika' : 'Top Companies by Workers'} />
+                  <SectionHeader icon="🏆" title={lang === 'bs' ? 'Top kompanije po broju radnika' : 'Top Companies by Workers'} />
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid var(--border)' }}>
@@ -673,6 +688,141 @@ export default function SettingsPage() {
                     </div>
                   ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 7: ACTIVITY LOG (all users)                   */}
+      {/* ══════════════════════════════════════════════════ */}
+      {activeTab === 'activity' && (
+        <div>
+          {/* ── Admin: Online users ── */}
+          {isAdmin && onlineUsers.length > 0 && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <div className="card-body" style={{ padding: '16px 20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }} />
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{lang === 'bs' ? 'Korisnici online' : 'Users online'} ({onlineUsers.length})</span>
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {onlineUsers.map(u => (
+                    <div key={u.userId} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '6px 12px', borderRadius: 20,
+                      background: '#F0FDF4', border: '1px solid #BBF7D0', fontSize: '0.78rem',
+                    }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
+                      <span style={{ fontWeight: 600 }}>{u.userName}</span>
+                      <span style={{ color: 'var(--text-muted)' }}>• {u.companyName || '—'}</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{humanizePage(u.page)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="card">
+            <div className="card-body">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <h3 style={{ margin: 0 }}>📋 {lang === 'bs' ? 'Dnevnik aktivnosti' : 'Activity Log'}</h3>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button className="btn" style={{ fontSize: '0.75rem', padding: '6px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+                    onClick={() => { if (isAdmin) { clearAdminLog(); } clearUserLog(); setLogRefresh(r => r + 1); }}>
+                    🗑️ {lang === 'bs' ? 'Obriši log' : 'Clear log'}
+                  </button>
+                  <button className="btn" style={{ fontSize: '0.75rem', padding: '6px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text)' }}
+                    onClick={() => setLogRefresh(r => r + 1)}>
+                    🔄
+                  </button>
+                </div>
+              </div>
+
+              {/* Category filters */}
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+                {[null, 'worker', 'certificate', 'equipment', 'document', 'company', 'expiry', 'auth'].map(cat => (
+                  <button key={cat || 'all'} onClick={() => setLogFilter(cat)}
+                    style={{
+                      padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600,
+                      border: '1px solid var(--border)', cursor: 'pointer',
+                      background: logFilter === cat ? 'var(--dark)' : 'white',
+                      color: logFilter === cat ? 'white' : 'var(--text)',
+                    }}>
+                    {cat === null ? (lang === 'bs' ? '📋 Sve' : '📋 All') :
+                      cat === 'worker' ? '👷 Radnici' :
+                        cat === 'certificate' ? '📋 Uvjerenja' :
+                          cat === 'equipment' ? '⚙️ Oprema' :
+                            cat === 'document' ? '📄 Dokumenti' :
+                              cat === 'company' ? '🏢 Firme' :
+                                cat === 'expiry' ? '⏰ Isteci' : '🔐 Prijave'}
+                  </button>
+                ))}
+              </div>
+
+              {/* Admin log section */}
+              {isAdmin && adminLog.length > 0 && (
+                <>
+                  <SectionHeader icon="🛡️" title={lang === 'bs' ? 'Admin aktivnosti' : 'Admin Events'} />
+                  <div style={{ marginBottom: 16 }}>
+                    {adminLog.map(entry => {
+                      const colors = getSeverityColors(entry.severity);
+                      return (
+                        <div key={entry.id} style={{
+                          display: 'flex', gap: 12, padding: '10px 12px',
+                          borderBottom: '1px solid var(--border-light)',
+                          borderLeft: `3px solid ${colors.dot}`,
+                          background: colors.bg,
+                          marginBottom: 2, borderRadius: '0 6px 6px 0',
+                        }}>
+                          <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
+                            {entry.detail && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{entry.detail}</div>}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{formatLogTime(entry.timestamp)}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+
+              {/* User log section */}
+              <SectionHeader icon="📝" title={lang === 'bs' ? 'Moje aktivnosti' : 'My Activities'} />
+              {userLog.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: 8 }}>📭</div>
+                  {lang === 'bs' ? 'Nema evidentiranih aktivnosti.' : 'No activities recorded yet.'}
+                  <div style={{ fontSize: '0.75rem', marginTop: 4 }}>{lang === 'bs' ? 'Aktivnosti se bilježe kada dodajete, mijenjate ili brišete podatke.' : 'Activities are recorded when you add, edit or delete data.'}</div>
+                </div>
+              ) : userLog.map(entry => {
+                const colors = getSeverityColors(entry.severity);
+                return (
+                  <div key={entry.id} style={{
+                    display: 'flex', gap: 12, padding: '10px 12px',
+                    borderBottom: '1px solid var(--border-light)',
+                    borderLeft: `3px solid ${colors.dot}`,
+                    background: colors.bg,
+                    marginBottom: 2, borderRadius: '0 6px 6px 0',
+                  }}>
+                    <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
+                      {entry.detail && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginTop: 2 }}>{entry.detail}</div>}
+                      {entry.userName && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>👤 {entry.userName}</div>}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{formatLogTime(entry.timestamp)}</div>
+                  </div>
+                );
+              })}
+
+              {userLog.length === 0 && isAdmin && adminLog.length === 0 && (
+                <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  {lang === 'bs' ? 'Log je prazan.' : 'Log is empty.'}
+                </div>
+              )}
             </div>
           </div>
         </div>

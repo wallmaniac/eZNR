@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import { useRouter } from 'next/navigation';
 import { findUserByUsername } from '@/lib/dataStore';
 import { initializeFirestore, isFirestoreReady } from '@/lib/firestoreService';
+import { logLogin, updatePresence } from '@/lib/activityLog';
 
 const AuthContext = createContext({});
 
@@ -31,6 +32,8 @@ export function AuthProvider({ children }) {
             localStorage.setItem('eznr_user', JSON.stringify(enriched));
             if (companyId) localStorage.setItem('eznr_activeCompany', companyId);
         }
+        // Log login event
+        try { logLogin(enriched); } catch (e) { /* non-critical */ }
     }, []);
 
     const logout = useCallback(async () => {
@@ -84,6 +87,19 @@ export function AuthProvider({ children }) {
     const register = useCallback((userData) => {
         login(userData);
     }, [login]);
+
+    // Presence heartbeat — update every 60s so admin can see online users
+    useEffect(() => {
+        if (!user?.id) return;
+        const tick = () => {
+            try {
+                updatePresence(user.id, `${user.firstName} ${user.lastName}`, activeCompanyId, null);
+            } catch (e) { /* non-critical */ }
+        };
+        tick(); // immediate
+        const interval = setInterval(tick, 60000);
+        return () => clearInterval(interval);
+    }, [user?.id, activeCompanyId]);
 
     const isAdmin = user?.role === 'admin';
     const isOfficer = user?.role === 'officer';

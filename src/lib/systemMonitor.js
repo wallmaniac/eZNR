@@ -494,11 +494,24 @@ export function getSystemStats() {
     });
 
     // Top companies by worker count
+    // Workers may not have companyId in seed data, so we also count via orgUnit names
     const companies = getAll(COLLECTIONS.COMPANIES);
-    const companyWorkerCounts = companies.map(c => ({
-        name: c.skraceniNaziv || c.naziv,
-        workers: allWorkers.filter(w => w.companyId === c.id).length,
-    })).sort((a, b) => b.workers - a.workers).slice(0, 5);
+    const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+    const companyWorkerCounts = companies.map(c => {
+        // Direct match by companyId
+        const directCount = allWorkers.filter(w => w.companyId === c.id).length;
+        // Fallback: match by company name in orgUnit
+        const companyOrgUnits = orgUnits.filter(ou =>
+            ou.naziv?.toLowerCase().includes(c.naziv?.toLowerCase().split(' ')[0]) ||
+            ou.naziv?.toLowerCase().includes(c.skraceniNaziv?.toLowerCase())
+        ).map(ou => ou.id);
+        const fallbackCount = directCount > 0 ? 0 :
+            allWorkers.filter(w => companyOrgUnits.includes(w.orgJedinicaId)).length;
+        return {
+            name: c.skraceniNaziv || c.naziv,
+            workers: directCount + fallbackCount,
+        };
+    }).sort((a, b) => b.workers - a.workers).slice(0, 5);
 
     return {
         totalRecords,
