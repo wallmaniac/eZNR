@@ -1,0 +1,61 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Useful function to check if the user is authenticated in the app
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Useful function to check if the current Auth user is an Admin
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Useful function to get their companyIds from the users collection
+    // Note: To save reads, Next.js could pass the companyId down, but this is the safest and strictest way.
+    function belongsToCompany(companyId) {
+      return isSignedIn() && companyId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyIds;
+    }
+
+
+    // 1) Users Collection
+    // Users can read everything (to get colleagues, etc). Only Admins can create/delete users.
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+      allow update: if request.auth.uid == userId || isAdmin();
+    }
+
+    // 2) Companies Collection
+    // Users can read the company list. Only Admins can modify them.
+    match /companies/{companyId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // 3) Global Catalog Data (Countries, File Types, Equipment Types, etc)
+    // Any logged-in user can read these drop-down values. Nobody can edit them via the app.
+    match /countries/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /counties/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /places/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /examTypes/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /certTypes/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /equipmentTypes/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /ppeTypes/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /fileTypes/{document} { allow read: if isSignedIn(); allow write: if false; }
+    match /isznrDocTypes/{document} { allow read: if isSignedIn(); allow write: if false; }
+
+    // 4) COMPANY-SCOPED DATA
+    // Most data in your app belongs to a specific company (workers, equipment, certificates, etc).
+    // Rule: You can only read/write this document if you belong to the `companyId` stored on it.
+    match /{collection}/{documentId} {
+      allow read, write: if isSignedIn() && belongsToCompany(resource.data.companyId);
+      
+      // When creating a new document, resource is null, so check incoming data
+      allow create: if isSignedIn() && belongsToCompany(request.resource.data.companyId);
+    }
+    
+  }
+}

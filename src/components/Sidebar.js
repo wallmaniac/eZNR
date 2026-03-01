@@ -1,0 +1,440 @@
+'use client';
+import { useState, useMemo } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+
+const menuItems = [
+    {
+        key: 'dashboard',
+        icon: '📊',
+        path: '/dashboard',
+    },
+    {
+        key: 'home',
+        icon: '🏠',
+        path: '/dashboard/news',
+    },
+    {
+        key: 'basicData',
+        icon: '📋',
+        children: [
+            { key: 'orgUnits', icon: '🏢', path: '/dashboard/org-units' },
+            { key: 'workplaces', icon: '🔧', path: '/dashboard/workplaces' },
+            { key: 'workers', icon: '👷', path: '/dashboard/workers' },
+            { key: 'equipment', icon: '⚙️', path: '/dashboard/equipment' },
+            { key: 'injuryReport', icon: '🩹', path: '/dashboard/injuries' },
+            { key: 'diseaseReport', icon: '🏥', path: '/dashboard/diseases' },
+            { key: 'formOIR1', icon: '📄', path: '/dashboard/form-oir1' },
+            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
+            { key: 'medicalReferralRA1', icon: '🩺', path: '/dashboard/referral-ra1' },
+            { key: 'formRO1', icon: '📄', path: '/dashboard/form-ro1' },
+            { key: 'formRO2', icon: '📄', path: '/dashboard/form-ro2' },
+            { key: 'nightWorkReferral', icon: '🌙', path: '/dashboard/night-work' },
+            { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
+            { key: 'requests', icon: '📝', path: '/dashboard/requests' },
+            { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
+            { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
+        ],
+    },
+    {
+        key: 'commonElements',
+        icon: '🔗',
+        children: [
+            { key: 'countries', icon: '🌍', path: '/dashboard/countries' },
+            { key: 'counties', icon: '📍', path: '/dashboard/counties' },
+            { key: 'places', icon: '🏘️', path: '/dashboard/places' },
+            { key: 'orgUnitGroups', icon: '📁', path: '/dashboard/org-groups' },
+            { key: 'authorizedCompanies', icon: '✅', path: '/dashboard/authorized-companies' },
+            { key: 'examiners', icon: '🔍', path: '/dashboard/examiners' },
+            { key: 'doctors', icon: '👨‍⚕️', path: '/dashboard/doctors' },
+            { key: 'examTypes', icon: '📋', path: '/dashboard/exam-types' },
+            { key: 'certTypes', icon: '📜', path: '/dashboard/cert-types' },
+            { key: 'equipmentTypes', icon: '🔩', path: '/dashboard/equipment-types' },
+            { key: 'ppe', icon: '🦺', path: '/dashboard/ppe' },
+            { key: 'fileTypes', icon: '📂', path: '/dashboard/file-types' },
+            { key: 'extraFields', icon: '➕', path: '/dashboard/extra-fields' },
+        ],
+    },
+    {
+        key: 'reports',
+        icon: '📊',
+        children: [
+            { key: 'addressBook', icon: '📒', path: '/dashboard/address-book' },
+            { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
+            { key: 'workerPPE', icon: '🦺', path: '/dashboard/worker-ppe' },
+            { key: 'workplaceList', icon: '📋', path: '/dashboard/workplace-list' },
+            { key: 'injuryList', icon: '🩹', path: '/dashboard/injury-list' },
+            { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
+            { key: 'ekWorkers', icon: '📇', path: '/dashboard/ek-workers' },
+            { key: 'ekEquipment', icon: '📇', path: '/dashboard/ek-equipment' },
+            { key: 'equipmentExamList', icon: '🔍', path: '/dashboard/equipment-exams' },
+        ],
+    },
+    {
+        key: 'isznr',
+        icon: '🏛️',
+        children: [
+            { key: 'documents', icon: '📄', path: '/dashboard/isznr-documents' },
+            { key: 'parties', icon: '👥', path: '/dashboard/isznr-parties' },
+            { key: 'documentTypes', icon: '📋', path: '/dashboard/isznr-doc-types' },
+            { key: 'digitalSigning', icon: '✍️', path: '/dashboard/isznr-signing' },
+            { key: 'examiners', icon: '🔍', path: '/dashboard/isznr-examiners' },
+            { key: 'measureEquipment', icon: '📏', path: '/dashboard/isznr-measure-equipment' },
+        ],
+    },
+    {
+        key: 'employerDocs',
+        icon: '📑',
+        path: '/dashboard/employer-docs',
+    },
+    {
+        key: 'settings',
+        icon: '⚙️',
+        path: '/dashboard/settings',
+    },
+];
+
+export default function Sidebar({ collapsed, onToggle }) {
+    const { t } = useLanguage();
+    const { user, logout, isAdmin } = useAuth();
+    const router = useRouter();
+    const pathname = usePathname();
+    const [openMenus, setOpenMenus] = useState({});
+
+    // Build menu: base items + admin items (if admin)
+    const allMenuItems = useMemo(() => {
+        const items = [...menuItems];
+        if (isAdmin) {
+            items.push({
+                key: 'admin',
+                icon: '👑',
+                children: [
+                    { key: 'adminUsers', icon: '👥', path: '/dashboard/admin/users' },
+                    { key: 'adminCompanies', icon: '🏢', path: '/dashboard/admin/companies' },
+                ],
+            });
+        }
+        return items;
+    }, [isAdmin]);
+
+    const toggleMenu = (key) => {
+        setOpenMenus((prev) => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const isActive = (path) => pathname === path;
+
+    const handleLogout = () => {
+        logout();
+        router.push('/');
+    };
+
+    return (
+        <aside style={{
+            ...sidebarStyles.sidebar,
+            width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+        }}>
+            {/* Logo */}
+            <div style={sidebarStyles.logoArea}>
+                {!collapsed && (
+                    <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
+                        <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
+                        <div style={{ marginLeft: -8 }}>
+                            <div style={sidebarStyles.logoTitle}>eZNR</div>
+                            <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
+                        </div>
+                    </Link>
+                )}
+                {collapsed && (
+                    <Link href="/dashboard">
+                        <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
+                    </Link>
+                )}
+                <button onClick={onToggle} style={sidebarStyles.collapseBtn}>
+                    {collapsed ? '▶' : '◀'}
+                </button>
+            </div>
+
+            {/* Menu */}
+            <nav style={sidebarStyles.nav}>
+                {allMenuItems.map((item) => {
+                    const hasChildren = item.children && item.children.length > 0;
+                    const isOpen = openMenus[item.key];
+                    const active = item.path && isActive(item.path);
+                    const childActive = hasChildren && item.children.some((c) => isActive(c.path));
+
+                    return (
+                        <div key={item.key}>
+                            {hasChildren ? (
+                                <button
+                                    onClick={() => toggleMenu(item.key)}
+                                    style={{
+                                        ...sidebarStyles.menuItem,
+                                        ...(childActive ? sidebarStyles.menuItemActive : {}),
+                                        justifyContent: collapsed ? 'center' : 'flex-start',
+                                        padding: collapsed ? '12px' : '10px 16px',
+                                    }}
+                                    title={collapsed ? t(item.key) : undefined}
+                                >
+                                    <span style={sidebarStyles.menuIcon}>{item.icon}</span>
+                                    {!collapsed && (
+                                        <>
+                                            <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                            <span style={{
+                                                ...sidebarStyles.arrow,
+                                                transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                                            }}>
+                                                ›
+                                            </span>
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                <Link
+                                    href={item.path}
+                                    prefetch={true}
+                                    style={{
+                                        ...sidebarStyles.menuItem,
+                                        ...(active ? sidebarStyles.menuItemActive : {}),
+                                        justifyContent: collapsed ? 'center' : 'flex-start',
+                                        padding: collapsed ? '12px' : '10px 16px',
+                                        textDecoration: 'none',
+                                    }}
+                                    title={collapsed ? t(item.key) : undefined}
+                                >
+                                    <span style={sidebarStyles.menuIcon}>{item.icon}</span>
+                                    {!collapsed && (
+                                        <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                    )}
+                                </Link>
+                            )}
+
+                            {/* Submenu */}
+                            {hasChildren && isOpen && !collapsed && (
+                                <div style={sidebarStyles.submenu}>
+                                    {item.children.map((child) => (
+                                        <Link
+                                            key={child.key}
+                                            href={child.path}
+                                            prefetch={true}
+                                            style={{
+                                                ...sidebarStyles.submenuItem,
+                                                ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
+                                                textDecoration: 'none',
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
+                                            <span>{t(child.key)}</span>
+                                        </Link>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </nav>
+
+            {/* User area */}
+            {!collapsed && (
+                <div style={sidebarStyles.userArea}>
+                    <div style={sidebarStyles.userInfo}>
+                        <div style={sidebarStyles.userAvatar}>
+                            {user?.firstName?.[0] || 'K'}
+                        </div>
+                        <div>
+                            <div style={sidebarStyles.userName}>
+                                {user?.firstName} {user?.lastName}
+                            </div>
+                            <div style={sidebarStyles.userCompany}>
+                                {user?.companyName}
+                            </div>
+                        </div>
+                    </div>
+                    <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
+                        🚪 {t('logout')}
+                    </button>
+                </div>
+            )}
+        </aside>
+    );
+}
+
+const sidebarStyles = {
+    sidebar: {
+        background: 'var(--bg-sidebar)',
+        height: '100vh',
+        position: 'fixed',
+        left: 0,
+        top: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        transition: 'width var(--transition-normal)',
+        zIndex: 100,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        borderRight: '1px solid rgba(255,255,255,0.05)',
+    },
+    logoArea: {
+        padding: '16px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        minHeight: 64,
+    },
+    logoContent: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+    },
+    logoTitle: {
+        fontFamily: 'var(--font-heading)',
+        fontWeight: 800,
+        fontSize: '1.2rem',
+        color: 'var(--primary)',
+        letterSpacing: -0.5,
+    },
+    logoSub: {
+        fontSize: '0.7rem',
+        color: 'rgba(255,255,255,0.4)',
+        fontWeight: 500,
+    },
+    collapseBtn: {
+        background: 'rgba(255,255,255,0.05)',
+        border: '1px solid rgba(255,255,255,0.1)',
+        borderRadius: 6,
+        color: 'rgba(255,255,255,0.5)',
+        cursor: 'pointer',
+        width: 28,
+        height: 28,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '0.7rem',
+        flexShrink: 0,
+        transition: 'all 0.2s',
+    },
+    nav: {
+        flex: 1,
+        padding: '12px 8px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+    },
+    menuItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        width: '100%',
+        padding: '10px 16px',
+        border: 'none',
+        background: 'transparent',
+        color: 'rgba(255,255,255,0.65)',
+        borderRadius: 'var(--radius-md)',
+        cursor: 'pointer',
+        fontSize: '0.875rem',
+        fontFamily: 'var(--font-body)',
+        fontWeight: 500,
+        transition: 'all 0.15s',
+        textAlign: 'left',
+    },
+    menuItemActive: {
+        background: 'var(--bg-sidebar-active)',
+        color: 'var(--primary)',
+        fontWeight: 600,
+    },
+    menuIcon: {
+        fontSize: '1.1rem',
+        flexShrink: 0,
+    },
+    menuLabel: {
+        flex: 1,
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+    },
+    arrow: {
+        fontSize: '1rem',
+        transition: 'transform 0.2s',
+        color: 'rgba(255,255,255,0.3)',
+    },
+    submenu: {
+        marginLeft: 20,
+        paddingLeft: 12,
+        borderLeft: '2px solid rgba(0,191,166,0.2)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 1,
+        marginTop: 4,
+        marginBottom: 4,
+    },
+    submenuItem: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: '8px 12px',
+        border: 'none',
+        background: 'transparent',
+        color: 'rgba(255,255,255,0.5)',
+        borderRadius: 'var(--radius-sm)',
+        cursor: 'pointer',
+        fontSize: '0.8rem',
+        fontFamily: 'var(--font-body)',
+        transition: 'all 0.15s',
+        textAlign: 'left',
+        width: '100%',
+    },
+    submenuItemActive: {
+        background: 'var(--bg-sidebar-active)',
+        color: 'var(--primary)',
+        fontWeight: 600,
+    },
+    userArea: {
+        padding: '16px',
+        borderTop: '1px solid rgba(255,255,255,0.08)',
+    },
+    userInfo: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        marginBottom: 12,
+    },
+    userAvatar: {
+        width: 36,
+        height: 36,
+        borderRadius: 'var(--radius-md)',
+        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: 'white',
+        fontWeight: 700,
+        fontSize: '0.9rem',
+        fontFamily: 'var(--font-heading)',
+        flexShrink: 0,
+    },
+    userName: {
+        color: 'rgba(255,255,255,0.85)',
+        fontSize: '0.85rem',
+        fontWeight: 600,
+    },
+    userCompany: {
+        color: 'rgba(255,255,255,0.4)',
+        fontSize: '0.7rem',
+    },
+    logoutBtn: {
+        width: '100%',
+        padding: '8px 12px',
+        background: 'rgba(244,67,54,0.1)',
+        border: '1px solid rgba(244,67,54,0.2)',
+        borderRadius: 'var(--radius-sm)',
+        color: '#ef9a9a',
+        cursor: 'pointer',
+        fontSize: '0.8rem',
+        fontFamily: 'var(--font-body)',
+        transition: 'all 0.2s',
+        textAlign: 'center',
+    },
+};

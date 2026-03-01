@@ -1,0 +1,53 @@
+'use client';
+import { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+
+export default function DoctorsPage() {
+  const { t, lang } = useLanguage();
+  const [items, setItems] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ ime: '', specijalizacija: '', telefon: '', email: '' });
+
+  const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.DOCTORS)); }, []);
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleNew = () => { setFormData({ ime: '', specijalizacija: '', telefon: '', email: '' }); setEditingId(null); setShowForm(true); };
+  const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
+  const handleSave = () => {
+    if (!formData.ime) return;
+    if (editingId) update(COLLECTIONS.DOCTORS, editingId, formData); else create(COLLECTIONS.DOCTORS, formData);
+    setShowForm(false); loadData();
+  };
+  const handleDelete = (id) => { if (confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.DOCTORS, id); loadData(); } };
+
+  return (
+    <div className="animate-fadeIn">
+      <h1 style={{ marginBottom: 24 }}>🩺 {t('doctors')}</h1>
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal" style={{ maxWidth: 550 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('doctors')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
+            <div className="modal-body">
+              <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.ime} onChange={e => setFormData({ ...formData, ime: e.target.value })} /></div>
+              <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{lang === 'bs' ? 'Specijalizacija' : 'Specialization'}</label><input className="form-input" value={formData.specijalizacija} onChange={e => setFormData({ ...formData, specijalizacija: e.target.value })} /></div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="form-group"><label className="form-label">{t('phone')}</label><input className="form-input" value={formData.telefon} onChange={e => setFormData({ ...formData, telefon: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} /></div>
+              </div>
+            </div>
+            <div className="modal-footer"><button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button><button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button></div>
+          </div>
+        </div>
+      )}
+      <div className="card"><div className="card-body">
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}><button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button></div>
+        <div className="data-table-wrapper"><table className="data-table"><thead><tr><th>{t('actions')}</th><th>{t('name')}</th><th>{lang === 'bs' ? 'Specijalizacija' : 'Specialization'}</th><th>{t('phone')}</th><th>Email</th></tr></thead>
+          <tbody>{items.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : items.map(i => (
+            <tr key={i.id}><td><div style={{ display: 'flex', gap: 4 }}><button className="btn btn-primary btn-sm" onClick={() => handleEdit(i)}>✏️</button><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(i.id)} style={{ color: 'var(--danger)' }}>🗑️</button></div></td><td style={{ fontWeight: 600 }}>{i.ime}</td><td>{i.specijalizacija}</td><td>{i.telefon}</td><td><a href={`mailto:${i.email}`}>{i.email}</a></td></tr>
+          ))}</tbody></table></div>
+      </div></div>
+    </div>
+  );
+}

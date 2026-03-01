@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# temp files
+ngrok_output.txt
+ngrok_path.txt
+tunnel.log
+start_ngrok.bat
+create_pages.py
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
