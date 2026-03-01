@@ -5,10 +5,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies } from '@/lib/dataStore';
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Header({ sidebarCollapsed }) {
     const { t, lang, toggleLang } = useLanguage();
     const { user, logout, isAdmin, activeCompanyId, switchCompany } = useAuth();
+    const { isDark, toggleTheme } = useTheme();
     const router = useRouter();
     const [searchFocused, setSearchFocused] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
@@ -246,6 +248,46 @@ export default function Header({ sidebarCollapsed }) {
                     {/* Language toggle */}
                     <button onClick={toggleLang} style={headerStyles.langBtn}>
                         🌐 {lang === 'bs' ? 'EN' : 'BS'}
+                    </button>
+
+                    {/* Dark mode toggle */}
+                    <button
+                        onClick={toggleTheme}
+                        title={isDark ? (lang === 'bs' ? 'Uključi svijetli mod' : 'Switch to light mode') : (lang === 'bs' ? 'Uključi tamni mod' : 'Switch to dark mode')}
+                        style={{
+                            position: 'relative',
+                            width: 52, height: 28,
+                            borderRadius: 14,
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: isDark
+                                ? 'linear-gradient(135deg, #1e3a5f, #0a1f3d)'
+                                : 'linear-gradient(135deg, #87CEEB, #FDB813)',
+                            padding: 0,
+                            flexShrink: 0,
+                            boxShadow: isDark
+                                ? 'inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(0,150,255,0.2)'
+                                : 'inset 0 1px 3px rgba(0,0,0,0.1), 0 0 8px rgba(255,193,7,0.3)',
+                            transition: 'background 0.4s ease, box-shadow 0.3s ease',
+                        }}
+                    >
+                        {/* Sliding knob */}
+                        <span style={{
+                            position: 'absolute',
+                            top: 3,
+                            left: isDark ? 27 : 3,
+                            width: 22, height: 22,
+                            borderRadius: '50%',
+                            background: isDark ? '#c8d8f0' : '#fff',
+                            boxShadow: isDark
+                                ? '0 1px 4px rgba(0,0,0,0.5)'
+                                : '0 1px 4px rgba(0,0,0,0.25)',
+                            transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1), background 0.3s ease',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.65rem',
+                        }}>
+                            {isDark ? '🌙' : '☀️'}
+                        </span>
                     </button>
 
                     {/* Notifications */}

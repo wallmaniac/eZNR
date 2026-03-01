@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useSearchParams } from 'next/navigation';
 import {
   getAll, getById, update, COLLECTIONS, getAllCompanies, getUserCompanies,
@@ -21,6 +22,7 @@ import {
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
   const { user, isAdmin, activeCompanyId, login } = useAuth();
+  const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'profile');
@@ -519,6 +521,49 @@ export default function SettingsPage() {
             <Toggle checked={appSettings.animations} onChange={v => updateApp('animations', v)} label={lang === 'bs' ? 'Animacije' : 'Animations'} description={lang === 'bs' ? 'Uključi glatke prijelaze i animacije' : 'Enable smooth transitions and animations'} />
             <Toggle checked={appSettings.notificationSound} onChange={v => updateApp('notificationSound', v)} label={lang === 'bs' ? 'Zvuk obavijesti' : 'Notification sound'} description={lang === 'bs' ? 'Pusti zvuk kada stigne nova obavijest' : 'Play sound for new notifications'} />
             <Toggle checked={appSettings.sidebarOpen} onChange={v => updateApp('sidebarOpen', v)} label={lang === 'bs' ? 'Bočna traka uvijek otvorena' : 'Sidebar always open'} description={lang === 'bs' ? 'Zadrži bočnu traku otvorenom pri pokretanju' : 'Keep sidebar expanded on startup'} />
+
+            <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+
+            {/* Dark mode toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                  {isDark ? '🌙' : '☀️'} {lang === 'bs' ? 'Tamni mod' : 'Dark mode'}
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  {lang === 'bs' ? 'Trenutno: ' : 'Currently: '}
+                  <strong>{isDark ? (lang === 'bs' ? 'Tamni' : 'Dark') : (lang === 'bs' ? 'Svijetli' : 'Light')}</strong>
+                  {lang === 'bs' ? ' — promjena se odmah primjenjuje' : ' — changes apply immediately'}
+                </div>
+              </div>
+              <button
+                onClick={toggleTheme}
+                style={{
+                  position: 'relative', width: 64, height: 34, borderRadius: 17,
+                  border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0,
+                  background: isDark
+                    ? 'linear-gradient(135deg, #1e3a5f, #0a1f3d)'
+                    : 'linear-gradient(135deg, #87CEEB, #FDB813)',
+                  boxShadow: isDark
+                    ? 'inset 0 1px 4px rgba(0,0,0,0.5), 0 0 10px rgba(0,100,255,0.15)'
+                    : 'inset 0 1px 3px rgba(0,0,0,0.1), 0 0 10px rgba(255,193,7,0.25)',
+                  transition: 'background 0.4s ease',
+                }}
+              >
+                <span style={{
+                  position: 'absolute', top: 4,
+                  left: isDark ? 34 : 4,
+                  width: 26, height: 26, borderRadius: '50%',
+                  background: isDark ? '#c8d8f0' : '#fff',
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                  transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.75rem',
+                }}>
+                  {isDark ? '🌙' : '☀️'}
+                </span>
+              </button>
+            </div>
 
             <div style={{ marginTop: 24 }}>
               <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke prikaza' : 'Save Display Settings'}</button>

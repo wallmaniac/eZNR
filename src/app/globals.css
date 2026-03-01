@@ -66,6 +66,157 @@
   --header-height: 64px;
 }
 
+/* ===== DARK MODE ===== */
+[data-theme="dark"] {
+  /* Brand colors stay the same — they pop on dark backgrounds */
+  --primary: #00CDB5;
+  --primary-light: #33d9c4;
+  --primary-dark: #00a896;
+  --primary-glow: rgba(0, 205, 181, 0.12);
+  --primary-glow-strong: rgba(0, 205, 181, 0.25);
+
+  --secondary: #5CC75F;
+  --secondary-light: #7dd680;
+  --secondary-dark: #48a84b;
+
+  /* Dark surfaces — layered greys, not pure black */
+  --dark: #e2ecf4;
+  /* inverted: light text on dark bg */
+  --dark-light: #c5d8e8;
+  --dark-lighter: #a8c4d8;
+
+  --neutral: #1a2332;
+  --text: #e2ecf4;
+  --text-light: #9bb5cc;
+  --text-muted: #6a8fa8;
+
+  /* Surfaces */
+  --bg-page: #0f1923;
+  /* deepest background */
+  --bg-card: #162031;
+  /* card surface */
+  --bg-sidebar: #0a1520;
+  /* sidebar — darker than cards */
+  --bg-sidebar-hover: #162031;
+  --bg-sidebar-active: rgba(0, 205, 181, 0.12);
+  --bg-input: #1e2d40;
+  /* input fields */
+  --bg-table-header: #1a2a3a;
+  --bg-table-row-hover: #1e2d40;
+  --bg-badge: rgba(0, 205, 181, 0.15);
+
+  /* Borders */
+  --border: #253545;
+  --border-light: #1d2e40;
+  --border-focus: #00CDB5;
+
+  /* Shadows — more prominent on dark */
+  --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.7);
+  --shadow-glow: 0 0 24px rgba(0, 205, 181, 0.25);
+
+  /* Status colors — slightly brighter for dark bg visibility */
+  --success: #5CC75F;
+  --warning: #FFB74D;
+  --danger: #EF5350;
+  --info: #42A5F5;
+}
+
+/* Smooth theme transition on everything */
+*,
+*::before,
+*::after {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
+}
+
+/* But NOT on transforms/animations — avoid janky hover effects */
+.btn,
+.card,
+.stat-card,
+.tab,
+.dropdown-item {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease,
+    box-shadow 0.2s ease, transform var(--transition-normal), opacity var(--transition-fast);
+}
+
+/* Dark mode specific overrides for elements that use hardcoded colors */
+[data-theme="dark"] .form-input:focus,
+[data-theme="dark"] .form-select:focus,
+[data-theme="dark"] .form-textarea:focus {
+  background: #1e2d40;
+}
+
+[data-theme="dark"] .card-footer {
+  background: #1a2a3a;
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background: #162031;
+  border-color: var(--border);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .dropdown-item:hover {
+  background: var(--bg-table-row-hover);
+}
+
+[data-theme="dark"] .badge-success {
+  background: rgba(92, 199, 95, 0.15);
+  color: #7dd680;
+}
+
+[data-theme="dark"] .badge-warning {
+  background: rgba(255, 183, 77, 0.15);
+  color: #FFB74D;
+}
+
+[data-theme="dark"] .badge-danger {
+  background: rgba(239, 83, 80, 0.15);
+  color: #EF5350;
+}
+
+[data-theme="dark"] .badge-info {
+  background: rgba(66, 165, 245, 0.15);
+  color: #42A5F5;
+}
+
+[data-theme="dark"] .alert-info {
+  background: rgba(66, 165, 245, 0.1);
+  border-color: rgba(66, 165, 245, 0.3);
+  color: #9bb5cc;
+}
+
+[data-theme="dark"] .alert-success {
+  background: rgba(92, 199, 95, 0.1);
+  border-color: rgba(92, 199, 95, 0.3);
+}
+
+[data-theme="dark"] .alert-warning {
+  background: rgba(255, 183, 77, 0.1);
+  border-color: rgba(255, 183, 77, 0.3);
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: var(--text);
+}
+
+[data-theme="dark"] .modal-overlay {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+[data-theme="dark"] .modal {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+
 * {
   box-sizing: border-box;
   margin: 0;

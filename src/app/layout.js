@@ -1,6 +1,7 @@
 import './globals.css';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 export const metadata = {
   title: 'eZNR - Digitalna platforma za zaštitu na radu',
@@ -16,9 +17,11 @@ export default function RootLayout({ children }) {
       </head>
       <body>
         <AuthProvider>
-          <LanguageProvider>
-            {children}
-          </LanguageProvider>
+          <ThemeProvider>
+            <LanguageProvider>
+              {children}
+            </LanguageProvider>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>
