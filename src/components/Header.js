@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies } from '@/lib/dataStore';
-import { getActiveNotifications, dismissNotification, getUrgentCount, APP_VERSION } from '@/lib/systemMonitor';
+import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 
 export default function Header({ sidebarCollapsed }) {
     const { t, lang, toggleLang } = useLanguage();
@@ -81,46 +81,20 @@ export default function Header({ sidebarCollapsed }) {
         return results.slice(0, 8);
     }, [searchTerm]);
 
-    // Notifications — ADMIN gets system monitor alerts, OFFICER gets calendar events
+    // Notifications — ADMIN gets system alerts, OFFICER gets work alerts
     const notifications = useMemo(() => {
-        if (isAdmin) {
-            const { notifications: sysNotifs } = getActiveNotifications();
-            return sysNotifs.map(n => ({
-                icon: n.icon,
-                text: n.title,
-                detail: n.message,
-                date: '',
-                path: n.actionUrl || '/dashboard',
-                severity: n.severity,
-                id: n.id,
-                actionLabel: n.actionLabel,
-            }));
-        }
-        // Officer — original calendar-based notifications
-        const notifs = [];
-        const events = getAll(COLLECTIONS.CALENDAR_EVENTS);
-        events.forEach(ev => {
-            notifs.push({
-                icon: ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : '📅',
-                text: ev.tip === 'cert' ? `${lang === 'bs' ? 'Uvjerenja' : 'Certificates'} (${ev.count})` :
-                    ev.tip === 'ppe' ? `${lang === 'bs' ? 'Zaštitna sredstva' : 'PPE'} (${ev.count})` :
-                        ev.opis || ev.tip,
-                date: formatDate(ev.datum),
-                path: ev.tip === 'cert' ? '/dashboard/worker-certificates' : ev.tip === 'ppe' ? '/dashboard/worker-ppe' : '/dashboard',
-            });
-        });
-        const certs = getAll(COLLECTIONS.CERTIFICATES);
-        certs.forEach(c => {
-            if (c.vrijediDo) {
-                const exp = new Date(c.vrijediDo);
-                const diff = (exp - new Date()) / (1000 * 60 * 60 * 24);
-                if (diff >= 0 && diff <= 60) {
-                    notifs.push({ icon: '⚠️', text: `${c.naziv} - ${lang === 'bs' ? 'ističe' : 'expires'} ${formatDate(c.vrijediDo)}`, date: formatDate(c.vrijediDo), path: '/dashboard/worker-certificates' });
-                }
-            }
-        });
-        return notifs.slice(0, 10);
-    }, [lang, isAdmin]);
+        const { notifications: notifs } = getHeaderNotifications(isAdmin, activeCompanyId);
+        return notifs.map(n => ({
+            icon: n.icon,
+            text: n.title,
+            detail: n.message,
+            date: '',
+            path: n.actionUrl || '/dashboard',
+            severity: n.severity,
+            id: n.id,
+            actionLabel: n.actionLabel,
+        }));
+    }, [isAdmin, activeCompanyId]);
 
     const handleSearchNav = (result) => { setSearchTerm(''); setSearchFocused(false); router.push(result.path); };
     const handleProfileNav = (path) => { setShowProfile(false); router.push(path); };

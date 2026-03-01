@@ -1,11 +1,17 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSearchParams } from 'next/navigation';
 import {
   getAll, getById, update, COLLECTIONS, getAllCompanies, getUserCompanies,
 } from '@/lib/dataStore';
+import {
+  getNotificationSettings, saveNotificationSettings,
+  getAppSettings, saveAppSettings,
+  getSystemStats, APP_VERSION, APP_BUILD_DATE, CHANGELOG,
+  clearDismissedNotifications,
+} from '@/lib/systemMonitor';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -24,6 +30,15 @@ export default function SettingsPage() {
   // Company state
   const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '' });
 
+  // Notification settings state
+  const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
+
+  // App settings state
+  const [appSettings, setAppSettings] = useState(getAppSettings());
+
+  // Stats (admin only)
+  const stats = useMemo(() => isAdmin ? getSystemStats() : null, [isAdmin]);
+
   // Load profile data
   useEffect(() => {
     if (user) {
@@ -39,7 +54,7 @@ export default function SettingsPage() {
     }
   }, [user]);
 
-  // Load company data when activeCompanyId changes
+  // Load company data
   useEffect(() => {
     if (activeCompanyId) {
       const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
@@ -57,9 +72,7 @@ export default function SettingsPage() {
 
   // Update tab from URL param
   useEffect(() => {
-    if (tabParam && ['profile', 'company', 'app'].includes(tabParam)) {
-      setActiveTab(tabParam);
-    }
+    if (tabParam) setActiveTab(tabParam);
   }, [tabParam]);
 
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
@@ -72,7 +85,6 @@ export default function SettingsPage() {
       email: profileData.email,
       phone: profileData.phone,
     });
-    // Update auth context
     login({ ...user, firstName: profileData.firstName, lastName: profileData.lastName, email: profileData.email });
     showSaved();
   };
@@ -86,6 +98,10 @@ export default function SettingsPage() {
     }
     if (passwordData.newPass !== passwordData.confirm) {
       setPasswordError(lang === 'bs' ? 'Nove lozinke se ne podudaraju!' : 'New passwords do not match!');
+      return;
+    }
+    if (passwordData.newPass.length < appSettings.minPasswordLength) {
+      setPasswordError(lang === 'bs' ? `Lozinka mora imati barem ${appSettings.minPasswordLength} znakova!` : `Password must be at least ${appSettings.minPasswordLength} characters!`);
       return;
     }
     const dbUser = getAll(COLLECTIONS.USERS).find(u => u.id === user.id);
@@ -104,11 +120,74 @@ export default function SettingsPage() {
     showSaved();
   };
 
+  const handleSaveNotifSettings = () => {
+    saveNotificationSettings(notifSettings);
+    showSaved();
+  };
+
+  const handleSaveAppSettings = () => {
+    saveAppSettings(appSettings);
+    showSaved();
+  };
+
+  const updateNotif = (key, value) => setNotifSettings(prev => ({ ...prev, [key]: value }));
+  const updateApp = (key, value) => setAppSettings(prev => ({ ...prev, [key]: value }));
+
+  // ── Tabs ──
   const tabs = [
-    { key: 'profile', label: lang === 'bs' ? 'Korisnički profil' : 'User Profile', icon: '👤' },
-    { key: 'company', label: lang === 'bs' ? 'Podaci o firmi' : 'Company Data', icon: '🏢' },
-    { key: 'app', label: lang === 'bs' ? 'Postavke aplikacije' : 'App Settings', icon: '⚙️' },
+    { key: 'profile', label: lang === 'bs' ? 'Profil' : 'Profile', icon: '👤' },
+    { key: 'company', label: lang === 'bs' ? 'Firma' : 'Company', icon: '🏢' },
+    { key: 'notifications', label: lang === 'bs' ? 'Obavijesti' : 'Notifications', icon: '🔔' },
+    { key: 'display', label: lang === 'bs' ? 'Prikaz' : 'Display', icon: '🎨' },
+    ...(isAdmin ? [
+      { key: 'system', label: lang === 'bs' ? 'Sistem' : 'System', icon: '🛡️' },
+      { key: 'statistics', label: lang === 'bs' ? 'Statistika' : 'Statistics', icon: '📊' },
+    ] : []),
   ];
+
+  // ── Toggle component ──
+  const Toggle = ({ checked, onChange, label, description }) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{label}</div>
+        {description && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{description}</div>}
+      </div>
+      <button
+        onClick={() => onChange(!checked)}
+        style={{
+          width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer',
+          background: checked ? 'var(--primary)' : '#ccc',
+          position: 'relative', transition: 'background 0.3s', flexShrink: 0,
+        }}
+      >
+        <span style={{
+          position: 'absolute', top: 3, left: checked ? 25 : 3,
+          width: 20, height: 20, borderRadius: '50%', background: 'white',
+          transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+        }} />
+      </button>
+    </div>
+  );
+
+  // ── Stat card component ──
+  const StatCard = ({ icon, value, label, color }) => (
+    <div style={{
+      background: 'white', borderRadius: 12, padding: '20px 16px',
+      boxShadow: 'var(--shadow-sm)', textAlign: 'center', border: '1px solid var(--border-light)',
+    }}>
+      <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{icon}</div>
+      <div style={{ fontSize: '1.8rem', fontWeight: 800, color: color || 'var(--text)', fontFamily: 'var(--font-heading)' }}>{typeof value === 'number' ? value.toLocaleString() : value}</div>
+      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>{label}</div>
+    </div>
+  );
+
+  // ── Section header ──
+  const SectionHeader = ({ icon, title }) => (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 24, marginBottom: 12, paddingBottom: 8, borderBottom: '2px solid var(--border)' }}>
+      <span style={{ fontSize: '1.1rem' }}>{icon}</span>
+      <span style={{ fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>{title}</span>
+    </div>
+  );
 
   return (
     <div className="animate-fadeIn">
@@ -127,11 +206,12 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap' }}>
         {tabs.map(tb => (
           <button key={tb.key} onClick={() => setActiveTab(tb.key)} style={{
-            padding: '12px 24px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-            fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.85rem',
+            padding: '10px 18px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
+            fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.82rem',
             background: activeTab === tb.key ? 'var(--dark)' : 'white',
             color: activeTab === tb.key ? 'white' : 'var(--text)',
             boxShadow: activeTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
@@ -142,7 +222,9 @@ export default function SettingsPage() {
         ))}
       </div>
 
-      {/* ── Profile Tab ── */}
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 1: PROFILE                                    */}
+      {/* ══════════════════════════════════════════════════ */}
       {activeTab === 'profile' && (
         <div className="card">
           <div className="card-body">
@@ -219,14 +301,16 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* ── Company Tab ── */}
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 2: COMPANY                                    */}
+      {/* ══════════════════════════════════════════════════ */}
       {activeTab === 'company' && (
         <div className="card">
           <div className="card-body">
             <h3 style={{ marginBottom: 20 }}>🏢 {lang === 'bs' ? 'Podaci o firmi' : 'Company Data'}</h3>
             {!activeCompanyId ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                {lang === 'bs' ? 'Odaberite firmu kroz birač firma u gornjem meniju.' : 'Select a company from the company switcher in the top menu.'}
+                {lang === 'bs' ? 'Odaberite firmu kroz birač firma u gornjem meniju.' : 'Select a company from the company switcher.'}
               </div>
             ) : (
               <>
@@ -249,45 +333,347 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* ── App Settings Tab ── */}
-      {activeTab === 'app' && (
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 3: NOTIFICATIONS                              */}
+      {/* ══════════════════════════════════════════════════ */}
+      {activeTab === 'notifications' && (
         <div className="card">
           <div className="card-body">
-            <h3 style={{ marginBottom: 20 }}>⚙️ {lang === 'bs' ? 'Postavke aplikacije' : 'Application Settings'}</h3>
+            <h3 style={{ marginBottom: 8 }}>🔔 {lang === 'bs' ? 'Postavke obavijesti' : 'Notification Preferences'}</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 16 }}>
+              {lang === 'bs' ? 'Odaberite koje obavijesti želite primati u aplikaciji.' : 'Choose which notifications you want to receive.'}
+            </p>
+
+            {/* ── Certificates ── */}
+            <SectionHeader icon="📋" title={lang === 'bs' ? 'Uvjerenja radnika' : 'Worker Certificates'} />
+            <Toggle
+              checked={notifSettings.certExpiryEnabled}
+              onChange={v => updateNotif('certExpiryEnabled', v)}
+              label={lang === 'bs' ? 'Obavijest o isteku uvjerenja' : 'Certificate expiry alerts'}
+              description={lang === 'bs' ? 'Upozori me kada radničko uvjerenje uskoro ističe' : 'Warn me when worker certificates are expiring soon'}
+            />
+            {notifSettings.certExpiryEnabled && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Upozori me' : 'Warn me'}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.certExpiryDays} onChange={e => updateNotif('certExpiryDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'dana prije isteka' : 'days before expiry'}</span>
+              </div>
+            )}
+
+            {/* ── Equipment ── */}
+            <SectionHeader icon="⚙️" title={lang === 'bs' ? 'Pregled opreme' : 'Equipment Inspections'} />
+            <Toggle
+              checked={notifSettings.equipExpiryEnabled}
+              onChange={v => updateNotif('equipExpiryEnabled', v)}
+              label={lang === 'bs' ? 'Obavijest o pregledu opreme' : 'Equipment inspection alerts'}
+              description={lang === 'bs' ? 'Upozori me kada oprema treba pregled' : 'Warn me when equipment inspection is due'}
+            />
+            {notifSettings.equipExpiryEnabled && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Upozori me' : 'Warn me'}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.equipExpiryDays} onChange={e => updateNotif('equipExpiryDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'dana prije isteka' : 'days before expiry'}</span>
+              </div>
+            )}
+
+            {/* ── Documents ── */}
+            <SectionHeader icon="📄" title={lang === 'bs' ? 'Dokumenti poslodavca' : 'Employer Documents'} />
+            <Toggle
+              checked={notifSettings.docExpiryEnabled}
+              onChange={v => updateNotif('docExpiryEnabled', v)}
+              label={lang === 'bs' ? 'Obavijest o isteku dokumenata' : 'Document expiry alerts'}
+              description={lang === 'bs' ? 'Upozori me kada dokumenti ističu' : 'Warn me when employer documents expire'}
+            />
+            {notifSettings.docExpiryEnabled && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Upozori me' : 'Warn me'}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.docExpiryDays} onChange={e => updateNotif('docExpiryDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'dana prije isteka' : 'days before expiry'}</span>
+              </div>
+            )}
+
+            {/* ── Workers ── */}
+            <SectionHeader icon="👷" title={lang === 'bs' ? 'Radnici' : 'Workers'} />
+            <Toggle
+              checked={notifSettings.workersNoCerts}
+              onChange={v => updateNotif('workersNoCerts', v)}
+              label={lang === 'bs' ? 'Radnici bez uvjerenja' : 'Workers without certificates'}
+              description={lang === 'bs' ? 'Prikaži koliko aktivnih radnika nema uvjerenja' : 'Show how many active workers have no certificates'}
+            />
+            <Toggle
+              checked={notifSettings.workersNoPPE}
+              onChange={v => updateNotif('workersNoPPE', v)}
+              label={lang === 'bs' ? 'Radnici bez zaštitne opreme' : 'Workers without PPE'}
+              description={lang === 'bs' ? 'Prikaži koliko aktivnih radnika nema dodijeljenu zaštitnu opremu' : 'Show workers missing PPE assignments'}
+            />
+
+            {/* ── Calendar ── */}
+            <SectionHeader icon="📅" title={lang === 'bs' ? 'Kalendar' : 'Calendar'} />
+            <Toggle
+              checked={notifSettings.calendarWeek}
+              onChange={v => updateNotif('calendarWeek', v)}
+              label={lang === 'bs' ? 'Događaji ovog tjedna' : 'Events this week'}
+              description={lang === 'bs' ? 'Prikaži nadolazeće kalendarske događaje' : 'Show upcoming calendar events'}
+            />
+
+            {/* ── Admin-only notifications ── */}
+            {isAdmin && (
+              <>
+                <SectionHeader icon="🛡️" title={lang === 'bs' ? 'Admin: Zdravlje sistema' : 'Admin: System Health'} />
+                <Toggle
+                  checked={notifSettings.adminDbSize}
+                  onChange={v => updateNotif('adminDbSize', v)}
+                  label={lang === 'bs' ? 'Upozorenje o veličini baze' : 'Database size warning'}
+                  description={lang === 'bs' ? 'Obavijesti me kada baza podataka raste iznad pragova' : 'Alert me when database grows past thresholds'}
+                />
+                {notifSettings.adminDbSize && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>{lang === 'bs' ? 'Prag upozorenja (zapisi)' : 'Warning threshold (records)'}</label>
+                      <input className="form-input" type="number" value={notifSettings.adminDbWarnThreshold} onChange={e => updateNotif('adminDbWarnThreshold', Number(e.target.value))} />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>{lang === 'bs' ? 'Kritični prag (zapisi)' : 'Critical threshold (records)'}</label>
+                      <input className="form-input" type="number" value={notifSettings.adminDbCriticalThreshold} onChange={e => updateNotif('adminDbCriticalThreshold', Number(e.target.value))} />
+                    </div>
+                  </div>
+                )}
+
+                <SectionHeader icon="📈" title={lang === 'bs' ? 'Admin: Rast i aktivnost' : 'Admin: Growth & Activity'} />
+                <Toggle checked={notifSettings.adminNewCompanies} onChange={v => updateNotif('adminNewCompanies', v)} label={lang === 'bs' ? 'Nove kompanije' : 'New companies'} description={lang === 'bs' ? 'Obavijesti me kada se registrira nova kompanija' : 'Notify when new company registers'} />
+                <Toggle checked={notifSettings.adminNewUsers} onChange={v => updateNotif('adminNewUsers', v)} label={lang === 'bs' ? 'Novi korisnici' : 'New users'} description={lang === 'bs' ? 'Obavijesti me kada se registrira novi korisnik' : 'Notify when new user registers'} />
+                <Toggle checked={notifSettings.adminMilestones} onChange={v => updateNotif('adminMilestones', v)} label={lang === 'bs' ? 'Milestone obavijesti' : 'Milestone alerts'} description={lang === 'bs' ? 'Obavijesti na 50, 100, 250, 500 kompanija/korisnika' : 'Alerts at 50, 100, 250, 500 companies/users'} />
+
+                <SectionHeader icon="🔒" title={lang === 'bs' ? 'Admin: Sigurnost' : 'Admin: Security'} />
+                <Toggle checked={notifSettings.adminFailedLogins} onChange={v => updateNotif('adminFailedLogins', v)} label={lang === 'bs' ? 'Neuspješne prijave' : 'Failed login attempts'} description={lang === 'bs' ? 'Upozori me na 5+ neuspješnih prijava' : 'Alert on 5+ failed logins for same account'} />
+                <Toggle checked={notifSettings.adminInactiveCompanies} onChange={v => updateNotif('adminInactiveCompanies', v)} label={lang === 'bs' ? 'Neaktivne kompanije' : 'Inactive companies'} description={lang === 'bs' ? 'Prikaži kompanije bez prijave 30+ dana' : 'Show companies with no login in 30+ days'} />
+              </>
+            )}
+
+            <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+              <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
+              <button className="btn" style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }} onClick={() => { clearDismissedNotifications(); showSaved(); }}>
+                🔄 {lang === 'bs' ? 'Poništi odbačene obavijesti' : 'Reset dismissed notifications'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 4: DISPLAY                                    */}
+      {/* ══════════════════════════════════════════════════ */}
+      {activeTab === 'display' && (
+        <div className="card">
+          <div className="card-body">
+            <h3 style={{ marginBottom: 20 }}>🎨 {lang === 'bs' ? 'Postavke prikaza' : 'Display Settings'}</h3>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div className="form-group">
                 <label className="form-label">{t('language')}</label>
-                <select className="form-select" value={lang} onChange={e => toggleLang()}>
+                <select className="form-select" value={lang} onChange={() => toggleLang()}>
                   <option value="bs">🇧🇦 Bosanski</option>
                   <option value="en">🇬🇧 English</option>
                 </select>
               </div>
               <div className="form-group">
                 <label className="form-label">{lang === 'bs' ? 'Format datuma' : 'Date format'}</label>
-                <select className="form-select" defaultValue="dd.mm.yyyy">
+                <select className="form-select" value={appSettings.dateFormat} onChange={e => updateApp('dateFormat', e.target.value)}>
                   <option value="dd.mm.yyyy">DD.MM.YYYY.</option>
                   <option value="mm/dd/yyyy">MM/DD/YYYY</option>
                   <option value="yyyy-mm-dd">YYYY-MM-DD</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">{lang === 'bs' ? 'Stavki po stranici' : 'Items per page'}</label>
-                <select className="form-select" defaultValue="10">
-                  <option value="10">10</option><option value="25">25</option><option value="50">50</option><option value="100">100</option>
+                <label className="form-label">{lang === 'bs' ? 'Zapisi po stranici' : 'Records per page'}</label>
+                <select className="form-select" value={appSettings.recordsPerPage} onChange={e => updateApp('recordsPerPage', Number(e.target.value))}>
+                  <option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option>
                 </select>
               </div>
-              <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                  <input type="checkbox" defaultChecked />
-                  {lang === 'bs' ? 'Prikaži obavijesti' : 'Show notifications'}
-                </label>
+            </div>
+
+            <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+
+            <Toggle checked={appSettings.compactView} onChange={v => updateApp('compactView', v)} label={lang === 'bs' ? 'Kompaktni prikaz' : 'Compact view'} description={lang === 'bs' ? 'Smanji razmake između elemenata' : 'Reduce spacing between elements'} />
+            <Toggle checked={appSettings.animations} onChange={v => updateApp('animations', v)} label={lang === 'bs' ? 'Animacije' : 'Animations'} description={lang === 'bs' ? 'Uključi glatke prijelaze i animacije' : 'Enable smooth transitions and animations'} />
+            <Toggle checked={appSettings.notificationSound} onChange={v => updateApp('notificationSound', v)} label={lang === 'bs' ? 'Zvuk obavijesti' : 'Notification sound'} description={lang === 'bs' ? 'Pusti zvuk kada stigne nova obavijest' : 'Play sound for new notifications'} />
+            <Toggle checked={appSettings.sidebarOpen} onChange={v => updateApp('sidebarOpen', v)} label={lang === 'bs' ? 'Bočna traka uvijek otvorena' : 'Sidebar always open'} description={lang === 'bs' ? 'Zadrži bočnu traku otvorenom pri pokretanju' : 'Keep sidebar expanded on startup'} />
+
+            <div style={{ marginTop: 24 }}>
+              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke prikaza' : 'Save Display Settings'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 5: SYSTEM (Admin only)                       */}
+      {/* ══════════════════════════════════════════════════ */}
+      {activeTab === 'system' && isAdmin && (
+        <div className="card">
+          <div className="card-body">
+            <h3 style={{ marginBottom: 20 }}>🛡️ {lang === 'bs' ? 'Postavke sistema' : 'System Settings'}</h3>
+
+            <SectionHeader icon="🔐" title={lang === 'bs' ? 'Registracija i pristup' : 'Registration & Access'} />
+            <Toggle checked={appSettings.allowRegistration} onChange={v => updateApp('allowRegistration', v)} label={lang === 'bs' ? 'Omogući registraciju' : 'Allow registration'} description={lang === 'bs' ? 'Dozvolite novim korisnicima da se sami registriraju' : 'Allow new users to self-register'} />
+            <Toggle checked={appSettings.requireApproval} onChange={v => updateApp('requireApproval', v)} label={lang === 'bs' ? 'Potrebna admin potvrda' : 'Require admin approval'} description={lang === 'bs' ? 'Novi korisnici moraju biti odobreni od admina' : 'New accounts must be approved by admin'} />
+            <Toggle checked={appSettings.googleSignIn} onChange={v => updateApp('googleSignIn', v)} label={lang === 'bs' ? 'Google prijava' : 'Google sign-in'} description={lang === 'bs' ? 'Dozvolite prijavu putem Google računa' : 'Allow login via Google account'} />
+
+            <SectionHeader icon="🔒" title={lang === 'bs' ? 'Sigurnost' : 'Security'} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0' }}>
+              <div className="form-group">
+                <label className="form-label">{lang === 'bs' ? 'Minimalna dužina lozinke' : 'Minimum password length'}</label>
+                <select className="form-select" value={appSettings.minPasswordLength} onChange={e => updateApp('minPasswordLength', Number(e.target.value))}>
+                  {[6, 8, 10, 12, 16, 20].map(n => <option key={n} value={n}>{n} {lang === 'bs' ? 'znakova' : 'characters'}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">{lang === 'bs' ? 'Automatsko odjavljivanje' : 'Auto-logout'}</label>
+                <select className="form-select" value={appSettings.autoLogoutMinutes} onChange={e => updateApp('autoLogoutMinutes', Number(e.target.value))}>
+                  <option value={15}>15 min</option><option value={30}>30 min</option><option value={60}>1 {lang === 'bs' ? 'sat' : 'hour'}</option><option value={120}>2 {lang === 'bs' ? 'sata' : 'hours'}</option><option value={0}>{lang === 'bs' ? 'Nikada' : 'Never'}</option>
+                </select>
               </div>
             </div>
-            <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
-            <div className="alert alert-info">
-              ℹ️ eZNR v1.0.0 — {lang === 'bs' ? 'Digitalna platforma za zaštitu na radu u BiH' : 'Digital Platform for Occupational Safety in BiH'}
+
+            <SectionHeader icon="📁" title={lang === 'bs' ? 'Datoteke' : 'Files'} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0' }}>
+              <div className="form-group">
+                <label className="form-label">{lang === 'bs' ? 'Maksimalna veličina datoteke' : 'Max file size'}</label>
+                <select className="form-select" value={appSettings.maxFileSizeMB} onChange={e => updateApp('maxFileSizeMB', Number(e.target.value))}>
+                  <option value={5}>5 MB</option><option value={10}>10 MB</option><option value={25}>25 MB</option><option value={50}>50 MB</option>
+                </select>
+              </div>
             </div>
-            <div style={{ marginTop: 20 }}><button className="btn btn-primary">💾 {t('save')}</button></div>
+
+            <SectionHeader icon="🔧" title={lang === 'bs' ? 'Održavanje' : 'Maintenance'} />
+            <Toggle checked={appSettings.maintenanceMode} onChange={v => updateApp('maintenanceMode', v)} label={lang === 'bs' ? 'Režim održavanja' : 'Maintenance mode'} description={lang === 'bs' ? 'Prikaži stranicu održavanja za sve korisnike osim admina' : 'Show maintenance page to all users except admin'} />
+            {appSettings.maintenanceMode && (
+              <div className="form-group" style={{ padding: '12px 0 0 24px' }}>
+                <label className="form-label">{lang === 'bs' ? 'Poruka održavanja' : 'Maintenance message'}</label>
+                <input className="form-input" value={appSettings.maintenanceMessage} onChange={e => updateApp('maintenanceMessage', e.target.value)} placeholder={lang === 'bs' ? 'Aplikacija je trenutno na održavanju...' : 'Application is under maintenance...'} />
+              </div>
+            )}
+
+            <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+
+            {/* App version info */}
+            <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: '1rem' }}>eZNR v{APP_VERSION}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Datum izgradnje' : 'Build date'}: {APP_BUILD_DATE}</div>
+                </div>
+                <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700, background: '#E8F5E9', color: '#2E7D32' }}>
+                  {lang === 'bs' ? 'Najnovija verzija' : 'Latest version'}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 8 }}>{lang === 'bs' ? 'Changelog' : 'Changelog'}:</div>
+              {CHANGELOG[0]?.changes?.map((c, i) => (
+                <div key={i} style={{ fontSize: '0.78rem', color: 'var(--text-muted)', padding: '2px 0', paddingLeft: 12, borderLeft: '2px solid var(--primary)' }}>• {c}</div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 24 }}>
+              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke sistema' : 'Save System Settings'}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB 6: STATISTICS (Admin only)                   */}
+      {/* ══════════════════════════════════════════════════ */}
+      {activeTab === 'statistics' && isAdmin && stats && (
+        <div>
+          <div className="card" style={{ marginBottom: 20 }}>
+            <div className="card-body">
+              <h3 style={{ marginBottom: 20 }}>📊 {lang === 'bs' ? 'Pregled sistema' : 'System Overview'}</h3>
+
+              {/* Main stats grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
+                <StatCard icon="🏢" value={stats.totalCompanies} label={lang === 'bs' ? 'Kompanije' : 'Companies'} color="var(--primary)" />
+                <StatCard icon="👥" value={stats.totalUsers} label={lang === 'bs' ? 'Korisnici' : 'Users'} color="#7B1FA2" />
+                <StatCard icon="👷" value={stats.totalWorkers} label={lang === 'bs' ? 'Radnici' : 'Workers'} color="#1976D2" />
+                <StatCard icon="📋" value={stats.totalCertificates} label={lang === 'bs' ? 'Uvjerenja' : 'Certificates'} color="#F57C00" />
+                <StatCard icon="⚙️" value={stats.totalEquipment} label={lang === 'bs' ? 'Oprema' : 'Equipment'} color="#388E3C" />
+                <StatCard icon="💾" value={stats.totalRecords} label={lang === 'bs' ? 'Ukupno zapisa' : 'Total records'} color="#C62828" />
+              </div>
+
+              {/* Workers breakdown */}
+              <SectionHeader icon="👷" title={lang === 'bs' ? 'Radnici — Pregled' : 'Workers — Breakdown'} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div style={{ padding: 16, borderRadius: 10, background: '#E3F2FD', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#1565C0' }}>{stats.activeWorkers}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#1565C0' }}>{lang === 'bs' ? 'Aktivni' : 'Active'}</div>
+                </div>
+                <div style={{ padding: 16, borderRadius: 10, background: '#FFF3E0', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#E65100' }}>{stats.inactiveWorkers}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#E65100' }}>{lang === 'bs' ? 'Neaktivni' : 'Inactive'}</div>
+                </div>
+                <div style={{ padding: 16, borderRadius: 10, background: '#F3E5F5', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#7B1FA2' }}>{stats.totalWorkers}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#7B1FA2' }}>{lang === 'bs' ? 'Ukupno' : 'Total'}</div>
+                </div>
+              </div>
+
+              {/* Certificate breakdown */}
+              <SectionHeader icon="📋" title={lang === 'bs' ? 'Uvjerenja — Status' : 'Certificates — Status'} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div style={{ padding: 16, borderRadius: 10, background: '#E8F5E9', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2E7D32' }}>{stats.activeCerts}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#2E7D32' }}>{lang === 'bs' ? 'Aktivna' : 'Active'}</div>
+                </div>
+                <div style={{ padding: 16, borderRadius: 10, background: '#FFEBEE', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#C62828' }}>{stats.expiredCerts}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#C62828' }}>{lang === 'bs' ? 'Istekla' : 'Expired'}</div>
+                </div>
+              </div>
+
+              {/* Top companies */}
+              {stats.topCompanies?.length > 0 && (
+                <>
+                  <SectionHeader icon="🏆" title={lang === 'bs' ? 'Top kompanijep po broju radnika' : 'Top Companies by Workers'} />
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ borderBottom: '2px solid var(--border)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>#</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Kompanija' : 'Company'}</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stats.topCompanies.map((c, i) => (
+                        <tr key={i} style={{ borderBottom: '1px solid var(--border-light)' }}>
+                          <td style={{ padding: '8px 12px', fontSize: '0.85rem', fontWeight: 700 }}>{i + 1}</td>
+                          <td style={{ padding: '8px 12px', fontSize: '0.85rem' }}>{c.name}</td>
+                          <td style={{ padding: '8px 12px', fontSize: '0.85rem', fontWeight: 700, textAlign: 'right' }}>{c.workers}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </>
+              )}
+
+              {/* Collection breakdown */}
+              <SectionHeader icon="📦" title={lang === 'bs' ? 'Zapisi po kolekcijama' : 'Records by Collection'} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                {Object.entries(stats.collectionCounts)
+                  .filter(([, count]) => count > 0)
+                  .sort((a, b) => b[1] - a[1])
+                  .map(([col, count]) => (
+                    <div key={col} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>{col}</span>
+                      <span style={{ fontWeight: 700 }}>{count}</span>
+                    </div>
+                  ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
