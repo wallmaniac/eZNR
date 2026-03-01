@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies } from '@/lib/dataStore';
+import { getActiveNotifications, dismissNotification, getUrgentCount, APP_VERSION } from '@/lib/systemMonitor';
 
 export default function Header({ sidebarCollapsed }) {
     const { t, lang, toggleLang } = useLanguage();
@@ -80,8 +81,22 @@ export default function Header({ sidebarCollapsed }) {
         return results.slice(0, 8);
     }, [searchTerm]);
 
-    // Notifications
+    // Notifications — ADMIN gets system monitor alerts, OFFICER gets calendar events
     const notifications = useMemo(() => {
+        if (isAdmin) {
+            const { notifications: sysNotifs } = getActiveNotifications();
+            return sysNotifs.map(n => ({
+                icon: n.icon,
+                text: n.title,
+                detail: n.message,
+                date: '',
+                path: n.actionUrl || '/dashboard',
+                severity: n.severity,
+                id: n.id,
+                actionLabel: n.actionLabel,
+            }));
+        }
+        // Officer — original calendar-based notifications
         const notifs = [];
         const events = getAll(COLLECTIONS.CALENDAR_EVENTS);
         events.forEach(ev => {
@@ -105,7 +120,7 @@ export default function Header({ sidebarCollapsed }) {
             }
         });
         return notifs.slice(0, 10);
-    }, [lang]);
+    }, [lang, isAdmin]);
 
     const handleSearchNav = (result) => { setSearchTerm(''); setSearchFocused(false); router.push(result.path); };
     const handleProfileNav = (path) => { setShowProfile(false); router.push(path); };
@@ -263,28 +278,68 @@ export default function Header({ sidebarCollapsed }) {
                     <div ref={notifRef} style={{ position: 'relative' }}>
                         <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); }} style={headerStyles.iconBtn}>
                             🔔
-                            {notifications.length > 0 && <span style={headerStyles.notifDot} />}
+                            {notifications.length > 0 && (
+                                <span style={{
+                                    ...headerStyles.notifDot,
+                                    background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent')
+                                        ? '#EF4444' : '#F59E0B',
+                                    width: 18, height: 18, borderRadius: '50%',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '0.6rem', color: 'white', fontWeight: 700,
+                                }}>
+                                    {notifications.length}
+                                </span>
+                            )}
                         </button>
 
                         {showNotifs && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, left: 'auto', minWidth: 320, maxHeight: 400, overflowY: 'auto' }}>
-                                <div style={{ padding: '12px 16px', fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)' }}>
-                                    🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, left: 'auto', minWidth: 380, maxHeight: 500, overflowY: 'auto' }}>
+                                <div style={{ padding: '12px 16px', fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
+                                    {isAdmin && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>v{APP_VERSION}</span>}
                                 </div>
                                 {notifications.length === 0 ? (
                                     <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                        {lang === 'bs' ? 'Nema obavijesti' : 'No notifications'}
+                                        ✅ {lang === 'bs' ? 'Sve je u redu! Nema obavijesti.' : 'All good! No notifications.'}
                                     </div>
-                                ) : notifications.map((n, idx) => (
-                                    <button key={idx} className="dropdown-item" onClick={() => handleNotifNav(n.path)}
-                                        style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px' }}>
-                                        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{n.icon}</span>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontSize: '0.82rem', lineHeight: 1.4 }}>{n.text}</div>
-                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 2 }}>{n.date}</div>
+                                ) : notifications.map((n, idx) => {
+                                    const severityColors = {
+                                        critical: { bg: '#FEF2F2', border: '#FECACA', dot: '#EF4444' },
+                                        urgent: { bg: '#FFF7ED', border: '#FED7AA', dot: '#F97316' },
+                                        warning: { bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B' },
+                                        info: { bg: '#F0FDF4', border: '#BBF7D0', dot: '#22C55E' },
+                                    };
+                                    const colors = severityColors[n.severity] || severityColors.info;
+                                    return (
+                                        <div key={n.id || idx}
+                                            style={{
+                                                padding: '10px 14px', borderBottom: '1px solid var(--border-light)',
+                                                background: colors.bg, borderLeft: `3px solid ${colors.dot}`,
+                                            }}>
+                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{n.icon}</span>
+                                                <div style={{ flex: 1, minWidth: 0 }}>
+                                                    <div style={{ fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.4, color: 'var(--text)' }}>{n.text}</div>
+                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.4 }}>{n.detail}</div>}
+                                                    <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                                                        {n.actionLabel && (
+                                                            <button onClick={() => handleNotifNav(n.path)}
+                                                                style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.dot}`, background: 'white', color: colors.dot, fontWeight: 600, cursor: 'pointer' }}>
+                                                                {n.actionLabel}
+                                                            </button>
+                                                        )}
+                                                        {n.id && isAdmin && (
+                                                            <button onClick={(e) => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }}
+                                                                style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'white', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                                                ✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </button>
-                                ))}
+                                    );
+                                })}
                             </div>
                         )}
                     </div>
