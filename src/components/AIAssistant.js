@@ -58,7 +58,81 @@ const APP_KNOWLEDGE = {
     ],
 };
 
-function buildSystemPrompt(lang, currentPath) {
+// ─── Live data context builder ────────────────────────────────────────────────
+function buildDataContext(lang) {
+    if (typeof window === 'undefined') return '';
+    try {
+        const prefix = 'eznr_';
+        const get = (key) => { try { return JSON.parse(localStorage.getItem(prefix + key) || '[]'); } catch { return []; } };
+
+        const workers = get('workers');
+        const injuries = get('injuries');
+        const diseases = get('diseases');
+        const certificates = get('certificates');
+        const equipment = get('equipment');
+
+        const lines = [];
+        const today = new Date();
+        const in30 = new Date(); in30.setDate(in30.getDate() + 30);
+        const in60 = new Date(); in60.setDate(in60.getDate() + 60);
+
+        // Workers on sick leave
+        const injuryBol = injuries.filter(i => i.bolovanje && i.status !== 'zatvorena').map(i => ({ name: i.radnikIme, src: 'injury' }));
+        const diseaseBol = diseases.filter(d => d.bolovanje && d.status !== 'zatvorena').map(d => ({ name: d.radnikIme, src: 'disease' }));
+        const allBol = [...injuryBol, ...diseaseBol].filter((b, i, arr) => b.name && arr.findIndex(x => x.name === b.name) === i);
+        lines.push(lang === 'bs'
+            ? `\nRADNICI NA BOLOVANJU (${allBol.length}): ${allBol.length === 0 ? 'Nema.' : allBol.map(b => `${b.name} (${b.src === 'injury' ? 'povreda' : 'bolest'})`).join(', ')}`
+            : `\nWORKERS ON SICK LEAVE (${allBol.length}): ${allBol.length === 0 ? 'None.' : allBol.map(b => `${b.name} (${b.src === 'injury' ? 'injury' : 'disease'})`).join(', ')}`
+        );
+
+        // Expired certificates
+        const expiredCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today);
+        const soonCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30);
+        const workerMap = Object.fromEntries(workers.map(w => [w.id, `${w.ime} ${w.prezime}`]));
+        if (expiredCerts.length > 0) {
+            lines.push(lang === 'bs'
+                ? `ISTEKLA UVJERENJA (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (isteklo: ${c.vrijediDo})`).join('; ')}`
+                : `EXPIRED CERTIFICATES (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (expired: ${c.vrijediDo})`).join('; ')}`
+            );
+        }
+        if (soonCerts.length > 0) {
+            lines.push(lang === 'bs'
+                ? `UVJERENJA KOJA USKORO ISTIČU - 30 DANA (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (ističe: ${c.vrijediDo})`).join('; ')}`
+                : `CERTIFICATES EXPIRING SOON - 30 DAYS (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (expires: ${c.vrijediDo})`).join('; ')}`
+            );
+        }
+
+        // Overdue equipment
+        const overdueEquip = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
+        const soonEquip = equipment.filter(e => e.iduci && new Date(e.iduci) >= today && new Date(e.iduci) <= in60);
+        if (overdueEquip.length > 0) lines.push(lang === 'bs'
+            ? `OPREMA S PREKORAČENIM PREGLEDOM (${overdueEquip.length}): ${overdueEquip.slice(0, 6).map(e => `${e.naziv} (trebalo do: ${e.iduci})`).join('; ')}`
+            : `EQUIPMENT WITH OVERDUE INSPECTION (${overdueEquip.length}): ${overdueEquip.slice(0, 6).map(e => `${e.naziv} (was due: ${e.iduci})`).join('; ')}`
+        );
+        if (soonEquip.length > 0) lines.push(lang === 'bs'
+            ? `OPREMA ČIJI PREGLED USKORO DOSPIJEVA - 60 DANA (${soonEquip.length}): ${soonEquip.slice(0, 6).map(e => `${e.naziv} (do: ${e.iduci})`).join('; ')}`
+            : `EQUIPMENT INSPECTION DUE SOON - 60 DAYS (${soonEquip.length}): ${soonEquip.slice(0, 6).map(e => `${e.naziv} (due: ${e.iduci})`).join('; ')}`
+        );
+
+        // Recent injuries
+        const recentInj = injuries.filter(i => i.datum && new Date(i.datum) >= new Date(Date.now() - 90 * 86400000)).sort((a, b) => new Date(b.datum) - new Date(a.datum));
+        if (recentInj.length > 0) lines.push(lang === 'bs'
+            ? `NEDAVNE POVREDE (90 dana, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `${i.radnikIme || 'N/A'} ${i.datum} ${i.tip}${i.bolovanje ? ' BOLOVANJE' : ''}`).join('; ')}`
+            : `RECENT INJURIES (90 days, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `${i.radnikIme || 'N/A'} ${i.datum} ${i.tip}${i.bolovanje ? ' SICK LEAVE' : ''}`).join('; ')}`
+        );
+
+        // Stats
+        const activeWorkers = workers.filter(w => w.aktivan !== false).length;
+        lines.push(lang === 'bs'
+            ? `STATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja`
+            : `STATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment items, ${certificates.length} certificates`
+        );
+
+        return lines.join('\n');
+    } catch { return ''; }
+}
+
+function buildSystemPrompt(lang, currentPath, dataContext) {
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
         ? (lang === 'bs' ? `Korisnik se trenutno nalazi na: ${currentPage.label_bs} — ${currentPage.desc_bs}` : `User is currently on: ${currentPage.label_en} — ${currentPage.desc_en}`)
@@ -71,44 +145,57 @@ function buildSystemPrompt(lang, currentPath) {
         .join('\n');
 
     if (lang === 'bs') {
-        return `Ti si Zia, napredni AI asistent za eZNR — digitalnu platformu za zaštitu na radu i zaštitu od požara u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku.
+        return `Ti si Zia, napredni AI asistent za eZNR — digitalnu platformu za zaštitu na radu u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku.
 
 TVOJA ULOGA:
 - Pomaži korisnicima da se snađu unutar aplikacije
 - Objasni svrhu svake stranice i modula
 - Daj savjete o toku rada i najboljim praksama u zaštiti na radu
 - Usmjeri korisnike na odgovarajuće sekcije aplikacije
+- Odgovaraj na pitanja o STVARNIM PODACIMA iz aplikacije koristeci ZIVE PODATKE ispod
 
 ${pageDesc}
 
 STRANICE APLIKACIJE:
 ${pagesText}
 
+ŽIVI PODACI IZ APLIKACIJE (ažurirano u realnom vremenu):
+${dataContext || 'Nema podataka u bazi.'}
+
 UPUTE:
 - Budi prijatan, stručan i koncizan
 - Kada preporučuješ stranicu, navedi njenu putanju u formatu: [Naziv](putanja)
-- Fokusiraj se na pomoć unutar platforme eZNR
-- Ako korisnik pita o specifičnim propisima zaštite na radu u BiH, pomozi im uz napomenu da uvijek proverite sa nadležnim tijelima
+- OBAVEZNO: Kada korisnik pita ko je na bolovanju, ko ima istekla uvjerenja, ili slična pitanja o podacima — navedi KONKRETNA IMENA iz ŽIVIH PODATAKA iznad
+- Za bolovanje/povrede uputi na [Popis povreda](/dashboard/injury-list) i [Prijava bolesti](/dashboard/diseases)
+- Za uvjerenja uputi na [Radnici](/dashboard/workers)
+- Za opremu uputi na [Radna oprema](/dashboard/equipment)
+- Ako korisnik pita o propisima zaštite na radu u BiH, pomozi uz napomenu da provjere sa nadležnim tijelima
 - Odgovaraj kratko i jasno, bez dugih uvoda`;
     } else {
-        return `You are Zia, an advanced AI assistant for eZNR — a digital platform for occupational safety and fire safety in Bosnia and Herzegovina. You communicate in English.
+        return `You are Zia, an advanced AI assistant for eZNR — a digital platform for occupational safety in Bosnia and Herzegovina. You communicate in English.
 
 YOUR ROLE:
 - Help users navigate the application
 - Explain the purpose of each page and module
 - Provide workflow tips and best practices for occupational safety
 - Direct users to the appropriate application sections
+- Answer questions about REAL DATA from the app using the LIVE DATA below
 
 ${pageDesc}
 
 APPLICATION PAGES:
 ${pagesText}
 
+LIVE APP DATA (updated in real time):
+${dataContext || 'No data in the database.'}
+
 INSTRUCTIONS:
 - Be friendly, professional, and concise
 - When recommending a page, mention its path in format: [Name](path)
-- Focus on helping within the eZNR platform
-- If users ask about specific occupational safety regulations in BiH, help them while noting to always verify with competent authorities
+- MANDATORY: When a user asks who is on sick leave, who has expired certificates, etc. — name SPECIFIC PEOPLE from the LIVE DATA above
+- For sick leave/injuries link to [Injury List](/dashboard/injury-list) and [Disease Report](/dashboard/diseases)
+- For certificates link to [Workers](/dashboard/workers)
+- For equipment link to [Equipment](/dashboard/equipment)
 - Keep responses short and clear, without long introductions`;
     }
 }
@@ -313,7 +400,7 @@ export default function AIAssistant() {
         if (!existingHistory) chatHistoryRef.current = newHistory;
 
         setIsLoading(true);
-        const systemPrompt = buildSystemPrompt(lang, pathname);
+        const systemPrompt = buildSystemPrompt(lang, pathname, buildDataContext(lang));
         const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-lite-001'];
 
         for (let i = 0; i < MODELS.length; i++) {

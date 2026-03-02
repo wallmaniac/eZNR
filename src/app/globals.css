@@ -433,13 +433,27 @@ a:hover {
 }
 
 .btn-dark {
-  background: linear-gradient(135deg, var(--dark), var(--dark-light));
-  color: white;
+  background: linear-gradient(135deg, #0B2A3C, #143d54);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .btn-dark:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow-lg);
+  background: linear-gradient(135deg, #143d54, #1a4f6e);
+}
+
+/* In dark mode, btn-dark uses a visible contrasted style */
+[data-theme="dark"] .btn-dark {
+  background: linear-gradient(135deg, #1e3a4f, #2a5070);
+  color: #e2f0fb;
+  border: 1px solid rgba(100, 180, 230, 0.25);
+}
+
+[data-theme="dark"] .btn-dark:hover {
+  background: linear-gradient(135deg, #2a5070, #336080);
+  border-color: rgba(100, 180, 230, 0.45);
 }
 
 .btn-outline {
