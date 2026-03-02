@@ -7,6 +7,7 @@ import {
     COLLECTIONS, getOrgUnitName, getWorkplaceName,
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
@@ -37,6 +38,7 @@ export default function WorkersPage() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
+    const [viewWorkerId, setViewWorkerId] = useState(null);
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
     // Certificate form state
@@ -631,140 +633,165 @@ export default function WorkersPage() {
     // ── LIST VIEW ──
 
     return (
-        <div className="animate-fadeIn">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                👷 {t('workers')}
-            </h1>
+        <>
+            <div className="animate-fadeIn">
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                    👷 {t('workers')}
+                </h1>
 
-            <div className="card">
-                <div className="card-body">
-                    {/* Toolbar */}
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>
-                            + {t('add')}
-                        </button>
-                        <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
-                            <input
-                                placeholder={t('searchBtn') + '...'}
-                                value={searchTerm}
-                                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
-                            />
-                            <button className="btn btn-ghost btn-sm" onClick={() => setPage(1)}>{t('searchBtn')}</button>
-                        </div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
-                            {t('formerWorkers')}
-                        </label>
-                        <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                            <button className="btn btn-dark btn-sm" onClick={() => {
-                                const el = document.getElementById('group-action-menu');
-                                if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-                            }}>{t('selectGroupAction')} ▼</button>
-                            <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
-                                <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
-                                <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                <div className="card">
+                    <div className="card-body">
+                        {/* Toolbar */}
+                        <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <button className="btn btn-primary btn-sm" onClick={handleNew}>
+                                + {t('add')}
+                            </button>
+                            <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
+                                <input
+                                    placeholder={t('searchBtn') + '...'}
+                                    value={searchTerm}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+                                />
+                                <button className="btn btn-ghost btn-sm" onClick={() => setPage(1)}>{t('searchBtn')}</button>
+                            </div>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
+                                {t('formerWorkers')}
+                            </label>
+                            <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                                <button className="btn btn-dark btn-sm" onClick={() => {
+                                    const el = document.getElementById('group-action-menu');
+                                    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+                                }}>{t('selectGroupAction')} ▼</button>
+                                <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
+                                    <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
+                                    <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
+                                    <div className="dropdown-divider" />
+                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Table */}
-                    <div className="data-table-wrapper">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th style={{ width: 100 }}>{t('actions')}</th>
-                                    <th>{t('workerName')} ↑</th>
-                                    <th>{t('workerSurname')} ↑</th>
-                                    <th>{t('oib')}</th>
-                                    <th>{t('orgUnit')}</th>
-                                    <th>{t('workplace')}</th>
-                                    <th><input type="checkbox" /></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {pagedWorkers.length === 0 ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : (
-                                    pagedWorkers.map((w) => (
-                                        <tr key={w.id}>
-                                            <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                                    <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                        onClick={() => handleEdit(w)}>▶</button>
-                                                    <button className="btn btn-primary btn-sm"
-                                                        onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
-                                                        {t('actions')} ▼
-                                                    </button>
-                                                </div>
-                                                {actionMenuId === w.id && (
-                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 200 }}>
-                                                        <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
-                                                        <div className="dropdown-submenu">
-                                                            <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>📄 {t('enterForm')} ▶</button>
-                                                            <div className="dropdown-menu">
-                                                                <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro1')}>RO-1</button>
-                                                                <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro2')}>RO-2</button>
-                                                                <button className="dropdown-item" onClick={() => router.push('/dashboard/referral-ra1')}>RA-1</button>
-                                                                <button className="dropdown-item" onClick={() => router.push('/dashboard/night-work')}>NR-1</button>
-                                                                <button className="dropdown-item" onClick={() => router.push('/dashboard/diseases')}>PB</button>
-                                                                <button className="dropdown-item" onClick={() => router.push('/dashboard/injuries')}>{lang === 'bs' ? 'Ozljeda na radu' : 'Work injury'}</button>
-                                                            </div>
-                                                        </div>
-                                                        <div className="dropdown-submenu">
-                                                            <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>🖨️ {t('print')} ▶</button>
-                                                            <div className="dropdown-menu">
-                                                                <button className="dropdown-item" onClick={() => window.print()}>EK-1</button>
-                                                                <button className="dropdown-item" onClick={() => window.print()}>EK-2</button>
-                                                                <button className="dropdown-item" onClick={() => window.print()}>EK-ZS</button>
-                                                                <button className="dropdown-item" onClick={() => window.print()}>EK-PP</button>
-                                                                <button className="dropdown-item" onClick={() => window.print()}>OZO - {lang === 'bs' ? 'Potpis' : 'Signature'}</button>
-                                                            </div>
-                                                        </div>
-                                                        <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/archive'); }}>📁 {t('files')}</button>
-                                                        <button className="dropdown-item" onClick={() => { setActionMenuId(null); alert(lang === 'bs' ? 'Funkcija preuzimanja dolazi uskoro.' : 'Download coming soon.'); }}>⬇️ {t('downloadFiles')}</button>
-                                                        <div className="dropdown-divider" />
-                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
+                        {/* Table */}
+                        <div className="data-table-wrapper">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: 100 }}>{t('actions')}</th>
+                                        <th>{t('workerName')} ↑</th>
+                                        <th>{t('workerSurname')} ↑</th>
+                                        <th>{t('oib')}</th>
+                                        <th>{t('orgUnit')}</th>
+                                        <th>{t('workplace')}</th>
+                                        <th><input type="checkbox" /></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {pagedWorkers.length === 0 ? (
+                                        <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                    ) : (
+                                        pagedWorkers.map((w) => (
+                                            <tr key={w.id}>
+                                                <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                        <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                                            onClick={() => handleEdit(w)}>▶</button>
+                                                        <button className="btn btn-primary btn-sm"
+                                                            onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
+                                                            {t('actions')} ▼
+                                                        </button>
                                                     </div>
-                                                )}
-                                            </td>
-                                            <td style={{ fontWeight: 600 }}>{w.ime}</td>
-                                            <td style={{ fontWeight: 600 }}>{w.prezime}</td>
-                                            <td><code style={{ fontSize: '0.85rem' }}>{w.oib || w.jmbg}</code></td>
-                                            <td>{getOrgUnitName(w.orgJedinicaId)}</td>
-                                            <td>{getWorkplaceName(w.radnoMjestoId)}</td>
-                                            <td><input type="checkbox" /></td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {/* Pagination */}
-                    <div className="pagination">
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            {filteredWorkers.length > 0 ? `${(page - 1) * perPage + 1} - ${Math.min(page * perPage, filteredWorkers.length)}` : '0'} {t('of')} {filteredWorkers.length} {t('records')}
+                                                    {actionMenuId === w.id && (
+                                                        <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 200 }}>
+                                                            <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
+                                                            <div className="dropdown-submenu">
+                                                                <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>📄 {t('enterForm')} ▶</button>
+                                                                <div className="dropdown-menu">
+                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro1')}>RO-1</button>
+                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro2')}>RO-2</button>
+                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/referral-ra1')}>RA-1</button>
+                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/night-work')}>NR-1</button>
+                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/diseases')}>PB</button>
+                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/injuries')}>{lang === 'bs' ? 'Ozljeda na radu' : 'Work injury'}</button>
+                                                                </div>
+                                                            </div>
+                                                            <div className="dropdown-submenu">
+                                                                <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>🖨️ {t('print')} ▶</button>
+                                                                <div className="dropdown-menu">
+                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-1</button>
+                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-2</button>
+                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-ZS</button>
+                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-PP</button>
+                                                                    <button className="dropdown-item" onClick={() => window.print()}>OZO - {lang === 'bs' ? 'Potpis' : 'Signature'}</button>
+                                                                </div>
+                                                            </div>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/archive'); }}>📁 {t('files')}</button>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); alert(lang === 'bs' ? 'Funkcija preuzimanja dolazi uskoro.' : 'Download coming soon.'); }}>⬇️ {t('downloadFiles')}</button>
+                                                            <div className="dropdown-divider" />
+                                                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                <td style={{ fontWeight: 600 }}>
+                                                    <button
+                                                        onClick={() => setViewWorkerId(w.id)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
+                                                    >{w.ime}</button>
+                                                </td>
+                                                <td style={{ fontWeight: 600 }}>
+                                                    <button
+                                                        onClick={() => setViewWorkerId(w.id)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
+                                                    >{w.prezime}</button>
+                                                </td>
+                                                <td><code style={{ fontSize: '0.85rem' }}>{w.oib || w.jmbg}</code></td>
+                                                <td>{getOrgUnitName(w.orgJedinicaId)}</td>
+                                                <td>{getWorkplaceName(w.radnoMjestoId)}</td>
+                                                <td><input type="checkbox" /></td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1}>⏮</button>
-                            <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>◀</button>
-                            <button className="pagination-btn active">{page}</button>
-                            <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>▶</button>
-                            <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>⏭</button>
-                            <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
-                                style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
-                                <option value={10}>10 {t('perPage')}</option>
-                                <option value={25}>25 {t('perPage')}</option>
-                                <option value={50}>50 {t('perPage')}</option>
-                            </select>
+
+                        {/* Pagination */}
+                        <div className="pagination">
+                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                {filteredWorkers.length > 0 ? `${(page - 1) * perPage + 1} - ${Math.min(page * perPage, filteredWorkers.length)}` : '0'} {t('of')} {filteredWorkers.length} {t('records')}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1}>⏮</button>
+                                <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>◀</button>
+                                <button className="pagination-btn active">{page}</button>
+                                <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>▶</button>
+                                <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>⏭</button>
+                                <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+                                    style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
+                                    <option value={10}>10 {t('perPage')}</option>
+                                    <option value={25}>25 {t('perPage')}</option>
+                                    <option value={50}>50 {t('perPage')}</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            {/* Worker Profile Modal */}
+            {
+                viewWorkerId && (
+                    <WorkerProfileModal
+                        workerId={viewWorkerId}
+                        onClose={() => setViewWorkerId(null)}
+                        onSaved={() => { loadData(); setViewWorkerId(null); }}
+                    />
+                )
+            }
+        </>
     );
 }
 

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
@@ -19,6 +20,7 @@ export default function InjuriesPage() {
   const [injuries, setInjuries] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewWorkerId, setViewWorkerId] = useState(null);
 
   // ── Form state ──
   const [showForm, setShowForm] = useState(false);
@@ -139,186 +141,202 @@ export default function InjuriesPage() {
   };
 
   return (
-    <div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>🩹 {t('injuryReport')}</h1>
+    <>
+      <div className="animate-fadeIn">
+        <h1 style={{ marginBottom: 24 }}>🩹 {t('injuryReport')}</h1>
 
-      {/* Modal */}
-      {showForm && (
-        <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>🩹 {editingId ? (lang === 'bs' ? 'Uredi prijavu' : 'Edit report') : t('injuryReport')}</h2>
-              <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
-            </div>
-            <div className="modal-body">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        {/* Modal */}
+        {showForm && (
+          <div className="modal-overlay" onClick={() => setShowForm(false)}>
+            <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>🩹 {editingId ? (lang === 'bs' ? 'Uredi prijavu' : 'Edit report') : t('injuryReport')}</h2>
+                <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+              </div>
+              <div className="modal-body">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-                {/* Worker picker with search */}
-                <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
-                  <label className="form-label">{t('worker')} *</label>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      className="form-input"
-                      placeholder={lang === 'bs' ? '🔍 Pretraži radnika...' : '🔍 Search worker...'}
-                      value={workerSearch}
-                      onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('radnikId', ''); set('radnikIme', ''); }}
-                      onFocus={() => setShowWorkerDropdown(true)}
-                      autoComplete="off"
-                    />
-                    {showWorkerDropdown && (
-                      <div style={{
-                        position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-                        background: 'var(--bg-card)', border: '1px solid var(--border)',
-                        borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
-                        zIndex: 100, maxHeight: 220, overflowY: 'auto',
-                      }}>
-                        {filteredWorkers.length === 0 ? (
-                          <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                            {lang === 'bs' ? 'Nema radnika' : 'No workers found'}
-                          </div>
-                        ) : filteredWorkers.map(w => (
-                          <button key={w.id}
-                            style={{
-                              display: 'flex', alignItems: 'center', gap: 10,
-                              padding: '10px 16px', width: '100%', border: 'none',
-                              background: 'transparent', cursor: 'pointer', textAlign: 'left',
-                              borderBottom: '1px solid var(--border-light)',
-                            }}
-                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            onClick={() => handleWorkerSelect(w)}
-                          >
-                            <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>
-                              {w.ime?.[0]}{w.prezime?.[0]}
-                            </span>
-                            <div>
-                              <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)' }}>{w.ime} {w.prezime}</div>
-                              {w.evidencijskiBroj && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Ev. br: {w.evidencijskiBroj}</div>}
+                  {/* Worker picker with search */}
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
+                    <label className="form-label">{t('worker')} *</label>
+                    <div style={{ position: 'relative' }}>
+                      <input
+                        className="form-input"
+                        placeholder={lang === 'bs' ? '🔍 Pretraži radnika...' : '🔍 Search worker...'}
+                        value={workerSearch}
+                        onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('radnikId', ''); set('radnikIme', ''); }}
+                        onFocus={() => setShowWorkerDropdown(true)}
+                        autoComplete="off"
+                      />
+                      {showWorkerDropdown && (
+                        <div style={{
+                          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
+                          background: 'var(--bg-card)', border: '1px solid var(--border)',
+                          borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                          zIndex: 100, maxHeight: 220, overflowY: 'auto',
+                        }}>
+                          {filteredWorkers.length === 0 ? (
+                            <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                              {lang === 'bs' ? 'Nema radnika' : 'No workers found'}
                             </div>
-                          </button>
-                        ))}
+                          ) : filteredWorkers.map(w => (
+                            <button key={w.id}
+                              style={{
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                padding: '10px 16px', width: '100%', border: 'none',
+                                background: 'transparent', cursor: 'pointer', textAlign: 'left',
+                                borderBottom: '1px solid var(--border-light)',
+                              }}
+                              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                              onClick={() => handleWorkerSelect(w)}
+                            >
+                              <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>
+                                {w.ime?.[0]}{w.prezime?.[0]}
+                              </span>
+                              <div>
+                                <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)' }}>{w.ime} {w.prezime}</div>
+                                {w.evidencijskiBroj && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Ev. br: {w.evidencijskiBroj}</div>}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {formData.radnikId && (
+                      <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>
+                        ✓ {lang === 'bs' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}
                       </div>
                     )}
                   </div>
-                  {formData.radnikId && (
-                    <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>
-                      ✓ {lang === 'bs' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}
-                    </div>
-                  )}
-                </div>
 
-                <div className="form-group">
-                  <label className="form-label">{t('date')} *</label>
-                  <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'bs' ? 'Vrijeme povrede' : 'Time of injury'}</label>
-                  <input className="form-input" type="time" value={formData.vrijemePovrede} onChange={e => set('vrijemePovrede', e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'bs' ? 'Tip povrede' : 'Injury type'}</label>
-                  <select className="form-select" value={formData.tip} onChange={e => set('tip', e.target.value)}>
-                    <option value="laka">{lang === 'bs' ? 'Laka' : 'Minor'}</option>
-                    <option value="teska">{lang === 'bs' ? 'Teška' : 'Severe'}</option>
-                    <option value="smrtna">{lang === 'bs' ? 'Smrtna' : 'Fatal'}</option>
-                  </select>
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'bs' ? 'Status' : 'Status'}</label>
-                  <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
-                    <option value="prijavljena">{lang === 'bs' ? 'Prijavljena' : 'Reported'}</option>
-                    <option value="u_obradi">{lang === 'bs' ? 'U obradi' : 'Processing'}</option>
-                    <option value="zatvorena">{lang === 'bs' ? 'Zatvorena' : 'Closed'}</option>
-                  </select>
-                </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">{t('location')}</label>
-                  <input className="form-input" value={formData.lokacija} onChange={e => set('lokacija', e.target.value)} placeholder={lang === 'bs' ? 'Npr. Hala 2, Skladište...' : 'E.g. Hall 2, Warehouse...'} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'bs' ? 'Povrijeđeni dio tijela' : 'Injured body part'}</label>
-                  <input className="form-input" value={formData.povredjeniDio} onChange={e => set('povredjeniDio', e.target.value)} />
-                </div>
-                <div className="form-group">
-                  <label className="form-label">{lang === 'bs' ? 'Uzrok povrede' : 'Cause of injury'}</label>
-                  <input className="form-input" value={formData.uzrokPovrede} onChange={e => set('uzrokPovrede', e.target.value)} />
-                </div>
-                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                  <label className="form-label">{t('description')}</label>
-                  <textarea className="form-input" rows={3} value={formData.opisPovrede} onChange={e => set('opisPovrede', e.target.value)} placeholder={lang === 'bs' ? 'Opis okolnosti povrede...' : 'Describe the circumstances of the injury...'} />
-                </div>
-                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <input type="checkbox" id="prvaPomoc" checked={formData.prvaPomoć} onChange={e => set('prvaPomoć', e.target.checked)} style={{ width: 16, height: 16 }} />
-                  <label htmlFor="prvaPomoc" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Pružena prva pomoć' : 'First aid provided'}</label>
-                </div>
-                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <input type="checkbox" id="bolovanje" checked={formData.bolovanje} onChange={e => set('bolovanje', e.target.checked)} style={{ width: 16, height: 16 }} />
-                  <label htmlFor="bolovanje" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</label>
+                  <div className="form-group">
+                    <label className="form-label">{t('date')} *</label>
+                    <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{lang === 'bs' ? 'Vrijeme povrede' : 'Time of injury'}</label>
+                    <input className="form-input" type="time" value={formData.vrijemePovrede} onChange={e => set('vrijemePovrede', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{lang === 'bs' ? 'Tip povrede' : 'Injury type'}</label>
+                    <select className="form-select" value={formData.tip} onChange={e => set('tip', e.target.value)}>
+                      <option value="laka">{lang === 'bs' ? 'Laka' : 'Minor'}</option>
+                      <option value="teska">{lang === 'bs' ? 'Teška' : 'Severe'}</option>
+                      <option value="smrtna">{lang === 'bs' ? 'Smrtna' : 'Fatal'}</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{lang === 'bs' ? 'Status' : 'Status'}</label>
+                    <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
+                      <option value="prijavljena">{lang === 'bs' ? 'Prijavljena' : 'Reported'}</option>
+                      <option value="u_obradi">{lang === 'bs' ? 'U obradi' : 'Processing'}</option>
+                      <option value="zatvorena">{lang === 'bs' ? 'Zatvorena' : 'Closed'}</option>
+                    </select>
+                  </div>
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">{t('location')}</label>
+                    <input className="form-input" value={formData.lokacija} onChange={e => set('lokacija', e.target.value)} placeholder={lang === 'bs' ? 'Npr. Hala 2, Skladište...' : 'E.g. Hall 2, Warehouse...'} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{lang === 'bs' ? 'Povrijeđeni dio tijela' : 'Injured body part'}</label>
+                    <input className="form-input" value={formData.povredjeniDio} onChange={e => set('povredjeniDio', e.target.value)} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">{lang === 'bs' ? 'Uzrok povrede' : 'Cause of injury'}</label>
+                    <input className="form-input" value={formData.uzrokPovrede} onChange={e => set('uzrokPovrede', e.target.value)} />
+                  </div>
+                  <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                    <label className="form-label">{t('description')}</label>
+                    <textarea className="form-input" rows={3} value={formData.opisPovrede} onChange={e => set('opisPovrede', e.target.value)} placeholder={lang === 'bs' ? 'Opis okolnosti povrede...' : 'Describe the circumstances of the injury...'} />
+                  </div>
+                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input type="checkbox" id="prvaPomoc" checked={formData.prvaPomoć} onChange={e => set('prvaPomoć', e.target.checked)} style={{ width: 16, height: 16 }} />
+                    <label htmlFor="prvaPomoc" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Pružena prva pomoć' : 'First aid provided'}</label>
+                  </div>
+                  <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <input type="checkbox" id="bolovanje" checked={formData.bolovanje} onChange={e => set('bolovanje', e.target.checked)} style={{ width: 16, height: 16 }} />
+                    <label htmlFor="bolovanje" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</label>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
-              <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
+              <div className="modal-footer">
+                <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Main card */}
-      <div className="card">
-        <div className="card-body">
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-            <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
-            <input
-              className="form-input"
-              style={{ maxWidth: 280 }}
-              placeholder={lang === 'bs' ? '🔍 Pretraži prijave...' : '🔍 Search reports...'}
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              {filtered.length} {lang === 'bs' ? 'prijava' : 'reports'}
-            </span>
-          </div>
+        {/* Main card */}
+        <div className="card">
+          <div className="card-body">
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
+              <input
+                className="form-input"
+                style={{ maxWidth: 280 }}
+                placeholder={lang === 'bs' ? '🔍 Pretraži prijave...' : '🔍 Search reports...'}
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <span style={{ marginLeft: 'auto', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                {filtered.length} {lang === 'bs' ? 'prijava' : 'reports'}
+              </span>
+            </div>
 
-          <div className="data-table-wrapper">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>{t('actions')}</th>
-                  <th>{t('worker')}</th>
-                  <th>{t('date')}</th>
-                  <th>{lang === 'bs' ? 'Tip' : 'Type'}</th>
-                  <th>{t('location')}</th>
-                  <th>{t('description')}</th>
-                  <th>{t('status')}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                ) : filtered.map(inj => (
-                  <tr key={inj.id}>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => openEdit(inj)}>✏️</button>
-                        <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={() => handleDelete(inj.id)}>🗑️</button>
-                      </div>
-                    </td>
-                    <td style={{ fontWeight: 600 }}>{inj.radnikIme || '—'}</td>
-                    <td>{inj.datum ? new Date(inj.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : '—'}</td>
-                    <td>{tipBadge(inj.tip)}</td>
-                    <td>{inj.lokacija || '—'}</td>
-                    <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.opisPovrede || '—'}</td>
-                    <td>{statusBadge(inj.status)}</td>
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{t('actions')}</th>
+                    <th>{t('worker')}</th>
+                    <th>{t('date')}</th>
+                    <th>{lang === 'bs' ? 'Tip' : 'Type'}</th>
+                    <th>{t('location')}</th>
+                    <th>{t('description')}</th>
+                    <th>{t('status')}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filtered.length === 0 ? (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                  ) : filtered.map(inj => (
+                    <tr key={inj.id}>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => openEdit(inj)}>✏️</button>
+                          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={() => handleDelete(inj.id)}>🗑️</button>
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>
+                        <button
+                          onClick={() => { const w = workers.find(w => w.id === inj.radnikId); if (w) setViewWorkerId(w.id); }}
+                          style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                          title={inj.radnikId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
+                        >{inj.radnikIme || '—'}</button>
+                      </td>
+                      <td>{inj.datum ? new Date(inj.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : '—'}</td>
+                      <td>{tipBadge(inj.tip)}</td>
+                      <td>{inj.lokacija || '—'}</td>
+                      <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.opisPovrede || '—'}</td>
+                      <td>{statusBadge(inj.status)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {viewWorkerId && (
+        <WorkerProfileModal
+          workerId={viewWorkerId}
+          onClose={() => setViewWorkerId(null)}
+          onSaved={() => setViewWorkerId(null)}
+        />
+      )}
+    </>
   );
 }

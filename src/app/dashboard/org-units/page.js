@@ -1,10 +1,12 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, COLLECTIONS,
     getChildOrgUnits, getWorkersInOrgUnit, getById,
 } from '@/lib/dataStore';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const emptyOU = {
     naziv: '', skraceniNaziv: '', parentId: null,
@@ -15,7 +17,9 @@ const emptyOU = {
 
 export default function OrgUnitsPage() {
     const { t, lang } = useLanguage();
+    const router = useRouter();
     const [units, setUnits] = useState([]);
+    const [workers, setWorkers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyOU });
@@ -23,8 +27,13 @@ export default function OrgUnitsPage() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
 
+    // Workers panel state
+    const [workersPanel, setWorkersPanel] = useState(null); // { id, naziv }
+    const [viewWorkerId, setViewWorkerId] = useState(null);
+
     const loadData = useCallback(() => {
         setUnits(getAll(COLLECTIONS.ORG_UNITS));
+        setWorkers(getAll(COLLECTIONS.WORKERS));
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
@@ -43,6 +52,9 @@ export default function OrgUnitsPage() {
         const parent = units.find(u => u.id === id);
         return parent ? parent.naziv : '-';
     };
+
+    const getWorkersForUnit = (unitId) =>
+        workers.filter(w => w.aktivan !== false && (w.orgJedinicaId === unitId || w.orgJedinica === unitId));
 
     const handleNew = (parentId = null) => {
         setFormData({ ...emptyOU, parentId });
@@ -64,8 +76,8 @@ export default function OrgUnitsPage() {
             alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima podorganizacije.' : 'Cannot delete org. unit with child units.');
             return;
         }
-        const workers = getWorkersInOrgUnit(id);
-        if (workers.length > 0) {
+        const unitWorkers = getWorkersInOrgUnit(id);
+        if (unitWorkers.length > 0) {
             alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima zaposlenike.' : 'Cannot delete org. unit with employees.');
             return;
         }
@@ -94,11 +106,95 @@ export default function OrgUnitsPage() {
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const openWorkersPanel = (unit) => {
+        setWorkersPanel(unit);
+        setActionMenuId(null);
+    };
+
+    const panelWorkers = workersPanel ? getWorkersForUnit(workersPanel.id) : [];
+
     return (
         <div className="animate-fadeIn">
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 🏢 {t('orgUnits')}
             </h1>
+
+            {/* Workers Panel Modal */}
+            {workersPanel && (
+                <div className="modal-overlay" onClick={() => setWorkersPanel(null)}>
+                    <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <h2>👥 {lang === 'bs' ? 'Radnici' : 'Workers'} — {workersPanel.naziv}</h2>
+                                <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                                    {panelWorkers.length} {lang === 'bs' ? 'zaposlenih' : 'employees'}
+                                </div>
+                            </div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setWorkersPanel(null)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ padding: 0, maxHeight: 480, overflowY: 'auto' }}>
+                            {panelWorkers.length === 0 ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    {lang === 'bs' ? 'Nema zaposlenika u ovoj organizacijskoj jedinici.' : 'No employees in this organizational unit.'}
+                                </div>
+                            ) : panelWorkers.map((w, idx) => {
+                                const workplaces = getAll(COLLECTIONS.WORKPLACES);
+                                const wp = workplaces.find(p => p.id === w.radnoMjestoId);
+                                return (
+                                    <div key={w.id}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 14,
+                                            padding: '12px 20px',
+                                            borderBottom: idx < panelWorkers.length - 1 ? '1px solid var(--border-light)' : 'none',
+                                            cursor: 'pointer',
+                                            transition: 'background 0.15s',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        onClick={() => { setViewWorkerId(w.id); }}
+                                    >
+                                        <div style={{
+                                            width: 42, height: 42, borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, var(--primary), #4CAF50)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
+                                        }}>
+                                            {w.ime?.[0]}{w.prezime?.[0]}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text)' }}>
+                                                {w.ime} {w.prezime}
+                                            </div>
+                                            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                                {wp ? wp.naziv : (lang === 'bs' ? 'Bez radnog mjesta' : 'No workplace')}
+                                                {w.evidencijskiBroj ? ` · Ev.br: ${w.evidencijskiBroj}` : ''}
+                                            </div>
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600 }}>
+                                            {lang === 'bs' ? 'Otvori →' : 'Open →'}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-ghost" onClick={() => setWorkersPanel(null)}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
+                            <button className="btn btn-primary" onClick={() => { setWorkersPanel(null); router.push('/dashboard/workers'); }}>
+                                👥 {lang === 'bs' ? 'Svi radnici' : 'All workers'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Worker Profile Modal */}
+            {viewWorkerId && (
+                <WorkerProfileModal
+                    workerId={viewWorkerId}
+                    onClose={() => setViewWorkerId(null)}
+                    onSaved={() => { loadData(); setViewWorkerId(null); }}
+                />
+            )}
 
             {/* Form Modal */}
             {showForm && (
@@ -202,32 +298,69 @@ export default function OrgUnitsPage() {
                                 {filteredUnits.length === 0 ? (
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : (
-                                    filteredUnits.map((u) => (
-                                        <tr key={u.id}>
-                                            <td style={{ position: 'relative' }} ref={actionMenuId === u.id ? actionRef : null}>
-                                                <button className="btn btn-primary btn-sm"
-                                                    onClick={() => setActionMenuId(actionMenuId === u.id ? null : u.id)}>
-                                                    {t('actions')} ▼
-                                                </button>
-                                                {actionMenuId === u.id && (
-                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 220 }}>
-                                                        <button className="dropdown-item" onClick={() => handleEdit(u)}>📂 {t('open')}</button>
-                                                        <button className="dropdown-item" onClick={() => handleNew(u.id)}>➕ {lang === 'bs' ? 'Dodaj podorganizaciju' : 'Add sub-unit'}</button>
-                                                        <button className="dropdown-item">👥 {lang === 'bs' ? 'Pregled zaposlenih' : 'View employees'}</button>
-                                                        <div className="dropdown-divider" />
-                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(u.id)}>🗑️ {t('delete')}</button>
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td style={{ fontWeight: 600, paddingLeft: u.parentId ? 24 : 0 }}>
-                                                {u.parentId ? '└ ' : ''}{u.naziv}
-                                            </td>
-                                            <td>{u.skraceniNaziv}</td>
-                                            <td>{getParentName(u.parentId)}</td>
-                                            <td>{u.mjesto}</td>
-                                            <td><span className="badge badge-info">{getWorkersInOrgUnit(u.id).length}</span></td>
-                                        </tr>
-                                    ))
+                                    filteredUnits.map((u) => {
+                                        const count = getWorkersInOrgUnit(u.id).length;
+                                        return (
+                                            <tr key={u.id}>
+                                                <td style={{ position: 'relative' }} ref={actionMenuId === u.id ? actionRef : null}>
+                                                    <button className="btn btn-primary btn-sm"
+                                                        onClick={() => setActionMenuId(actionMenuId === u.id ? null : u.id)}>
+                                                        {t('actions')} ▼
+                                                    </button>
+                                                    {actionMenuId === u.id && (
+                                                        <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 220 }}>
+                                                            <button className="dropdown-item" onClick={() => handleEdit(u)}>📂 {t('open')}</button>
+                                                            <button className="dropdown-item" onClick={() => openWorkersPanel(u)}>👥 {lang === 'bs' ? 'Pregled zaposlenih' : 'View employees'}</button>
+                                                            <button className="dropdown-item" onClick={() => handleNew(u.id)}>➕ {lang === 'bs' ? 'Dodaj podorganizaciju' : 'Add sub-unit'}</button>
+                                                            <div className="dropdown-divider" />
+                                                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(u.id)}>🗑️ {t('delete')}</button>
+                                                        </div>
+                                                    )}
+                                                </td>
+                                                {/* Clickable name */}
+                                                <td style={{ fontWeight: 600, paddingLeft: u.parentId ? 24 : 0 }}>
+                                                    <button
+                                                        onClick={() => openWorkersPanel(u)}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: 'pointer',
+                                                            color: 'var(--text)', fontWeight: 600, fontSize: 'inherit',
+                                                            textAlign: 'left', padding: 0, fontFamily: 'inherit',
+                                                            textDecoration: 'underline', textDecorationStyle: 'dotted',
+                                                            textDecorationColor: 'var(--text-muted)',
+                                                        }}
+                                                        title={lang === 'bs' ? 'Klikni za pregled radnika' : 'Click to view workers'}
+                                                    >
+                                                        {u.parentId ? '└ ' : ''}{u.naziv}
+                                                    </button>
+                                                </td>
+                                                <td>{u.skraceniNaziv}</td>
+                                                <td>{getParentName(u.parentId)}</td>
+                                                <td>{u.mjesto}</td>
+                                                {/* Clickable badge */}
+                                                <td>
+                                                    <button
+                                                        onClick={() => openWorkersPanel(u)}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: count > 0 ? 'pointer' : 'default',
+                                                            padding: 0,
+                                                        }}
+                                                        title={count > 0 ? (lang === 'bs' ? 'Klikni za pregled radnika' : 'Click to view workers') : ''}
+                                                    >
+                                                        <span className={`badge ${count > 0 ? 'badge-primary' : 'badge-info'}`}
+                                                            style={{
+                                                                cursor: count > 0 ? 'pointer' : 'default',
+                                                                transition: 'transform 0.15s',
+                                                            }}
+                                                            onMouseEnter={e => count > 0 && (e.target.style.transform = 'scale(1.1)')}
+                                                            onMouseLeave={e => (e.target.style.transform = 'scale(1)')}
+                                                        >
+                                                            {count} {count > 0 ? '👁' : ''}
+                                                        </span>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })
                                 )}
                             </tbody>
                         </table>

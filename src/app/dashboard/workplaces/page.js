@@ -1,10 +1,12 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, COLLECTIONS,
     getWorkersInWorkplace, getOrgUnitName,
 } from '@/lib/dataStore';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const emptyWP = {
     naziv: '', oznaka: '', strucnaSprema: '', grupaRM: '',
@@ -14,7 +16,9 @@ const emptyWP = {
 
 export default function WorkplacesPage() {
     const { t, lang } = useLanguage();
+    const router = useRouter();
     const [items, setItems] = useState([]);
+    const [workers, setWorkers] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyWP });
@@ -23,7 +27,15 @@ export default function WorkplacesPage() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
 
-    const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.WORKPLACES)); }, []);
+    // Workers panel state
+    const [workersPanel, setWorkersPanel] = useState(null); // workplace object
+    const [viewWorkerId, setViewWorkerId] = useState(null);
+
+    const loadData = useCallback(() => {
+        setItems(getAll(COLLECTIONS.WORKPLACES));
+        setWorkers(getAll(COLLECTIONS.WORKERS));
+    }, []);
+
     useEffect(() => { loadData(); }, [loadData]);
     useEffect(() => {
         const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
@@ -35,11 +47,17 @@ export default function WorkplacesPage() {
         !searchTerm || w.naziv.toLowerCase().includes(searchTerm.toLowerCase()) || (w.oznaka || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const getWorkersForWP = (wp) =>
+        workers.filter(w =>
+            w.aktivan !== false &&
+            (w.radnoMjestoId === wp.id || w.radnoMjesto === wp.naziv)
+        );
+
     const handleNew = () => { setFormData({ ...emptyWP }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
     const handleDelete = (id) => {
-        const workers = getWorkersInWorkplace(id);
-        if (workers.length > 0) {
+        const wpWorkers = getWorkersInWorkplace(id);
+        if (wpWorkers.length > 0) {
             alert(lang === 'bs' ? 'Ne možete obrisati radno mjesto koje ima zaposlenike.' : 'Cannot delete workplace with assigned workers.');
             return;
         }
@@ -52,10 +70,91 @@ export default function WorkplacesPage() {
     };
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
 
+    const openWorkersPanel = (wp) => { setWorkersPanel(wp); setActionMenuId(null); };
+
+    const panelWorkers = workersPanel ? getWorkersForWP(workersPanel) : [];
+
     return (
         <div className="animate-fadeIn">
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>🔧 {t('workplaces')}</h1>
 
+            {/* Workers Panel Modal */}
+            {workersPanel && (
+                <div className="modal-overlay" onClick={() => setWorkersPanel(null)}>
+                    <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <div>
+                                <h2>👥 {lang === 'bs' ? 'Radnici' : 'Workers'} — {workersPanel.naziv}</h2>
+                                <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
+                                    {panelWorkers.length} {lang === 'bs' ? 'zaposlenih na ovom radnom mjestu' : 'employees at this workplace'}
+                                    {workersPanel.strucnaSprema ? ` · ${lang === 'bs' ? 'Zahtj. SSS' : 'Req. edu'}: ${workersPanel.strucnaSprema}` : ''}
+                                </div>
+                            </div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setWorkersPanel(null)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ padding: 0, maxHeight: 480, overflowY: 'auto' }}>
+                            {panelWorkers.length === 0 ? (
+                                <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                    {lang === 'bs' ? 'Nema radnika na ovom radnom mjestu.' : 'No workers at this workplace.'}
+                                </div>
+                            ) : panelWorkers.map((w, idx) => {
+                                const ou = getAll(COLLECTIONS.ORG_UNITS).find(o => o.id === w.orgJedinicaId);
+                                return (
+                                    <div key={w.id}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', gap: 14,
+                                            padding: '12px 20px',
+                                            borderBottom: idx < panelWorkers.length - 1 ? '1px solid var(--border-light)' : 'none',
+                                            cursor: 'pointer', transition: 'background 0.15s',
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                        onClick={() => { setViewWorkerId(w.id); }}
+                                    >
+                                        <div style={{
+                                            width: 42, height: 42, borderRadius: '50%',
+                                            background: 'linear-gradient(135deg, var(--primary), #4CAF50)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'white', fontWeight: 700, fontSize: '0.9rem', flexShrink: 0,
+                                        }}>
+                                            {w.ime?.[0]}{w.prezime?.[0]}
+                                        </div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.92rem', color: 'var(--text)' }}>
+                                                {w.ime} {w.prezime}
+                                            </div>
+                                            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                                {ou ? ou.naziv : ''}
+                                                {w.evidencijskiBroj ? `${ou ? ' · ' : ''}Ev.br: ${w.evidencijskiBroj}` : ''}
+                                            </div>
+                                        </div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600 }}>
+                                            {lang === 'bs' ? 'Otvori →' : 'Open →'}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-ghost" onClick={() => setWorkersPanel(null)}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
+                            <button className="btn btn-primary" onClick={() => { setWorkersPanel(null); router.push('/dashboard/workers'); }}>
+                                👥 {lang === 'bs' ? 'Svi radnici' : 'All workers'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Worker Profile Modal */}
+            {viewWorkerId && (
+                <WorkerProfileModal
+                    workerId={viewWorkerId}
+                    onClose={() => setViewWorkerId(null)}
+                    onSaved={() => { loadData(); setViewWorkerId(null); }}
+                />
+            )}
+
+            {/* Form Modal */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
@@ -160,27 +259,57 @@ export default function WorkplacesPage() {
                             <tbody>
                                 {filtered.length === 0 ? (
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : filtered.map((w) => (
-                                    <tr key={w.id}>
-                                        <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
-                                            <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
-                                                {t('actions')} ▼
-                                            </button>
-                                            {actionMenuId === w.id && (
-                                                <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0 }}>
-                                                    <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
-                                                    <div className="dropdown-divider" />
-                                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td style={{ fontWeight: 600 }}>{w.naziv}</td>
-                                        <td>{w.strucnaSprema || '-'}</td>
-                                        <td>{w.grupaRM || '-'}</td>
-                                        <td><span className="badge badge-info">{getWorkersInWorkplace(w.id).length}</span></td>
-                                        <td><input type="checkbox" /></td>
-                                    </tr>
-                                ))}
+                                ) : filtered.map((w) => {
+                                    const count = getWorkersInWorkplace(w.id).length;
+                                    return (
+                                        <tr key={w.id}>
+                                            <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
+                                                <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
+                                                    {t('actions')} ▼
+                                                </button>
+                                                {actionMenuId === w.id && (
+                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0 }}>
+                                                        <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
+                                                        <button className="dropdown-item" onClick={() => openWorkersPanel(w)}>👥 {lang === 'bs' ? 'Pregled radnika' : 'View workers'}</button>
+                                                        <div className="dropdown-divider" />
+                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            {/* Clickable name */}
+                                            <td style={{ fontWeight: 600 }}>
+                                                <button
+                                                    onClick={() => openWorkersPanel(w)}
+                                                    style={{
+                                                        background: 'none', border: 'none', cursor: 'pointer',
+                                                        color: 'var(--text)', fontWeight: 600, fontSize: 'inherit',
+                                                        textAlign: 'left', padding: 0, fontFamily: 'inherit',
+                                                        textDecoration: 'underline', textDecorationStyle: 'dotted',
+                                                        textDecorationColor: 'var(--text-muted)',
+                                                    }}
+                                                    title={lang === 'bs' ? 'Klikni za pregled radnika' : 'Click to view workers'}
+                                                >
+                                                    {w.naziv}
+                                                </button>
+                                            </td>
+                                            <td>{w.strucnaSprema || '-'}</td>
+                                            <td>{w.grupaRM || '-'}</td>
+                                            {/* Clickable badge */}
+                                            <td>
+                                                <button onClick={() => openWorkersPanel(w)} style={{ background: 'none', border: 'none', cursor: count > 0 ? 'pointer' : 'default', padding: 0 }}>
+                                                    <span className={`badge ${count > 0 ? 'badge-primary' : 'badge-info'}`}
+                                                        style={{ cursor: count > 0 ? 'pointer' : 'default', transition: 'transform 0.15s' }}
+                                                        onMouseEnter={e => count > 0 && (e.target.style.transform = 'scale(1.1)')}
+                                                        onMouseLeave={e => (e.target.style.transform = 'scale(1)')}
+                                                    >
+                                                        {count} {count > 0 ? '👁' : ''}
+                                                    </span>
+                                                </button>
+                                            </td>
+                                            <td><input type="checkbox" /></td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>
