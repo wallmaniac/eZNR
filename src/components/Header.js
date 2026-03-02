@@ -146,6 +146,34 @@ export default function Header({ sidebarCollapsed }) {
                 zIndex: 90,
                 transition: 'left var(--transition-normal)',
             }}>
+                {/* ── Back / Forward navigation buttons ── */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 10, flexShrink: 0 }}>
+                    <button
+                        onClick={() => router.back()}
+                        title={lang === 'bs' ? 'Nazad (Alt+←)' : 'Back (Alt+←)'}
+                        style={{
+                            width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border)',
+                            background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
+                            transition: 'all 0.15s', flexShrink: 0,
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                    >&#8592;</button>
+                    <button
+                        onClick={() => router.forward()}
+                        title={lang === 'bs' ? 'Naprijed (Alt+→)' : 'Forward (Alt+→)'}
+                        style={{
+                            width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border)',
+                            background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                            justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
+                            transition: 'all 0.15s', flexShrink: 0,
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                    >&#8594;</button>
+                </div>
+
                 {/* ── Company Switcher ── LEFT of search */}
                 <div ref={companyRef} style={{ position: 'relative', marginRight: 12, flexShrink: 0 }}>
                     <button

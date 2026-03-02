@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
@@ -15,6 +16,7 @@ const EMPTY_FORM = {
 
 export default function InjuriesPage() {
   const { t, lang } = useLanguage();
+  const { markDirty, markClean } = useUnsavedChanges();
 
   // ── Data state ──
   const [injuries, setInjuries] = useState([]);
@@ -50,7 +52,7 @@ export default function InjuriesPage() {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
+  const set = (k, v) => { setFormData(f => ({ ...f, [k]: v })); markDirty(); };
 
   const filteredWorkers = workers.filter(w => {
     if (!workerSearch) return true;
@@ -95,6 +97,7 @@ export default function InjuriesPage() {
       create(COLLECTIONS.INJURIES, formData);
     }
     loadData();
+    markClean();
     setShowForm(false);
   };
 

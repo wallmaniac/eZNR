@@ -6,6 +6,7 @@ import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 import AIAssistant from '@/components/AIAssistant';
 import { initializeData } from '@/lib/dataStore';
+import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading } = useAuth();
@@ -65,7 +66,9 @@ export default function DashboardLayout({ children }) {
                 transition: 'margin-left var(--transition-normal)',
                 minHeight: 'calc(100vh - var(--header-height))',
             }}>
-                {children}
+                <NavigationGuardProvider>
+                    {children}
+                </NavigationGuardProvider>
             </main>
             <AIAssistant />
         </div>

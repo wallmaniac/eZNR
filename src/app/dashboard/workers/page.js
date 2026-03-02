@@ -8,6 +8,7 @@ import {
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
@@ -24,6 +25,7 @@ const emptyWorker = {
 export default function WorkersPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
+    const { markDirty, markClean } = useUnsavedChanges(() => handleSave());
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showFormer, setShowFormer] = useState(false);
@@ -163,6 +165,7 @@ export default function WorkersPage() {
             create(COLLECTIONS.WORKERS, formData);
         }
         loadData();
+        markClean();
         if (addNew) {
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
@@ -174,12 +177,14 @@ export default function WorkersPage() {
     };
 
     const handleCancel = () => {
+        markClean();
         setShowForm(false);
         setEditingWorker(null);
     };
 
     const updateField = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        if (showForm) markDirty();
     };
 
     // ── Photo upload with auto-crop to face (center-top crop, 3:4 ratio) ──
