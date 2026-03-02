@@ -74,7 +74,13 @@ export default function WorkerCertificatesPage() {
                         title={r.workerId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
                       >{r.workerName}</button>
                     </td>
-                    <td>{r.naziv}</td>
+                    <td>
+                      <button
+                        onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
+                        style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' }}
+                        title={lang === 'bs' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates'}
+                      >{r.naziv || r.ime || '—'}</button>
+                    </td>
                     <td><span className="badge badge-info">{r.oznaka}</span></td>
                     <td><span className="badge" style={{ background: '#E8EAF6', color: '#283593' }}>{r.tipUvjerenja}</span></td>
                     <td>{formatDate(r.datum)}</td>
