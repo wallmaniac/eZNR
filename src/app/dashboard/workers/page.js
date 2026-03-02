@@ -70,6 +70,18 @@ export default function WorkersPage() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
+    // Auto-open from WorkerProfileModal "Otvori potpuno"
+    useEffect(() => {
+        if (workers.length === 0) return;
+        const storedId = sessionStorage.getItem('openWorkerId');
+        if (storedId) {
+            sessionStorage.removeItem('openWorkerId');
+            const found = workers.find(x => x.id === storedId);
+            if (found) handleEdit(found);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [workers]);
+
     const filteredWorkers = workers.filter(w => {
         const matchSearch = !searchTerm || `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib}`.toLowerCase().includes(searchTerm.toLowerCase());
         const matchStatus = showFormer ? !w.aktivan : w.aktivan;
@@ -748,8 +760,20 @@ export default function WorkersPage() {
                                                     >{w.prezime}</button>
                                                 </td>
                                                 <td><code style={{ fontSize: '0.85rem' }}>{w.oib || w.jmbg}</code></td>
-                                                <td>{getOrgUnitName(w.orgJedinicaId)}</td>
-                                                <td>{getWorkplaceName(w.radnoMjestoId)}</td>
+                                                <td>
+                                                    {w.orgJedinicaId ? (
+                                                        <button onClick={() => router.push('/dashboard/org-units')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }} title={lang === 'bs' ? 'Otvori organizacijsku jedinicu' : 'Open org unit'}>
+                                                            {getOrgUnitName(w.orgJedinicaId)}
+                                                        </button>
+                                                    ) : '—'}
+                                                </td>
+                                                <td>
+                                                    {w.radnoMjestoId ? (
+                                                        <button onClick={() => router.push('/dashboard/workplaces')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }} title={lang === 'bs' ? 'Otvori radno mjesto' : 'Open workplace'}>
+                                                            {getWorkplaceName(w.radnoMjestoId)}
+                                                        </button>
+                                                    ) : '—'}
+                                                </td>
                                                 <td><input type="checkbox" /></td>
                                             </tr>
                                         ))
