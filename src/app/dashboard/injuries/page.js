@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
@@ -16,6 +17,7 @@ const EMPTY_FORM = {
 
 export default function InjuriesPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const { markDirty, markClean } = useUnsavedChanges();
 
   // ── Data state ──
@@ -82,13 +84,13 @@ export default function InjuriesPage() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.radnikId && !formData.radnikIme) {
-      alert(lang === 'bs' ? 'Odaberite radnika!' : 'Please select a worker!');
+      await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Please select a worker!');
       return;
     }
     if (!formData.datum) {
-      alert(lang === 'bs' ? 'Datum je obavezan!' : 'Date is required!');
+      await alert(lang === 'bs' ? 'Datum je obavezan!' : 'Date is required!');
       return;
     }
     if (editingId) {
@@ -101,8 +103,8 @@ export default function InjuriesPage() {
     setShowForm(false);
   };
 
-  const handleDelete = (id) => {
-    if (!confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?')) return;
+  const handleDelete = async (id) => {
+    const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?'); if (!ok) return;
     remove(COLLECTIONS.INJURIES, id);
     loadData();
   };

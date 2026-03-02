@@ -6,6 +6,8 @@ import {
     getAll, getById, create, update, remove, COLLECTIONS,
     formatDate, todayISO,
 } from '@/lib/dataStore';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useDialog } from '@/hooks/useDialog';
 
 const EMPTY_CERT = {
     workerId: '',
@@ -75,7 +77,14 @@ export function UvjerenjeFormPage() {
     const tipRef = useRef(null);
     const ispitivacRef = useRef(null);
 
-    const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
+    const { markDirty, markClean } = useUnsavedChanges();
+    const { alert, confirm, DialogRenderer } = useDialog();
+
+    // Inline new examiner form state
+    const [showNewExaminerForm, setShowNewExaminerForm] = useState(false);
+    const [newExaminerData, setNewExaminerData] = useState({ ime: '', zvanje: '', telefon: '', ovlaštenaTvrtkaId: '' });
+
+    const set = (k, v) => { setFormData(f => ({ ...f, [k]: v })); markDirty(); };
 
     const load = useCallback(() => {
         setWorkers(getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false));
@@ -194,13 +203,13 @@ export function UvjerenjeFormPage() {
         setShowTipDropdown(false);
     };
 
-    const handleSave = () => {
-        if (selectedWorkerIds.size === 0) {
-            alert(lang === 'bs' ? 'Molimo odaberite barem jednog radnika!' : 'Please select at least one worker!');
+    const handleSave = async () => {
+        if (!isSingleWorkerMode && selectedWorkerIds.size === 0) {
+            await alert(lang === 'bs' ? 'Molimo odaberite barem jednog radnika!' : 'Please select at least one worker!');
             return;
         }
         if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId) {
-            alert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
+            await alert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }
         // Save a certificate for each selected worker
@@ -220,10 +229,20 @@ export function UvjerenjeFormPage() {
             }
             count++;
         }
-        alert(lang === 'bs'
+        markClean();
+        await alert(lang === 'bs'
             ? `Uspješno sačuvano ${count} uvjerenje(a)!`
             : `Successfully saved ${count} certificate(s)!`);
-        router.push('/dashboard/worker-certificates');
+        router.back();
+    };
+
+    const handleSaveNewExaminer = () => {
+        if (!newExaminerData.ime.trim()) return;
+        const created = create(COLLECTIONS.EXAMINERS, newExaminerData);
+        setExaminers(prev => [...prev, created]);
+        set('ispitivacId', created.id);
+        setShowNewExaminerForm(false);
+        setNewExaminerData({ ime: '', zvanje: '', telefon: '', ovlaštenaTvrtkaId: '' });
     };
 
     const getWorkplaceName = (id) => {
@@ -247,6 +266,7 @@ export function UvjerenjeFormPage() {
                 <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
                 <h1 style={{ margin: 0 }}>📜 {lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
             </div>
+            <DialogRenderer />
 
             {/* Worker selection — hidden when a single worker is pre-selected */}
             {!isSingleWorkerMode && (
@@ -257,9 +277,6 @@ export function UvjerenjeFormPage() {
                                 <input type="checkbox" checked={showOnlySelected} onChange={e => setShowOnlySelected(e.target.checked)} />
                                 {lang === 'bs' ? 'Prikaži samo označene' : 'Show only selected'}
                             </label>
-                            <button className="btn btn-ghost btn-sm" onClick={deselectAll}>
-                                ⊘ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}
-                            </button>
                             <select className="form-select" style={{ maxWidth: 260, marginLeft: 0 }} value={orgUnitFilter} onChange={e => setOrgUnitFilter(e.target.value)}>
                                 <option value="">{lang === 'bs' ? 'Prikaži sve pod org. jedinice od' : 'All org. units'}</option>
                                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
@@ -464,8 +481,8 @@ export function UvjerenjeFormPage() {
                                 <button
                                     className="btn btn-ghost btn-sm"
                                     style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)' }}
-                                    onClick={() => router.push('/dashboard/examiners')}
-                                    title={lang === 'bs' ? 'Upravljaj ispitivačima' : 'Manage examiners'}
+                                    onClick={e => { e.preventDefault(); setShowNewExaminerForm(true); setShowIspitivacDropdown(false); }}
+                                    title={lang === 'bs' ? 'Dodaj novog ispitivača' : 'Add new examiner'}
                                 >+</button>
                             </div>
                             <div
@@ -509,6 +526,44 @@ export function UvjerenjeFormPage() {
                                     ))}
                                 </div>
                             )}
+                            {/* Inline new examiner quick-add */}
+                            {showNewExaminerForm && (
+                                <div style={{ marginTop: 8, padding: 14, background: 'var(--bg-input)', border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)' }}>
+                                    <div style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--primary)', marginBottom: 10 }}>
+                                        + {lang === 'bs' ? 'Novi ispitivač' : 'New examiner'}
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
+                                        <div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Ime *' : 'Name *'}</div>
+                                            <input className="form-input" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+                                                value={newExaminerData.ime} onChange={e => setNewExaminerData(d => ({ ...d, ime: e.target.value }))} autoFocus
+                                                onKeyDown={e => { if (e.key === 'Enter') handleSaveNewExaminer(); if (e.key === 'Escape') setShowNewExaminerForm(false); }} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Zvanje' : 'Title'}</div>
+                                            <input className="form-input" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+                                                value={newExaminerData.zvanje} onChange={e => setNewExaminerData(d => ({ ...d, zvanje: e.target.value }))} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Telefon' : 'Phone'}</div>
+                                            <input className="form-input" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+                                                value={newExaminerData.telefon} onChange={e => setNewExaminerData(d => ({ ...d, telefon: e.target.value }))} />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Ovlaštena tvrtka' : 'Auth. company'}</div>
+                                            <select className="form-select" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
+                                                value={newExaminerData.ovlaštenaTvrtkaId} onChange={e => setNewExaminerData(d => ({ ...d, ovlaštenaTvrtkaId: e.target.value }))}>
+                                                <option value="">-</option>
+                                                {authorizedCompanies.map(c => <option key={c.id} value={c.id}>{c.naziv}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setShowNewExaminerForm(false)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                                        <button className="btn btn-primary btn-sm" onClick={handleSaveNewExaminer}>+ {lang === 'bs' ? 'Dodaj ispitivača' : 'Add examiner'}</button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="form-group" style={{ marginBottom: 0 }}>
@@ -542,7 +597,10 @@ export function UvjerenjeFormPage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <div style={labelStyle}>{lang === 'bs' ? 'Izdano za radno mjesto' : 'Issued for workplace'}</div>
-                            <input className="form-input" value={formData.vydanoZaRadnoMjesto} onChange={e => set('vydanoZaRadnoMjesto', e.target.value)} />
+                            <select className="form-select" value={formData.vydanoZaRadnoMjesto || ''} onChange={e => set('vydanoZaRadnoMjesto', e.target.value)}>
+                                <option value="">{lang === 'bs' ? '— Odaberite radno mjesto —' : '— Select workplace —'}</option>
+                                {workplaces.map(wp => <option key={wp.id} value={wp.naziv}>{wp.naziv}</option>)}
+                            </select>
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <div style={labelStyle}>{lang === 'bs' ? 'Ograničenja / Napomena' : 'Restrictions / Note'}</div>

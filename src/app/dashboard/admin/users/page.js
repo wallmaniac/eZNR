@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, COLLECTIONS, getAllCompanies, formatDate,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function AdminUsersPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const { isAdmin, user } = useAuth();
     const router = useRouter();
     const [users, setUsers] = useState([]);
@@ -83,7 +85,7 @@ export default function AdminUsersPage() {
 
     const handleDelete = (u) => {
         if (u.id === user?.id) return;
-        if (confirm(lang === 'bs' ? `Obrisati korisnika ${u.firstName} ${u.lastName}?` : `Delete user ${u.firstName} ${u.lastName}?`)) {
+        const ok = await confirm(lang === 'bs' ? `Obrisati korisnika ${u.firstName} ${u.lastName}?` : `Delete user ${u.firstName} ${u.lastName}?`); if (ok) {
             remove(COLLECTIONS.USERS, u.id);
             refreshData();
         }

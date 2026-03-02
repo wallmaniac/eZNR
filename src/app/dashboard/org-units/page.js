@@ -6,6 +6,7 @@ import {
     getAll, create, update, remove, COLLECTIONS,
     getChildOrgUnits, getWorkersInOrgUnit, getById,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const emptyOU = {
@@ -17,6 +18,7 @@ const emptyOU = {
 
 export default function OrgUnitsPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const router = useRouter();
     const [units, setUnits] = useState([]);
     const [workers, setWorkers] = useState([]);
@@ -73,12 +75,12 @@ export default function OrgUnitsPage() {
     const handleDelete = (id) => {
         const children = getChildOrgUnits(id);
         if (children.length > 0) {
-            alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima podorganizacije.' : 'Cannot delete org. unit with child units.');
+            await alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima podorganizacije.' : 'Cannot delete org. unit with child units.');
             return;
         }
         const unitWorkers = getWorkersInOrgUnit(id);
         if (unitWorkers.length > 0) {
-            alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima zaposlenike.' : 'Cannot delete org. unit with employees.');
+            await alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima zaposlenike.' : 'Cannot delete org. unit with employees.');
             return;
         }
         if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) {
@@ -88,9 +90,9 @@ export default function OrgUnitsPage() {
         }
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!formData.naziv || !formData.skraceniNaziv) {
-            alert(lang === 'bs' ? 'Naziv i skraćeni naziv su obavezna polja!' : 'Name and short name are required!');
+            await alert(lang === 'bs' ? 'Naziv i skraćeni naziv su obavezna polja!' : 'Name and short name are required!');
             return;
         }
         if (editingId) {

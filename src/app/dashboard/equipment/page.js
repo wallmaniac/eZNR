@@ -5,6 +5,7 @@ import {
     getAll, create, update, remove, COLLECTIONS,
     getOrgUnitName, formatDate,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 const emptyEQ = {
     naziv: '', vrsta: '', tip: '', tvBroj: '', invBroj: '',
@@ -15,6 +16,7 @@ const emptyEQ = {
 
 export default function EquipmentPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const [items, setItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -46,8 +48,8 @@ export default function EquipmentPage() {
     const handleDelete = (id) => {
         if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) { remove(COLLECTIONS.EQUIPMENT, id); setActionMenuId(null); loadData(); }
     };
-    const handleSave = () => {
-        if (!formData.naziv) { alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
+    const handleSave = async () => {
+        if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EQUIPMENT, editingId, formData); } else { create(COLLECTIONS.EQUIPMENT, formData); }
         setShowForm(false); loadData();
     };
@@ -165,10 +167,10 @@ export default function EquipmentPage() {
                                 if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
                             }}>{t('selectGroupAction')} ▼</button>
                             <div id="group-action-menu-eq" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
-                                <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
+                                <button className="dropdown-item" onClick={() => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
+                                <button className="dropdown-item" onClick={() => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
                                 <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
                             </div>
                         </div>
                     </div>

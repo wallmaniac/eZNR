@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, getById, create, update, remove, COLLECTIONS, formatDate,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 const emptyDoc = {
     partyId: '', naslov: '', tipDokumentaId: '', datum: '', potpisano: false, datoteka: '',
@@ -11,6 +12,7 @@ const emptyDoc = {
 
 export default function ISZNRDocumentsPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const [docs, setDocs] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -43,8 +45,8 @@ export default function ISZNRDocumentsPage() {
 
     const handleNew = () => { setFormData({ ...emptyDoc }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
-    const handleDelete = (id) => {
-        if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
+    const handleDelete = async (id) => {
+        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (ok) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = () => {
         if (!formData.naslov || !formData.partyId) { alert(lang === 'bs' ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!'); return; }

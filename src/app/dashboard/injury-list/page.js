@@ -2,10 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 export default function InjuryListPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const [injuries, setInjuries] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -21,7 +23,7 @@ export default function InjuryListPage() {
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleDelete = (id) => {
-    if (!confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?')) return;
+    const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?'); if (!ok) return;
     remove(COLLECTIONS.INJURIES, id);
     loadData();
   };

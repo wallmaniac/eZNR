@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 // Simulated digital signature generation
 function generateSignatureHash() {
@@ -16,6 +17,7 @@ function generateSignatureHash() {
 
 export default function ISZNRSigningPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const { user, activeCompanyId } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [activeTab, setActiveTab] = useState('sign');
@@ -165,7 +167,7 @@ export default function ISZNRSigningPage() {
   };
 
   const handleRevokeSignature = (doc) => {
-    if (!confirm(lang === 'bs' ? 'Poništiti digitalni potpis na ovom dokumentu?' : 'Revoke digital signature on this document?')) return;
+    { const ok = await confirm(lang === 'bs' ? 'Poništiti digitalni potpis na ovom dokumentu?' : 'Revoke digital signature on this document?'); if (!ok) return; }
     update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, {
       potpisano: false,
       datumPotpisa: null,
@@ -177,7 +179,7 @@ export default function ISZNRSigningPage() {
   };
 
   const handleDeleteDoc = (doc) => {
-    if (!confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?')) return;
+    { const ok = await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?'); if (!ok) return; }
     remove(COLLECTIONS.ISZNR_DOCUMENTS, doc.id);
     loadData();
   };

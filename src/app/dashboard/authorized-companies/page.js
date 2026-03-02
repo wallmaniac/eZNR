@@ -2,9 +2,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function AuthorizedCompaniesPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -15,12 +17,12 @@ export default function AuthorizedCompaniesPage() {
 
   const handleNew = () => { setFormData({ naziv: '', rješenjeBroj: '', datumRješenja: '', adresa: '', tel: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.naziv) return;
     if (editingId) update(COLLECTIONS.AUTHORIZED_COMPANIES, editingId, formData); else create(COLLECTIONS.AUTHORIZED_COMPANIES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = (id) => { if (confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.AUTHORIZED_COMPANIES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.AUTHORIZED_COMPANIES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

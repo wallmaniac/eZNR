@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, COLLECTIONS, getAllCompanies, getAllUsers, formatDate,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function AdminCompaniesPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const { isAdmin } = useAuth();
     const router = useRouter();
     const [companies, setCompanies] = useState([]);
@@ -67,7 +69,7 @@ export default function AdminCompaniesPage() {
                 : `Cannot delete company "${c.naziv}" — it has ${usersInCompany.length} users.`);
             return;
         }
-        if (confirm(lang === 'bs' ? `Obrisati firmu ${c.naziv}?` : `Delete company ${c.naziv}?`)) {
+        const ok = await confirm(lang === 'bs' ? `Obrisati firmu ${c.naziv}?` : `Delete company ${c.naziv}?`); if (ok) {
             remove(COLLECTIONS.COMPANIES, c.id);
             refreshData();
         }

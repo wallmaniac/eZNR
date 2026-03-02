@@ -6,6 +6,7 @@ import {
     getAll, getById, update, create, remove, COLLECTIONS,
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 /**
  * WorkerProfileModal
@@ -17,6 +18,7 @@ import {
 export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     const { t, lang } = useLanguage();
     const router = useRouter();
+    const { alert, confirm, DialogRenderer } = useDialog();
 
     const [worker, setWorker] = useState(null);
     const [editMode, setEditMode] = useState(false);
@@ -54,9 +56,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
 
     const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!formData.ime || !formData.prezime) {
-            alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First and last name are required!');
+            await alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First and last name are required!');
             return;
         }
         update(COLLECTIONS.WORKERS, workerId, formData);
@@ -65,9 +67,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
         onSaved?.();
     };
 
-    const handleSaveCert = () => {
+    const handleSaveCert = async () => {
         if (!certFormData.oznaka || !certFormData.ime) {
-            alert(lang === 'bs' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!');
+            await alert(lang === 'bs' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!');
             return;
         }
         if (certEditId) {
@@ -80,9 +82,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
         setCertEditId(null);
     };
 
-    const handleSavePpe = () => {
+    const handleSavePpe = async () => {
         if (!ppeFormData.naziv) {
-            alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!');
+            await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!');
             return;
         }
         if (ppeEditId) {
@@ -149,6 +151,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal" style={{ maxWidth: 820, maxHeight: '92vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+                <DialogRenderer />
 
                 {/* ── Header ── */}
                 <div className="modal-header">
@@ -310,7 +313,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                         <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Kopiraj u novo uvjerenje' : 'Copy to new certificate'}
                                             onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?copyFrom=${c.id}&workerId=${workerId}`); }}>📋</button>
                                         <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')}
-                                            onClick={() => { if (confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?')) { remove(COLLECTIONS.CERTIFICATES, c.id); refreshCerts(); } }}>🗑️</button>
+                                            onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); refreshCerts(); } }}>🗑️</button>
                                     </div>
                                 </div>
                             );
@@ -358,7 +361,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                 {p.datumRazduzenja && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Razduž.' : 'Returned'}: {formatDate(p.datumRazduzenja)}</span>}
                                 <div style={{ display: 'flex', gap: 4 }}>
                                     <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => { setPpeFormData({ ...p }); setPpeEditId(p.id); setShowPpeForm(true); }}>✏️</button>
-                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')} onClick={() => { if (confirm(lang === 'bs' ? 'Obrisati zaduženje?' : 'Delete assignment?')) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); refreshPpe(); } }}>🗑️</button>
+                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati zaduženje?' : 'Delete assignment?'); if (ok) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); refreshPpe(); } }}>🗑️</button>
                                 </div>
                             </div>
                         ))}

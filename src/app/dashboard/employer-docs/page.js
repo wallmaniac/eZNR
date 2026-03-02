@@ -5,9 +5,11 @@ import {
     getAll, create, update, remove, COLLECTIONS, formatDate,
     getWorkplaceName, getOrgUnitName,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function EmployerDocsPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const [docs, setDocs] = useState([]);
     const [activeTab, setActiveTab] = useState('obavezna');
     const [showForm, setShowForm] = useState(false);
@@ -21,8 +23,8 @@ export default function EmployerDocsPage() {
 
     const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '' }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
-    const handleSave = () => {
-        if (!formData.naziv) { alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
+    const handleSave = async () => {
+        if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, formData); } else { create(COLLECTIONS.EMPLOYER_DOCS, formData); }
         setShowForm(false); loadData();
     };

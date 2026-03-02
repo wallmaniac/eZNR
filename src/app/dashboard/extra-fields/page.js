@@ -2,9 +2,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function ExtraFieldsPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -13,8 +15,8 @@ export default function ExtraFieldsPage() {
   useEffect(() => { loadData(); }, [loadData]);
   const handleNew = () => { setFormData({ naziv: '', tip: 'text' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
-  const handleSave = () => { if (!formData.naziv) return; const col = COLLECTIONS.EXTRA_FIELDS || 'extra_fields'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };
-  const handleDelete = (id) => { if (confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.EXTRA_FIELDS || 'extra_fields', id); loadData(); } };
+  const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.EXTRA_FIELDS || 'extra_fields'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.EXTRA_FIELDS || 'extra_fields', id); loadData(); } };
   return (
     <div className="animate-fadeIn">
       <h1 style={{ marginBottom: 24 }}>➕ {t('extraFields')}</h1>

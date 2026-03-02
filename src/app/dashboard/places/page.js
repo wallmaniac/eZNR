@@ -2,9 +2,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function PlacesPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -17,12 +19,12 @@ export default function PlacesPage() {
   const filtered = items.filter(i => !searchTerm || i.naziv.toLowerCase().includes(searchTerm.toLowerCase()));
   const handleNew = () => { setFormData({ naziv: '', postBroj: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.naziv) return;
     if (editingId) update(COLLECTIONS.PLACES, editingId, formData); else create(COLLECTIONS.PLACES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = (id) => { if (confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.PLACES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.PLACES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

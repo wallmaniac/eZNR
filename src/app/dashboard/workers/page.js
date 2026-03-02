@@ -9,6 +9,7 @@ import {
 } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useDialog } from '@/hooks/useDialog';
 
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
@@ -26,7 +27,8 @@ function WorkersPageInner() {
     const { t, lang } = useLanguage();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { markDirty, markClean } = useUnsavedChanges(() => handleSave());
+    const { markDirty, markClean } = useUnsavedChanges(async () => await handleSave());
+    const { alert, confirm, DialogRenderer } = useDialog();
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showFormer, setShowFormer] = useState(false);
@@ -104,8 +106,8 @@ function WorkersPageInner() {
     });
 
     // Save certificate
-    const handleSaveCert = () => {
-        if (!certFormData.oznaka || !certFormData.ime) { alert(lang === 'bs' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!'); return; }
+    const handleSaveCert = async () => {
+        if (!certFormData.oznaka || !certFormData.ime) { await alert(lang === 'bs' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!'); return; }
         if (certEditId) {
             update(COLLECTIONS.CERTIFICATES, certEditId, { ...certFormData, workerId: editingWorker });
         } else {
@@ -117,8 +119,8 @@ function WorkersPageInner() {
     };
 
     // Save PPE
-    const handleSavePpe = () => {
-        if (!ppeFormData.naziv) { alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
+    const handleSavePpe = async () => {
+        if (!ppeFormData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
         if (ppeEditId) {
             update(COLLECTIONS.PPE_ASSIGNMENTS, ppeEditId, { ...ppeFormData, workerId: editingWorker });
         } else {
@@ -146,17 +148,18 @@ function WorkersPageInner() {
         setShowForm(true);
     };
 
-    const handleDelete = (id) => {
-        if (confirm(lang === 'bs' ? 'Jeste li sigurni da želite obrisati ovog radnika?' : 'Are you sure you want to delete this worker?')) {
+    const handleDelete = async (id) => {
+        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni da želite obrisati ovog radnika?' : 'Are you sure you want to delete this worker?');
+        if (ok) {
             remove(COLLECTIONS.WORKERS, id);
             setActionMenuId(null);
             loadData();
         }
     };
 
-    const handleSave = (addNew = false) => {
+    const handleSave = async (addNew = false) => {
         if (!formData.ime || !formData.prezime) {
-            alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
+            await alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
             return;
         }
         if (editingWorker) {
@@ -184,15 +187,15 @@ function WorkersPageInner() {
 
     const updateField = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        if (showForm) markDirty();
+        markDirty();
     };
 
     // ── Photo upload with auto-crop to face (center-top crop, 3:4 ratio) ──
-    const handlePhotoUpload = (e) => {
+    const handlePhotoUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-            alert(lang === 'bs' ? 'Molimo odaberite sliku.' : 'Please select an image file.');
+            await alert(lang === 'bs' ? 'Molimo odaberite sliku.' : 'Please select an image file.');
             return;
         }
         const reader = new FileReader();
@@ -251,6 +254,7 @@ function WorkersPageInner() {
                         👷 {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
                 </div>
+                <DialogRenderer />
 
                 {/* ── MAIN FORM CARD ── */}
                 <div className="card" style={{ marginBottom: 24 }}>
@@ -655,6 +659,7 @@ function WorkersPageInner() {
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     👷 {t('workers')}
                 </h1>
+                <DialogRenderer />
 
                 <div className="card">
                     <div className="card-body">
@@ -682,10 +687,10 @@ function WorkersPageInner() {
                                     if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
                                 }}>{t('selectGroupAction')} ▼</button>
                                 <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                    <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
-                                    <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
+                                    <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {lang === 'bs' ? 'Geniši dokumente' : 'Generate documents'}</button>
+                                    <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
                                     <div className="dropdown-divider" />
-                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(t('confirmDelete')); if (ok) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
                                 </div>
                             </div>
                         </div>

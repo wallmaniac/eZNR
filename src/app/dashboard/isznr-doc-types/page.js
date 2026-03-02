@@ -2,9 +2,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function ISZNRDocTypesPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -15,12 +17,12 @@ export default function ISZNRDocTypesPage() {
 
   const handleNew = () => { setFormData({ naziv: '', oznaka: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.naziv) return;
     if (editingId) update(COLLECTIONS.ISZNR_DOC_TYPES, editingId, formData); else create(COLLECTIONS.ISZNR_DOC_TYPES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = (id) => { if (confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_DOC_TYPES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_DOC_TYPES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

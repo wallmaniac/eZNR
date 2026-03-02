@@ -6,6 +6,7 @@ import {
     getAll, create, update, remove, COLLECTIONS,
     getWorkersInWorkplace, getOrgUnitName,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const emptyWP = {
@@ -16,6 +17,7 @@ const emptyWP = {
 
 export default function WorkplacesPage() {
     const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
     const router = useRouter();
     const [items, setItems] = useState([]);
     const [workers, setWorkers] = useState([]);
@@ -58,13 +60,13 @@ export default function WorkplacesPage() {
     const handleDelete = (id) => {
         const wpWorkers = getWorkersInWorkplace(id);
         if (wpWorkers.length > 0) {
-            alert(lang === 'bs' ? 'Ne možete obrisati radno mjesto koje ima zaposlenike.' : 'Cannot delete workplace with assigned workers.');
+            await alert(lang === 'bs' ? 'Ne možete obrisati radno mjesto koje ima zaposlenike.' : 'Cannot delete workplace with assigned workers.');
             return;
         }
         if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) { remove(COLLECTIONS.WORKPLACES, id); setActionMenuId(null); loadData(); }
     };
-    const handleSave = () => {
-        if (!formData.naziv) { alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
+    const handleSave = async () => {
+        if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.WORKPLACES, editingId, formData); } else { create(COLLECTIONS.WORKPLACES, formData); }
         setShowForm(false); loadData();
     };
@@ -236,10 +238,10 @@ export default function WorkplacesPage() {
                                 if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
                             }}>{t('selectGroupAction')} ▼</button>
                             <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
-                                <button className="dropdown-item" onClick={() => { alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
+                                <button className="dropdown-item" onClick={() => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
+                                <button className="dropdown-item" onClick={() => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
                                 <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
                             </div>
                         </div>
                     </div>

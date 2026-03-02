@@ -2,9 +2,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function ISZNRMeasureEquipmentPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
   const [items, setItems] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -15,13 +17,13 @@ export default function ISZNRMeasureEquipmentPage() {
 
   const handleNew = () => { setFormData({ naziv: '', serijskiBroj: '', kalibriranDo: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.naziv) return;
     const col = COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip';
     if (editingId) update(col, editingId, formData); else create(col, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = (id) => { if (confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">
