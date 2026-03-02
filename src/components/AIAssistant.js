@@ -293,7 +293,7 @@ export default function AIAssistant() {
 
     // ── Internal send (supports retry loop) ───────────────────────────────────
     const sendMessageInternal = useCallback(async (text, existingHistory, isRetry = false) => {
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || 'AIzaSyDmT2L5fjmwvQs1HThancNnImhxb9QCGe0';
         if (!apiKey) {
             setMessages(prev => [...prev, {
                 role: 'assistant',
