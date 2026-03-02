@@ -3,9 +3,11 @@ import { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useRouter } from 'next/navigation';
 
 export default function WorkerCertificatesPage() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [viewWorkerId, setViewWorkerId] = useState(null);
@@ -35,6 +37,9 @@ export default function WorkerCertificatesPage() {
         <h1 style={{ marginBottom: 24 }}>📜 {t('workerCertificates')}</h1>
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates/create')}>
+              + {lang === 'bs' ? 'Dodaj uvjerenje' : 'Add certificate'}
+            </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input
