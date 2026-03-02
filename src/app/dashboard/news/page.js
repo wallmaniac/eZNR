@@ -66,7 +66,7 @@ export default function NewsPage() {
                     <button key={tb.key} onClick={() => setActiveTab(tb.key)} style={{
                         padding: '12px 24px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
                         fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.9rem',
-                        background: activeTab === tb.key ? 'var(--dark)' : 'white',
+                        background: activeTab === tb.key ? 'var(--dark)' : 'var(--bg-input)',
                         color: activeTab === tb.key ? 'white' : 'var(--text)',
                         boxShadow: activeTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
                         transition: 'all 0.2s',

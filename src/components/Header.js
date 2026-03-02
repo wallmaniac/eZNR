@@ -131,9 +131,19 @@ export default function Header({ sidebarCollapsed }) {
 
     return (
         <>
-            <header style={{
-                ...headerStyles.header,
+            <header className="app-header" style={{
+                position: 'fixed',
+                top: 0,
+                right: 0,
+                height: 'var(--header-height)',
                 left: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+                borderBottom: '1px solid var(--border-light)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0 24px',
+                zIndex: 90,
+                transition: 'left var(--transition-normal)',
             }}>
                 {/* Search */}
                 <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
@@ -156,7 +166,7 @@ export default function Header({ sidebarCollapsed }) {
 
                     {/* Search Results Dropdown */}
                     {searchFocused && searchTerm.length >= 2 && (
-                        <div style={headerStyles.searchDropdown}>
+                        <div className="search-dropdown" style={headerStyles.searchDropdown}>
                             {searchResults.length === 0 ? (
                                 <div style={{ padding: '16px 20px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
                                     {lang === 'bs' ? 'Nema rezultata' : 'No results'}
@@ -250,44 +260,29 @@ export default function Header({ sidebarCollapsed }) {
                         🌐 {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
 
-                    {/* Dark mode toggle */}
+                    {/* Dark mode toggle — clear labeled pill */}
                     <button
                         onClick={toggleTheme}
                         title={isDark ? (lang === 'bs' ? 'Uključi svijetli mod' : 'Switch to light mode') : (lang === 'bs' ? 'Uključi tamni mod' : 'Switch to dark mode')}
                         style={{
-                            position: 'relative',
-                            width: 52, height: 28,
-                            borderRadius: 14,
-                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '7px 13px',
+                            background: isDark ? '#1e2d40' : 'var(--bg-input)',
+                            border: `2px solid ${isDark ? 'var(--primary)' : 'var(--border)'}`,
+                            borderRadius: 'var(--radius-full)',
                             cursor: 'pointer',
-                            background: isDark
-                                ? 'linear-gradient(135deg, #1e3a5f, #0a1f3d)'
-                                : 'linear-gradient(135deg, #87CEEB, #FDB813)',
-                            padding: 0,
-                            flexShrink: 0,
-                            boxShadow: isDark
-                                ? 'inset 0 1px 3px rgba(0,0,0,0.4), 0 0 8px rgba(0,150,255,0.2)'
-                                : 'inset 0 1px 3px rgba(0,0,0,0.1), 0 0 8px rgba(255,193,7,0.3)',
-                            transition: 'background 0.4s ease, box-shadow 0.3s ease',
+                            fontSize: '0.78rem',
+                            fontWeight: 700,
+                            fontFamily: 'var(--font-heading)',
+                            color: isDark ? 'var(--primary)' : 'var(--text-light)',
+                            transition: 'all 0.25s ease',
+                            whiteSpace: 'nowrap',
                         }}
                     >
-                        {/* Sliding knob */}
-                        <span style={{
-                            position: 'absolute',
-                            top: 3,
-                            left: isDark ? 27 : 3,
-                            width: 22, height: 22,
-                            borderRadius: '50%',
-                            background: isDark ? '#c8d8f0' : '#fff',
-                            boxShadow: isDark
-                                ? '0 1px 4px rgba(0,0,0,0.5)'
-                                : '0 1px 4px rgba(0,0,0,0.25)',
-                            transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1), background 0.3s ease',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.65rem',
-                        }}>
-                            {isDark ? '🌙' : '☀️'}
-                        </span>
+                        <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>{isDark ? '🌙' : '☀️'}</span>
+                        <span>{isDark ? (lang === 'bs' ? 'Tamni' : 'Dark') : (lang === 'bs' ? 'Svijetli' : 'Light')}</span>
                     </button>
 
                     {/* Notifications */}
@@ -340,13 +335,13 @@ export default function Header({ sidebarCollapsed }) {
                                                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                                                         {n.actionLabel && (
                                                             <button onClick={() => handleNotifNav(n.path)}
-                                                                style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.dot}`, background: 'white', color: colors.dot, fontWeight: 600, cursor: 'pointer' }}>
+                                                                style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.dot}`, background: 'var(--bg-input)', color: colors.dot, fontWeight: 600, cursor: 'pointer' }}>
                                                                 {n.actionLabel}
                                                             </button>
                                                         )}
                                                         {n.id && isAdmin && (
                                                             <button onClick={(e) => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }}
-                                                                style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'white', color: 'var(--text-muted)', cursor: 'pointer' }}>
+                                                                style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-muted)', cursor: 'pointer' }}>
                                                                 ✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}
                                                             </button>
                                                         )}
@@ -495,7 +490,7 @@ const headerStyles = {
     },
     searchFocused: {
         borderColor: 'var(--primary)',
-        background: 'white',
+        background: 'var(--bg-input)',
         boxShadow: '0 0 0 4px var(--primary-glow)',
     },
     searchIcon: {
@@ -517,7 +512,7 @@ const headerStyles = {
         top: 'calc(100% + 8px)',
         left: 0,
         right: 0,
-        background: 'white',
+        background: 'var(--bg-card)',
         borderRadius: 'var(--radius-lg)',
         boxShadow: '0 8px 30px rgba(11, 42, 60, 0.15)',
         border: '1px solid var(--border)',

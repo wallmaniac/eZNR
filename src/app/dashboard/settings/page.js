@@ -179,7 +179,7 @@ export default function SettingsPage() {
       >
         <span style={{
           position: 'absolute', top: 3, left: checked ? 25 : 3,
-          width: 20, height: 20, borderRadius: '50%', background: 'white',
+          width: 20, height: 20, borderRadius: '50%', background: 'var(--neutral)',
           transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         }} />
       </button>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
   // ── Stat card component ──
   const StatCard = ({ icon, value, label, color }) => (
     <div style={{
-      background: 'white', borderRadius: 12, padding: '20px 16px',
+      background: 'var(--bg-card)', borderRadius: 12, padding: '20px 16px',
       boxShadow: 'var(--shadow-sm)', textAlign: 'center', border: '1px solid var(--border-light)',
     }}>
       <div style={{ fontSize: '1.5rem', marginBottom: 4 }}>{icon}</div>
@@ -229,7 +229,7 @@ export default function SettingsPage() {
           <button key={tb.key} onClick={() => setActiveTab(tb.key)} style={{
             padding: '10px 18px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
             fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.82rem',
-            background: activeTab === tb.key ? 'var(--dark)' : 'white',
+            background: activeTab === tb.key ? 'var(--dark)' : 'var(--bg-input)',
             color: activeTab === tb.key ? 'white' : 'var(--text)',
             boxShadow: activeTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
             transition: 'all 0.2s',
@@ -525,9 +525,9 @@ export default function SettingsPage() {
             <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
 
             {/* Dark mode toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderTop: '1px solid var(--border)' }}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>
                   {isDark ? '🌙' : '☀️'} {lang === 'bs' ? 'Tamni mod' : 'Dark mode'}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
@@ -539,29 +539,18 @@ export default function SettingsPage() {
               <button
                 onClick={toggleTheme}
                 style={{
-                  position: 'relative', width: 64, height: 34, borderRadius: 17,
-                  border: 'none', cursor: 'pointer', padding: 0, flexShrink: 0,
-                  background: isDark
-                    ? 'linear-gradient(135deg, #1e3a5f, #0a1f3d)'
-                    : 'linear-gradient(135deg, #87CEEB, #FDB813)',
-                  boxShadow: isDark
-                    ? 'inset 0 1px 4px rgba(0,0,0,0.5), 0 0 10px rgba(0,100,255,0.15)'
-                    : 'inset 0 1px 3px rgba(0,0,0,0.1), 0 0 10px rgba(255,193,7,0.25)',
-                  transition: 'background 0.4s ease',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '10px 20px', borderRadius: 'var(--radius-full)',
+                  border: `2px solid ${isDark ? 'var(--primary)' : 'var(--border)'}`,
+                  background: isDark ? 'var(--bg-input)' : 'var(--bg-input)',
+                  cursor: 'pointer', fontWeight: 700, fontSize: '0.88rem',
+                  fontFamily: 'var(--font-heading)',
+                  color: isDark ? 'var(--primary)' : 'var(--text-light)',
+                  transition: 'all 0.25s ease',
                 }}
               >
-                <span style={{
-                  position: 'absolute', top: 4,
-                  left: isDark ? 34 : 4,
-                  width: 26, height: 26, borderRadius: '50%',
-                  background: isDark ? '#c8d8f0' : '#fff',
-                  boxShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                  transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.75rem',
-                }}>
-                  {isDark ? '🌙' : '☀️'}
-                </span>
+                <span style={{ fontSize: '1.1rem' }}>{isDark ? '🌙' : '☀️'}</span>
+                <span>{isDark ? (lang === 'bs' ? 'Uključi Svijetli mod' : 'Switch to Light') : (lang === 'bs' ? 'Uključi Tamni mod' : 'Switch to Dark')}</span>
               </button>
             </div>
 

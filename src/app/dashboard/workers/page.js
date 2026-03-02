@@ -615,8 +615,8 @@ export default function WorkersPage() {
                 )}
 
                 {/* ── FOOTER ACTIONS (sticky) ── */}
-                <div style={{
-                    position: 'sticky', bottom: 0, background: 'white', borderTop: '1px solid var(--border)', padding: '12px 0',
+                <div className="sticky-footer" style={{
+                    position: 'sticky', bottom: 0, background: 'var(--bg-card)', borderTop: '1px solid var(--border)', padding: '12px 0',
                     display: 'flex', alignItems: 'center', gap: 12, zIndex: 50,
                 }}>
                     <button className="btn btn-ghost" onClick={handleCancel}>← </button>

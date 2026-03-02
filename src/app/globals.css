@@ -216,6 +216,104 @@
   border: 1px solid var(--border);
 }
 
+/* ── Header ── */
+.app-header {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .app-header {
+  background: rgba(10, 21, 32, 0.97) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+/* ── Search dropdown ── */
+.search-dropdown {
+  background: white;
+}
+
+[data-theme="dark"] .search-dropdown {
+  background: var(--bg-card) !important;
+  border-color: var(--border) !important;
+}
+
+/* ── Search focused state ── */
+[data-theme="dark"] .search-focused {
+  background: var(--bg-input) !important;
+}
+
+/* ── Notification/dismiss buttons ── */
+[data-theme="dark"] .notif-dismiss-btn {
+  background: var(--bg-input) !important;
+  border-color: var(--border) !important;
+  color: var(--text-muted) !important;
+}
+
+/* ── Calendar cells ── */
+.cal-cell {
+  background: white;
+  border-left: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.cal-cell.cal-today {
+  background: rgba(0, 191, 166, 0.08);
+  border-left: 3px solid var(--primary);
+}
+
+.cal-cell-pad {
+  background: #f8f9fa;
+}
+
+[data-theme="dark"] .cal-cell {
+  background: var(--bg-card) !important;
+  border-left-color: var(--border) !important;
+  border-bottom-color: var(--border) !important;
+}
+
+[data-theme="dark"] .cal-cell.cal-today {
+  background: rgba(0, 205, 181, 0.1) !important;
+}
+
+[data-theme="dark"] .cal-cell-pad {
+  background: #0d1a27 !important;
+}
+
+/* ── Tab pills (inline-style tabs) ── */
+.tab-pill-inactive {
+  background: white;
+  color: var(--text);
+}
+
+.tab-pill-active {
+  background: var(--dark);
+  color: white;
+}
+
+[data-theme="dark"] .tab-pill-inactive {
+  background: var(--bg-input) !important;
+  color: var(--text) !important;
+}
+
+[data-theme="dark"] .tab-pill-active {
+  background: var(--primary) !important;
+  color: white !important;
+}
+
+/* ── General: never let anything be pure white in dark mode ── */
+[data-theme="dark"] [style*="background: white"],
+[data-theme="dark"] [style*="background:'white'"],
+[data-theme="dark"] [style*="background: '#fff'"],
+[data-theme="dark"] [style*="background:#fff"] {
+  background: var(--bg-card) !important;
+}
+
+/* Workers page sticky footer */
+[data-theme="dark"] .sticky-footer {
+  background: var(--bg-card) !important;
+  border-top-color: var(--border) !important;
+}
+
 
 * {
   box-sizing: border-box;

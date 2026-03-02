@@ -187,19 +187,21 @@ export default function DashboardPage() {
                             <div key={d} style={{ padding: '8px 4px', textAlign: 'center', fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-table-header)', textTransform: 'uppercase' }}>{d}</div>
                         ))}
                         {Array.from({ length: startPad }).map((_, i) => (
-                            <div key={`pad-${i}`} style={{ padding: 8, background: '#f8f9fa', minHeight: 80, minWidth: 0 }} />
+                            <div key={`pad-${i}`} className="cal-cell-pad" style={{ padding: 8, minHeight: 80, minWidth: 0 }} />
                         ))}
                         {Array.from({ length: daysInMonth }).map((_, i) => {
                             const day = i + 1;
                             const events = getDayEvents(day);
                             const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
                             return (
-                                <div key={day} style={{
-                                    padding: '6px 8px', minHeight: 80, minWidth: 0, background: isToday ? 'rgba(0,191,166,0.08)' : 'white',
-                                    borderLeft: isToday ? '3px solid var(--primary)' : '1px solid #eee',
-                                    borderBottom: '1px solid #eee', transition: 'background 0.2s', cursor: 'pointer',
-                                }} onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,191,166,0.05)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = isToday ? 'rgba(0,191,166,0.08)' : 'white'}
+                                <div key={day}
+                                    className={`cal-cell${isToday ? ' cal-today' : ''}`}
+                                    style={{
+                                        padding: '6px 8px', minHeight: 80, minWidth: 0,
+                                        transition: 'background 0.2s', cursor: 'pointer',
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,191,166,0.08)'}
+                                    onMouseLeave={(e) => e.currentTarget.style.background = ''}
                                     onClick={() => {
                                         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                                         setEventFormDate(dateStr);
@@ -210,7 +212,7 @@ export default function DashboardPage() {
                                         });
                                         setShowEventForm(true);
                                     }}>
-                                    <div style={{ fontWeight: isToday ? 800 : 600, fontSize: '0.85rem', color: isToday ? 'var(--primary)' : 'var(--text-dark)', marginBottom: 4 }}>{day}</div>
+                                    <div style={{ fontWeight: isToday ? 800 : 600, fontSize: '0.85rem', color: isToday ? 'var(--primary)' : 'var(--text)', marginBottom: 4 }}>{day}</div>
                                     {events.map((ev, idx) => (
                                         <div key={idx}
                                             style={{
@@ -516,7 +518,7 @@ export default function DashboardPage() {
                                     padding: '12px 20px', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-heading)',
                                     fontWeight: activeTab === tb.key ? 700 : 500, fontSize: '0.85rem', whiteSpace: 'nowrap',
                                     background: activeTab === tb.key ? 'var(--primary)' : 'transparent',
-                                    color: activeTab === tb.key ? 'white' : 'var(--text-dark)',
+                                    color: activeTab === tb.key ? 'white' : 'var(--text-light)',
                                     borderRadius: activeTab === tb.key ? 'var(--radius-md) var(--radius-md) 0 0' : 0,
                                     transition: 'all 0.2s',
                                 }}>
