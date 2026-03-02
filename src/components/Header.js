@@ -141,12 +141,66 @@ export default function Header({ sidebarCollapsed }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '0 24px',
+                gap: 0,
+                padding: '0 20px 0 16px',
                 zIndex: 90,
                 transition: 'left var(--transition-normal)',
             }}>
+                {/* ── Company Switcher ── LEFT of search */}
+                <div ref={companyRef} style={{ position: 'relative', marginRight: 12, flexShrink: 0 }}>
+                    <button
+                        onClick={() => { setShowCompanyMenu(!showCompanyMenu); setShowProfile(false); setShowNotifs(false); }}
+                        style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            padding: '6px 14px', borderRadius: 'var(--radius-full)',
+                            border: '1px solid var(--border)', background: 'var(--bg-input)',
+                            cursor: 'pointer', transition: 'all 0.2s', maxWidth: 200,
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                    >
+                        <span style={{ fontSize: '1rem' }}>🏢</span>
+                        <span style={{
+                            fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)',
+                            fontFamily: 'var(--font-heading)', overflow: 'hidden',
+                            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                            {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi firmu' : 'Select company')}
+                        </span>
+                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>▼</span>
+                    </button>
+
+                    {showCompanyMenu && (
+                        <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 280, zIndex: 200 }}>
+                            <div style={{ padding: '10px 16px', fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
+                            </div>
+                            {companies.map(c => (
+                                <button key={c.id} className="dropdown-item"
+                                    onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
+                                        background: c.id === activeCompanyId ? 'rgba(0,191,166,0.08)' : undefined,
+                                        fontWeight: c.id === activeCompanyId ? 700 : 400,
+                                    }}>
+                                    <span style={{ fontSize: '1.1rem' }}>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv}</div>
+                                        {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
+                                    </div>
+                                </button>
+                            ))}
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }}
+                                style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                                ➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+
                 {/* Search */}
-                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
+                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 380 }}>
                     <div style={{
                         ...headerStyles.searchContainer,
                         ...(searchFocused ? headerStyles.searchFocused : {}),
@@ -200,59 +254,6 @@ export default function Header({ sidebarCollapsed }) {
                     )}
                 </div>
 
-                {/* ── Company Switcher ── */}
-                <div ref={companyRef} style={{ position: 'relative', marginLeft: 12 }}>
-                    <button
-                        onClick={() => { setShowCompanyMenu(!showCompanyMenu); setShowProfile(false); setShowNotifs(false); }}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '6px 14px', borderRadius: 'var(--radius-full)',
-                            border: '1px solid var(--border)', background: 'var(--bg-input)',
-                            cursor: 'pointer', transition: 'all 0.2s', maxWidth: 220,
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                    >
-                        <span style={{ fontSize: '1rem' }}>🏢</span>
-                        <span style={{
-                            fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)',
-                            fontFamily: 'var(--font-heading)', overflow: 'hidden',
-                            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}>
-                            {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi firmu' : 'Select company')}
-                        </span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>▼</span>
-                    </button>
-
-                    {showCompanyMenu && (
-                        <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 280, zIndex: 200 }}>
-                            <div style={{ padding: '10px 16px', fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
-                            </div>
-                            {companies.map(c => (
-                                <button key={c.id} className="dropdown-item"
-                                    onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); }}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
-                                        background: c.id === activeCompanyId ? 'rgba(0,191,166,0.08)' : undefined,
-                                        fontWeight: c.id === activeCompanyId ? 700 : 400,
-                                    }}>
-                                    <span style={{ fontSize: '1.1rem' }}>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv}</div>
-                                        {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
-                                    </div>
-                                </button>
-                            ))}
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }}
-                                style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                                ➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-
                 {/* Right side */}
                 <div style={headerStyles.rightSide}>
                     {/* Language toggle */}
@@ -260,29 +261,39 @@ export default function Header({ sidebarCollapsed }) {
                         🌐 {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
 
-                    {/* Dark mode toggle — clear labeled pill */}
+                    {/* Dark mode toggle — compact sliding pill */}
                     <button
                         onClick={toggleTheme}
-                        title={isDark ? (lang === 'bs' ? 'Uključi svijetli mod' : 'Switch to light mode') : (lang === 'bs' ? 'Uključi tamni mod' : 'Switch to dark mode')}
+                        title={isDark ? (lang === 'bs' ? 'Uključi svijetli mod' : 'Light mode') : (lang === 'bs' ? 'Uključi tamni mod' : 'Dark mode')}
                         style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '7px 13px',
-                            background: isDark ? '#1e2d40' : 'var(--bg-input)',
-                            border: `2px solid ${isDark ? 'var(--primary)' : 'var(--border)'}`,
-                            borderRadius: 'var(--radius-full)',
+                            position: 'relative',
+                            width: 50, height: 26,
+                            borderRadius: 13,
+                            border: 'none',
                             cursor: 'pointer',
-                            fontSize: '0.78rem',
-                            fontWeight: 700,
-                            fontFamily: 'var(--font-heading)',
-                            color: isDark ? 'var(--primary)' : 'var(--text-light)',
-                            transition: 'all 0.25s ease',
-                            whiteSpace: 'nowrap',
+                            background: isDark
+                                ? 'linear-gradient(135deg, #1a3a5c, #0d2240)'
+                                : 'linear-gradient(135deg, #74C0FC, #FCC419)',
+                            padding: 0,
+                            flexShrink: 0,
+                            transition: 'background 0.35s ease',
                         }}
                     >
-                        <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>{isDark ? '🌙' : '☀️'}</span>
-                        <span>{isDark ? (lang === 'bs' ? 'Tamni' : 'Dark') : (lang === 'bs' ? 'Svijetli' : 'Light')}</span>
+                        <span style={{
+                            position: 'absolute',
+                            top: 3,
+                            left: isDark ? 27 : 3,
+                            width: 20, height: 20,
+                            borderRadius: '50%',
+                            background: isDark ? '#b8d0ee' : '#ffffff',
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+                            transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1), background 0.3s',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.6rem', lineHeight: 1,
+                            userSelect: 'none',
+                        }}>
+                            {isDark ? '🌙' : '☀️'}
+                        </span>
                     </button>
 
                     {/* Notifications */}

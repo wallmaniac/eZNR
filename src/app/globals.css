@@ -308,6 +308,12 @@
   background: var(--bg-card) !important;
 }
 
+/* ── Active tab: var(--dark) is too light in dark mode → use primary ── */
+[data-theme="dark"] [style*="background: var(--dark)"] {
+  background: var(--primary) !important;
+  color: #ffffff !important;
+}
+
 /* Workers page sticky footer */
 [data-theme="dark"] .sticky-footer {
   background: var(--bg-card) !important;
