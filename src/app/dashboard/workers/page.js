@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     getAll, getById, create, update, remove, search,
     COLLECTIONS, getOrgUnitName, getWorkplaceName,
@@ -22,9 +22,10 @@ const emptyWorker = {
     aktivan: true, posebniUvjeti: false, napomena: '', slika: '',
 };
 
-export default function WorkersPage() {
+function WorkersPageInner() {
     const { t, lang } = useLanguage();
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { markDirty, markClean } = useUnsavedChanges(() => handleSave());
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -72,17 +73,16 @@ export default function WorkersPage() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Auto-open from WorkerProfileModal "Otvori potpuno"
+    // Auto-open from WorkerProfileModal "Otvori potpuno" via ?openWorker=ID
     useEffect(() => {
         if (workers.length === 0) return;
-        const storedId = sessionStorage.getItem('openWorkerId');
-        if (storedId) {
-            sessionStorage.removeItem('openWorkerId');
-            const found = workers.find(x => x.id === storedId);
+        const openId = searchParams?.get('openWorker');
+        if (openId) {
+            const found = workers.find(x => x.id === openId);
             if (found) handleEdit(found);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [workers]);
+    }, [workers, searchParams]);
 
     const filteredWorkers = workers.filter(w => {
         const matchSearch = !searchTerm || `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib}`.toLowerCase().includes(searchTerm.toLowerCase());
@@ -886,5 +886,13 @@ function Accordion({ title, open, onToggle, children }) {
                 </div>
             )}
         </div>
+    );
+}
+
+export default function WorkersPage() {
+    return (
+        <Suspense fallback={null}>
+            <WorkersPageInner />
+        </Suspense>
     );
 }

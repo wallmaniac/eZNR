@@ -1,7 +1,7 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
     getAll, getById, create, update, remove, COLLECTIONS,
     formatDate, todayISO,
@@ -46,9 +46,10 @@ const FILE_TYPE_OPTIONS = [
     'Sken', 'Original', 'Kopija', 'Email potvrda', 'Digitalni dokument',
 ];
 
-export default function UvjerenjeFormPage() {
+export function UvjerenjeFormPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
+    const searchParams = useSearchParams();
 
     const [workers, setWorkers] = useState([]);
     const [examiners, setExaminers] = useState([]);
@@ -95,6 +96,39 @@ export default function UvjerenjeFormPage() {
     }, []);
 
     useEffect(() => { load(); }, [load]);
+
+    // Handle ?workerId (pre-select worker) and ?copyFrom (pre-fill from cert)
+    useEffect(() => {
+        const workerIdParam = searchParams?.get('workerId');
+        const copyFromId = searchParams?.get('copyFrom');
+        if (workerIdParam) {
+            setSelectedWorkerIds(new Set([workerIdParam]));
+        }
+        if (copyFromId) {
+            const src = getById(COLLECTIONS.CERTIFICATES, copyFromId);
+            if (src) {
+                setFormData({
+                    ...EMPTY_CERT,
+                    tipUvjerenjaId: src.tipUvjerenjaId || '',
+                    tipUvjerenjaIme: src.tipUvjerenjaIme || src.ime || '',
+                    oznaka: src.oznaka || '',
+                    sposoban: src.sposoban ?? (src.sposobnost !== 'Nesposoban'),
+                    vrijediDo: src.vrijediDo || '',
+                    ispitivacId: src.ispitivacId || '',
+                    strucnjakZNR: src.strucnjakZNR || '',
+                    upisao: src.upisao || '',
+                    cijena: src.cijena || '',
+                    vydanoZaRadnoMjesto: src.vydanoZaRadnoMjesto || '',
+                    ogranicenja: src.ogranicenja || '',
+                });
+                if (src.tipUvjerenjaIme || src.ime) setTipSearch(src.tipUvjerenjaIme || src.ime || '');
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    const preselectedWorkerId = searchParams?.get('workerId');
+    const isSingleWorkerMode = !!preselectedWorkerId;
 
     // Close dropdowns on outside click
     useEffect(() => {
@@ -214,76 +248,78 @@ export default function UvjerenjeFormPage() {
                 <h1 style={{ margin: 0 }}>📜 {lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
             </div>
 
-            {/* ── Worker selection table ── */}
-            <div className="card" style={{ marginBottom: 20 }}>
-                <div className="card-body">
-                    <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
-                            <input type="checkbox" checked={showOnlySelected} onChange={e => setShowOnlySelected(e.target.checked)} />
-                            {lang === 'bs' ? 'Prikaži samo označene' : 'Show only selected'}
-                        </label>
-                        <button className="btn btn-ghost btn-sm" onClick={deselectAll}>
-                            ⊘ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}
-                        </button>
-                        <select className="form-select" style={{ maxWidth: 260, marginLeft: 0 }} value={orgUnitFilter} onChange={e => setOrgUnitFilter(e.target.value)}>
-                            <option value="">{lang === 'bs' ? 'Prikaži sve pod org. jedinice od' : 'All org. units'}</option>
-                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                        </select>
-                        <div className="search-bar" style={{ marginLeft: 'auto', maxWidth: 260, display: 'flex', alignItems: 'center' }}>
-                            <input
-                                placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
-                                value={workerSearch}
-                                onChange={e => setWorkerSearch(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.88rem', flex: 1 }}
-                            />
+            {/* Worker selection — hidden when a single worker is pre-selected */}
+            {!isSingleWorkerMode && (
+                <div className="card" style={{ marginBottom: 20 }}>
+                    <div className="card-body">
+                        <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
+                                <input type="checkbox" checked={showOnlySelected} onChange={e => setShowOnlySelected(e.target.checked)} />
+                                {lang === 'bs' ? 'Prikaži samo označene' : 'Show only selected'}
+                            </label>
+                            <button className="btn btn-ghost btn-sm" onClick={deselectAll}>
+                                ⊘ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}
+                            </button>
+                            <select className="form-select" style={{ maxWidth: 260, marginLeft: 0 }} value={orgUnitFilter} onChange={e => setOrgUnitFilter(e.target.value)}>
+                                <option value="">{lang === 'bs' ? 'Prikaži sve pod org. jedinice od' : 'All org. units'}</option>
+                                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                            </select>
+                            <div className="search-bar" style={{ marginLeft: 'auto', maxWidth: 260, display: 'flex', alignItems: 'center' }}>
+                                <input
+                                    placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
+                                    value={workerSearch}
+                                    onChange={e => setWorkerSearch(e.target.value)}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.88rem', flex: 1 }}
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="data-table-wrapper">
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th style={{ width: 40 }}>
-                                        <input type="checkbox"
-                                            checked={filteredWorkers.length > 0 && filteredWorkers.every(w => selectedWorkerIds.has(w.id))}
-                                            onChange={toggleAll} />
-                                    </th>
-                                    <th>{lang === 'bs' ? 'Djelatnik' : 'Worker'} ↑</th>
-                                    <th>OIB / JMBG</th>
-                                    <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
-                                    <th>{lang === 'bs' ? 'Radno mjesto' : 'Workplace'}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredWorkers.length === 0 ? (
-                                    <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : filteredWorkers.map(w => (
-                                    <tr key={w.id}
-                                        style={{ cursor: 'pointer', background: selectedWorkerIds.has(w.id) ? 'var(--bg-selected, rgba(33,150,243,0.06))' : undefined }}
-                                        onClick={() => toggleWorker(w.id)}
-                                    >
-                                        <td onClick={e => e.stopPropagation()}>
-                                            <input type="checkbox" checked={selectedWorkerIds.has(w.id)} onChange={() => toggleWorker(w.id)} />
-                                        </td>
-                                        <td style={{ fontWeight: selectedWorkerIds.has(w.id) ? 700 : undefined }}>
-                                            {w.ime} {w.prezime}
-                                        </td>
-                                        <td><code style={{ fontSize: '0.82rem' }}>{w.oib || w.jmbg || '—'}</code></td>
-                                        <td>{getOrgUnitName(w.orgJedinicaId)}</td>
-                                        <td>{getWorkplaceName(w.radnoMjestoId)}</td>
+                        <div className="data-table-wrapper">
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style={{ width: 40 }}>
+                                            <input type="checkbox"
+                                                checked={filteredWorkers.length > 0 && filteredWorkers.every(w => selectedWorkerIds.has(w.id))}
+                                                onChange={toggleAll} />
+                                        </th>
+                                        <th>{lang === 'bs' ? 'Djelatnik' : 'Worker'} ↑</th>
+                                        <th>OIB / JMBG</th>
+                                        <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
+                                        <th>{lang === 'bs' ? 'Radno mjesto' : 'Workplace'}</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {selectedWorkerIds.size > 0 && (
-                        <div style={{ marginTop: 10, fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
-                            ✓ {selectedWorkerIds.size} {lang === 'bs' ? 'radnik(a) odabrano' : 'worker(s) selected'}
+                                </thead>
+                                <tbody>
+                                    {filteredWorkers.length === 0 ? (
+                                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                    ) : filteredWorkers.map(w => (
+                                        <tr key={w.id}
+                                            style={{ cursor: 'pointer', background: selectedWorkerIds.has(w.id) ? 'var(--bg-selected, rgba(33,150,243,0.06))' : undefined }}
+                                            onClick={() => toggleWorker(w.id)}
+                                        >
+                                            <td onClick={e => e.stopPropagation()}>
+                                                <input type="checkbox" checked={selectedWorkerIds.has(w.id)} onChange={() => toggleWorker(w.id)} />
+                                            </td>
+                                            <td style={{ fontWeight: selectedWorkerIds.has(w.id) ? 700 : undefined }}>
+                                                {w.ime} {w.prezime}
+                                            </td>
+                                            <td><code style={{ fontSize: '0.82rem' }}>{w.oib || w.jmbg || '—'}</code></td>
+                                            <td>{getOrgUnitName(w.orgJedinicaId)}</td>
+                                            <td>{getWorkplaceName(w.radnoMjestoId)}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    )}
+
+                        {selectedWorkerIds.size > 0 && (
+                            <div style={{ marginTop: 10, fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
+                                ✓ {selectedWorkerIds.size} {lang === 'bs' ? 'radnik(a) odabrano' : 'worker(s) selected'}
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* ── Certificate details form ── */}
             <div className="card">
@@ -564,5 +600,13 @@ export default function UvjerenjeFormPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function UvjerenjeCreatePage() {
+    return (
+        <Suspense fallback={null}>
+            <UvjerenjeFormPage />
+        </Suspense>
     );
 }

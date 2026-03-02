@@ -142,12 +142,8 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     );
 
     const openFullEdit = () => {
-        // Store the worker id so the workers page can open it directly
-        if (typeof window !== 'undefined') {
-            sessionStorage.setItem('openWorkerId', workerId);
-        }
         onClose();
-        router.push('/dashboard/workers');
+        router.push(`/dashboard/workers?openWorker=${workerId}`);
     };
 
     return (
@@ -243,10 +239,12 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                     <Section
                         title={`${t('workerCerts')} (${certificates.length})`}
                         action={
-                            <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
-                                onClick={() => { setCertFormData({ oznaka: '', datum: todayISO(), vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' }); setCertEditId(null); setShowCertForm(true); }}>
-                                + {lang === 'bs' ? 'Dodaj' : 'Add'}
-                            </button>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                                <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
+                                    onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}`); }}>
+                                    + {lang === 'bs' ? 'Dodaj' : 'Add'}
+                                </button>
+                            </div>
                         }
                     >
                         {showCertForm && (
@@ -305,8 +303,14 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                     </span>
                                     <span className={`badge ${c.sposobnost === 'Sposoban' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>{c.sposobnost}</span>
                                     <div style={{ display: 'flex', gap: 4 }}>
-                                        <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
-                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')} onClick={() => { if (confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?')) { remove(COLLECTIONS.CERTIFICATES, c.id); refreshCerts(); } }}>🗑️</button>
+                                        <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Brza izmjena' : 'Quick edit'}
+                                            onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
+                                        <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori puni obrazac' : 'Open full form'}
+                                            onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/edit/${c.id}`); }}>📄</button>
+                                        <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Kopiraj u novo uvjerenje' : 'Copy to new certificate'}
+                                            onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?copyFrom=${c.id}&workerId=${workerId}`); }}>📋</button>
+                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')}
+                                            onClick={() => { if (confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?')) { remove(COLLECTIONS.CERTIFICATES, c.id); refreshCerts(); } }}>🗑️</button>
                                     </div>
                                 </div>
                             );
