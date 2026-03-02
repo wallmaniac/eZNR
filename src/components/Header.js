@@ -151,23 +151,46 @@ export default function Header({ sidebarCollapsed }) {
                     <button
                         onClick={() => { setShowCompanyMenu(!showCompanyMenu); setShowProfile(false); setShowNotifs(false); }}
                         style={{
-                            display: 'flex', alignItems: 'center', gap: 8,
-                            padding: '6px 14px', borderRadius: 'var(--radius-full)',
-                            border: '1px solid var(--border)', background: 'var(--bg-input)',
-                            cursor: 'pointer', transition: 'all 0.2s', maxWidth: 200,
+                            display: 'flex', alignItems: 'center', gap: 10,
+                            padding: '7px 16px 7px 12px',
+                            borderRadius: 'var(--radius-full)',
+                            border: '2px solid rgba(0,191,166,0.6)',
+                            background: 'linear-gradient(135deg, var(--primary), #009985)',
+                            cursor: 'pointer',
+                            transition: 'all 0.2s',
+                            maxWidth: 220,
+                            boxShadow: '0 2px 8px rgba(0,191,166,0.35)',
                         }}
-                        onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,191,166,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,191,166,0.35)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                     >
-                        <span style={{ fontSize: '1rem' }}>🏢</span>
+                        {/* Company icon badge */}
                         <span style={{
-                            fontSize: '0.8rem', fontWeight: 600, color: 'var(--text)',
-                            fontFamily: 'var(--font-heading)', overflow: 'hidden',
-                            textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        }}>
-                            {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi firmu' : 'Select company')}
-                        </span>
-                        <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>▼</span>
+                            width: 24, height: 24, borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.2)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.85rem', flexShrink: 0,
+                        }}>🏢</span>
+                        <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{
+                                fontSize: '0.65rem', fontWeight: 600,
+                                color: 'rgba(255,255,255,0.75)',
+                                fontFamily: 'var(--font-heading)',
+                                letterSpacing: '0.3px', lineHeight: 1,
+                                marginBottom: 1,
+                            }}>
+                                {lang === 'bs' ? 'Aktivna firma' : 'Active company'}
+                            </div>
+                            <div style={{
+                                fontSize: '0.82rem', fontWeight: 700,
+                                color: '#ffffff',
+                                fontFamily: 'var(--font-heading)',
+                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                                {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi firmu' : 'Select')}
+                            </div>
+                        </div>
+                        <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.8)', flexShrink: 0 }}>▼</span>
                     </button>
 
                     {showCompanyMenu && (
@@ -261,35 +284,56 @@ export default function Header({ sidebarCollapsed }) {
                         🌐 {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
 
-                    {/* Dark mode toggle — compact sliding pill */}
+                    {/* Dark mode toggle — bigger pill with clear icon */}
                     <button
                         onClick={toggleTheme}
                         title={isDark ? (lang === 'bs' ? 'Uključi svijetli mod' : 'Light mode') : (lang === 'bs' ? 'Uključi tamni mod' : 'Dark mode')}
                         style={{
                             position: 'relative',
-                            width: 50, height: 26,
-                            borderRadius: 13,
-                            border: 'none',
+                            width: 62, height: 32,
+                            borderRadius: 16,
+                            border: isDark ? '1.5px solid rgba(100,160,220,0.4)' : '1.5px solid rgba(255,180,0,0.4)',
                             cursor: 'pointer',
                             background: isDark
-                                ? 'linear-gradient(135deg, #1a3a5c, #0d2240)'
-                                : 'linear-gradient(135deg, #74C0FC, #FCC419)',
+                                ? 'linear-gradient(135deg, #1b3d5e 0%, #0c1d30 100%)'
+                                : 'linear-gradient(135deg, #7EC8E3 0%, #FFC947 100%)',
                             padding: 0,
                             flexShrink: 0,
-                            transition: 'background 0.35s ease',
+                            transition: 'background 0.4s ease, border-color 0.4s ease',
+                            boxShadow: isDark
+                                ? '0 0 0 1px rgba(100,160,220,0.15), inset 0 1px 3px rgba(0,0,0,0.4)'
+                                : '0 0 0 1px rgba(255,180,0,0.1), inset 0 1px 3px rgba(0,0,0,0.05)',
                         }}
                     >
+                        {/* Track decoration: stars or sun rays */}
+                        <span style={{
+                            position: 'absolute',
+                            top: '50%', transform: 'translateY(-50%)',
+                            left: isDark ? 7 : 'auto',
+                            right: isDark ? 'auto' : 7,
+                            fontSize: '0.55rem',
+                            opacity: 0.6,
+                            pointerEvents: 'none',
+                            userSelect: 'none',
+                        }}>
+                            {isDark ? '✨' : '☀️'}
+                        </span>
+                        {/* Sliding knob */}
                         <span style={{
                             position: 'absolute',
                             top: 3,
-                            left: isDark ? 27 : 3,
-                            width: 20, height: 20,
+                            left: isDark ? 33 : 3,
+                            width: 24, height: 24,
                             borderRadius: '50%',
-                            background: isDark ? '#b8d0ee' : '#ffffff',
-                            boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-                            transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1), background 0.3s',
+                            background: isDark
+                                ? 'radial-gradient(circle at 35% 35%, #d0e8ff, #a8c8f0)'
+                                : 'radial-gradient(circle at 35% 35%, #ffffff, #ffe780)',
+                            boxShadow: isDark
+                                ? '0 2px 6px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)'
+                                : '0 2px 6px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,200,0,0.3)',
+                            transition: 'left 0.35s cubic-bezier(0.4,0,0.2,1)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.6rem', lineHeight: 1,
+                            fontSize: '0.85rem', lineHeight: 1,
                             userSelect: 'none',
                         }}>
                             {isDark ? '🌙' : '☀️'}
