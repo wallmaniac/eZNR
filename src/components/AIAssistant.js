@@ -121,11 +121,68 @@ function buildDataContext(lang) {
             : `RECENT INJURIES (90 days, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `${i.radnikIme || 'N/A'} ${i.datum} ${i.tip}${i.bolovanje ? ' SICK LEAVE' : ''}`).join('; ')}`
         );
 
+        // ── Workers roster with workplace & org unit ──────────────────────────
+        const workplaces = get('workplaces');
+        const orgUnits = get('orgUnits');
+        const wpMap = Object.fromEntries(workplaces.map(w => [w.id, w.naziv]));
+        const ouMap = Object.fromEntries(orgUnits.map(o => [o.id, o.naziv]));
+
+        const activeWorkerList = workers.filter(w => w.aktivan !== false);
+        if (activeWorkerList.length > 0) {
+            const rosterLines = activeWorkerList.map(w => {
+                const wp = wpMap[w.radnoMjestoId] || wpMap[w.radnoMjesto] || '';
+                const ou = ouMap[w.orgJedinicaId] || ouMap[w.orgJedinica] || '';
+                return `${w.ime} ${w.prezime}${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}`;
+            });
+            lines.push(lang === 'bs'
+                ? `\nSVI AKTIVNI RADNICI (${activeWorkerList.length}) sa radnim mjestima:\n${rosterLines.join('\n')}`
+                : `\nALL ACTIVE WORKERS (${activeWorkerList.length}) with positions:\n${rosterLines.join('\n')}`
+            );
+        }
+
+        // ── Workplace → workers lookup (who holds each position) ─────────────
+        if (workplaces.length > 0) {
+            const wpWorkers = workplaces.map(wp => {
+                const assigned = workers.filter(w =>
+                    w.aktivan !== false &&
+                    (w.radnoMjestoId === wp.id || w.radnoMjesto === wp.naziv)
+                );
+                if (assigned.length === 0) return null;
+                return `${wp.naziv}: ${assigned.map(w => `${w.ime} ${w.prezime}`).join(', ')}`;
+            }).filter(Boolean);
+
+            if (wpWorkers.length > 0) {
+                lines.push(lang === 'bs'
+                    ? `\nRADNA MJESTA → RADNICI:\n${wpWorkers.join('\n')}`
+                    : `\nWORKPLACES → WORKERS:\n${wpWorkers.join('\n')}`
+                );
+            }
+        }
+
+        // ── Org unit → workers lookup ─────────────────────────────────────────
+        if (orgUnits.length > 0) {
+            const ouWorkers = orgUnits.map(ou => {
+                const assigned = workers.filter(w =>
+                    w.aktivan !== false &&
+                    (w.orgJedinicaId === ou.id || w.orgJedinica === ou.naziv)
+                );
+                if (assigned.length === 0) return null;
+                return `${ou.naziv}: ${assigned.map(w => `${w.ime} ${w.prezime}`).join(', ')}`;
+            }).filter(Boolean);
+
+            if (ouWorkers.length > 0) {
+                lines.push(lang === 'bs'
+                    ? `\nORGANIZACIJSKE JEDINICE → RADNICI:\n${ouWorkers.join('\n')}`
+                    : `\nORG UNITS → WORKERS:\n${ouWorkers.join('\n')}`
+                );
+            }
+        }
+
         // Stats
         const activeWorkers = workers.filter(w => w.aktivan !== false).length;
         lines.push(lang === 'bs'
-            ? `STATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja`
-            : `STATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment items, ${certificates.length} certificates`
+            ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja`
+            : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment items, ${certificates.length} certificates`
         );
 
         return lines.join('\n');
@@ -165,7 +222,9 @@ ${dataContext || 'Nema podataka u bazi.'}
 UPUTE:
 - Budi prijatan, stručan i koncizan
 - Kada preporučuješ stranicu, navedi njenu putanju u formatu: [Naziv](putanja)
-- OBAVEZNO: Kada korisnik pita ko je na bolovanju, ko ima istekla uvjerenja, ili slična pitanja o podacima — navedi KONKRETNA IMENA iz ŽIVIH PODATAKA iznad
+- OBAVEZNO: Kada korisnik pita o podacima — navedi KONKRETNA IMENA iz ŽIVIH PODATAKA iznad
+- Kada korisnik pita ko radi na nekom radnom mjestu (npr. "ko je direktor", "ko je šef smjene") — pogledaj sekciju RADNA MJESTA → RADNICI i odgovori imenima radnika sa tog radnog mjesta
+- Kada korisnik pita ko radi u nekoj organizacijskoj jedinici — pogledaj ORGANIZACIJSKE JEDINICE → RADNICI
 - Za bolovanje/povrede uputi na [Popis povreda](/dashboard/injury-list) i [Prijava bolesti](/dashboard/diseases)
 - Za uvjerenja uputi na [Radnici](/dashboard/workers)
 - Za opremu uputi na [Radna oprema](/dashboard/equipment)
@@ -192,7 +251,9 @@ ${dataContext || 'No data in the database.'}
 INSTRUCTIONS:
 - Be friendly, professional, and concise
 - When recommending a page, mention its path in format: [Name](path)
-- MANDATORY: When a user asks who is on sick leave, who has expired certificates, etc. — name SPECIFIC PEOPLE from the LIVE DATA above
+- MANDATORY: When a user asks about data — name SPECIFIC PEOPLE from the LIVE DATA above
+- When a user asks who holds a position (e.g. "who is the director", "who is the shift manager") — check the WORKPLACES → WORKERS section and reply with the names of workers in that role
+- When a user asks who works in a department — check ORG UNITS → WORKERS
 - For sick leave/injuries link to [Injury List](/dashboard/injury-list) and [Disease Report](/dashboard/diseases)
 - For certificates link to [Workers](/dashboard/workers)
 - For equipment link to [Equipment](/dashboard/equipment)
