@@ -1,6 +1,7 @@
 'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter, usePathname } from 'next/navigation';
 
 // ─── App knowledge base for the AI system prompt ───────────────────────────
@@ -135,8 +136,12 @@ const SUGGESTIONS = {
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function AIAssistant() {
     const { lang } = useLanguage();
+    const { isDark } = useTheme();
     const router = useRouter();
     const pathname = usePathname();
+
+    // Compute theme-aware chat styles
+    const chatStyles = makeChatStyles(isDark);
 
     const [isOpen, setIsOpen] = useState(false);
     const [isMinimized, setIsMinimized] = useState(false);
@@ -598,7 +603,6 @@ export default function AIAssistant() {
         </>
     );
 }
-
 // ─── Styles ─────────────────────────────────────────────────────────────────
 const fabStyles = {
     fab: {
@@ -643,16 +647,18 @@ const fabStyles = {
     },
 };
 
-const chatStyles = {
+const makeChatStyles = (isDark) => ({
     window: {
         position: 'fixed',
         bottom: 28,
         right: 28,
         zIndex: 999,
         width: 380,
-        background: 'white',
+        background: isDark ? 'var(--bg-card)' : 'white',
         borderRadius: 20,
-        boxShadow: '0 20px 60px rgba(11,42,60,0.2), 0 0 0 1px rgba(0,191,166,0.15)',
+        boxShadow: isDark
+            ? '0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,191,166,0.2)'
+            : '0 20px 60px rgba(11,42,60,0.2), 0 0 0 1px rgba(0,191,166,0.15)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -734,7 +740,7 @@ const chatStyles = {
         display: 'flex',
         flexDirection: 'column',
         gap: 12,
-        background: '#f8fafb',
+        background: isDark ? 'var(--bg-body)' : '#f8fafb',
     },
     messageRow: {
         display: 'flex',
@@ -765,11 +771,13 @@ const chatStyles = {
         borderBottomRightRadius: 4,
     },
     botBubble: {
-        background: 'white',
-        color: '#263238',
-        border: '1px solid #eef2f5',
+        background: isDark ? 'var(--bg-card)' : 'white',
+        color: isDark ? 'var(--text)' : '#263238',
+        border: isDark ? '1px solid var(--border)' : '1px solid #eef2f5',
         borderBottomLeftRadius: 4,
-        boxShadow: '0 1px 3px rgba(11,42,60,0.06)',
+        boxShadow: isDark
+            ? '0 1px 4px rgba(0,0,0,0.3)'
+            : '0 1px 3px rgba(11,42,60,0.06)',
     },
     bubbleContent: {
         wordBreak: 'break-word',
@@ -794,13 +802,13 @@ const chatStyles = {
     },
     suggestions: {
         padding: '8px 14px 4px',
-        background: 'white',
-        borderTop: '1px solid #eef2f5',
+        background: isDark ? 'var(--bg-card)' : 'white',
+        borderTop: isDark ? '1px solid var(--border)' : '1px solid #eef2f5',
         flexShrink: 0,
     },
     suggestionsLabel: {
         fontSize: '0.7rem',
-        color: '#90A4AE',
+        color: isDark ? 'var(--text-muted)' : '#90A4AE',
         fontWeight: 600,
         textTransform: 'uppercase',
         letterSpacing: 0.5,
@@ -817,8 +825,8 @@ const chatStyles = {
         padding: '5px 10px',
         borderRadius: 20,
         border: '1px solid rgba(0,191,166,0.3)',
-        background: 'rgba(0,191,166,0.08)',
-        color: '#009985',
+        background: isDark ? 'rgba(0,191,166,0.12)' : 'rgba(0,191,166,0.08)',
+        color: isDark ? 'var(--primary)' : '#009985',
         cursor: 'pointer',
         fontSize: '0.75rem',
         fontWeight: 500,
@@ -828,16 +836,16 @@ const chatStyles = {
     },
     inputArea: {
         padding: '10px 14px 12px',
-        borderTop: '1px solid #eef2f5',
+        borderTop: isDark ? '1px solid var(--border)' : '1px solid #eef2f5',
         flexShrink: 0,
-        background: 'white',
+        background: isDark ? 'var(--bg-card)' : 'white',
     },
     inputWrapper: {
         display: 'flex',
         alignItems: 'flex-end',
         gap: 8,
-        background: '#f8fafb',
-        border: '2px solid #dde4e9',
+        background: isDark ? 'var(--bg-input)' : '#f8fafb',
+        border: isDark ? '2px solid var(--border)' : '2px solid #dde4e9',
         borderRadius: 14,
         padding: '6px 8px 6px 14px',
         transition: 'border-color 0.15s',
@@ -848,7 +856,7 @@ const chatStyles = {
         background: 'transparent',
         fontFamily: 'var(--font-body)',
         fontSize: '0.875rem',
-        color: '#263238',
+        color: isDark ? 'var(--text)' : '#263238',
         resize: 'none',
         lineHeight: 1.5,
         maxHeight: 100,
@@ -871,7 +879,7 @@ const chatStyles = {
     },
     inputFooter: {
         fontSize: '0.65rem',
-        color: '#90A4AE',
+        color: isDark ? 'var(--text-muted)' : '#90A4AE',
         textAlign: 'center',
         marginTop: 6,
     },
@@ -882,8 +890,8 @@ const chatStyles = {
         padding: '3px 10px',
         borderRadius: 20,
         border: '1px solid rgba(0,191,166,0.4)',
-        background: 'rgba(0,191,166,0.08)',
-        color: '#009985',
+        background: isDark ? 'rgba(0,191,166,0.12)' : 'rgba(0,191,166,0.08)',
+        color: isDark ? 'var(--primary)' : '#009985',
         cursor: 'pointer',
         fontSize: '0.8rem',
         fontWeight: 600,
@@ -891,4 +899,4 @@ const chatStyles = {
         margin: '2px 0',
         transition: 'background 0.15s',
     },
-};
+});
