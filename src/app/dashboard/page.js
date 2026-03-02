@@ -6,6 +6,7 @@ import {
     getAll, create, remove, COLLECTIONS, getOrgUnitName, getWorkplaceName,
     getWorkerCertificates, getWorkerPPE, formatDate,
 } from '@/lib/dataStore';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const EVENT_ROUTES = {
     cert: '/dashboard/worker-certificates',
@@ -38,6 +39,7 @@ export default function DashboardPage() {
     const [certTypes, setCertTypes] = useState([]);
     const [ppeTypes, setPpeTypes] = useState([]);
     const [deleteEventTarget, setDeleteEventTarget] = useState(null); // event to confirm-delete
+    const [viewWorkerId, setViewWorkerId] = useState(null);
 
     useEffect(() => {
         setWorkers(getAll(COLLECTIONS.WORKERS));
@@ -619,8 +621,20 @@ export default function DashboardPage() {
                                         return (
                                             <tr key={c.id || idx}>
                                                 <td><button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates')}>{t('actions')} ▼</button></td>
-                                                <td style={{ fontWeight: 600 }}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</td>
-                                                <td>{c.naziv}</td>
+                                                <td style={{ fontWeight: 600 }}>
+                                                    <button
+                                                        onClick={() => { if (worker) setViewWorkerId(worker.id); }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        title={worker ? (lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
+                                                    >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => { if (worker) setViewWorkerId(worker.id); }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' }}
+                                                        title={worker ? (lang === 'bs' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}
+                                                    >{c.naziv || c.ime || '—'}</button>
+                                                </td>
                                                 <td><span className="badge badge-info">{c.oznaka}</span></td>
                                                 <td>{formatDate(c.datum)}</td>
                                                 <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>
@@ -654,8 +668,20 @@ export default function DashboardPage() {
                                         return (
                                             <tr key={p.id || idx}>
                                                 <td><button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-ppe')}>{t('actions')} ▼</button></td>
-                                                <td style={{ fontWeight: 600 }}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</td>
-                                                <td>{p.naziv}</td>
+                                                <td style={{ fontWeight: 600 }}>
+                                                    <button
+                                                        onClick={() => { if (worker) setViewWorkerId(worker.id); }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        title={worker ? (lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
+                                                    >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => { if (worker) setViewWorkerId(worker.id); }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' }}
+                                                        title={worker ? (lang === 'bs' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}
+                                                    >{p.naziv || '—'}</button>
+                                                </td>
                                                 <td>{formatDate(p.datumZaduzenja)}</td>
                                                 <td>{p.kolicina}</td>
                                             </tr>
@@ -668,6 +694,14 @@ export default function DashboardPage() {
                     )}
                 </div>
             </div>
+
+            {viewWorkerId && (
+                <WorkerProfileModal
+                    workerId={viewWorkerId}
+                    onClose={() => setViewWorkerId(null)}
+                    onSaved={() => setViewWorkerId(null)}
+                />
+            )}
         </div>
     );
 }
