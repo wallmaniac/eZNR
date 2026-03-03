@@ -127,6 +127,7 @@ export const COLLECTIONS = {
     CALENDAR_EVENTS: 'calendarEvents',
     EMPLOYER_DOCS: 'employerDocs',
     REFERRALS_RA1: 'referralsRa1',
+    FORMS_OIR1: 'formsOir1',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
@@ -135,7 +136,7 @@ export const COLLECTIONS = {
 // Collections that are company-scoped (data belongs to a specific company)
 const COMPANY_SCOPED = [
     'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
-    'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1',
+    'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1',
     'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners',
 ];
