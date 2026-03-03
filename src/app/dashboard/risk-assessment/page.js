@@ -32,9 +32,11 @@ export default function RiskAssessmentPage() {
     const [ptEdit, setPtEdit] = useState(null);
     const [ptNaziv, setPtNaziv] = useState('');
     const [ptVrsta, setPtVrsta] = useState('');
+    const [searchPt, setSearchPt] = useState('');
 
     // Hazards
     const [hazards, setHazards] = useState([]);
+    const [searchHaz, setSearchHaz] = useState('');
     const [hazEdit, setHazEdit] = useState(null);
     const [hazNaziv, setHazNaziv] = useState('');
     const [hazOznaka, setHazOznaka] = useState('');
@@ -236,9 +238,16 @@ export default function RiskAssessmentPage() {
 
                 <div className="card">
                     <div className="card-body">
-                        <button className="btn btn-outline btn-sm" onClick={startNewPt} style={{ marginBottom: 14 }}>
-                            + {lang === 'bs' ? 'Dodaj novi red' : 'Add new row'}
-                        </button>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+                            <button className="btn btn-outline btn-sm" onClick={startNewPt}>
+                                + {lang === 'bs' ? 'Dodaj novi red' : 'Add new row'}
+                            </button>
+                            <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
+                                <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={searchPt} onChange={e => setSearchPt(e.target.value)}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+                                <button className="btn btn-ghost btn-sm">{lang === 'bs' ? 'Traži' : 'Search'}</button>
+                            </div>
+                        </div>
 
                         <div className="data-table-wrapper">
                             <table className="data-table">
@@ -263,10 +272,12 @@ export default function RiskAssessmentPage() {
                                             <td><input className="form-input" value={ptVrsta} onChange={e => setPtVrsta(e.target.value)} /></td>
                                         </tr>
                                     )}
-                                    {personTypes.length === 0 && ptEdit !== '__new__' && (
-                                        <tr><td colSpan={3} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                    )}
-                                    {personTypes.map(p => (
+                                    {(() => {
+                                        const filtered = searchPt ? personTypes.filter(p => (p.naziv || '').toLowerCase().includes(searchPt.toLowerCase()) || (p.vrsta || '').toLowerCase().includes(searchPt.toLowerCase())) : personTypes; return filtered.length === 0 && ptEdit !== '__new__' ? (
+                                            <tr><td colSpan={3} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                        ) : null;
+                                    })()}
+                                    {(searchPt ? personTypes.filter(p => (p.naziv || '').toLowerCase().includes(searchPt.toLowerCase()) || (p.vrsta || '').toLowerCase().includes(searchPt.toLowerCase())) : personTypes).map(p => (
                                         ptEdit === p.id ? (
                                             <tr key={p.id} style={{ background: 'var(--bg-input)' }}>
                                                 <td>
@@ -318,9 +329,16 @@ export default function RiskAssessmentPage() {
 
                 <div className="card">
                     <div className="card-body">
-                        <button className="btn btn-outline btn-sm" onClick={startNewHaz} style={{ marginBottom: 14 }}>
-                            + {lang === 'bs' ? 'Dodaj novi red' : 'Add new row'}
-                        </button>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
+                            <button className="btn btn-outline btn-sm" onClick={startNewHaz}>
+                                + {lang === 'bs' ? 'Dodaj novi red' : 'Add new row'}
+                            </button>
+                            <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
+                                <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={searchHaz} onChange={e => setSearchHaz(e.target.value)}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+                                <button className="btn btn-ghost btn-sm">{lang === 'bs' ? 'Traži' : 'Search'}</button>
+                            </div>
+                        </div>
 
                         <div className="data-table-wrapper">
                             <table className="data-table">
@@ -347,10 +365,12 @@ export default function RiskAssessmentPage() {
                                                 placeholder={lang === 'bs' ? 'npr. O.1' : 'e.g. O.1'} /></td>
                                         </tr>
                                     )}
-                                    {hazards.length === 0 && hazEdit !== '__new__' && (
-                                        <tr><td colSpan={3} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                    )}
-                                    {hazards.map(h => (
+                                    {(() => {
+                                        const filtered = searchHaz ? hazards.filter(h => (h.naziv || '').toLowerCase().includes(searchHaz.toLowerCase()) || (h.oznaka || '').toLowerCase().includes(searchHaz.toLowerCase())) : hazards; return filtered.length === 0 && hazEdit !== '__new__' ? (
+                                            <tr><td colSpan={3} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                        ) : null;
+                                    })()}
+                                    {(searchHaz ? hazards.filter(h => (h.naziv || '').toLowerCase().includes(searchHaz.toLowerCase()) || (h.oznaka || '').toLowerCase().includes(searchHaz.toLowerCase())) : hazards).map(h => (
                                         hazEdit === h.id ? (
                                             <tr key={h.id} style={{ background: 'var(--bg-input)' }}>
                                                 <td>

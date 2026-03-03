@@ -148,6 +148,14 @@
   background: #1e2d40;
 }
 
+[data-theme="dark"] .search-bar:focus-within {
+  background: #1e2d40;
+}
+
+[data-theme="dark"] .search-bar input {
+  color: var(--text);
+}
+
 [data-theme="dark"] .card-footer {
   background: #1a2a3a;
 }
