@@ -1,16 +1,421 @@
 'use client';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
+import {
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+} from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
+
+const EMPTY_ZAHTJEVNICA = {
+  zahtjevnicaBroj: '',
+  datum: todayISO(),
+  workerId: '',
+  mjestoTroska: '',
+  orgJedinicaId: '',
+  odobrioId: '',
+  skladistarId: '',
+  napomena: '',
+  stavke: [], // array of items
+};
+
+const EMPTY_STAVKA = {
+  opisno: '',
+  zastitnoSredstvoId: '',
+  zastitnoSredstvoNaziv: '',
+  redBr: 1,
+  velicina: '',
+  jedMjera: '',
+  komada: 1,
+};
 
 export default function RequestsPage() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
+  const { alert, confirm, DialogRenderer } = useDialog();
+
+  const [records, setRecords] = useState([]);
+  const [workers, setWorkers] = useState([]);
+  const [orgUnits, setOrgUnits] = useState([]);
+  const [ppeTypes, setPpeTypes] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ ...EMPTY_ZAHTJEVNICA });
+  // Item sub-form
+  const [showItemForm, setShowItemForm] = useState(false);
+  const [editingItemIdx, setEditingItemIdx] = useState(null);
+  const [itemData, setItemData] = useState({ ...EMPTY_STAVKA });
+
+  const loadData = useCallback(() => {
+    setRecords(getAll(COLLECTIONS.REQUESTS));
+    setWorkers(getAll(COLLECTIONS.WORKERS));
+    setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
+    setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  const setItem = (field, value) => setItemData(prev => ({ ...prev, [field]: value }));
+
+  const handleNew = () => {
+    setFormData({ ...EMPTY_ZAHTJEVNICA, datum: todayISO(), stavke: [] });
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (item) => {
+    setFormData({ ...EMPTY_ZAHTJEVNICA, ...item, stavke: item.stavke || [] });
+    setEditingId(item.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    const ok = await confirm(lang === 'bs' ? 'Obrisati zahtjevnicu?' : 'Delete request?');
+    if (ok) { remove(COLLECTIONS.REQUESTS, id); loadData(); }
+  };
+
+  const handleSave = async () => {
+    if (editingId) {
+      update(COLLECTIONS.REQUESTS, editingId, formData);
+    } else {
+      create(COLLECTIONS.REQUESTS, formData);
+    }
+    setShowForm(false);
+    loadData();
+  };
+
+  // ── Item sub-form handlers ──
+  const handleNewItem = () => {
+    const nextRedBr = formData.stavke.length + 1;
+    setItemData({ ...EMPTY_STAVKA, redBr: nextRedBr });
+    setEditingItemIdx(null);
+    setShowItemForm(true);
+  };
+
+  const handleEditItem = (idx) => {
+    setItemData({ ...formData.stavke[idx] });
+    setEditingItemIdx(idx);
+    setShowItemForm(true);
+  };
+
+  const handleDeleteItem = async (idx) => {
+    const ok = await confirm(lang === 'bs' ? 'Obrisati stavku?' : 'Delete item?');
+    if (ok) {
+      setFormData(prev => ({
+        ...prev,
+        stavke: prev.stavke.filter((_, i) => i !== idx),
+      }));
+    }
+  };
+
+  const handleSaveItem = () => {
+    // Auto-fill PPE name if selected
+    const enriched = { ...itemData };
+    if (enriched.zastitnoSredstvoId) {
+      const ppe = ppeTypes.find(p => p.id === enriched.zastitnoSredstvoId);
+      if (ppe) enriched.zastitnoSredstvoNaziv = ppe.naziv || ppe.name || '';
+    }
+
+    setFormData(prev => {
+      const newStavke = [...prev.stavke];
+      if (editingItemIdx !== null) {
+        newStavke[editingItemIdx] = enriched;
+      } else {
+        newStavke.push(enriched);
+      }
+      return { ...prev, stavke: newStavke };
+    });
+    setShowItemForm(false);
+  };
+
+  const getWorkerName = (id) => {
+    const w = workers.find(wk => wk.id === id);
+    return w ? `${w.prezime} ${w.ime}` : '—';
+  };
+  const getOrgName = (id) => {
+    const o = orgUnits.find(ou => ou.id === id);
+    return o ? o.naziv : '—';
+  };
+
+  const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
+  const sectionTitle = { fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 };
+
+  // ── Item sub-form modal ──
+  const renderItemForm = () => {
+    if (!showItemForm) return null;
+    return (
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+        background: 'rgba(0,0,0,0.5)', zIndex: 9999,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div className="card" style={{ width: 600, maxWidth: '95vw', maxHeight: '90vh', overflow: 'auto' }}>
+          <div className="card-body">
+            <div style={sectionTitle}>
+              {editingItemIdx !== null
+                ? (lang === 'bs' ? 'Uredi stavku zahtjevnice' : 'Edit request item')
+                : (lang === 'bs' ? 'Nova stavka zahtjevnice' : 'New request item')}
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={labelSt}>{lang === 'bs' ? 'Opisno' : 'Description'}</div>
+              <input className="form-input" value={itemData.opisno} onChange={e => setItem('opisno', e.target.value)} />
+            </div>
+
+            <div style={{ marginBottom: 12 }}>
+              <div style={labelSt}>{lang === 'bs' ? 'Zaštitno sredstvo' : 'Protective equipment'}</div>
+              <select className="form-select" value={itemData.zastitnoSredstvoId} onChange={e => setItem('zastitnoSredstvoId', e.target.value)}>
+                <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                {ppeTypes.map(p => (
+                  <option key={p.id} value={p.id}>{p.naziv || p.name || p.id}</option>
+                ))}
+              </select>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 100px', gap: 12, marginBottom: 12 }}>
+              <div>
+                <div style={labelSt}>RedBr</div>
+                <input className="form-input" type="number" min="1" value={itemData.redBr} onChange={e => setItem('redBr', Number(e.target.value))} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Veličina' : 'Size'}</div>
+                <input className="form-input" value={itemData.velicina} onChange={e => setItem('velicina', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Jed. mjera' : 'Unit'}</div>
+                <input className="form-input" value={itemData.jedMjera} onChange={e => setItem('jedMjera', e.target.value)} placeholder={lang === 'bs' ? 'npr. kom, par' : 'e.g. pcs, pair'} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Komada' : 'Qty'}</div>
+                <input className="form-input" type="number" min="1" value={itemData.komada} onChange={e => setItem('komada', Number(e.target.value))} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+              <button className="btn btn-primary" onClick={handleSaveItem}>
+                💾 {lang === 'bs' ? 'Snimi' : 'Save'}
+              </button>
+              <button className="btn btn-ghost" onClick={() => setShowItemForm(false)}>
+                ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ── List view ──
+  if (!showForm) {
+    return (
+      <div className="animate-fadeIn">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <h1 style={{ margin: 0 }}>📝 {t('requests')}</h1>
+        </div>
+        <DialogRenderer />
+
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={handleNew}>
+              + {lang === 'bs' ? 'Nova zahtjevnica' : 'New request'}
+            </button>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
+            </span>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
+                    <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
+                    <th>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</th>
+                    <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
+                    <th>{lang === 'bs' ? 'Stavke' : 'Items'}</th>
+                    <th>{t('actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                  ) : records.map((r) => (
+                    <tr key={r.id}>
+                      <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
+                      <td>{formatDate(r.datum)}</td>
+                      <td>{getWorkerName(r.workerId)}</td>
+                      <td>{getOrgName(r.orgJedinicaId)}</td>
+                      <td>
+                        <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: '#E3F2FD', color: '#1565C0', fontWeight: 600 }}>
+                          {(r.stavke || []).length}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
+                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Form view ──
   return (
     <div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>📝 {t('requests')}</h1>
-      <div className="card"><div className="card-body">
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}><button className="btn btn-primary btn-sm">+ {t('add')}</button></div>
-        <div className="data-table-wrapper"><table className="data-table"><thead><tr><th>{t('actions')}</th><th>{t('name')}</th><th>{t('worker')}</th><th>{t('date')}</th><th>{t('status')}</th></tr></thead>
-          <tbody><tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr></tbody></table></div>
-      </div></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
+        <h1 style={{ margin: 0 }}>📝 {editingId ? (lang === 'bs' ? 'Uredi zahtjevnicu' : 'Edit request') : (lang === 'bs' ? 'Nova zahtjevnica' : 'New request')}</h1>
+      </div>
+      <DialogRenderer />
+      {renderItemForm()}
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* ═══ Main form fields ═══ */}
+        <div className="card">
+          <div className="card-body">
+            <div style={sectionTitle}>{lang === 'bs' ? 'Zahtjevnica' : 'Request'}</div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr 160px 1fr', gap: 12, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Zahtjevnica broj' : 'Request No.'}</div>
+                <input className="form-input" value={formData.zahtjevnicaBroj} onChange={e => set('zahtjevnicaBroj', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</div>
+                <select className="form-select" value={formData.workerId} onChange={e => set('workerId', e.target.value)}>
+                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  {workers.filter(w => w.aktivan).map(w => (
+                    <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Mjesto troška' : 'Cost center'}</div>
+                <input className="form-input" value={formData.mjestoTroska} onChange={e => set('mjestoTroska', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Organizacijska jedinica' : 'Org. unit'}</div>
+                <select className="form-select" value={formData.orgJedinicaId} onChange={e => set('orgJedinicaId', e.target.value)}>
+                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  {orgUnits.map(o => (
+                    <option key={o.id} value={o.id}>{o.naziv}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Odobrio' : 'Approved by'}</div>
+                <select className="form-select" value={formData.odobrioId} onChange={e => set('odobrioId', e.target.value)}>
+                  <option value="">{lang === 'bs' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
+                  {workers.filter(w => w.aktivan).map(w => (
+                    <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Skladištar' : 'Storekeeper'}</div>
+                <select className="form-select" value={formData.skladistarId} onChange={e => set('skladistarId', e.target.value)}>
+                  <option value="">{lang === 'bs' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
+                  {workers.filter(w => w.aktivan).map(w => (
+                    <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Napomena' : 'Note'}</div>
+                <textarea className="form-input" rows={2} value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Tražena zaštitna sredstva ═══ */}
+        <div className="card">
+          <div className="card-body">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <div style={{ ...sectionTitle, marginBottom: 0, background: 'var(--bg-dark, #333)', color: '#fff', padding: '8px 16px', borderRadius: 'var(--radius-md)', fontSize: '0.82rem' }}>
+                {lang === 'bs' ? 'Tražena zaštitna sredstva' : 'Requested protective equipment'}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
+              <button className="btn btn-primary btn-sm" onClick={handleNewItem}>
+                + {lang === 'bs' ? 'Nova stavka zahtjevnice' : 'New request item'}
+              </button>
+            </div>
+
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{t('actions')}</th>
+                    <th>{lang === 'bs' ? 'Osobna zaštitna oprema / Opisno' : 'PPE / Description'}</th>
+                    <th>{lang === 'bs' ? 'Šifra' : 'Code'}</th>
+                    <th>RedBr</th>
+                    <th>{lang === 'bs' ? 'Veličina' : 'Size'}</th>
+                    <th>{lang === 'bs' ? 'Jed. mjera' : 'Unit'}</th>
+                    <th>{lang === 'bs' ? 'Komada' : 'Qty'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.stavke.length === 0 ? (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
+                      {lang === 'bs' ? 'Nema stavki. Dodajte novu stavku zahtjevnice.' : 'No items. Add a new request item.'}
+                    </td></tr>
+                  ) : formData.stavke.map((s, idx) => (
+                    <tr key={idx}>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleEditItem(idx)}>✏️</button>
+                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteItem(idx)}>🗑️</button>
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: 500 }}>{s.zastitnoSredstvoNaziv || s.opisno || '—'}</td>
+                      <td>{s.zastitnoSredstvoId ? s.zastitnoSredstvoId.slice(0, 8) : '—'}</td>
+                      <td>{s.redBr}</td>
+                      <td>{s.velicina || '—'}</td>
+                      <td>{s.jedMjera || '—'}</td>
+                      <td style={{ fontWeight: 600 }}>{s.komada}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Action buttons ═══ */}
+        <div className="card">
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={handleSave}>
+              💾 {lang === 'bs' ? 'Snimi zahtjevnicu' : 'Save request'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
+              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
