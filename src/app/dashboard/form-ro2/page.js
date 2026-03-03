@@ -1,19 +1,288 @@
 'use client';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
+import {
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+} from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
+
+const EMPTY_RO2 = {
+  workerId: '',
+  broj: '',
+  datum: todayISO(),
+  // RO-2 specifics
+  clanak3Tocke: '',
+  datumOcjene: '',
+  nijeMijenjaoRadnoMjesto: true, // Da/Ne — default Ne (true = hasn't changed)
+  radniStazNaRadnomMjestu: '',
+};
 
 export default function FormRO2Page() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
+  const { alert, confirm, DialogRenderer } = useDialog();
+
+  const [records, setRecords] = useState([]);
+  const [workers, setWorkers] = useState([]);
+  const [orgUnits, setOrgUnits] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ ...EMPTY_RO2 });
+
+  const loadData = useCallback(() => {
+    setRecords(getAll(COLLECTIONS.FORMS_RO2));
+    setWorkers(getAll(COLLECTIONS.WORKERS));
+    setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+
+  const handleNew = () => {
+    setFormData({ ...EMPTY_RO2, datum: todayISO() });
+    setEditingId(null);
+    setShowForm(true);
+  };
+
+  const handleEdit = (item) => {
+    setFormData({ ...EMPTY_RO2, ...item });
+    setEditingId(item.id);
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id) => {
+    const ok = await confirm(lang === 'bs' ? 'Obrisati uputnicu?' : 'Delete referral?');
+    if (ok) { remove(COLLECTIONS.FORMS_RO2, id); loadData(); }
+  };
+
+  const handleSave = async () => {
+    if (!formData.workerId) {
+      await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Select a worker!');
+      return;
+    }
+    if (editingId) {
+      update(COLLECTIONS.FORMS_RO2, editingId, formData);
+    } else {
+      create(COLLECTIONS.FORMS_RO2, formData);
+    }
+    setShowForm(false);
+    loadData();
+  };
+
+  const getWorkerName = (id) => {
+    const w = workers.find(wk => wk.id === id);
+    return w ? `${w.prezime} ${w.ime}` : '—';
+  };
+  const getWorkerInfo = (id) => workers.find(wk => wk.id === id);
+
+  const labelSt = {
+    fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)',
+    textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4,
+  };
+  const sectionTitle = {
+    fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)',
+    textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14,
+  };
+  const checkLabel = {
+    display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.84rem',
+    cursor: 'pointer', whiteSpace: 'nowrap',
+  };
+
+  // ── List view ──
+  if (!showForm) {
+    return (
+      <div className="animate-fadeIn">
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <h1 style={{ margin: 0 }}>📄 {t('formRO2')}</h1>
+        </div>
+        <DialogRenderer />
+
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={handleNew}>
+              + {lang === 'bs' ? 'Nova uputnica RO-2' : 'New RO-2 referral'}
+            </button>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
+            </span>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
+                    <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
+                    <th>{lang === 'bs' ? 'Čl.3 točke' : 'Art.3 point'}</th>
+                    <th>{lang === 'bs' ? 'Radni staž' : 'Experience'}</th>
+                    <th>{lang === 'bs' ? 'Promjena RM' : 'Changed pos.'}</th>
+                    <th>{t('actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {records.length === 0 ? (
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                  ) : records.map((r, idx) => (
+                    <tr key={r.id}>
+                      <td>{idx + 1}</td>
+                      <td style={{ fontWeight: 600 }}>{getWorkerName(r.workerId)}</td>
+                      <td>{formatDate(r.datum)}</td>
+                      <td>{r.clanak3Tocke || '—'}</td>
+                      <td>{r.radniStazNaRadnomMjestu || '—'}</td>
+                      <td>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600,
+                          background: r.nijeMijenjaoRadnoMjesto ? '#E8F5E9' : '#FBE9E7',
+                          color: r.nijeMijenjaoRadnoMjesto ? '#2E7D32' : '#C62828',
+                        }}>{r.nijeMijenjaoRadnoMjesto ? 'Ne' : 'Da'}</span>
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
+                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Form view ──
+  const worker = getWorkerInfo(formData.workerId);
+  const workerOu = worker ? orgUnits.find(o => o.id === worker.orgJedinicaId) : null;
+
   return (
     <div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>📄 {t('formRO2')}</h1>
-      <div className="card"><div className="card-body">
-        <div className="alert alert-info" style={{ marginBottom: 20 }}>
-          ℹ️ {lang === 'bs' ? 'Obrazac RO2 - Evidencija pregleda radne opreme i objekta.' : 'Form RO2 - Equipment and facility inspection records.'}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
+        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang === 'bs' ? 'Uredi uputnicu RO-2' : 'Edit RO-2') : (lang === 'bs' ? 'Nova uputnica RO-2' : 'New RO-2')}</h1>
+      </div>
+      <DialogRenderer />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* ═══ SECTION 1: Worker & General ═══ */}
+        <div className="card">
+          <div className="card-body">
+            <div style={sectionTitle}>
+              {lang === 'bs'
+                ? 'Uputnice za provjeru radne sposobnosti radnika na radnom mjestu s posebnim uvjetima rada (Obrazac RO-2)'
+                : 'Referral for verifying worker fitness at workplace with special conditions (Form RO-2)'}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr', gap: 16, marginBottom: 16 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Broj' : 'Number'}</div>
+                <input className="form-input" value={formData.broj} onChange={e => set('broj', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
+                <select className="form-select" value={formData.workerId} onChange={e => set('workerId', e.target.value)}>
+                  <option value="">{lang === 'bs' ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                  {workers.filter(w => w.aktivan).map(w => (
+                    <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Worker auto-filled details */}
+            {worker && (
+              <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Matični broj:</span> <strong>{worker.jmbg || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Prezime, ime, ime oca:' : 'Name:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}><button className="btn btn-primary btn-sm">+ {t('add')}</button><button className="btn btn-ghost btn-sm">🖨️ {t('print')}</button></div>
-        <div className="data-table-wrapper"><table className="data-table"><thead><tr><th>{t('actions')}</th><th>{t('name')}</th><th>{t('date')}</th><th>{t('status')}</th></tr></thead>
-          <tbody><tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr></tbody></table></div>
-      </div></div>
+
+        {/* ═══ SECTION 2: RO-2 Specifics ═══ */}
+        <div className="card">
+          <div className="card-body">
+            <div style={sectionTitle}>RO-2</div>
+
+            {/* Čl.3 točke */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: '0.84rem' }}>
+                <span style={{ fontWeight: 600 }}>
+                  {lang === 'bs' ? 'Radno mjesto s posebnim uvjetima prema čl3, točke' : 'Workplace with special conditions per art.3, points'}
+                </span>
+                <input className="form-input" style={{ width: 100 }} value={formData.clanak3Tocke} onChange={e => set('clanak3Tocke', e.target.value)} />
+                <span style={{ color: 'var(--text-muted)' }}>
+                  {lang === 'bs' ? 'Pravilnika o poslovima s posebnim uvjetima rada.' : 'of the Regulation on special working conditions.'}
+                </span>
+              </div>
+            </div>
+
+            {/* Last assessment */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: '0.84rem' }}>
+                <span style={{ fontWeight: 600 }}>
+                  {lang === 'bs' ? 'Od posljednje ocjene radne sposobnosti dne:' : 'Since last fitness assessment on:'}
+                </span>
+                <input className="form-input" type="date" style={{ width: 180 }} value={formData.datumOcjene} onChange={e => set('datumOcjene', e.target.value)} />
+                <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+                  {lang === 'bs'
+                    ? 'radnik nije mijenjao radno mjesto odnosno nisu promijenjeni uvjeti rada na tim poslovima'
+                    : 'worker has not changed workplace nor have the working conditions changed'}
+                </span>
+                <label style={checkLabel}>
+                  <input type="radio" name="nijeMijenjao" checked={formData.nijeMijenjaoRadnoMjesto === false} onChange={() => set('nijeMijenjaoRadnoMjesto', false)} /> Da
+                </label>
+                <label style={checkLabel}>
+                  <input type="radio" name="nijeMijenjao" checked={formData.nijeMijenjaoRadnoMjesto === true} onChange={() => set('nijeMijenjaoRadnoMjesto', true)} /> Ne
+                </label>
+              </div>
+            </div>
+
+            {/* Radni staž */}
+            <div style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.84rem' }}>
+                <span style={{ fontWeight: 600 }}>
+                  {lang === 'bs' ? 'Radni staž na radnom mjestu koji obavlja:' : 'Work experience in current position:'}
+                </span>
+                <input className="form-input" style={{ width: 140 }} value={formData.radniStazNaRadnomMjestu} onChange={e => set('radniStazNaRadnomMjestu', e.target.value)} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Action buttons ═══ */}
+        <div className="card">
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={handleSave}>
+              💾 {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
+            </button>
+            <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
+              💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
+              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+            </button>
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
