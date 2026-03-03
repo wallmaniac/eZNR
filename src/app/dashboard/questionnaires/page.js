@@ -1,16 +1,492 @@
 'use client';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import {
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+} from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
+
+/* ═══════════════════════════════════════════════
+   Upitnici — Questionnaire System
+   Matching: https://app.zastitanaradu.hr/merkant/Upitnik
+   ═══════════════════════════════════════════════ */
+
+const ZA_VRSTU_OPTIONS = [
+  'Djelatnik', 'DokumentTip', 'Posao', 'Tenant',
+];
+
+const DODAJ_PROCJENA_OPTIONS = [
+  'Ne dodaje se u procjenu rizika',
+  'Dodaje se u procjenu rizika',
+];
+
+const EMPTY_UPITNIK = {
+  naziv: '',
+  oznaka: '',
+  zaVrstu: '',
+  prikaziNaPortalu: false,
+  dodajUPrilogProcjeniRizika: 'Ne dodaje se u procjenu rizika',
+  emailZaRezultate: '',
+  posaljiKopijuKorisniku: false,
+  prikaziRezultateNakonRjesavanja: false,
+  prikaziSamoZadovoljavaNezadovoljava: false,
+  automatskiUpisUEvidenciju: false,
+  brojTocnihOdgovora: '',
+  izlazniTipDokumenta: '',
+  zadaniIspisZaDokument: '',
+  emailSubject: '',
+  emailBody: '',
+  porukaUspjesno: '',
+  porukaNedovoljno: '',
+  jezik: '',
+  predlozak: false,
+  // Survey JSON (simplified — stores the question definition)
+  surveyJson: '{\n  "pages": [\n    {\n      "name": "page1",\n      "elements": []\n    }\n  ]\n}',
+  // Responses
+  responses: [],
+};
+
+// Built-in templates from reference app (WebZNR-ovi ugrađeni primjeri)
+const BUILTIN_TEMPLATES = [
+  { naziv: 'Alkotest ovlaštene osobe', oznaka: 'ALKO-oo', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Alkotest za poslodavce', oznaka: 'ALKO', zaVrstu: 'Djelatnik', prikaziNaPortalu: false },
+  { naziv: 'Evidencija požara', oznaka: 'POŽAR', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Fizikalni v3', oznaka: 'FIv3', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Fizikalni v3 obavezna polja', oznaka: 'FIv3', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Kemijske v3', oznaka: 'KIv3', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Kemijske v3 bez prikaza (samo učitavanje iz Excela)', oznaka: 'KIv3', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Ocjenjivanje opterećenja / procjena rizika kod statodinamičkih napora', oznaka: 'STATO', zaVrstu: 'Posao', prikaziNaPortalu: true },
+  { naziv: 'Primjer različitih mogućnosti upitnika', oznaka: 'PRIM', zaVrstu: 'Djelatnik', prikaziNaPortalu: false },
+  { naziv: 'Procjena rizika - prikupljanje osnovnih podataka poslodavca', oznaka: '', zaVrstu: 'Tenant', prikaziNaPortalu: false },
+  { naziv: 'Procjena rizika za sigurnost I zdravlje radnika pri obavljanju ponavljajućih zadataka', oznaka: 'PONAV', zaVrstu: 'Posao', prikaziNaPortalu: false },
+  { naziv: 'Rad na računalu - upitnik za radnike', oznaka: 'RAČR', zaVrstu: 'Djelatnik', prikaziNaPortalu: true },
+  { naziv: 'Rad na računalu - upitnik za stručnjake', oznaka: 'RAČ', zaVrstu: 'Djelatnik', prikaziNaPortalu: false },
+  { naziv: 'Radna oprema v3', oznaka: 'ROv3', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Radna oprema v3 - čl. 41', oznaka: 'ROv3-41', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Radna oprema v3 - obavezni podaci', oznaka: 'ROv3', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Radni nalog - Ministarstvo', oznaka: 'RN-Min', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
+  { naziv: 'Sudjelovanje radnika u procjeni rizika (Ministarstvo)', oznaka: 'SUD1', zaVrstu: 'Djelatnik', prikaziNaPortalu: false },
+  { naziv: 'Test - radnik unosi svoje podatke', oznaka: 'Test', zaVrstu: 'Djelatnik', prikaziNaPortalu: true },
+  { naziv: 'Test za rad na siguran način - predložak', oznaka: 'ZOS-TEST', zaVrstu: 'Djelatnik', prikaziNaPortalu: true },
+];
 
 export default function QuestionnairesPage() {
   const { t, lang } = useLanguage();
+  const { alert, confirm, DialogRenderer } = useDialog();
+
+  const [view, setView] = useState('list'); // list | form
+  const [records, setRecords] = useState([]);
+  const [editingId, setEditingId] = useState(null);
+  const [formData, setFormData] = useState({ ...EMPTY_UPITNIK });
+  const [search, setSearch] = useState('');
+  const [templateSearch, setTemplateSearch] = useState('');
+  const [activeTab, setActiveTab] = useState('editor'); // editor | test | json
+
+  const loadData = useCallback(() => {
+    setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
+  }, []);
+
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+
+  // CRUD
+  const handleNew = () => {
+    setFormData({ ...EMPTY_UPITNIK });
+    setEditingId(null);
+    setActiveTab('editor');
+    setView('form');
+  };
+  const handleEdit = (item) => {
+    setFormData({ ...EMPTY_UPITNIK, ...item });
+    setEditingId(item.id);
+    setActiveTab('editor');
+    setView('form');
+  };
+  const handleDelete = async (id) => {
+    if (await confirm(lang === 'bs' ? 'Obrisati upitnik?' : 'Delete questionnaire?')) { remove(COLLECTIONS.QUESTIONNAIRES, id); loadData(); }
+  };
+  const handleSave = () => {
+    if (editingId) update(COLLECTIONS.QUESTIONNAIRES, editingId, formData);
+    else create(COLLECTIONS.QUESTIONNAIRES, formData);
+    setView('list'); loadData();
+  };
+
+  // Insert template
+  const handleInsertTemplate = (tpl) => {
+    create(COLLECTIONS.QUESTIONNAIRES, {
+      ...EMPTY_UPITNIK,
+      ...tpl,
+      predlozak: true,
+    });
+    loadData();
+  };
+
+  const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
+  const sectionTitle = { fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 };
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VIEW: LIST
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  if (view === 'list') {
+    const filtered = search
+      ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()) || (r.oznaka || '').toLowerCase().includes(search.toLowerCase()))
+      : records;
+    const filteredTemplates = templateSearch
+      ? BUILTIN_TEMPLATES.filter(t => (t.naziv || '').toLowerCase().includes(templateSearch.toLowerCase()) || (t.oznaka || '').toLowerCase().includes(templateSearch.toLowerCase()))
+      : BUILTIN_TEMPLATES;
+
+    return (
+      <div className="animate-fadeIn">
+        <h1 style={{ marginBottom: 24 }}>❓ {t('questionnaires')}</h1>
+        <DialogRenderer />
+
+        {/* ═══ User Questionnaires ═══ */}
+        <div className="card" style={{ marginBottom: 16 }}>
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>
+              + {lang === 'bs' ? 'Novi' : 'New'}
+            </button>
+            <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
+              <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+              <button className="btn btn-ghost btn-sm">{lang === 'bs' ? 'Traži' : 'Search'}</button>
+            </div>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              {filtered.length} {lang === 'bs' ? 'zapisa' : 'records'}
+            </span>
+          </div>
+        </div>
+
+        <div className="card" style={{ marginBottom: 32 }}>
+          <div className="card-body">
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{t('actions')}</th>
+                    <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
+                    <th>{lang === 'bs' ? 'Povezan na' : 'Connected to'}</th>
+                    <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</th>
+                    <th>{lang === 'bs' ? 'Predložak' : 'Template'}</th>
+                    <th>{lang === 'bs' ? 'Jezik' : 'Language'}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.length === 0 ? (
+                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                  ) : filtered.map(r => (
+                    <tr key={r.id}>
+                      <td>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-primary btn-sm" onClick={() => handleEdit(r)}>
+                            {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+                          </button>
+                        </div>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{r.naziv || '—'}</td>
+                      <td>{r.zaVrstu || '—'}</td>
+                      <td>{r.prikaziNaPortalu ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No')}</td>
+                      <td>
+                        {r.predlozak && <span style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>✔</span>}
+                      </td>
+                      <td>{r.jezik || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Built-in Templates (WebZNR-ovi ugrađeni primjeri) ═══ */}
+        <h2 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+          ❓ {lang === 'bs' ? 'WebZNR-ovi ugrađeni primjeri:' : 'Built-in Templates:'}
+        </h2>
+
+        <div className="card" style={{ marginBottom: 8 }}>
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
+              <input placeholder={lang === 'bs' ? 'Pretraži predloške...' : 'Search templates...'} value={templateSearch} onChange={e => setTemplateSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+              <button className="btn btn-ghost btn-sm">{lang === 'bs' ? 'Traži' : 'Search'}</button>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-body">
+            <div className="data-table-wrapper">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
+                    <th>{lang === 'bs' ? 'Oznaka' : 'Code'}</th>
+                    <th>{lang === 'bs' ? 'Za vrstu' : 'For type'}</th>
+                    <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Portal'}</th>
+                    <th>{t('actions')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTemplates.map((tpl, idx) => (
+                    <tr key={idx}>
+                      <td style={{ fontWeight: 500 }}>{tpl.naziv}</td>
+                      <td><span style={{ fontFamily: 'monospace', fontWeight: 600 }}>{tpl.oznaka || '—'}</span></td>
+                      <td>{tpl.zaVrstu}</td>
+                      <td>
+                        {tpl.prikaziNaPortalu
+                          ? <span style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>✔</span>
+                          : ''}
+                      </td>
+                      <td>
+                        <button className="btn btn-primary btn-sm" onClick={() => handleInsertTemplate(tpl)}>
+                          {lang === 'bs' ? 'Umetni' : 'Insert'}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VIEW: FORM (Create / Edit)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  const tabStyle = (key) => ({
+    padding: '10px 24px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+    borderBottom: activeTab === key ? '3px solid var(--primary)' : '3px solid transparent',
+    color: activeTab === key ? 'var(--primary)' : 'var(--text-muted)',
+    background: 'none', border: 'none', borderBottomStyle: 'solid',
+  });
+
   return (
     <div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>❓ {t('questionnaires')}</h1>
-      <div className="card"><div className="card-body">
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}><button className="btn btn-primary btn-sm">+ {t('add')}</button></div>
-        <div className="data-table-wrapper"><table className="data-table"><thead><tr><th>{t('actions')}</th><th>{t('name')}</th><th>{t('date')}</th><th>{t('status')}</th></tr></thead>
-          <tbody><tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr></tbody></table></div>
-      </div></div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <button className="btn btn-ghost" onClick={() => setView('list')}>←</button>
+        <h1 style={{ margin: 0 }}>
+          ❓ {editingId
+            ? (lang === 'bs' ? 'Uredi upitnik' : 'Edit questionnaire')
+            : (lang === 'bs' ? 'Novi upitnik' : 'New questionnaire')}
+        </h1>
+      </div>
+      <DialogRenderer />
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* ═══ Editor Tabs ═══ */}
+        <div className="card">
+          <div style={{ display: 'flex', borderBottom: '2px solid var(--border-light)', padding: '0 16px' }}>
+            <button style={tabStyle('editor')} onClick={() => setActiveTab('editor')}>
+              📝 {lang === 'bs' ? 'Uređivač upitnika' : 'Questionnaire Editor'}
+            </button>
+            <button style={tabStyle('test')} onClick={() => setActiveTab('test')}>
+              ▶ {lang === 'bs' ? 'Testiraj upitnik' : 'Test Questionnaire'}
+            </button>
+            <button style={tabStyle('json')} onClick={() => setActiveTab('json')}>
+              {'{ }'} {lang === 'bs' ? 'JSON uređivač' : 'JSON Editor'}
+            </button>
+          </div>
+          <div className="card-body">
+            {activeTab === 'editor' && (
+              <div>
+                <div style={{ padding: 20, border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--text-muted)', minHeight: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                  <div style={{ fontSize: '2.5rem', opacity: 0.4 }}>📝</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                    {lang === 'bs' ? 'Alatna traka — Dodajte pitanja' : 'Toolbox — Add questions'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    {['Tekst polje', 'Potvrdni okvir', 'Radiogumb', 'Padajući izbornik', 'Komentar', 'Ocjena', 'Rangiranje', 'Odabirač slike', 'Booleov'].map((tool, i) => (
+                      <span key={i} style={{ padding: '6px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', border: '1px solid var(--border-light)' }}>
+                        {tool}
+                      </span>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', marginTop: 8, maxWidth: 400 }}>
+                    {lang === 'bs'
+                      ? 'Kliknite na tip pitanja ili koristite JSON uređivač za definiranje pitanja upitnika.'
+                      : 'Click a question type or use the JSON editor to define questionnaire questions.'}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'test' && (
+              <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
+                <div style={{ fontSize: '2.5rem', opacity: 0.4 }}>▶</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                  {lang === 'bs' ? 'Pretpregled upitnika' : 'Questionnaire Preview'}
+                </div>
+                <div style={{ fontSize: '0.82rem' }}>
+                  {lang === 'bs'
+                    ? 'Definirajte pitanja u editoru ili JSON uređivaču da biste ih mogli testirati ovdje.'
+                    : 'Define questions in the editor or JSON editor to preview them here.'}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'json' && (
+              <div>
+                <textarea
+                  className="form-input"
+                  value={formData.surveyJson}
+                  onChange={e => set('surveyJson', e.target.value)}
+                  style={{ fontFamily: 'monospace', fontSize: '0.85rem', minHeight: 300, lineHeight: 1.5 }}
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ═══ Detalji upitnika ═══ */}
+        <div className="card">
+          <div className="card-body">
+            <div style={sectionTitle}>{lang === 'bs' ? 'Detalji upitnika' : 'Questionnaire Details'}</div>
+
+            {/* Row 1: Naziv, Oznaka */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Naziv' : 'Name'}</div>
+                <input className="form-input" value={formData.naziv} onChange={e => set('naziv', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Oznaka' : 'Code'}</div>
+                <input className="form-input" value={formData.oznaka} onChange={e => set('oznaka', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 2: Za vrstu, Prikaži na portalu, Dodaj u prilog procjeni rizika */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 1fr', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Za vrstu' : 'For type'}</div>
+                <select className="form-select" value={formData.zaVrstu} onChange={e => set('zaVrstu', e.target.value)}>
+                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  {ZA_VRSTU_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <div style={labelSt}>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" className="form-checkbox" checked={formData.prikaziNaPortalu} onChange={e => set('prikaziNaPortalu', e.target.checked)} />
+                </label>
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Dodaj u prilog procjeni rizika' : 'Add to risk assessment'}</div>
+                <select className="form-select" value={formData.dodajUPrilogProcjeniRizika} onChange={e => set('dodajUPrilogProcjeniRizika', e.target.value)}>
+                  {DODAJ_PROCJENA_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Row 3: Email, checkboxes */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px 200px 250px', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Email adresa za rezultate' : 'Email for results'}</div>
+                <input className="form-input" type="email" value={formData.emailZaRezultate} onChange={e => set('emailZaRezultate', e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <div style={labelSt}>{lang === 'bs' ? 'Pošalji kopiju korisniku' : 'Send copy to user'}</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" className="form-checkbox" checked={formData.posaljiKopijuKorisniku} onChange={e => set('posaljiKopijuKorisniku', e.target.checked)} />
+                </label>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <div style={labelSt}>{lang === 'bs' ? 'Prikaži rezultate nakon rješavanja' : 'Show results after'}</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" className="form-checkbox" checked={formData.prikaziRezultateNakonRjesavanja} onChange={e => set('prikaziRezultateNakonRjesavanja', e.target.checked)} />
+                </label>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <div style={labelSt}>{lang === 'bs' ? 'Prikaži samo zadovoljava/nezadovoljava' : 'Show only pass/fail'}</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" className="form-checkbox" checked={formData.prikaziSamoZadovoljavaNezadovoljava} onChange={e => set('prikaziSamoZadovoljavaNezadovoljava', e.target.checked)} />
+                </label>
+              </div>
+            </div>
+
+            {/* Row 4: Automatski upis, Broj točnih */}
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 200px 1fr 1fr', gap: 16, marginBottom: 14 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <div style={labelSt}>{lang === 'bs' ? 'Automatski upis u evidenciju' : 'Auto-record'}</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input type="checkbox" className="form-checkbox" checked={formData.automatskiUpisUEvidenciju} onChange={e => set('automatskiUpisUEvidenciju', e.target.checked)} />
+                </label>
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Broj točnih odgovora' : 'Correct answers count'}</div>
+                <input className="form-input" type="number" value={formData.brojTocnihOdgovora} onChange={e => set('brojTocnihOdgovora', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Izlazni tip dokumenta' : 'Output doc type'}</div>
+                <select className="form-select" value={formData.izlazniTipDokumenta} onChange={e => set('izlazniTipDokumenta', e.target.value)}>
+                  <option value="">—</option>
+                  <option value="PDF">PDF</option>
+                  <option value="Word">Word</option>
+                  <option value="Excel">Excel</option>
+                </select>
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Zadani ispis za dokument' : 'Default print for doc'}</div>
+                <input className="form-input" value={formData.zadaniIspisZaDokument} onChange={e => set('zadaniIspisZaDokument', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 5: Email Subject, Email Body */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Email Subject' : 'Email Subject'}</div>
+                <input className="form-input" value={formData.emailSubject} onChange={e => set('emailSubject', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Email Body' : 'Email Body'}</div>
+                <textarea className="form-input" rows={2} value={formData.emailBody} onChange={e => set('emailBody', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 6: Success / Failure messages */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Poruka za uspješno rješavanje' : 'Success message'}</div>
+                <textarea className="form-input" rows={2} value={formData.porukaUspjesno} onChange={e => set('porukaUspjesno', e.target.value)} />
+              </div>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Poruka za nedovoljan broj točnih odgovora' : 'Failure message'}</div>
+                <textarea className="form-input" rows={2} value={formData.porukaNedovoljno} onChange={e => set('porukaNedovoljno', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 7: Jezik */}
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Jezik' : 'Language'}</div>
+                <input className="form-input" value={formData.jezik} onChange={e => set('jezik', e.target.value)} placeholder={lang === 'bs' ? 'npr. hr, en' : 'e.g. hr, en'} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ Action buttons ═══ */}
+        <div className="card">
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <button className="btn btn-primary" onClick={handleSave}>
+              💾 {lang === 'bs' ? 'Snimi' : 'Save'}
+            </button>
+            <button className="btn btn-ghost" onClick={() => setView('list')}>
+              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+            </button>
+            {editingId && (
+              <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }} onClick={() => { handleDelete(editingId); setView('list'); }}>
+                🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+              </button>
+            )}
+          </div>
+        </div>
+
+      </div>
     </div>
   );
 }
