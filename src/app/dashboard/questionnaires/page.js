@@ -81,6 +81,7 @@ export default function QuestionnairesPage() {
   const [formData, setFormData] = useState({ ...EMPTY_UPITNIK });
   const [search, setSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
+  const [openMenuId, setOpenMenuId] = useState(null); // for Akcije dropdown
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
@@ -90,24 +91,81 @@ export default function QuestionnairesPage() {
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
+  // Navigate to form view (pushes history so browser back works)
+  const goToForm = useCallback(() => {
+    window.history.pushState({ upitnikView: 'form' }, '');
+    setView('form');
+  }, []);
+  const goToList = useCallback(() => {
+    setView('list');
+    setOpenMenuId(null);
+  }, []);
+
+  // Browser back button handler
+  useEffect(() => {
+    const handlePopState = () => {
+      if (view === 'form') {
+        setView('list');
+        setOpenMenuId(null);
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [view]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!openMenuId) return;
+    let id;
+    const close = (e) => {
+      // Don't close if clicking inside the dropdown
+      if (e.target.closest && e.target.closest('[data-akcije-menu]')) return;
+      setOpenMenuId(null);
+    };
+    // Delay adding listener to avoid catching the same click that opened it
+    id = requestAnimationFrame(() => {
+      document.addEventListener('mousedown', close);
+    });
+    return () => {
+      cancelAnimationFrame(id);
+      document.removeEventListener('mousedown', close);
+    };
+  }, [openMenuId]);
+
   // CRUD
   const handleNew = () => {
     setFormData({ ...EMPTY_UPITNIK });
     setEditingId(null);
-    setView('form');
+    goToForm();
   };
   const handleEdit = (item) => {
     setFormData({ ...EMPTY_UPITNIK, ...item });
     setEditingId(item.id);
-    setView('form');
+    goToForm();
+  };
+  const handleDuplicate = (item) => {
+    const dup = { ...EMPTY_UPITNIK, ...item };
+    delete dup.id;
+    delete dup.createdAt;
+    delete dup.updatedAt;
+    dup.naziv = (dup.naziv || '') + ' (kopija)';
+    create(COLLECTIONS.QUESTIONNAIRES, dup);
+    loadData();
+    setOpenMenuId(null);
+  };
+  const handleTogglePortal = (item) => {
+    update(COLLECTIONS.QUESTIONNAIRES, item.id, { prikaziNaPortalu: !item.prikaziNaPortalu });
+    loadData();
+    setOpenMenuId(null);
   };
   const handleDelete = async (id) => {
+    setOpenMenuId(null);
     if (await confirm(lang === 'bs' ? 'Obrisati upitnik?' : 'Delete questionnaire?')) { remove(COLLECTIONS.QUESTIONNAIRES, id); loadData(); }
   };
   const handleSave = () => {
     if (editingId) update(COLLECTIONS.QUESTIONNAIRES, editingId, formData);
     else create(COLLECTIONS.QUESTIONNAIRES, formData);
-    setView('list'); loadData();
+    goToList(); loadData();
   };
 
   // Insert template
@@ -122,6 +180,12 @@ export default function QuestionnairesPage() {
 
   const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
   const sectionTitle = { fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 };
+  const menuItemStyle = {
+    display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
+    background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+    fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)',
+    textAlign: 'left', transition: 'background 0.12s',
+  };
 
   /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
      VIEW: LIST
@@ -176,13 +240,47 @@ export default function QuestionnairesPage() {
                   ) : filtered.map(r => (
                     <tr key={r.id}>
                       <td>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-primary btn-sm" onClick={() => handleEdit(r)}>
+                        <div style={{ position: 'relative' }}>
+                          <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === r.id ? null : r.id); }}>
                             {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
                           </button>
+                          {openMenuId === r.id && (
+                            <div data-akcije-menu style={{
+                              position: 'absolute', top: '100%', left: 0, zIndex: 100,
+                              background: 'var(--bg-card)', border: '1px solid var(--border)',
+                              borderRadius: 'var(--radius-md)', boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
+                              minWidth: 180, overflow: 'hidden', marginTop: 4,
+                            }}>
+                              <button onClick={() => handleEdit(r)} style={menuItemStyle}>
+                                📝 {lang === 'bs' ? 'Otvori' : 'Open'}
+                              </button>
+                              <button onClick={() => handleDuplicate(r)} style={menuItemStyle}>
+                                📋 {lang === 'bs' ? 'Dupliciraj' : 'Duplicate'}
+                              </button>
+                              <button onClick={() => handleTogglePortal(r)} style={menuItemStyle}>
+                                {r.prikaziNaPortalu ? '🔒' : '🌐'} {lang === 'bs'
+                                  ? (r.prikaziNaPortalu ? 'Sakrij s portala' : 'Prikaži na portalu')
+                                  : (r.prikaziNaPortalu ? 'Hide from portal' : 'Show on portal')}
+                              </button>
+                              <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                              <button onClick={() => handleDelete(r.id)} style={{ ...menuItemStyle, color: 'var(--danger)' }}>
+                                🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </td>
-                      <td style={{ fontWeight: 600 }}>{r.naziv || '—'}</td>
+                      <td>
+                        <span onClick={() => handleEdit(r)} style={{
+                          fontWeight: 600, color: 'var(--primary)', cursor: 'pointer',
+                          textDecoration: 'none', transition: 'opacity 0.15s',
+                        }}
+                          onMouseEnter={e => e.target.style.textDecoration = 'underline'}
+                          onMouseLeave={e => e.target.style.textDecoration = 'none'}
+                        >
+                          {r.naziv || '—'}
+                        </span>
+                      </td>
                       <td>{r.zaVrstu || '—'}</td>
                       <td>{r.prikaziNaPortalu ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No')}</td>
                       <td>
@@ -255,7 +353,7 @@ export default function QuestionnairesPage() {
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setView('list')}>←</button>
+        <button className="btn btn-ghost" onClick={() => { window.history.back(); }}>←</button>
         <h1 style={{ margin: 0 }}>
           ❓ {editingId
             ? (lang === 'bs' ? 'Uredi upitnik' : 'Edit questionnaire')
