@@ -505,4 +505,200 @@ export function getCalendarEventsForMonth(year, month) {
     return events.filter(e => e.datum.startsWith(prefix));
 }
 
+// ============================================================================
+// SEED DEFAULT DATA — Vrsta osobe & Opasnosti
+// ============================================================================
+
+const DEFAULT_PERSON_TYPES = [
+    { naziv: 'Član radne skupine', vrsta: 'Član radne skupine' },
+    { naziv: 'Član radne skupine kod poslodavca', vrsta: 'Član radne skupine kod poslodavca' },
+    { naziv: 'Povjerenik zaštite na radu', vrsta: 'Povjerenik zaštite na radu' },
+    { naziv: 'Stručnjak zaštite na radu', vrsta: 'Stručnjak zaštite na radu' },
+    { naziv: 'Voditelj radne skupine', vrsta: 'Voditelj radne skupine' },
+];
+
+const DEFAULT_HAZARDS = [
+    { naziv: 'O.1. MEHANIČKE OPASNOSTI', oznaka: 'O.1' },
+    { naziv: 'O.1.1. alati', oznaka: 'O.1.1' },
+    { naziv: 'O.1.1.1. ručni', oznaka: 'O.1.1.1' },
+    { naziv: 'O.1.1.2. mehanizirani', oznaka: 'O.1.1.2' },
+    { naziv: 'O.1.2. strojevi i oprema', oznaka: 'O.1.2' },
+    { naziv: 'O.1.3. sredstva za horizontalni prijenos', oznaka: 'O.1.3' },
+    { naziv: 'O.1.3.1. prijevozna vozila: automobili, kamioni i dr', oznaka: 'O.1.3.1' },
+    { naziv: 'O.1.3.2. prijenosna sredstva: viličari', oznaka: 'O.1.3.2' },
+    { naziv: 'O.1.3.3. samohodni strojevi: bageri, buldožeri i dr', oznaka: 'O.1.3.3' },
+    { naziv: 'O.1.4. sredstva za vertikalni prijenos', oznaka: 'O.1.4' },
+    { naziv: 'O.1.4.1. dizalice', oznaka: 'O.1.4.1' },
+    { naziv: 'O.1.4.2. transporteri', oznaka: 'O.1.4.2' },
+    { naziv: 'O.1.5. rukovanje predmetima', oznaka: 'O.1.5' },
+    { naziv: 'O.1.6. ostale mehaničke opasnosti', oznaka: 'O.1.6' },
+    { naziv: 'O.2. OPASNOSTI OD PADOVA', oznaka: 'O.2' },
+    { naziv: 'O.2.1. pad radnika i drugih osoba', oznaka: 'O.2.1' },
+    { naziv: 'O.2.1.1. na istoj razini', oznaka: 'O.2.1.1' },
+    { naziv: 'O.2.1.2. u dubinu', oznaka: 'O.2.1.2' },
+    { naziv: 'O.2.1.3. s visine', oznaka: 'O.2.1.3' },
+    { naziv: 'O.2.1.4. s visine iznad 3 metra', oznaka: 'O.2.1.4' },
+    { naziv: 'O.2.2. pad predmeta', oznaka: 'O.2.2' },
+    { naziv: 'O.3. ELEKTRIČNA STRUJA', oznaka: 'O.3' },
+    { naziv: 'O.3.1. otvoreni električni krug', oznaka: 'O.3.1' },
+    { naziv: 'O.3.2. ostale električne opasnosti', oznaka: 'O.3.2' },
+    { naziv: 'O.4. POŽAR I EKSPLOZIJA', oznaka: 'O.4' },
+    { naziv: 'O.4.1. eksplozivne tvari', oznaka: 'O.4.1' },
+    { naziv: 'O.4.2. zapaljive tvari', oznaka: 'O.4.2' },
+    { naziv: 'O.5. TERMIČKE OPASNOSTI', oznaka: 'O.5' },
+    { naziv: 'O.5.1. vruće tvari', oznaka: 'O.5.1' },
+    { naziv: 'O.5.2. hladne tvari', oznaka: 'O.5.2' },
+    { naziv: 'Š.1. KEMIJSKE ŠTETNOSTI', oznaka: 'Š.1' },
+    { naziv: 'Š.1.1. otrovi', oznaka: 'Š.1.1' },
+    { naziv: 'Š.1.1.1. metali', oznaka: 'Š.1.1.1' },
+    { naziv: 'Š.1.1.2. nemetali', oznaka: 'Š.1.1.2' },
+    { naziv: 'Š.1.1.3. organski spojevi', oznaka: 'Š.1.1.3' },
+    { naziv: 'Š.1.2. korozivi', oznaka: 'Š.1.2' },
+    { naziv: 'Š.1.2.1. kiseline', oznaka: 'Š.1.2.1' },
+    { naziv: 'Š.1.2.2. lužine', oznaka: 'Š.1.2.2' },
+    { naziv: 'Š.1.2.3. drugi korozivi', oznaka: 'Š.1.2.3' },
+    { naziv: 'Š.1.3. nadražljivci', oznaka: 'Š.1.3' },
+    { naziv: 'Š.1.3.1. lako topivi u vodi', oznaka: 'Š.1.3.1' },
+    { naziv: 'Š.1.3.2. slabo topivi u vodi', oznaka: 'Š.1.3.2' },
+    { naziv: 'Š.1.3.3. odmašćivači', oznaka: 'Š.1.3.3' },
+    { naziv: 'Š.1.3.4. drugi nadražljivci', oznaka: 'Š.1.3.4' },
+    { naziv: 'Š.1.4. zagušljivci', oznaka: 'Š.1.4' },
+    { naziv: 'Š.1.4.1. inertni', oznaka: 'Š.1.4.1' },
+    { naziv: 'Š.1.4.2. kemijski', oznaka: 'Š.1.4.2' },
+    { naziv: 'Š.1.5. senzibilizatori', oznaka: 'Š.1.5' },
+    { naziv: 'Š.1.5.1. organske prašine biljnog porijekla', oznaka: 'Š.1.5.1' },
+    { naziv: 'Š.1.5.2. organske prašine životinjskog porijekla', oznaka: 'Š.1.5.2' },
+    { naziv: 'Š.1.5.3. kemijski spojevi alergogenog potencijala', oznaka: 'Š.1.5.3' },
+    { naziv: 'Š.1.5.4. termofilne aktinomicete', oznaka: 'Š.1.5.4' },
+    { naziv: 'Š.1.5.5. ostali senzibilizatori', oznaka: 'Š.1.5.5' },
+    { naziv: 'Š.1.6. fibrogeni', oznaka: 'Š.1.6' },
+    { naziv: 'Š.1.6.1. azbest', oznaka: 'Š.1.6.1' },
+    { naziv: 'Š.1.6.2. silicijev dioksid', oznaka: 'Š.1.6.2' },
+    { naziv: 'Š.1.6.3. ostali fibrogeni', oznaka: 'Š.1.6.3' },
+    { naziv: 'Š.1.7. mutageni', oznaka: 'Š.1.7' },
+    { naziv: 'Š.1.8. karcinogeni', oznaka: 'Š.1.8' },
+    { naziv: 'Š.1.9. teratogeni', oznaka: 'Š.1.9' },
+    { naziv: 'Š.2. BIOLOŠKE ŠTETNOSTI', oznaka: 'Š.2' },
+    { naziv: 'Š.2.1. zarazni materijal', oznaka: 'Š.2.1' },
+    { naziv: 'Š.2.2. zaraženi ljudi', oznaka: 'Š.2.2' },
+    { naziv: 'Š.2.3. zaražene životinje', oznaka: 'Š.2.3' },
+    { naziv: 'Š.2.4. opasne biljke', oznaka: 'Š.2.4' },
+    { naziv: 'Š.2.5. opasne životinje', oznaka: 'Š.2.5' },
+    { naziv: 'Š.3. FIZIKALNE ŠTETNOSTI', oznaka: 'Š.3' },
+    { naziv: 'Š.3.1. buka', oznaka: 'Š.3.1' },
+    { naziv: 'Š.3.1.1. kontinuirana buka', oznaka: 'Š.3.1.1' },
+    { naziv: 'Š.3.1.2. diskontinuirana buka', oznaka: 'Š.3.1.2' },
+    { naziv: 'Š.3.1.3. impulsna buka', oznaka: 'Š.3.1.3' },
+    { naziv: 'Š.3.1.4. ometajuća', oznaka: 'Š.3.1.4' },
+    { naziv: 'Š.3.2. vibracije', oznaka: 'Š.3.2' },
+    { naziv: 'Š.3.2.1. vibracije koje se prenose na ruke', oznaka: 'Š.3.2.1' },
+    { naziv: 'Š.3.2.2. vibracije koje se prenose na cijelo tijelo', oznaka: 'Š.3.2.2' },
+    { naziv: 'Š.3.2.3. potresanja', oznaka: 'Š.3.2.3' },
+    { naziv: 'Š.3.3. promijenjeni tlak', oznaka: 'Š.3.3' },
+    { naziv: 'Š.3.3.1. povišeni tlak', oznaka: 'Š.3.3.1' },
+    { naziv: 'Š.3.3.2. sniženi tlak', oznaka: 'Š.3.3.2' },
+    { naziv: 'Š.3.3.3. promjene tlaka', oznaka: 'Š.3.3.3' },
+    { naziv: 'Š.3.4. nepovoljni klimatski i mikroklimatski uvjeti', oznaka: 'Š.3.4' },
+    { naziv: 'Š.3.4.1. rad na otvorenom', oznaka: 'Š.3.4.1' },
+    { naziv: 'Š.3.4.2. vrući okoliš', oznaka: 'Š.3.4.2' },
+    { naziv: 'Š.3.4.3. visoka vlažnost', oznaka: 'Š.3.4.3' },
+    { naziv: 'Š.3.4.4. pojačano strujanje zraka', oznaka: 'Š.3.4.4' },
+    { naziv: 'Š.3.4.5. hladan okoliš', oznaka: 'Š.3.4.5' },
+    { naziv: 'Š.3.4.6. česte promjene temperature', oznaka: 'Š.3.4.6' },
+    { naziv: 'Š.3.4.7. nepovoljni učinci umjetne ventilacije', oznaka: 'Š.3.4.7' },
+    { naziv: 'Š.3.5. ionizirajuće zračenje', oznaka: 'Š.3.5' },
+    { naziv: 'Š.3.5.1. rendgensko zračenje', oznaka: 'Š.3.5.1' },
+    { naziv: 'Š.3.5.2. otvoreni radioaktivni elementi', oznaka: 'Š.3.5.2' },
+    { naziv: 'Š.3.5.3. zatvoreni radioaktivni elementi', oznaka: 'Š.3.5.3' },
+    { naziv: 'Š.3.6. neionizirajuće zračenje', oznaka: 'Š.3.6' },
+    { naziv: 'Š.3.6.1. UV zračenje (A, B, C)', oznaka: 'Š.3.6.1' },
+    { naziv: 'Š.3.6.2. toplinsko zračenje', oznaka: 'Š.3.6.2' },
+    { naziv: 'Š.3.6.3. mikrovalno zračenje', oznaka: 'Š.3.6.3' },
+    { naziv: 'Š.3.6.4. lasersko zračenje', oznaka: 'Š.3.6.4' },
+    { naziv: 'Š.3.6.5. elektromagnetsko polje vrlo niskih frekvencija', oznaka: 'Š.3.6.5' },
+    { naziv: 'Š.3.7. osvijetljenost', oznaka: 'Š.3.7' },
+    { naziv: 'Š.3.7.1. nedovoljna osvijetljenost', oznaka: 'Š.3.7.1' },
+    { naziv: 'Š.3.7.2. blještanje', oznaka: 'Š.3.7.2' },
+    { naziv: 'Š.3.8. ostale fizikalne štetnosti', oznaka: 'Š.3.8' },
+    { naziv: 'N.1. STATODINAMIČKI NAPORI', oznaka: 'N.1' },
+    { naziv: 'N.1.1. statički: prisilan položaj tijela pri radu', oznaka: 'N.1.1' },
+    { naziv: 'N.1.1.1. stalno sjedenje', oznaka: 'N.1.1.1' },
+    { naziv: 'N.1.1.2. stalno stajanje', oznaka: 'N.1.1.2' },
+    { naziv: 'N.1.1.3. pognut položaj tijela', oznaka: 'N.1.1.3' },
+    { naziv: 'N.1.1.4. čučanje, klečanje', oznaka: 'N.1.1.4' },
+    { naziv: 'N.1.1.5. rad u skučenom prostoru', oznaka: 'N.1.1.5' },
+    { naziv: 'N.1.1.6. ruke iznad glave', oznaka: 'N.1.1.6' },
+    { naziv: 'N.1.1.7. ostali statički napori', oznaka: 'N.1.1.7' },
+    { naziv: 'N.1.2. dinamički: fizički rad', oznaka: 'N.1.2' },
+    { naziv: 'N.1.2.1. ponavljajući pokreti sa i bez primjene sile', oznaka: 'N.1.2.1' },
+    { naziv: 'N.1.2.2. brzi rad', oznaka: 'N.1.2.2' },
+    { naziv: 'N.1.2.3. dizanje i nošenje tereta', oznaka: 'N.1.2.3' },
+    { naziv: 'N.1.2.4. guranje i vučenje tereta', oznaka: 'N.1.2.4' },
+    { naziv: 'N.1.2.5. težak fizički rad', oznaka: 'N.1.2.5' },
+    { naziv: 'N.1.2.6. ostali dinamički napori', oznaka: 'N.1.2.6' },
+    { naziv: 'N.2. PSIHOFIZIOLOŠKI NAPORI', oznaka: 'N.2' },
+    { naziv: 'N.2.1. nepovoljan ritam rada', oznaka: 'N.2.1' },
+    { naziv: 'N.2.1.1. rad na normu', oznaka: 'N.2.1.1' },
+    { naziv: 'N.2.1.2. ritam uvjetovan radnim procesom', oznaka: 'N.2.1.2' },
+    { naziv: 'N.2.1.3. neujednačen ritam', oznaka: 'N.2.1.3' },
+    { naziv: 'N.2.2. poremećen bioritam', oznaka: 'N.2.2' },
+    { naziv: 'N.2.2.2. noćni rad', oznaka: 'N.2.2.2' },
+    { naziv: 'N.2.2.3. produljeni rad', oznaka: 'N.2.2.3' },
+    { naziv: 'N.2.3. remećenje socijalnih potreba', oznaka: 'N.2.3' },
+    { naziv: 'N.2.3.1. terenski rad', oznaka: 'N.2.3.1' },
+    { naziv: 'N.2.3.2. rad na daljinu', oznaka: 'N.2.3.2' },
+    { naziv: 'N.2.4. odgovornost za živote ljudi i materijalna dobra', oznaka: 'N.2.4' },
+    { naziv: 'N.2.4.1. rukovođenje', oznaka: 'N.2.4.1' },
+    { naziv: 'N.2.4.2. upravljanje prijevoznim sredstvima', oznaka: 'N.2.4.2' },
+    { naziv: 'N.2.5. visoka vjerojatnost izvanrednih događaja', oznaka: 'N.2.5' },
+    { naziv: 'N.2.6. otežan prijam informacija', oznaka: 'N.2.6' },
+    { naziv: 'N.2.6.1. zvučni signali i znakovi', oznaka: 'N.2.6.1' },
+    { naziv: 'N.2.6.2. svjetlosni signali i znakovi', oznaka: 'N.2.6.2' },
+    { naziv: 'N.2.6.3. buka', oznaka: 'N.2.6.3' },
+    { naziv: 'N.2.6.4. nedovoljna osvijetljenost', oznaka: 'N.2.6.4' },
+    { naziv: 'N.2.7. radni zahtjevi', oznaka: 'N.2.7' },
+    { naziv: 'N.2.7.1. neodgovarajući kvantitativni zahtjevi (premalo ili previše rada)', oznaka: 'N.2.7.1' },
+    { naziv: 'N.2.7.2. premali utjecaj na rad', oznaka: 'N.2.7.2' },
+    { naziv: 'N.2.7.3. zahtjev za visokom kvalitetom rada', oznaka: 'N.2.7.3' },
+    { naziv: 'N.2.7.4. izolirani rad', oznaka: 'N.2.7.4' },
+    { naziv: 'N.2.7.5. monotoni rad', oznaka: 'N.2.7.5' },
+    { naziv: 'N.2.7.6. komunikacija s osobama', oznaka: 'N.2.7.6' },
+    { naziv: 'N.2.8. maltretiranje', oznaka: 'N.2.8' },
+    { naziv: 'N.2.8.1. mobing', oznaka: 'N.2.8.1' },
+    { naziv: 'N.2.8.2. bulling', oznaka: 'N.2.8.2' },
+    { naziv: 'N.2.9. burnout', oznaka: 'N.2.9' },
+    { naziv: 'N.2.10. ostali psihofiziološki napori', oznaka: 'N.2.10' },
+    { naziv: 'N.3. NAPORI VIDA', oznaka: 'N.3' },
+    { naziv: 'N.4. NAPORI GOVORA', oznaka: 'N.4' },
+];
+
+export function seedDefaultData() {
+    if (typeof window === 'undefined') return;
+    const SEED_KEY = STORE_PREFIX + '__seeded_procjena_v2';
+    if (localStorage.getItem(SEED_KEY)) return;
+
+    // Seed person types if empty
+    const existing_pt = getStore(COLLECTIONS.PERSON_TYPES);
+    if (existing_pt.length === 0) {
+        const seeded = DEFAULT_PERSON_TYPES.map(d => ({ ...d, id: genId() }));
+        setStore(COLLECTIONS.PERSON_TYPES, seeded);
+    }
+
+    // Seed hazards if empty
+    const existing_haz = getStore(COLLECTIONS.HAZARDS);
+    if (existing_haz.length === 0) {
+        const seeded = DEFAULT_HAZARDS.map((d, i) => {
+            // Tiny delay between IDs to keep order
+            const id = Date.now().toString(36) + i.toString(36).padStart(3, '0') + Math.random().toString(36).substr(2, 5);
+            return { ...d, id };
+        });
+        setStore(COLLECTIONS.HAZARDS, seeded);
+    }
+
+    localStorage.setItem(SEED_KEY, '1');
+}
+
+// Auto-seed on module load
+seedDefaultData();
+
 export { formatDate, todayISO, genId, COMPANY_SCOPED };
