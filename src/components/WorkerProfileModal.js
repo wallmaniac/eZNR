@@ -386,14 +386,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                         </>
                     ) : (
-                        <>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                {lang === 'bs' ? '💡 Klikni Uredi za izmjenu, ili Otvori potpuno za puni profil' : '💡 Click Edit to modify, or Open full for complete profile'}
-                            </div>
-                            <button className="btn btn-ghost" onClick={onClose}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
-                            <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
-                            <button className="btn btn-primary btn-sm" onClick={openFullEdit}>👤 {lang === 'bs' ? 'Otvori potpuno' : 'Open full'}</button>
-                        </>
+                        <button className="btn btn-ghost" onClick={onClose}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
                     )}
                 </div>
             </div>

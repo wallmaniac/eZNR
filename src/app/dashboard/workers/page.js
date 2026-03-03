@@ -29,6 +29,7 @@ function WorkersPageInner() {
     const searchParams = useSearchParams();
     const { markDirty, markClean } = useUnsavedChanges(async () => await handleSave());
     const { alert, confirm, DialogRenderer } = useDialog();
+    const isDirtyRef = useRef(false);
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showFormer, setShowFormer] = useState(false);
@@ -169,6 +170,7 @@ function WorkersPageInner() {
         }
         loadData();
         markClean();
+        isDirtyRef.current = false;
         if (addNew) {
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
@@ -181,13 +183,27 @@ function WorkersPageInner() {
 
     const handleCancel = () => {
         markClean();
+        isDirtyRef.current = false;
         setShowForm(false);
         setEditingWorker(null);
+    };
+
+    const handleBack = async () => {
+        if (isDirtyRef.current) {
+            const choice = await confirm(
+                lang === 'bs'
+                    ? 'Imate nesačuvane promjene. Odbaciti promjene?'
+                    : 'You have unsaved changes. Discard changes?'
+            );
+            if (!choice) return; // stay
+        }
+        handleCancel();
     };
 
     const updateField = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         markDirty();
+        isDirtyRef.current = true;
     };
 
     // ── Photo upload with auto-crop to face (center-top crop, 3:4 ratio) ──
@@ -249,7 +265,7 @@ function WorkersPageInner() {
         return (
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button className="btn btn-ghost" onClick={handleCancel}>← {t('discard')}</button>
+                    <button className="btn btn-ghost" onClick={handleBack}>← {t('discard')}</button>
                     <h1 style={{ margin: 0 }}>
                         👷 {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
@@ -439,7 +455,7 @@ function WorkersPageInner() {
                                 value={certSearch} onChange={e => setCertSearch(e.target.value)} />
                             {certSearch && <button className="btn btn-ghost btn-sm" onClick={() => setCertSearch('')}>✕</button>}
                         </div>
-                        <button className="btn btn-outline btn-sm" onClick={() => { setCertFormData({ oznaka: '', datum: todayISO(), vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' }); setShowCertForm(true); }}>+ {t('newCertificate')}</button>
+                        <button className="btn btn-outline btn-sm" onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}`); }}>+ {t('newCertificate')}</button>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', marginLeft: 'auto', cursor: 'pointer' }}>
                             <input type="checkbox" checked={showOnlyValidCerts} onChange={e => setShowOnlyValidCerts(e.target.checked)} /> {t('showOnlyValid')}
                         </label>
@@ -467,8 +483,9 @@ function WorkersPageInner() {
                                         <tr key={c.id}>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
-                                                    <button className="btn btn-ghost btn-sm" onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
-                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?')) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>🗑️</button>
+                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Brza izmjena' : 'Quick edit'} onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
+                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Otvori potpuno' : 'Open full form'} onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}`); }}>📄</button>
+                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>🗑️</button>
                                                 </div>
                                             </td>
                                             <td>{c.oznaka}</td>
