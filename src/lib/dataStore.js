@@ -131,6 +131,8 @@ export const COLLECTIONS = {
     FORMS_RO1: 'formsRo1',
     FORMS_RO2: 'formsRo2',
     REFERRALS_NR1: 'referralsNr1',
+    PERSON_TYPES: 'personTypes',
+    HAZARDS: 'hazards',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
@@ -141,7 +143,7 @@ const COMPANY_SCOPED = [
     'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
     'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
     'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
-    'authorizedCompanies', 'examiners',
+    'authorizedCompanies', 'examiners', 'personTypes', 'hazards',
 ];
 
 // Get all records filtered by companyId
