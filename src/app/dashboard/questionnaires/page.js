@@ -82,6 +82,7 @@ export default function QuestionnairesPage() {
   const [search, setSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null); // for Akcije dropdown
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 }); // fixed-position coords
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
@@ -241,15 +242,24 @@ export default function QuestionnairesPage() {
                     <tr key={r.id}>
                       <td>
                         <div style={{ position: 'relative' }}>
-                          <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === r.id ? null : r.id); }}>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (openMenuId === r.id) { setOpenMenuId(null); return; }
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setMenuPos({ top: rect.bottom + 4, left: rect.left });
+                              setOpenMenuId(r.id);
+                            }}
+                          >
                             {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
                           </button>
                           {openMenuId === r.id && (
                             <div data-akcije-menu style={{
-                              position: 'absolute', top: '100%', left: 0, zIndex: 100,
+                              position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
                               background: 'var(--bg-card)', border: '1px solid var(--border)',
-                              borderRadius: 'var(--radius-md)', boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-                              minWidth: 180, overflow: 'hidden', marginTop: 4,
+                              borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                              minWidth: 200, overflow: 'visible',
                             }}>
                               <button onClick={() => handleEdit(r)} style={menuItemStyle}>
                                 📝 {lang === 'bs' ? 'Otvori' : 'Open'}
