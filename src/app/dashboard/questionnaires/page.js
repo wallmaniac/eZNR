@@ -1,22 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import dynamic from 'next/dynamic';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
-
-// Dynamic import of SurveyJS Creator — SSR disabled
-const SurveyCreatorWidget = dynamic(() => import('@/components/SurveyCreator'), {
-  ssr: false,
-  loading: () => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 500, color: 'var(--text-muted)', flexDirection: 'column', gap: 12 }}>
-      <div style={{ fontSize: '2rem' }}>⏳</div>
-      <div>Loading Survey Creator...</div>
-    </div>
-  ),
-});
+import QuestionnaireBuilder from '@/components/SurveyCreator';
 
 /* ═══════════════════════════════════════════════
    Upitnici — Questionnaire System
@@ -277,12 +266,13 @@ export default function QuestionnairesPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* ═══ SurveyJS Creator ═══ */}
+        {/* ═══ Questionnaire Builder ═══ */}
         <div className="card">
           <div className="card-body" style={{ padding: 0, overflow: 'hidden' }}>
-            <SurveyCreatorWidget
+            <QuestionnaireBuilder
               json={formData.surveyJson}
               onJsonChange={(newJson) => set('surveyJson', newJson)}
+              lang={lang}
             />
           </div>
         </div>

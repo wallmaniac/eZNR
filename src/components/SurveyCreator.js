@@ -1,99 +1,420 @@
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState, useCallback } from 'react';
 
 /* ═══════════════════════════════════════════════════════
-   SurveyJS Creator Component — SSR-safe wrapper
-   Dynamically loads SurveyJS Creator and renders it
+   Custom Questionnaire Builder
+   A drag-and-drop-like survey creator that works in production
    ═══════════════════════════════════════════════════════ */
 
-export default function SurveyCreatorWidget({ json, onJsonChange }) {
-    const [CreatorComponent, setCreatorComponent] = useState(null);
-    const [creator, setCreator] = useState(null);
-    const [error, setError] = useState(null);
-    const initDone = useRef(false);
+const QUESTION_TYPES = [
+    { type: 'text', icon: '📝', label: 'Tekst polje', labelEn: 'Text Input' },
+    { type: 'textarea', icon: '📄', label: 'Komentar', labelEn: 'Comment' },
+    { type: 'radio', icon: '🔘', label: 'Radiogumb', labelEn: 'Radio Group' },
+    { type: 'checkbox', icon: '☑️', label: 'Potvrdni okvir', labelEn: 'Checkbox' },
+    { type: 'dropdown', icon: '📋', label: 'Padajući izbornik', labelEn: 'Dropdown' },
+    { type: 'rating', icon: '⭐', label: 'Ocjena', labelEn: 'Rating' },
+    { type: 'boolean', icon: '✅', label: 'Da/Ne', labelEn: 'Yes/No' },
+    { type: 'date', icon: '📅', label: 'Datum', labelEn: 'Date' },
+    { type: 'number', icon: '🔢', label: 'Broj', labelEn: 'Number' },
+    { type: 'file', icon: '📎', label: 'Prilog', labelEn: 'File Upload' },
+    { type: 'heading', icon: '🏷️', label: 'Naslov/Sekcija', labelEn: 'Heading/Section' },
+    { type: 'html', icon: '🌐', label: 'HTML sadržaj', labelEn: 'HTML Content' },
+];
 
-    useEffect(() => {
-        if (initDone.current) return;
-        initDone.current = true;
+const createQuestion = (type) => ({
+    id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+    type,
+    title: '',
+    description: '',
+    required: false,
+    choices: type === 'radio' || type === 'checkbox' || type === 'dropdown'
+        ? ['Opcija 1', 'Opcija 2', 'Opcija 3']
+        : [],
+    ratingMax: type === 'rating' ? 5 : undefined,
+    placeholder: '',
+    htmlContent: type === 'html' ? '<p>Vaš HTML sadržaj ovdje</p>' : undefined,
+});
 
-        async function loadSurveyJS() {
-            try {
-                // Dynamic imports — SSR safe
-                const [creatorCoreModule, creatorReactModule] = await Promise.all([
-                    import('survey-creator-core'),
-                    import('survey-creator-react'),
-                    import('survey-core/survey-core.min.css'),
-                    import('survey-creator-core/survey-creator-core.min.css'),
-                ]);
+export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }) {
+    // Parse questions from JSON
+    const parseQuestions = useCallback(() => {
+        try {
+            const parsed = typeof json === 'string' ? JSON.parse(json || '{}') : (json || {});
+            return parsed.questions || [];
+        } catch { return []; }
+    }, [json]);
 
-                const SurveyCreatorModel = creatorCoreModule.SurveyCreatorModel;
+    const [questions, setQuestions] = useState(parseQuestions);
+    const [selectedId, setSelectedId] = useState(null);
+    const [activeTab, setActiveTab] = useState('designer'); // designer | preview | json
 
-                // Create the creator instance
-                const creatorInstance = new SurveyCreatorModel({
-                    showLogicTab: true,
-                    showJSONEditorTab: true,
-                    showTranslationTab: false,
-                    isAutoSave: true,
-                });
-
-                // Load existing JSON
-                try {
-                    const parsed = typeof json === 'string' ? JSON.parse(json || '{}') : (json || {});
-                    creatorInstance.JSON = parsed.pages ? parsed : { pages: [{ name: 'page1', elements: [] }] };
-                } catch {
-                    creatorInstance.JSON = { pages: [{ name: 'page1', elements: [] }] };
-                }
-
-                // Auto-save callback
-                creatorInstance.saveSurveyFunc = (saveNo, callback) => {
-                    if (onJsonChange) {
-                        onJsonChange(JSON.stringify(creatorInstance.JSON, null, 2));
-                    }
-                    callback(saveNo, true);
-                };
-
-                setCreator(creatorInstance);
-                setCreatorComponent(() => creatorReactModule.SurveyCreatorComponent);
-            } catch (err) {
-                console.error('SurveyJS Creator load error:', err);
-                setError(err.message);
-            }
+    const saveQuestions = useCallback((updatedQuestions) => {
+        setQuestions(updatedQuestions);
+        if (onJsonChange) {
+            onJsonChange(JSON.stringify({ questions: updatedQuestions }, null, 2));
         }
+    }, [onJsonChange]);
 
-        loadSurveyJS();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Add question
+    const addQuestion = (type) => {
+        const newQ = createQuestion(type);
+        const updated = [...questions, newQ];
+        saveQuestions(updated);
+        setSelectedId(newQ.id);
+    };
 
-    if (error) {
-        return (
-            <div style={{ padding: 40, textAlign: 'center', color: 'var(--danger)' }}>
-                <div style={{ fontSize: '2rem', marginBottom: 12 }}>⚠️</div>
-                <div>Failed to load Survey Creator: {error}</div>
-            </div>
-        );
-    }
+    // Remove question
+    const removeQuestion = (id) => {
+        saveQuestions(questions.filter(q => q.id !== id));
+        if (selectedId === id) setSelectedId(null);
+    };
 
-    if (!creator || !CreatorComponent) {
-        return (
-            <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                minHeight: 500, color: 'var(--text-muted)', flexDirection: 'column', gap: 12,
-            }}>
-                <div className="loading-spinner" style={{
-                    width: 36, height: 36,
-                    border: '3px solid var(--border)',
-                    borderTopColor: 'var(--primary)',
-                    borderRadius: '50%',
-                    animation: 'spin 0.8s linear infinite',
-                }} />
-                <div style={{ fontSize: '0.9rem' }}>Loading SurveyJS Creator...</div>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            </div>
-        );
-    }
+    // Update question
+    const updateQuestion = (id, field, value) => {
+        saveQuestions(questions.map(q => q.id === id ? { ...q, [field]: value } : q));
+    };
+
+    // Move question up/down
+    const moveQuestion = (id, direction) => {
+        const idx = questions.findIndex(q => q.id === id);
+        if ((direction === -1 && idx === 0) || (direction === 1 && idx === questions.length - 1)) return;
+        const updated = [...questions];
+        [updated[idx], updated[idx + direction]] = [updated[idx + direction], updated[idx]];
+        saveQuestions(updated);
+    };
+
+    // Duplicate question
+    const duplicateQuestion = (id) => {
+        const idx = questions.findIndex(q => q.id === id);
+        const newQ = { ...questions[idx], id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5) };
+        const updated = [...questions];
+        updated.splice(idx + 1, 0, newQ);
+        saveQuestions(updated);
+        setSelectedId(newQ.id);
+    };
+
+    // Choice management
+    const addChoice = (qId) => {
+        const q = questions.find(q => q.id === qId);
+        updateQuestion(qId, 'choices', [...(q.choices || []), `Opcija ${(q.choices || []).length + 1}`]);
+    };
+    const updateChoice = (qId, index, value) => {
+        const q = questions.find(q => q.id === qId);
+        const updated = [...(q.choices || [])];
+        updated[index] = value;
+        updateQuestion(qId, 'choices', updated);
+    };
+    const removeChoice = (qId, index) => {
+        const q = questions.find(q => q.id === qId);
+        updateQuestion(qId, 'choices', (q.choices || []).filter((_, i) => i !== index));
+    };
+
+    const selectedQuestion = questions.find(q => q.id === selectedId);
+    const getTypeLabel = (type) => {
+        const t = QUESTION_TYPES.find(qt => qt.type === type);
+        return t ? (lang === 'bs' ? t.label : t.labelEn) : type;
+    };
+    const getTypeIcon = (type) => {
+        const t = QUESTION_TYPES.find(qt => qt.type === type);
+        return t ? t.icon : '❓';
+    };
+
+    const tabSt = (key) => ({
+        padding: '10px 20px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
+        borderBottom: activeTab === key ? '3px solid var(--primary)' : '3px solid transparent',
+        color: activeTab === key ? 'var(--primary)' : 'var(--text-muted)',
+        background: 'none', border: 'none',
+    });
 
     return (
-        <div style={{ minHeight: 500 }}>
-            <CreatorComponent creator={creator} />
+        <div>
+            {/* Tabs */}
+            <div style={{ display: 'flex', borderBottom: '2px solid var(--border-light)', padding: '0 16px' }}>
+                <button style={tabSt('designer')} onClick={() => setActiveTab('designer')}>
+                    📝 {lang === 'bs' ? 'Uređivač' : 'Designer'}
+                </button>
+                <button style={tabSt('preview')} onClick={() => setActiveTab('preview')}>
+                    ▶ {lang === 'bs' ? 'Pregled' : 'Preview'}
+                </button>
+                <button style={tabSt('json')} onClick={() => setActiveTab('json')}>
+                    {'{ }'} JSON
+                </button>
+            </div>
+
+            {/* ═══ DESIGNER TAB ═══ */}
+            {activeTab === 'designer' && (
+                <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr 280px', minHeight: 450 }}>
+                    {/* LEFT: Toolbox */}
+                    <div style={{ borderRight: '1px solid var(--border-light)', padding: 12, overflowY: 'auto', maxHeight: 600 }}>
+                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
+                            {lang === 'bs' ? 'Alatna traka' : 'Toolbox'}
+                        </div>
+                        {QUESTION_TYPES.map(qt => (
+                            <button key={qt.type} onClick={() => addQuestion(qt.type)} style={{
+                                display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px',
+                                background: 'var(--bg-input)', border: '1px solid var(--border-light)',
+                                borderRadius: 'var(--radius-sm)', cursor: 'pointer', width: '100%',
+                                marginBottom: 6, fontSize: '0.82rem', fontWeight: 500,
+                                color: 'var(--text)', transition: 'all 0.15s',
+                            }}
+                                onMouseEnter={e => { e.target.style.background = 'var(--primary)'; e.target.style.color = '#fff'; }}
+                                onMouseLeave={e => { e.target.style.background = 'var(--bg-input)'; e.target.style.color = 'var(--text)'; }}
+                            >
+                                <span style={{ fontSize: '1rem' }}>{qt.icon}</span>
+                                {lang === 'bs' ? qt.label : qt.labelEn}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* CENTER: Canvas */}
+                    <div style={{ padding: 16, overflowY: 'auto', maxHeight: 600, background: 'var(--bg-input)' }}>
+                        {questions.length === 0 ? (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300, flexDirection: 'column', gap: 12, color: 'var(--text-muted)' }}>
+                                <div style={{ fontSize: '3rem', opacity: 0.3 }}>📝</div>
+                                <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
+                                    {lang === 'bs' ? 'Kliknite na pitanje iz alatne trake za dodavanje' : 'Click a question from the toolbar to add'}
+                                </div>
+                            </div>
+                        ) : questions.map((q, idx) => (
+                            <div key={q.id} onClick={() => setSelectedId(q.id)} style={{
+                                padding: 16, marginBottom: 10, borderRadius: 'var(--radius-md)',
+                                border: selectedId === q.id ? '2px solid var(--primary)' : '1px solid var(--border-light)',
+                                background: 'var(--bg-card)', cursor: 'pointer',
+                                boxShadow: selectedId === q.id ? '0 0 0 3px rgba(0,200,150,0.15)' : 'none',
+                                transition: 'all 0.15s',
+                            }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 700 }}>Q{idx + 1}</span>
+                                    <span style={{ fontSize: '0.9rem' }}>{getTypeIcon(q.type)}</span>
+                                    <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>{getTypeLabel(q.type)}</span>
+                                    {q.required && <span style={{ fontSize: '0.7rem', background: 'var(--danger)', color: '#fff', padding: '1px 6px', borderRadius: 10 }}>*</span>}
+                                    <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
+                                        <button onClick={e => { e.stopPropagation(); moveQuestion(q.id, -1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: 2 }}>⬆</button>
+                                        <button onClick={e => { e.stopPropagation(); moveQuestion(q.id, 1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: 2 }}>⬇</button>
+                                        <button onClick={e => { e.stopPropagation(); duplicateQuestion(q.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: 2 }}>📋</button>
+                                        <button onClick={e => { e.stopPropagation(); removeQuestion(q.id); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: 2, color: 'var(--danger)' }}>✖</button>
+                                    </div>
+                                </div>
+                                <div style={{ fontWeight: 600, fontSize: '0.92rem', color: q.title ? 'var(--text)' : 'var(--text-muted)' }}>
+                                    {q.title || (lang === 'bs' ? 'Unesite naslov pitanja...' : 'Enter question title...')}
+                                </div>
+                                {q.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{q.description}</div>}
+
+                                {/* Preview of choices */}
+                                {(q.type === 'radio' || q.type === 'checkbox' || q.type === 'dropdown') && q.choices && (
+                                    <div style={{ marginTop: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        {q.choices.slice(0, 4).map((c, ci) => (
+                                            <div key={ci} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                                {q.type === 'radio' ? '○' : q.type === 'checkbox' ? '☐' : '•'} {c}
+                                            </div>
+                                        ))}
+                                        {q.choices.length > 4 && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>+{q.choices.length - 4} more</div>}
+                                    </div>
+                                )}
+                                {q.type === 'rating' && (
+                                    <div style={{ marginTop: 8, display: 'flex', gap: 4 }}>
+                                        {Array.from({ length: q.ratingMax || 5 }, (_, i) => (
+                                            <span key={i} style={{ fontSize: '1.1rem', opacity: 0.4 }}>⭐</span>
+                                        ))}
+                                    </div>
+                                )}
+                                {q.type === 'boolean' && (
+                                    <div style={{ marginTop: 8, display: 'flex', gap: 10, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                                        <span>○ {lang === 'bs' ? 'Da' : 'Yes'}</span>
+                                        <span>○ {lang === 'bs' ? 'Ne' : 'No'}</span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* RIGHT: Properties Panel */}
+                    <div style={{ borderLeft: '1px solid var(--border-light)', padding: 14, overflowY: 'auto', maxHeight: 600 }}>
+                        {selectedQuestion ? (
+                            <>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+                                    {lang === 'bs' ? 'Svojstva pitanja' : 'Question Properties'}
+                                </div>
+
+                                <div style={{ marginBottom: 10 }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
+                                        {lang === 'bs' ? 'NASLOV' : 'TITLE'}
+                                    </div>
+                                    <input className="form-input" value={selectedQuestion.title}
+                                        onChange={e => updateQuestion(selectedId, 'title', e.target.value)}
+                                        placeholder={lang === 'bs' ? 'Naslov pitanja' : 'Question title'} />
+                                </div>
+
+                                <div style={{ marginBottom: 10 }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
+                                        {lang === 'bs' ? 'OPIS' : 'DESCRIPTION'}
+                                    </div>
+                                    <input className="form-input" value={selectedQuestion.description}
+                                        onChange={e => updateQuestion(selectedId, 'description', e.target.value)}
+                                        placeholder={lang === 'bs' ? 'Opis (opcionalno)' : 'Description (optional)'} />
+                                </div>
+
+                                <div style={{ marginBottom: 10 }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
+                                        <input type="checkbox" checked={selectedQuestion.required}
+                                            onChange={e => updateQuestion(selectedId, 'required', e.target.checked)} />
+                                        {lang === 'bs' ? 'Obavezno' : 'Required'}
+                                    </label>
+                                </div>
+
+                                {selectedQuestion.type === 'text' && (
+                                    <div style={{ marginBottom: 10 }}>
+                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>PLACEHOLDER</div>
+                                        <input className="form-input" value={selectedQuestion.placeholder || ''}
+                                            onChange={e => updateQuestion(selectedId, 'placeholder', e.target.value)} />
+                                    </div>
+                                )}
+
+                                {selectedQuestion.type === 'rating' && (
+                                    <div style={{ marginBottom: 10 }}>
+                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
+                                            {lang === 'bs' ? 'MAX OCJENA' : 'MAX RATING'}
+                                        </div>
+                                        <input className="form-input" type="number" min={2} max={10}
+                                            value={selectedQuestion.ratingMax || 5}
+                                            onChange={e => updateQuestion(selectedId, 'ratingMax', parseInt(e.target.value) || 5)} />
+                                    </div>
+                                )}
+
+                                {selectedQuestion.type === 'html' && (
+                                    <div style={{ marginBottom: 10 }}>
+                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>HTML</div>
+                                        <textarea className="form-input" rows={4} value={selectedQuestion.htmlContent || ''}
+                                            onChange={e => updateQuestion(selectedId, 'htmlContent', e.target.value)}
+                                            style={{ fontFamily: 'monospace', fontSize: '0.82rem' }} />
+                                    </div>
+                                )}
+
+                                {/* Choices editor for radio/checkbox/dropdown */}
+                                {(selectedQuestion.type === 'radio' || selectedQuestion.type === 'checkbox' || selectedQuestion.type === 'dropdown') && (
+                                    <div style={{ marginBottom: 10 }}>
+                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
+                                            {lang === 'bs' ? 'OPCIJE' : 'CHOICES'}
+                                        </div>
+                                        {(selectedQuestion.choices || []).map((choice, ci) => (
+                                            <div key={ci} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
+                                                <input className="form-input" value={choice}
+                                                    onChange={e => updateChoice(selectedId, ci, e.target.value)}
+                                                    style={{ flex: 1, fontSize: '0.82rem', padding: '4px 8px' }} />
+                                                <button onClick={() => removeChoice(selectedId, ci)}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: '0.8rem', padding: 2 }}>✖</button>
+                                            </div>
+                                        ))}
+                                        <button onClick={() => addChoice(selectedId)}
+                                            style={{ fontSize: '0.78rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: '4px 0' }}>
+                                            + {lang === 'bs' ? 'Dodaj opciju' : 'Add choice'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 16, borderTop: '1px solid var(--border-light)', paddingTop: 8 }}>
+                                    {lang === 'bs' ? 'Tip' : 'Type'}: {getTypeLabel(selectedQuestion.type)} · ID: {selectedQuestion.id}
+                                </div>
+                            </>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, flexDirection: 'column', gap: 8, color: 'var(--text-muted)' }}>
+                                <div style={{ fontSize: '1.5rem', opacity: 0.3 }}>👈</div>
+                                <div style={{ fontSize: '0.82rem', textAlign: 'center' }}>
+                                    {lang === 'bs' ? 'Odaberite pitanje za uređivanje' : 'Select a question to edit'}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* ═══ PREVIEW TAB ═══ */}
+            {activeTab === 'preview' && (
+                <div style={{ padding: 24, maxWidth: 700, margin: '0 auto' }}>
+                    {questions.length === 0 ? (
+                        <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
+                            {lang === 'bs' ? 'Nema pitanja za pregled. Dodajte pitanja u uređivaču.' : 'No questions to preview. Add questions in the designer.'}
+                        </div>
+                    ) : questions.map((q, idx) => (
+                        <div key={q.id} style={{ marginBottom: 24 }}>
+                            {q.type === 'heading' ? (
+                                <h3 style={{ color: 'var(--primary)', borderBottom: '2px solid var(--primary)', paddingBottom: 8 }}>
+                                    {q.title || `Section ${idx + 1}`}
+                                </h3>
+                            ) : q.type === 'html' ? (
+                                <div dangerouslySetInnerHTML={{ __html: q.htmlContent || '' }} />
+                            ) : (
+                                <>
+                                    <div style={{ fontWeight: 600, marginBottom: 6, fontSize: '0.92rem' }}>
+                                        {idx + 1}. {q.title || (lang === 'bs' ? 'Bez naslova' : 'Untitled')}
+                                        {q.required && <span style={{ color: 'var(--danger)', marginLeft: 4 }}>*</span>}
+                                    </div>
+                                    {q.description && <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 8 }}>{q.description}</div>}
+
+                                    {q.type === 'text' && <input className="form-input" placeholder={q.placeholder} readOnly />}
+                                    {q.type === 'textarea' && <textarea className="form-input" rows={3} readOnly />}
+                                    {q.type === 'number' && <input className="form-input" type="number" readOnly />}
+                                    {q.type === 'date' && <input className="form-input" type="date" readOnly />}
+                                    {q.type === 'file' && <input type="file" disabled style={{ fontSize: '0.85rem' }} />}
+                                    {q.type === 'radio' && (q.choices || []).map((c, ci) => (
+                                        <label key={ci} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, cursor: 'pointer' }}>
+                                            <input type="radio" name={q.id} disabled /> {c}
+                                        </label>
+                                    ))}
+                                    {q.type === 'checkbox' && (q.choices || []).map((c, ci) => (
+                                        <label key={ci} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, cursor: 'pointer' }}>
+                                            <input type="checkbox" disabled /> {c}
+                                        </label>
+                                    ))}
+                                    {q.type === 'dropdown' && (
+                                        <select className="form-select" disabled>
+                                            <option>{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                                            {(q.choices || []).map((c, ci) => <option key={ci}>{c}</option>)}
+                                        </select>
+                                    )}
+                                    {q.type === 'rating' && (
+                                        <div style={{ display: 'flex', gap: 4 }}>
+                                            {Array.from({ length: q.ratingMax || 5 }, (_, i) => (
+                                                <span key={i} style={{ fontSize: '1.5rem', cursor: 'pointer', opacity: 0.3 }}>⭐</span>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {q.type === 'boolean' && (
+                                        <div style={{ display: 'flex', gap: 16 }}>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                                <input type="radio" name={q.id} disabled /> {lang === 'bs' ? 'Da' : 'Yes'}
+                                            </label>
+                                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+                                                <input type="radio" name={q.id} disabled /> {lang === 'bs' ? 'Ne' : 'No'}
+                                            </label>
+                                        </div>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    ))}
+                </div>
+            )}
+
+            {/* ═══ JSON TAB ═══ */}
+            {activeTab === 'json' && (
+                <div style={{ padding: 16 }}>
+                    <textarea
+                        className="form-input"
+                        value={JSON.stringify({ questions }, null, 2)}
+                        onChange={e => {
+                            try {
+                                const parsed = JSON.parse(e.target.value);
+                                if (parsed.questions) {
+                                    setQuestions(parsed.questions);
+                                    if (onJsonChange) onJsonChange(e.target.value);
+                                }
+                            } catch { /* ignore parse errors while typing */ }
+                        }}
+                        style={{ fontFamily: 'monospace', fontSize: '0.82rem', minHeight: 350, lineHeight: 1.5 }}
+                    />
+                </div>
+            )}
         </div>
     );
 }
