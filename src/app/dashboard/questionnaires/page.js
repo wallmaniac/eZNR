@@ -1,10 +1,22 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+
+// Dynamic import of SurveyJS Creator — SSR disabled
+const SurveyCreatorWidget = dynamic(() => import('@/components/SurveyCreator'), {
+  ssr: false,
+  loading: () => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 500, color: 'var(--text-muted)', flexDirection: 'column', gap: 12 }}>
+      <div style={{ fontSize: '2rem' }}>⏳</div>
+      <div>Loading Survey Creator...</div>
+    </div>
+  ),
+});
 
 /* ═══════════════════════════════════════════════
    Upitnici — Questionnaire System
@@ -80,7 +92,6 @@ export default function QuestionnairesPage() {
   const [formData, setFormData] = useState({ ...EMPTY_UPITNIK });
   const [search, setSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('editor'); // editor | test | json
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
@@ -94,13 +105,11 @@ export default function QuestionnairesPage() {
   const handleNew = () => {
     setFormData({ ...EMPTY_UPITNIK });
     setEditingId(null);
-    setActiveTab('editor');
     setView('form');
   };
   const handleEdit = (item) => {
     setFormData({ ...EMPTY_UPITNIK, ...item });
     setEditingId(item.id);
-    setActiveTab('editor');
     setView('form');
   };
   const handleDelete = async (id) => {
@@ -254,16 +263,6 @@ export default function QuestionnairesPage() {
     );
   }
 
-  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-     VIEW: FORM (Create / Edit)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-  const tabStyle = (key) => ({
-    padding: '10px 24px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
-    borderBottom: activeTab === key ? '3px solid var(--primary)' : '3px solid transparent',
-    color: activeTab === key ? 'var(--primary)' : 'var(--text-muted)',
-    background: 'none', border: 'none', borderBottomStyle: 'solid',
-  });
-
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -278,67 +277,13 @@ export default function QuestionnairesPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* ═══ Editor Tabs ═══ */}
+        {/* ═══ SurveyJS Creator ═══ */}
         <div className="card">
-          <div style={{ display: 'flex', borderBottom: '2px solid var(--border-light)', padding: '0 16px' }}>
-            <button style={tabStyle('editor')} onClick={() => setActiveTab('editor')}>
-              📝 {lang === 'bs' ? 'Uređivač upitnika' : 'Questionnaire Editor'}
-            </button>
-            <button style={tabStyle('test')} onClick={() => setActiveTab('test')}>
-              ▶ {lang === 'bs' ? 'Testiraj upitnik' : 'Test Questionnaire'}
-            </button>
-            <button style={tabStyle('json')} onClick={() => setActiveTab('json')}>
-              {'{ }'} {lang === 'bs' ? 'JSON uređivač' : 'JSON Editor'}
-            </button>
-          </div>
-          <div className="card-body">
-            {activeTab === 'editor' && (
-              <div>
-                <div style={{ padding: 20, border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', textAlign: 'center', color: 'var(--text-muted)', minHeight: 200, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-                  <div style={{ fontSize: '2.5rem', opacity: 0.4 }}>📝</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                    {lang === 'bs' ? 'Alatna traka — Dodajte pitanja' : 'Toolbox — Add questions'}
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
-                    {['Tekst polje', 'Potvrdni okvir', 'Radiogumb', 'Padajući izbornik', 'Komentar', 'Ocjena', 'Rangiranje', 'Odabirač slike', 'Booleov'].map((tool, i) => (
-                      <span key={i} style={{ padding: '6px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', border: '1px solid var(--border-light)' }}>
-                        {tool}
-                      </span>
-                    ))}
-                  </div>
-                  <div style={{ fontSize: '0.82rem', marginTop: 8, maxWidth: 400 }}>
-                    {lang === 'bs'
-                      ? 'Kliknite na tip pitanja ili koristite JSON uređivač za definiranje pitanja upitnika.'
-                      : 'Click a question type or use the JSON editor to define questionnaire questions.'}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'test' && (
-              <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', minHeight: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12 }}>
-                <div style={{ fontSize: '2.5rem', opacity: 0.4 }}>▶</div>
-                <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                  {lang === 'bs' ? 'Pretpregled upitnika' : 'Questionnaire Preview'}
-                </div>
-                <div style={{ fontSize: '0.82rem' }}>
-                  {lang === 'bs'
-                    ? 'Definirajte pitanja u editoru ili JSON uređivaču da biste ih mogli testirati ovdje.'
-                    : 'Define questions in the editor or JSON editor to preview them here.'}
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'json' && (
-              <div>
-                <textarea
-                  className="form-input"
-                  value={formData.surveyJson}
-                  onChange={e => set('surveyJson', e.target.value)}
-                  style={{ fontFamily: 'monospace', fontSize: '0.85rem', minHeight: 300, lineHeight: 1.5 }}
-                />
-              </div>
-            )}
+          <div className="card-body" style={{ padding: 0, overflow: 'hidden' }}>
+            <SurveyCreatorWidget
+              json={formData.surveyJson}
+              onJsonChange={(newJson) => set('surveyJson', newJson)}
+            />
           </div>
         </div>
 
