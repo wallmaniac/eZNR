@@ -24,6 +24,7 @@ export default function DashboardPage() {
     const [certs, setCerts] = useState([]);
     const [ppeAssignments, setPpeAssignments] = useState([]);
     const [equipment, setEquipment] = useState([]);
+    const [employerDocs, setEmployerDocs] = useState([]);
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
     const [showEventForm, setShowEventForm] = useState(false);
@@ -46,6 +47,7 @@ export default function DashboardPage() {
         setCerts(getAll(COLLECTIONS.CERTIFICATES));
         setPpeAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
         setEquipment(getAll(COLLECTIONS.EQUIPMENT));
+        setEmployerDocs(getAll(COLLECTIONS.EMPLOYER_DOCS));
         setCalEvents(getAll(COLLECTIONS.CALENDAR_EVENTS));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
@@ -65,11 +67,55 @@ export default function DashboardPage() {
     const firstDay = new Date(year, month, 1).getDay();
     const startPad = (firstDay === 0 ? 6 : firstDay - 1);
 
-    const calendarEvents = calEvents;
+    // Build auto-events from all data with expiry dates
+    const autoEvents = useMemo(() => {
+        const events = [];
+        // Certificates — vrijediDo
+        certs.forEach(c => {
+            if (!c.vrijediDo) return;
+            const w = workers.find(wk => wk.id === c.workerId);
+            const wName = w ? `${w.ime} ${w.prezime}` : '';
+            events.push({
+                id: `auto-cert-${c.id}`,
+                datum: c.vrijediDo,
+                tip: 'cert',
+                opis: `${c.ime || c.oznaka || 'Uvjerenje'}${wName ? ` — ${wName}` : ''}`,
+                auto: true,
+                sourceId: c.id,
+            });
+        });
+        // Equipment — iduci (next inspection)
+        equipment.forEach(eq => {
+            if (!eq.iduci) return;
+            events.push({
+                id: `auto-equip-${eq.id}`,
+                datum: eq.iduci,
+                tip: 'equip',
+                opis: `${eq.naziv || eq.invBroj || 'Oprema'}`,
+                auto: true,
+                sourceId: eq.id,
+            });
+        });
+        // Employer docs — datumIsteka
+        employerDocs.forEach(d => {
+            if (!d.datumIsteka) return;
+            events.push({
+                id: `auto-doc-${d.id}`,
+                datum: d.datumIsteka,
+                tip: 'doc',
+                opis: `${d.naziv || 'Dokument'}`,
+                auto: true,
+                sourceId: d.id,
+            });
+        });
+        return events;
+    }, [certs, equipment, employerDocs, workers]);
+
+    const allCalendarEvents = useMemo(() => [...calEvents, ...autoEvents], [calEvents, autoEvents]);
 
     const getDayEvents = (day) => {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return calendarEvents.filter(e => e.datum === dateStr);
+        return allCalendarEvents.filter(e => e.datum === dateStr);
     };
 
     const stats = useMemo(() => {
@@ -215,48 +261,65 @@ export default function DashboardPage() {
                                         setShowEventForm(true);
                                     }}>
                                     <div style={{ fontWeight: isToday ? 800 : 600, fontSize: '0.85rem', color: isToday ? 'var(--primary)' : 'var(--text)', marginBottom: 4 }}>{day}</div>
-                                    {events.map((ev, idx) => (
-                                        <div key={idx}
-                                            style={{
-                                                fontSize: '0.65rem', padding: '2px 4px', borderRadius: 3, marginBottom: 2,
-                                                cursor: 'pointer', position: 'relative',
-                                                display: 'flex', alignItems: 'center', gap: 2,
-                                                background: ev.tip === 'cert' ? '#E3F2FD' : ev.tip === 'ppe' ? '#FFF3E0' : ev.tip === 'equip' ? '#E8F5E9' : '#F3E5F5',
-                                                color: ev.tip === 'cert' ? '#1565C0' : ev.tip === 'ppe' ? '#E65100' : ev.tip === 'equip' ? '#2E7D32' : '#6A1B9A',
-                                                transition: 'opacity 0.15s',
-                                            }}
-                                            title={ev.opis}>
-                                            <span
-                                                onClick={(e) => handleEventClick(ev, e)}
-                                                style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}>
-                                                {ev.tip === 'cert' ? `📜 ${ev.opis || `Uvjerenja (${ev.count})`}` : ev.tip === 'ppe' ? `🦺 ${ev.opis || `ZS (${ev.count})`}` : ev.tip === 'equip' ? `⚙️ ${ev.opis || `RO (${ev.count})`}` : ev.opis}
-                                            </span>
-                                            <button
-                                                onClick={(e) => handleDeleteEvent(ev, e)}
-                                                title={lang === 'bs' ? 'Obriši događaj' : 'Delete event'}
+                                    {events.map((ev, idx) => {
+                                        const isExpired = ev.datum && new Date(ev.datum) < today;
+                                        const diff = ev.datum ? (new Date(ev.datum) - today) / (1000 * 60 * 60 * 24) : 999;
+                                        const isSoon = diff >= 0 && diff <= 30;
+                                        const statusIcon = ev.auto ? (isExpired ? ' ⚠️' : isSoon ? ' ⏰' : '') : '';
+                                        const bgColor = ev.auto && isExpired
+                                            ? (ev.tip === 'cert' ? '#FFEBEE' : ev.tip === 'equip' ? '#FBE9E7' : '#FFEBEE')
+                                            : (ev.tip === 'cert' ? '#E3F2FD' : ev.tip === 'ppe' ? '#FFF3E0' : ev.tip === 'equip' ? '#E8F5E9' : '#F3E5F5');
+                                        const fgColor = ev.auto && isExpired
+                                            ? '#C62828'
+                                            : (ev.tip === 'cert' ? '#1565C0' : ev.tip === 'ppe' ? '#E65100' : ev.tip === 'equip' ? '#2E7D32' : '#6A1B9A');
+                                        return (
+                                            <div key={ev.id || idx}
                                                 style={{
-                                                    background: 'none', border: 'none', cursor: 'pointer',
-                                                    padding: '0 2px', lineHeight: 1, fontSize: '0.7rem',
-                                                    color: 'inherit', opacity: 0.5, flexShrink: 0,
-                                                    borderRadius: 2,
+                                                    fontSize: '0.65rem', padding: '2px 4px', borderRadius: 3, marginBottom: 2,
+                                                    cursor: 'pointer', position: 'relative',
+                                                    display: 'flex', alignItems: 'center', gap: 2,
+                                                    background: bgColor,
+                                                    color: fgColor,
+                                                    borderLeft: ev.auto ? `3px solid ${fgColor}` : 'none',
+                                                    transition: 'opacity 0.15s',
                                                 }}
-                                                onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(0,0,0,0.12)'; }}
-                                                onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.background = 'none'; }}
-                                            >✕</button>
-                                        </div>
-                                    ))}
+                                                title={`${ev.opis}${statusIcon ? (isExpired ? ' (Isteklo)' : ' (Uskoro ističe)') : ''}`}>
+                                                <span
+                                                    onClick={(e) => handleEventClick(ev, e)}
+                                                    style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                                    onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
+                                                    onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}>
+                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
+                                                </span>
+                                                {!ev.auto && (
+                                                    <button
+                                                        onClick={(e) => handleDeleteEvent(ev, e)}
+                                                        title={lang === 'bs' ? 'Obriši događaj' : 'Delete event'}
+                                                        style={{
+                                                            background: 'none', border: 'none', cursor: 'pointer',
+                                                            padding: '0 2px', lineHeight: 1, fontSize: '0.7rem',
+                                                            color: 'inherit', opacity: 0.5, flexShrink: 0,
+                                                            borderRadius: 2,
+                                                        }}
+                                                        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(0,0,0,0.12)'; }}
+                                                        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.background = 'none'; }}
+                                                    >✕</button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             );
                         })}
                     </div>
 
-                    <div style={{ display: 'flex', gap: 24, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem' }}>
-                        <Legend color="#1565C0" bg="#E3F2FD" label={lang === 'bs' ? 'Uvjerenja' : 'Certificates'} />
-                        <Legend color="#E65100" bg="#FFF3E0" label="ZS" />
-                        <Legend color="#2E7D32" bg="#E8F5E9" label={lang === 'bs' ? 'Dokumenti' : 'Documents'} />
-                        <Legend color="#6A1B9A" bg="#F3E5F5" label={lang === 'bs' ? 'Predmeti' : 'Objects'} />
+                    <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem', flexWrap: 'wrap' }}>
+                        <Legend color="#1565C0" bg="#E3F2FD" label={lang === 'bs' ? '📜 Uvjerenja' : '📜 Certificates'} />
+                        <Legend color="#E65100" bg="#FFF3E0" label="🦺 ZS" />
+                        <Legend color="#2E7D32" bg="#E8F5E9" label={lang === 'bs' ? '⚙️ Oprema' : '⚙️ Equipment'} />
+                        <Legend color="#6A1B9A" bg="#F3E5F5" label={lang === 'bs' ? '📄 Dokumenti' : '📄 Documents'} />
+                        <Legend color="#C62828" bg="#FFEBEE" label={lang === 'bs' ? '⚠️ Isteklo' : '⚠️ Expired'} />
+                        <Legend color="#E65100" bg="#FFF8E1" label={lang === 'bs' ? '⏰ Uskoro' : '⏰ Soon'} />
                     </div>
                 </div>
             </div>

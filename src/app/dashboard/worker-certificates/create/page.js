@@ -268,6 +268,26 @@ export function UvjerenjeFormPage() {
             </div>
             <DialogRenderer />
 
+            {/* Copy notice */}
+            {searchParams?.get('copyFrom') && (
+                <div style={{
+                    padding: '12px 16px', marginBottom: 16, borderRadius: 'var(--radius-md)',
+                    background: 'rgba(33, 150, 243, 0.08)', border: '1px solid rgba(33, 150, 243, 0.3)',
+                    display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.88rem',
+                }}>
+                    <span style={{ fontSize: '1.2rem' }}>📋</span>
+                    <div>
+                        <strong>{lang === 'bs' ? 'Kopiranje uvjerenja' : 'Copying certificate'}</strong>
+                        {formData.tipUvjerenjaIme && <span> — {formData.tipUvjerenjaIme}</span>}
+                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                            {lang === 'bs'
+                                ? 'Odaberite jednog ili više radnika kojima želite dodijeliti ovo uvjerenje.'
+                                : 'Select one or more workers to assign this certificate to.'}
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Worker selection — hidden when a single worker is pre-selected */}
             {!isSingleWorkerMode && (
                 <div className="card" style={{ marginBottom: 20 }}>
