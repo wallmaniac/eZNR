@@ -8,6 +8,54 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
+/* ── Stable sub-components (defined outside to avoid recreating on every render) ── */
+
+const labelStyle = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 };
+const valueStyle = { fontSize: '0.88rem', color: 'var(--text)', fontWeight: 500 };
+
+function ModalField({ label, field, type = 'text', opts = null, editMode, formData, set, lang }) {
+    return (
+        <div className="form-group" style={{ marginBottom: 12 }}>
+            <div style={labelStyle}>{label}</div>
+            {editMode ? (
+                opts ? (
+                    <select className="form-select" value={formData[field] || ''} onChange={e => set(field, e.target.value)}>
+                        <option value="">-</option>
+                        {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    </select>
+                ) : type === 'checkbox' ? (
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', paddingTop: 6 }}>
+                        <input type="checkbox" checked={!!formData[field]} onChange={e => set(field, e.target.checked)} />
+                        {lang === 'bs' ? 'Da' : 'Yes'}
+                    </label>
+                ) : (
+                    <input className="form-input" type={type} value={formData[field] || ''} onChange={e => set(field, type === 'number' ? Number(e.target.value) : e.target.value)} />
+                )
+            ) : (
+                <div style={valueStyle}>{
+                    type === 'checkbox' ? (formData[field] ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No'))
+                        : opts ? (opts.find(o => o.value === formData[field])?.label || '—')
+                            : (formData[field] || '—')
+                }</div>
+            )}
+        </div>
+    );
+}
+
+function ModalSection({ title, action, children }) {
+    return (
+        <div style={{ marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 4, borderBottom: '1px solid var(--border-light)' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)' }}>
+                    {title}
+                </div>
+                {action}
+            </div>
+            {children}
+        </div>
+    );
+}
+
 /**
  * WorkerProfileModal
  * Props:
@@ -101,47 +149,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     const ou = orgUnits.find(o => o.id === formData.orgJedinicaId);
     const initials = `${worker.ime?.[0] || ''}${worker.prezime?.[0] || ''}`.toUpperCase();
 
-    const labelStyle = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 3 };
-    const valueStyle = { fontSize: '0.88rem', color: 'var(--text)', fontWeight: 500 };
 
-    const Field = ({ label, field, type = 'text', opts = null }) => (
-        <div className="form-group" style={{ marginBottom: 12 }}>
-            <div style={labelStyle}>{label}</div>
-            {editMode ? (
-                opts ? (
-                    <select className="form-select" value={formData[field] || ''} onChange={e => set(field, e.target.value)}>
-                        <option value="">-</option>
-                        {opts.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                ) : type === 'checkbox' ? (
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', paddingTop: 6 }}>
-                        <input type="checkbox" checked={!!formData[field]} onChange={e => set(field, e.target.checked)} />
-                        {lang === 'bs' ? 'Da' : 'Yes'}
-                    </label>
-                ) : (
-                    <input className="form-input" type={type} value={formData[field] || ''} onChange={e => set(field, type === 'number' ? Number(e.target.value) : e.target.value)} />
-                )
-            ) : (
-                <div style={valueStyle}>{
-                    type === 'checkbox' ? (formData[field] ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No'))
-                        : opts ? (opts.find(o => o.value === formData[field])?.label || '—')
-                            : (formData[field] || '—')
-                }</div>
-            )}
-        </div>
-    );
-
-    const Section = ({ title, action, children }) => (
-        <div style={{ marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 4, borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)' }}>
-                    {title}
-                </div>
-                {action}
-            </div>
-            {children}
-        </div>
-    );
 
     const openFullEdit = () => {
         onClose();
@@ -196,50 +204,50 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                 {/* ── Body ── */}
                 <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
 
-                    <Section title={lang === 'bs' ? 'Osnovno' : 'Basic info'}>
+                    <ModalSection title={lang === 'bs' ? 'Osnovno' : 'Basic info'}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <Field label={lang === 'bs' ? 'Ime' : 'First name'} field="ime" />
-                            <Field label={lang === 'bs' ? 'Prezime' : 'Last name'} field="prezime" />
-                            <Field label={lang === 'bs' ? 'Ime roditelja' : "Parent's name"} field="imeRoditelja" />
-                            <Field label="JMBG" field="jmbg" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ime' : 'First name'} field="ime" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Prezime' : 'Last name'} field="prezime" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ime roditelja' : "Parent's name"} field="imeRoditelja" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="JMBG" field="jmbg" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <Field label="OIB" field="oib" />
-                            <Field label={lang === 'bs' ? 'Spol' : 'Gender'} field="spol"
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="OIB" field="oib" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Spol' : 'Gender'} field="spol"
                                 opts={[{ value: 'M', label: lang === 'bs' ? 'Muški' : 'Male' }, { value: 'Z', label: lang === 'bs' ? 'Ženski' : 'Female' }]} />
-                            <Field label={lang === 'bs' ? 'Datum rođenja' : 'Date of birth'} field="datumRodenja" type="date" />
-                            <Field label={lang === 'bs' ? 'Životna dob' : 'Age'} field="zivotnaDob" type="number" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum rođenja' : 'Date of birth'} field="datumRodenja" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Životna dob' : 'Age'} field="zivotnaDob" type="number" />
                         </div>
-                    </Section>
+                    </ModalSection>
 
-                    <Section title={lang === 'bs' ? 'Radno mjesto' : 'Employment'}>
+                    <ModalSection title={lang === 'bs' ? 'Radno mjesto' : 'Employment'}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <Field label={t('workplace')} field="radnoMjestoId"
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('workplace')} field="radnoMjestoId"
                                 opts={workplaces.map(w => ({ value: w.id, label: w.naziv }))} />
-                            <Field label={t('orgUnit')} field="orgJedinicaId"
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('orgUnit')} field="orgJedinicaId"
                                 opts={orgUnits.map(o => ({ value: o.id, label: o.naziv }))} />
-                            <Field label={lang === 'bs' ? 'Ev. broj' : 'Emp. number'} field="evidencijskiBroj" />
-                            <Field label={lang === 'bs' ? 'Datum zaposlenja' : 'Employment date'} field="datumZaposlenja" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ev. broj' : 'Emp. number'} field="evidencijskiBroj" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum zaposlenja' : 'Employment date'} field="datumZaposlenja" type="date" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <Field label={lang === 'bs' ? 'Staz do dolaska' : 'Prior experience'} field="stazDoDolaska" />
-                            <Field label={lang === 'bs' ? 'Ukupni staz' : 'Total experience'} field="ukupniStaz" />
-                            <Field label={lang === 'bs' ? 'Koeficijent' : 'Coefficient'} field="koef" />
-                            <Field label={lang === 'bs' ? 'Vanjski suradnik' : 'External'} field="vanjskiSuradnik" type="checkbox" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Staz do dolaska' : 'Prior experience'} field="stazDoDolaska" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ukupni staz' : 'Total experience'} field="ukupniStaz" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Koeficijent' : 'Coefficient'} field="koef" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Vanjski suradnik' : 'External'} field="vanjskiSuradnik" type="checkbox" />
                         </div>
-                    </Section>
+                    </ModalSection>
 
-                    <Section title={lang === 'bs' ? 'Kontakt' : 'Contact'}>
+                    <ModalSection title={lang === 'bs' ? 'Kontakt' : 'Contact'}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <Field label={lang === 'bs' ? 'Mobitel' : 'Mobile'} field="mobitel" />
-                            <Field label={lang === 'bs' ? 'Tel. kuće' : 'Home phone'} field="telefonKuce" />
-                            <Field label={lang === 'bs' ? 'Tel. firme' : 'Company phone'} field="telefonTvrtki" />
-                            <Field label="Email" field="email" type="email" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Mobitel' : 'Mobile'} field="mobitel" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Tel. kuće' : 'Home phone'} field="telefonKuce" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Tel. firme' : 'Company phone'} field="telefonTvrtki" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="Email" field="email" type="email" />
                         </div>
-                    </Section>
+                    </ModalSection>
 
                     {/* ── Certificates with full CRUD ── */}
-                    <Section
+                    <ModalSection
                         title={`${t('workerCerts')} (${certificates.length})`}
                         action={
                             <div style={{ display: 'flex', gap: 6 }}>
@@ -318,10 +326,10 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                 </div>
                             );
                         })}
-                    </Section>
+                    </ModalSection>
 
                     {/* ── PPE with full CRUD ── */}
-                    <Section
+                    <ModalSection
                         title={`${t('workerPPESection')} (${ppeAssign.length})`}
                         action={
                             <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
@@ -365,16 +373,16 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                 </div>
                             </div>
                         ))}
-                    </Section>
+                    </ModalSection>
 
                     {(editMode || formData.napomena) && (
-                        <Section title={lang === 'bs' ? 'Napomena' : 'Notes'}>
+                        <ModalSection title={lang === 'bs' ? 'Napomena' : 'Notes'}>
                             {editMode ? (
                                 <textarea className="form-input" rows={3} value={formData.napomena || ''} onChange={e => set('napomena', e.target.value)} />
                             ) : (
                                 <div style={valueStyle}>{formData.napomena}</div>
                             )}
-                        </Section>
+                        </ModalSection>
                     )}
                 </div>
 
