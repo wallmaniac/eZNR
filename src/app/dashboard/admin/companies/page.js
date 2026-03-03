@@ -10,7 +10,7 @@ import { useDialog } from '@/hooks/useDialog';
 
 export default function AdminCompaniesPage() {
     const { t, lang } = useLanguage();
-  const { alert, confirm, DialogRenderer } = useDialog();
+    const { alert, confirm, DialogRenderer } = useDialog();
     const { isAdmin } = useAuth();
     const router = useRouter();
     const [companies, setCompanies] = useState([]);
@@ -61,15 +61,16 @@ export default function AdminCompaniesPage() {
         refreshData();
     };
 
-    const handleDelete = (c) => {
+    const handleDelete = async (c) => {
         const usersInCompany = users.filter(u => (u.companyIds || []).includes(c.id));
         if (usersInCompany.length > 0) {
-            alert(lang === 'bs'
+            await alert(lang === 'bs'
                 ? `Ne možete obrisati firmu "${c.naziv}" jer ima ${usersInCompany.length} korisnika.`
                 : `Cannot delete company "${c.naziv}" — it has ${usersInCompany.length} users.`);
             return;
         }
-        const ok = await confirm(lang === 'bs' ? `Obrisati firmu ${c.naziv}?` : `Delete company ${c.naziv}?`); if (ok) {
+        const ok = await confirm(lang === 'bs' ? `Obrisati firmu ${c.naziv}?` : `Delete company ${c.naziv}?`);
+        if (ok) {
             remove(COLLECTIONS.COMPANIES, c.id);
             refreshData();
         }

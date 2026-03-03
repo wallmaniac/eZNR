@@ -24,7 +24,7 @@ export default function PlacesPage() {
     if (editingId) update(COLLECTIONS.PLACES, editingId, formData); else create(COLLECTIONS.PLACES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.PLACES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.PLACES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

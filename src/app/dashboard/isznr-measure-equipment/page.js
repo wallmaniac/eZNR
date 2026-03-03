@@ -23,7 +23,7 @@ export default function ISZNRMeasureEquipmentPage() {
     if (editingId) update(col, editingId, formData); else create(col, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip', id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

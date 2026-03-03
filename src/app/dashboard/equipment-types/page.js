@@ -22,7 +22,7 @@ export default function EquipmentTypesPage() {
     if (editingId) update(COLLECTIONS.EQUIPMENT_TYPES, editingId, formData); else create(COLLECTIONS.EQUIPMENT_TYPES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.EQUIPMENT_TYPES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.EQUIPMENT_TYPES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

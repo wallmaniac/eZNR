@@ -16,7 +16,7 @@ export default function OrgGroupsPage() {
   const handleNew = () => { setFormData({ naziv: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.ORG_GROUPS || 'org_groups'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ORG_GROUPS || 'org_groups', id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.ORG_GROUPS || 'org_groups', id); loadData(); } };
   return (
     <div className="animate-fadeIn">
       <h1 style={{ marginBottom: 24 }}>📁 {t('orgUnitGroups')}</h1>

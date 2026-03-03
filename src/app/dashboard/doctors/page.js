@@ -22,7 +22,7 @@ export default function DoctorsPage() {
     if (editingId) update(COLLECTIONS.DOCTORS, editingId, formData); else create(COLLECTIONS.DOCTORS, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.DOCTORS, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.DOCTORS, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

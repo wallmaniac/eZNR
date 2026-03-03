@@ -24,7 +24,7 @@ export default function ExaminersPage() {
     if (editingId) update(COLLECTIONS.EXAMINERS, editingId, formData); else create(COLLECTIONS.EXAMINERS, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.EXAMINERS, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.EXAMINERS, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

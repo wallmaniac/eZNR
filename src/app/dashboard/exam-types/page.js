@@ -16,7 +16,7 @@ export default function ExamTypesPage() {
   const handleNew = () => { setFormData({ naziv: '', oznaka: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.EXAM_TYPES || 'exam_types'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.EXAM_TYPES || 'exam_types', id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.EXAM_TYPES || 'exam_types', id); loadData(); } };
   return (
     <div className="animate-fadeIn">
       <h1 style={{ marginBottom: 24 }}>📋 {t('examTypes')}</h1>

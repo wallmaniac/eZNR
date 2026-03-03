@@ -22,7 +22,7 @@ export default function InjuryListPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?'); if (!ok) return;
     remove(COLLECTIONS.INJURIES, id);
     loadData();

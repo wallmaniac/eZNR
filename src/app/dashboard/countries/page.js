@@ -22,7 +22,7 @@ export default function CountriesPage() {
     if (editingId) update(COLLECTIONS.COUNTRIES, editingId, formData); else create(COLLECTIONS.COUNTRIES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.COUNTRIES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.COUNTRIES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

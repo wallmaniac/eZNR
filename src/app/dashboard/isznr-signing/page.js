@@ -166,8 +166,8 @@ export default function ISZNRSigningPage() {
     }, 1500);
   };
 
-  const handleRevokeSignature = (doc) => {
-    { const ok = await confirm(lang === 'bs' ? 'Poništiti digitalni potpis na ovom dokumentu?' : 'Revoke digital signature on this document?'); if (!ok) return; }
+  const handleRevokeSignature = async (doc) => {
+    const ok = await confirm(lang === 'bs' ? 'Poništiti digitalni potpis na ovom dokumentu?' : 'Revoke digital signature on this document?'); if (!ok) return;
     update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, {
       potpisano: false,
       datumPotpisa: null,
@@ -178,8 +178,8 @@ export default function ISZNRSigningPage() {
     loadData();
   };
 
-  const handleDeleteDoc = (doc) => {
-    { const ok = await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?'); if (!ok) return; }
+  const handleDeleteDoc = async (doc) => {
+    const ok = await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?'); if (!ok) return;
     remove(COLLECTIONS.ISZNR_DOCUMENTS, doc.id);
     loadData();
   };

@@ -72,7 +72,7 @@ export default function OrgUnitsPage() {
         setActionMenuId(null);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         const children = getChildOrgUnits(id);
         if (children.length > 0) {
             await alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima podorganizacije.' : 'Cannot delete org. unit with child units.');

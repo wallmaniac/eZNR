@@ -22,7 +22,7 @@ export default function AuthorizedCompaniesPage() {
     if (editingId) update(COLLECTIONS.AUTHORIZED_COMPANIES, editingId, formData); else create(COLLECTIONS.AUTHORIZED_COMPANIES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.AUTHORIZED_COMPANIES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.AUTHORIZED_COMPANIES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

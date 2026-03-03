@@ -23,7 +23,7 @@ export default function ISZNRExaminersPage() {
     if (editingId) update(col, editingId, formData); else create(col, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_EXAMINERS || 'isznr_examiners', id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.ISZNR_EXAMINERS || 'isznr_examiners', id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

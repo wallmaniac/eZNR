@@ -22,7 +22,7 @@ export default function ISZNRDocTypesPage() {
     if (editingId) update(COLLECTIONS.ISZNR_DOC_TYPES, editingId, formData); else create(COLLECTIONS.ISZNR_DOC_TYPES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_DOC_TYPES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.ISZNR_DOC_TYPES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

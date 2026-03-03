@@ -28,8 +28,8 @@ export default function EmployerDocsPage() {
         if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, formData); } else { create(COLLECTIONS.EMPLOYER_DOCS, formData); }
         setShowForm(false); loadData();
     };
-    const handleDelete = (id) => {
-        if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) { remove(COLLECTIONS.EMPLOYER_DOCS, id); loadData(); }
+    const handleDelete = async (id) => {
+        const delOk = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (delOk) { remove(COLLECTIONS.EMPLOYER_DOCS, id); loadData(); }
     };
 
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };

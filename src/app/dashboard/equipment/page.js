@@ -45,8 +45,8 @@ export default function EquipmentPage() {
 
     const handleNew = () => { setFormData({ ...emptyEQ }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
-    const handleDelete = (id) => {
-        if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) { remove(COLLECTIONS.EQUIPMENT, id); setActionMenuId(null); loadData(); }
+    const handleDelete = async (id) => {
+        const delOk = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (delOk) { remove(COLLECTIONS.EQUIPMENT, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
@@ -167,10 +167,10 @@ export default function EquipmentPage() {
                                 if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
                             }}>{t('selectGroupAction')} ▼</button>
                             <div id="group-action-menu-eq" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                <button className="dropdown-item" onClick={() => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
-                                <button className="dropdown-item" onClick={() => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
+                                <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
+                                <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
                                 <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { if (confirm(t('confirmDelete'))) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm(t('confirmDelete'))) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
                             </div>
                         </div>
                     </div>

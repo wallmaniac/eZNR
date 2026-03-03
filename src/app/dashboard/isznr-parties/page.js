@@ -22,7 +22,7 @@ export default function ISZNRPartiesPage() {
     if (editingId) update(COLLECTIONS.ISZNR_PARTIES, editingId, formData); else create(COLLECTIONS.ISZNR_PARTIES, formData);
     setShowForm(false); loadData();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.ISZNR_PARTIES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.ISZNR_PARTIES, id); loadData(); } };
 
   return (
     <div className="animate-fadeIn">

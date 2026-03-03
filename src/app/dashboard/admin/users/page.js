@@ -83,7 +83,7 @@ export default function AdminUsersPage() {
         refreshData();
     };
 
-    const handleDelete = (u) => {
+    const handleDelete = async (u) => {
         if (u.id === user?.id) return;
         const ok = await confirm(lang === 'bs' ? `Obrisati korisnika ${u.firstName} ${u.lastName}?` : `Delete user ${u.firstName} ${u.lastName}?`); if (ok) {
             remove(COLLECTIONS.USERS, u.id);

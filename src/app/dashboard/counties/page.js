@@ -16,7 +16,7 @@ export default function CountiesPage() {
   const handleNew = () => { setFormData({ naziv: '', kod: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.COUNTIES || 'counties'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.COUNTIES || 'counties', id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.COUNTIES || 'counties', id); loadData(); } };
   return (
     <div className="animate-fadeIn">
       <h1 style={{ marginBottom: 24 }}>📍 {t('counties')}</h1>
