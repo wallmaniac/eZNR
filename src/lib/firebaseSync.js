@@ -162,16 +162,21 @@ export async function getQuestionnaireSession(token) {
     return snap.docs[0].data();
 }
 
-export async function saveQuestionnaireResponse(sessionId, answers) {
+export async function saveQuestionnaireResponse(sessionId, answers, grade = null) {
     const ref = doc(db, 'questionnaire_responses', sessionId);
     await setDoc(ref, {
         sessionId,
         answers,
+        grade, // null if no grading defined, or { percentage, correct, total, passed }
         submittedAt: new Date().toISOString(),
     });
     // Also update session status
     const sessionRef = doc(db, 'questionnaire_sessions', sessionId);
-    await setDoc(sessionRef, { status: 'completed', completedAt: new Date().toISOString() }, { merge: true });
+    await setDoc(sessionRef, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        grade: grade ? { percentage: grade.percentage, passed: grade.passed } : null,
+    }, { merge: true });
 }
 
 // ─── Get all sessions for a specific questionnaire ───────────────────────────

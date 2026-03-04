@@ -66,11 +66,17 @@ export default function PublicQuestionnairePage({ params }) {
         loadSession();
     }, [token]);
 
-    const handleSubmit = async (answers) => {
+    const handleSubmit = async (answers, grade) => {
         if (!session?.id) return;
         setSubmitting(true);
         try {
-            await saveQuestionnaireResponse(session.id, answers);
+            await saveQuestionnaireResponse(session.id, answers, grade);
+            if (!grade) {
+                // No grading — go straight to thank-you screen
+                setSubmitted(true);
+            }
+            // If grading is on, the form shows the score screen itself
+            // We still mark submitted so re-opening shows completed state
             setSubmitted(true);
         } catch (err) {
             console.error('Failed to submit response:', err);
@@ -210,6 +216,8 @@ export default function PublicQuestionnairePage({ params }) {
                             questionnaireName={session.questionnaireName}
                             onSubmit={handleSubmit}
                             submitting={submitting}
+                            prolazniPrag={session.prolazniPrag ?? 70}
+                            prikaziRezultate={session.prikaziRezultateNakonRjesavanja !== false}
                         />
                     </div>
                 )}

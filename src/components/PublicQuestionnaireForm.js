@@ -6,6 +6,38 @@ import { useState, useCallback } from 'react';
    for external workers to fill out (no login required)
    ═══════════════════════════════════════════════════════ */
 
+// Calculate grade from answers vs correct answers in questions
+function calculateGrade(questions, answers) {
+    const gradeable = questions.filter(q =>
+        q.correctAnswer != null &&
+        q.correctAnswer !== '' &&
+        (Array.isArray(q.correctAnswer) ? q.correctAnswer.length > 0 : true)
+    );
+    if (gradeable.length === 0) return null; // no grading defined
+
+    let correct = 0;
+    const details = gradeable.map(q => {
+        const qId = q.id || q.name;
+        const given = answers[qId];
+        let isCorrect = false;
+
+        if (Array.isArray(q.correctAnswer)) {
+            // checkbox: both arrays must match (order-independent)
+            const givenArr = Array.isArray(given) ? given : [];
+            isCorrect = q.correctAnswer.length === givenArr.length &&
+                q.correctAnswer.every(a => givenArr.includes(a));
+        } else {
+            isCorrect = String(given || '').trim() === String(q.correctAnswer).trim();
+        }
+
+        if (isCorrect) correct++;
+        return { qId, title: q.title || q.name, isCorrect, given, correct: q.correctAnswer };
+    });
+
+    const percentage = Math.round((correct / gradeable.length) * 100);
+    return { correct, total: gradeable.length, percentage, details };
+}
+
 const QUESTION_TYPE_LABELS = {
     text: 'Tekst',
     textarea: 'Komentar',
@@ -20,9 +52,10 @@ const QUESTION_TYPE_LABELS = {
     html: 'HTML',
 };
 
-export default function PublicQuestionnaireForm({ surveyJson, questionnaireName, onSubmit, submitting }) {
+export default function PublicQuestionnaireForm({ surveyJson, questionnaireName, onSubmit, submitting, prolazniPrag = 70, prikaziRezultate = true }) {
     const [answers, setAnswers] = useState({});
     const [errors, setErrors] = useState({});
+    const [gradeResult, setGradeResult] = useState(null); // shown after submit if grading is set
 
     // Parse survey JSON
     let questions = [];
@@ -66,7 +99,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
         const newErrors = {};
         questions.forEach(q => {
             if (q.type === 'heading' || q.type === 'html') return;
-            if (q.isRequired) {
+            if (q.isRequired || q.required) {
                 const val = answers[q.id || q.name];
                 if (!val || (Array.isArray(val) && val.length === 0) || val === '') {
                     newErrors[q.id || q.name] = 'Ovo polje je obavezno';
@@ -76,23 +109,90 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
 
         if (Object.keys(newErrors).length > 0) {
             setErrors(newErrors);
-            // Scroll to first error
             const firstErrorId = Object.keys(newErrors)[0];
             document.getElementById(`q-${firstErrorId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
             return;
         }
 
-        onSubmit?.(answers);
+        // Calculate grade if questions have correctAnswer set
+        const grade = calculateGrade(questions, answers);
+
+        // If grading is defined and we want to show results, show score screen first
+        if (grade !== null && prikaziRezultate) {
+            const passed = grade.percentage >= (prolazniPrag ?? 70);
+            setGradeResult({ ...grade, passed, prolazniPrag: prolazniPrag ?? 70 });
+        }
+
+        // Always submit with grade info attached
+        onSubmit?.(answers, grade);
     };
 
-    if (questions.length === 0) {
+    // ─── Grade result screen ─────────────────────────────────────────────────
+    if (gradeResult) {
+        const { percentage, correct, total, passed, prolazniPrag: threshold, details } = gradeResult;
+        const passColor = passed ? '#10b981' : '#ef4444';
+        const passBg = passed ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)';
         return (
-            <div style={{
-                textAlign: 'center', padding: '60px 20px',
-                color: '#94a3b8',
-            }}>
-                <div style={{ fontSize: '3rem', marginBottom: 16 }}>📋</div>
-                <p style={{ fontSize: '1.1rem' }}>Ovaj upitnik nema pitanja.</p>
+            <div style={{ maxWidth: 600, margin: '0 auto', textAlign: 'center', padding: '20px 0 40px' }}>
+                {/* Big score circle */}
+                <div style={{
+                    width: 140, height: 140, borderRadius: '50%',
+                    border: `6px solid ${passColor}`,
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center',
+                    margin: '0 auto 20px',
+                    background: passBg,
+                    boxShadow: `0 0 32px ${passColor}30`,
+                    animation: 'popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)',
+                }}>
+                    <style>{`@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }`}</style>
+                    <span style={{ fontSize: '2rem', fontWeight: 800, color: passColor }}>{percentage}%</span>
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8', fontWeight: 600 }}>{correct}/{total}</span>
+                </div>
+
+                {/* Pass / Fail badge */}
+                <div style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8,
+                    padding: '8px 24px', borderRadius: 30,
+                    background: passBg, border: `1px solid ${passColor}40`,
+                    color: passColor, fontWeight: 700, fontSize: '1rem',
+                    marginBottom: 8,
+                }}>
+                    {passed ? '✅ Položeno' : '❌ Nije položeno'}
+                </div>
+
+                <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '6px 0 28px' }}>
+                    Prag prolaza: {threshold}% — {passed ? 'Čestitamo!' : 'Nažalost, niste dosegli prag prolaza.'}
+                </p>
+
+                {/* Per-question breakdown */}
+                <div style={{ textAlign: 'left' }}>
+                    {details.map((d, i) => (
+                        <div key={i} style={{
+                            padding: '12px 16px', marginBottom: 8, borderRadius: 10,
+                            background: d.isCorrect ? 'rgba(16,185,129,0.06)' : 'rgba(239,68,68,0.06)',
+                            border: `1px solid ${d.isCorrect ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                            display: 'flex', alignItems: 'flex-start', gap: 12,
+                        }}>
+                            <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{d.isCorrect ? '✅' : '❌'}</span>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#e2e8f0', marginBottom: 2 }}>
+                                    {d.title}
+                                </div>
+                                <div style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
+                                    Vaš odgovor: <span style={{ color: d.isCorrect ? '#10b981' : '#ef4444' }}>
+                                        {Array.isArray(d.given) ? d.given.join(', ') : (d.given || '—')}
+                                    </span>
+                                    {!d.isCorrect && (
+                                        <> · Tačan: <span style={{ color: '#10b981' }}>
+                                            {Array.isArray(d.correct) ? d.correct.join(', ') : d.correct}
+                                        </span></>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         );
     }
@@ -161,7 +261,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                                 {idx + 1}
                             </span>
                             {q.title || q.text || `Pitanje ${idx + 1}`}
-                            {q.isRequired && (
+                            {(q.isRequired || q.required) && (
                                 <span style={{ color: '#ef4444', marginLeft: 4 }}>*</span>
                             )}
                         </label>
@@ -291,7 +391,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                                 </div>
                             )}
 
-                            {q.type === 'yesno' && (
+                            {(q.type === 'yesno' || q.type === 'boolean') && (
                                 <div style={{ display: 'flex', gap: 12 }}>
                                     {['Da', 'Ne'].map(opt => (
                                         <button
@@ -363,6 +463,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
         </div>
     );
 }
+
 
 // ─── Reusable styles ─────────────────────────────────────────────────────────
 

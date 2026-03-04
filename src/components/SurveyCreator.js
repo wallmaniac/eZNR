@@ -21,6 +21,9 @@ const QUESTION_TYPES = [
     { type: 'html', icon: '🌐', label: 'HTML sadržaj', labelEn: 'HTML Content' },
 ];
 
+// Types that support automatic grading
+const GRADEABLE_TYPES = ['radio', 'checkbox', 'dropdown', 'boolean'];
+
 const createQuestion = (type) => ({
     id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
     type,
@@ -30,6 +33,7 @@ const createQuestion = (type) => ({
     choices: type === 'radio' || type === 'checkbox' || type === 'dropdown'
         ? ['Opcija 1', 'Opcija 2', 'Opcija 3']
         : [],
+    correctAnswer: null, // null = not graded; string or array = graded
     ratingMax: type === 'rating' ? 5 : undefined,
     placeholder: '',
     htmlContent: type === 'html' ? '<p>Vaš HTML sadržaj ovdje</p>' : undefined,
@@ -188,6 +192,12 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                     <span style={{ fontSize: '0.9rem' }}>{getTypeIcon(q.type)}</span>
                                     <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>{getTypeLabel(q.type)}</span>
                                     {q.required && <span style={{ fontSize: '0.7rem', background: 'var(--danger)', color: '#fff', padding: '1px 6px', borderRadius: 10 }}>*</span>}
+                                    {GRADEABLE_TYPES.includes(q.type) && q.correctAnswer != null && q.correctAnswer !== '' && (
+                                        <span title={lang === 'bs' ? 'Tačan odgovor postavljen' : 'Correct answer set'}
+                                            style={{ fontSize: '0.7rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>
+                                            ✓
+                                        </span>
+                                    )}
                                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 4 }}>
                                         <button onClick={e => { e.stopPropagation(); moveQuestion(q.id, -1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: 2 }}>⬆</button>
                                         <button onClick={e => { e.stopPropagation(); moveQuestion(q.id, 1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', padding: 2 }}>⬇</button>
@@ -309,6 +319,80 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                             style={{ fontSize: '0.78rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: '4px 0' }}>
                                             + {lang === 'bs' ? 'Dodaj opciju' : 'Add choice'}
                                         </button>
+                                    </div>
+                                )}
+
+                                {/* ── Correct answer (for grading) ── */}
+                                {GRADEABLE_TYPES.includes(selectedQuestion.type) && (
+                                    <div style={{
+                                        marginBottom: 10, marginTop: 14,
+                                        padding: '10px 12px',
+                                        background: 'rgba(16,185,129,0.06)',
+                                        border: '1px solid rgba(16,185,129,0.2)',
+                                        borderRadius: 8,
+                                    }}>
+                                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            ✅ {lang === 'bs' ? 'Tačan odgovor' : 'Correct answer'}
+                                        </div>
+
+                                        {/* radio / dropdown — single correct answer */}
+                                        {(selectedQuestion.type === 'radio' || selectedQuestion.type === 'dropdown') && (
+                                            <select className="form-select"
+                                                value={selectedQuestion.correctAnswer || ''}
+                                                onChange={e => updateQuestion(selectedId, 'correctAnswer', e.target.value || null)}
+                                                style={{ fontSize: '0.82rem' }}
+                                            >
+                                                <option value="">{lang === 'bs' ? '— Nije postavljeno (ne ocjenjuje se) —' : '— Not set (not graded) —'}</option>
+                                                {(selectedQuestion.choices || []).map((c, ci) => (
+                                                    <option key={ci} value={c}>{c}</option>
+                                                ))}
+                                            </select>
+                                        )}
+
+                                        {/* checkbox — multiple correct answers */}
+                                        {selectedQuestion.type === 'checkbox' && (
+                                            <div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                                                    {lang === 'bs' ? 'Odaberite sve tačne odgovore:' : 'Select all correct answers:'}
+                                                </div>
+                                                {(selectedQuestion.choices || []).map((c, ci) => {
+                                                    const currentCorrect = Array.isArray(selectedQuestion.correctAnswer) ? selectedQuestion.correctAnswer : [];
+                                                    const isChecked = currentCorrect.includes(c);
+                                                    return (
+                                                        <label key={ci} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4, cursor: 'pointer', fontSize: '0.82rem' }}>
+                                                            <input type="checkbox" checked={isChecked}
+                                                                style={{ accentColor: '#10b981' }}
+                                                                onChange={() => {
+                                                                    const updated = isChecked
+                                                                        ? currentCorrect.filter(x => x !== c)
+                                                                        : [...currentCorrect, c];
+                                                                    updateQuestion(selectedId, 'correctAnswer', updated.length > 0 ? updated : null);
+                                                                }} />
+                                                            {c}
+                                                        </label>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+
+                                        {/* boolean — Da or Ne */}
+                                        {selectedQuestion.type === 'boolean' && (
+                                            <select className="form-select"
+                                                value={selectedQuestion.correctAnswer ?? ''}
+                                                onChange={e => updateQuestion(selectedId, 'correctAnswer', e.target.value === '' ? null : e.target.value)}
+                                                style={{ fontSize: '0.82rem' }}
+                                            >
+                                                <option value="">{lang === 'bs' ? '— Nije postavljeno —' : '— Not set —'}</option>
+                                                <option value="Da">✅ Da</option>
+                                                <option value="Ne">❌ Ne</option>
+                                            </select>
+                                        )}
+
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6 }}>
+                                            {lang === 'bs'
+                                                ? 'Pitanja bez tačnog odgovora ne ulaze u ocjenu.'
+                                                : 'Questions without a correct answer are not graded.'}
+                                        </div>
                                     </div>
                                 )}
 

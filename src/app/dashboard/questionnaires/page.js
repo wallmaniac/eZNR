@@ -34,7 +34,7 @@ const EMPTY_UPITNIK = {
   prikaziRezultateNakonRjesavanja: false,
   prikaziSamoZadovoljavaNezadovoljava: false,
   automatskiUpisUEvidenciju: false,
-  brojTocnihOdgovora: '',
+  prolazniPrag: 70, // pass threshold %
   izlazniTipDokumenta: '',
   zadaniIspisZaDokument: '',
   emailSubject: '',
@@ -493,8 +493,17 @@ export default function QuestionnairesPage() {
                 </label>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Broj točnih odgovora' : 'Correct answers count'}</div>
-                <input className="form-input" type="number" value={formData.brojTocnihOdgovora} onChange={e => set('brojTocnihOdgovora', e.target.value)} />
+                <div style={labelSt}>{lang === 'bs' ? 'Prag prolaza (%)' : 'Pass threshold (%)'}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <input className="form-input" type="number" min={0} max={100}
+                    value={formData.prolazniPrag ?? 70}
+                    onChange={e => set('prolazniPrag', Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+                    style={{ maxWidth: 100 }} />
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>%</span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginLeft: 4 }}>
+                    ({lang === 'bs' ? 'npr. 70 znači 70% tačnih odgovora za prolaz' : 'e.g. 70 means 70% correct to pass'})
+                  </span>
+                </div>
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Izlazni tip dokumenta' : 'Output doc type'}</div>

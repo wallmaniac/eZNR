@@ -156,6 +156,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
                                         <th>{lang === 'bs' ? 'Primatelj' : 'Recipient'}</th>
                                         <th>{lang === 'bs' ? 'Email' : 'Email'}</th>
                                         <th>{lang === 'bs' ? 'Status' : 'Status'}</th>
+                                        <th>{lang === 'bs' ? 'Ocjena' : 'Score'}</th>
                                         <th>{lang === 'bs' ? 'Poslano' : 'Sent'}</th>
                                         <th>{lang === 'bs' ? 'Završeno' : 'Completed'}</th>
                                         <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
@@ -181,6 +182,21 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
                                                     }}>
                                                         {sc.icon} {lang === 'bs' ? sc.label : sc.labelEn}
                                                     </span>
+                                                </td>
+                                                <td>
+                                                    {s.grade != null ? (
+                                                        <span style={{
+                                                            display: 'inline-flex', alignItems: 'center', gap: 5,
+                                                            padding: '4px 10px', borderRadius: 6,
+                                                            background: s.grade.passed ? 'rgba(16,185,129,0.1)' : 'rgba(239,68,68,0.1)',
+                                                            color: s.grade.passed ? '#10b981' : '#ef4444',
+                                                            fontSize: '0.8rem', fontWeight: 700,
+                                                        }}>
+                                                            {s.grade.passed ? '✅' : '❌'} {s.grade.percentage}%
+                                                        </span>
+                                                    ) : (
+                                                        <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>—</span>
+                                                    )}
                                                 </td>
                                                 <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                                                     {s.createdAt ? new Date(s.createdAt).toLocaleString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
