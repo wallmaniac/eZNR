@@ -7,12 +7,12 @@
 
 import emailjs from '@emailjs/browser';
 
-// EmailJS configuration — read lazily so env vars are always fresh
+// EmailJS credentials (NEXT_PUBLIC — safe to be in client code)
 function getConfig() {
     return {
-        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '',
-        templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '',
-        publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '',
+        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'service_40uo2ms',
+        templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'template_twqa5ke',
+        publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '56HEWr_JbUhT-R4Fa',
     };
 }
 
