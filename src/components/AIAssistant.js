@@ -218,12 +218,16 @@ function buildSystemPrompt(lang, currentPath, dataContext) {
 NISI SAMO CHATBOT — TI SI AGENT. Možeš aktivno pomagati službenicima da izvršavaju zadatke:
 - Navigirati do stranica umjesto korisnika (koristi navigate_to alat)
 - Otvoriti modal za slanje upitnika (koristi open_dispatch_modal alat)
+- Otvoriti formu za NOVOG RADNIKA s pre-popunjenim imenom (koristi create_new_worker alat)
+- Otvoriti formu za PRIJAVU POVREDE za određenog radnika (koristi report_injury alat)
 - Analizirati podatke i dati konkretne preporuke
-- Voditi korisnike korak po korak kroz složene procese
 
 KADA KORISTITI ALATE:
 - Ako korisnik kaže "idi na", "otvori", "prikaži stranicu" → ODMAH koristi navigate_to
 - Ako korisnik želi poslati upitnik → koristi open_dispatch_modal s ID-om upitnika iz ŽIVIH PODATAKA
+- Ako korisnik kaže "dodaj radnika", "novi radnik", "unesi radnika" → koristi create_new_worker s imenom/prezimenom
+- Ako korisnik kaže "povreda na radu", "ozljeda", "incident" za određenog radnika → koristi report_injury s podacima radnika iz ŽIVIH PODATAKA
+- Ako korisnik kaže "dodaj uvjerenje", "nova potvrda", "novi pregled" za radnika → koristi add_certificate s ID-om radnika iz ŽIVIH PODATAKA
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 
 ${pageDesc}
@@ -247,12 +251,16 @@ UPUTE:
 YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers complete tasks:
 - Navigate to pages on their behalf (use navigate_to tool)
 - Open the questionnaire dispatch modal (use open_dispatch_modal tool)
+- Open a NEW WORKER form pre-filled with a name (use create_new_worker tool)
+- Open an INJURY REPORT form pre-filled with a worker (use report_injury tool)
 - Analyse data and give concrete recommendations
-- Walk users through complex multi-step workflows
 
 WHEN TO USE TOOLS:
 - If the user says "go to", "open", "show me" a page → USE navigate_to immediately
 - If the user wants to send a questionnaire → use open_dispatch_modal with the questionnaire ID from LIVE DATA
+- If the user says "add worker", "new worker", "register employee" → use create_new_worker with the name
+- If the user mentions a work injury, accident, or incident for a specific worker → use report_injury with that worker's data from LIVE DATA
+- If the user says "add certificate", "new training", "new medical exam" for a worker → use add_certificate with the worker ID from LIVE DATA
 - If the user asks about data you already have → answer directly without tools
 
 ${pageDesc}
@@ -346,7 +354,45 @@ const ZIA_TOOLS = [
             required: ['questionnaire_id', 'questionnaire_name'],
         },
     },
+    {
+        name: 'create_new_worker',
+        description: 'Open the new worker creation form, optionally pre-filled with a name. Use this when the user says they want to add, create, or register a new worker/employee.',
+        parameters: {
+            type: 'object',
+            properties: {
+                ime: { type: 'string', description: 'First name (ime) of the new worker, if mentioned' },
+                prezime: { type: 'string', description: 'Last name (prezime) of the new worker, if mentioned' },
+            },
+        },
+    },
+    {
+        name: 'report_injury',
+        description: 'Open the injury report form pre-filled with a worker. Use when the user says a worker had an injury, accident, or work incident. The date defaults to today if not specified.',
+        parameters: {
+            type: 'object',
+            properties: {
+                worker_name: { type: 'string', description: 'Full name of the injured worker' },
+                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA (SVI AKTIVNI RADNICI section)' },
+                datum: { type: 'string', description: 'Date of injury in YYYY-MM-DD format, defaults to today' },
+                tip: { type: 'string', description: 'Injury type: laka (minor), teska (severe), or smrtna (fatal). Default: laka' },
+            },
+            required: ['worker_name'],
+        },
+    },
+    {
+        name: 'add_certificate',
+        description: 'Open the certificate creation form for a specific worker. Use when user wants to add a new certificate, training record, or medical exam for an existing worker.',
+        parameters: {
+            type: 'object',
+            properties: {
+                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA (SVI AKTIVNI RADNICI section)' },
+                worker_name: { type: 'string', description: 'Full name of the worker' },
+            },
+            required: ['worker_name'],
+        },
+    },
 ];
+
 
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function AIAssistant() {
@@ -367,9 +413,12 @@ export default function AIAssistant() {
     const [hasNewMessage, setHasNewMessage] = useState(false);
     const [pulseAnimation, setPulseAnimation] = useState(true);
     const [retryCountdown, setRetryCountdown] = useState(0);
+    const [attachments, setAttachments] = useState([]);   // file attachments
+    const [isDragging, setIsDragging] = useState(false);  // drag-drop active
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
+    const fileInputRef = useRef(null);
     const chatHistoryRef = useRef([]); // keep full history for context
     const retryTimerRef = useRef(null);
     const pendingRetryRef = useRef(null); // stores { text, history } for auto-retry
@@ -463,8 +512,36 @@ export default function AIAssistant() {
             setIsMinimized(true);
             return { success: true, message: `Opening dispatch for ${args.questionnaire_name}` };
         }
+        if (name === 'create_new_worker') {
+            const params = new URLSearchParams({ zia_new: '1' });
+            if (args.ime) params.set('ime', args.ime);
+            if (args.prezime) params.set('prezime', args.prezime);
+            router.push(`/dashboard/workers?${params.toString()}`);
+            setIsMinimized(true);
+            return { success: true, message: `Opening new worker form` };
+        }
+        if (name === 'report_injury') {
+            const today = new Date().toISOString().split('T')[0];
+            const params = new URLSearchParams({ zia_new: '1' });
+            if (args.worker_name) params.set('radnikIme', args.worker_name);
+            if (args.worker_id) params.set('radnikId', args.worker_id);
+            params.set('datum', args.datum || today);
+            if (args.tip) params.set('tip', args.tip);
+            router.push(`/dashboard/injuries?${params.toString()}`);
+            setIsMinimized(true);
+            return { success: true, message: `Opening injury report for ${args.worker_name}` };
+        }
+        if (name === 'add_certificate') {
+            const url = args.worker_id
+                ? `/dashboard/worker-certificates/create?workerId=${args.worker_id}`
+                : '/dashboard/workers';
+            router.push(url);
+            setIsMinimized(true);
+            return { success: true, message: `Opening certificate form for ${args.worker_name}` };
+        }
         return { error: 'unknown_tool' };
     }, [router]);
+
 
     // ── Start retry countdown, then auto-resend ───────────────────────────────
     const startRetryCountdown = useCallback((seconds, text, history) => {
@@ -514,8 +591,14 @@ export default function AIAssistant() {
     }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Internal send (supports retry loop + function calling) ───────────────
-    const sendMessageInternal = useCallback(async (text, existingHistory, isRetry = false) => {
-        const newHistory = existingHistory || [...chatHistoryRef.current, { role: 'user', parts: [{ text }] }];
+    const sendMessageInternal = useCallback(async (text, existingHistory, isRetry = false, attachedFiles = []) => {
+        // Build parts: text + any attached file data
+        const msgParts = [];
+        if (text) msgParts.push({ text });
+        attachedFiles.forEach(att => msgParts.push({ inlineData: { mimeType: att.type, data: att.data } }));
+        if (msgParts.length === 0) msgParts.push({ text: ' ' });
+
+        const newHistory = existingHistory || [...chatHistoryRef.current, { role: 'user', parts: msgParts }];
         if (!existingHistory) chatHistoryRef.current = newHistory;
 
         setIsLoading(true);
@@ -579,17 +662,45 @@ export default function AIAssistant() {
     }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
 
     const sendMessage = useCallback(async (text) => {
-        if (!text.trim() || isLoading || retryCountdown > 0) return;
-        const userMessage = { role: 'user', content: text.trim(), timestamp: new Date() };
+        if ((!text.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) return;
+        const attachedFiles = [...attachments];
+        const displayText = text.trim() || (attachedFiles.length > 0 ? (lang === 'bs' ? '[Prilog]' : '[Attachment]') : '');
+        const userMessage = {
+            role: 'user',
+            content: displayText,
+            attachmentPreviews: attachedFiles.map(a => ({ name: a.name, type: a.type, preview: a.preview })),
+            timestamp: new Date(),
+        };
         setMessages(prev => [...prev, userMessage]);
         setInputValue('');
+        setAttachments([]);
         setShowSuggestions(false);
-        await sendMessageInternal(text.trim());
-    }, [isLoading, retryCountdown, sendMessageInternal]);
+        await sendMessageInternal(text.trim(), undefined, false, attachedFiles);
+    }, [isLoading, retryCountdown, sendMessageInternal, attachments, lang]);
 
     const handleSuggestion = useCallback((suggestion) => {
         sendMessage(suggestion.text);
     }, [sendMessage]);
+
+    // ── File attachment handler ───────────────────────────────────────────────
+    const handleFilesSelected = useCallback((files) => {
+        Array.from(files).forEach(file => {
+            const ok = file.type.startsWith('image/') || file.type === 'application/pdf' || file.type.startsWith('text/');
+            if (!ok || file.size > 20_000_000) return; // 20 MB max
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                const base64 = dataUrl.split(',')[1];
+                setAttachments(prev => [...prev, {
+                    name: file.name,
+                    type: file.type,
+                    data: base64,
+                    preview: file.type.startsWith('image/') ? dataUrl : null,
+                }]);
+            };
+            reader.readAsDataURL(file);
+        });
+    }, []);
 
     const handleKeyDown = useCallback((e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -609,8 +720,8 @@ export default function AIAssistant() {
         setShowSuggestions(true);
         // Re-show welcome
         const welcome = lang === 'bs'
-            ? `Zdravo! Ja sam **Zia**, vaš AI asistent za eZNR platformu. 👋\n\nŠta vas zanima?`
-            : `Hello! I'm **Zia**, your AI assistant for the eZNR platform. 👋\n\nWhat would you like to know?`;
+            ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nMogu navigirati do stranica, pokrenuti slanje upitnika i analizirati vaše podatke. Šta trebate uraditi?`
+            : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nI can navigate pages, trigger questionnaire dispatch, and analyse your data. What do you need to get done?`;
         setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
     }, [lang]);
 
@@ -691,7 +802,7 @@ export default function AIAssistant() {
                                         ? (lang === 'bs' ? `Pokušavam ponovo za ${retryCountdown}s...` : `Retrying in ${retryCountdown}s...`)
                                         : isLoading
                                             ? (lang === 'bs' ? 'Tipka...' : 'Typing...')
-                                            : (lang === 'bs' ? 'Online • AI Asistent' : 'Online • AI Assistant')}
+                                            : (lang === 'bs' ? 'Online • AI Agent' : 'Online • AI Agent')}
                                 </div>
                             </div>
                         </div>
@@ -707,8 +818,19 @@ export default function AIAssistant() {
                     {/* Body — hidden when minimized */}
                     {!isMinimized && (
                         <>
-                            {/* Messages */}
-                            <div style={chatStyles.messages}>
+                            {/* Messages — drag-drop zone */}
+                            <div
+                                style={{ ...chatStyles.messages, position: 'relative' }}
+                                onDragOver={e => { e.preventDefault(); setIsDragging(true); }}
+                                onDragLeave={e => { if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false); }}
+                                onDrop={e => { e.preventDefault(); setIsDragging(false); handleFilesSelected(e.dataTransfer.files); }}
+                            >
+                                {isDragging && (
+                                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,191,166,0.12)', border: '2px dashed #00BFA6', borderRadius: 12, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8, color: '#00BFA6', fontWeight: 700, fontSize: '0.95rem', pointerEvents: 'none' }}>
+                                        <span style={{ fontSize: '2rem' }}>📎</span>
+                                        {lang === 'bs' ? 'Ispustite datoteke ovdje' : 'Drop files here'}
+                                    </div>
+                                )}
                                 {messages.map((msg, idx) => (
                                     <div
                                         key={idx}
@@ -724,6 +846,15 @@ export default function AIAssistant() {
                                             ...chatStyles.bubble,
                                             ...(msg.role === 'user' ? chatStyles.userBubble : chatStyles.botBubble),
                                         }}>
+                                            {/* Attachment previews inside bubble */}
+                                            {msg.attachmentPreviews?.length > 0 && (
+                                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+                                                    {msg.attachmentPreviews.map((att, ai) => att.preview
+                                                        ? <img key={ai} src={att.preview} alt={att.name} style={{ maxWidth: 140, maxHeight: 140, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
+                                                        : <div key={ai} style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.15)', borderRadius: 6, fontSize: '0.72rem', fontWeight: 600 }}>📄 {att.name}</div>
+                                                    )}
+                                                </div>
+                                            )}
                                             <div style={chatStyles.bubbleContent}>
                                                 {renderMessageContent(msg.content)}
                                             </div>
@@ -773,7 +904,32 @@ export default function AIAssistant() {
 
                             {/* Input */}
                             <div style={chatStyles.inputArea}>
+                                {/* Attachment previews */}
+                                {attachments.length > 0 && (
+                                    <div style={{ display: 'flex', gap: 6, padding: '4px 12px 0', flexWrap: 'wrap' }}>
+                                        {attachments.map((att, i) => (
+                                            <div key={i} style={{ position: 'relative', display: 'inline-flex' }}>
+                                                {att.preview
+                                                    ? <img src={att.preview} alt={att.name} style={{ width: 48, height: 48, objectFit: 'cover', borderRadius: 8, border: '1px solid var(--border)' }} />
+                                                    : <div style={{ width: 48, height: 48, background: 'var(--bg-input)', border: '1px solid var(--border)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem' }}>📄</div>
+                                                }
+                                                <button onClick={() => setAttachments(prev => prev.filter((_, idx) => idx !== i))} style={{ position: 'absolute', top: -5, right: -5, width: 16, height: 16, borderRadius: '50%', background: '#EF4444', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', fontWeight: 700, lineHeight: 1 }}>✕</button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                                 <div style={chatStyles.inputWrapper}>
+                                    {/* Hidden file input */}
+                                    <input ref={fileInputRef} type="file" multiple accept="image/*,.pdf,.txt,.csv" style={{ display: 'none' }} onChange={e => { handleFilesSelected(e.target.files); e.target.value = ''; }} />
+                                    {/* + attach button */}
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isLoading}
+                                        title={lang === 'bs' ? 'Priloži datoteku' : 'Attach file'}
+                                        style={{ flexShrink: 0, width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)', transition: 'all 0.15s', marginRight: 4 }}
+                                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#00BFA6'; e.currentTarget.style.color = '#00BFA6'; }}
+                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                                    >+</button>
                                     <textarea
                                         ref={inputRef}
                                         id="ai-assistant-input"
@@ -791,10 +947,10 @@ export default function AIAssistant() {
                                     <button
                                         id="ai-assistant-send"
                                         onClick={() => sendMessage(inputValue)}
-                                        disabled={!inputValue.trim() || isLoading || retryCountdown > 0}
+                                        disabled={(!inputValue.trim() && attachments.length === 0) || isLoading || retryCountdown > 0}
                                         style={{
                                             ...chatStyles.sendBtn,
-                                            opacity: (!inputValue.trim() || isLoading || retryCountdown > 0) ? 0.4 : 1,
+                                            opacity: ((!inputValue.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) ? 0.4 : 1,
                                         }}
                                         title={lang === 'bs' ? 'Pošalji' : 'Send'}
                                     >
@@ -803,7 +959,7 @@ export default function AIAssistant() {
                                 </div>
                                 <div style={chatStyles.inputFooter}>
                                     {lang === 'bs' ? 'Pokretano sa Google Gemini' : 'Powered by Google Gemini'} ·{' '}
-                                    {lang === 'bs' ? 'Enter za slanje' : 'Enter to send'}
+                                    {lang === 'bs' ? 'Enter za slanje • + za prilog' : 'Enter to send • + to attach'}
                                 </div>
                             </div>
                         </>

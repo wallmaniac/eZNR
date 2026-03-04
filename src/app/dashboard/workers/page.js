@@ -87,6 +87,19 @@ function WorkersPageInner() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);
 
+    // ── Zia agent: auto-open new worker form with pre-filled name ─────────────
+    useEffect(() => {
+        if (searchParams?.get('zia_new') !== '1') return;
+        const ime = searchParams.get('ime') || '';
+        const prezime = searchParams.get('prezime') || '';
+        setFormData({ ...emptyWorker, ime, prezime });
+        setEditingWorker(null);
+        setCertificates([]);
+        setPpeAssign([]);
+        setShowForm(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
     const filteredWorkers = workers.filter(w => {
         const matchSearch = !searchTerm || `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib}`.toLowerCase().includes(searchTerm.toLowerCase());
         const matchStatus = showFormer ? !w.aktivan : w.aktivan;

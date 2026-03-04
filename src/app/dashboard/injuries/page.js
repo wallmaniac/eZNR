@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
@@ -19,6 +20,7 @@ export default function InjuriesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { markDirty, markClean } = useUnsavedChanges();
+  const searchParams = useSearchParams();
 
   // ── Data state ──
   const [injuries, setInjuries] = useState([]);
@@ -42,6 +44,20 @@ export default function InjuriesPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // ── Zia agent: auto-open injury form with pre-filled worker ──────────────
+  useEffect(() => {
+    if (searchParams?.get('zia_new') !== '1') return;
+    const radnikIme = searchParams.get('radnikIme') || '';
+    const radnikId = searchParams.get('radnikId') || '';
+    const datum = searchParams.get('datum') || new Date().toISOString().split('T')[0];
+    const tip = searchParams.get('tip') || 'laka';
+    setFormData({ ...EMPTY_FORM, radnikId, radnikIme, datum, tip });
+    setWorkerSearch(radnikIme);
+    setEditingId(null);
+    setShowForm(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Close worker dropdown on outside click
   useEffect(() => {
@@ -104,7 +120,8 @@ export default function InjuriesPage() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?'); if (!ok) return;
+    const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?');
+    if (!ok) return;
     remove(COLLECTIONS.INJURIES, id);
     loadData();
   };
@@ -124,11 +141,7 @@ export default function InjuriesPage() {
       smrtna: { color: '#7C3AED', bg: 'rgba(124,58,237,0.1)', label: lang === 'bs' ? 'Smrtna' : 'Fatal' },
     };
     const s = map[tip] || map.laka;
-    return (
-      <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>
-        {s.label}
-      </span>
-    );
+    return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{s.label}</span>;
   };
 
   const statusBadge = (status) => {
@@ -138,15 +151,12 @@ export default function InjuriesPage() {
       zatvorena: { color: '#10B981', bg: 'rgba(16,185,129,0.1)', label: lang === 'bs' ? 'Zatvorena' : 'Closed' },
     };
     const s = map[status] || map.prijavljena;
-    return (
-      <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>
-        {s.label}
-      </span>
-    );
+    return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{s.label}</span>;
   };
 
   return (
     <>
+      <DialogRenderer />
       <div className="animate-fadeIn">
         <h1 style={{ marginBottom: 24 }}>🩹 {t('injuryReport')}</h1>
 
@@ -161,7 +171,7 @@ export default function InjuriesPage() {
               <div className="modal-body">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
 
-                  {/* Worker picker with search */}
+                  {/* Worker picker */}
                   <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
                     <label className="form-label">{t('worker')} *</label>
                     <div style={{ position: 'relative' }}>
@@ -174,31 +184,17 @@ export default function InjuriesPage() {
                         autoComplete="off"
                       />
                       {showWorkerDropdown && (
-                        <div style={{
-                          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0,
-                          background: 'var(--bg-card)', border: '1px solid var(--border)',
-                          borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
-                          zIndex: 100, maxHeight: 220, overflowY: 'auto',
-                        }}>
+                        <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 100, maxHeight: 220, overflowY: 'auto' }}>
                           {filteredWorkers.length === 0 ? (
-                            <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                              {lang === 'bs' ? 'Nema radnika' : 'No workers found'}
-                            </div>
+                            <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang === 'bs' ? 'Nema radnika' : 'No workers found'}</div>
                           ) : filteredWorkers.map(w => (
                             <button key={w.id}
-                              style={{
-                                display: 'flex', alignItems: 'center', gap: 10,
-                                padding: '10px 16px', width: '100%', border: 'none',
-                                background: 'transparent', cursor: 'pointer', textAlign: 'left',
-                                borderBottom: '1px solid var(--border-light)',
-                              }}
+                              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
                               onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                               onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                               onClick={() => handleWorkerSelect(w)}
                             >
-                              <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>
-                                {w.ime?.[0]}{w.prezime?.[0]}
-                              </span>
+                              <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>{w.ime?.[0]}{w.prezime?.[0]}</span>
                               <div>
                                 <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)' }}>{w.ime} {w.prezime}</div>
                                 {w.evidencijskiBroj && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Ev. br: {w.evidencijskiBroj}</div>}
@@ -208,11 +204,7 @@ export default function InjuriesPage() {
                         </div>
                       )}
                     </div>
-                    {formData.radnikId && (
-                      <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>
-                        ✓ {lang === 'bs' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}
-                      </div>
-                    )}
+                    {formData.radnikId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {lang === 'bs' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}</div>}
                   </div>
 
                   <div className="form-group">
@@ -289,7 +281,6 @@ export default function InjuriesPage() {
                 {filtered.length} {lang === 'bs' ? 'prijava' : 'reports'}
               </span>
             </div>
-
             <div className="data-table-wrapper">
               <table className="data-table">
                 <thead>
