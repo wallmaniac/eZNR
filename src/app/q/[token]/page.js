@@ -80,7 +80,7 @@ export default function PublicQuestionnairePage({ params }) {
             setSubmitted(true);
         } catch (err) {
             console.error('Failed to submit response:', err);
-            alert('Greška pri slanju odgovora. Molimo pokušajte ponovo.');
+            alert('Greška pri slanju odgovora: ' + (err?.message || err?.code || 'Nepoznata greška'));
         } finally {
             setSubmitting(false);
         }

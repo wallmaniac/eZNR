@@ -162,15 +162,27 @@ export async function getQuestionnaireSession(token) {
     return snap.docs[0].data();
 }
 
+// Strip undefined values from an object (Firestore rejects undefined)
+function sanitize(obj) {
+    if (obj === undefined) return null;
+    if (obj === null || typeof obj !== 'object') return obj;
+    if (Array.isArray(obj)) return obj.map(sanitize);
+    return Object.fromEntries(
+        Object.entries(obj)
+            .filter(([, v]) => v !== undefined)
+            .map(([k, v]) => [k, sanitize(v)])
+    );
+}
+
 export async function saveQuestionnaireResponse(sessionId, answers, grade = null) {
     const ref = doc(db, 'questionnaire_responses', sessionId);
-    await setDoc(ref, {
+    await setDoc(ref, sanitize({
         sessionId,
         answers,
-        grade, // null if no grading defined, or { percentage, correct, total, passed }
+        grade, // may include details array — sanitized so no undefined values
         submittedAt: new Date().toISOString(),
-    });
-    // Also update session status
+    }));
+    // Also update session status (only store summary, not full details)
     const sessionRef = doc(db, 'questionnaire_sessions', sessionId);
     await setDoc(sessionRef, {
         status: 'completed',
