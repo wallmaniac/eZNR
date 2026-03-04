@@ -53,16 +53,19 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
         }
     }, []);
 
-    // Parse survey JSON for question labels
-    let questions = [];
-    try {
-        const parsed = typeof questionnaire?.surveyJson === 'string'
-            ? JSON.parse(questionnaire.surveyJson)
-            : questionnaire?.surveyJson;
-        if (parsed?.pages?.[0]?.elements) {
-            questions = parsed.pages[0].elements;
-        }
-    } catch { /* ignore */ }
+    // Parse survey JSON — handles native {questions:[]} format
+    // Uses selectedSession.surveyJson if available (stored at send time)
+    // Falls back to questionnaire.surveyJson
+    function parseQuestions(json) {
+        try {
+            const parsed = typeof json === 'string' ? JSON.parse(json) : json;
+            if (!parsed) return [];
+            if (Array.isArray(parsed)) return parsed;
+            if (parsed.questions) return parsed.questions; // native format
+            if (parsed.pages?.[0]?.elements) return parsed.pages[0].elements; // SurveyJS
+            return [];
+        } catch { return []; }
+    }
 
     // Stats
     const stats = {
@@ -265,40 +268,55 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
                                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                                     {lang === 'bs' ? 'Nema odgovora' : 'No responses found'}
                                 </div>
-                            ) : (
-                                <div>
-                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                                        {lang === 'bs' ? 'Predano' : 'Submitted'}: {responseData.submittedAt
-                                            ? new Date(responseData.submittedAt).toLocaleString('hr-HR')
-                                            : '—'}
-                                    </div>
-                                    {Object.entries(responseData.answers || {}).map(([key, value]) => {
-                                        // Find question label
-                                        const question = questions.find(q => (q.id || q.name) === key);
-                                        const label = question?.title || question?.text || key;
-
-                                        return (
-                                            <div key={key} style={{
-                                                padding: '12px 16px', marginBottom: 10,
-                                                background: 'rgba(255,255,255,0.03)',
-                                                border: '1px solid rgba(255,255,255,0.06)',
-                                                borderRadius: 10,
-                                            }}>
-                                                <div style={{
-                                                    fontSize: '0.78rem', fontWeight: 600,
-                                                    color: 'var(--primary)', marginBottom: 4,
-                                                    textTransform: 'uppercase', letterSpacing: '0.02em',
-                                                }}>
-                                                    {label}
-                                                </div>
-                                                <div style={{ fontSize: '0.92rem', color: 'var(--text)' }}>
-                                                    {Array.isArray(value) ? value.join(', ') : String(value)}
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                            ) : (<div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                                    {lang === 'bs' ? 'Predano' : 'Submitted'}: {responseData.submittedAt
+                                        ? new Date(responseData.submittedAt).toLocaleString('hr-HR')
+                                        : '—'}
                                 </div>
-                            )}
+                                {(() => {
+                                    // Get ordered questions from session surveyJson
+                                    const qs = parseQuestions(selectedSession.surveyJson || questionnaire?.surveyJson);
+                                    const answers = responseData.answers || {};
+
+                                    // Build ordered list: questions in their defined order, skip heading/html
+                                    const ordered = qs
+                                        .filter(q => q.type !== 'heading' && q.type !== 'html')
+                                        .map((q, idx) => ({
+                                            key: q.id || q.name,
+                                            title: q.title || q.text || q.name || q.id,
+                                            num: idx + 1,
+                                            value: answers[q.id || q.name],
+                                        }))
+                                        .filter(item => item.value !== undefined && item.value !== null && item.value !== '');
+
+                                    // Append any answers not matched to a question (fallback)
+                                    const matchedKeys = new Set(ordered.map(o => o.key));
+                                    const unmatched = Object.entries(answers)
+                                        .filter(([k]) => !matchedKeys.has(k))
+                                        .map(([k, v]) => ({ key: k, title: k, num: null, value: v }));
+
+                                    return [...ordered, ...unmatched].map(item => (
+                                        <div key={item.key} style={{
+                                            padding: '12px 16px', marginBottom: 10,
+                                            background: 'rgba(255,255,255,0.03)',
+                                            border: '1px solid rgba(255,255,255,0.06)',
+                                            borderRadius: 10,
+                                        }}>
+                                            <div style={{
+                                                fontSize: '0.78rem', fontWeight: 600,
+                                                color: 'var(--primary)', marginBottom: 4,
+                                            }}>
+                                                {item.num ? `#${item.num}. ` : ''}{item.title}
+                                            </div>
+                                            <div style={{ fontSize: '0.92rem', color: 'var(--text)' }}>
+                                                {Array.isArray(item.value) ? item.value.join(', ') : String(item.value)}
+                                            </div>
+                                        </div>
+                                    ));
+                                })()}
+                            </div>)
+                            }
                         </div>
                     </div>
                 </>
