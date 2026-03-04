@@ -15,7 +15,7 @@ function checkRate(ip) {
 }
 
 // ─── Model cascade (fastest / cheapest first as fallback) ────────────────────
-const MODELS = ['gemini-2.0-flash', 'gemini-2.0-flash-lite'];
+const MODELS = ['gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
 
 export async function POST(request) {
     // 1. Rate limit by IP
@@ -66,14 +66,17 @@ export async function POST(request) {
 
             if (!res.ok) {
                 const errData = await res.json().catch(() => ({}));
-                const isRateLimit = res.status === 429 || (errData.error?.message ?? '').toLowerCase().includes('quota');
+                const errMsg = errData.error?.message ?? `API error ${res.status}`;
+                const isRateLimit = res.status === 429 || errMsg.toLowerCase().includes('quota');
                 if (isRateLimit && model !== MODELS[MODELS.length - 1]) continue; // try next model
-                const match = (errData.error?.message ?? '').match(/retry in ([\d.]+)s/i);
+                const match = errMsg.match(/retry in ([\d.]+)s/i);
                 const retryAfter = match ? Math.ceil(parseFloat(match[1])) + 2 : 30;
-                return NextResponse.json({
-                    error: errData.error?.message ?? `API error ${res.status}`,
-                    isRateLimit, retryAfter,
-                }, { status: res.status });
+                // Always return 429 for rate limits, 500 for all other Gemini errors
+                // (never pass through Gemini's raw status like 404 for deprecated models)
+                return NextResponse.json(
+                    { error: errMsg, isRateLimit, retryAfter },
+                    { status: isRateLimit ? 429 : 500 }
+                );
             }
 
             const data = await res.json();
