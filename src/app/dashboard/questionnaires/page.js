@@ -96,6 +96,29 @@ export default function QuestionnairesPage() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // ── Zia agent: pick up dispatch intent set by open_dispatch_modal tool ──────
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem('zia_dispatch_intent');
+      if (!raw) return;
+      sessionStorage.removeItem('zia_dispatch_intent');
+      const intent = JSON.parse(raw);
+      if (!intent?.id) return;
+      // Wait for records to load then open dispatch modal for that questionnaire
+      const tryOpen = (attempts = 0) => {
+        const allRecords = getAll(COLLECTIONS.QUESTIONNAIRES);
+        const q = allRecords.find(r => r.id === intent.id);
+        if (q) {
+          setDispatchQuestionnaire(q);
+          setDispatchModalOpen(true);
+        } else if (attempts < 5) {
+          setTimeout(() => tryOpen(attempts + 1), 200);
+        }
+      };
+      setTimeout(() => tryOpen(), 100);
+    } catch { /* ignore */ }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
   // Navigate to form view (pushes history so browser back works)

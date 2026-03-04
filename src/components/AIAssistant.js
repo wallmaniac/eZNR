@@ -70,6 +70,7 @@ function buildDataContext(lang) {
         const diseases = get('diseases');
         const certificates = get('certificates');
         const equipment = get('equipment');
+        const questionnaires = get('questionnaires');
 
         const lines = [];
         const today = new Date();
@@ -178,11 +179,19 @@ function buildDataContext(lang) {
             }
         }
 
+        // ── Questionnaires ─────────────────────────────────────────────────────
+        if (questionnaires.length > 0) {
+            const qList = questionnaires.map(q => `ID:${q.id} "${q.naziv || '(bez naziva)'}"${q.zaVrstu ? ` [${q.zaVrstu}]` : ''}`).join('; ');
+            lines.push(lang === 'bs'
+                ? `\nUPITNICI (${questionnaires.length}): ${qList}`
+                : `\nQUESTIONNAIRES (${questionnaires.length}): ${qList}`);
+        }
+
         // Stats
         const activeWorkers = workers.filter(w => w.aktivan !== false).length;
         lines.push(lang === 'bs'
-            ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja`
-            : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment items, ${certificates.length} certificates`
+            ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja, ${questionnaires.length} upitnika`
+            : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment, ${certificates.length} certificates, ${questionnaires.length} questionnaires`
         );
 
         return lines.join('\n');
@@ -201,15 +210,21 @@ function buildSystemPrompt(lang, currentPath, dataContext) {
             : `• ${p.label_en} (${p.path}): ${p.desc_en}`)
         .join('\n');
 
-    if (lang === 'bs') {
-        return `Ti si Zia, napredni AI asistent za eZNR — digitalnu platformu za zaštitu na radu u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku.
+    const today = new Date().toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-TVOJA ULOGA:
-- Pomaži korisnicima da se snađu unutar aplikacije
-- Objasni svrhu svake stranice i modula
-- Daj savjete o toku rada i najboljim praksama u zaštiti na radu
-- Usmjeri korisnike na odgovarajuće sekcije aplikacije
-- Odgovaraj na pitanja o STVARNIM PODACIMA iz aplikacije koristeci ZIVE PODATKE ispod
+    if (lang === 'bs') {
+        return `Ti si Zia, napredni AI AGENT za eZNR — digitalnu platformu za zaštitu na radu u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku. Danas je ${today}.
+
+NISI SAMO CHATBOT — TI SI AGENT. Možeš aktivno pomagati službenicima da izvršavaju zadatke:
+- Navigirati do stranica umjesto korisnika (koristi navigate_to alat)
+- Otvoriti modal za slanje upitnika (koristi open_dispatch_modal alat)
+- Analizirati podatke i dati konkretne preporuke
+- Voditi korisnike korak po korak kroz složene procese
+
+KADA KORISTITI ALATE:
+- Ako korisnik kaže "idi na", "otvori", "prikaži stranicu" → ODMAH koristi navigate_to
+- Ako korisnik želi poslati upitnik → koristi open_dispatch_modal s ID-om upitnika iz ŽIVIH PODATAKA
+- Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 
 ${pageDesc}
 
@@ -220,25 +235,25 @@ ${pagesText}
 ${dataContext || 'Nema podataka u bazi.'}
 
 UPUTE:
-- Budi prijatan, stručan i koncizan
-- Kada preporučuješ stranicu, navedi njenu putanju u formatu: [Naziv](putanja)
-- OBAVEZNO: Kada korisnik pita o podacima — navedi KONKRETNA IMENA iz ŽIVIH PODATAKA iznad
-- Kada korisnik pita ko radi na nekom radnom mjestu (npr. "ko je direktor", "ko je šef smjene") — pogledaj sekciju RADNA MJESTA → RADNICI i odgovori imenima radnika sa tog radnog mjesta
-- Kada korisnik pita ko radi u nekoj organizacijskoj jedinici — pogledaj ORGANIZACIJSKE JEDINICE → RADNICI
-- Za bolovanje/povrede uputi na [Popis povreda](/dashboard/injury-list) i [Prijava bolesti](/dashboard/diseases)
-- Za uvjerenja uputi na [Radnici](/dashboard/workers)
-- Za opremu uputi na [Radna oprema](/dashboard/equipment)
-- Ako korisnik pita o propisima zaštite na radu u BiH, pomozi uz napomenu da provjere sa nadležnim tijelima
-- Odgovaraj kratko i jasno, bez dugih uvoda`;
+- Budi direktan i akcijski orijentiran — ne samo savjetuj, POMOZI DA SE URADI
+- Kada korisnik pita o podacima — navedi KONKRETNA IMENA i brojeve iz podataka iznad
+- Za bolovanje: [Popis povreda](/dashboard/injury-list)
+- Za uvjerenja: [Radnici](/dashboard/workers) ili [Uvjerenja radnika](/dashboard/worker-certificates)
+- Za opremu: [Radna oprema](/dashboard/equipment)
+- Odgovori kratko i akcijski, bez dugih uvoda`;
     } else {
-        return `You are Zia, an advanced AI assistant for eZNR — a digital platform for occupational safety in Bosnia and Herzegovina. You communicate in English.
+        return `You are Zia, an advanced AI AGENT for eZNR — a digital platform for occupational safety in Bosnia and Herzegovina. You communicate in English. Today is ${today}.
 
-YOUR ROLE:
-- Help users navigate the application
-- Explain the purpose of each page and module
-- Provide workflow tips and best practices for occupational safety
-- Direct users to the appropriate application sections
-- Answer questions about REAL DATA from the app using the LIVE DATA below
+YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers complete tasks:
+- Navigate to pages on their behalf (use navigate_to tool)
+- Open the questionnaire dispatch modal (use open_dispatch_modal tool)
+- Analyse data and give concrete recommendations
+- Walk users through complex multi-step workflows
+
+WHEN TO USE TOOLS:
+- If the user says "go to", "open", "show me" a page → USE navigate_to immediately
+- If the user wants to send a questionnaire → use open_dispatch_modal with the questionnaire ID from LIVE DATA
+- If the user asks about data you already have → answer directly without tools
 
 ${pageDesc}
 
@@ -249,37 +264,89 @@ LIVE APP DATA (updated in real time):
 ${dataContext || 'No data in the database.'}
 
 INSTRUCTIONS:
-- Be friendly, professional, and concise
-- When recommending a page, mention its path in format: [Name](path)
-- MANDATORY: When a user asks about data — name SPECIFIC PEOPLE from the LIVE DATA above
-- When a user asks who holds a position (e.g. "who is the director", "who is the shift manager") — check the WORKPLACES → WORKERS section and reply with the names of workers in that role
-- When a user asks who works in a department — check ORG UNITS → WORKERS
-- For sick leave/injuries link to [Injury List](/dashboard/injury-list) and [Disease Report](/dashboard/diseases)
-- For certificates link to [Workers](/dashboard/workers)
-- For equipment link to [Equipment](/dashboard/equipment)
-- Keep responses short and clear, without long introductions`;
+- Be direct and action-oriented — don't just advise, HELP GET IT DONE
+- Name SPECIFIC PEOPLE and numbers from the live data above
+- For sick leave: [Injury List](/dashboard/injury-list)
+- For certificates: [Workers](/dashboard/workers) or [Worker Certificates](/dashboard/worker-certificates)
+- For equipment: [Equipment](/dashboard/equipment)
+- Keep responses short and action-focused`;
     }
 }
 
-// ─── Quick suggestion chips ─────────────────────────────────────────────────
-const SUGGESTIONS = {
-    bs: [
-        { label: '👷 Dodati novog radnika', text: 'Kako dodati novog radnika u sistem?' },
-        { label: '📜 Pratiti uvjerenja', text: 'Gdje mogu pratiti uvjerenja radnika i kada ističu?' },
-        { label: '⚠️ Procjena rizika', text: 'Kako napraviti procjenu rizika za radno mjesto?' },
-        { label: '📊 Godišnji izvještaj', text: 'Gdje se pravi godišnji izvještaj o povredama na radu?' },
-        { label: '🦺 Zaštitna oprema', text: 'Kako evidentirati zaštitnu opremu za radnike?' },
-        { label: '📋 Obavezna dokumentacija', text: 'Koja je obavezna dokumentacija za poslodavca?' },
-    ],
-    en: [
-        { label: '👷 Add a worker', text: 'How do I add a new worker to the system?' },
-        { label: '📜 Track certificates', text: 'Where can I track worker certificates and their expiry?' },
-        { label: '⚠️ Risk assessment', text: 'How do I create a risk assessment for a workplace?' },
-        { label: '📊 Annual report', text: 'Where do I create the annual injury report?' },
-        { label: '🦺 Protective gear', text: 'How do I record personal protective equipment for workers?' },
-        { label: '📋 Mandatory docs', text: 'What mandatory documentation is required for employers?' },
-    ],
-};
+// ─── Dynamic suggestion chips based on live data ────────────────────────────
+function buildDynamicSuggestions(lang) {
+    const chips = [];
+    try {
+        const prefix = 'eznr_';
+        const get = (key) => { try { return JSON.parse(localStorage.getItem(prefix + key) || '[]'); } catch { return []; } };
+        const certificates = get('certificates');
+        const injuries = get('injuries');
+        const diseases = get('diseases');
+        const equipment = get('equipment');
+        const today = new Date();
+        const in30 = new Date(); in30.setDate(in30.getDate() + 30);
+
+        const expired = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today);
+        const expiring = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30);
+        const sickLeave = [...injuries, ...diseases].filter(i => i.bolovanje && i.status !== 'zatvorena');
+        const overdueEq = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
+
+        if (expired.length > 0) chips.push(lang === 'bs'
+            ? { label: `🔴 ${expired.length} istekla uvjerenja`, text: 'Koji radnici imaju istekla uvjerenja?' }
+            : { label: `🔴 ${expired.length} expired certs`, text: 'Which workers have expired certificates?' });
+        if (expiring.length > 0) chips.push(lang === 'bs'
+            ? { label: `📜 ${expiring.length} uvjerenja uskoro iste`, text: 'Prikaži mi uvjerenja koja uskoro ističu.' }
+            : { label: `📜 ${expiring.length} certs expiring soon`, text: 'Show me certificates expiring soon.' });
+        if (sickLeave.length > 0) chips.push(lang === 'bs'
+            ? { label: `🏥 ${sickLeave.length} na bolovanju`, text: 'Ko je trenutno na bolovanju?' }
+            : { label: `🏥 ${sickLeave.length} on sick leave`, text: 'Who is currently on sick leave?' });
+        if (overdueEq.length > 0) chips.push(lang === 'bs'
+            ? { label: `⚠️ ${overdueEq.length} pregleda opreme kasni`, text: 'Koja oprema ima prekoračen pregled?' }
+            : { label: `⚠️ ${overdueEq.length} equipment overdue`, text: 'Which equipment has overdue inspection?' });
+    } catch { /* ignore */ }
+
+    // Always-available actions
+    if (lang === 'bs') {
+        chips.push({ label: '📧 Pošalji upitnik radnicima', text: 'Pošalji upitnik radnicima u određenom odjelu.' });
+        chips.push({ label: '📊 Pregled stanja', text: 'Daj mi pregled trenutnog stanja zaštite na radu.' });
+        chips.push({ label: '👷 Dodaj novog radnika', text: 'Otvori formu za dodavanje novog radnika.' });
+        chips.push({ label: '📋 Obavezna dokumentacija', text: 'Koja je obavezna dokumentacija za poslodavca?' });
+    } else {
+        chips.push({ label: '📧 Send questionnaire', text: 'Send a questionnaire to workers in a department.' });
+        chips.push({ label: '📊 Status overview', text: 'Give me a current occupational safety status overview.' });
+        chips.push({ label: '👷 Add new worker', text: 'Open the form to add a new worker.' });
+        chips.push({ label: '📋 Mandatory docs', text: 'What mandatory documentation is required for employers?' });
+    }
+    return chips.slice(0, 6);
+}
+
+// ─── Tool definitions for Gemini function calling ────────────────────────────
+const ZIA_TOOLS = [
+    {
+        name: 'navigate_to',
+        description: 'Navigate the user to a specific page in the eZNR app. Use this whenever the user wants to go to a page, see a list, or open a section.',
+        parameters: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: 'App path to navigate to, e.g. /dashboard/workers' },
+                reason: { type: 'string', description: 'One-sentence explanation shown to the user' },
+            },
+            required: ['path', 'reason'],
+        },
+    },
+    {
+        name: 'open_dispatch_modal',
+        description: 'Navigate to the Questionnaires page and trigger the dispatch modal so the officer can send a questionnaire to workers. Use when the user wants to send a questionnaire.',
+        parameters: {
+            type: 'object',
+            properties: {
+                questionnaire_id: { type: 'string', description: 'ID of the questionnaire to dispatch (from LIVE DATA)' },
+                questionnaire_name: { type: 'string', description: 'Name of the questionnaire for display' },
+            },
+            required: ['questionnaire_id', 'questionnaire_name'],
+        },
+    },
+];
 
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function AIAssistant() {
@@ -342,8 +409,8 @@ export default function AIAssistant() {
         // Show welcome message on first open
         if (messages.length === 0) {
             const welcome = lang === 'bs'
-                ? `Zdravo! Ja sam **Zia**, vaš AI asistent za eZNR platformu. 👋\n\nMogu vam pomoći da:\n• Pronađete pravu stranicu ili funkciju\n• Razumijete kako koristiti module\n• Pratite tokove rada za zaštitu na radu\n\nŠta vas zanima?`
-                : `Hello! I'm **Zia**, your AI assistant for the eZNR platform. 👋\n\nI can help you:\n• Find the right page or feature\n• Understand how to use the modules\n• Navigate occupational safety workflows\n\nWhat would you like to know?`;
+                ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nNisam samo chatbot — mogu aktivno pomagati:\n• 🧭 Navigirati do željene stranice umjesto vas\n• 📧 Pokrenuti slanje upitnika radnicima\n• ⚠️ Analizirati istekla uvjerenja i opremu\n• 📊 Dati pregled stanja zaštite na radu\n\nŠta trebate uraditi?`
+                : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nI'm not just a chatbot — I can actively help:\n• 🧭 Navigate to any page for you\n• 📧 Trigger questionnaire dispatch to workers\n• ⚠️ Analyse expiring certificates and equipment\n• 📊 Give you a safety status overview\n\nWhat do you need to get done?`;
             const welcomeMsg = { role: 'assistant', content: welcome, timestamp: new Date() };
             setMessages([welcomeMsg]);
         }
@@ -365,37 +432,39 @@ export default function AIAssistant() {
         });
     }, []);
 
-    // ── Core API call (single model attempt) ────────────────────────────────
-    const callGemini = useCallback(async (model, history, systemPrompt, apiKey) => {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    system_instruction: { parts: [{ text: systemPrompt }] },
-                    contents: history,
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 600, topP: 0.95 },
-                    safetySettings: [
-                        { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
-                        { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
-                    ],
-                }),
-            }
-        );
-        if (!response.ok) {
-            const errData = await response.json().catch(() => ({}));
-            const err = new Error(errData.error?.message || `API error ${response.status}`);
-            err.status = response.status;
-            err.isRateLimit = response.status === 429 || (errData.error?.message || '').toLowerCase().includes('quota');
-            // Parse retry-after seconds from error message e.g. "retry in 22.299...s"
-            const match = (errData.error?.message || '').match(/retry in ([\d.]+)s/i);
-            err.retryAfter = match ? Math.ceil(parseFloat(match[1])) + 2 : 30;
+    // ── Proxy API call through /api/zia (key never leaves server) ────────────
+    const callZiaAPI = useCallback(async (history, systemPrompt, tools) => {
+        const res = await fetch('/api/zia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: history, systemPrompt, tools }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            const err = new Error(data.error || `API error ${res.status}`);
+            err.isRateLimit = data.isRateLimit || res.status === 429;
+            err.retryAfter = data.retryAfter || 30;
             throw err;
         }
-        const data = await response.json();
-        return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        return data; // { text } or { function_call: { name, args } }
     }, []);
+
+    // ── Execute a tool call from Gemini ──────────────────────────────────────
+    const executeTool = useCallback(async (name, args) => {
+        if (name === 'navigate_to') {
+            router.push(args.path);
+            setIsMinimized(true);
+            return { success: true, message: args.reason };
+        }
+        if (name === 'open_dispatch_modal') {
+            // Store intent for the questionnaires page to pick up
+            try { sessionStorage.setItem('zia_dispatch_intent', JSON.stringify({ id: args.questionnaire_id, name: args.questionnaire_name })); } catch { }
+            router.push('/dashboard/questionnaires');
+            setIsMinimized(true);
+            return { success: true, message: `Opening dispatch for ${args.questionnaire_name}` };
+        }
+        return { error: 'unknown_tool' };
+    }, [router]);
 
     // ── Start retry countdown, then auto-resend ───────────────────────────────
     const startRetryCountdown = useCallback((seconds, text, history) => {
@@ -444,63 +513,70 @@ export default function AIAssistant() {
         }, 1000);
     }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    // ── Internal send (supports retry loop) ───────────────────────────────────
+    // ── Internal send (supports retry loop + function calling) ───────────────
     const sendMessageInternal = useCallback(async (text, existingHistory, isRetry = false) => {
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-        if (!apiKey) {
-            setMessages(prev => [...prev, {
-                role: 'assistant',
-                content: lang === 'bs' ? '⚠️ API ključ nije konfigurisan.' : '⚠️ API key is not configured.',
-                timestamp: new Date(),
-            }]);
-            setIsLoading(false);
-            return;
-        }
-
         const newHistory = existingHistory || [...chatHistoryRef.current, { role: 'user', parts: [{ text }] }];
         if (!existingHistory) chatHistoryRef.current = newHistory;
 
         setIsLoading(true);
         const systemPrompt = buildSystemPrompt(lang, pathname, buildDataContext(lang));
-        const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-lite-001'];
 
-        for (let i = 0; i < MODELS.length; i++) {
-            try {
-                const rawText = await callGemini(MODELS[i], newHistory, systemPrompt, apiKey);
-                const reply = rawText || (lang === 'bs' ? 'Nema odgovora.' : 'No response.');
-                chatHistoryRef.current = [...newHistory, { role: 'model', parts: [{ text: reply }] }];
-                setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date() }]);
+        try {
+            const result = await callZiaAPI(newHistory, systemPrompt, ZIA_TOOLS);
+
+            // ── Function call: Zia wants to take an action ────────────────────
+            if (result.function_call) {
+                const { name, args } = result.function_call;
+
+                // Add model's function_call turn to history
+                const historyWithCall = [...newHistory, { role: 'model', parts: [{ function_call: { name, args } }] }];
+
+                // Execute the tool
+                const toolResult = await executeTool(name, args);
+
+                // Add function response turn
+                const historyWithResult = [...historyWithCall, {
+                    role: 'user',
+                    parts: [{ function_response: { name, response: toolResult } }],
+                }];
+
+                // Get Zia's final text response after seeing the tool result
+                const finalResult = await callZiaAPI(historyWithResult, systemPrompt, ZIA_TOOLS);
+                const reply = finalResult.text || (lang === 'bs' ? 'Urađeno.' : 'Done.');
+
+                chatHistoryRef.current = [...historyWithResult, { role: 'model', parts: [{ text: reply }] }];
+                setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date(), isAction: true }]);
                 if (isMinimized) setHasNewMessage(true);
-                retryAttemptRef.current = 0; // reset on success
-                setIsLoading(false);
-                return; // success — done
-            } catch (err) {
-                console.warn(`Model ${MODELS[i]} failed:`, err.message);
-                if (err.isRateLimit) {
-                    if (i === MODELS.length - 1) {
-                        // All models exhausted — show countdown and schedule retry
-                        const waitSec = err.retryAfter || 30;
-                        const countdownMsg = lang === 'bs'
-                            ? `⏳ Dostignut limit besplatnog nivoa. Automatski pokušavam ponovo za **${waitSec}s**...`
-                            : `⏳ Free tier rate limit reached. Auto-retrying in **${waitSec}s**...`;
-                        setMessages(prev => [...prev, { role: 'assistant', content: countdownMsg, timestamp: new Date(), isRetryMsg: true }]);
-                        setIsLoading(false);
-                        startRetryCountdown(waitSec, text, newHistory);
-                        return;
-                    }
-                    // Try next model immediately
-                    continue;
-                }
-                // Non-rate-limit error — show it and stop
-                const errText = lang === 'bs'
-                    ? `⚠️ Greška: ${err.message}`
-                    : `⚠️ Error: ${err.message}`;
-                setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
+                retryAttemptRef.current = 0;
                 setIsLoading(false);
                 return;
             }
+
+            // ── Normal text response ──────────────────────────────────────────
+            const reply = result.text || (lang === 'bs' ? 'Nema odgovora.' : 'No response.');
+            chatHistoryRef.current = [...newHistory, { role: 'model', parts: [{ text: reply }] }];
+            setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date() }]);
+            if (isMinimized) setHasNewMessage(true);
+            retryAttemptRef.current = 0;
+            setIsLoading(false);
+
+        } catch (err) {
+            console.warn('Zia API error:', err.message);
+            if (err.isRateLimit) {
+                const waitSec = err.retryAfter || 30;
+                const countdownMsg = lang === 'bs'
+                    ? `⏳ Limit zahtjeva dostignut. Pokušavam ponovo za **${waitSec}s**...`
+                    : `⏳ Rate limit reached. Auto-retrying in **${waitSec}s**...`;
+                setMessages(prev => [...prev, { role: 'assistant', content: countdownMsg, timestamp: new Date(), isRetryMsg: true }]);
+                setIsLoading(false);
+                startRetryCountdown(waitSec, text, newHistory);
+                return;
+            }
+            const errText = lang === 'bs' ? `⚠️ Greška: ${err.message}` : `⚠️ Error: ${err.message}`;
+            setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
+            setIsLoading(false);
         }
-    }, [callGemini, isMinimized, lang, pathname, startRetryCountdown]);
+    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
 
     const sendMessage = useCallback(async (text) => {
         if (!text.trim() || isLoading || retryCountdown > 0) return;
@@ -570,7 +646,7 @@ export default function AIAssistant() {
         });
     };
 
-    const suggestions = SUGGESTIONS[lang] || SUGGESTIONS.bs;
+    const suggestions = buildDynamicSuggestions(lang);
 
     return (
         <>
