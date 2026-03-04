@@ -34,7 +34,8 @@ export async function sendQuestionnaireEmail({
             deadline: deadline || 'Nema roka',
             sender_name: senderName,
             company_name: companyName,
-            reply_to: replyTo || toEmail, // EmailJS uses reply_to for Reply-To header
+            reply_to: replyTo || toEmail,
+            from_name: replyTo ? `${senderName} via eZNR` : 'eZNR — Zaštita na radu',
         };
 
         // v4 API: pass publicKey as 4th argument to send()
