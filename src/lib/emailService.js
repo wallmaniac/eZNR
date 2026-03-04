@@ -23,6 +23,7 @@ export async function sendQuestionnaireEmail({
     deadline,
     senderName = 'eZNR Admin',
     companyName = '',
+    replyTo = null,
 }) {
     try {
         const templateParams = {
@@ -33,6 +34,7 @@ export async function sendQuestionnaireEmail({
             deadline: deadline || 'Nema roka',
             sender_name: senderName,
             company_name: companyName,
+            reply_to: replyTo || toEmail, // EmailJS uses reply_to for Reply-To header
         };
 
         // v4 API: pass publicKey as 4th argument to send()
@@ -69,7 +71,7 @@ export function isEmailConfigured() {
  * @returns {Promise<{sent: number, failed: number, errors: Array}>}
  */
 export async function sendBatchEmails(recipients, questionnaireInfo, onProgress) {
-    const { questionnaireName, tokens, deadline, senderName, companyName } = questionnaireInfo;
+    const { questionnaireName, tokens, deadline, senderName, companyName, replyTo } = questionnaireInfo;
     let sent = 0;
     let failed = 0;
     const errors = [];
@@ -82,10 +84,11 @@ export async function sendBatchEmails(recipients, questionnaireInfo, onProgress)
             toEmail: r.toEmail,
             toName: r.toName,
             questionnaireName,
-            link: tokens[i], // each recipient has their unique link
+            link: tokens[i],
             deadline,
             senderName,
             companyName,
+            replyTo,
         });
 
         if (result.success) {

@@ -57,14 +57,17 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
     const [errors, setErrors] = useState({});
     const [gradeResult, setGradeResult] = useState(null); // shown after submit if grading is set
 
-    // Parse survey JSON
+    // Parse survey JSON — handles our native format { questions: [] }
+    // and legacy SurveyJS format { pages: [{ elements: [] }] }
     let questions = [];
     try {
         const parsed = typeof surveyJson === 'string' ? JSON.parse(surveyJson) : surveyJson;
-        if (parsed?.pages?.[0]?.elements) {
-            questions = parsed.pages[0].elements;
-        } else if (Array.isArray(parsed)) {
-            questions = parsed;
+        if (Array.isArray(parsed)) {
+            questions = parsed; // plain array
+        } else if (parsed?.questions) {
+            questions = parsed.questions; // our native format
+        } else if (parsed?.pages?.[0]?.elements) {
+            questions = parsed.pages[0].elements; // SurveyJS format
         }
     } catch {
         questions = [];

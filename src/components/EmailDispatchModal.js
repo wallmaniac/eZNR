@@ -13,6 +13,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
     const [workers, setWorkers] = useState([]);
     const [selectedWorkerIds, setSelectedWorkerIds] = useState([]);
     const [manualEmails, setManualEmails] = useState('');
+    const [replyToEmail, setReplyToEmail] = useState('');
     const [deadline, setDeadline] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [step, setStep] = useState('select'); // select | sending | done
@@ -24,6 +25,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
             setWorkers(getAll(COLLECTIONS.WORKERS) || []);
             setSelectedWorkerIds([]);
             setManualEmails('');
+            setReplyToEmail('');
             setDeadline('');
             setSearchQuery('');
             setStep('select');
@@ -106,6 +108,8 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                     workerId: r.workerId || null,
                     deadline: deadline || null,
                     surveyJson: questionnaire.surveyJson,
+                    prolazniPrag: questionnaire.prolazniPrag ?? 70,
+                    prikaziRezultateNakonRjesavanja: questionnaire.prikaziRezultateNakonRjesavanja ?? true,
                 });
                 tokens.push(`${baseUrl}${token}`);
             } catch (err) {
@@ -123,6 +127,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                 deadline: deadline || null,
                 senderName: 'eZNR Admin',
                 companyName: '',
+                replyTo: replyToEmail.trim() || null,
             },
             (current, total, email) => {
                 setProgress({ current, total, email });
@@ -265,6 +270,25 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                     onChange={e => setDeadline(e.target.value)}
                                     style={{ ...searchInputStyle, maxWidth: 220 }}
                                 />
+                            </div>
+
+                            {/* Reply-To email */}
+                            <div style={{ marginBottom: 20 }}>
+                                <label style={labelStyle}>
+                                    ↩️ {lang === 'bs' ? 'Vaš email (Reply-To — primaoci vide ovaj email)' : 'Your email (Reply-To — recipients see this)'}
+                                </label>
+                                <input
+                                    type="email"
+                                    value={replyToEmail}
+                                    onChange={e => setReplyToEmail(e.target.value)}
+                                    placeholder={lang === 'bs' ? 'npr. marko.maric@firma.ba' : 'e.g. officer@company.com'}
+                                    style={searchInputStyle}
+                                />
+                                <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)' }}>
+                                    {lang === 'bs'
+                                        ? 'Email će biti poslan s vašeg EmailJS naloga, ali primaoci će moći odgovoriti na ovaj email.'
+                                        : 'Email is sent from your EmailJS account, but recipients can reply to this address.'}
+                                </p>
                             </div>
                         </>
                     )}
