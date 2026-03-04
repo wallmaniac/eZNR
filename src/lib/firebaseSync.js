@@ -86,9 +86,12 @@ export async function syncAllToFirebase(companyId = 'default', onProgress) {
             let path;
 
             if (COMPANY_SCOPED.includes(col)) {
+                // Company-scoped: companies/{companyId}/{collection}/{docId}  → 4 segments ✅
                 path = `companies/${companyId}/${col}`;
             } else {
-                path = `global/${col}`;
+                // Global/reference data: {collection}/{docId}  → 2 segments ✅
+                // (NOT nested under 'global/' which would give 3 segments ❌)
+                path = col;
             }
 
             const result = await syncCollection(col, path, onProgress);
