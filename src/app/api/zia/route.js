@@ -43,7 +43,13 @@ export async function POST(request) {
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents: messages,
-        generationConfig: { temperature: 0.7, maxOutputTokens: 1500, topP: 0.95 },
+        generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 2048,
+            topP: 0.95,
+            // Disable thinking for gemini-2.5-flash — faster and not needed for an agentic assistant
+            thinkingConfig: { thinkingBudget: 0 },
+        },
         safetySettings: [
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
             { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_ONLY_HIGH' },
@@ -81,15 +87,21 @@ export async function POST(request) {
             }
 
             const data = await res.json();
-            const part = data.candidates?.[0]?.content?.parts?.[0];
+            const allParts = data.candidates?.[0]?.content?.parts ?? [];
+
+            // Skip thought/thinking parts (gemini-2.5-flash thinking mode)
+            // Find the first real part that has a function_call or text
+            const part = allParts.find(p => !p.thought && (p.function_call || p.text != null))
+                ?? allParts[0];
 
             // Function call response
             if (part?.function_call) {
                 return NextResponse.json({ function_call: part.function_call, model });
             }
 
-            // Normal text response
-            return NextResponse.json({ text: part?.text ?? '', model });
+            // Normal text response — ensure never empty
+            const text = part?.text ?? '';
+            return NextResponse.json({ text, model });
 
         } catch (err) {
             if (model === MODELS[MODELS.length - 1]) {
