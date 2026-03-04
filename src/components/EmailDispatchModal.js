@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getAll, COLLECTIONS } from '@/lib/dataStore';
 import { createQuestionnaireSession, generateToken } from '@/lib/firebaseSync';
-import { sendBatchEmails, isEmailConfigured } from '@/lib/emailService';
+import { sendBatchEmails } from '@/lib/emailService';
 
 /* ═══════════════════════════════════════════════════════
    Email Dispatch Modal
@@ -135,13 +135,8 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
 
     if (!isOpen) return null;
 
-    const emailConfigured = !!(
-        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID &&
-        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID &&
-        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-    );
     const totalRecipients = selectedWorkerIds.filter(id => workers.find(w => w.id === id)?.email).length
-        + (manualEmails.trim() ? manualEmails.split(/[,;\n]+/).filter(e => e.trim() && e.includes('@')).length : 0);
+        + (manualEmails.trim() ? manualEmails.split(/[,;\\n]+/).filter(e => e.trim() && e.includes('@')).length : 0);
 
     return (
         <>
@@ -186,21 +181,6 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
 
                 {/* Body */}
                 <div style={{ flex: 1, overflow: 'auto', padding: '20px 24px' }}>
-                    {!emailConfigured && (
-                        <div style={{
-                            background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)',
-                            borderRadius: 10, padding: '14px 18px', marginBottom: 20,
-                        }}>
-                            <p style={{ margin: 0, fontSize: '0.85rem', color: '#fbbf24', fontWeight: 600 }}>
-                                ⚠️ {lang === 'bs' ? 'EmailJS nije konfiguriran' : 'EmailJS not configured'}
-                            </p>
-                            <p style={{ margin: '6px 0 0', fontSize: '0.8rem', color: '#94a3b8' }}>
-                                {lang === 'bs'
-                                    ? 'Dodajte NEXT_PUBLIC_EMAILJS_SERVICE_ID, NEXT_PUBLIC_EMAILJS_TEMPLATE_ID i NEXT_PUBLIC_EMAILJS_PUBLIC_KEY u .env.local datoteku. Linkovi će biti generirani, ali emailovi neće biti poslani.'
-                                    : 'Add EMAILJS env vars to .env.local. Links will be generated but emails won\'t be sent.'}
-                            </p>
-                        </div>
-                    )}
 
                     {step === 'select' && (
                         <>
