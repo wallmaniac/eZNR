@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
@@ -85,6 +85,7 @@ export default function QuestionnairesPage() {
   const [templateSearch, setTemplateSearch] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null); // for Akcije dropdown
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 }); // fixed-position coords
+  const menuButtonRef = useRef(null); // ref to the button that opened the menu
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
   const [dispatchQuestionnaire, setDispatchQuestionnaire] = useState(null);
   const [resultsQuestionnaire, setResultsQuestionnaire] = useState(null);
@@ -136,6 +137,23 @@ export default function QuestionnairesPage() {
       cancelAnimationFrame(id);
       document.removeEventListener('mousedown', close);
     };
+  }, [openMenuId]);
+
+  // Track scroll — reposition dropdown so it follows its trigger button
+  useEffect(() => {
+    if (!openMenuId || !menuButtonRef.current) return;
+    const updatePos = () => {
+      if (!menuButtonRef.current) return;
+      const rect = menuButtonRef.current.getBoundingClientRect();
+      // If button scrolled out of view, close the menu
+      if (rect.bottom < 0 || rect.top > window.innerHeight) {
+        setOpenMenuId(null);
+        return;
+      }
+      setMenuPos({ top: rect.bottom + 4, left: rect.left });
+    };
+    window.addEventListener('scroll', updatePos, true);
+    return () => window.removeEventListener('scroll', updatePos, true);
   }, [openMenuId]);
 
   // CRUD
@@ -251,8 +269,9 @@ export default function QuestionnairesPage() {
                             className="btn btn-primary btn-sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              if (openMenuId === r.id) { setOpenMenuId(null); return; }
+                              if (openMenuId === r.id) { setOpenMenuId(null); menuButtonRef.current = null; return; }
                               const rect = e.currentTarget.getBoundingClientRect();
+                              menuButtonRef.current = e.currentTarget;
                               setMenuPos({ top: rect.bottom + 4, left: rect.left });
                               setOpenMenuId(r.id);
                             }}
