@@ -15,9 +15,8 @@ function checkRate(ip) {
 }
 
 // ─── Model cascade ────────────────────────────────────────────────────────────
-// gemini-2.0-flash-001 = versioned stable, confirmed available via ListModels
-// gemini-1.5-flash     = universal fallback, available on all API key tiers
-const MODELS = ['gemini-2.0-flash-001', 'gemini-1.5-flash'];
+// Verified via ListModels against this API key (2025-03-05)
+const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-001'];
 
 export async function POST(request) {
     // 1. Rate limit by IP
