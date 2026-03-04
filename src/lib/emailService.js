@@ -8,22 +8,9 @@
 import emailjs from '@emailjs/browser';
 
 // EmailJS credentials (NEXT_PUBLIC — safe to be in client code)
-function getConfig() {
-    return {
-        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || 'service_40uo2ms',
-        templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || 'template_twqa5ke',
-        publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '56HEWr_JbUhT-R4Fa',
-    };
-}
-
-// Initialize EmailJS
-let initialized = false;
-function initEmailJS() {
-    const { publicKey } = getConfig();
-    if (initialized || !publicKey) return;
-    emailjs.init(publicKey);
-    initialized = true;
-}
+const EMAILJS_SERVICE_ID = 'service_40uo2ms';
+const EMAILJS_TEMPLATE_ID = 'template_twqa5ke';
+const EMAILJS_PUBLIC_KEY = '56HEWr_JbUhT-R4Fa';
 
 /**
  * Send a questionnaire email to a worker/recipient
@@ -37,16 +24,6 @@ export async function sendQuestionnaireEmail({
     senderName = 'eZNR Admin',
     companyName = '',
 }) {
-    initEmailJS();
-    const { serviceId, templateId, publicKey } = getConfig();
-
-    if (!serviceId || !templateId || !publicKey) {
-        return {
-            success: false,
-            error: 'EmailJS nije konfiguriran. Dodajte NEXT_PUBLIC_EMAILJS_SERVICE_ID, NEXT_PUBLIC_EMAILJS_TEMPLATE_ID i NEXT_PUBLIC_EMAILJS_PUBLIC_KEY u .env.local datoteku.',
-        };
-    }
-
     try {
         const templateParams = {
             to_email: toEmail,
@@ -58,7 +35,13 @@ export async function sendQuestionnaireEmail({
             company_name: companyName,
         };
 
-        await emailjs.send(serviceId, templateId, templateParams);
+        // v4 API: pass publicKey as 4th argument to send()
+        await emailjs.send(
+            EMAILJS_SERVICE_ID,
+            EMAILJS_TEMPLATE_ID,
+            templateParams,
+            { publicKey: EMAILJS_PUBLIC_KEY }
+        );
         return { success: true };
     } catch (err) {
         console.error('EmailJS send error:', err);
@@ -73,9 +56,10 @@ export async function sendQuestionnaireEmail({
  * Check if EmailJS is configured
  */
 export function isEmailConfigured() {
-    const { serviceId, templateId, publicKey } = getConfig();
-    return !!(serviceId && templateId && publicKey);
+    return !!(EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY);
 }
+
+
 
 /**
  * Send multiple questionnaire emails (batch)
