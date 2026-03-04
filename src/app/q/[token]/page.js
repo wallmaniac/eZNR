@@ -71,13 +71,15 @@ export default function PublicQuestionnairePage({ params }) {
         setSubmitting(true);
         try {
             await saveQuestionnaireResponse(session.id, answers, grade);
-            if (!grade) {
-                // No grading — go straight to thank-you screen
+
+            const showResultsToWorker = grade && (session.prikaziRezultateNakonRjesavanja !== false);
+            if (!showResultsToWorker) {
+                // No grading or results hidden — go straight to thank-you screen
                 setSubmitted(true);
             }
-            // If grading is on, the form shows the score screen itself
-            // We still mark submitted so re-opening shows completed state
-            setSubmitted(true);
+            // If grade results are enabled, keep the form mounted so it can
+            // display its built-in grade screen. The session is already marked
+            // as 'completed' in Firestore, so re-opening the link shows "Hvala".
         } catch (err) {
             console.error('Failed to submit response:', err);
             alert('Greška pri slanju odgovora: ' + (err?.message || err?.code || 'Nepoznata greška'));
