@@ -126,8 +126,11 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
             setGradeResult({ ...grade, passed, prolazniPrag: prolazniPrag ?? 70 });
         }
 
-        // Always submit with grade info attached
-        onSubmit?.(answers, grade);
+        // Submit with full grade including passed/failed status
+        const gradeWithPassed = grade !== null
+            ? { ...grade, passed: grade.percentage >= (prolazniPrag ?? 70), prolazniPrag: prolazniPrag ?? 70 }
+            : null;
+        onSubmit?.(answers, gradeWithPassed);
     };
 
     // ─── Grade result screen ─────────────────────────────────────────────────
