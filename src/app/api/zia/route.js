@@ -14,8 +14,9 @@ function checkRate(ip) {
     return { allowed: r.count <= RATE_LIMIT, waitSec: Math.ceil((r.resetAt - now) / 1000) };
 }
 
-// ─── Model cascade (fastest / cheapest first as fallback) ────────────────────
-const MODELS = ['gemini-2.0-flash-lite', 'gemini-1.5-flash-latest'];
+// ─── Model cascade ────────────────────────────────────────────────────────────
+// Use explicitly versioned/stable models that are available to all API key tiers
+const MODELS = ['gemini-1.5-flash-latest', 'gemini-1.5-pro-latest'];
 
 export async function POST(request) {
     // 1. Rate limit by IP
@@ -68,11 +69,11 @@ export async function POST(request) {
                 const errData = await res.json().catch(() => ({}));
                 const errMsg = errData.error?.message ?? `API error ${res.status}`;
                 const isRateLimit = res.status === 429 || errMsg.toLowerCase().includes('quota');
-                if (isRateLimit && model !== MODELS[MODELS.length - 1]) continue; // try next model
+                const isModelUnavailable = res.status === 404 || errMsg.toLowerCase().includes('no longer available') || errMsg.toLowerCase().includes('not found');
+                const tryNext = (isRateLimit || isModelUnavailable) && model !== MODELS[MODELS.length - 1];
+                if (tryNext) continue; // try next model in cascade
                 const match = errMsg.match(/retry in ([\d.]+)s/i);
                 const retryAfter = match ? Math.ceil(parseFloat(match[1])) + 2 : 30;
-                // Always return 429 for rate limits, 500 for all other Gemini errors
-                // (never pass through Gemini's raw status like 404 for deprecated models)
                 return NextResponse.json(
                     { error: errMsg, isRateLimit, retryAfter },
                     { status: isRateLimit ? 429 : 500 }
