@@ -135,7 +135,11 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
 
     if (!isOpen) return null;
 
-    const emailConfigured = isEmailConfigured();
+    const emailConfigured = !!(
+        process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID &&
+        process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID &&
+        process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+    );
     const totalRecipients = selectedWorkerIds.filter(id => workers.find(w => w.id === id)?.email).length
         + (manualEmails.trim() ? manualEmails.split(/[,;\n]+/).filter(e => e.trim() && e.includes('@')).length : 0);
 

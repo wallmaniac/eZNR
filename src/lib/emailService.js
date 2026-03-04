@@ -7,30 +7,26 @@
 
 import emailjs from '@emailjs/browser';
 
-// EmailJS configuration from environment variables
-const SERVICE_ID = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '';
-const TEMPLATE_ID = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '';
-const PUBLIC_KEY = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '';
+// EmailJS configuration — read lazily so env vars are always fresh
+function getConfig() {
+    return {
+        serviceId: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || '',
+        templateId: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || '',
+        publicKey: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || '',
+    };
+}
 
 // Initialize EmailJS
 let initialized = false;
 function initEmailJS() {
-    if (initialized || !PUBLIC_KEY) return;
-    emailjs.init(PUBLIC_KEY);
+    const { publicKey } = getConfig();
+    if (initialized || !publicKey) return;
+    emailjs.init(publicKey);
     initialized = true;
 }
 
 /**
  * Send a questionnaire email to a worker/recipient
- * @param {Object} params
- * @param {string} params.toEmail - Recipient email address
- * @param {string} params.toName  - Recipient full name
- * @param {string} params.questionnaireName - Name of the questionnaire
- * @param {string} params.link    - Full URL to fill the questionnaire
- * @param {string} params.deadline - Deadline date (ISO string or formatted)
- * @param {string} params.senderName - Admin/sender name
- * @param {string} params.companyName - Company name
- * @returns {Promise<{success: boolean, error?: string}>}
  */
 export async function sendQuestionnaireEmail({
     toEmail,
@@ -42,8 +38,9 @@ export async function sendQuestionnaireEmail({
     companyName = '',
 }) {
     initEmailJS();
+    const { serviceId, templateId, publicKey } = getConfig();
 
-    if (!SERVICE_ID || !TEMPLATE_ID || !PUBLIC_KEY) {
+    if (!serviceId || !templateId || !publicKey) {
         return {
             success: false,
             error: 'EmailJS nije konfiguriran. Dodajte NEXT_PUBLIC_EMAILJS_SERVICE_ID, NEXT_PUBLIC_EMAILJS_TEMPLATE_ID i NEXT_PUBLIC_EMAILJS_PUBLIC_KEY u .env.local datoteku.',
@@ -61,7 +58,7 @@ export async function sendQuestionnaireEmail({
             company_name: companyName,
         };
 
-        await emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+        await emailjs.send(serviceId, templateId, templateParams);
         return { success: true };
     } catch (err) {
         console.error('EmailJS send error:', err);
@@ -76,7 +73,8 @@ export async function sendQuestionnaireEmail({
  * Check if EmailJS is configured
  */
 export function isEmailConfigured() {
-    return !!(SERVICE_ID && TEMPLATE_ID && PUBLIC_KEY);
+    const { serviceId, templateId, publicKey } = getConfig();
+    return !!(serviceId && templateId && publicKey);
 }
 
 /**
