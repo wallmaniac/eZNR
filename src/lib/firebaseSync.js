@@ -173,3 +173,64 @@ export async function saveQuestionnaireResponse(sessionId, answers) {
     const sessionRef = doc(db, 'questionnaire_sessions', sessionId);
     await setDoc(sessionRef, { status: 'completed', completedAt: new Date().toISOString() }, { merge: true });
 }
+
+// ─── Get all sessions for a specific questionnaire ───────────────────────────
+export async function getSessionsForQuestionnaire(questionnaireId) {
+    const { getDocs, query, where, orderBy } = await import('firebase/firestore');
+    try {
+        const q = query(
+            fsCollection(db, 'questionnaire_sessions'),
+            where('questionnaireId', '==', questionnaireId),
+            orderBy('createdAt', 'desc')
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => d.data());
+    } catch (err) {
+        // If index not ready, fallback without orderBy
+        console.warn('Falling back to unordered query:', err.message);
+        const q = query(
+            fsCollection(db, 'questionnaire_sessions'),
+            where('questionnaireId', '==', questionnaireId)
+        );
+        const snap = await getDocs(q);
+        const results = snap.docs.map(d => d.data());
+        results.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        return results;
+    }
+}
+
+// ─── Mark a session as opened (when worker opens the link) ───────────────────
+export async function markSessionOpened(sessionId) {
+    const sessionRef = doc(db, 'questionnaire_sessions', sessionId);
+    await setDoc(sessionRef, {
+        status: 'opened',
+        openedAt: new Date().toISOString(),
+    }, { merge: true });
+}
+
+// ─── Get a specific questionnaire response ───────────────────────────────────
+export async function getQuestionnaireResponse(sessionId) {
+    const { getDoc } = await import('firebase/firestore');
+    const ref = doc(db, 'questionnaire_responses', sessionId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return snap.data();
+}
+
+// ─── Generate a unique token for questionnaire sessions ──────────────────────
+export function generateToken() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    const array = new Uint8Array(24);
+    if (typeof window !== 'undefined' && window.crypto) {
+        window.crypto.getRandomValues(array);
+        for (let i = 0; i < 24; i++) {
+            token += chars[array[i] % chars.length];
+        }
+    } else {
+        for (let i = 0; i < 24; i++) {
+            token += chars[Math.floor(Math.random() * chars.length)];
+        }
+    }
+    return token;
+}

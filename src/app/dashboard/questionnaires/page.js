@@ -6,6 +6,8 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import QuestionnaireBuilder from '@/components/SurveyCreator';
+import EmailDispatchModal from '@/components/EmailDispatchModal';
+import QuestionnaireResults from '@/components/QuestionnaireResults';
 
 /* ═══════════════════════════════════════════════
    Upitnici — Questionnaire System
@@ -75,7 +77,7 @@ export default function QuestionnairesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
 
-  const [view, setView] = useState('list'); // list | form
+  const [view, setView] = useState('list'); // list | form | results
   const [records, setRecords] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_UPITNIK });
@@ -83,6 +85,9 @@ export default function QuestionnairesPage() {
   const [templateSearch, setTemplateSearch] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null); // for Akcije dropdown
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 }); // fixed-position coords
+  const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
+  const [dispatchQuestionnaire, setDispatchQuestionnaire] = useState(null);
+  const [resultsQuestionnaire, setResultsQuestionnaire] = useState(null);
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
@@ -273,6 +278,13 @@ export default function QuestionnairesPage() {
                                   : (r.prikaziNaPortalu ? 'Hide from portal' : 'Show on portal')}
                               </button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                              <button onClick={() => { setOpenMenuId(null); setDispatchQuestionnaire(r); setDispatchModalOpen(true); }} style={menuItemStyle}>
+                                📧 {lang === 'bs' ? 'Pošalji' : 'Send'}
+                              </button>
+                              <button onClick={() => { setOpenMenuId(null); setResultsQuestionnaire(r); setView('results'); }} style={menuItemStyle}>
+                                📊 {lang === 'bs' ? 'Rezultati' : 'Results'}
+                              </button>
+                              <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                               <button onClick={() => handleDelete(r.id)} style={{ ...menuItemStyle, color: 'var(--danger)' }}>
                                 🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
                               </button>
@@ -356,7 +368,28 @@ export default function QuestionnairesPage() {
             </div>
           </div>
         </div>
+
+        {/* Email Dispatch Modal */}
+        <EmailDispatchModal
+          isOpen={dispatchModalOpen}
+          onClose={() => { setDispatchModalOpen(false); setDispatchQuestionnaire(null); }}
+          questionnaire={dispatchQuestionnaire}
+          lang={lang}
+        />
       </div>
+    );
+  }
+
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+     VIEW: RESULTS
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  if (view === 'results' && resultsQuestionnaire) {
+    return (
+      <QuestionnaireResults
+        questionnaire={resultsQuestionnaire}
+        onBack={() => { setView('list'); setResultsQuestionnaire(null); }}
+        lang={lang}
+      />
     );
   }
 
