@@ -898,7 +898,7 @@ export default function SettingsPage() {
                     <div key={u.userId} style={{
                       display: 'flex', alignItems: 'center', gap: 8,
                       padding: '6px 12px', borderRadius: 20,
-                      background: '#F0FDF4', border: '1px solid #BBF7D0', fontSize: '0.78rem',
+                      background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)', fontSize: '0.78rem',
                     }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#22C55E', display: 'inline-block' }} />
                       <span style={{ fontWeight: 600 }}>{u.userName}</span>
@@ -929,21 +929,22 @@ export default function SettingsPage() {
 
               {/* Category filters */}
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
-                {[null, 'worker', 'certificate', 'equipment', 'document', 'company', 'expiry', 'auth'].map(cat => (
+                {[null, 'worker', 'certificate', 'equipment', 'ppe', 'document', 'company', 'expiry', 'auth'].map(cat => (
                   <button key={cat || 'all'} onClick={() => setLogFilter(cat)}
                     style={{
                       padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 600,
                       border: '1px solid var(--border)', cursor: 'pointer',
-                      background: logFilter === cat ? 'var(--dark)' : 'white',
+                      background: logFilter === cat ? 'var(--primary)' : 'var(--bg-input)',
                       color: logFilter === cat ? 'white' : 'var(--text)',
                     }}>
                     {cat === null ? (lang === 'bs' ? '📋 Sve' : '📋 All') :
                       cat === 'worker' ? '👷 Radnici' :
                         cat === 'certificate' ? '📋 Uvjerenja' :
                           cat === 'equipment' ? '⚙️ Oprema' :
-                            cat === 'document' ? '📄 Dokumenti' :
-                              cat === 'company' ? '🏢 Firme' :
-                                cat === 'expiry' ? '⏰ Isteci' : '🔐 Prijave'}
+                            cat === 'ppe' ? '🦺 OZO' :
+                              cat === 'document' ? '📄 Dokumenti' :
+                                cat === 'company' ? '🏢 Firme' :
+                                  cat === 'expiry' ? '⏰ Isteci' : '🔐 Prijave'}
                   </button>
                 ))}
               </div>

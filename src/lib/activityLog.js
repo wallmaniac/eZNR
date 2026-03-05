@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 // ============================================================================
 // ACTIVITY LOG — Smart logging for eZNR
@@ -62,12 +62,12 @@ const CATEGORY_ICONS = {
     expiry: '⏰',
 };
 
-// ── Severity colors ──
+// ── Severity colors (rgba for dark-mode compatibility) ──
 const SEVERITY_COLORS = {
-    info: { bg: '#F0FDF4', border: '#22C55E', dot: '#22C55E' },
-    warning: { bg: '#FFFBEB', border: '#F59E0B', dot: '#F59E0B' },
-    urgent: { bg: '#FFF7ED', border: '#F97316', dot: '#F97316' },
-    critical: { bg: '#FEF2F2', border: '#EF4444', dot: '#EF4444' },
+    info: { bg: 'rgba(34,197,94,0.08)', border: '#22C55E', dot: '#22C55E' },
+    warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', dot: '#F59E0B' },
+    urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', dot: '#F97316' },
+    critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', dot: '#EF4444' },
 };
 
 export function getSeverityColors(severity) {
@@ -237,6 +237,19 @@ export function logDocumentCreated(doc, user) {
     });
 }
 
+
+export function logPPEAssigned(ppe, workerName, user) {
+    logUserAction({
+        action: LOG_ACTION.CREATED,
+        category: LOG_CATEGORY.PPE,
+        title: \Zadu\u017eena OZO: \\,
+        detail: \Radnik: \ | Kol: \ | Datum: \\,
+        userId: user?.id,
+        userName: user ? \\ \\.trim() : 'Zia',
+        companyId: user?.activeCompanyId,
+        relatedId: ppe.id,
+    });
+}
 export function logCompanyCreated(company, createdBy) {
     logAdminAction({
         action: LOG_ACTION.COMPANY_SIGNED_UP,

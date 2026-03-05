@@ -18,7 +18,7 @@ const EVENT_ROUTES = {
 export default function DashboardPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
-    const [currentDate, setCurrentDate] = useState(new Date(2026, 1, 26));
+    const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
     const [workers, setWorkers] = useState([]);
     const [certs, setCerts] = useState([]);

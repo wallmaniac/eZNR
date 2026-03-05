@@ -7,6 +7,7 @@ import {
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { logPPEAssigned } from '@/lib/activityLog';
 
 /* ── Stable sub-components (defined outside to avoid recreating on every render) ── */
 
@@ -135,11 +136,15 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
             await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!');
             return;
         }
+        let saved;
         if (ppeEditId) {
             update(COLLECTIONS.PPE_ASSIGNMENTS, ppeEditId, { ...ppeFormData, workerId });
+            saved = { ...ppeFormData, workerId, id: ppeEditId };
         } else {
-            create(COLLECTIONS.PPE_ASSIGNMENTS, { ...ppeFormData, workerId });
+            saved = create(COLLECTIONS.PPE_ASSIGNMENTS, { ...ppeFormData, workerId });
         }
+        // Log to activity log
+        try { logPPEAssigned(saved, `${worker?.ime || ''} ${worker?.prezime || ''}`.trim(), null); } catch { }
         refreshPpe();
         setShowPpeForm(false);
         setPpeEditId(null);

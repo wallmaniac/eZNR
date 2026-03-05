@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -133,7 +133,7 @@ function buildDataContext(lang) {
             const rosterLines = activeWorkerList.map(w => {
                 const wp = wpMap[w.radnoMjestoId] || wpMap[w.radnoMjesto] || '';
                 const ou = ouMap[w.orgJedinicaId] || ouMap[w.orgJedinica] || '';
-                return `${w.ime} ${w.prezime}${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}`;
+                return `[ID:${w.id}] ${w.ime} ${w.prezime}${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}`;
             });
             lines.push(lang === 'bs'
                 ? `\nSVI AKTIVNI RADNICI (${activeWorkerList.length}) sa radnim mjestima:\n${rosterLines.join('\n')}`
@@ -563,18 +563,41 @@ export default function AIAssistant() {
         }
         if (name === 'assign_ppe') {
             try {
-                const { create: createRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const { create: createRecord, getAll: getRecords, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const { logPPEAssigned } = await import('@/lib/activityLog');
                 const today = new Date().toISOString().split('T')[0];
-                createRecord(COLS.PPE_ASSIGNMENTS, {
-                    workerId: args.worker_id,
+
+                // Resolve worker_id — prefer provided ID, fall back to name match
+                let resolvedId = args.worker_id;
+                const allWorkers = getRecords(COLS.WORKERS);
+                if (!resolvedId || !allWorkers.find(w => w.id === resolvedId)) {
+                    // Try to find by name
+                    const nameParts = (args.worker_name || '').toLowerCase().split(' ');
+                    const match = allWorkers.find(w =>
+                        nameParts.some(p => p && (w.ime || '').toLowerCase().includes(p)) &&
+                        nameParts.some(p => p && (w.prezime || '').toLowerCase().includes(p))
+                    );
+                    if (match) { resolvedId = match.id; }
+                }
+
+                if (!resolvedId) {
+                    return { error: `Radnik "${args.worker_name}" nije prona\u0111en. Provjeri ime i prezime.` };
+                }
+
+                const newPpe = createRecord(COLS.PPE_ASSIGNMENTS, {
+                    workerId: resolvedId,
                     naziv: args.ppe_name,
                     datumZaduzenja: args.datum || today,
                     kolicina: args.kolicina || 1,
                     datumRazduzenja: '',
                 });
+
+                // Log to activity log
+                try { logPPEAssigned(newPpe, args.worker_name, null); } catch { }
+
                 router.push('/dashboard/worker-ppe');
                 setIsMinimized(true);
-                return { success: true, message: `PPE "${args.ppe_name}" assigned to ${args.worker_name} (qty: ${args.kolicina || 1}, date: ${args.datum || today})` };
+                return { success: true, message: `OZO "${args.ppe_name}" dodijeljen${args.worker_name ? ` radniku ${args.worker_name}` : ''} (kol: ${args.kolicina || 1}, datum: ${args.datum || today})` };
             } catch (err) {
                 return { error: `Failed to save PPE: ${err.message}` };
             }

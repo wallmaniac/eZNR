@@ -3,6 +3,7 @@ import { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { logPPEAssigned } from '@/lib/activityLog';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
@@ -27,13 +28,17 @@ export default function WorkerPPEPage() {
   const handleSave = () => {
     if (!addForm.workerId || !addForm.naziv.trim()) return;
     setSaving(true);
-    create(COLLECTIONS.PPE_ASSIGNMENTS, {
+    const saved = create(COLLECTIONS.PPE_ASSIGNMENTS, {
       workerId: addForm.workerId,
       naziv: addForm.naziv.trim(),
       datumZaduzenja: addForm.datumZaduzenja || todayISO(),
       kolicina: addForm.kolicina || 1,
       datumRazduzenja: '',
     });
+    // Log to activity log
+    const w = workers.find(x => x.id === addForm.workerId);
+    const workerName = w ? `${w.ime} ${w.prezime}` : '';
+    try { logPPEAssigned(saved, workerName, null); } catch { }
     setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
     setShowAddModal(false);
     setAddForm({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
