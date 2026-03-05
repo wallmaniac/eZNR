@@ -24,11 +24,9 @@ export default function Header({ sidebarCollapsed }) {
     const searchRef = useRef(null);
     const companyRef = useRef(null);
 
-    // Admin sees ALL companies; officers only see assigned ones
     const companies = useMemo(() => {
         if (!user?.id) return [];
         if (isAdmin) {
-            // Import getAllCompanies for admin
             const { getAllCompanies } = require('@/lib/dataStore');
             return getAllCompanies();
         }
@@ -41,61 +39,39 @@ export default function Header({ sidebarCollapsed }) {
         const handleClick = (e) => {
             if (profileRef.current && !profileRef.current.contains(e.target)) setShowProfile(false);
             if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false);
-            if (searchRef.current && !searchRef.current.contains(e.target)) { setSearchFocused(false); }
+            if (searchRef.current && !searchRef.current.contains(e.target)) setSearchFocused(false);
             if (companyRef.current && !companyRef.current.contains(e.target)) setShowCompanyMenu(false);
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Global search across all collections
     const searchResults = useMemo(() => {
         if (!searchTerm || searchTerm.length < 2) return [];
         const term = searchTerm.toLowerCase();
         const results = [];
-
-        const workers = getAll(COLLECTIONS.WORKERS);
-        workers.forEach(w => {
-            const full = `${w.ime} ${w.prezime} ${w.jmbg || ''}`.toLowerCase();
-            if (full.includes(term)) {
+        getAll(COLLECTIONS.WORKERS).forEach(w => {
+            if (`${w.ime} ${w.prezime} ${w.jmbg || ''}`.toLowerCase().includes(term))
                 results.push({ type: 'worker', icon: '👷', label: `${w.ime} ${w.prezime}`, sub: getOrgUnitName(w.orgJedinicaId), path: '/dashboard/workers', id: w.id });
-            }
         });
-        const equipment = getAll(COLLECTIONS.EQUIPMENT);
-        equipment.forEach(e => {
-            const full = `${e.naziv} ${e.tvBroj || ''} ${e.invBroj || ''}`.toLowerCase();
-            if (full.includes(term)) {
+        getAll(COLLECTIONS.EQUIPMENT).forEach(e => {
+            if (`${e.naziv} ${e.tvBroj || ''} ${e.invBroj || ''}`.toLowerCase().includes(term))
                 results.push({ type: 'equipment', icon: '⚙️', label: e.naziv, sub: e.tvBroj || '', path: '/dashboard/equipment', id: e.id });
-            }
         });
-        const workplaces = getAll(COLLECTIONS.WORKPLACES);
-        workplaces.forEach(wp => {
-            if (wp.naziv.toLowerCase().includes(term)) {
+        getAll(COLLECTIONS.WORKPLACES).forEach(wp => {
+            if (wp.naziv.toLowerCase().includes(term))
                 results.push({ type: 'workplace', icon: '🔧', label: wp.naziv, sub: wp.oznaka || '', path: '/dashboard/workplaces', id: wp.id });
-            }
         });
-        const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
-        orgUnits.forEach(ou => {
-            if (ou.naziv.toLowerCase().includes(term)) {
+        getAll(COLLECTIONS.ORG_UNITS).forEach(ou => {
+            if (ou.naziv.toLowerCase().includes(term))
                 results.push({ type: 'orgUnit', icon: '🏢', label: ou.naziv, sub: ou.skraceniNaziv || '', path: '/dashboard/org-units', id: ou.id });
-            }
         });
         return results.slice(0, 8);
     }, [searchTerm]);
 
-    // Notifications — ADMIN gets system alerts, OFFICER gets work alerts
     const notifications = useMemo(() => {
         const { notifications: notifs } = getHeaderNotifications(isAdmin, activeCompanyId);
-        return notifs.map(n => ({
-            icon: n.icon,
-            text: n.title,
-            detail: n.message,
-            date: '',
-            path: n.actionUrl || '/dashboard',
-            severity: n.severity,
-            id: n.id,
-            actionLabel: n.actionLabel,
-        }));
+        return notifs.map(n => ({ icon: n.icon, text: n.title, detail: n.message, date: '', path: n.actionUrl || '/dashboard', severity: n.severity, id: n.id, actionLabel: n.actionLabel }));
     }, [isAdmin, activeCompanyId]);
 
     const handleSearchNav = (result) => { setSearchTerm(''); setSearchFocused(false); router.push(result.path); };
@@ -105,23 +81,15 @@ export default function Header({ sidebarCollapsed }) {
 
     const handleCreateCompany = () => {
         if (!newCompanyData.naziv.trim()) return;
-        const newComp = create(COLLECTIONS.COMPANIES, {
-            ...newCompanyData,
-            skraceniNaziv: newCompanyData.naziv,
-            aktivan: true,
-        });
-        // Add company to user's companyIds
+        const newComp = create(COLLECTIONS.COMPANIES, { ...newCompanyData, skraceniNaziv: newCompanyData.naziv, aktivan: true });
         const { update } = require('@/lib/dataStore');
         if (user?.id) {
             const currentUser = getAll(COLLECTIONS.USERS).find(u => u.id === user.id);
-            if (currentUser) {
-                update(COLLECTIONS.USERS, user.id, { companyIds: [...(currentUser.companyIds || []), newComp.id] });
-            }
+            if (currentUser) update(COLLECTIONS.USERS, user.id, { companyIds: [...(currentUser.companyIds || []), newComp.id] });
         }
         switchCompany(newComp.id);
         setShowNewCompanyModal(false);
         setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '' });
-        // Force re-render
         window.location.reload();
     };
 
@@ -129,148 +97,135 @@ export default function Header({ sidebarCollapsed }) {
         ? { label: 'Admin', bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: 'white' }
         : { label: lang === 'bs' ? 'Stručnjak ZNR' : 'Safety Officer', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
 
+    /* ─── Shared micro-styles ─── */
+    const island = {
+        display: 'flex', alignItems: 'center', gap: 2,
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border)',
+        borderRadius: 100,
+        padding: '4px 6px',
+        flexShrink: 0,
+        boxShadow: '0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05)',
+    };
+    const iBtn = (extra = {}) => ({
+        width: 34, height: 34, borderRadius: 34, border: 'none',
+        background: 'transparent', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: '1rem', color: 'var(--text-muted)',
+        transition: 'background 0.15s, color 0.15s',
+        flexShrink: 0, padding: 0, ...extra,
+    });
+    const sep = <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />;
+
     return (
         <>
-            <header className="app-header" style={{
-                position: 'fixed',
-                top: 0,
-                right: 0,
+            {/* ════════════════════════════════════════
+                THREE-ISLAND FLOATING HEADER
+            ════════════════════════════════════════ */}
+            <header style={{
+                position: 'fixed', top: 0, right: 0, zIndex: 90,
                 height: 'var(--header-height)',
                 left: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
-                borderBottom: '1px solid var(--border-light)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '0 20px 0 16px',
-                zIndex: 90,
                 transition: 'left var(--transition-normal)',
+                display: 'flex', alignItems: 'center',
+                gap: 10, padding: '0 16px',
+                background: 'var(--bg-header, var(--bg-page))',
+                backdropFilter: 'blur(20px)',
+                borderBottom: '1px solid var(--border-light)',
             }}>
-                {/* ── Back / Forward navigation buttons ── */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                    <button
-                        onClick={() => router.back()}
-                        title={lang === 'bs' ? 'Nazad (Alt+←)' : 'Back (Alt+←)'}
-                        style={headerStyles.navBtn}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-                    >&#8592;</button>
-                    <button
-                        onClick={() => router.forward()}
-                        title={lang === 'bs' ? 'Naprijed (Alt+→)' : 'Forward (Alt+→)'}
-                        style={headerStyles.navBtn}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-                    >&#8594;</button>
-                </div>
 
-                {/* Divider */}
-                <div style={{ width: 1, height: 24, background: 'var(--border)', flexShrink: 0, margin: '0 4px' }} />
-
-                {/* ── Company Switcher ── LEFT of search */}
-                <div ref={companyRef} style={{ position: 'relative', flexShrink: 0 }}>
-                    <button
-                        onClick={() => { setShowCompanyMenu(!showCompanyMenu); setShowProfile(false); setShowNotifs(false); }}
-                        style={{
-                            display: 'flex', alignItems: 'center', gap: 10,
-                            padding: '7px 16px 7px 12px',
-                            borderRadius: 'var(--radius-full)',
-                            border: '2px solid rgba(0,191,166,0.6)',
-                            background: 'linear-gradient(135deg, var(--primary), #009985)',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            maxWidth: 220,
-                            boxShadow: '0 2px 8px rgba(0,191,166,0.35)',
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,191,166,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,191,166,0.35)'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                    >
-                        {/* Company icon badge */}
-                        <span style={{
-                            width: 24, height: 24, borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.2)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.85rem', flexShrink: 0,
-                        }}>🏢</span>
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                            <div style={{
-                                fontSize: '0.65rem', fontWeight: 600,
-                                color: 'rgba(255,255,255,0.75)',
-                                fontFamily: 'var(--font-heading)',
-                                letterSpacing: '0.3px', lineHeight: 1,
-                                marginBottom: 1,
-                            }}>
-                                {lang === 'bs' ? 'Aktivna firma' : 'Active company'}
-                            </div>
-                            <div style={{
-                                fontSize: '0.82rem', fontWeight: 700,
-                                color: '#ffffff',
-                                fontFamily: 'var(--font-heading)',
-                                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}>
-                                {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi firmu' : 'Select')}
-                            </div>
-                        </div>
-                        <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.8)', flexShrink: 0 }}>▼</span>
+                {/* ══ LEFT ISLAND: Navigation + Company ══ */}
+                <div style={{ ...island, boxShadow: '0 2px 14px rgba(0,191,166,0.12), 0 1px 3px rgba(0,0,0,0.07)' }}>
+                    {/* Back */}
+                    <button title={lang === 'bs' ? 'Nazad' : 'Back'} onClick={() => router.back()}
+                        style={iBtn()}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                        ←
+                    </button>
+                    {/* Forward */}
+                    <button title={lang === 'bs' ? 'Naprijed' : 'Forward'} onClick={() => router.forward()}
+                        style={iBtn()}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                        →
                     </button>
 
-                    {showCompanyMenu && (
-                        <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 280, zIndex: 200 }}>
-                            <div style={{ padding: '10px 16px', fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
+                    {sep}
+
+                    {/* Company chip */}
+                    <div ref={companyRef} style={{ position: 'relative' }}>
+                        <button onClick={() => { setShowCompanyMenu(v => !v); setShowProfile(false); setShowNotifs(false); }}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: 8,
+                                padding: '5px 12px 5px 7px', borderRadius: 100, border: 'none',
+                                background: 'linear-gradient(135deg, var(--primary) 0%, #009985 100%)',
+                                cursor: 'pointer', transition: 'all 0.2s',
+                                boxShadow: '0 2px 10px rgba(0,191,166,0.3)',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 5px 18px rgba(0,191,166,0.45)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,191,166,0.3)'; }}>
+                            <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
+                            <div>
+                                <div style={{ fontSize: '0.58rem', fontWeight: 600, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.3px', lineHeight: 1, marginBottom: 1 }}>
+                                    {lang === 'bs' ? 'Aktivna firma' : 'Active company'}
+                                </div>
+                                <div style={{ fontSize: '0.79rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>
+                                    {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi' : 'Select')}
+                                </div>
                             </div>
-                            {companies.map(c => (
-                                <button key={c.id} className="dropdown-item"
-                                    onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); }}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
-                                        background: c.id === activeCompanyId ? 'rgba(0,191,166,0.08)' : undefined,
-                                        fontWeight: c.id === activeCompanyId ? 700 : 400,
-                                    }}>
-                                    <span style={{ fontSize: '1.1rem' }}>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv}</div>
-                                        {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
-                                    </div>
+                            <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.75)', flexShrink: 0 }}>▼</span>
+                        </button>
+
+                        {showCompanyMenu && (
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 280, zIndex: 200 }}>
+                                <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
+                                </div>
+                                {companies.map(c => (
+                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: c.id === activeCompanyId ? 'rgba(0,191,166,0.08)' : undefined, fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
+                                        <span>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv}</div>
+                                            {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
+                                        </div>
+                                    </button>
+                                ))}
+                                <div className="dropdown-divider" />
+                                <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                                    ➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}
                                 </button>
-                            ))}
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }}
-                                style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                                ➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {/* Divider */}
-                <div style={{ width: 1, height: 24, background: 'var(--border)', flexShrink: 0, margin: '0 4px' }} />
-
-                {/* Search */}
-                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
-                    <div style={{
-                        ...headerStyles.searchContainer,
-                        ...(searchFocused ? headerStyles.searchFocused : {}),
-                    }}>
-                        <span style={headerStyles.searchIcon}>🔍</span>
-                        <input
-                            style={headerStyles.searchInput}
-                            placeholder={t('searchPlaceholder')}
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            onFocus={() => setSearchFocused(true)}
-                        />
-                        {searchTerm && (
-                            <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem' }}>✕</button>
+                            </div>
                         )}
                     </div>
+                </div>
 
-                    {/* Search Results Dropdown */}
+                {/* ══ CENTER ISLAND: Search ══ */}
+                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 440 }}>
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        background: 'var(--bg-card)',
+                        border: `1.5px solid ${searchFocused ? 'var(--primary)' : 'var(--border)'}`,
+                        borderRadius: 100, padding: '0 16px', height: 42,
+                        boxShadow: searchFocused ? '0 0 0 4px var(--primary-glow), 0 2px 12px rgba(0,0,0,0.07)' : '0 2px 12px rgba(0,0,0,0.06)',
+                        transition: 'border-color 0.2s, box-shadow 0.2s',
+                    }}>
+                        <span style={{ fontSize: '0.88rem', flexShrink: 0, opacity: 0.45 }}>🔍</span>
+                        <input
+                            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.88rem', color: 'var(--text)', fontFamily: 'var(--font-body)', flex: 1, minWidth: 0 }}
+                            placeholder={t('searchPlaceholder')}
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            onFocus={() => setSearchFocused(true)}
+                        />
+                        {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}>✕</button>}
+                    </div>
+
                     {searchFocused && searchTerm.length >= 2 && (
-                        <div className="search-dropdown" style={headerStyles.searchDropdown}>
+                        <div className="search-dropdown" style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(11,42,60,0.15)', border: '1px solid var(--border)', zIndex: 200, overflow: 'hidden' }}>
                             {searchResults.length === 0 ? (
-                                <div style={{ padding: '16px 20px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                                    {lang === 'bs' ? 'Nema rezultata' : 'No results'}
-                                </div>
+                                <div style={{ padding: '16px 20px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>
                             ) : (
                                 <>
                                     <div style={{ padding: '8px 16px', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -278,19 +233,16 @@ export default function Header({ sidebarCollapsed }) {
                                     </div>
                                     {searchResults.map((r, idx) => (
                                         <button key={idx} onClick={() => handleSearchNav(r)}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s', borderRadius: 6 }}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
                                             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                             <span style={{ fontSize: '1.2rem' }}>{r.icon}</span>
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{r.label}</div>
+                                                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{r.label}</div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.sub}</div>
                                             </div>
                                             <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-badge)', color: 'var(--primary-dark)', fontWeight: 600 }}>
-                                                {r.type === 'worker' ? (lang === 'bs' ? 'Radnik' : 'Worker') :
-                                                    r.type === 'equipment' ? (lang === 'bs' ? 'Oprema' : 'Equipment') :
-                                                        r.type === 'workplace' ? (lang === 'bs' ? 'Radno mj.' : 'Workplace') :
-                                                            lang === 'bs' ? 'Org. jed.' : 'Org. unit'}
+                                                {r.type === 'worker' ? (lang === 'bs' ? 'Radnik' : 'Worker') : r.type === 'equipment' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : r.type === 'workplace' ? (lang === 'bs' ? 'Radno mj.' : 'Workplace') : lang === 'bs' ? 'Org. jed.' : 'Org. unit'}
                                             </span>
                                         </button>
                                     ))}
@@ -300,95 +252,42 @@ export default function Header({ sidebarCollapsed }) {
                     )}
                 </div>
 
-                {/* Divider */}
-                <div style={{ width: 1, height: 24, background: 'var(--border)', flexShrink: 0, margin: '0 4px' }} />
-
-                {/* Right side */}
-                <div style={headerStyles.rightSide}>
-                    {/* Language toggle */}
-                    <button
-                        onClick={toggleLang}
-                        title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
-                        style={headerStyles.langBtn}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-                    >
+                {/* ══ RIGHT ISLAND: Lang + Theme | Notifs + Profile ══ */}
+                <div style={island}>
+                    {/* Language */}
+                    <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
+                        style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 5, minWidth: 50 })}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
                         🌐 {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
 
-                    {/* Dark mode toggle — bigger pill with clear icon */}
-                    <button
-                        onClick={toggleTheme}
-                        title={isDark ? (lang === 'bs' ? 'Uključi svijetli mod' : 'Light mode') : (lang === 'bs' ? 'Uključi tamni mod' : 'Dark mode')}
+                    {/* Light/Dark pill toggle */}
+                    <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                         style={{
-                            position: 'relative',
-                            width: 62, height: 32,
-                            borderRadius: 16,
-                            border: isDark ? '1.5px solid rgba(100,160,220,0.4)' : '1.5px solid rgba(255,180,0,0.4)',
-                            cursor: 'pointer',
-                            background: isDark
-                                ? 'linear-gradient(135deg, #1b3d5e 0%, #0c1d30 100%)'
-                                : 'linear-gradient(135deg, #7EC8E3 0%, #FFC947 100%)',
-                            padding: 0,
-                            flexShrink: 0,
-                            transition: 'background 0.4s ease, border-color 0.4s ease',
-                            boxShadow: isDark
-                                ? '0 0 0 1px rgba(100,160,220,0.15), inset 0 1px 3px rgba(0,0,0,0.4)'
-                                : '0 0 0 1px rgba(255,180,0,0.1), inset 0 1px 3px rgba(0,0,0,0.05)',
-                        }}
-                    >
-                        {/* Track decoration: stars or sun rays */}
-                        <span style={{
-                            position: 'absolute',
-                            top: '50%', transform: 'translateY(-50%)',
-                            left: isDark ? 7 : 'auto',
-                            right: isDark ? 'auto' : 7,
-                            fontSize: '0.55rem',
-                            opacity: 0.6,
-                            pointerEvents: 'none',
-                            userSelect: 'none',
+                            position: 'relative', width: 50, height: 26, borderRadius: 13,
+                            border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)',
+                            cursor: 'pointer', padding: 0, flexShrink: 0, margin: '0 3px',
+                            background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)',
+                            transition: 'background 0.4s, border-color 0.4s',
                         }}>
-                            {isDark ? '✨' : '☀️'}
-                        </span>
-                        {/* Sliding knob */}
-                        <span style={{
-                            position: 'absolute',
-                            top: 3,
-                            left: isDark ? 33 : 3,
-                            width: 24, height: 24,
-                            borderRadius: '50%',
-                            background: isDark
-                                ? 'radial-gradient(circle at 35% 35%, #d0e8ff, #a8c8f0)'
-                                : 'radial-gradient(circle at 35% 35%, #ffffff, #ffe780)',
-                            boxShadow: isDark
-                                ? '0 2px 6px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1)'
-                                : '0 2px 6px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,200,0,0.3)',
-                            transition: 'left 0.35s cubic-bezier(0.4,0,0.2,1)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: '0.85rem', lineHeight: 1,
-                            userSelect: 'none',
-                        }}>
+                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 4 : 'auto', right: isDark ? 'auto' : 4, fontSize: '0.48rem', opacity: 0.55, pointerEvents: 'none' }}>{isDark ? '✨' : '☀️'}</span>
+                        <span style={{ position: 'absolute', top: 2, left: isDark ? 22 : 2, width: 18, height: 18, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', boxShadow: isDark ? '0 2px 4px rgba(0,0,0,0.5)' : '0 1px 4px rgba(0,0,0,0.2)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem' }}>
                             {isDark ? '🌙' : '☀️'}
                         </span>
                     </button>
 
+                    {sep}
+
                     {/* Notifications */}
                     <div ref={notifRef} style={{ position: 'relative' }}>
-                        <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); }}
-                            style={headerStyles.iconBtn}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover,rgba(0,0,0,0.06))'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
-                        >
+                        <button onClick={() => { setShowNotifs(v => !v); setShowProfile(false); }}
+                            style={iBtn({ position: 'relative' })}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.07)'; e.currentTarget.style.color = '#ef4444'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
                             🔔
                             {notifications.length > 0 && (
-                                <span style={{
-                                    ...headerStyles.notifDot,
-                                    background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent')
-                                        ? '#EF4444' : '#F59E0B',
-                                    width: 18, height: 18, borderRadius: '50%',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '0.6rem', color: 'white', fontWeight: 700,
-                                }}>
+                                <span style={{ position: 'absolute', top: 3, right: 3, width: 15, height: 15, borderRadius: '50%', background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: 'white', fontWeight: 700, border: '1.5px solid var(--bg-card)' }}>
                                     {notifications.length}
                                 </span>
                             )}
@@ -396,46 +295,25 @@ export default function Header({ sidebarCollapsed }) {
 
                         {showNotifs && (
                             <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, left: 'auto', minWidth: 380, maxHeight: 500, overflowY: 'auto' }}>
-                                <div style={{ padding: '12px 16px', fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ padding: '12px 16px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
                                     {isAdmin && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>v{APP_VERSION}</span>}
                                 </div>
                                 {notifications.length === 0 ? (
-                                    <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                        ✅ {lang === 'bs' ? 'Sve je u redu! Nema obavijesti.' : 'All good! No notifications.'}
-                                    </div>
+                                    <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
                                 ) : notifications.map((n, idx) => {
-                                    const severityColors = {
-                                        critical: { bg: '#FEF2F2', border: '#FECACA', dot: '#EF4444' },
-                                        urgent: { bg: '#FFF7ED', border: '#FED7AA', dot: '#F97316' },
-                                        warning: { bg: '#FFFBEB', border: '#FDE68A', dot: '#F59E0B' },
-                                        info: { bg: '#F0FDF4', border: '#BBF7D0', dot: '#22C55E' },
-                                    };
-                                    const colors = severityColors[n.severity] || severityColors.info;
+                                    const sc = { critical: { bg: '#FEF2F2', dot: '#EF4444' }, urgent: { bg: '#FFF7ED', dot: '#F97316' }, warning: { bg: '#FFFBEB', dot: '#F59E0B' }, info: { bg: '#F0FDF4', dot: '#22C55E' } };
+                                    const c = sc[n.severity] || sc.info;
                                     return (
-                                        <div key={n.id || idx}
-                                            style={{
-                                                padding: '10px 14px', borderBottom: '1px solid var(--border-light)',
-                                                background: colors.bg, borderLeft: `3px solid ${colors.dot}`,
-                                            }}>
-                                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{n.icon}</span>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ fontWeight: 600, fontSize: '0.82rem', lineHeight: 1.4, color: 'var(--text)' }}>{n.text}</div>
-                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3, lineHeight: 1.4 }}>{n.detail}</div>}
+                                        <div key={n.id || idx} style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-light)', background: c.bg, borderLeft: `3px solid ${c.dot}` }}>
+                                            <div style={{ display: 'flex', gap: 10 }}>
+                                                <span style={{ fontSize: '1.1rem' }}>{n.icon}</span>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{n.text}</div>
+                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                                                        {n.actionLabel && (
-                                                            <button onClick={() => handleNotifNav(n.path)}
-                                                                style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${colors.dot}`, background: 'var(--bg-input)', color: colors.dot, fontWeight: 600, cursor: 'pointer' }}>
-                                                                {n.actionLabel}
-                                                            </button>
-                                                        )}
-                                                        {n.id && isAdmin && (
-                                                            <button onClick={(e) => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }}
-                                                                style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                                                                ✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}
-                                                            </button>
-                                                        )}
+                                                        {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.dot}`, background: 'var(--bg-input)', color: c.dot, fontWeight: 600, cursor: 'pointer' }}>{n.actionLabel}</button>}
+                                                        {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}</button>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -446,63 +324,43 @@ export default function Header({ sidebarCollapsed }) {
                         )}
                     </div>
 
+                    {sep}
+
                     {/* Profile */}
                     <div ref={profileRef} style={{ position: 'relative' }}>
-                        <button
-                            onClick={() => { setShowProfile(!showProfile); setShowNotifs(false); }}
-                            style={headerStyles.profileBtn}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--primary-glow)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
-                        >
-                            <div style={headerStyles.avatar}>
+                        <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '3px 8px 3px 3px', borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer', transition: 'background 0.15s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.04)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                            {/* Avatar */}
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
                                 {user?.firstName?.[0] || 'K'}
                             </div>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                <span style={headerStyles.profileName}>
-                                    {user?.firstName} {user?.lastName}
-                                </span>
-                                <span style={{
-                                    fontSize: '0.6rem', fontWeight: 700, padding: '1px 6px', borderRadius: 8,
-                                    background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.4,
-                                }}>
-                                    {roleBadge.label}
-                                </span>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{user?.firstName} {user?.lastName}</span>
+                                <span style={{ fontSize: '0.56rem', fontWeight: 700, padding: '1px 5px', borderRadius: 6, background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.5 }}>{roleBadge.label}</span>
                             </div>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>▼</span>
+                            <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>▼</span>
                         </button>
 
                         {showProfile && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)' }}>
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0 }}>
                                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)' }}>
                                     <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{user?.firstName} {user?.lastName}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || user?.companyName || ''}</div>
-                                    <span style={{
-                                        display: 'inline-block', marginTop: 4,
-                                        fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 8,
-                                        background: roleBadge.bg, color: roleBadge.color,
-                                    }}>
-                                        {roleBadge.label}
-                                    </span>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || ''}</div>
+                                    <span style={{ display: 'inline-block', marginTop: 4, fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 8, background: roleBadge.bg, color: roleBadge.color }}>{roleBadge.label}</span>
                                 </div>
                                 <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=profile')}>👤 {t('profile')}</button>
                                 <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=company')}>🏢 {t('company')}</button>
                                 <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=app')}>⚙️ {t('settings')}</button>
-                                {isAdmin && (
-                                    <>
-                                        <div className="dropdown-divider" />
-                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>
-                                            👑 {lang === 'bs' ? 'Administracija' : 'Admin Panel'}
-                                        </button>
-                                    </>
-                                )}
+                                {isAdmin && (<><div className="dropdown-divider" /><button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {lang === 'bs' ? 'Administracija' : 'Admin Panel'}</button></>)}
                                 <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={handleLogout}>
-                                    🚪 {t('logout')}
-                                </button>
+                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 {t('logout')}</button>
                             </div>
                         )}
                     </div>
                 </div>
+
             </header>
 
             {/* ── New Company Modal ── */}
@@ -519,31 +377,17 @@ export default function Header({ sidebarCollapsed }) {
                                 <input className="form-input" value={newCompanyData.naziv} onChange={e => setNewCompanyData(p => ({ ...p, naziv: e.target.value }))} placeholder="ABC d.o.o." required />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Adresa' : 'Address'}</label>
-                                    <input className="form-input" value={newCompanyData.adresa} onChange={e => setNewCompanyData(p => ({ ...p, adresa: e.target.value }))} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Mjesto' : 'City'}</label>
-                                    <input className="form-input" value={newCompanyData.mjesto} onChange={e => setNewCompanyData(p => ({ ...p, mjesto: e.target.value }))} />
-                                </div>
+                                <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Adresa' : 'Address'}</label><input className="form-input" value={newCompanyData.adresa} onChange={e => setNewCompanyData(p => ({ ...p, adresa: e.target.value }))} /></div>
+                                <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Mjesto' : 'City'}</label><input className="form-input" value={newCompanyData.mjesto} onChange={e => setNewCompanyData(p => ({ ...p, mjesto: e.target.value }))} /></div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Telefon' : 'Phone'}</label>
-                                    <input className="form-input" value={newCompanyData.telefon} onChange={e => setNewCompanyData(p => ({ ...p, telefon: e.target.value }))} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Email</label>
-                                    <input className="form-input" type="email" value={newCompanyData.email} onChange={e => setNewCompanyData(p => ({ ...p, email: e.target.value }))} />
-                                </div>
+                                <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Telefon' : 'Phone'}</label><input className="form-input" value={newCompanyData.telefon} onChange={e => setNewCompanyData(p => ({ ...p, telefon: e.target.value }))} /></div>
+                                <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={newCompanyData.email} onChange={e => setNewCompanyData(p => ({ ...p, email: e.target.value }))} /></div>
                             </div>
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowNewCompanyModal(false)}>{t('cancel')}</button>
-                            <button className="btn btn-primary" onClick={handleCreateCompany} disabled={!newCompanyData.naziv.trim()}>
-                                💾 {t('save')}
-                            </button>
+                            <button className="btn btn-primary" onClick={handleCreateCompany} disabled={!newCompanyData.naziv.trim()}>💾 {t('save')}</button>
                         </div>
                     </div>
                 </div>
@@ -551,151 +395,3 @@ export default function Header({ sidebarCollapsed }) {
         </>
     );
 }
-
-const headerStyles = {
-    header: {
-        position: 'fixed',
-        top: 0,
-        right: 0,
-        height: 'var(--header-height)',
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid var(--border-light)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '0 24px',
-        zIndex: 90,
-        transition: 'left var(--transition-normal)',
-    },
-    navBtn: {
-        width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--border)',
-        background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-        justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
-        transition: 'all 0.15s', flexShrink: 0,
-    },
-    searchContainer: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        background: 'var(--bg-input)',
-        borderWidth: 2,
-        borderStyle: 'solid',
-        borderColor: 'var(--border)',
-        borderRadius: 'var(--radius-full)',
-        padding: '8px 20px',
-        width: '100%',
-        transition: 'all var(--transition-fast)',
-    },
-    searchFocused: {
-        borderColor: 'var(--primary)',
-        background: 'var(--bg-input)',
-        boxShadow: '0 0 0 4px var(--primary-glow)',
-    },
-    searchIcon: {
-        fontSize: '0.95rem',
-        flexShrink: 0,
-    },
-    searchInput: {
-        border: 'none',
-        background: 'transparent',
-        outline: 'none',
-        fontSize: '0.9rem',
-        color: 'var(--text)',
-        fontFamily: 'var(--font-body)',
-        flex: 1,
-        minWidth: 0,
-    },
-    searchDropdown: {
-        position: 'absolute',
-        top: 'calc(100% + 8px)',
-        left: 0,
-        right: 0,
-        background: 'var(--bg-card)',
-        borderRadius: 'var(--radius-lg)',
-        boxShadow: '0 8px 30px rgba(11, 42, 60, 0.15)',
-        border: '1px solid var(--border)',
-        zIndex: 200,
-        overflow: 'hidden',
-    },
-    rightSide: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-    },
-    langBtn: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '0 14px',
-        height: 36,
-        background: 'var(--bg-input)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-full)',
-        cursor: 'pointer',
-        fontSize: '0.8rem',
-        fontWeight: 700,
-        fontFamily: 'var(--font-heading)',
-        color: 'var(--text)',
-        transition: 'all 0.2s',
-        letterSpacing: '0.3px',
-        flexShrink: 0,
-    },
-    iconBtn: {
-        position: 'relative',
-        width: 36,
-        height: 36,
-        borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border)',
-        background: 'var(--bg-input)',
-        cursor: 'pointer',
-        fontSize: '1.05rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transition: 'all 0.2s',
-        flexShrink: 0,
-    },
-    notifDot: {
-        position: 'absolute',
-        top: 4,
-        right: 4,
-        width: 8,
-        height: 8,
-        borderRadius: '50%',
-        background: 'var(--danger)',
-        border: '2px solid white',
-    },
-    profileBtn: {
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        padding: '5px 10px 5px 5px',
-        height: 36,
-        background: 'var(--bg-input)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-full)',
-        cursor: 'pointer',
-        transition: 'all 0.2s',
-        flexShrink: 0,
-    },
-    avatar: {
-        width: 26,
-        height: 26,
-        borderRadius: '50%',
-        background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'white',
-        fontWeight: 700,
-        fontSize: '0.8rem',
-        fontFamily: 'var(--font-heading)',
-    },
-    profileName: {
-        fontSize: '0.85rem',
-        fontWeight: 600,
-        color: 'var(--text)',
-        fontFamily: 'var(--font-heading)',
-    },
-};
