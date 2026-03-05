@@ -176,19 +176,33 @@ export default function AddressBookPage() {
                   {/* Copyable email */}
                   <td>
                     {w.email ? (
-                      <button
-                        onClick={() => copyEmail(w.email, w.id)}
-                        title={copiedEmail === w.id ? (lang === 'bs' ? 'Kopirano!' : 'Copied!') : (lang === 'bs' ? 'Klikni za kopiranje' : 'Click to copy')}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          color: copiedEmail === w.id ? 'var(--success, #22c55e)' : 'var(--primary)',
-                          fontFamily: 'inherit', fontSize: 'inherit', padding: 0,
-                          display: 'flex', alignItems: 'center', gap: 4,
-                          transition: 'color 0.2s',
-                        }}
-                      >
-                        {copiedEmail === w.id ? '✅' : '📧'} {w.email}
-                      </button>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ color: 'var(--text)', fontSize: 'inherit' }}>{w.email}</span>
+                        <button
+                          onClick={() => copyEmail(w.email, w.id)}
+                          title={copiedEmail === w.id ? (lang === 'bs' ? 'Kopirano!' : 'Copied!') : (lang === 'bs' ? 'Kopiraj email' : 'Copy email')}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
+                            color: copiedEmail === w.id ? '#22c55e' : 'var(--text-muted)',
+                            display: 'inline-flex', alignItems: 'center', flexShrink: 0,
+                            borderRadius: 4, transition: 'color 0.2s, background 0.2s',
+                            lineHeight: 1,
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                        >
+                          {copiedEmail === w.id ? (
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                              <path d="M3 8l3.5 3.5L13 4" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          ) : (
+                            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                              <rect x="5" y="1" width="9" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
+                              <rect x="2" y="4" width="9" height="11" rx="1.5" fill="var(--bg-card,#1e2030)" stroke="currentColor" strokeWidth="1.4" />
+                            </svg>
+                          )}
+                        </button>
+                      </span>
                     ) : '-'}
                   </td>
                   <td style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>

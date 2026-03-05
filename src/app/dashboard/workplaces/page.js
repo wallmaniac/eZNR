@@ -264,7 +264,7 @@ export default function WorkplacesPage() {
                             <tbody>
                                 {sortedWP.length === 0 ? (
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : filtered.map((w) => {
+                                ) : sortedWP.map((w) => {
                                     const count = getWorkersInWorkplace(w.id).length;
                                     return (
                                         <tr key={w.id}>
