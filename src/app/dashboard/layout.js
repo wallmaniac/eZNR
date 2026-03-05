@@ -63,6 +63,7 @@ export default function DashboardLayout({ children }) {
                 marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
                 marginTop: 'var(--header-height)',
                 padding: 24,
+                paddingBottom: 96, // clearance for Zia FAB (72px bubble + 24px from bottom edge)
                 transition: 'margin-left var(--transition-normal)',
                 minHeight: 'calc(100vh - var(--header-height))',
             }}>
