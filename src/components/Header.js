@@ -140,42 +140,34 @@ export default function Header({ sidebarCollapsed }) {
                 borderBottom: '1px solid var(--border-light)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 0,
+                gap: 10,
                 padding: '0 20px 0 16px',
                 zIndex: 90,
                 transition: 'left var(--transition-normal)',
             }}>
                 {/* ── Back / Forward navigation buttons ── */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginRight: 10, flexShrink: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                     <button
                         onClick={() => router.back()}
                         title={lang === 'bs' ? 'Nazad (Alt+←)' : 'Back (Alt+←)'}
-                        style={{
-                            width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border)',
-                            background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
-                            transition: 'all 0.15s', flexShrink: 0,
-                        }}
+                        style={headerStyles.navBtn}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                     >&#8592;</button>
                     <button
                         onClick={() => router.forward()}
                         title={lang === 'bs' ? 'Naprijed (Alt+→)' : 'Forward (Alt+→)'}
-                        style={{
-                            width: 32, height: 32, borderRadius: '50%', border: '1px solid var(--border)',
-                            background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
-                            transition: 'all 0.15s', flexShrink: 0,
-                        }}
+                        style={headerStyles.navBtn}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
                     >&#8594;</button>
                 </div>
 
+                {/* Divider */}
+                <div style={{ width: 1, height: 24, background: 'var(--border)', flexShrink: 0, margin: '0 4px' }} />
+
                 {/* ── Company Switcher ── LEFT of search */}
-                <div ref={companyRef} style={{ position: 'relative', marginRight: 12, flexShrink: 0 }}>
+                <div ref={companyRef} style={{ position: 'relative', flexShrink: 0 }}>
                     <button
                         onClick={() => { setShowCompanyMenu(!showCompanyMenu); setShowProfile(false); setShowNotifs(false); }}
                         style={{
@@ -250,8 +242,11 @@ export default function Header({ sidebarCollapsed }) {
                     )}
                 </div>
 
+                {/* Divider */}
+                <div style={{ width: 1, height: 24, background: 'var(--border)', flexShrink: 0, margin: '0 4px' }} />
+
                 {/* Search */}
-                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 380 }}>
+                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 400 }}>
                     <div style={{
                         ...headerStyles.searchContainer,
                         ...(searchFocused ? headerStyles.searchFocused : {}),
@@ -305,10 +300,19 @@ export default function Header({ sidebarCollapsed }) {
                     )}
                 </div>
 
+                {/* Divider */}
+                <div style={{ width: 1, height: 24, background: 'var(--border)', flexShrink: 0, margin: '0 4px' }} />
+
                 {/* Right side */}
                 <div style={headerStyles.rightSide}>
                     {/* Language toggle */}
-                    <button onClick={toggleLang} style={headerStyles.langBtn}>
+                    <button
+                        onClick={toggleLang}
+                        title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
+                        style={headerStyles.langBtn}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                    >
                         🌐 {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
 
@@ -370,7 +374,11 @@ export default function Header({ sidebarCollapsed }) {
 
                     {/* Notifications */}
                     <div ref={notifRef} style={{ position: 'relative' }}>
-                        <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); }} style={headerStyles.iconBtn}>
+                        <button onClick={() => { setShowNotifs(!showNotifs); setShowProfile(false); }}
+                            style={headerStyles.iconBtn}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--bg-hover,rgba(0,0,0,0.06))'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-input)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                        >
                             🔔
                             {notifications.length > 0 && (
                                 <span style={{
@@ -443,6 +451,8 @@ export default function Header({ sidebarCollapsed }) {
                         <button
                             onClick={() => { setShowProfile(!showProfile); setShowNotifs(false); }}
                             style={headerStyles.profileBtn}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 3px var(--primary-glow)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'none'; }}
                         >
                             <div style={headerStyles.avatar}>
                                 {user?.firstName?.[0] || 'K'}
@@ -558,6 +568,12 @@ const headerStyles = {
         zIndex: 90,
         transition: 'left var(--transition-normal)',
     },
+    navBtn: {
+        width: 36, height: 36, borderRadius: '50%', border: '1px solid var(--border)',
+        background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+        justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)',
+        transition: 'all 0.15s', flexShrink: 0,
+    },
     searchContainer: {
         display: 'flex',
         alignItems: 'center',
@@ -605,41 +621,45 @@ const headerStyles = {
     rightSide: {
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 6,
     },
     langBtn: {
         display: 'flex',
         alignItems: 'center',
         gap: 6,
-        padding: '8px 14px',
+        padding: '0 14px',
+        height: 36,
         background: 'var(--bg-input)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-full)',
         cursor: 'pointer',
         fontSize: '0.8rem',
-        fontWeight: 600,
+        fontWeight: 700,
         fontFamily: 'var(--font-heading)',
         color: 'var(--text)',
         transition: 'all 0.2s',
+        letterSpacing: '0.3px',
+        flexShrink: 0,
     },
     iconBtn: {
         position: 'relative',
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         borderRadius: 'var(--radius-md)',
         border: '1px solid var(--border)',
         background: 'var(--bg-input)',
         cursor: 'pointer',
-        fontSize: '1.1rem',
+        fontSize: '1.05rem',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         transition: 'all 0.2s',
+        flexShrink: 0,
     },
     notifDot: {
         position: 'absolute',
-        top: 8,
-        right: 8,
+        top: 4,
+        right: 4,
         width: 8,
         height: 8,
         borderRadius: '50%',
@@ -650,16 +670,18 @@ const headerStyles = {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        padding: '6px 12px 6px 6px',
+        padding: '5px 10px 5px 5px',
+        height: 36,
         background: 'var(--bg-input)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-full)',
         cursor: 'pointer',
         transition: 'all 0.2s',
+        flexShrink: 0,
     },
     avatar: {
-        width: 32,
-        height: 32,
+        width: 26,
+        height: 26,
         borderRadius: '50%',
         background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
         display: 'flex',
