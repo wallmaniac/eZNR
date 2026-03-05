@@ -47,10 +47,34 @@ export default function OrgUnitsPage() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    const filteredUnits = units.filter(u =>
-        !searchTerm || u.naziv.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    const { sorted: sortedUnits, toggleSort: tOU, sortIcon: siOU, thStyle: tsOU } = useSortedList(filteredUnits, 'naziv');
+    // ── Tree hierarchy sort ────────────────────────────────────────────────────
+    const [sortField, setSortField] = useState('naziv');
+    const [sortDir, setSortDir] = useState('asc');
+
+    const toggleSort = (field) => {
+        if (sortField === field) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+        else { setSortField(field); setSortDir('asc'); }
+    };
+    const sortIcon = (field) => sortField === field ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+    const thStyle = (field) => ({ cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap', color: sortField === field ? 'var(--primary)' : undefined });
+
+    // Build depth-first flat list preserving parent → child order
+    const buildTree = (allUnits, parentId, depth) => {
+        const matchSearch = (u) => !searchTerm || u.naziv.toLowerCase().includes(searchTerm.toLowerCase());
+        let children = allUnits.filter(u => (u.parentId || null) === (parentId || null));
+        children = [...children].sort((a, b) => {
+            const av = (a[sortField] || '').toString().toLowerCase();
+            const bv = (b[sortField] || '').toString().toLowerCase();
+            const cmp = av.localeCompare(bv, 'hr', { sensitivity: 'base' });
+            return sortDir === 'asc' ? cmp : -cmp;
+        });
+        return children.flatMap(u => {
+            const descendants = buildTree(allUnits, u.id, depth + 1);
+            if (!matchSearch(u) && descendants.length === 0) return [];
+            return [{ ...u, _depth: depth }, ...descendants];
+        });
+    };
+    const treeUnits = buildTree(units, null, 0);
 
     const getParentName = (id) => {
         const parent = units.find(u => u.id === id);
@@ -291,18 +315,18 @@ export default function OrgUnitsPage() {
                             <thead>
                                 <tr>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
-                                    <th style={tsOU('naziv')} onClick={() => tOU('naziv')}>{t('name')}{siOU('naziv')}</th>
-                                    <th style={tsOU('skraceniNaziv')} onClick={() => tOU('skraceniNaziv')}>{lang === 'bs' ? 'Skraćeni' : 'Short'}{siOU('skraceniNaziv')}</th>
+                                    <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
+                                    <th style={thStyle('skraceniNaziv')} onClick={() => toggleSort('skraceniNaziv')}>{lang === 'bs' ? 'Skraćeni' : 'Short'}{sortIcon('skraceniNaziv')}</th>
                                     <th>{lang === 'bs' ? 'Nadređena' : 'Parent'}</th>
-                                    <th style={tsOU('mjesto')} onClick={() => tOU('mjesto')}>{t('place')}{siOU('mjesto')}</th>
+                                    <th style={thStyle('mjesto')} onClick={() => toggleSort('mjesto')}>{t('place')}{sortIcon('mjesto')}</th>
                                     <th>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {sortedUnits.length === 0 ? (
+                                {treeUnits.length === 0 ? (
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : (
-                                    sortedUnits.map((u) => {
+                                    treeUnits.map((u) => {
                                         const count = getWorkersInOrgUnit(u.id).length;
                                         return (
                                             <tr key={u.id}>
@@ -334,7 +358,12 @@ export default function OrgUnitsPage() {
                                                         }}
                                                         title={lang === 'bs' ? 'Klikni za pregled radnika' : 'Click to view workers'}
                                                     >
-                                                        {u.parentId ? '└ ' : ''}{u.naziv}
+                                                        {u._depth > 0 ? (
+                                                <span style={{ color: 'var(--text-muted)', marginRight: 4 }}>
+                                                    {'│  '.repeat(u._depth - 1)}{'└ '}
+                                                </span>
+                                            ) : null}
+                                            <span style={{ fontWeight: u._depth === 0 ? 700 : 500 }}>{u.naziv}</span>
                                                     </button>
                                                 </td>
                                                 <td>{u.skraceniNaziv}</td>

@@ -49,6 +49,7 @@ export default function WorkplacesPage() {
     const filtered = items.filter(w =>
         !searchTerm || w.naziv.toLowerCase().includes(searchTerm.toLowerCase()) || (w.oznaka || '').toLowerCase().includes(searchTerm.toLowerCase())
     );
+    const { sorted: sortedWP, toggleSort: tWP, sortIcon: siWP, thStyle: tsWP } = useSortedList(filtered, 'naziv');
 
     const getWorkersForWP = (wp) =>
         workers.filter(w =>
