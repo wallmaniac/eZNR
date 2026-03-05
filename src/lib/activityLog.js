@@ -242,10 +242,10 @@ export function logPPEAssigned(ppe, workerName, user) {
     logUserAction({
         action: LOG_ACTION.CREATED,
         category: LOG_CATEGORY.PPE,
-        title: \Zadu\u017eena OZO: \\,
-        detail: \Radnik: \ | Kol: \ | Datum: \\,
+        title: `Zadužena OZO: ${ppe.naziv}`,
+        detail: `Radnik: ${workerName} | Kol: ${ppe.kolicina || 1} | Datum: ${ppe.datumZaduzenja || ''}`,
         userId: user?.id,
-        userName: user ? \\ \\.trim() : 'Zia',
+        userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Zia',
         companyId: user?.activeCompanyId,
         relatedId: ppe.id,
     });
