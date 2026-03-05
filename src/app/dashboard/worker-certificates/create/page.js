@@ -76,6 +76,7 @@ export function UvjerenjeFormPage() {
 
     const tipRef = useRef(null);
     const ispitivacRef = useRef(null);
+    const appliedZiaRef = useRef(false); // prevent double-apply
 
     const { markDirty, markClean } = useUnsavedChanges();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -135,6 +136,35 @@ export function UvjerenjeFormPage() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
+
+    // Handle Zia pre-fill params: ?tipUvjerenja, ?datum, ?vrijediDo
+    // Must wait for certTypes to load so we can fuzzy-match the type name
+    useEffect(() => {
+        if (appliedZiaRef.current || !certTypes.length) return;
+        const tipParam = searchParams?.get('tipUvjerenja');
+        const datumParam = searchParams?.get('datum');
+        const vrijediDoParam = searchParams?.get('vrijediDo');
+        if (!tipParam && !datumParam && !vrijediDoParam) return;
+        appliedZiaRef.current = true;
+        if (tipParam) {
+            // Try fuzzy match against existing cert types
+            const match = certTypes.find(ct =>
+                ct.naziv.toLowerCase().includes(tipParam.toLowerCase()) ||
+                tipParam.toLowerCase().includes(ct.naziv.toLowerCase().split(' ').slice(0, 3).join(' '))
+            );
+            if (match) {
+                setFormData(f => ({ ...f, tipUvjerenjaId: match.id, tipUvjerenjaIme: match.naziv }));
+                setTipSearch(match.naziv);
+            } else {
+                setFormData(f => ({ ...f, tipUvjerenjaIme: tipParam }));
+                setTipSearch(tipParam);
+            }
+        }
+        if (datumParam) setFormData(f => ({ ...f, datum: datumParam }));
+        if (vrijediDoParam) setFormData(f => ({ ...f, vrijediDo: vrijediDoParam }));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [certTypes, searchParams]);
+
 
     const preselectedWorkerId = searchParams?.get('workerId');
     const isSingleWorkerMode = !!preselectedWorkerId;

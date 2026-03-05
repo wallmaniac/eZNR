@@ -227,7 +227,8 @@ KADA KORISTITI ALATE:
 - Ako korisnik želi poslati upitnik → koristi open_dispatch_modal s ID-om upitnika iz ŽIVIH PODATAKA
 - Ako korisnik kaže "dodaj radnika", "novi radnik", "unesi radnika" → koristi create_new_worker s imenom/prezimenom
 - Ako korisnik kaže "povreda na radu", "ozljeda", "incident" za određenog radnika → koristi report_injury s podacima radnika iz ŽIVIH PODATAKA
-- Ako korisnik kaže "dodaj uvjerenje", "nova potvrda", "novi pregled" za radnika → koristi add_certificate s ID-om radnika iz ŽIVIH PODATAKA
+- Ako korisnik kaže "dodaj uvjerenje", "nova potvrda", "novi pregled" za radnika → koristi add_certificate s ID-om radnika iz ŽIVIH PODATAKA i svim detaljima (tipUvjerenja, datum, vrijediDo)
+- Ako korisnik navede trajanje (npr. "2 godine"), izračunaj vrijediDo = datum + trajanje i proslijeđi u alat
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 
 ${pageDesc}
@@ -259,7 +260,8 @@ WHEN TO USE TOOLS:
 - If the user wants to send a questionnaire → use open_dispatch_modal with the questionnaire ID from LIVE DATA
 - If the user says "add worker", "new worker", "register employee" → use create_new_worker with the name
 - If the user mentions a work injury, accident, or incident for a specific worker → use report_injury with that worker's data from LIVE DATA
-- If the user says "add certificate", "new training", "new medical exam" for a worker → use add_certificate with the worker ID from LIVE DATA
+- If the user says "add certificate", "new training", "new medical exam" for a worker → use add_certificate with the worker ID from LIVE DATA and all details (tipUvjerenja, datum, vrijediDo)
+- If user specifies duration (e.g. "2 years"), calculate vrijediDo = datum + duration and pass it to the tool
 - If the user asks about data you already have → answer directly without tools
 
 ${pageDesc}
@@ -379,12 +381,15 @@ const ZIA_TOOLS = [
     },
     {
         name: 'add_certificate',
-        description: 'Open the certificate creation form for a specific worker. Use when user wants to add a new certificate, training record, or medical exam for an existing worker.',
+        description: 'Open the certificate creation form pre-filled with worker and certificate details. Use when user wants to add a certificate, training, or medical fitness record for a worker.',
         parameters: {
             type: 'object',
             properties: {
-                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA (SVI AKTIVNI RADNICI section)' },
+                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA' },
                 worker_name: { type: 'string', description: 'Full name of the worker' },
+                tipUvjerenja: { type: 'string', description: 'Certificate type name. For fire protection use "PP - Osposobljenost za gašenje požara". Match to available types in the app.' },
+                datum: { type: 'string', description: 'Issue date in YYYY-MM-DD format. Default: today.' },
+                vrijediDo: { type: 'string', description: 'Expiry date in YYYY-MM-DD format. Calculate from datum + duration if user specifies (e.g. "2 years" = datum + 730 days).' },
             },
             required: ['worker_name'],
         },
@@ -530,10 +535,12 @@ export default function AIAssistant() {
             return { success: true, message: `Opening injury report for ${args.worker_name}` };
         }
         if (name === 'add_certificate') {
-            const url = args.worker_id
-                ? `/dashboard/worker-certificates/create?workerId=${args.worker_id}`
-                : '/dashboard/workers';
-            router.push(url);
+            const params = new URLSearchParams();
+            if (args.worker_id) params.set('workerId', args.worker_id);
+            if (args.tipUvjerenja) params.set('tipUvjerenja', args.tipUvjerenja);
+            if (args.datum) params.set('datum', args.datum);
+            if (args.vrijediDo) params.set('vrijediDo', args.vrijediDo);
+            router.push(`/dashboard/worker-certificates/create?${params.toString()}`);
             setIsMinimized(true);
             return { success: true, message: `Opening certificate form for ${args.worker_name}` };
         }
