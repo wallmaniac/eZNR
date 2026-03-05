@@ -47,8 +47,6 @@ export async function POST(request) {
             temperature: 0.7,
             maxOutputTokens: 2048,
             topP: 0.95,
-            // Disable thinking for gemini-2.5-flash — faster and not needed for an agentic assistant
-            thinkingConfig: { thinkingBudget: 0 },
         },
         safetySettings: [
             { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
