@@ -8,6 +8,7 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useSortedList } from '@/hooks/useSortedList';
 
 const emptyOU = {
     naziv: '', skraceniNaziv: '', parentId: null,
@@ -49,6 +50,7 @@ export default function OrgUnitsPage() {
     const filteredUnits = units.filter(u =>
         !searchTerm || u.naziv.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    const { sorted: sortedUnits, toggleSort: tOU, sortIcon: siOU, thStyle: tsOU } = useSortedList(filteredUnits, 'naziv');
 
     const getParentName = (id) => {
         const parent = units.find(u => u.id === id);
@@ -289,18 +291,18 @@ export default function OrgUnitsPage() {
                             <thead>
                                 <tr>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
-                                    <th>{t('name')} ↑</th>
-                                    <th>{lang === 'bs' ? 'Skraćeni' : 'Short'}</th>
+                                    <th style={tsOU('naziv')} onClick={() => tOU('naziv')}>{t('name')}{siOU('naziv')}</th>
+                                    <th style={tsOU('skraceniNaziv')} onClick={() => tOU('skraceniNaziv')}>{lang === 'bs' ? 'Skraćeni' : 'Short'}{siOU('skraceniNaziv')}</th>
                                     <th>{lang === 'bs' ? 'Nadređena' : 'Parent'}</th>
-                                    <th>{t('place')}</th>
+                                    <th style={tsOU('mjesto')} onClick={() => tOU('mjesto')}>{t('place')}{siOU('mjesto')}</th>
                                     <th>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredUnits.length === 0 ? (
+                                {sortedUnits.length === 0 ? (
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : (
-                                    filteredUnits.map((u) => {
+                                    sortedUnits.map((u) => {
                                         const count = getWorkersInOrgUnit(u.id).length;
                                         return (
                                             <tr key={u.id}>

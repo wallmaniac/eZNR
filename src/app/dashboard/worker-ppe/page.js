@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { logPPEAssigned } from '@/lib/activityLog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
@@ -24,6 +25,7 @@ export default function WorkerPPEPage() {
       return { ...a, workerName: w ? `${w.ime} ${w.prezime}` : '-', workerId: a.workerId };
     }).filter(r => !searchTerm || r.workerName.toLowerCase().includes(searchTerm.toLowerCase()) || (r.naziv || '').toLowerCase().includes(searchTerm.toLowerCase()));
   }, [assignments, workers, searchTerm]);
+  const { sorted: sortedRows, toggleSort: tPPE, sortIcon: siPPE, thStyle: tsPPE } = useSortedList(rows, 'workerName');
 
   const handleSave = () => {
     if (!addForm.workerId || !addForm.naziv.trim()) return;
@@ -68,9 +70,12 @@ export default function WorkerPPEPage() {
             </button>
           </div>
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-            <th>{t('worker')}</th><th>{t('name')}</th><th>{t('assignmentDate')}</th><th>{lang === 'bs' ? 'Količina' : 'Quantity'}</th>
+            <th style={tsPPE('workerName')} onClick={() => tPPE('workerName')}>{t('worker')}{siPPE('workerName')}</th>
+            <th style={tsPPE('naziv')} onClick={() => tPPE('naziv')}>{t('name')}{siPPE('naziv')}</th>
+            <th style={tsPPE('datumZaduzenja')} onClick={() => tPPE('datumZaduzenja')}>{t('assignmentDate')}{siPPE('datumZaduzenja')}</th>
+            <th style={tsPPE('kolicina')} onClick={() => tPPE('kolicina')}>{lang === 'bs' ? 'Količina' : 'Quantity'}{siPPE('kolicina')}</th>
           </tr></thead><tbody>
-              {rows.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : rows.map((r, idx) => (
+              {sortedRows.length === 0 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : sortedRows.map((r, idx) => (
                 <tr key={r.id || idx}>
                   <td>
                     <button style={clickableName} onClick={() => { if (r.workerId) setViewWorkerId(r.workerId); }} title={lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile'}>

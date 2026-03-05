@@ -8,6 +8,7 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useSortedList } from '@/hooks/useSortedList';
 
 const emptyWP = {
     naziv: '', oznaka: '', strucnaSprema: '', grupaRM: '',
@@ -252,15 +253,15 @@ export default function WorkplacesPage() {
                             <thead>
                                 <tr>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
-                                    <th>{t('name')} ↑</th>
-                                    <th>{lang === 'bs' ? 'Stručna sprema' : 'Education'}</th>
-                                    <th>{lang === 'bs' ? 'Grupa RM' : 'WP Group'}</th>
+                                    <th style={tsWP('naziv')} onClick={() => tWP('naziv')}>{t('name')}{siWP('naziv')}</th>
+                                    <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{lang === 'bs' ? 'Stručna sprema' : 'Education'}{siWP('strucnaSprema')}</th>
+                                    <th style={tsWP('grupaRM')} onClick={() => tWP('grupaRM')}>{lang === 'bs' ? 'Grupa RM' : 'WP Group'}{siWP('grupaRM')}</th>
                                     <th>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
                                     <th><input type="checkbox" /></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtered.length === 0 ? (
+                                {sortedWP.length === 0 ? (
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : filtered.map((w) => {
                                     const count = getWorkersInWorkplace(w.id).length;

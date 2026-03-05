@@ -8,6 +8,7 @@ import {
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
 
@@ -106,8 +107,9 @@ function WorkersPageInner() {
         return matchSearch && matchStatus;
     });
 
-    const totalPages = Math.max(1, Math.ceil(filteredWorkers.length / perPage));
-    const pagedWorkers = filteredWorkers.slice((page - 1) * perPage, page * perPage);
+    const { sorted: sortedWorkers, toggleSort: tW, sortIcon: siW, thStyle: tsW } = useSortedList(filteredWorkers, 'prezime');
+    const totalPages = Math.max(1, Math.ceil(sortedWorkers.length / perPage));
+    const pagedWorkers = sortedWorkers.slice((page - 1) * perPage, page * perPage);
 
     const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -731,11 +733,11 @@ function WorkersPageInner() {
                                 <thead>
                                     <tr>
                                         <th style={{ width: 100 }}>{t('actions')}</th>
-                                        <th>{t('workerName')} ↑</th>
-                                        <th>{t('workerSurname')} ↑</th>
+                                        <th style={tsW('ime')} onClick={() => tW('ime')}>{t('workerName')}{siW('ime')}</th>
+                                        <th style={tsW('prezime')} onClick={() => tW('prezime')}>{t('workerSurname')}{siW('prezime')}</th>
                                         <th>{t('oib')}</th>
-                                        <th>{t('orgUnit')}</th>
-                                        <th>{t('workplace')}</th>
+                                        <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
+                                        <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
                                         <th><input type="checkbox" /></th>
                                     </tr>
                                 </thead>

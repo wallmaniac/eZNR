@@ -38,6 +38,43 @@ function todayISO() {
 }
 
 // ============================================================================
+// ACTIVITY AUTO-LOG — writes directly to activityLog localStorage key
+// No circular import needed — reads/writes the same 'eznr_activity_log' key
+// ============================================================================
+const _AL_KEY = 'eznr_activity_log';
+const _AL_MAX = 200;
+const _AL_COLS = {
+    workers: { cat: 'worker', icon: '\uD83D\uDC77', label: d => (`${d.ime || ''} ${d.prezime || ''}`).trim() || 'Radnik' },
+    certificates: { cat: 'certificate', icon: '\uD83D\uDCCB', label: d => d.ime || d.oznaka || 'Uvjerenje' },
+    ppeAssignments: { cat: 'ppe', icon: '\uD83E\uDDBA', label: d => d.naziv || 'OZO' },
+    equipment: { cat: 'equipment', icon: '\u2699\uFE0F', label: d => d.naziv || 'Oprema' },
+    employerDocs: { cat: 'document', icon: '\uD83D\uDCC4', label: d => d.naziv || d.tip || 'Dokument' },
+    injuries: { cat: 'worker', icon: '\uD83E\uDE79', label: d => `Povreda: ${d.radnikIme || ''}` },
+    diseases: { cat: 'worker', icon: '\uD83C\uDFE5', label: d => `Bolest: ${d.radnikIme || ''}` },
+    workplaces: { cat: 'company', icon: '\uD83D\uDD27', label: d => `Radno mjesto: ${d.naziv || ''}` },
+    orgUnits: { cat: 'company', icon: '\uD83C\uDFE2', label: d => `Org. jedinica: ${d.naziv || ''}` },
+};
+const _AL_VERBS = { create: 'Dodan(a)', update: 'A\u017euriran(a)', delete: 'Obrisan(a)' };
+
+function _autoLog(action, collection, item) {
+    if (typeof window === 'undefined' || !item) return;
+    const cfg = _AL_COLS[collection];
+    if (!cfg) return;
+    try {
+        const existing = JSON.parse(localStorage.getItem(_AL_KEY) || '[]');
+        const entry = {
+            id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
+            timestamp: new Date().toISOString(),
+            action, category: cfg.cat, icon: cfg.icon,
+            title: `${_AL_VERBS[action] || action} ${cfg.label(item)}`,
+            detail: '', severity: action === 'delete' ? 'warning' : 'info',
+            relatedId: item.id || '',
+        };
+        localStorage.setItem(_AL_KEY, JSON.stringify([entry, ...existing].slice(0, _AL_MAX)));
+    } catch { }
+}
+
+// ============================================================================
 // GENERIC CRUD
 // ============================================================================
 
@@ -59,6 +96,7 @@ export function create(collection, data) {
     };
     items.push(newItem);
     setStore(collection, items);
+    _autoLog('create', collection, newItem);
     return newItem;
 }
 
@@ -68,13 +106,16 @@ export function update(collection, id, data) {
     if (idx === -1) return null;
     items[idx] = { ...items[idx], ...data, updatedAt: new Date().toISOString() };
     setStore(collection, items);
+    _autoLog('update', collection, items[idx]);
     return items[idx];
 }
 
 export function remove(collection, id) {
     const items = getStore(collection);
+    const removed = items.find(item => item.id === id);
     const filtered = items.filter(item => item.id !== id);
     setStore(collection, filtered);
+    if (removed) _autoLog('delete', collection, removed);
     return filtered;
 }
 
