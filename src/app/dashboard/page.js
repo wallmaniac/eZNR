@@ -246,6 +246,8 @@ export default function DashboardPage() {
                                     className={`cal-cell${isToday ? ' cal-today' : ''}`}
                                     style={{
                                         padding: '6px 8px', minHeight: 80, minWidth: 0,
+                                        background: isToday ? 'rgba(0,191,166,0.06)' : '',
+                                        border: isToday ? '1.5px solid rgba(0,191,166,0.35)' : '',
                                         transition: 'background 0.2s', cursor: 'pointer',
                                     }}
                                     onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,191,166,0.08)'}
@@ -260,7 +262,19 @@ export default function DashboardPage() {
                                         });
                                         setShowEventForm(true);
                                     }}>
-                                    <div style={{ fontWeight: isToday ? 800 : 600, fontSize: '0.85rem', color: isToday ? 'var(--primary)' : 'var(--text)', marginBottom: 4 }}>{day}</div>
+                                    <div style={{ marginBottom: 4, display: 'flex', alignItems: 'center' }}>
+                                        {isToday ? (
+                                            <span style={{
+                                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                                width: 24, height: 24, borderRadius: '50%',
+                                                background: 'var(--primary)',
+                                                color: 'white', fontWeight: 800, fontSize: '0.8rem',
+                                                boxShadow: '0 2px 6px rgba(0,191,166,0.45)',
+                                            }}>{day}</span>
+                                        ) : (
+                                            <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{day}</span>
+                                        )}
+                                    </div>
                                     {events.map((ev, idx) => {
                                         const isExpired = ev.datum && new Date(ev.datum) < today;
                                         const diff = ev.datum ? (new Date(ev.datum) - today) / (1000 * 60 * 60 * 24) : 999;

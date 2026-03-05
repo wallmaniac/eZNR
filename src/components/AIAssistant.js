@@ -229,6 +229,7 @@ KADA KORISTITI ALATE:
 - Ako korisnik kaže "povreda na radu", "ozljeda", "incident" za određenog radnika → koristi report_injury s podacima radnika iz ŽIVIH PODATAKA
 - Ako korisnik kaže "dodaj uvjerenje", "nova potvrda", "novi pregled" za radnika → koristi add_certificate s ID-om radnika iz ŽIVIH PODATAKA i svim detaljima (tipUvjerenja, datum, vrijediDo)
 - Ako korisnik navede trajanje (npr. "2 godine"), izračunaj vrijediDo = datum + trajanje i proslijeđi u alat
+- Ako korisnik kaže da je radnik dobio opremu, zaštitna sredstva, kaciga, rukavice, prsluk, cipele ili slično (OZO) → koristi assign_ppe s worker_id iz ŽIVIH PODATAKA. Podrazumijevano: datum = danas, kolicina = 1, osim ako korisnik ne navede drugačije. Snima DIREKTNO — nije potrebna forma.
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 
 ${pageDesc}
@@ -262,6 +263,7 @@ WHEN TO USE TOOLS:
 - If the user mentions a work injury, accident, or incident for a specific worker → use report_injury with that worker's data from LIVE DATA
 - If the user says "add certificate", "new training", "new medical exam" for a worker → use add_certificate with the worker ID from LIVE DATA and all details (tipUvjerenja, datum, vrijediDo)
 - If user specifies duration (e.g. "2 years"), calculate vrijediDo = datum + duration and pass it to the tool
+- If the user mentions assigning PPE (equipment, gloves, helmet, vest, boots, etc.) to a worker → use assign_ppe with worker_id from LIVE DATA. Default datum = today, default kolicina = 1 unless user specifies otherwise. This saves DIRECTLY — no form needed.
 - If the user asks about data you already have → answer directly without tools
 
 ${pageDesc}
@@ -392,6 +394,21 @@ const ZIA_TOOLS = [
                 vrijediDo: { type: 'string', description: 'Expiry date in YYYY-MM-DD format. Calculate from datum + duration if user specifies (e.g. "2 years" = datum + 730 days).' },
             },
             required: ['worker_name'],
+        },
+    },
+    {
+        name: 'assign_ppe',
+        description: 'Assign personal protective equipment (Osobna zaštitna oprema / OZO) to a worker. Use when user says a worker received, was given, or needs safety equipment (gloves, helmet, vest, boots, etc). Directly saves the record — no form navigation needed.',
+        parameters: {
+            type: 'object',
+            properties: {
+                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA. Always look this up from the workers list before calling.' },
+                worker_name: { type: 'string', description: 'Full name of the worker for confirmation message.' },
+                ppe_name: { type: 'string', description: 'Name of the PPE item in the local language (e.g. Zaštitne rukavice, Kaska, Zaštitne cipele, Prsluk, Naočale).' },
+                datum: { type: 'string', description: 'Assignment date in YYYY-MM-DD format. Default: today if not specified by user.' },
+                kolicina: { type: 'number', description: 'Quantity assigned. Default: 1 if not specified.' },
+            },
+            required: ['worker_id', 'worker_name', 'ppe_name'],
         },
     },
 ];
@@ -543,6 +560,24 @@ export default function AIAssistant() {
             router.push(`/dashboard/worker-certificates/create?${params.toString()}`);
             setIsMinimized(true);
             return { success: true, message: `Opening certificate form for ${args.worker_name}` };
+        }
+        if (name === 'assign_ppe') {
+            try {
+                const { create: createRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const today = new Date().toISOString().split('T')[0];
+                createRecord(COLS.PPE_ASSIGNMENTS, {
+                    workerId: args.worker_id,
+                    naziv: args.ppe_name,
+                    datumZaduzenja: args.datum || today,
+                    kolicina: args.kolicina || 1,
+                    datumRazduzenja: '',
+                });
+                router.push('/dashboard/worker-ppe');
+                setIsMinimized(true);
+                return { success: true, message: `PPE "${args.ppe_name}" assigned to ${args.worker_name} (qty: ${args.kolicina || 1}, date: ${args.datum || today})` };
+            } catch (err) {
+                return { error: `Failed to save PPE: ${err.message}` };
+            }
         }
         return { error: 'unknown_tool' };
     }, [router]);

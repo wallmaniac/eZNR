@@ -333,14 +333,14 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                         title={`${t('workerPPESection')} (${ppeAssign.length})`}
                         action={
                             <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
-                                onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '' }); setPpeEditId(null); setShowPpeForm(true); }}>
+                                onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '', kolicina: 1 }); setPpeEditId(null); setShowPpeForm(true); }}>
                                 + {lang === 'bs' ? 'Dodaj' : 'Add'}
                             </button>
                         }
                     >
                         {showPpeForm && (
                             <div style={{ padding: 14, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 12, border: '1px solid var(--primary)' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 10 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 70px', gap: 10, marginBottom: 10 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Naziv OZO' : 'PPE name'} *</div>
                                         <input className="form-input" value={ppeFormData.naziv || ''} onChange={e => setPpeFormData(f => ({ ...f, naziv: e.target.value }))} />
@@ -352,6 +352,10 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Datum razduženja' : 'Returned'}</div>
                                         <input className="form-input" type="date" value={ppeFormData.datumRazduzenja || ''} onChange={e => setPpeFormData(f => ({ ...f, datumRazduzenja: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <div style={labelStyle}>{lang === 'bs' ? 'Kol.' : 'Qty'}</div>
+                                        <input className="form-input" type="number" min="1" value={ppeFormData.kolicina ?? 1} onChange={e => setPpeFormData(f => ({ ...f, kolicina: parseInt(e.target.value) || 1 }))} />
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
@@ -365,6 +369,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                         ) : ppeAssign.map(p => (
                             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>🦺 {p.naziv}</span>
+                                {p.kolicina && p.kolicina > 1 && <span style={{ fontSize: '0.72rem', padding: '1px 7px', borderRadius: 10, background: 'rgba(0,191,166,0.1)', color: 'var(--primary)', fontWeight: 700 }}>×{p.kolicina}</span>}
                                 <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Zaduž.' : 'Assigned'}: {formatDate(p.datumZaduzenja) || '—'}</span>
                                 {p.datumRazduzenja && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Razduž.' : 'Returned'}: {formatDate(p.datumRazduzenja)}</span>}
                                 <div style={{ display: 'flex', gap: 4 }}>
