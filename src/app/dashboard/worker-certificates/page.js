@@ -57,10 +57,10 @@ export default function WorkerCertificatesPage() {
             <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>{rows.length} {t('records')}</span>
           </div>
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-            <th>{t('worker')}</th><th>{t('name')}</th><th>{t('certCode')}</th><th>{lang === 'bs' ? 'Tip' : 'Type'}</th><th>{t('certDate')}</th><th>{t('certValidUntil')}</th><th>{t('status')}</th>
+            <th>{t('worker')}</th><th>{t('name')}</th><th>{t('certCode')}</th><th>{lang === 'bs' ? 'Tip' : 'Type'}</th><th>{t('certDate')}</th><th>{t('certValidUntil')}</th><th>{t('status')}</th><th style={{ width: 40 }}></th>
           </tr></thead><tbody>
               {rows.length === 0 ? (
-                <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                   {searchTerm ? (lang === 'bs' ? `Nema rezultata za "${searchTerm}"` : `No results for "${searchTerm}"`) : t('noRecords')}
                 </td></tr>
               ) : rows.map((r, idx) => {
@@ -82,12 +82,25 @@ export default function WorkerCertificatesPage() {
                       >{r.naziv || r.ime || '—'}</button>
                     </td>
                     <td><span className="badge badge-info">{r.oznaka}</span></td>
-                    <td><span className="badge" style={{ background: '#E8EAF6', color: '#283593' }}>{r.tipUvjerenja}</span></td>
+                    <td>
+                      {(r.tipUvjerenjaIme || r.tipUvjerenja || r.ime)
+                        ? <span className="badge" style={{ background: '#E8EAF6', color: '#283593' }}>{r.tipUvjerenjaIme || r.tipUvjerenja || r.ime}</span>
+                        : <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>—</span>}
+                    </td>
                     <td>{formatDate(r.datum)}</td>
                     <td style={{ color: r.isExpired ? 'var(--danger)' : diff <= 60 ? '#FF9800' : undefined, fontWeight: r.isExpired || diff <= 60 ? 700 : undefined }}>
                       {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
                     </td>
                     <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (lang === 'bs' ? 'Isteklo' : 'Expired') : (lang === 'bs' ? 'Važeće' : 'Valid')}</span></td>
+                    <td style={{ textAlign: 'center' }}>
+                      <button
+                        onClick={() => router.push(`/dashboard/worker-certificates/edit/${r.id}`)}
+                        title={lang === 'bs' ? 'Uredi uvjerenje' : 'Edit certificate'}
+                        style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, cursor: 'pointer', padding: '3px 7px', fontSize: '0.9rem', color: 'var(--text-muted)', transition: 'all 0.15s' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'var(--primary-glow)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; }}
+                      >📄</button>
+                    </td>
                   </tr>
                 );
               })}

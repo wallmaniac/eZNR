@@ -1,10 +1,11 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter, useSearchParams, useParams } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import {
     getAll, getById, create, update, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 
 const DEFAULT_CERT_TYPES = [
     'Koordinatora ZNR tijekom građenja',
@@ -44,6 +45,7 @@ function EditCertPageInner() {
     const ispitivacRef = useRef(null);
 
     const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
+    const { alert: dlgAlert, DialogRenderer } = useDialog();
 
     const load = useCallback(() => {
         const c = getById(COLLECTIONS.CERTIFICATES, certId);
@@ -95,9 +97,9 @@ function EditCertPageInner() {
         setShowNewTypeForm(false); setNewTypeName(''); setShowTipDropdown(false);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId) {
-            alert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
+            await dlgAlert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }
         update(COLLECTIONS.CERTIFICATES, certId, {
@@ -105,7 +107,7 @@ function EditCertPageInner() {
             ime: formData.tipUvjerenjaIme || formData.ime,
             sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
         });
-        alert(lang === 'bs' ? 'Uvjerenje sačuvano!' : 'Certificate saved!');
+        await dlgAlert(lang === 'bs' ? 'Uvjerenje sačuvano!' : 'Certificate saved!');
         router.back();
     };
 
@@ -120,6 +122,7 @@ function EditCertPageInner() {
 
     return (
         <div className="animate-fadeIn">
+            <DialogRenderer />
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
