@@ -87,19 +87,23 @@ export async function POST(request) {
             const data = await res.json();
             const allParts = data.candidates?.[0]?.content?.parts ?? [];
 
-            // Skip thought/thinking parts (gemini-2.5-flash thinking mode)
-            // Find the first real part that has a function_call or text
-            const part = allParts.find(p => !p.thought && (p.function_call || p.text != null))
+            // Gemini REST API uses camelCase 'functionCall' in responses (not 'function_call')
+            // Also skip thought parts from gemini-2.5-flash thinking mode
+            const part = allParts.find(p =>
+                !p.thought && (p.functionCall || p.function_call || (p.text != null && p.text !== ''))
+            ) ?? allParts.find(p => p.functionCall || p.function_call || p.text)
                 ?? allParts[0];
 
-            // Function call response
-            if (part?.function_call) {
-                return NextResponse.json({ function_call: part.function_call, model });
+            // Function call response — handle both camelCase and snake_case
+            const fc = part?.functionCall ?? part?.function_call;
+            if (fc) {
+                return NextResponse.json({ function_call: fc, model });
             }
 
-            // Normal text response — ensure never empty
+            // Normal text response
             const text = part?.text ?? '';
             return NextResponse.json({ text, model });
+
 
         } catch (err) {
             if (model === MODELS[MODELS.length - 1]) {
