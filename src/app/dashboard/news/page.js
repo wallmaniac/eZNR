@@ -173,17 +173,17 @@ export default function NewsPage() {
                     {/* Header bar */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: '0.8rem', padding: '3px 10px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#1565C0,#00897B)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
-                                🤖 AI Vijesti
-                            </span>
-                            {grounded === true && (
-                                <span style={{ fontSize: '0.74rem', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: '#1565C020', color: '#1565C0', fontWeight: 700 }}>
-                                    🌐 Google Search
+                            {grounded === true ? (
+                                <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#1565C0,#1976D2)', color: 'white', fontWeight: 700, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    🌐 Vijesti uživo
                                 </span>
-                            )}
-                            {grounded === false && (
-                                <span style={{ fontSize: '0.74rem', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: '#E6510015', color: '#E65100', fontWeight: 600 }}>
-                                    ⚠️ Bez live pretrage
+                            ) : grounded === false ? (
+                                <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#00897B,#00695C)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
+                                    🤖 AI Pregled
+                                </span>
+                            ) : (
+                                <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-input)', color: 'var(--text-muted)', fontWeight: 600 }}>
+                                    📰 Vijesti
                                 </span>
                             )}
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
