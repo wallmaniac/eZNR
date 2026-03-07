@@ -234,7 +234,7 @@ export default function NewsPage() {
                     )}
 
                     {/* Empty state */}
-                    {!loading && news.length === 0 && !error && (
+                    {!loading && news.length === 0 && (
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: 12 }}>📰</div>
