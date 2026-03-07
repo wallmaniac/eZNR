@@ -2,8 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
-const LS_KEY = 'eznr_news_cache';
-const LS_TTL = 24 * 60 * 60 * 1000; // 24h client cache
+// No localStorage cache — server caches for 2h, so every page load is fresh within 2h
 
 const TIP_CONFIG = {
     zakon: { color: '#1565C0', bg: '#1565C015', label: 'ZAKON', icon: '⚖️' },
@@ -114,27 +113,12 @@ export default function NewsPage() {
     const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [fromCache, setFromCache] = useState(false);
+    const [grounded, setGrounded] = useState(null); // true=Google Search, false=AI only, null=unknown
+    const [nextRefresh, setNextRefresh] = useState(null); // minutes until server cache expires
 
     const fetchNews = useCallback(async (force = false) => {
-        // Check localStorage cache first (unless forced)
-        if (!force) {
-            try {
-                const raw = localStorage.getItem(LS_KEY);
-                if (raw) {
-                    const { items, ts } = JSON.parse(raw);
-                    if (Date.now() - ts < LS_TTL && items?.length > 0) {
-                        setNews(items);
-                        setLastUpdated(new Date(ts));
-                        setFromCache(true);
-                        return;
-                    }
-                }
-            } catch { }
-        }
-
         setLoading(true);
         setError(null);
-        setFromCache(false);
         try {
             const url = `/api/news${force ? '?force=1' : ''}`;
             const res = await fetch(url);
@@ -142,10 +126,10 @@ export default function NewsPage() {
             if (data.error) throw new Error(data.error);
             const items = data.news || [];
             setNews(items);
-            const now = new Date();
-            setLastUpdated(now);
-            // Save to localStorage
-            localStorage.setItem(LS_KEY, JSON.stringify({ items, ts: Date.now() }));
+            setLastUpdated(new Date());
+            setFromCache(data.cached || false);
+            setGrounded(data.grounded ?? null);
+            setNextRefresh(data.nextRefresh ?? null);
         } catch (err) {
             setError(err.message || 'Greška pri dohvatu vijesti');
         } finally {
@@ -192,6 +176,16 @@ export default function NewsPage() {
                             <span style={{ fontSize: '0.8rem', padding: '3px 10px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#1565C0,#00897B)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
                                 🤖 AI Vijesti
                             </span>
+                            {grounded === true && (
+                                <span style={{ fontSize: '0.74rem', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: '#1565C020', color: '#1565C0', fontWeight: 700 }}>
+                                    🌐 Google Search
+                                </span>
+                            )}
+                            {grounded === false && (
+                                <span style={{ fontSize: '0.74rem', padding: '2px 8px', borderRadius: 'var(--radius-full)', background: '#E6510015', color: '#E65100', fontWeight: 600 }}>
+                                    ⚠️ Bez live pretrage
+                                </span>
+                            )}
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                                 Zaštita na radu · Bosna i Hercegovina
                             </span>
@@ -199,7 +193,8 @@ export default function NewsPage() {
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                             {lastUpdated && (
                                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                    {fromCache ? '📦 Cache' : '🔄 Osvježeno'}: {formatTime(lastUpdated)}
+                                    {fromCache ? '📦 Server cache' : '🔄 Osvježeno'}: {formatTime(lastUpdated)}
+                                    {nextRefresh != null && ` · sljedeće za ${nextRefresh}min`}
                                 </span>
                             )}
                             <button
@@ -265,7 +260,9 @@ export default function NewsPage() {
 
                     {/* AI disclaimer */}
                     <div style={{ marginTop: 20, padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona i propisa BiH. Uvijek provjerite originalne izvore (Sl. novine FBiH, Sl. glasnik RS) za zvanične informacije.
+                        {grounded === true
+                            ? '🌐 Vijesti su dohvaćene pretraživanjem Google-a u realnom vremenu putem Gemini AI modela. Uvijek provjerite originalne izvore za zvanične informacije.'
+                            : '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona i propisa BiH. Uvijek provjerite originalne izvore (Sl. novine FBiH, Sl. glasnik RS) za zvanične informacije.'}
                     </div>
                 </div>
             )}
