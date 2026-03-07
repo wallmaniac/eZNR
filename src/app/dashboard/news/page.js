@@ -110,28 +110,24 @@ export default function NewsPage() {
     const [activeTab, setActiveTab] = useState('news');
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [fromCache, setFromCache] = useState(false);
-    const [grounded, setGrounded] = useState(null); // true=Google Search, false=AI only, null=unknown
-    const [nextRefresh, setNextRefresh] = useState(null); // minutes until server cache expires
+    const [source, setSource] = useState(null); // 'gemini' | 'static' | null
+    const [nextRefresh, setNextRefresh] = useState(null);
 
     const fetchNews = useCallback(async (force = false) => {
         setLoading(true);
-        setError(null);
         try {
             const url = `/api/news${force ? '?force=1' : ''}`;
             const res = await fetch(url);
             const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            const items = data.news || [];
-            setNews(items);
+            setNews(data.news || []);
             setLastUpdated(new Date());
             setFromCache(data.cached || false);
-            setGrounded(data.grounded ?? null);
+            setSource(data.source || null);
             setNextRefresh(data.nextRefresh ?? null);
         } catch (err) {
-            setError(err.message || 'Greška pri dohvatu vijesti');
+            console.error('News fetch error:', err);
         } finally {
             setLoading(false);
         }
@@ -173,13 +169,13 @@ export default function NewsPage() {
                     {/* Header bar */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {grounded === true ? (
-                                <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#1565C0,#1976D2)', color: 'white', fontWeight: 700, letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    🌐 Vijesti uživo
-                                </span>
-                            ) : grounded === false ? (
+                            {source === 'gemini' ? (
                                 <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#00897B,#00695C)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
                                     🤖 AI Pregled
+                                </span>
+                            ) : source === 'static' ? (
+                                <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#37474F,#546E7A)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>
+                                    📚 Info ZNR
                                 </span>
                             ) : (
                                 <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'var(--bg-input)', color: 'var(--text-muted)', fontWeight: 600 }}>
@@ -209,16 +205,6 @@ export default function NewsPage() {
                             </button>
                         </div>
                     </div>
-
-                    {/* Error */}
-                    {error && (
-                        <div className="card" style={{ borderLeft: '4px solid var(--danger)', marginBottom: 16 }}>
-                            <div className="card-body" style={{ color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                                ⚠️ Greška pri dohvatu vijesti: {error}
-                                <button className="btn btn-ghost btn-sm" onClick={() => fetchNews(true)} style={{ marginLeft: 8 }}>Pokušaj ponovo</button>
-                            </div>
-                        </div>
-                    )}
 
                     {/* Loading skeleton */}
                     {loading && news.length === 0 && (
@@ -258,11 +244,10 @@ export default function NewsPage() {
                         </div>
                     )}
 
-                    {/* AI disclaimer */}
                     <div style={{ marginTop: 20, padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        {grounded === true
-                            ? '🌐 Vijesti su dohvaćene pretraživanjem Google-a u realnom vremenu putem Gemini AI modela. Uvijek provjerite originalne izvore za zvanične informacije.'
-                            : '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona i propisa BiH. Uvijek provjerite originalne izvore (Sl. novine FBiH, Sl. glasnik RS) za zvanične informacije.'}
+                        {source === 'gemini'
+                            ? '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona BiH. Uvijek provjerite Sl. novine FBiH i Sl. glasnik RS za zvanične informacije.'
+                            : '📚 Prikazane informacije temelje se na važećim propisima ZNR u BiH. Uvijek provjerite originalne izvore za aktualne izmjene.'}
                     </div>
                 </div>
             )}
