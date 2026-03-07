@@ -4,125 +4,93 @@ import { NextResponse } from 'next/server';
 let cache = { data: null, ts: 0 };
 const CACHE_TTL = 2 * 60 * 60 * 1000;
 
-// ── Models that work (same as Zia) ────────────────────────────────────────────
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-001'];
+// Models that support google_search grounding (billing required, same key as Zia)
+// Use base model names (not versioned -001) for grounding support
+const GROUNDED_MODELS = ['gemini-2.0-flash', 'gemini-2.5-flash'];
+// Fallback without grounding — these work for sure (same as Zia)
+const PLAIN_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-001'];
 
-// ── Google News RSS queries (BiH workplace safety) ────────────────────────────
-const RSS_QUERIES = [
-    'zaštita na radu Bosna Hercegovina',
-    'zakon o zaštiti na radu BiH',
-    'inspekcija rada FBiH',
-];
+const SYSTEM = `Si ekspert za zaštitu na radu u Bosni i Hercegovini koji radi za aplikaciju eZNR.`;
 
-// ── Type colour mapping guesses from keywords ─────────────────────────────────
-function guessType(title = '', desc = '') {
-    const text = `${title} ${desc}`.toLowerCase();
-    if (text.includes('zakon') || text.includes('zakonod') || text.includes('zakonit')) return 'zakon';
-    if (text.includes('pravilnik') || text.includes('uredba') || text.includes('propis')) return 'pravilnik';
-    if (text.includes('inspekcij') || text.includes('inspektorat') || text.includes('nadzor')) return 'inspekcija';
-    if (text.includes('edukacij') || text.includes('seminar') || text.includes('obuka') || text.includes('trening')) return 'edukacija';
-    if (text.includes('rok') || text.includes('deadline') || text.includes('do kraja')) return 'rok';
-    if (text.includes('eu') || text.includes('direktiv') || text.includes('harmoniz')) return 'smjernice';
-    return 'obavijest';
-}
+const PROMPT = `Pretraži web i pronađi 6-8 aktuelnih vijesti ili informacija o zaštiti na radu u Bosni i Hercegovini za 2025-2026. 
 
-function formatRSSDate(dateStr) {
-    if (!dateStr) return '';
-    try {
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '.') + '.';
-    } catch { return ''; }
-}
+Uključi samo vijesti iz 2024, 2025 ili 2026. Fokusiraj se na:
+- Izmjene Zakona o zaštiti na radu u FBiH (Sl. novine FBiH) ili RS (Sl. glasnik RS)
+- Aktivnosti Federalne inspekcije rada ili Inspektorata RS
+- Nove pravilnike, uredbe, smjernice
+- EU harmonizacija propisa o ZNR u okviru BiH pristupa EU
+- Obaveze poslodavaca, rokovi, kazne
 
-function stripHTML(html = '') {
-    return html.replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'").trim();
-}
+Vrati ISKLJUČIVO validan JSON niz (bez Markdown fences, bez ikakvih komentara):
+[
+  {
+    "naslov": "Naslov na bosanskom",
+    "opis": "Opis od 2-3 rečenice s konkretnim informacijama i datumima.",
+    "tip": "zakon",
+    "datum": "07.03.2026.",
+    "izvor": "Naziv izvora",
+    "url": "https://..."
+  }
+]
+Tipovi: zakon | pravilnik | inspekcija | edukacija | rok | obavijest | smjernice
+Samo JSON, ništa drugo.`;
 
-// ── Fetch real news from Google News RSS ─────────────────────────────────────
-async function fetchRSSNews() {
-    const results = [];
-    const seen = new Set();
+async function callGrounded(apiKey, model) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            system_instruction: { parts: [{ text: SYSTEM }] },
+            contents: [{ role: 'user', parts: [{ text: PROMPT }] }],
+            tools: [{ google_search: {} }],   // ← Real-time Google Search
+            generationConfig: { temperature: 0.1, maxOutputTokens: 3000 },
+        }),
+        signal: AbortSignal.timeout(25000),
+    });
 
-    for (const q of RSS_QUERIES) {
-        const encoded = encodeURIComponent(q);
-        const url = `https://news.google.com/rss/search?q=${encoded}&hl=bs&gl=BA&ceid=BA:bs`;
-
-        try {
-            const res = await fetch(url, {
-                headers: { 'User-Agent': 'Mozilla/5.0 (compatible; eZNR/1.0)' },
-                signal: AbortSignal.timeout(6000),
-            });
-            if (!res.ok) continue;
-
-            const xml = await res.text();
-
-            // Parse <item> elements
-            const items = [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)];
-            for (const match of items.slice(0, 4)) {
-                const block = match[1];
-                const title = stripHTML(block.match(/<title>([\s\S]*?)<\/title>/)?.[1] || '');
-                const link = (block.match(/<link>([\s\S]*?)<\/link>/) || block.match(/<guid[^>]*>([\s\S]*?)<\/guid>/))?.[1]?.trim() || '';
-                const desc = stripHTML(block.match(/<description>([\s\S]*?)<\/description>/)?.[1] || '');
-                const pubDate = block.match(/<pubDate>([\s\S]*?)<\/pubDate>/)?.[1]?.trim() || '';
-                const source = stripHTML(block.match(/<source[^>]*>([\s\S]*?)<\/source>/)?.[1] || '');
-
-                if (!title || seen.has(title)) continue;
-                seen.add(title);
-
-                results.push({
-                    naslov: title,
-                    opis: desc || title,
-                    tip: guessType(title, desc),
-                    datum: formatRSSDate(pubDate),
-                    izvor: source || 'Google News',
-                    url: link,
-                });
-            }
-        } catch { /* skip failed query */ }
+    if (!res.ok) {
+        const errBody = await res.text().catch(() => '');
+        throw new Error(`HTTP ${res.status}: ${errBody.substring(0, 200)}`);
     }
 
-    return results;
+    const data = await res.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const grounding = data.candidates?.[0]?.groundingMetadata;
+    const sources = grounding?.groundingChunks
+        ?.map(c => c.web?.uri).filter(Boolean).slice(0, 5) || [];
+
+    return { text, sources, grounded: true };
 }
 
-// ── Gemini fallback (no grounding — same approach as Zia) ─────────────────────
-async function fetchGeminiNews(apiKey) {
-    const prompt = `Generiraj 6 kratkih vijesti o zaštiti na radu u Bosni i Hercegovini za 2025-2026. Koristi ono što znaš o:
-- Zakonu o zaštiti na radu FBiH (Sl. novine FBiH br. 22/02, izmjene)
-- Zakonu o zaštiti na radu RS (Sl. glasnik RS br. 1/08, izmjene)
-- EU direktivama o zaštiti na radu u okviru BiH pristupnog procesa
-- Obavezama poslodavaca, obukama, inspekcijama
-Vrati SAMO validan JSON niz, bez Markdown, bez komentara:
-[{"naslov":"...","opis":"2-3 rečenice s konkretnim podacima.","tip":"zakon","datum":"DD.MM.YYYY.","izvor":"Sl. novine FBiH","url":""}]
-Tipovi: zakon|pravilnik|inspekcija|edukacija|rok|obavijest|smjernice`;
-
-    let lastErr = null;
-    for (const model of MODELS) {
-        try {
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.2, maxOutputTokens: 2000 },
-                }),
-                signal: AbortSignal.timeout(20000),
-            });
-            if (!res.ok) { lastErr = new Error(`Gemini HTTP ${res.status}`); continue; }
-            const data = await res.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const clean = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
-            const match = clean.match(/\[[\s\S]*\]/);
-            if (!match) { lastErr = new Error('No JSON array in Gemini response'); continue; }
-            const arr = JSON.parse(match[0]);
-            if (!Array.isArray(arr) || arr.length === 0) { lastErr = new Error('Empty array'); continue; }
-            return { news: arr.filter(x => x.naslov && x.opis), source: 'gemini' };
-        } catch (err) { lastErr = err; }
-    }
-    throw lastErr || new Error('All Gemini models failed');
+async function callPlain(apiKey, model) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            system_instruction: { parts: [{ text: SYSTEM }] },
+            contents: [{ role: 'user', parts: [{ text: PROMPT.replace('Pretraži web i pronađi', 'Generiraj na osnovu znanja') }] }],
+            generationConfig: { temperature: 0.2, maxOutputTokens: 2500 },
+        }),
+        signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    return { text: data.candidates?.[0]?.content?.parts?.[0]?.text || '', sources: [], grounded: false };
 }
 
-// ── GET handler ───────────────────────────────────────────────────────────────
+function parseNews(text) {
+    const clean = text
+        .replace(/^```json\s*/im, '').replace(/```\s*$/im, '')
+        .replace(/^```\s*/im, '').replace(/```\s*$/im, '').trim();
+    const match = clean.match(/\[[\s\S]*\]/);
+    if (!match) throw new Error('No JSON array in response');
+    const arr = JSON.parse(match[0]);
+    if (!Array.isArray(arr) || arr.length === 0) throw new Error('Empty array');
+    return arr.filter(x => x.naslov && x.opis);
+}
+
 export async function GET(request) {
     const force = request.nextUrl?.searchParams?.get('force') === '1';
 
@@ -135,28 +103,38 @@ export async function GET(request) {
         }, { headers: { 'Cache-Control': 'no-store' } });
     }
 
-    // 1. Try real RSS news first
-    try {
-        const rssNews = await fetchRSSNews();
-        if (rssNews.length >= 2) {
-            const payload = { news: rssNews, source: 'rss', grounded: true, cached: false };
-            cache = { data: payload, ts: Date.now() };
-            return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
-        }
-    } catch { /* fall through */ }
-
-    // 2. Fallback: Gemini AI (no grounding, uses training knowledge)
     const apiKey = process.env.GEMINI_API_KEY ?? process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-    if (apiKey) {
+    if (!apiKey) return NextResponse.json({ error: 'not_configured' }, { status: 500 });
+
+    let lastErr = null;
+
+    // 1. Try Google Search grounding (requires billing — should work with your key)
+    for (const model of GROUNDED_MODELS) {
         try {
-            const { news } = await fetchGeminiNews(apiKey);
-            const payload = { news, source: 'gemini', grounded: false, cached: false };
+            const { text, sources, grounded } = await callGrounded(apiKey, model);
+            const news = parseNews(text);
+            const payload = { news, sources, grounded, source: 'gemini+search', cached: false, model };
             cache = { data: payload, ts: Date.now() };
             return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
         } catch (err) {
-            return NextResponse.json({ error: err.message }, { status: 502 });
+            lastErr = err;
+            console.error(`[news] grounded ${model} failed:`, err.message);
         }
     }
 
-    return NextResponse.json({ error: 'no_api_key_and_rss_failed' }, { status: 500 });
+    // 2. Fallback: Gemini without grounding (always works)
+    for (const model of PLAIN_MODELS) {
+        try {
+            const { text, sources, grounded } = await callPlain(apiKey, model);
+            const news = parseNews(text);
+            const payload = { news, sources, grounded, source: 'gemini', cached: false, model, warning: 'grounding_unavailable' };
+            cache = { data: payload, ts: Date.now() };
+            return NextResponse.json(payload, { headers: { 'Cache-Control': 'no-store' } });
+        } catch (err) {
+            lastErr = err;
+            console.error(`[news] plain ${model} failed:`, err.message);
+        }
+    }
+
+    return NextResponse.json({ error: lastErr?.message || 'all_models_failed' }, { status: 502 });
 }
