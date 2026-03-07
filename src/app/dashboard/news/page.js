@@ -69,8 +69,31 @@ const FORMS_LIST = [
     { name: 'Obrazac NR1 — Evidencija noćnog rada', route: '/dashboard/night-work' },
 ];
 
+// Parse "DD.MM.YYYY." → Date for sorting
+function parseBSDate(str) {
+    const m = (str || '').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    if (!m) return new Date(0);
+    return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+}
+
+// Guess a useful URL from izvor text when Gemini doesn't provide one
+function guessSourceUrl(izvor, naslov) {
+    const src = (izvor || '').toLowerCase();
+    if (src.includes('sl. novine fbih') || src.includes('sllist') || src.includes('federaln')) return 'https://www.sllist.ba';
+    if (src.includes('sl. glasnik rs') || src.includes('slglasnik') || src.includes('republicka') || src.includes('republika srpska')) return 'https://www.slglasnikrs.ba';
+    if (src.includes('ilo')) return 'https://www.ilo.org/budapest';
+    if (src.includes('eu') || src.includes('direktiv') || src.includes('eur-lex')) return 'https://eur-lex.europa.eu';
+    if (src.includes('inspektorat') || src.includes('vladars')) return 'https://inspektorat.vladars.net';
+    if (src.includes('ministarstvo') || src.includes('fbihvlada') || src.includes('fbih')) return 'https://www.fbihvlada.gov.ba';
+    // Fallback: Google search for the headline
+    return `https://www.google.com/search?q=${encodeURIComponent((naslov || '') + ' Bosna Hercegovina')}`;
+}
+
 function NewsCard({ item }) {
     const cfg = TIP_CONFIG[item.tip] || TIP_CONFIG.obavijest;
+    const titleUrl = item.url || guessSourceUrl(item.izvor, item.naslov);
+    const sourceUrl = guessSourceUrl(item.izvor, item.naslov);
+
     return (
         <div className="card" style={{ borderLeft: `4px solid ${cfg.color}`, transition: 'transform 0.15s, box-shadow 0.15s' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
@@ -85,19 +108,35 @@ function NewsCard({ item }) {
                                 {item.tip?.toUpperCase()}
                             </span>
                             {item.izvor && (
-                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                                    📌 {item.izvor}
-                                </span>
+                                <a href={sourceUrl} target="_blank" rel="noopener noreferrer"
+                                    style={{ fontSize: '0.72rem', color: 'var(--primary)', fontStyle: 'italic', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 3 }}
+                                    title={`Otvori: ${item.izvor}`}>
+                                    📌 {item.izvor} ↗
+                                </a>
                             )}
+                            <span style={{ marginLeft: 'auto', fontSize: '0.65rem', padding: '1px 6px', borderRadius: 4, background: 'rgba(255,193,7,0.12)', color: '#f59e0b', fontWeight: 700 }}
+                                title="Sadržaj generira AI — može biti netačan. Uvijek provjerite originalni izvor.">AI</span>
                         </div>
-                        <h3 style={{ marginBottom: 8, fontSize: '1rem', lineHeight: 1.4 }}>{item.naslov}</h3>
+                        {/* Clickable title */}
+                        <a href={titleUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit' }}>
+                            <h3 style={{ marginBottom: 8, fontSize: '1rem', lineHeight: 1.4, cursor: 'pointer' }}
+                                onMouseEnter={e => e.currentTarget.style.color = cfg.color}
+                                onMouseLeave={e => e.currentTarget.style.color = ''}>
+                                {item.naslov}
+                            </h3>
+                        </a>
                         <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', lineHeight: 1.65, margin: 0 }}>{item.opis}</p>
-                        {item.url && (
-                            <a href={item.url} target="_blank" rel="noopener noreferrer"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 10, fontSize: '0.8rem', color: cfg.color, textDecoration: 'none', fontWeight: 600 }}>
-                                Više informacija →
+                        <div style={{ display: 'flex', gap: 12, marginTop: 10, flexWrap: 'wrap' }}>
+                            <a href={titleUrl} target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: cfg.color, textDecoration: 'none', fontWeight: 600 }}>
+                                {item.url ? 'Više informacija →' : '🔍 Pretraži temu →'}
                             </a>
-                        )}
+                            <a href={`https://www.google.com/search?q=${encodeURIComponent((item.naslov || '') + ' site:sllist.ba OR site:slglasnikrs.ba OR site:fbihvlada.gov.ba')}`}
+                                target="_blank" rel="noopener noreferrer"
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500 }}>
+                                ✔ Provjeri tačnost
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -226,10 +265,10 @@ export default function NewsPage() {
                         </div>
                     )}
 
-                    {/* News cards */}
+                    {/* News cards — sorted newest → oldest */}
                     {!loading && news.length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                            {news.map((item, i) => <NewsCard key={i} item={item} />)}
+                            {[...news].sort((a, b) => parseBSDate(b.datum) - parseBSDate(a.datum)).map((item, i) => <NewsCard key={i} item={item} />)}
                         </div>
                     )}
 

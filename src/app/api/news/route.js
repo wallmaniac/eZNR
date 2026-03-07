@@ -71,12 +71,18 @@ function parseNews(text) {
 }
 
 async function fetchGeminiNews(apiKey) {
-    const prompt = `Generiraj 6 aktuelnih vijesti o zaštiti na radu u Bosni i Hercegovini za 2025-2026.
+    const prompt = `Ti si pravni asistent za zaštitu na radu u Bosni i Hercegovini.
 
-Teme: izmjene zakona FBiH/RS, inspekcija rada, EU harmonizacija, rokovi za poslodavce, pravilnici o OZO i procjeni rizika.
+Generiraj 6 informativnih stavki o zaštiti na radu u BiH. Bitno:
+- Koristi SAMO informacije koje su provjereno tačne i za koje si siguran na osnovu svog treninga
+- Napiši konkretne zakone sa brojevima glasnika (npr. "Sl. novine FBiH br. 22/02")  
+- Za rokove koji su godišnji (poput godišnjeg izvještaja) navedi rok u 2026. godini
+- Ako nisi siguran je li se nešto zaista desilo, formuliši kao "Zakon propisuje..." ili "Obaveza poslodavca je..." umjesto kao vijest
+- Datum neka bude datum relevantnosti propisa ili 07.03.2026. za opće informacije
+- Za "url" stavi pravi link ako postoji (sllist.ba, slglasnikrs.ba, eur-lex.europa.eu), inače ostavi ""
 
-Vrati SAMO JSON niz, bez ikakvog teksta ispred ili iza, bez Markdown:
-[{"naslov":"...","opis":"2-3 rečenice s konkretnim infomracijama.","tip":"zakon","datum":"07.03.2026.","izvor":"Sl. novine FBiH","url":""}]
+Vrati SAMO JSON niz, bez teksta ispred ili iza, bez Markdown:
+[{"naslov":"...","opis":"2-3 rečenice s konkretnim podacima.","tip":"zakon","datum":"07.03.2026.","izvor":"Sl. novine FBiH br. 22/02","url":"https://www.sllist.ba"}]
 
 Tipovi: zakon|pravilnik|inspekcija|edukacija|rok|obavijest|smjernice
 Samo JSON.`;
