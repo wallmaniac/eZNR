@@ -7,8 +7,8 @@ export const maxDuration = 30;
 let cache = { data: null, ts: 0 };
 const CACHE_TTL = 2 * 60 * 60 * 1000;
 
-// Same models as Zia (known working)
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-001'];
+// Only gemini-2.5-flash works on this key (others return 404 on v1beta)
+const MODELS = ['gemini-2.5-flash'];
 
 // ── Static fallback — always correct, shown when Gemini fails ─────────────────
 const STATIC_FALLBACK = [
@@ -95,7 +95,9 @@ Samo JSON.`;
                     generationConfig: {
                         temperature: 0.2,
                         maxOutputTokens: 2000,
-                        // NO responseMimeType — causes errors on preview models
+                        thinkingConfig: { thinkingBudget: 0 }, // ← CRITICAL: disable thinking mode
+                        // Without this, 2.5-flash spends all tokens on internal reasoning
+                        // leaving only ~247 chars for actual output (truncated JSON)
                     },
                     safetySettings: [
                         { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_ONLY_HIGH' },
