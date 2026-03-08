@@ -20,7 +20,7 @@ const LAW_LINKS = [
         items: [
             { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-na-radu.html' },
             { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-radu.html' },
-            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-od-pozara-i-vatrogastvu.html' },
+            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.fucz.gov.ba' },
         ]
     },
     {
@@ -61,7 +61,7 @@ const LAW_LINKS = [
             { name: 'Federalno ministarstvo rada i socijalne politike FBiH', url: 'https://fmrsp.gov.ba' },
             { name: 'Narodna skupština RS — zakoni i propisi', url: 'https://www.narodnaskupstinars.net' },
             { name: 'Paragraf.ba — Pravna baza BiH (FBiH + RS zakoni)', url: 'https://www.paragraf.ba' },
-            { name: 'ILO — Međunarodna organizacija rada (BiH stranica)', url: 'https://www.ilo.org/countries/bosnia-herzegovina' },
+            { name: 'ILO — Međunarodna organizacija rada (BiH — ILOSTAT statistike)', url: 'https://ilostat.ilo.org/data/country-profiles/bih/' },
             { name: 'EUR-Lex — EU direktive o zaštiti na radu (pretraživač)', url: 'https://eur-lex.europa.eu/search.html?text=safety+health+workers&scope=EURLEX&type=quick&lang=hr' },
         ]
     },

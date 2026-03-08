@@ -45,9 +45,9 @@ const CATEGORIES = [
                 year: 2022,
                 status: 'važeći',
                 desc: 'Uređuje organizaciju i provedbu mjera zaštite od požara, obveze poslodavaca i inspektorat u FBiH.',
-                url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-od-pozara-i-vatrogastvu.html',
-                urlLabel: 'Pročitaj zakon (paragraf.ba)',
-                searchUrl: 'https://www.google.com/search?q=Zakon+zaštiti+od+požara+FBiH+64%2F09+tekst',
+                url: 'https://www.fucz.gov.ba',
+                urlLabel: 'Federalna uprava civ. zaštite (fucz.gov.ba)',
+                searchUrl: 'https://www.google.com/search?q=Zakon+o+zastiti+od+pozara+i+vatrogastvu+FBiH+64%2F09+tekst',
             },
         ],
     },
@@ -270,8 +270,8 @@ const CATEGORIES = [
             {
                 name: 'ILO — Međunarodna organizacija rada (BiH stranica)',
                 desc: 'Aktivnosti i dokumenti ILO za Bosnu i Hercegovinu, uključujući standarde zaštite na radu i ratificirane konvencije.',
-                url: 'https://www.ilo.org/countries/bosnia-herzegovina',
-                urlLabel: 'Otvori ilo.org/bih ✓',
+                url: 'https://ilostat.ilo.org/data/country-profiles/bih/',
+                urlLabel: 'Otvori ILOSTAT—BiH ✓',
             },
             {
                 name: 'EUR-Lex — Pretraživač EU direktiva o ZNR',
