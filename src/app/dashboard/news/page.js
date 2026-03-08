@@ -20,23 +20,23 @@ const LAW_LINKS = [
         items: [
             { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-na-radu.html' },
             { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-radu.html' },
-            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.fucz.gov.ba' },
+            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.msb.gov.ba/dokumenti/10ZAKON_O_VATROGASTVU_FBIH.pdf' },
         ]
     },
     {
         category: 'Zakoni — Republika Srpska', icon: '🛡️',
         items: [
-            { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.google.com/search?q=Zakon+o+za%C5%A1titi+na+radu+RS+1%2F08+pre%C4%8Di%C5%A1%C4%87en+tekst' },
-            { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21', url: 'https://www.narodnaskupstinars.net' },
+            { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/republika-srpska/zakon-o-zastiti-na-radu.html' },
+            { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21, 112/23, 39/24', url: 'https://www.paragraf.ba/propisi/republika-srpska/zakon-o-radu.html' },
             { name: 'Sl. glasnik RS — zvanični portal (slglasnik.org)', url: 'https://slglasnik.org' },
         ]
     },
     {
         category: 'Pravilnici i podzakonski akti — FBiH', icon: '📜',
         items: [
-            { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.google.com/search?q=Pravilnik+o+upotrebi+li%C4%8Dne+za%C5%A1titne+opreme+FBiH+42%2F25' },
-            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.google.com/search?q=Pravila+o+procjeni+rizika+FBiH+23%2F21+tekst' },
-            { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.google.com/search?q=Pravilnik+o+uvjetima+obavljanja+poslova+za%C5%A1tite+na+radu+FBiH+34%2F21' },
+            { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.paragraf.ba/propisi/fbih/pravilnik-o-upotrebi-sredstava-i-opreme-licne-zastite-na-radu.html' },
+            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.msb.gov.ba/dokumenti/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf' },
+            { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.akta.ba/legislativa/134526/pravilnik-o-nacinu-i-uvjetima-obavljanja-poslova-zastite-na-radu-kod-poslodavca' },
         ]
     },
     {
