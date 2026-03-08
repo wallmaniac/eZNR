@@ -1,0 +1,408 @@
+'use client';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
+
+// ─── All verified BiH ZNR laws with real URLs ─────────────────────────────────
+const CATEGORIES = [
+    {
+        id: 'fbih-zakoni',
+        icon: '🛡️',
+        title: 'Zakon o zaštiti na radu — FBiH',
+        subtitle: 'Federacija Bosne i Hercegovine',
+        color: '#1565C0',
+        items: [
+            {
+                name: 'Zakon o zaštiti na radu FBiH',
+                gazette: 'Sl. novine FBiH br. 79/20',
+                year: 2020,
+                status: 'važeći',
+                desc: 'Temeljni zakon koji uređuje prava, obaveze i odgovornosti poslodavaca i radnika u FBiH. Ugrađena Direktiva 89/391/EEZ.',
+                url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-zastiti-na-radu-fbih.html',
+                urlLabel: 'Pročitaj zakon (paragraf.ba)',
+            },
+            {
+                name: 'Zakon o radu FBiH',
+                gazette: 'Sl. novine FBiH br. 26/16, 89/18, 44/22',
+                year: 2022,
+                status: 'važeći',
+                desc: 'Reguliše ugovor o radu, radno vrijeme, odmor, zaštitu na radu i ostale uvjete rada u FBiH.',
+                url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-radu.html',
+                urlLabel: 'Pročitaj zakon (paragraf.ba)',
+            },
+            {
+                name: 'Zakon o zaštiti od požara i vatrogastvu FBiH',
+                gazette: 'Sl. novine FBiH br. 64/09, 45/22',
+                year: 2022,
+                status: 'važeći',
+                desc: 'Uređuje organizaciju i provedbu mjera zaštite od požara, obveze poslodavaca i inspektorat.',
+                url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-zastiti-od-pozara-i-vatrogastvu.html',
+                urlLabel: 'Pročitaj zakon (paragraf.ba)',
+            },
+        ],
+    },
+    {
+        id: 'fbih-pravilnici',
+        icon: '📜',
+        title: 'Pravilnici o zaštiti na radu — FBiH',
+        subtitle: 'Podzakonski akti Federacije BiH',
+        color: '#6A1B9A',
+        items: [
+            {
+                name: 'Pravilnik o upotrebi sredstava i opreme lične zaštite na radu',
+                gazette: 'Sl. novine FBiH br. 42/25',
+                year: 2025,
+                status: 'važeći',
+                desc: 'Najnoviji pravilnik (jun 2025.) koji detaljno uređuje upotrebu OZO. Djelomično transponira EU Direktivu 89/656/EEZ.',
+                url: 'https://www.paragraf.ba/propisi/fbih/',
+                urlLabel: 'Pretraži na paragraf.ba',
+                badge: 'NOVO 2025',
+            },
+            {
+                name: 'Pravila o procjeni rizika',
+                gazette: 'Sl. novine FBiH br. 23/21',
+                year: 2021,
+                status: 'važeći',
+                desc: 'Propisuje metodologiju i sadržaj akta o procjeni rizika za svako radno mjesto u FBiH.',
+                url: 'https://www.paragraf.ba/propisi_files/fbih/pravila-o-procjeni-rizika.html',
+                urlLabel: 'Pročitaj (paragraf.ba)',
+            },
+            {
+                name: 'Pravilnik o načinu i uvjetima obavljanja poslova zaštite na radu',
+                gazette: 'Sl. novine FBiH br. 34/21',
+                year: 2021,
+                status: 'važeći',
+                desc: 'Uređuje uvjete za stručnjake zaštite na radu kod poslodavca (kvalifikacije, ovlaštenja).',
+                url: 'https://www.paragraf.ba/propisi/fbih/',
+                urlLabel: 'Pretraži na paragraf.ba',
+            },
+            {
+                name: 'Pravilnik o sadržaju i načinu vođenja evidencija o zaštiti na radu',
+                gazette: 'Sl. novine FBiH (uputstvo za primjenu zakona br. 79/20)',
+                year: 2021,
+                status: 'važeći',
+                desc: 'Obavezne evidencije: upute o radu, mjere za sprečavanje rizika, povrede, oprema, pregledi, osposobljavanje.',
+                url: 'https://www.sllist.ba',
+                urlLabel: 'Sl. novine FBiH',
+            },
+        ],
+    },
+    {
+        id: 'rs-zakoni',
+        icon: '🛡️',
+        title: 'Zakon o zaštiti na radu — Republika Srpska',
+        subtitle: 'Republika Srpska',
+        color: '#B71C1C',
+        items: [
+            {
+                name: 'Zakon o zaštiti na radu RS',
+                gazette: 'Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20',
+                year: 2020,
+                status: 'važeći',
+                desc: 'Temeljni zakon RS koji utvrđuje zaštitu na radu kao stvar javnog interesa. Izmjene 2020. uskladile su s FBiH okvirom.',
+                url: 'https://www.paragraf.ba/propisi_files/rs/zakon-o-zastiti-na-radu.html',
+                urlLabel: 'Pročitaj zakon (paragraf.ba)',
+            },
+            {
+                name: 'Zakon o radu RS',
+                gazette: 'Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21',
+                year: 2021,
+                status: 'važeći',
+                desc: 'Reguliše radno-pravne odnose, zaštitu radnika i sigurnost radnog mjesta u Republici Srpskoj.',
+                url: 'https://www.paragraf.ba/propisi_files/rs/zakon-o-radu.html',
+                urlLabel: 'Pročitaj zakon (paragraf.ba)',
+            },
+            {
+                name: 'Zakon o zaštiti od požara RS',
+                gazette: 'Sl. glasnik RS br. 92/20',
+                year: 2020,
+                status: 'važeći',
+                desc: 'Uređuje zaštitu od požara, obaveze pravnih lica, inspektorat i sankcije u Republici Srpskoj.',
+                url: 'https://www.slglasnikrs.ba',
+                urlLabel: 'Sl. glasnik RS',
+            },
+        ],
+    },
+    {
+        id: 'eu',
+        icon: '🇪🇺',
+        title: 'EU Direktive (relevantne za BiH)',
+        subtitle: 'Harmonizacija s pravom EU — poglavlje 19',
+        color: '#003399',
+        items: [
+            {
+                name: 'Direktiva 89/391/EEZ — Okvirna direktiva',
+                gazette: 'EUR-Lex CELEX 31989L0391',
+                year: 1989,
+                status: 'na snazi',
+                desc: 'Okvirna direktiva o uvođenju mjera za poboljšanje zaštite zdravlja i sigurnosti radnika. Transponirana u Zakon o ZNR FBiH br. 79/20.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 89/654/EEZ — Radna mjesta',
+                gazette: 'EUR-Lex CELEX 31989L0654',
+                year: 1989,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za sigurnost i zdravlje na radnim mjestima (prostorije, osvijetljenost, ventilacija).',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0654',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 2009/104/EZ — Radna oprema',
+                gazette: 'EUR-Lex CELEX 32009L0104',
+                year: 2009,
+                status: 'na snazi',
+                desc: 'Minimalni sigurnosni zahtjevi za upotrebu radne opreme (zamjenjuje 89/655/EEZ). Obuhvata preglede i održavanje.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32009L0104',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 89/656/EEZ — Osobna zaštitna oprema (OZO)',
+                gazette: 'EUR-Lex CELEX 31989L0656',
+                year: 1989,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za korištenje OZO na radnom mjestu. Transponirana u Pravilnik FBiH br. 42/25.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0656',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 90/269/EEZ — Ručno rukovanje teretima',
+                gazette: 'EUR-Lex CELEX 31990L0269',
+                year: 1990,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za zaštitu zdravlja pri ručnom rukovanju teretima koji mogu uzrokovati povrede leđa.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31990L0269',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 90/270/EEZ — Rad s ekranima',
+                gazette: 'EUR-Lex CELEX 31990L0270',
+                year: 1990,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za zaštitu zdravlja pri radu s kompjuterskim ekranima (pauze, ergonomija, vid).',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31990L0270',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 92/85/EEZ — Zaštita trudnica',
+                gazette: 'EUR-Lex CELEX 31992L0085',
+                year: 1992,
+                status: 'na snazi',
+                desc: 'Posebne mjere za zaštitu zdravlja trudnica, porodilja i dojilja na radnom mjestu.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31992L0085',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 2003/10/EZ — Buka na radu',
+                gazette: 'EUR-Lex CELEX 32003L0010',
+                year: 2003,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za zaštitu zdravlja i sigurnosti radnika izloženih rizicima od buke.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32003L0010',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 2002/44/EZ — Vibracije',
+                gazette: 'EUR-Lex CELEX 32002L0044',
+                year: 2002,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za zaštitu od mehaničkih vibracija (ruka-šaka i cijelo tijelo).',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32002L0044',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+            {
+                name: 'Direktiva 98/24/EZ — Kemijski agensi',
+                gazette: 'EUR-Lex CELEX 31998L0024',
+                year: 1998,
+                status: 'na snazi',
+                desc: 'Minimalni zahtjevi za zaštitu zdravlja radnika od rizika koji su u vezi s kemijskim agensima na radu.',
+                url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31998L0024',
+                urlLabel: 'Otvori na EUR-Lex',
+            },
+        ],
+    },
+    {
+        id: 'links',
+        icon: '🔗',
+        title: 'Korisni linkovi i institucije',
+        subtitle: 'Zvanični portali, inspekcije, pravne baze',
+        color: '#00695C',
+        items: [
+            {
+                name: 'Paragraf.ba — Pravna baza BiH (FBiH i RS zakoni)',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Besplatna baza svih zakona i pravilnika FBiH i RS s prečišćenim tekstovima. Preporučen alat za svakodnevnu upotrebu.',
+                url: 'https://www.paragraf.ba',
+                urlLabel: 'Otvori paragraf.ba',
+            },
+            {
+                name: 'Sl. novine FBiH — Zvanični glasnik FBiH',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Pretraživač propisa objavljenih u Službenim novinama Federacije Bosne i Hercegovine.',
+                url: 'https://www.sllist.ba',
+                urlLabel: 'Otvori sllist.ba',
+            },
+            {
+                name: 'Sl. glasnik RS — Zvanični glasnik RS',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Pretraživač propisa Republike Srpske objavljenih u Službenom glasniku.',
+                url: 'https://www.slglasnikrs.ba',
+                urlLabel: 'Otvori slglasnikrs.ba',
+            },
+            {
+                name: 'Federalna inspekcija rada (FBiH)',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Federalna uprava za inspekcijske poslove — provođenje nadzora iz oblasti zaštite na radu u FBiH.',
+                url: 'https://fuzip.gov.ba',
+                urlLabel: 'Otvori fuzip.gov.ba',
+            },
+            {
+                name: 'Inspektorat RS — Inspekcija rada RS',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Republički inspektorat za zaštitu na radu u Republici Srpskoj.',
+                url: 'https://inspektorat.vladars.net',
+                urlLabel: 'Otvori inspektorat.vladars.net',
+            },
+            {
+                name: 'Federalno ministarstvo rada i socijalne politike FBiH',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Nadležno ministarstvo za donošenje pravilnika i propisa o zaštiti na radu u FBiH.',
+                url: 'https://www.fmrsp.gov.ba',
+                urlLabel: 'Otvori fmrsp.gov.ba',
+            },
+            {
+                name: 'Ministarstvo rada i boračko-invalidske zaštite RS',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Nadležno ministarstvo za zaštitu na radu u Republici Srpskoj.',
+                url: 'https://www.vladars.net/sr-SP-Cyrl/Vlada/Ministarstva/mrsb/Pages/default.aspx',
+                urlLabel: 'Otvori vladars.net',
+            },
+            {
+                name: 'ILO — Međunarodna organizacija rada (BiH)',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Standardi i smjernice Međunarodne organizacije rada relevatni za BiH, baza ILO konvencija.',
+                url: 'https://www.ilo.org/budapest',
+                urlLabel: 'Otvori ilo.org',
+            },
+            {
+                name: 'EUR-Lex — Direktive EU o zaštiti na radu',
+                gazette: '',
+                year: null,
+                status: '',
+                desc: 'Kompletan pretraživač EU direktiva u oblasti zaštite na radu relevantnih za poglavlje 19 pristupnog procesa.',
+                url: 'https://eur-lex.europa.eu/search.html?qid=&text=safety+health+workers&scope=EURLEX&type=quick&lang=hr',
+                urlLabel: 'Pretraži EUR-Lex',
+            },
+        ],
+    },
+];
+
+const STATUS_COLOR = { 'važeći': '#166534', 'na snazi': '#1e40af', 'stavljen van snage': '#991b1b' };
+
+export default function ZNRZakonodavstvoPage() {
+    const { lang } = useLanguage();
+    const router = useRouter();
+
+    return (
+        <div className="animate-fadeIn">
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <button onClick={() => router.back()} className="btn btn-ghost btn-sm" style={{ marginRight: 4, fontSize: '1rem' }}>←</button>
+                <div>
+                    <h1 style={{ margin: 0, fontSize: '1.5rem' }}>⚖️ Zakonodavstvo zaštite na radu u BiH</h1>
+                    <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                        Prečišćeni pregled svih važećih zakona, pravilnika i EU direktiva — FBiH, RS i EU · Ažurirano 2025.
+                    </p>
+                </div>
+            </div>
+
+            {/* Notice */}
+            <div style={{ marginBottom: 24, padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'rgba(21,101,192,0.08)', border: '1px solid rgba(21,101,192,0.2)', fontSize: '0.82rem', color: 'var(--text)' }}>
+                📌 <strong>Napomena:</strong> Linkovi vode na zvanične tekstove zakona i pravne baze (paragraf.ba, EUR-Lex).
+                Uvijek provjerite Sl. novine FBiH ili Sl. glasnik RS za eventualne izmjene i dopune.
+            </div>
+
+            {/* Categories */}
+            {CATEGORIES.map(cat => (
+                <div key={cat.id} className="card" style={{ marginBottom: 20, borderTop: `3px solid ${cat.color}` }}>
+                    <div className="card-body">
+                        {/* Category header */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid var(--border-light)' }}>
+                            <span style={{ fontSize: '1.5rem' }}>{cat.icon}</span>
+                            <div>
+                                <div style={{ fontWeight: 700, fontSize: '1rem', color: cat.color }}>{cat.title}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{cat.subtitle}</div>
+                            </div>
+                            <span style={{ marginLeft: 'auto', fontSize: '0.72rem', color: 'var(--text-muted)' }}>{cat.items.length} {cat.items.length === 1 ? 'dokument' : cat.items.length <= 4 ? 'dokumenta' : 'dokumenata'}</span>
+                        </div>
+
+                        {/* Items */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                            {cat.items.map((item, i) => (
+                                <div key={i} style={{
+                                    padding: '12px 14px',
+                                    borderRadius: 'var(--radius-md)',
+                                    background: 'var(--bg-input)',
+                                    border: '1px solid var(--border-light)',
+                                    display: 'flex', alignItems: 'flex-start', gap: 12,
+                                }}>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                                            <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{item.name}</span>
+                                            {item.badge && (
+                                                <span style={{ fontSize: '0.6rem', padding: '1px 7px', borderRadius: 'var(--radius-full)', background: '#16a34a', color: 'white', fontWeight: 800, letterSpacing: '0.04em' }}>{item.badge}</span>
+                                            )}
+                                            {item.status && (
+                                                <span style={{ fontSize: '0.62rem', padding: '1px 7px', borderRadius: 'var(--radius-full)', background: `${STATUS_COLOR[item.status] || '#374151'}20`, color: STATUS_COLOR[item.status] || '#374151', fontWeight: 700 }}>
+                                                    ✓ {item.status.toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {item.gazette && (
+                                            <div style={{ fontSize: '0.73rem', color: cat.color, fontWeight: 600, marginBottom: 5, fontStyle: 'italic' }}>📄 {item.gazette}</div>
+                                        )}
+                                        <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.55, marginBottom: 8 }}>{item.desc}</div>
+                                        <a href={item.url} target="_blank" rel="noopener noreferrer"
+                                            style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', fontWeight: 700, color: cat.color, textDecoration: 'none', padding: '4px 12px', border: `1px solid ${cat.color}40`, borderRadius: 'var(--radius-full)', transition: 'all 0.15s' }}
+                                            onMouseEnter={e => { e.currentTarget.style.background = cat.color; e.currentTarget.style.color = 'white'; }}
+                                            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = cat.color; }}>
+                                            {item.urlLabel} ↗
+                                        </a>
+                                    </div>
+                                    {item.year && (
+                                        <div style={{ flexShrink: 0, textAlign: 'center', minWidth: 48 }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: cat.color }}>{item.year}</div>
+                                            <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', fontWeight: 600 }}>GOD.</div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            ))}
+
+            {/* Footer */}
+            <div style={{ marginTop: 8, padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+                Pregled zakona i pravilnika o zaštiti na radu u Bosni i Hercegovini · eZNR · Devizija: 08.03.2025. ·
+                Za zvanični tekst uvijek koristite Sl. novine FBiH ili Sl. glasnik RS
+            </div>
+        </div>
+    );
+}

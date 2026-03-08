@@ -16,45 +16,54 @@ const TIP_CONFIG = {
 
 const LAW_LINKS = [
     {
-        category: 'Zakon o zaštiti na radu', icon: '🛡️',
+        category: 'Zakoni — FBiH', icon: '🛡️',
         items: [
-            { name: 'Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 22/02)', url: 'https://www.sllist.ba' },
-            { name: 'Zakon o zaštiti na radu RS (Sl. glasnik RS br. 1/08)', url: 'https://www.slglasnikrs.ba' },
-            { name: 'Zakon o radu FBiH (Sl. novine FBiH br. 26/16)', url: 'https://www.sllist.ba' },
+            { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-zastiti-na-radu-fbih.html' },
+            { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-radu.html' },
+            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-zastiti-od-pozara-i-vatrogastvu.html' },
         ]
     },
     {
-        category: 'Pravilnici o zaštiti na radu', icon: '📜',
+        category: 'Zakoni — Republika Srpska', icon: '🛡️',
         items: [
-            { name: 'Pravilnik o sadržaju i načinu vođenja evidencija o zaštiti na radu', url: 'https://www.sllist.ba' },
-            { name: 'Pravilnik o procjeni rizika / Opšta načela prevencije', url: 'https://www.slglasnikrs.ba' },
-            { name: 'Pravilnik o osobnoj zaštitnoj opremi', url: 'https://www.sllist.ba' },
-            { name: 'Pravilnik o načinu i rokovima vršenja periodičnih pregleda', url: 'https://www.sllist.ba' },
+            { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi_files/rs/zakon-o-zastiti-na-radu.html' },
+            { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21', url: 'https://www.paragraf.ba/propisi_files/rs/zakon-o-radu.html' },
         ]
     },
     {
-        category: 'Zaštita od požara', icon: '🔥',
+        category: 'Pravilnici i podzakonski akti — FBiH', icon: '📜',
         items: [
-            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH (Sl. novine FBiH br. 64/09)', url: 'https://www.sllist.ba' },
-            { name: 'Pravilnik o tehničkim normativima za zaštitu od požara', url: 'https://www.sllist.ba' },
+            { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.paragraf.ba/propisi/fbih/' },
+            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.paragraf.ba/propisi_files/fbih/pravila-o-procjeni-rizika.html' },
+            { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.paragraf.ba/propisi/fbih/' },
+            { name: 'Pravilnik o evidencijama iz oblasti zaštite na radu — FBiH', url: 'https://www.sllist.ba' },
         ]
     },
     {
-        category: 'EU Direktive (harmonizacija)', icon: '🇪🇺',
+        category: 'EU Direktive (harmonizacija s BiH)', icon: '🇪🇺',
         items: [
-            { name: 'Direktiva 89/391/EEZ — Okvirna direktiva o bezbjednosti i zdravlju', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391' },
-            { name: 'Direktiva 89/656/EEZ — Upotreba osobne zaštitne opreme', url: 'https://eur-lex.europa.eu' },
-            { name: 'Direktiva 92/85/EEZ — Zaštita trudnica na radu', url: 'https://eur-lex.europa.eu' },
+            { name: 'Direktiva 89/391/EEZ — Okvirna direktiva (transponirana u Zakon FBiH 79/20)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391' },
+            { name: 'Direktiva 89/654/EEZ — Minimalni zahtjevi za radna mjesta', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0654' },
+            { name: 'Direktiva 2009/104/EZ — Radna oprema (zamjenjuje 89/655)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32009L0104' },
+            { name: 'Direktiva 89/656/EEZ — Osobna zaštitna oprema (transponirana u Pravilnik 42/25)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0656' },
+            { name: 'Direktiva 92/85/EEZ — Zaštita trudnica na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31992L0085' },
+            { name: 'Direktiva 2003/10/EZ — Buka na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32003L0010' },
+            { name: 'Direktiva 2002/44/EZ — Vibracije', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32002L0044' },
+            { name: 'Direktiva 98/24/EZ — Kemijski agensi na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31998L0024' },
         ]
     },
     {
-        category: 'Korisni linkovi', icon: '🔗',
+        category: 'Korisni linkovi — Institucije i portali', icon: '🔗',
         items: [
-            { name: 'Federalna inspekcija rada — fbihvlada.gov.ba', url: 'https://www.fbihvlada.gov.ba' },
-            { name: 'Inspektorat RS — inspektorat.vladars.net', url: 'https://inspektorat.vladars.net' },
-            { name: 'Sl. novine FBiH — pretraživač zakona', url: 'https://www.sllist.ba' },
-            { name: 'Sl. glasnik RS — pretraživač zakona', url: 'https://www.slglasnikrs.ba' },
-            { name: 'ILO — Međunarodna organizacija rada (BiH)', url: 'https://www.ilo.org/budapest' },
+            { name: 'Paragraf.ba — Besplatna pravna baza BiH (FBiH + RS zakoni, prečišćeni tekstovi)', url: 'https://www.paragraf.ba' },
+            { name: 'Sl. novine FBiH — Zvanični pretraživač propisa FBiH', url: 'https://www.sllist.ba' },
+            { name: 'Sl. glasnik RS — Zvanični pretraživač propisa RS', url: 'https://www.slglasnikrs.ba' },
+            { name: 'Federalna inspekcija rada (FUZIP) — fuzip.gov.ba', url: 'https://fuzip.gov.ba' },
+            { name: 'Inspektorat RS — inspekcija rada Republika Srpska', url: 'https://inspektorat.vladars.net' },
+            { name: 'Federalno ministarstvo rada i socijalne politike — fmrsp.gov.ba', url: 'https://www.fmrsp.gov.ba' },
+            { name: 'Ministarstvo rada i bor.-inv. zaštite RS — vladars.net', url: 'https://www.vladars.net' },
+            { name: 'ILO — Međunarodna organizacija rada (Budimpešta)', url: 'https://www.ilo.org/budapest' },
+            { name: 'EUR-Lex — EU direktive o zaštiti na radu (pretraživač)', url: 'https://eur-lex.europa.eu/search.html?text=safety+health+workers&scope=EURLEX&type=quick&lang=hr' },
         ]
     },
 ];
@@ -294,6 +303,23 @@ export default function NewsPage() {
             {/* ── LAWS TAB ── */}
             {activeTab === 'laws' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+                    {/* Hero: Open full reference document */}
+                    <div className="card" style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', border: 'none' }}>
+                        <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'white', marginBottom: 4 }}>⚖️ Zakonodavstvo ZNR u BiH — kompletan pregled</div>
+                                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.82)' }}>
+                                    Svi zakoni, pravilnici (uključujući novi OZO pravilnik 42/25), EU direktive i institucioni linkovi — na jednom mjestu.
+                                </div>
+                            </div>
+                            <a href="/dashboard/znr-zakonodavstvo"
+                                style={{ flexShrink: 0, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'white', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem', textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                                Otvori dokument →
+                            </a>
+                        </div>
+                    </div>
+
                     {LAW_LINKS.map((cat, idx) => (
                         <div key={idx} className="card">
                             <div className="card-body">
