@@ -315,7 +315,7 @@ export default function Header({ sidebarCollapsed }) {
                                                 <span style={{ fontSize: '1.1rem' }}>{n.icon}</span>
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ fontWeight: 700, fontSize: '0.82rem', color: c.titleColor }}>{n.text}</div>
-                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>{n.detail}</div>}
+                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: '#4B5563', marginTop: 3 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                                                         {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
                                                         {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}</button>}
