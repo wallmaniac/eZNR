@@ -17,7 +17,7 @@ const CATEGORIES = [
         icon: '🛡️',
         title: 'Zakoni — Federacija BiH',
         subtitle: 'Federacija Bosne i Hercegovine',
-        color: '#1565C0',
+        color: '#3b82f6',
         items: [
             {
                 name: 'Zakon o zaštiti na radu FBiH',
@@ -56,7 +56,7 @@ const CATEGORIES = [
         icon: '📜',
         title: 'Pravilnici — Federacija BiH',
         subtitle: 'Podzakonski akti Federacije BiH',
-        color: '#6A1B9A',
+        color: '#a855f7',
         items: [
             {
                 name: 'Pravilnik o upotrebi sredstava i opreme lične zaštite na radu',
@@ -93,7 +93,7 @@ const CATEGORIES = [
         icon: '🛡️',
         title: 'Zakoni — Republika Srpska',
         subtitle: 'Republika Srpska',
-        color: '#B71C1C',
+        color: '#f05252',
         items: [
             {
                 name: 'Zakon o zaštiti na radu RS',
@@ -130,7 +130,7 @@ const CATEGORIES = [
         icon: '🇪🇺',
         title: 'EU Direktive (relevantne za BiH)',
         subtitle: 'Harmonizacija s pravom EU — poglavlje 19 · Linkovi potvrđeno rade ✓',
-        color: '#003399',
+        color: '#5b9cf8',
         items: [
             {
                 name: 'Direktiva 89/391/EEZ — Okvirna direktiva',
@@ -229,7 +229,7 @@ const CATEGORIES = [
         icon: '🔗',
         title: 'Korisni linkovi i institucije',
         subtitle: 'Zvanični portali · svi provjereni i aktivni ✓',
-        color: '#00695C',
+        color: '#2dd4bf',
         items: [
             {
                 name: 'Sl. glasnik Republike Srpske — slglasnik.org',
@@ -289,7 +289,7 @@ const CATEGORIES = [
     },
 ];
 
-const STATUS_COLOR = { 'važeći': '#166534', 'na snazi': '#1e40af', 'stavljen van snage': '#991b1b' };
+const STATUS_COLOR = { 'važeći': '#22c55e', 'na snazi': '#5b9cf8', 'stavljen van snage': '#f87171' };
 
 export default function ZNRZakonodavstvoPage() {
     const { lang } = useLanguage();
