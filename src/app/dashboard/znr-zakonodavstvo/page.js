@@ -74,8 +74,8 @@ const CATEGORIES = [
                 year: 2021,
                 status: 'važeći',
                 desc: 'Propisuje metodologiju i sadržaj akta o procjeni rizika za svako radno mjesto u FBiH.',
-                url: 'https://www.msb.gov.ba/dokumenti/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf',
-                urlLabel: 'Preuzmi PDF (msb.gov.ba)',
+                url: 'https://www.basic.com.ba/asset/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf',
+                urlLabel: 'Preuzmi PDF (basic.com.ba)',
             },
             {
                 name: 'Pravilnik o načinu i uvjetima obavljanja poslova zaštite na radu',

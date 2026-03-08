@@ -35,7 +35,7 @@ const LAW_LINKS = [
         category: 'Pravilnici i podzakonski akti — FBiH', icon: '📜',
         items: [
             { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.paragraf.ba/propisi/fbih/pravilnik-o-upotrebi-sredstava-i-opreme-licne-zastite-na-radu.html' },
-            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.msb.gov.ba/dokumenti/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf' },
+            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.basic.com.ba/asset/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf' },
             { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.akta.ba/legislativa/134526/pravilnik-o-nacinu-i-uvjetima-obavljanja-poslova-zastite-na-radu-kod-poslodavca' },
         ]
     },
@@ -162,17 +162,40 @@ export default function NewsPage() {
     const [source, setSource] = useState(null); // 'gemini' | 'static' | null
     const [nextRefresh, setNextRefresh] = useState(null);
 
-    const fetchNews = useCallback(async (force = false) => {
+    // On mount: load from localStorage ONLY — never auto-call the API
+    useEffect(() => {
+        try {
+            const raw = localStorage.getItem('eznr_news_cache');
+            if (raw) {
+                const cached = JSON.parse(raw);
+                setNews(cached.news || []);
+                setLastUpdated(cached.ts ? new Date(cached.ts) : null);
+                setFromCache(true);
+                setSource(cached.source || 'cache');
+            }
+            // If no cache exists at all, show empty state — user must click Osvježi
+        } catch { /* ignore */ }
+    }, []);
+
+    // Override fetchNews to also persist to localStorage
+    const fetchAndCache = useCallback(async (force = false) => {
         setLoading(true);
         try {
             const url = `/api/news${force ? '?force=1' : ''}`;
             const res = await fetch(url);
             const data = await res.json();
-            setNews(data.news || []);
+            const freshNews = data.news || [];
+            setNews(freshNews);
             setLastUpdated(new Date());
-            setFromCache(data.cached || false);
+            setFromCache(false);
             setSource(data.source || null);
             setNextRefresh(data.nextRefresh ?? null);
+            // Persist to localStorage so next visit shows cached news immediately
+            localStorage.setItem('eznr_news_cache', JSON.stringify({
+                news: freshNews,
+                ts: new Date().toISOString(),
+                source: data.source || null,
+            }));
         } catch (err) {
             console.error('News fetch error:', err);
         } finally {
@@ -180,7 +203,6 @@ export default function NewsPage() {
         }
     }, []);
 
-    useEffect(() => { fetchNews(false); }, [fetchNews]);
 
     const tabs = [
         { key: 'news', label: 'Vijesti', icon: '📰' },
@@ -236,13 +258,13 @@ export default function NewsPage() {
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
                             {lastUpdated && (
                                 <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                    {fromCache ? '📦 Server cache' : '🔄 Osvježeno'}: {formatTime(lastUpdated)}
+                                    {fromCache ? '💾 Sačuvano' : '🔄 Osvježeno'}: {formatTime(lastUpdated)}
                                     {nextRefresh != null && ` · sljedeće za ${nextRefresh}min`}
                                 </span>
                             )}
                             <button
                                 className="btn btn-outline btn-sm"
-                                onClick={() => fetchNews(true)}
+                                onClick={() => fetchAndCache(true)}
                                 disabled={loading}
                                 style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem' }}>
                                 {loading
@@ -285,8 +307,9 @@ export default function NewsPage() {
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '3rem', marginBottom: 12 }}>📰</div>
-                                <div style={{ fontWeight: 600, marginBottom: 8 }}>Nema dostupnih vijesti</div>
-                                <button className="btn btn-primary btn-sm" onClick={() => fetchNews(true)}>🔄 Učitaj vijesti</button>
+                                <div style={{ fontWeight: 600, marginBottom: 8 }}>Nema sačuvanih vijesti</div>
+                                <div style={{ fontSize: '0.85rem', marginBottom: 14, opacity: 0.75 }}>Klikni "Osvježi vijesti" da učitaš najnovije vijesti iz oblasti ZNR.</div>
+                                <button className="btn btn-primary btn-sm" onClick={() => fetchAndCache(true)}>🔄 Učitaj vijesti</button>
                             </div>
                         </div>
                     )}
