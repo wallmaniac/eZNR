@@ -18,29 +18,29 @@ const LAW_LINKS = [
     {
         category: 'Zakoni — FBiH', icon: '🛡️',
         items: [
-            { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-zastiti-na-radu-fbih.html' },
-            { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-radu.html' },
-            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.paragraf.ba/propisi_files/fbih/zakon-o-zastiti-od-pozara-i-vatrogastvu.html' },
+            { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-na-radu.html' },
+            { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-radu.html' },
+            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-od-pozara-i-vatrogastvu.html' },
         ]
     },
     {
         category: 'Zakoni — Republika Srpska', icon: '🛡️',
         items: [
-            { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi_files/rs/zakon-o-zastiti-na-radu.html' },
-            { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21', url: 'https://www.paragraf.ba/propisi_files/rs/zakon-o-radu.html' },
+            { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.google.com/search?q=Zakon+o+za%C5%A1titi+na+radu+RS+1%2F08+pre%C4%8Di%C5%A1%C4%87en+tekst' },
+            { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21', url: 'https://www.narodnaskupstinars.net' },
+            { name: 'Sl. glasnik RS — zvanični portal (slglasnik.org)', url: 'https://slglasnik.org' },
         ]
     },
     {
         category: 'Pravilnici i podzakonski akti — FBiH', icon: '📜',
         items: [
-            { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.paragraf.ba/propisi/fbih/' },
-            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.paragraf.ba/propisi_files/fbih/pravila-o-procjeni-rizika.html' },
-            { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.paragraf.ba/propisi/fbih/' },
-            { name: 'Pravilnik o evidencijama iz oblasti zaštite na radu — FBiH', url: 'https://www.sllist.ba' },
+            { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.google.com/search?q=Pravilnik+o+upotrebi+li%C4%8Dne+za%C5%A1titne+opreme+FBiH+42%2F25' },
+            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.google.com/search?q=Pravila+o+procjeni+rizika+FBiH+23%2F21+tekst' },
+            { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.google.com/search?q=Pravilnik+o+uvjetima+obavljanja+poslova+za%C5%A1tite+na+radu+FBiH+34%2F21' },
         ]
     },
     {
-        category: 'EU Direktive (harmonizacija s BiH)', icon: '🇪🇺',
+        category: 'EU Direktive (harmonizacija s BiH) ✓', icon: '🇪🇺',
         items: [
             { name: 'Direktiva 89/391/EEZ — Okvirna direktiva (transponirana u Zakon FBiH 79/20)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391' },
             { name: 'Direktiva 89/654/EEZ — Minimalni zahtjevi za radna mjesta', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0654' },
@@ -53,16 +53,15 @@ const LAW_LINKS = [
         ]
     },
     {
-        category: 'Korisni linkovi — Institucije i portali', icon: '🔗',
+        category: 'Korisni linkovi — Institucije i portali ✓', icon: '🔗',
         items: [
-            { name: 'Paragraf.ba — Besplatna pravna baza BiH (FBiH + RS zakoni, prečišćeni tekstovi)', url: 'https://www.paragraf.ba' },
-            { name: 'Sl. novine FBiH — Zvanični pretraživač propisa FBiH', url: 'https://www.sllist.ba' },
-            { name: 'Sl. glasnik RS — Zvanični pretraživač propisa RS', url: 'https://www.slglasnikrs.ba' },
-            { name: 'Federalna inspekcija rada (FUZIP) — fuzip.gov.ba', url: 'https://fuzip.gov.ba' },
-            { name: 'Inspektorat RS — inspekcija rada Republika Srpska', url: 'https://inspektorat.vladars.net' },
-            { name: 'Federalno ministarstvo rada i socijalne politike — fmrsp.gov.ba', url: 'https://www.fmrsp.gov.ba' },
-            { name: 'Ministarstvo rada i bor.-inv. zaštite RS — vladars.net', url: 'https://www.vladars.net' },
-            { name: 'ILO — Međunarodna organizacija rada (Budimpešta)', url: 'https://www.ilo.org/budapest' },
+            { name: 'Sl. glasnik RS — slglasnik.org (e-RP registar propisa)', url: 'https://slglasnik.org' },
+            { name: 'Federalna inspekcija rada (FUZIP FBiH) — fuzip.gov.ba', url: 'https://fuzip.gov.ba/inspektorati/federalni-inspektorat-rada/' },
+            { name: 'Inspektorat RS — inspekcija rada — inspektorat.vladars.rs', url: 'https://inspektorat.vladars.rs' },
+            { name: 'Federalno ministarstvo rada i socijalne politike FBiH', url: 'https://fmrsp.gov.ba' },
+            { name: 'Narodna skupština RS — zakoni i propisi', url: 'https://www.narodnaskupstinars.net' },
+            { name: 'Paragraf.ba — Pravna baza BiH (FBiH + RS zakoni)', url: 'https://www.paragraf.ba' },
+            { name: 'ILO — Međunarodna organizacija rada (BiH stranica)', url: 'https://www.ilo.org/countries/bosnia-herzegovina' },
             { name: 'EUR-Lex — EU direktive o zaštiti na radu (pretraživač)', url: 'https://eur-lex.europa.eu/search.html?text=safety+health+workers&scope=EURLEX&type=quick&lang=hr' },
         ]
     },
