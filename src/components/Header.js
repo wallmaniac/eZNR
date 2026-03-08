@@ -302,18 +302,23 @@ export default function Header({ sidebarCollapsed }) {
                                 {notifications.length === 0 ? (
                                     <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
                                 ) : notifications.map((n, idx) => {
-                                    const sc = { critical: { bg: '#FEF2F2', dot: '#EF4444' }, urgent: { bg: '#FFF7ED', dot: '#F97316' }, warning: { bg: '#FFFBEB', dot: '#F59E0B' }, info: { bg: '#F0FDF4', dot: '#22C55E' } };
+                                    const sc = {
+                                        critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: '#B91C1C' },
+                                        urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: '#C2410C' },
+                                        warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: '#92400E' },
+                                        info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: '#166534' },
+                                    };
                                     const c = sc[n.severity] || sc.info;
                                     return (
-                                        <div key={n.id || idx} style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-light)', background: c.bg, borderLeft: `3px solid ${c.dot}` }}>
+                                        <div key={n.id || idx} style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-light)', background: c.bg, borderLeft: `3px solid ${c.border}` }}>
                                             <div style={{ display: 'flex', gap: 10 }}>
                                                 <span style={{ fontSize: '1.1rem' }}>{n.icon}</span>
                                                 <div style={{ flex: 1 }}>
-                                                    <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{n.text}</div>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.82rem', color: c.titleColor }}>{n.text}</div>
                                                     {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 3 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
-                                                        {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.dot}`, background: 'var(--bg-input)', color: c.dot, fontWeight: 600, cursor: 'pointer' }}>{n.actionLabel}</button>}
-                                                        {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}</button>}
+                                                        {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
+                                                        {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}</button>}
                                                     </div>
                                                 </div>
                                             </div>
