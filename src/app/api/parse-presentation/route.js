@@ -4,17 +4,13 @@ import { NextResponse } from 'next/server';
    POST /api/parse-presentation
    Body: FormData with field "file" (PDF or PPTX)
 
-   PDF  → sent directly to Gemini 2.0 Flash as base64
-           Gemini reads the PDF natively and generates slides
-   PPTX → extract slides directly from XML (no AI needed)
+   PDF  → uploaded to Gemini Files API → model reads it → slides
+   PPTX → text extracted directly from XML shapes → slides
 
    Returns: { slides: [{ id, naslov, sadrzaj }], source, count }
    ═══════════════════════════════════════════════════════════ */
 
 export const runtime = 'nodejs';
-
-// Max PDF size to send to Gemini (15MB encoded is safe)
-const MAX_PDF_MB = 15;
 
 export async function POST(request) {
     try {
@@ -36,12 +32,12 @@ export async function POST(request) {
 
         } else if (fileName.endsWith('.pdf')) {
             const sizeMB = buffer.length / (1024 * 1024);
-            if (sizeMB > MAX_PDF_MB) {
+            if (sizeMB > 15) {
                 return NextResponse.json({
-                    error: `PDF je prevelik (${sizeMB.toFixed(1)} MB). Maksimalno ${MAX_PDF_MB} MB.`,
+                    error: `PDF je prevelik (${sizeMB.toFixed(1)} MB). Maksimalno 15 MB.`,
                 }, { status: 400 });
             }
-            slides = await generateSlidesFromPDF(buffer, file.name);
+            slides = await generateSlidesFromPDF(buffer);
             source = 'pdf-ai';
 
         } else if (fileName.endsWith('.ppt')) {
@@ -71,26 +67,49 @@ export async function POST(request) {
     }
 }
 
-// ─── PDF → Gemini (reads PDF natively as inline base64) ──────────────────────
-async function generateSlidesFromPDF(buffer, filename) {
+// ─── PDF → Gemini Files API → generateContent ────────────────────────────────
+async function generateSlidesFromPDF(buffer) {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('Gemini API key nije konfiguriran');
+    if (!apiKey) throw new Error('Gemini API key nije konfigurisan');
 
-    const base64Data = buffer.toString('base64');
+    // ── Step 1: Upload file to Gemini Files API ──
+    const uploadRes = await fetch(
+        `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`,
+        {
+            method: 'POST',
+            headers: {
+                'X-Goog-Upload-Protocol': 'raw',
+                'X-Goog-Upload-Header-Content-Type': 'application/pdf',
+                'Content-Type': 'application/pdf',
+            },
+            body: buffer,
+        }
+    );
 
+    if (!uploadRes.ok) {
+        const errText = await uploadRes.text();
+        console.error('Gemini upload error:', uploadRes.status, errText);
+        throw new Error(`Upload fajla neuspješan (${uploadRes.status})`);
+    }
+
+    const uploadData = await uploadRes.json();
+    const fileUri = uploadData.file?.uri;
+    if (!fileUri) throw new Error('Gemini nije vratio URI fajla');
+
+    // ── Step 2: Generate slides from the uploaded file ──
     const prompt = `Ti si ekspert za zaštitu na radu u Bosni i Hercegovini. Pročitaj ovaj PDF dokument i kreiraj edukativan materijal za radnike u obliku slajdova prezentacije.
 
 Kreiraj između 5 i 15 slajdova koji pokrivaju najvažnije informacije iz dokumenta.
 Svaki slajd treba imati:
-- naslov: kratki, jasni naslov (1 rečenica, max 10 riječi)
-- sadrzaj: ključne informacije kao bullet tačke (3-7 tačaka), svaka počinje sa • 
+- naslov: kratki, jasni naslov (max 10 riječi)
+- sadrzaj: ključne informacije kao bullet tačke (3-7 tačaka), svaka počinje sa •
 
 Pravila:
 - Piši na bosanskom/srpskom/hrvatskom jeziku
 - Fokusiraj se na informacije BITNE za radnika
 - Grupiši srodne informacije zajedno
 - Kratke, jasne rečenice
-- Preskoci naslovne strane, sadržaj, bibliografiju - fokus na sadržaj
+- Preskoči naslovne strane, sadržaj i bibliografiju
 
 Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
 {
@@ -102,7 +121,7 @@ Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
   ]
 }`;
 
-    const response = await fetch(
+    const genRes = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         {
             method: 'POST',
@@ -111,10 +130,9 @@ Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
                 contents: [{
                     parts: [
                         {
-                            // Send the PDF directly — Gemini 2.0 Flash reads it natively
-                            inline_data: {
+                            file_data: {
                                 mime_type: 'application/pdf',
-                                data: base64Data,
+                                file_uri: fileUri,
                             },
                         },
                         { text: prompt },
@@ -129,14 +147,14 @@ Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
         }
     );
 
-    if (!response.ok) {
-        const errText = await response.text();
-        console.error('Gemini API error:', errText);
-        throw new Error('Gemini API greška: ' + response.status);
+    if (!genRes.ok) {
+        const errText = await genRes.text();
+        console.error('Gemini generate error:', genRes.status, errText);
+        throw new Error(`Gemini generisanje neuspješno (${genRes.status})`);
     }
 
-    const data = await response.json();
-    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    const genData = await genRes.json();
+    const rawText = genData.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
 
     let parsed;
     try {
@@ -149,6 +167,15 @@ Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
 
     if (!parsed?.slides?.length) {
         throw new Error('Gemini nije vratio validne slajdove');
+    }
+
+    // ── Step 3: Clean up — delete uploaded file from Gemini ──
+    // (fire and forget — don't block response)
+    const fileName = fileUri.split('/').pop();
+    if (fileName) {
+        fetch(`https://generativelanguage.googleapis.com/v1beta/files/${fileName}?key=${apiKey}`, {
+            method: 'DELETE',
+        }).catch(() => {});
     }
 
     return parsed.slides.map(s => ({
@@ -214,7 +241,6 @@ function extractSlideText(xml) {
         else bodyTexts.push(shapeText);
     }
 
-    // If no title placeholder found, first text block becomes title
     if (!titleText && bodyTexts.length > 0) {
         titleText = bodyTexts.shift() || '';
     }
