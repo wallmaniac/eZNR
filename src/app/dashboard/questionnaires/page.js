@@ -90,7 +90,7 @@ export default function QuestionnairesPage() {
   const [search, setSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null); // for Akcije dropdown
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 }); // fixed-position coords
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 400 }); // fixed-position coords
   const menuButtonRef = useRef(null); // ref to the button that opened the menu
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
   const [dispatchQuestionnaire, setDispatchQuestionnaire] = useState(null);
@@ -317,7 +317,8 @@ export default function QuestionnairesPage() {
                               if (openMenuId === r.id) { setOpenMenuId(null); menuButtonRef.current = null; return; }
                               const rect = e.currentTarget.getBoundingClientRect();
                               menuButtonRef.current = e.currentTarget;
-                              setMenuPos({ top: rect.bottom + 4, left: rect.left });
+                              const availableBelow = window.innerHeight - rect.bottom - 8;
+                              setMenuPos({ top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, availableBelow) });
                               setOpenMenuId(r.id);
                             }}
                           >
@@ -328,7 +329,7 @@ export default function QuestionnairesPage() {
                               position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
                               background: 'var(--bg-card)', border: '1px solid var(--border)',
                               borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
-                              minWidth: 210, maxHeight: '90vh', overflowY: 'auto',
+                              minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                             }}>
                               <button onClick={() => handleEdit(r)} style={menuItemStyle}>
                                 📝 {lang === 'bs' ? 'Otvori' : 'Open'}

@@ -57,7 +57,7 @@ export default function TrainingsPage() {
     const [sessions, setSessions] = useState([]);
     const [loadingSessions, setLoadingSessions] = useState(false);
     const [openMenuId, setOpenMenuId] = useState(null);
-    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 400 });
     const menuButtonRef = useRef(null);
 
     const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
@@ -345,7 +345,8 @@ export default function TrainingsPage() {
                                                             if (openMenuId === r.id) { setOpenMenuId(null); return; }
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             menuButtonRef.current = e.currentTarget;
-                                                            setMenuPos({ top: rect.bottom + 4, left: rect.left });
+                                                            const availableBelow = window.innerHeight - rect.bottom - 8;
+                                                            setMenuPos({ top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, availableBelow) });
                                                             setOpenMenuId(r.id);
                                                         }}>
                                                         Akcije ▼
@@ -355,7 +356,7 @@ export default function TrainingsPage() {
                                                             position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
                                                             background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
-                                                            minWidth: 210, maxHeight: '90vh', overflowY: 'auto',
+                                                            minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                         }}>
                                                             <button onClick={() => handleEdit(r)} style={menuItemSt}>📝 Uredi</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
