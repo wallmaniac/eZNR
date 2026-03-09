@@ -49,6 +49,7 @@ export default function PublicTrainingPage({ params }) {
     const slides = session?.slides || [];
     const questions = session?.questions || [];
     const prolazniPrag = session?.prolazniPrag ?? 70;
+    const dozvoliPovratak = session?.dozvoliPovratak ?? false;
 
     const handleSubmitQuiz = async () => {
         if (!session?.id) return;
@@ -212,9 +213,11 @@ export default function PublicTrainingPage({ params }) {
 
                         {isLast ? (
                             <button
-                                onClick={() => { setPhase('quiz'); setQuizIdx(0); setAnswers({}); }}
+                                onClick={() => { setPhase('quiz'); setQuizIdx(0); }}
                                 style={{ padding: '10px 28px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 20px rgba(34,197,94,0.3)' }}>
-                                {questions.length > 0 ? '✅ Počni test →' : '✅ Završi prezentaciju'}
+                                {questions.length > 0
+                                    ? (Object.keys(answers).length > 0 ? '▶️ Nastavi test →' : '✅ Počni test →')
+                                    : '✅ Završi prezentaciju'}
                             </button>
                         ) : (
                             <button
@@ -264,7 +267,7 @@ export default function PublicTrainingPage({ params }) {
                 <div style={{ ...containerStyle, maxWidth: 720 }}>
                     <Logo />
 
-                    {/* Header — no back button, quiz is one-way */}
+                    {/* Header — back button only if officer enabled it */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                         <div>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 20, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', marginBottom: 4 }}>
@@ -272,9 +275,14 @@ export default function PublicTrainingPage({ params }) {
                             </div>
                             <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#e2e8f0', margin: 0 }}>{session.trainingName}</h1>
                         </div>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
-                            Test se ne može prekinuti
-                        </div>
+                        {dozvoliPovratak ? (
+                            <button onClick={() => setPhase('slides')}
+                                style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                ← Vrati se na prezentaciju
+                            </button>
+                        ) : (
+                            <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>Test se ne može prekinuti</div>
+                        )}
                     </div>
 
                     {/* Progress */}

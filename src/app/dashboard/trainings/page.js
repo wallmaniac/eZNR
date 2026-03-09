@@ -24,6 +24,7 @@ const EMPTY_TRAINING = {
     questions: [],
     prolazniPrag: 70,
     prikaziRezultate: true,
+    dozvoliPovratak: false,
     responses: [],
 };
 
@@ -641,6 +642,16 @@ export default function TrainingsPage() {
                                 <div>
                                     <div style={{ fontWeight: 600 }}>Prikaži rezultate radniku odmah po završetku</div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik vidi postotak i prolaz/pad odmah</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                                <input type="checkbox" className="form-checkbox" checked={formData.dozvoliPovratak ?? false}
+                                    onChange={e => setF('dozvoliPovratak', e.target.checked)} />
+                                <div>
+                                    <div style={{ fontWeight: 600 }}>Dozvoli povratak na prezentaciju tokom testa</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik može otvoriti prezentaciju tokom testa — odgovori se čuvaju</div>
                                 </div>
                             </label>
                         </div>
