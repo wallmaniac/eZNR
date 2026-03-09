@@ -63,28 +63,29 @@ export default function TrainingsPage() {
     const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
     useEffect(() => { loadData(); }, [loadData]);
 
-    // Close dropdown on outside click
+    // Close dropdown on outside click — ignore clicks on the trigger button itself
     useEffect(() => {
         if (!openMenuId) return;
         let id;
         const close = (e) => {
             if (e.target.closest?.('[data-menu]')) return;
+            if (e.target.closest?.('[data-menu-trigger]')) return;
             setOpenMenuId(null);
         };
         id = requestAnimationFrame(() => document.addEventListener('mousedown', close));
         return () => { cancelAnimationFrame(id); document.removeEventListener('mousedown', close); };
     }, [openMenuId]);
 
+    // Close menu if trigger button scrolls out of view — do NOT reposition (causes bounce)
     useEffect(() => {
         if (!openMenuId || !menuButtonRef.current) return;
-        const update = () => {
+        const checkVisible = () => {
             if (!menuButtonRef.current) return;
             const rect = menuButtonRef.current.getBoundingClientRect();
-            if (rect.bottom < 0 || rect.top > window.innerHeight) { setOpenMenuId(null); return; }
-            setMenuPos({ top: rect.bottom + 4, left: rect.left });
+            if (rect.bottom < 0 || rect.top > window.innerHeight) setOpenMenuId(null);
         };
-        window.addEventListener('scroll', update, true);
-        return () => window.removeEventListener('scroll', update, true);
+        window.addEventListener('scroll', checkVisible, true);
+        return () => window.removeEventListener('scroll', checkVisible, true);
     }, [openMenuId]);
 
     // ── CRUD ─────────────────────────────────
@@ -338,7 +339,7 @@ export default function TrainingsPage() {
                                         <tr key={r.id}>
                                             <td>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm"
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (openMenuId === r.id) { setOpenMenuId(null); return; }

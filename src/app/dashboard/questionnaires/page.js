@@ -149,40 +149,29 @@ export default function QuestionnairesPage() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, [view]);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside — ignore the trigger button itself
   useEffect(() => {
     if (!openMenuId) return;
     let id;
     const close = (e) => {
-      // Don't close if clicking inside the dropdown
       if (e.target.closest && e.target.closest('[data-akcije-menu]')) return;
+      if (e.target.closest && e.target.closest('[data-menu-trigger]')) return;
       setOpenMenuId(null);
     };
-    // Delay adding listener to avoid catching the same click that opened it
-    id = requestAnimationFrame(() => {
-      document.addEventListener('mousedown', close);
-    });
-    return () => {
-      cancelAnimationFrame(id);
-      document.removeEventListener('mousedown', close);
-    };
+    id = requestAnimationFrame(() => { document.addEventListener('mousedown', close); });
+    return () => { cancelAnimationFrame(id); document.removeEventListener('mousedown', close); };
   }, [openMenuId]);
 
-  // Track scroll — reposition dropdown so it follows its trigger button
+  // Close menu if button scrolls off screen — do NOT reposition (causes bounce)
   useEffect(() => {
     if (!openMenuId || !menuButtonRef.current) return;
-    const updatePos = () => {
+    const checkVisible = () => {
       if (!menuButtonRef.current) return;
       const rect = menuButtonRef.current.getBoundingClientRect();
-      // If button scrolled out of view, close the menu
-      if (rect.bottom < 0 || rect.top > window.innerHeight) {
-        setOpenMenuId(null);
-        return;
-      }
-      setMenuPos({ top: rect.bottom + 4, left: rect.left });
+      if (rect.bottom < 0 || rect.top > window.innerHeight) setOpenMenuId(null);
     };
-    window.addEventListener('scroll', updatePos, true);
-    return () => window.removeEventListener('scroll', updatePos, true);
+    window.addEventListener('scroll', checkVisible, true);
+    return () => window.removeEventListener('scroll', checkVisible, true);
   }, [openMenuId]);
 
   // CRUD
@@ -322,12 +311,18 @@ export default function QuestionnairesPage() {
                         <div style={{ position: 'relative' }}>
                           <button
                             className="btn btn-primary btn-sm"
+                            data-menu-trigger
                             onClick={(e) => {
                               e.stopPropagation();
                               if (openMenuId === r.id) { setOpenMenuId(null); menuButtonRef.current = null; return; }
                               const rect = e.currentTarget.getBoundingClientRect();
                               menuButtonRef.current = e.currentTarget;
-                              setMenuPos({ top: rect.bottom + 4, left: rect.left });
+                              const estimatedHeight = 260;
+                              const spaceBelow = window.innerHeight - rect.bottom;
+                              const top = spaceBelow < estimatedHeight
+                                ? Math.max(8, rect.top - estimatedHeight - 4)
+                                : rect.bottom + 4;
+                              setMenuPos({ top, left: rect.left });
                               setOpenMenuId(r.id);
                             }}
                           >
@@ -338,7 +333,7 @@ export default function QuestionnairesPage() {
                               position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
                               background: 'var(--bg-card)', border: '1px solid var(--border)',
                               borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
-                              minWidth: 200, overflow: 'visible',
+                              minWidth: 210, maxHeight: '90vh', overflowY: 'auto',
                             }}>
                               <button onClick={() => handleEdit(r)} style={menuItemStyle}>
                                 📝 {lang === 'bs' ? 'Otvori' : 'Open'}

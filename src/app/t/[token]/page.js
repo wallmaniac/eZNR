@@ -503,7 +503,7 @@ export default function PublicTrainingPage({ params }) {
 function Logo() {
     return (
         <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <img src="/transparentlogo.png" alt="eZNR" style={{ height: 56, maxWidth: 200, objectFit: 'contain' }} />
+            <img src="/extracted_Logo_0.png" alt="eZNR" style={{ height: 56, maxWidth: 220, objectFit: 'contain' }} />
         </div>
     );
 }
