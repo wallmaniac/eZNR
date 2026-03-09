@@ -93,14 +93,9 @@ export default function PublicQuestionnairePage({ params }) {
             {/* Decorative background */}
             <div style={bgGradient1} />
             <div style={bgGradient2} />
-            {/* Bottom logo — fixed, always visible */}
-            <div style={{ position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 50, pointerEvents: 'none' }}>
-                <img src="/blulogo.jpg" alt="eZNR" style={{ height: 48, maxWidth: 180, objectFit: 'contain', opacity: 0.85 }} />
-            </div>
 
             <div style={containerStyle}>
-                {/* Bottom logo — fixed */}
-                
+
                 {/* Loading */}
                 {loading && (
                     <div style={{ textAlign: 'center', padding: '60px 20px' }}>
@@ -218,11 +213,8 @@ export default function PublicQuestionnairePage({ params }) {
                 )}
 
                 {/* Footer */}
-                <div style={{
-                    textAlign: 'center', padding: '32px 0 16px',
-                    color: '#475569', fontSize: '0.75rem',
-                }}>
-                    Powered by <span style={{ color: '#6366f1', fontWeight: 600 }}>eZNR</span> — Zaštita na radu
+                <div style={{ textAlign: 'center', padding: '40px 0 24px' }}>
+                    <img src="/blulogo.jpg" alt="eZNR" style={{ height: 64, maxWidth: 220, objectFit: 'contain' }} />
                 </div>
             </div>
         </div>
@@ -256,7 +248,7 @@ const bgGradient2 = {
 
 const containerStyle = {
     maxWidth: 800, margin: '0 auto',
-    padding: '20px 20px 80px',
+    padding: '20px 20px',
     position: 'relative',
     zIndex: 1,
 };

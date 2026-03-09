@@ -148,7 +148,6 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
-                <Logo />
                 <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 860 }}>
 
@@ -259,8 +258,7 @@ export default function PublicTrainingPage({ params }) {
                 <div style={pageStyle}>
                     <BgGlow />
                     <div style={containerStyle}>
-                        <Logo />
-                        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                                <div style={{ textAlign: 'center', padding: '60px 0' }}>
                             <Spinner size={52} />
                             <p style={{ color: '#94a3b8', marginTop: 20 }}>Završavanje obuke...</p>
                         </div>
@@ -278,7 +276,6 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
-                <Logo />
                 <style>{`@keyframes spin { to { transform:rotate(360deg); } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 720 }}>
 
@@ -413,7 +410,6 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
-                <Logo />
                 <style>{`@keyframes popIn { from { transform:scale(0.5);opacity:0; } to { transform:scale(1);opacity:1; } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 640 }}>
 
@@ -500,13 +496,10 @@ export default function PublicTrainingPage({ params }) {
 
 // ─── Shared UI Components ────────────────────────────────────────────────────
 
-function Logo() {
+function Footer() {
     return (
-        <div style={{
-            position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)',
-            zIndex: 50, pointerEvents: 'none',
-        }}>
-            <img src="/blulogo.jpg" alt="eZNR" style={{ height: 48, maxWidth: 180, objectFit: 'contain', opacity: 0.85 }} />
+        <div style={{ textAlign: 'center', padding: '40px 0 24px' }}>
+            <img src="/blulogo.jpg" alt="eZNR" style={{ height: 64, maxWidth: 220, objectFit: 'contain' }} />
         </div>
     );
 }
@@ -526,13 +519,6 @@ function BgGlow() {
     );
 }
 
-function Footer() {
-    return (
-        <div style={{ textAlign: 'center', padding: '32px 0 16px', color: '#475569', fontSize: '0.75rem' }}>
-            Powered by <span style={{ color: '#6366f1', fontWeight: 600 }}>eZNR</span> — Zaštita na radu
-        </div>
-    );
-}
 
 function iconBox(bg, size = 72) {
     return {
@@ -546,7 +532,7 @@ function iconBox(bg, size = 72) {
 
 const pageStyle = { minHeight: '100vh', background: '#0f172a', position: 'relative', overflow: 'hidden', fontFamily: 'var(--font-body, system-ui, sans-serif)' };
 
-const containerStyle = { maxWidth: 800, margin: '0 auto', padding: '20px 20px 80px', position: 'relative', zIndex: 1 };
+const containerStyle = { maxWidth: 800, margin: '0 auto', padding: '20px 20px', position: 'relative', zIndex: 1 };
 
 const navBtnStyle = {
     padding: '9px 20px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
