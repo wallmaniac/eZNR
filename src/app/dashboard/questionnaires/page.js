@@ -90,7 +90,7 @@ export default function QuestionnairesPage() {
   const [search, setSearch] = useState('');
   const [templateSearch, setTemplateSearch] = useState('');
   const [openMenuId, setOpenMenuId] = useState(null); // for Akcije dropdown
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 400 }); // fixed-position coords
+  const [menuPos, setMenuPos] = useState({ top: 0, bottom: undefined, left: 0, maxH: 400 }); // fixed-position coords
   const menuButtonRef = useRef(null); // ref to the button that opened the menu
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
   const [dispatchQuestionnaire, setDispatchQuestionnaire] = useState(null);
@@ -317,8 +317,13 @@ export default function QuestionnairesPage() {
                               if (openMenuId === r.id) { setOpenMenuId(null); menuButtonRef.current = null; return; }
                               const rect = e.currentTarget.getBoundingClientRect();
                               menuButtonRef.current = e.currentTarget;
-                              const availableBelow = window.innerHeight - rect.bottom - 8;
-                              setMenuPos({ top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, availableBelow) });
+                              const spaceBelow = window.innerHeight - rect.bottom - 8;
+                              const spaceAbove = rect.top - 8;
+                              const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow;
+                              setMenuPos(flipUp
+                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                              );
                               setOpenMenuId(r.id);
                             }}
                           >
@@ -326,7 +331,11 @@ export default function QuestionnairesPage() {
                           </button>
                           {openMenuId === r.id && (
                             <div data-akcije-menu style={{
-                              position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
+                              position: 'fixed',
+                              top: menuPos.top,
+                              bottom: menuPos.bottom,
+                              left: menuPos.left,
+                              zIndex: 9999,
                               background: 'var(--bg-card)', border: '1px solid var(--border)',
                               borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                               minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',

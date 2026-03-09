@@ -57,7 +57,7 @@ export default function TrainingsPage() {
     const [sessions, setSessions] = useState([]);
     const [loadingSessions, setLoadingSessions] = useState(false);
     const [openMenuId, setOpenMenuId] = useState(null);
-    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 400 });
+    const [menuPos, setMenuPos] = useState({ top: 0, bottom: undefined, left: 0, maxH: 400 });
     const menuButtonRef = useRef(null);
 
     const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
@@ -345,15 +345,24 @@ export default function TrainingsPage() {
                                                             if (openMenuId === r.id) { setOpenMenuId(null); return; }
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             menuButtonRef.current = e.currentTarget;
-                                                            const availableBelow = window.innerHeight - rect.bottom - 8;
-                                                            setMenuPos({ top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, availableBelow) });
+                                                            const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                            const spaceAbove = rect.top - 8;
+                                                            const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow;
+                                                            setMenuPos(flipUp
+                                                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                            );
                                                             setOpenMenuId(r.id);
                                                         }}>
                                                         Akcije ▼
                                                     </button>
                                                     {openMenuId === r.id && (
                                                         <div data-menu style={{
-                                                            position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
+                                                            position: 'fixed',
+                                                            top: menuPos.top,
+                                                            bottom: menuPos.bottom,
+                                                            left: menuPos.left,
+                                                            zIndex: 9999,
                                                             background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                             minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
