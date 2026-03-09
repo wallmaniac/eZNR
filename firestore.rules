@@ -58,6 +58,17 @@ service cloud.firestore {
       allow write: if true;
     }
 
+    // 7) Training Sessions — public read by token, public write for status updates
+    //    Same pattern as questionnaire_sessions
+    match /training_sessions/{sessionId} {
+      // Anyone can read a session (worker opens the link)
+      allow read: if true;
+      // Authenticated admins can create sessions (when dispatching)
+      allow create: if isSignedIn();
+      // Public users can update status (mark opened, submit quiz answers)
+      allow update: if true;
+    }
+
     // 4) COMPANY-SCOPED DATA
     match /{collection}/{documentId} {
       allow read, write: if isSignedIn() && belongsToCompany(resource.data.companyId);
