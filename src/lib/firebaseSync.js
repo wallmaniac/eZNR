@@ -25,7 +25,8 @@ const COMPANY_SCOPED = [
     'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs',
     'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
     'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
-    'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
+    'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires', 'trainings',
+
 ];
 
 // Global collections (shared/reference data)
@@ -250,4 +251,74 @@ export function generateToken() {
         }
     }
     return token;
+}
+
+// ─── Training session helpers (for training module dispatch) ─────────────────
+export async function createTrainingSession(session) {
+    const ref = doc(fsCollection(db, 'training_sessions'));
+    const data = {
+        ...session,
+        id: ref.id,
+        createdAt: new Date().toISOString(),
+        status: 'sent', // sent | opened | completed
+    };
+    await setDoc(ref, data);
+    return data;
+}
+
+export async function getTrainingSession(token) {
+    const { getDocs, query, where } = await import('firebase/firestore');
+    const q = query(
+        fsCollection(db, 'training_sessions'),
+        where('token', '==', token)
+    );
+    const snap = await getDocs(q);
+    if (snap.empty) return null;
+    return snap.docs[0].data();
+}
+
+export async function saveTrainingResponse(sessionId, answers, grade = null) {
+    const ref = doc(db, 'training_responses', sessionId);
+    await setDoc(ref, sanitize({
+        sessionId,
+        answers,
+        grade,
+        submittedAt: new Date().toISOString(),
+    }));
+    const sessionRef = doc(db, 'training_sessions', sessionId);
+    await setDoc(sessionRef, {
+        status: 'completed',
+        completedAt: new Date().toISOString(),
+        grade: grade ? { percentage: grade.percentage, passed: grade.passed } : null,
+    }, { merge: true });
+}
+
+export async function markTrainingSessionOpened(sessionId) {
+    const sessionRef = doc(db, 'training_sessions', sessionId);
+    await setDoc(sessionRef, {
+        status: 'opened',
+        openedAt: new Date().toISOString(),
+    }, { merge: true });
+}
+
+export async function getSessionsForTraining(trainingId) {
+    const { getDocs, query, where, orderBy } = await import('firebase/firestore');
+    try {
+        const q = query(
+            fsCollection(db, 'training_sessions'),
+            where('trainingId', '==', trainingId),
+            orderBy('createdAt', 'desc')
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => d.data());
+    } catch (err) {
+        const q = query(
+            fsCollection(db, 'training_sessions'),
+            where('trainingId', '==', trainingId)
+        );
+        const snap = await getDocs(q);
+        const results = snap.docs.map(d => d.data());
+        results.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+        return results;
+    }
 }

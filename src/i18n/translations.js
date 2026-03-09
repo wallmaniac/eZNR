@@ -57,6 +57,8 @@ export const translations = {
     requests: 'Zahtjevnice',
     riskAssessment: 'Procjena rizika',
     questionnaires: 'Upitnici',
+    trainings: 'Obuke i prezentacije',
+
 
     // Common Elements submenu
     countries: 'Države',
@@ -387,6 +389,8 @@ export const translations = {
     requests: 'Requests',
     riskAssessment: 'Risk Assessment',
     questionnaires: 'Questionnaires',
+    trainings: 'Training Modules',
+
 
     // Common Elements submenu
     countries: 'Countries',

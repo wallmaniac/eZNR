@@ -37,6 +37,8 @@ const menuItems = [
             { key: 'requests', icon: '📝', path: '/dashboard/requests' },
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
             { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
+            { key: 'trainings', icon: '🎬', path: '/dashboard/trainings' },
+
         ],
     },
     {

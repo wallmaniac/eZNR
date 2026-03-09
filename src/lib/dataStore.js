@@ -175,6 +175,7 @@ export const COLLECTIONS = {
     PERSON_TYPES: 'personTypes',
     HAZARDS: 'hazards',
     QUESTIONNAIRES: 'questionnaires',
+    TRAININGS: 'trainings',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
