@@ -231,6 +231,32 @@ export default function QuestionnairesPage() {
     loadData();
   };
 
+  // Print questionnaire to new window
+  const handlePrintQuestionnaire = (q) => {
+    setOpenMenuId(null);
+    const questions = q.surveyJson?.pages?.flatMap(p => p.elements || []) || [];
+    const logoHtml = companyLogo ? `<img src="${companyLogo}" style="height:60px;max-width:200px;object-fit:contain;margin-bottom:6px" />` : '';
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${q.naziv || 'Upitnik'}</title>
+      <style>body{font-family:Arial,sans-serif;padding:32px 48px;color:#000}h1{font-size:20px;margin:0 0 4px}hr{border:none;border-top:2px solid #000;margin:16px 0 24px}.q{margin-bottom:18px;page-break-inside:avoid}.qt{font-size:13px;font-weight:700;margin-bottom:6px}.opt{font-size:12px;padding:2px 0 2px 20px}.meta{font-size:11px;color:#666;margin-bottom:4px}@media print{button{display:none}}</style>
+    </head><body>
+      ${logoHtml}
+      ${companyName ? `<div class="meta">${companyName}</div>` : ''}
+      <h1>${q.naziv || 'Upitnik'}</h1>
+      <div class="meta">${officerName} &mdash; ${new Date().toLocaleDateString('hr-HR')}</div>
+      <hr />
+      ${questions.map((el, i) => {
+        const opts = el.choices || el.rateValues || [];
+        return `<div class="q">
+          <div class="qt">${i + 1}. ${el.title || el.name || ''}</div>
+          ${opts.map((o, j) => `<div class="opt">${String.fromCharCode(65+j)}) ${typeof o === 'string' ? o : (o.text || o.value || '')}</div>`).join('')}
+        </div>`;
+      }).join('')}
+      <button onclick="window.print()" style="margin-top:24px;padding:8px 20px;font-size:14px;cursor:pointer">🖨️ Isprintaj</button>
+    </body></html>`;
+    const w = window.open('', '_blank');
+    if (w) { w.document.write(html); w.document.close(); }
+  };
+
   const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
   const sectionTitle = { fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 };
   const menuItemStyle = {
@@ -324,6 +350,9 @@ export default function QuestionnairesPage() {
                                 {r.prikaziNaPortalu ? '🔒' : '🌐'} {lang === 'bs'
                                   ? (r.prikaziNaPortalu ? 'Sakrij s portala' : 'Prikaži na portalu')
                                   : (r.prikaziNaPortalu ? 'Hide from portal' : 'Show on portal')}
+                              </button>
+                              <button onClick={() => handlePrintQuestionnaire(r)} style={menuItemStyle}>
+                                🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
                               </button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                               <button onClick={() => { setOpenMenuId(null); setDispatchQuestionnaire(r); setDispatchModalOpen(true); }} style={menuItemStyle}>

@@ -34,6 +34,11 @@ const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 export default function TrainingsPage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
+    const { user, activeCompanyId } = useAuth();
+    const officerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin';
+    const activeCompany = getUserCompanies(user?.id).find(c => c.id === activeCompanyId);
+    const companyName = activeCompany?.naziv || '';
+    const companyLogo = activeCompany?.logo || '';
 
     const [view, setView] = useState('list'); // list | form | results
     const [records, setRecords] = useState([]);
@@ -243,6 +248,35 @@ export default function TrainingsPage() {
         finally { setLoadingSessions(false); }
     };
 
+    // ── PRINT ──────────────────────────────────
+    const handlePrintTraining = (training) => {
+        setOpenMenuId(null);
+        const slides = training.slides || [];
+        const questions = training.questions || [];
+        const logoHtml = companyLogo ? `<img src="${companyLogo}" style="height:60px;max-width:200px;object-fit:contain;margin-bottom:6px" />` : '';
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${training.naziv || 'Obuka'}</title>
+          <style>body{font-family:Arial,sans-serif;padding:32px 48px;color:#000}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:24px 0 12px}hr{border:none;border-top:2px solid #000;margin:16px 0 24px}.slide{margin-bottom:20px;page-break-inside:avoid}.sn{font-size:13px;font-weight:700;margin-bottom:4px}.sc{font-size:11px;white-space:pre-wrap;line-height:1.6}.q{margin-bottom:16px;page-break-inside:avoid}.qt{font-size:12px;font-weight:700;margin-bottom:4px}.opt{font-size:11px;padding:2px 0 2px 16px}.meta{font-size:11px;color:#666;margin-bottom:4px}@media print{button{display:none}}</style>
+        </head><body>
+          ${logoHtml}
+          ${companyName ? `<div class="meta">${companyName}</div>` : ''}
+          <h1>${training.naziv || 'Obuka'}</h1>
+          <div class="meta">${officerName} &mdash; ${new Date().toLocaleDateString('hr-HR')}</div>
+          <hr />
+          ${slides.map((s, i) => `<div class="slide">
+            <div class="sn">Slajd ${i + 1}: ${s.naslov || ''}</div>
+            <div class="sc">${s.sadrzaj || ''}</div>
+          </div>`).join('')}
+          ${questions.length > 0 ? `<hr /><h2>TEST ZNANJA</h2>
+          ${questions.map((q, i) => `<div class="q">
+            <div class="qt">${i + 1}. ${q.pitanje || ''}</div>
+            ${(q.opcije || []).map((o, j) => `<div class="opt">${String.fromCharCode(65 + j)}) ${o}</div>`).join('')}
+          </div>`).join('')}` : ''}
+          <button onclick="window.print()" style="margin-top:24px;padding:8px 20px;font-size:14px;cursor:pointer">🖨️ Isprintaj</button>
+        </body></html>`;
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(html); w.document.close(); }
+    };
+
     // ═══════════════════════════════ STYLES ════════════════════════════════
     const lbl = { fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
@@ -322,6 +356,7 @@ export default function TrainingsPage() {
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200,
                                                         }}>
                                                             <button onClick={() => handleEdit(r)} style={menuItemSt}>📝 Uredi</button>
+                                                            <button onClick={() => handlePrintTraining(r)} style={menuItemSt}>🖨️ Isprintaj</button>
                                                             <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} style={menuItemSt}>📧 Pošalji radnicima</button>
                                                             <button onClick={() => openResults(r)} style={menuItemSt}>📊 Rezultati</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />

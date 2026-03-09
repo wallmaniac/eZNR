@@ -230,19 +230,6 @@ export default function PublicQuestionnairePage({ params }) {
                             prolazniPrag={session.prolazniPrag ?? 70}
                             prikaziRezultate={session.prikaziRezultateNakonRjesavanja !== false}
                         />
-                        {/* Print button */}
-                        <div style={{ textAlign: 'center', marginTop: 12, marginBottom: 8 }} className="no-print">
-                            <button onClick={() => window.print()} style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                🖨️ Isprintaj upitnik
-                            </button>
-                        </div>
-
-                        <style>{`
-                            @media print {
-                                .no-print { display: none !important; }
-                                body { background: #fff !important; color: #000 !important; }
-                            }
-                        `}</style>
                     </div>
                 )}
 
