@@ -16,7 +16,7 @@ function checkRate(ip) {
 
 // ─── Model cascade ────────────────────────────────────────────────────────────
 // Verified via ListModels against this API key (2025-03-05)
-const MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash-001'];
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
 
 export async function POST(request) {
     // 1. Rate limit by IP
