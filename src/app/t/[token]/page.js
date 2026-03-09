@@ -496,7 +496,7 @@ export default function PublicTrainingPage({ params }) {
 function Footer() {
     return (
         <div style={{ textAlign: 'center', padding: '40px 0 24px' }}>
-            <img src="/blulogo.jpg" alt="eZNR" style={{ height: 64, maxWidth: 220, objectFit: 'contain' }} />
+            <img src="/blulogo.jpg" alt="eZNR" style={{ height: 128, maxWidth: 440, objectFit: 'contain' }} />
         </div>
     );
 }
