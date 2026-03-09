@@ -148,7 +148,6 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
             generationConfig: {
                 temperature: 0.3,
                 maxOutputTokens: 8192,
-                responseMimeType: 'application/json',
             },
         }),
     });
@@ -168,12 +167,21 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
 
     const genData = await genRes.json();
     const rawText = genData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    console.log('[parse-presentation] Response length:', rawText.length);
+    console.log('[parse-presentation] Response length:', rawText.length, 'Preview:', rawText.substring(0, 200));
+
+    // Check for blocked/empty responses
+    if (!rawText) {
+        const blockReason = genData.candidates?.[0]?.finishReason || genData.promptFeedback?.blockReason || 'unknown';
+        console.error('[parse-presentation] Empty response. Reason:', blockReason, JSON.stringify(genData).substring(0, 500));
+        throw new Error(`Gemini vratio prazan odgovor (razlog: ${blockReason})`);
+    }
 
     const slides = parseJsonSlides(rawText);
     if (slides.length === 0) {
-        console.error('[parse-presentation] Could not parse slides from:', rawText.substring(0, 300));
-        throw new Error('Gemini nije vratio validne slajdove');
+        console.error('[parse-presentation] Could not parse slides from:', rawText.substring(0, 500));
+        // Return a helpful error with part of what Gemini actually said
+        const preview = rawText.substring(0, 150).replace(/[\n\r]+/g, ' ');
+        throw new Error(`Gemini odgovor nije JSON format. Odgovor: "${preview}..."`);
     }
 
     console.log(`[parse-presentation] Success: ${slides.length} slides generated`);
