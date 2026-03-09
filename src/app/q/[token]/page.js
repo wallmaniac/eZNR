@@ -97,7 +97,7 @@ export default function PublicQuestionnairePage({ params }) {
             <div style={containerStyle}>
                 {/* Logo / Brand */}
                 <div style={{ textAlign: 'center', marginBottom: 28, position: 'relative', zIndex: 1 }}>
-                    <img src="/extracted_Logo_0.png" alt="eZNR" style={{ height: 64, maxWidth: 240, objectFit: 'contain', mixBlendMode: 'screen' }} />
+                    <img src="/transparentlogo.jpg" alt="eZNR" style={{ height: 72, maxWidth: 260, objectFit: 'contain', mixBlendMode: 'screen' }} />
                 </div>
 
                 {/* Loading */}
