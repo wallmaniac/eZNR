@@ -166,7 +166,14 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
     }
 
     const genData = await genRes.json();
-    const rawText = genData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+
+    // gemini-2.5-flash may return multiple parts (thinking + response)
+    // Collect ALL text parts, not just the first one
+    const allParts = genData.candidates?.[0]?.content?.parts || [];
+    const rawText = allParts
+        .filter(p => p.text && !p.thought) // skip thinking parts
+        .map(p => p.text)
+        .join('\n');
     console.log('[parse-presentation] Response length:', rawText.length, 'Preview:', rawText.substring(0, 200));
 
     // Check for blocked/empty responses
@@ -190,34 +197,43 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ─── Parse JSON slides from Gemini response ──────────────────────────────────
+// ─── Parse JSON slides from Gemini response ──────────────────────────────────────────
 function parseJsonSlides(text) {
     if (!text) return [];
-    try {
-        const clean = text.replace(/```json\n?|\n?```/g, '').trim();
-        const parsed = JSON.parse(clean);
-        if (parsed?.slides?.length) {
-            return parsed.slides.map(s => ({
-                id: genId(),
-                naslov: (s.naslov || '').trim(),
-                sadrzaj: (s.sadrzaj || '').trim(),
-            }));
-        }
-    } catch {
-        try {
-            const match = text.match(/\{[\s\S]*\}/);
-            if (match) {
-                const parsed = JSON.parse(match[0]);
-                if (parsed?.slides?.length) {
-                    return parsed.slides.map(s => ({
-                        id: genId(),
-                        naslov: (s.naslov || '').trim(),
-                        sadrzaj: (s.sadrzaj || '').trim(),
-                    }));
-                }
-            }
-        } catch { /* */ }
+
+    // Step 1: Strip markdown code fences aggressively
+    let clean = text;
+    // Remove ```json ... ``` wrapping (handles various formats)
+    clean = clean.replace(/^[\s\S]*?```(?:json)?\s*\n?/i, ''); // strip everything before and including opening fence
+    clean = clean.replace(/\n?```[\s\S]*$/, '');                // strip closing fence and everything after
+    clean = clean.trim();
+
+    // If still doesn't start with {, try to find the JSON object
+    if (!clean.startsWith('{')) {
+        const jsonStart = clean.indexOf('{');
+        if (jsonStart >= 0) clean = clean.substring(jsonStart);
     }
+
+    // Step 2: Try to parse as JSON
+    const attempts = [
+        () => JSON.parse(clean),
+        () => JSON.parse(text.replace(/```json\s*/g, '').replace(/```/g, '').trim()),
+        () => { const m = text.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; },
+    ];
+
+    for (const attempt of attempts) {
+        try {
+            const parsed = attempt();
+            if (parsed?.slides?.length) {
+                return parsed.slides.map(s => ({
+                    id: genId(),
+                    naslov: (s.naslov || '').trim(),
+                    sadrzaj: (s.sadrzaj || '').trim(),
+                }));
+            }
+        } catch { /* try next */ }
+    }
+
     return [];
 }
 
