@@ -147,7 +147,8 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
             }],
             generationConfig: {
                 temperature: 0.3,
-                maxOutputTokens: 8192,
+                maxOutputTokens: 65536,
+                thinkingConfig: { thinkingBudget: 0 },
             },
         }),
     });
@@ -167,14 +168,13 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
 
     const genData = await genRes.json();
 
-    // gemini-2.5-flash may return multiple parts (thinking + response)
-    // Collect ALL text parts, not just the first one
+    // gemini-2.5-flash may return multiple parts
     const allParts = genData.candidates?.[0]?.content?.parts || [];
     const rawText = allParts
-        .filter(p => p.text && !p.thought) // skip thinking parts
+        .filter(p => p.text)
         .map(p => p.text)
         .join('\n');
-    console.log('[parse-presentation] Response length:', rawText.length, 'Preview:', rawText.substring(0, 200));
+    console.log('[parse-presentation] Response length:', rawText.length, 'finishReason:', genData.candidates?.[0]?.finishReason);
 
     // Check for blocked/empty responses
     if (!rawText) {
@@ -197,44 +197,70 @@ Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ─── Parse JSON slides from Gemini response ──────────────────────────────────────────
+// ─── Parse JSON slides from Gemini response ────────────────────────────────────────────────
 function parseJsonSlides(text) {
     if (!text) return [];
 
-    // Step 1: Strip markdown code fences aggressively
-    let clean = text;
-    // Remove ```json ... ``` wrapping (handles various formats)
-    clean = clean.replace(/^[\s\S]*?```(?:json)?\s*\n?/i, ''); // strip everything before and including opening fence
-    clean = clean.replace(/\n?```[\s\S]*$/, '');                // strip closing fence and everything after
-    clean = clean.trim();
+    // Step 1: Strip markdown fences
+    let clean = text
+        .replace(/^[\s\S]*?```json\s*/i, '')   // strip up to and including ```json
+        .replace(/```[\s\S]*$/, '')              // strip closing ``` and anything after
+        .trim();
 
-    // If still doesn't start with {, try to find the JSON object
+    // If that didn't work, try simple replace
+    if (!clean.startsWith('{') && !clean.startsWith('[')) {
+        clean = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+    }
+
+    // Find the JSON starting point
     if (!clean.startsWith('{')) {
-        const jsonStart = clean.indexOf('{');
-        if (jsonStart >= 0) clean = clean.substring(jsonStart);
+        const idx = clean.indexOf('{"slides"');
+        if (idx >= 0) clean = clean.substring(idx);
+        else {
+            const idx2 = clean.indexOf('{');
+            if (idx2 >= 0) clean = clean.substring(idx2);
+        }
     }
 
-    // Step 2: Try to parse as JSON
-    const attempts = [
-        () => JSON.parse(clean),
-        () => JSON.parse(text.replace(/```json\s*/g, '').replace(/```/g, '').trim()),
-        () => { const m = text.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; },
-    ];
+    // Step 2: Try full JSON parse
+    try {
+        const parsed = JSON.parse(clean);
+        if (parsed?.slides?.length) return mapSlides(parsed.slides);
+    } catch { /* JSON might be truncated */ }
 
-    for (const attempt of attempts) {
-        try {
-            const parsed = attempt();
-            if (parsed?.slides?.length) {
-                return parsed.slides.map(s => ({
-                    id: genId(),
-                    naslov: (s.naslov || '').trim(),
-                    sadrzaj: (s.sadrzaj || '').trim(),
-                }));
-            }
-        } catch { /* try next */ }
+    // Step 3: Try to extract individual slide objects via regex
+    // This handles truncated JSON where the last slide is cut off
+    const slideRegex = /\{\s*"naslov"\s*:\s*"([^"]*?)"\s*,\s*"sadrzaj"\s*:\s*"([^"]*?)"\s*\}/g;
+    const slides = [];
+    let m;
+    while ((m = slideRegex.exec(clean)) !== null) {
+        slides.push({
+            id: genId(),
+            naslov: m[1].trim(),
+            sadrzaj: m[2].replace(/\\n/g, '\n').trim(),
+        });
+    }
+    if (slides.length > 0) return slides;
+
+    // Step 4: Even more aggressive — find any naslov/sadrzaj pairs
+    const naslovMatches = [...clean.matchAll(/"naslov"\s*:\s*"((?:[^"\\]|\\.)*)"\s*,\s*"sadrzaj"\s*:\s*"((?:[^"\\]|\\.)*)"/g)];
+    for (const nm of naslovMatches) {
+        slides.push({
+            id: genId(),
+            naslov: nm[1].replace(/\\(.)/g, '$1').trim(),
+            sadrzaj: nm[2].replace(/\\n/g, '\n').replace(/\\(.)/g, '$1').trim(),
+        });
     }
 
-    return [];
+    return slides;
+}
+
+function mapSlides(arr) {
+    return arr.map(s => ({
+        id: genId(),
+        naslov: (s.naslov || '').trim(),
+        sadrzaj: (s.sadrzaj || '').trim(),
+    }));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
