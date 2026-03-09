@@ -92,7 +92,6 @@ export default function PublicTrainingPage({ params }) {
     if (loading) return (
         <div style={pageStyle}>
             <BgGlow />
-            <Logo />
             <div style={containerStyle}>
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                     <Spinner size={52} />
@@ -106,7 +105,6 @@ export default function PublicTrainingPage({ params }) {
     if (error) return (
         <div style={pageStyle}>
             <BgGlow />
-            <Logo />
             <div style={containerStyle}>
                 <div style={{ textAlign: 'center', padding: '60px 0', maxWidth: 480, margin: '0 auto' }}>
                     <div style={iconBox('rgba(239,68,68,0.1)', 72)}>❌</div>
@@ -122,7 +120,6 @@ export default function PublicTrainingPage({ params }) {
     if (submitted) return (
         <div style={pageStyle}>
             <BgGlow />
-            <Logo />
             <div style={containerStyle}>
                 <div style={{ textAlign: 'center', padding: '60px 0', maxWidth: 480, margin: '0 auto' }}>
                     <div style={{ ...iconBox('rgba(16,185,129,0.1)', 80), animation: 'popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)', fontSize: '2.5rem' }}>✅</div>
