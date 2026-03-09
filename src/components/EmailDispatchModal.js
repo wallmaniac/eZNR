@@ -9,7 +9,7 @@ import { sendBatchEmails } from '@/lib/emailService';
    Select workers/emails → Send questionnaire via EmailJS
    ═══════════════════════════════════════════════════════ */
 
-export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lang = 'bs' }) {
+export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lang = 'bs', officerName = '', companyName = '' }) {
     const [workers, setWorkers] = useState([]);
     const [selectedWorkerIds, setSelectedWorkerIds] = useState([]);
     const [manualEmails, setManualEmails] = useState('');
@@ -110,6 +110,9 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                     surveyJson: questionnaire.surveyJson,
                     prolazniPrag: questionnaire.prolazniPrag ?? 70,
                     prikaziRezultateNakonRjesavanja: questionnaire.prikaziRezultateNakonRjesavanja ?? true,
+                    assignedBy: officerName || null,
+                    companyName: companyName || null,
+                    companyLogo: companyLogo || null,
                 });
                 tokens.push(`${baseUrl}${token}`);
             } catch (err) {
@@ -125,8 +128,8 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                 questionnaireName: questionnaire.naziv || 'Upitnik',
                 tokens,
                 deadline: deadline || null,
-                senderName: 'eZNR Admin',
-                companyName: '',
+                senderName: officerName || 'eZNR Admin',
+                companyName: companyName || '',
                 replyTo: replyToEmail.trim() || null,
             },
             (current, total, email) => {

@@ -188,6 +188,14 @@ export default function PublicQuestionnairePage({ params }) {
                 {/* Questionnaire form */}
                 {!loading && !error && !submitted && session && (
                     <div style={{ position: 'relative', zIndex: 1 }}>
+                        {/* Company header */}
+                        {(session.companyLogo || session.companyName) && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 16, padding: '10px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                {session.companyLogo && <img src={session.companyLogo} alt={session.companyName} style={{ height: 40, maxWidth: 120, objectFit: 'contain' }} />}
+                                {session.companyName && <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#e2e8f0' }}>{session.companyName}</span>}
+                            </div>
+                        )}
+
                         {/* Title card */}
                         <div style={{
                             textAlign: 'center', marginBottom: 32,
@@ -202,6 +210,7 @@ export default function PublicQuestionnairePage({ params }) {
                             }}>
                                 📝 {session.questionnaireName || 'Upitnik'}
                             </h1>
+                            {session.assignedBy && <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '4px 0 0' }}>👤 Dodijelio/la: <strong style={{ color: '#e2e8f0' }}>{session.assignedBy}</strong></p>}
                             {session.deadline && (
                                 <p style={{
                                     color: '#f59e0b', fontSize: '0.85rem',
@@ -221,6 +230,19 @@ export default function PublicQuestionnairePage({ params }) {
                             prolazniPrag={session.prolazniPrag ?? 70}
                             prikaziRezultate={session.prikaziRezultateNakonRjesavanja !== false}
                         />
+                        {/* Print button */}
+                        <div style={{ textAlign: 'center', marginTop: 12, marginBottom: 8 }} className="no-print">
+                            <button onClick={() => window.print()} style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                🖨️ Isprintaj upitnik
+                            </button>
+                        </div>
+
+                        <style>{`
+                            @media print {
+                                .no-print { display: none !important; }
+                                body { background: #fff !important; color: #000 !important; }
+                            }
+                        `}</style>
                     </div>
                 )}
 

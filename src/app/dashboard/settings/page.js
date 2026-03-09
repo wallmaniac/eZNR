@@ -36,7 +36,7 @@ export default function SettingsPage() {
   const [passwordSuccess, setPasswordSuccess] = useState('');
 
   // Company state
-  const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '' });
+  const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '' });
 
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
@@ -86,6 +86,7 @@ export default function SettingsPage() {
           mjesto: company.mjesto || '', postanskiBroj: company.postanskiBroj || '',
           telefon: company.telefon || '', email: company.email || '',
           direktor: company.direktor || '', strucnoLice: company.strucnoLice || '',
+          logo: company.logo || '',
         });
       }
     }
@@ -374,6 +375,41 @@ export default function SettingsPage() {
                   <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={companyData.email} onChange={e => setCompanyData(p => ({ ...p, email: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Direktor' : 'Director'}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyData(p => ({ ...p, direktor: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyData(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
+                </div>
+                {/* Logo upload */}
+                <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>🖼️ {lang === 'bs' ? 'Logo firme' : 'Company Logo'}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                    {companyData.logo ? (
+                      <img src={companyData.logo} alt="Logo" style={{ height: 64, maxWidth: 200, objectFit: 'contain', borderRadius: 8, background: '#fff', padding: 4 }} />
+                    ) : (
+                      <div style={{ height: 64, width: 120, borderRadius: 8, border: '2px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
+                        {lang === 'bs' ? 'Nema loga' : 'No logo'}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <label style={{ cursor: 'pointer', padding: '8px 16px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: '0.82rem', display: 'inline-block' }}>
+                        📁 {lang === 'bs' ? 'Učitaj logo' : 'Upload Logo'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          if (file.size > 500000) { alert(lang === 'bs' ? 'Logo mora biti manji od 500KB' : 'Logo must be under 500KB'); return; }
+                          const reader = new FileReader();
+                          reader.onload = ev => setCompanyData(p => ({ ...p, logo: ev.target.result }));
+                          reader.readAsDataURL(file);
+                        }} />
+                      </label>
+                      {companyData.logo && (
+                        <button onClick={() => setCompanyData(p => ({ ...p, logo: '' }))} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
+                          🗑️ {lang === 'bs' ? 'Ukloni logo' : 'Remove Logo'}
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      {lang === 'bs' ? 'Logo će biti prikazan na svim obukama i upitnicima koje radnici primaju.' : 'Logo will appear on all trainings and questionnaires sent to workers.'}<br />
+                      {lang === 'bs' ? 'Preporučena veličina: PNG ili SVG, max 500KB.' : 'Recommended: PNG or SVG, max 500KB.'}
+                    </div>
+                  </div>
                 </div>
                 <div style={{ marginTop: 20 }}><button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button></div>
               </>

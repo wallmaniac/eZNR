@@ -50,6 +50,11 @@ export default function PublicTrainingPage({ params }) {
     const questions = session?.questions || [];
     const prolazniPrag = session?.prolazniPrag ?? 70;
     const dozvoliPovratak = session?.dozvoliPovratak ?? false;
+    const assignedBy = session?.assignedBy || '';
+    const companyName = session?.companyName || '';
+    const companyLogo = session?.companyLogo || '';
+
+    const handlePrint = () => window.print();
 
     const handleSubmitQuiz = async () => {
         if (!session?.id) return;
@@ -147,6 +152,14 @@ export default function PublicTrainingPage({ params }) {
                 <div style={{ ...containerStyle, maxWidth: 860 }}>
                     <Logo />
 
+                    {/* Company header */}
+                    {(companyLogo || companyName) && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 16, padding: '10px 16px', borderRadius: 12, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            {companyLogo && <img src={companyLogo} alt={companyName} style={{ height: 40, maxWidth: 120, objectFit: 'contain' }} />}
+                            {companyName && <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#e2e8f0' }}>{companyName}</span>}
+                        </div>
+                    )}
+
                     {/* Header */}
                     <div style={{ textAlign: 'center', marginBottom: 24 }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 16px', borderRadius: 20, background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', marginBottom: 12 }}>
@@ -155,6 +168,7 @@ export default function PublicTrainingPage({ params }) {
                         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#e2e8f0', margin: '0 0 8px' }}>
                             {session.trainingName || 'Obuka'}
                         </h1>
+                        {assignedBy && <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '0 0 4px' }}>👤 Dodijelio/la: <strong style={{ color: '#e2e8f0' }}>{assignedBy}</strong></p>}
                         {session.deadline && (
                             <p style={{ color: '#f59e0b', fontSize: '0.85rem', fontWeight: 600, margin: 0 }}>
                                 ⏰ Rok: {new Date(session.deadline).toLocaleDateString('hr-HR')}
@@ -225,6 +239,50 @@ export default function PublicTrainingPage({ params }) {
                                 style={navBtnStyle}>
                                 Sljedeći →
                             </button>
+                        )}
+                    </div>
+
+                    {/* Print button */}
+                    <div style={{ textAlign: 'center', marginTop: 8 }} className="no-print">
+                        <button onClick={handlePrint} style={{ padding: '7px 18px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.12)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            🖨️ Isprintaj obuku
+                        </button>
+                    </div>
+
+                    {/* Print-only content — hidden on screen, visible on print */}
+                    <style>{`
+                        @media print {
+                            .no-print { display: none !important; }
+                            .print-only { display: block !important; }
+                            body { background: #fff !important; color: #000 !important; }
+                        }
+                        .print-only { display: none; }
+                    `}</style>
+                    <div className="print-only" style={{ fontFamily: 'Arial, sans-serif', padding: 0, color: '#000', background: '#fff' }}>
+                        {companyLogo && <img src={companyLogo} alt={companyName} style={{ height: 60, maxWidth: 180, objectFit: 'contain', marginBottom: 8 }} />}
+                        {companyName && <div style={{ fontSize: 11, color: '#666', marginBottom: 4 }}>{companyName}</div>}
+                        <h1 style={{ fontSize: 20, fontWeight: 800, margin: '0 0 4px' }}>{session.trainingName || 'Obuka'}</h1>
+                        {assignedBy && <div style={{ fontSize: 11, color: '#666', marginBottom: 16 }}>Dodijelio/la: {assignedBy} — {new Date().toLocaleDateString('hr-HR')}</div>}
+                        <hr style={{ border: 'none', borderTop: '2px solid #000', marginBottom: 24 }} />
+                        {slides.map((s, i) => (
+                            <div key={i} style={{ marginBottom: 20, pageBreakInside: 'avoid' }}>
+                                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>Slajd {i + 1}: {s.naslov}</div>
+                                <div style={{ fontSize: 11, whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>{s.sadrzaj}</div>
+                            </div>
+                        ))}
+                        {questions.length > 0 && (
+                            <>
+                                <hr style={{ border: 'none', borderTop: '2px solid #000', margin: '24px 0' }} />
+                                <h2 style={{ fontSize: 16, fontWeight: 800, marginBottom: 16 }}>TEST ZNANJA</h2>
+                                {questions.map((q, i) => (
+                                    <div key={i} style={{ marginBottom: 16, pageBreakInside: 'avoid' }}>
+                                        <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 4 }}>{i + 1}. {q.pitanje}</div>
+                                        {q.opcije.map((o, j) => (
+                                            <div key={j} style={{ fontSize: 11, padding: '2px 0 2px 16px' }}>{String.fromCharCode(65 + j)}) {o}</div>
+                                        ))}
+                                    </div>
+                                ))}
+                            </>
                         )}
                     </div>
 

@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { getAll, create, update, remove, COLLECTIONS, getUserCompanies } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
 import {
@@ -678,6 +679,12 @@ export default function TrainingsPage() {
    Training Dispatch Modal — sends training link to workers
    ═══════════════════════════════════════════════ */
 function TrainingDispatchModal({ isOpen, onClose, training }) {
+    const { user, activeCompanyId } = useAuth();
+    const officerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin';
+    const activeCompany = getUserCompanies(user?.id).find(c => c.id === activeCompanyId);
+    const companyName = activeCompany?.naziv || '';
+    const companyLogo = activeCompany?.logo || '';
+
     const [workers, setWorkers] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const [manualEmails, setManualEmails] = useState('');
@@ -748,7 +755,8 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
 
         const sendResult = await sendBatchEmails(
             recipients,
-            { questionnaireName: training.naziv || 'Obuka', tokens, deadline: deadline || null, senderName: 'eZNR Admin', companyName: '', replyTo: replyTo.trim() || null },
+            { questionnaireName: training.naziv || 'Obuka', tokens, deadline: deadline || null,
+              senderName: officerName, companyName, replyTo: replyTo.trim() || null },
             (current, total, email) => setProgress({ current, total, email })
         );
         setResult(sendResult);

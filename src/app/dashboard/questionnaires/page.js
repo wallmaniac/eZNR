@@ -1,8 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import {
-  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO, getUserCompanies,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import QuestionnaireBuilder from '@/components/SurveyCreator';
@@ -76,6 +77,11 @@ const BUILTIN_TEMPLATES = [
 export default function QuestionnairesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
+  const { user, activeCompanyId } = useAuth();
+  const officerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin';
+  const activeCompany = getUserCompanies(user?.id).find(c => c.id === activeCompanyId);
+  const companyName = activeCompany?.naziv || '';
+  const companyLogo = activeCompany?.logo || '';
 
   const [view, setView] = useState('list'); // list | form | results
   const [records, setRecords] = useState([]);
@@ -417,6 +423,9 @@ export default function QuestionnairesPage() {
           onClose={() => { setDispatchModalOpen(false); setDispatchQuestionnaire(null); }}
           questionnaire={dispatchQuestionnaire}
           lang={lang}
+          officerName={officerName}
+          companyName={companyName}
+          companyLogo={companyLogo}
         />
       </div>
     );
