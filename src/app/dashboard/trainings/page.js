@@ -345,12 +345,7 @@ export default function TrainingsPage() {
                                                             if (openMenuId === r.id) { setOpenMenuId(null); return; }
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             menuButtonRef.current = e.currentTarget;
-                                                            const estimatedHeight = 300;
-                                                            const spaceBelow = window.innerHeight - rect.bottom;
-                                                            const top = spaceBelow < estimatedHeight
-                                                                ? Math.max(8, rect.top - estimatedHeight - 4)
-                                                                : rect.bottom + 4;
-                                                            setMenuPos({ top, left: rect.left });
+                                                            setMenuPos({ top: rect.bottom + 4, left: rect.left });
                                                             setOpenMenuId(r.id);
                                                         }}>
                                                         Akcije ▼
