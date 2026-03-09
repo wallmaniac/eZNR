@@ -94,9 +94,28 @@ async function generateSlidesFromPDF(buffer) {
 
     const uploadData = await uploadRes.json();
     const fileUri = uploadData.file?.uri;
+    const fileApiName = uploadData.file?.name; // e.g. "files/abc123"
     if (!fileUri) throw new Error('Gemini nije vratio URI fajla');
 
-    // ── Step 2: Generate slides from the uploaded file ──
+    // ── Step 1b: Wait for file to become ACTIVE ──
+    let fileState = uploadData.file?.state || 'ACTIVE';
+    if (fileState === 'PROCESSING' && fileApiName) {
+        for (let i = 0; i < 10; i++) {
+            await new Promise(r => setTimeout(r, 1500));
+            const checkRes = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/${fileApiName}?key=${apiKey}`
+            );
+            if (checkRes.ok) {
+                const checkData = await checkRes.json();
+                fileState = checkData.state || 'ACTIVE';
+                if (fileState === 'ACTIVE') break;
+                if (fileState === 'FAILED') throw new Error('Obrada PDF fajla neuspješna');
+            }
+        }
+    }
+
+    // ── Step 2: Generate slides using the uploaded file ──
+    // Use gemini-1.5-flash — it has full PDF file_data support
     const prompt = `Ti si ekspert za zaštitu na radu u Bosni i Hercegovini. Pročitaj ovaj PDF dokument i kreiraj edukativan materijal za radnike u obliku slajdova prezentacije.
 
 Kreiraj između 5 i 15 slajdova koji pokrivaju najvažnije informacije iz dokumenta.
@@ -122,7 +141,7 @@ Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
 }`;
 
     const genRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
         {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -169,11 +188,9 @@ Vrati SAMO ovaj JSON format, bez ikakvog drugog teksta:
         throw new Error('Gemini nije vratio validne slajdove');
     }
 
-    // ── Step 3: Clean up — delete uploaded file from Gemini ──
-    // (fire and forget — don't block response)
-    const fileName = fileUri.split('/').pop();
-    if (fileName) {
-        fetch(`https://generativelanguage.googleapis.com/v1beta/files/${fileName}?key=${apiKey}`, {
+    // ── Step 3: Clean up — delete uploaded file from Gemini (fire & forget) ──
+    if (fileApiName) {
+        fetch(`https://generativelanguage.googleapis.com/v1beta/${fileApiName}?key=${apiKey}`, {
             method: 'DELETE',
         }).catch(() => {});
     }
