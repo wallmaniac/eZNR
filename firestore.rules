@@ -69,6 +69,14 @@ service cloud.firestore {
       allow update: if true;
     }
 
+    // 8) Training Responses — public write (workers submit without login)
+    //    Only authenticated users can read (admin results dashboard)
+    match /training_responses/{responseId} {
+      allow read: if isSignedIn();
+      // Anyone can write a response (public form submission)
+      allow write: if true;
+    }
+
     // 4) COMPANY-SCOPED DATA
     match /{collection}/{documentId} {
       allow read, write: if isSignedIn() && belongsToCompany(resource.data.companyId);
