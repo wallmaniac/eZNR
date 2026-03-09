@@ -62,8 +62,8 @@ export default function PublicTrainingPage({ params }) {
                 if (isCorrect) correct++;
                 return { question: q.pitanje, userAnswer, correctAnswer: q.tacno, isCorrect };
             });
-            const percentage = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
-            const passed = percentage >= prolazniPrag;
+            const percentage = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 100;
+            const passed = questions.length === 0 || percentage >= prolazniPrag;
             const result = { percentage, passed, correct, total: questions.length, details };
             setGrade(result);
             await saveTrainingResponse(session.id, answers, result);
@@ -73,6 +73,14 @@ export default function PublicTrainingPage({ params }) {
             alert('Greška pri slanju odgovora: ' + (err?.message || 'Nepoznata greška'));
         } finally { setSubmitting(false); }
     };
+
+    // When entering quiz phase with no questions, auto-complete via useEffect (never during render)
+    useEffect(() => {
+        if (phase === 'quiz' && questions.length === 0 && !submitting && !submitted) {
+            handleSubmitQuiz();
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [phase, questions.length]);
 
     // ── Loading ────────────────────────────────────────────────────────────
     if (loading) return (
@@ -227,10 +235,20 @@ export default function PublicTrainingPage({ params }) {
     // PHASE: QUIZ
     // ══════════════════════════════════════════════════════════════════════
     if (phase === 'quiz') {
+        // No questions — show spinner while auto-submitting via useEffect
         if (questions.length === 0) {
-            // No questions — go straight to completed
-            handleSubmitQuiz();
-            return null;
+            return (
+                <div style={pageStyle}>
+                    <BgGlow />
+                    <div style={containerStyle}>
+                        <Logo />
+                        <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                            <Spinner size={52} />
+                            <p style={{ color: '#94a3b8', marginTop: 20 }}>Završavanje obuke...</p>
+                        </div>
+                    </div>
+                </div>
+            );
         }
 
         const currentQ = questions[quizIdx];
@@ -246,7 +264,7 @@ export default function PublicTrainingPage({ params }) {
                 <div style={{ ...containerStyle, maxWidth: 720 }}>
                     <Logo />
 
-                    {/* Header */}
+                    {/* Header — no back button, quiz is one-way */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
                         <div>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '4px 12px', borderRadius: 20, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', marginBottom: 4 }}>
@@ -254,10 +272,9 @@ export default function PublicTrainingPage({ params }) {
                             </div>
                             <h1 style={{ fontSize: '1.3rem', fontWeight: 800, color: '#e2e8f0', margin: 0 }}>{session.trainingName}</h1>
                         </div>
-                        <button onClick={() => setPhase('slides')}
-                            style={{ padding: '7px 14px', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#94a3b8', cursor: 'pointer', fontSize: '0.82rem', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            ← Vrati se na prezentaciju
-                        </button>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontStyle: 'italic' }}>
+                            Test se ne može prekinuti
+                        </div>
                     </div>
 
                     {/* Progress */}
