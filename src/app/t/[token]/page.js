@@ -502,11 +502,8 @@ export default function PublicTrainingPage({ params }) {
 
 function Logo() {
     return (
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '10px 24px', borderRadius: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)' }}>
-                <span style={{ fontSize: '1.6rem' }}>🛡️</span>
-                <span style={{ fontWeight: 800, fontSize: '1.3rem', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>eZNR</span>
-            </div>
+        <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <img src="/transparentlogo.png" alt="eZNR" style={{ height: 56, maxWidth: 200, objectFit: 'contain' }} />
         </div>
     );
 }

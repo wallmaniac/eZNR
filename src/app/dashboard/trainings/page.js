@@ -344,7 +344,12 @@ export default function TrainingsPage() {
                                                             if (openMenuId === r.id) { setOpenMenuId(null); return; }
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             menuButtonRef.current = e.currentTarget;
-                                                            setMenuPos({ top: rect.bottom + 4, left: rect.left });
+                                                            const estimatedHeight = 300;
+                                                            const spaceBelow = window.innerHeight - rect.bottom;
+                                                            const top = spaceBelow < estimatedHeight
+                                                                ? Math.max(8, rect.top - estimatedHeight - 4)
+                                                                : rect.bottom + 4;
+                                                            setMenuPos({ top, left: rect.left });
                                                             setOpenMenuId(r.id);
                                                         }}>
                                                         Akcije ▼
@@ -353,20 +358,21 @@ export default function TrainingsPage() {
                                                         <div data-menu style={{
                                                             position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999,
                                                             background: 'var(--bg-card)', border: '1px solid var(--border)',
-                                                            borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200,
+                                                            borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                                                            minWidth: 210, maxHeight: '90vh', overflowY: 'auto',
                                                         }}>
                                                             <button onClick={() => handleEdit(r)} style={menuItemSt}>📝 Uredi</button>
-                                                            {/* Print sub-options */}
-                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <div style={{ padding: '5px 14px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🖨️ Isprintaj</div>
-                                                            {(r.slides?.length > 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} style={{ ...menuItemSt, paddingLeft: 24 }}>🎬 Prezentaciju</button>}
-                                                            {(r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'test')} style={{ ...menuItemSt, paddingLeft: 24 }}>📝 Test</button>}
-                                                            {(r.slides?.length > 0 && r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'both')} style={{ ...menuItemSt, paddingLeft: 24 }}>📚 Prezentaciju + Test</button>}
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} style={menuItemSt}>📧 Pošalji radnicima</button>
                                                             <button onClick={() => openResults(r)} style={menuItemSt}>📊 Rezultati</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <button onClick={() => handleDelete(r.id)} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Obriši</button>
+                                                            {/* Print sub-options — last */}
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                            <div style={{ padding: '5px 14px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🖨️ Isprintaj</div>
+                                                            {(r.slides?.length > 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} style={{ ...menuItemSt, paddingLeft: 24 }}>🎬 Prezentaciju</button>}
+                                                            {(r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'test')} style={{ ...menuItemSt, paddingLeft: 24 }}>📝 Test</button>}
+                                                            {(r.slides?.length > 0 && r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'both')} style={{ ...menuItemSt, paddingLeft: 24 }}>📚 Prezentaciju + Test</button>}
                                                         </div>
                                                     )}
                                                 </div>
