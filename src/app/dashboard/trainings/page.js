@@ -249,10 +249,10 @@ export default function TrainingsPage() {
     };
 
     // ── PRINT ──────────────────────────────────
-    const handlePrintTraining = (training) => {
+    const handlePrintTraining = (training, what = 'both') => {
         setOpenMenuId(null);
-        const slides = training.slides || [];
-        const questions = training.questions || [];
+        const slides = what !== 'test' ? (training.slides || []) : [];
+        const questions = what !== 'prezentacija' ? (training.questions || []) : [];
         const logoHtml = companyLogo ? `<img src="${companyLogo}" style="height:60px;max-width:200px;object-fit:contain;margin-bottom:6px" />` : '';
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${training.naziv || 'Obuka'}</title>
           <style>body{font-family:Arial,sans-serif;padding:32px 48px;color:#000}h1{font-size:20px;margin:0 0 4px}h2{font-size:15px;margin:24px 0 12px}hr{border:none;border-top:2px solid #000;margin:16px 0 24px}.slide{margin-bottom:20px;page-break-inside:avoid}.sn{font-size:13px;font-weight:700;margin-bottom:4px}.sc{font-size:11px;white-space:pre-wrap;line-height:1.6}.q{margin-bottom:16px;page-break-inside:avoid}.qt{font-size:12px;font-weight:700;margin-bottom:4px}.opt{font-size:11px;padding:2px 0 2px 16px}.meta{font-size:11px;color:#666;margin-bottom:4px}@media print{button{display:none}}</style>
@@ -356,7 +356,13 @@ export default function TrainingsPage() {
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200,
                                                         }}>
                                                             <button onClick={() => handleEdit(r)} style={menuItemSt}>📝 Uredi</button>
-                                                            <button onClick={() => handlePrintTraining(r)} style={menuItemSt}>🖨️ Isprintaj</button>
+                                                            {/* Print sub-options */}
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                            <div style={{ padding: '5px 14px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🖨️ Isprintaj</div>
+                                                            {(r.slides?.length > 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} style={{ ...menuItemSt, paddingLeft: 24 }}>🎬 Prezentaciju</button>}
+                                                            {(r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'test')} style={{ ...menuItemSt, paddingLeft: 24 }}>📝 Test</button>}
+                                                            {(r.slides?.length > 0 && r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'both')} style={{ ...menuItemSt, paddingLeft: 24 }}>📚 Prezentaciju + Test</button>}
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} style={menuItemSt}>📧 Pošalji radnicima</button>
                                                             <button onClick={() => openResults(r)} style={menuItemSt}>📊 Rezultati</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
@@ -729,11 +735,13 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
     const [step, setStep] = useState('select');
     const [progress, setProgress] = useState({ current: 0, total: 0, email: '' });
     const [result, setResult] = useState(null);
+    const [sendWhat, setSendWhat] = useState('both'); // 'both' | 'prezentacija' | 'test'
 
     useEffect(() => {
         if (isOpen) {
             setWorkers(getAll(COLLECTIONS.WORKERS) || []);
-            setSelectedIds([]); setManualEmails(''); setReplyTo(''); setDeadline(''); setSearchQ(''); setStep('select'); setResult(null);
+            setSelectedIds([]); setManualEmails(''); setReplyTo(''); setDeadline(''); setSearchQ('');
+            setStep('select'); setResult(null); setSendWhat('both');
         }
     }, [isOpen]);
 
@@ -781,8 +789,14 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                     token, trainingId: training.id, trainingName: training.naziv || 'Obuka',
                     recipientEmail: r.toEmail, recipientName: r.toName, workerId: r.workerId || null,
                     deadline: deadline || null,
-                    slides: training.slides || [], questions: training.questions || [],
+                    slides: sendWhat !== 'test' ? (training.slides || []) : [],
+                    questions: sendWhat !== 'prezentacija' ? (training.questions || []) : [],
                     prolazniPrag: training.prolazniPrag ?? 70, prikaziRezultate: training.prikaziRezultate ?? true,
+                    dozvoliPovratak: training.dozvoliPovratak ?? false,
+                    assignedBy: officerName,
+                    companyName,
+                    companyLogo,
+                    sendWhat,
                 });
                 tokens.push(`${baseUrl}${token}`);
             } catch { tokens.push(`${baseUrl}error`); }
@@ -839,6 +853,25 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                             <div style={{ marginBottom: 16 }}>
                                 <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text,#e2e8f0)', marginBottom: 8 }}>✉️ Dodatni emailovi</div>
                                 <textarea value={manualEmails} onChange={e => setManualEmails(e.target.value)} rows={2} style={{ ...inputSt, width: '100%', resize: 'vertical' }} placeholder="email1@firma.ba, email2@firma.ba..." />
+                            </div>
+                            {/* What to send */}
+                            <div style={{ marginBottom: 16 }}>
+                                <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text,#e2e8f0)', marginBottom: 8 }}>📋 Što uključiti u obuku?</div>
+                                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                    {[{ v: 'both', label: '📚 Prezentacija + Test', disabled: (training?.slides?.length === 0 || training?.questions?.length === 0) },
+                                      { v: 'prezentacija', label: '🎬 Samo prezentacija', disabled: training?.slides?.length === 0 },
+                                      { v: 'test', label: '📝 Samo test', disabled: training?.questions?.length === 0 }]
+                                        .map(opt => (
+                                        <button key={opt.v} onClick={() => !opt.disabled && setSendWhat(opt.v)}
+                                            disabled={opt.disabled}
+                                            style={{ padding: '7px 14px', borderRadius: 8, border: `2px solid ${sendWhat === opt.v ? '#6366f1' : 'rgba(255,255,255,0.1)'}`,
+                                                background: sendWhat === opt.v ? 'rgba(99,102,241,0.15)' : 'transparent',
+                                                color: opt.disabled ? 'rgba(148,163,184,0.3)' : sendWhat === opt.v ? '#a5b4fc' : 'var(--text,#e2e8f0)',
+                                                cursor: opt.disabled ? 'not-allowed' : 'pointer', fontSize: '0.8rem', fontWeight: 600, transition: 'all 0.15s' }}>
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div>
