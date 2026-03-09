@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 
 /* ═══════════════════════════════════════════════════════════
    POST /api/parse-presentation
-   PDF  → base64 inline to Gemini 2.0 Flash (native PDF support)
+   PDF  → Upload to Gemini Files API → gemini-2.5-flash reads it
    PPTX → direct XML text extraction via jszip
    ═══════════════════════════════════════════════════════════ */
 
 export const runtime = 'nodejs';
+
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export async function POST(request) {
     try {
@@ -24,8 +26,8 @@ export async function POST(request) {
         }
 
         if (fileName.endsWith('.pdf')) {
-            if (buffer.length > 15 * 1024 * 1024) {
-                return NextResponse.json({ error: 'PDF prevelik (max 15 MB).' }, { status: 400 });
+            if (buffer.length > 20 * 1024 * 1024) {
+                return NextResponse.json({ error: 'PDF prevelik (max 20 MB).' }, { status: 400 });
             }
             const slides = await pdfToSlides(buffer);
             if (!slides?.length) return NextResponse.json({ error: 'Nije moguće kreirati slajdove iz PDF-a.' }, { status: 400 });
@@ -43,143 +45,142 @@ export async function POST(request) {
     }
 }
 
-// ─── PDF → Gemini 2.0 Flash (inline base64) ──────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// PDF → Gemini Files API → gemini-2.5-flash generates slides
+// ═══════════════════════════════════════════════════════════════════════════════
 async function pdfToSlides(buffer) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GEMINI_API_KEY not set');
 
-    const base64 = buffer.toString('base64');
+    // ── Step 1: Upload PDF to Gemini Files API ──────────────────────────────
+    console.log('[parse-presentation] Uploading PDF to Gemini Files API...');
 
-    const prompt = `Ti si ekspert za zaštitu na radu u BiH. Pročitaj ovaj PDF i kreiraj 5-15 edukativnih slajdova za radnike.
-
-Svaki slajd: naslov (max 10 riječi) + sadrzaj (3-7 bullet tačaka sa •).
-Piši na bosanskom jeziku. Fokus na informacije bitne za radnike.
-
-Vrati SAMO JSON:
-{"slides":[{"naslov":"...","sadrzaj":"• ...\\n• ..."}]}`;
-
-    const body = {
-        contents: [{
-            parts: [
-                {
-                    inline_data: {
-                        mime_type: 'application/pdf',
-                        data: base64,
-                    },
-                },
-                { text: prompt },
-            ],
-        }],
-        generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 4096,
-            responseMimeType: 'application/json',
+    const uploadUrl = `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`;
+    const uploadRes = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/pdf',
+            'X-Goog-Upload-Protocol': 'raw',
+            'X-Goog-Upload-Header-Content-Type': 'application/pdf',
         },
-    };
+        body: buffer,
+    });
 
-    // Try models in priority order
-    const models = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-    let lastError = '';
-
-    for (const model of models) {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
-        });
-
-        if (res.ok) {
-            const data = await res.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-            const slides = parseJsonSlides(text);
-            if (slides.length > 0) return slides;
-            lastError = 'Gemini vratio prazan odgovor';
-            continue;
-        }
-
-        const errBody = await res.text();
-        console.error(`[${model}] ${res.status}:`, errBody.substring(0, 500));
-        lastError = `${model}: ${res.status}`;
-
-        // If 404 or unsupported, try next model
-        if (res.status === 404 || res.status === 400) continue;
-        // Other errors (500, 429, etc) — fail immediately
-        throw new Error(`Gemini greška (${res.status})`);
+    if (!uploadRes.ok) {
+        const errBody = await uploadRes.text();
+        console.error('[parse-presentation] Upload failed:', uploadRes.status, errBody);
+        throw new Error(`PDF upload neuspješan (${uploadRes.status})`);
     }
 
-    // Both models failed — try text-only approach as last resort
-    console.log('PDF inline failed, trying text extraction fallback...');
-    return await pdfTextFallback(buffer, apiKey);
+    const uploadData = await uploadRes.json();
+    const fileUri = uploadData.file?.uri;
+    const fileApiName = uploadData.file?.name;
+    console.log('[parse-presentation] File uploaded:', fileApiName, 'URI:', fileUri);
+
+    if (!fileUri) throw new Error('Gemini Files API nije vratio URI');
+
+    // ── Step 2: Wait for file to become ACTIVE ──────────────────────────────
+    let state = uploadData.file?.state || 'ACTIVE';
+    if (state === 'PROCESSING' && fileApiName) {
+        console.log('[parse-presentation] File processing, waiting...');
+        for (let i = 0; i < 15; i++) {
+            await sleep(2000);
+            try {
+                const checkRes = await fetch(
+                    `https://generativelanguage.googleapis.com/v1beta/${fileApiName}?key=${apiKey}`
+                );
+                if (checkRes.ok) {
+                    const checkData = await checkRes.json();
+                    state = checkData.state || 'ACTIVE';
+                    console.log(`[parse-presentation] File state: ${state}`);
+                    if (state === 'ACTIVE') break;
+                    if (state === 'FAILED') throw new Error('Obrada PDF fajla neuspješna');
+                }
+            } catch (e) {
+                if (e.message.includes('neuspješna')) throw e;
+            }
+        }
+    }
+
+    // ── Step 3: Generate slides from the uploaded PDF ────────────────────────
+    console.log(`[parse-presentation] Generating slides with ${GEMINI_MODEL}...`);
+
+    const prompt = `Ti si ekspert za zaštitu na radu u Bosni i Hercegovini. Pročitaj CIJELI ovaj PDF dokument od početka do kraja i kreiraj edukativan materijal za radnike u obliku slajdova prezentacije.
+
+VAŽNO: Napravi NAJMANJE 5, a NAJVIŠE 15 slajdova. Svaki slajd pokriva jednu temu ili poglavlje iz dokumenta.
+
+Format svakog slajda:
+- naslov: kratki naslov teme (max 10 riječi)
+- sadrzaj: 3-7 bullet tačaka sa ključnim informacijama, svaka počinje sa •
+
+Pravila:
+- Piši na bosanskom jeziku
+- Fokusiraj se na praktične informacije BITNE za radnika
+- Grupiši srodne informacije na isti slajd
+- Kratke, jasne rečenice
+- Preskoči sadržaj, naslovne strane i bibliografiju
+- AKO dokument sadrži pravne odredbe ili zakone, napravi slajdove koji objašnjavaju prava i obaveze radnika
+
+Vrati SAMO JSON u ovom formatu, bez ikakvog drugog teksta ili komentara:
+{
+  "slides": [
+    {"naslov": "Naziv prve teme", "sadrzaj": "• Prva informacija\\n• Druga informacija\\n• Treća informacija"},
+    {"naslov": "Naziv druge teme", "sadrzaj": "• Prva informacija\\n• Druga informacija"}
+  ]
+}`;
+
+    const genUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+    const genRes = await fetch(genUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{
+                parts: [
+                    {
+                        file_data: {
+                            mime_type: 'application/pdf',
+                            file_uri: fileUri,
+                        },
+                    },
+                    { text: prompt },
+                ],
+            }],
+            generationConfig: {
+                temperature: 0.3,
+                maxOutputTokens: 8192,
+                responseMimeType: 'application/json',
+            },
+        }),
+    });
+
+    // ── Step 4: Clean up uploaded file (fire & forget) ───────────────────────
+    if (fileApiName) {
+        fetch(`https://generativelanguage.googleapis.com/v1beta/${fileApiName}?key=${apiKey}`, {
+            method: 'DELETE',
+        }).catch(() => {});
+    }
+
+    if (!genRes.ok) {
+        const errBody = await genRes.text();
+        console.error(`[parse-presentation] Generate failed (${genRes.status}):`, errBody.substring(0, 500));
+        throw new Error(`Gemini generisanje neuspješno (${genRes.status}): ${errBody.substring(0, 200)}`);
+    }
+
+    const genData = await genRes.json();
+    const rawText = genData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    console.log('[parse-presentation] Response length:', rawText.length);
+
+    const slides = parseJsonSlides(rawText);
+    if (slides.length === 0) {
+        console.error('[parse-presentation] Could not parse slides from:', rawText.substring(0, 300));
+        throw new Error('Gemini nije vratio validne slajdove');
+    }
+
+    console.log(`[parse-presentation] Success: ${slides.length} slides generated`);
+    return slides;
 }
 
-// ─── Fallback: extract raw text from PDF, then send to Gemini as text ────────
-async function pdfTextFallback(buffer, apiKey) {
-    // Quick and dirty PDF text extraction (no external library)
-    // PDF text is stored between BT...ET blocks, in Tj and TJ operators
-    const pdfStr = buffer.toString('latin1');
-    const textChunks = [];
-
-    // Extract text from decoded streams (simple approach)
-    const streamRegex = /stream\r?\n([\s\S]*?)endstream/g;
-    let match;
-    while ((match = streamRegex.exec(pdfStr)) !== null) {
-        const content = match[1];
-        // Look for text operations
-        const tjMatches = content.match(/\(([^)]*)\)\s*Tj/g) || [];
-        for (const tj of tjMatches) {
-            const text = tj.replace(/\(|\)\s*Tj/g, '').trim();
-            if (text.length > 1) textChunks.push(text);
-        }
-    }
-
-    // Also try simpler extraction — just find readable strings
-    if (textChunks.length < 10) {
-        const readable = pdfStr.match(/[\x20-\x7E\xC0-\xFF]{10,}/g) || [];
-        const filtered = readable.filter(s =>
-            !s.includes('/') && !s.includes('<<') && !s.includes('>>') &&
-            !s.includes('obj') && !s.includes('endobj') && !s.includes('stream') &&
-            !s.startsWith('%') && s.length < 500
-        );
-        textChunks.push(...filtered);
-    }
-
-    const extractedText = textChunks.join('\n').substring(0, 10000);
-
-    if (extractedText.trim().length < 50) {
-        throw new Error('PDF ne sadrži čitljiv tekst (možda skeniran bez OCR-a)');
-    }
-
-    // Send extracted text to Gemini 2.0 Flash (text works for sure)
-    const prompt = `Kreiraj 5-15 edukativnih slajdova za radnike iz ovog teksta. Piši na bosanskom.
-Svaki slajd: naslov (max 10 riječi) + sadrzaj (3-7 bullet tačaka sa •).
-
-Tekst:
-${extractedText}
-
-Vrati SAMO JSON: {"slides":[{"naslov":"...","sadrzaj":"• ...\\n• ..."}]}`;
-
-    const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 0.3,
-                    maxOutputTokens: 4096,
-                    responseMimeType: 'application/json',
-                },
-            }),
-        }
-    );
-
-    if (!res.ok) throw new Error(`Gemini text fallback: ${res.status}`);
-    const data = await res.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    return parseJsonSlides(text);
-}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ─── Parse JSON slides from Gemini response ──────────────────────────────────
 function parseJsonSlides(text) {
@@ -207,12 +208,14 @@ function parseJsonSlides(text) {
                     }));
                 }
             }
-        } catch { /* give up */ }
+        } catch { /* */ }
     }
     return [];
 }
 
-// ─── PPTX Parser ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// PPTX → direct XML extraction
+// ═══════════════════════════════════════════════════════════════════════════════
 async function parsePPTX(buffer) {
     const JSZipModule = await import('jszip');
     const JSZip = JSZipModule.default || JSZipModule;
