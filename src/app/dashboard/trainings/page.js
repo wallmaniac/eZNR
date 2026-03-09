@@ -40,6 +40,10 @@ export default function TrainingsPage() {
     const [search, setSearch] = useState('');
     const [activeFormTab, setActiveFormTab] = useState('slides'); // slides | quiz | settings
     const [generatingQuiz, setGeneratingQuiz] = useState(false);
+    const [uploadingFile, setUploadingFile] = useState(false);
+    const [uploadError, setUploadError] = useState('');
+    const [uploadStatus, setUploadStatus] = useState(''); // message shown during upload
+    const fileInputRef = useRef(null);
     const [dispatchOpen, setDispatchOpen] = useState(false);
     const [dispatchTraining, setDispatchTraining] = useState(null);
     const [resultsTraining, setResultsTraining] = useState(null);
@@ -168,7 +172,58 @@ export default function TrainingsPage() {
         }
     };
 
-    // ── DISPATCH ──────────────────────────────
+    // ── FILE UPLOAD (PDF / PPTX) ──────────────────
+    const handleFileUpload = async (file) => {
+        if (!file) return;
+        const name = file.name?.toLowerCase() || '';
+        if (!name.endsWith('.pdf') && !name.endsWith('.pptx') && !name.endsWith('.ppt')) {
+            setUploadError('Podržani formati: .pdf i .pptx');
+            return;
+        }
+        setUploadError('');
+        setUploadingFile(true);
+        setUploadStatus(name.endsWith('.pdf')
+            ? '🤖 Gemini čita dokument i kreira slajdove... (10-20s)'
+            : '📦 Izvlačim slajdove iz prezentacije...');
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            const res = await fetch('/api/parse-presentation', { method: 'POST', body: fd });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                setUploadError(data.error || 'Greška pri obradi fajla.');
+                return;
+            }
+            if ((data.slides || []).length === 0) {
+                setUploadError('Nije pronađen nijedan slajd u fajlu.');
+                return;
+            }
+            // Confirm if slides already exist
+            if ((formData.slides || []).some(s => s.naslov || s.sadrzaj)) {
+                if (!window.confirm(`Pronađeno ${data.slides.length} slajdova. Zamijeniti postojeće slajdove?`)) return;
+            }
+            setF('slides', data.slides);
+            // Auto-fill name from filename if empty
+            if (!formData.naziv.trim()) {
+                const nameWithout = file.name.replace(/\.(pdf|pptx?)$/i, '').replace(/[-_]/g, ' ');
+                setF('naziv', nameWithout.charAt(0).toUpperCase() + nameWithout.slice(1));
+            }
+            setUploadError('');
+            // Show success note
+            const src = data.source;
+            setUploadStatus(src === 'pdf-ai'
+                ? `✅ AI kreirao ${data.count} slajdova iz dokumenta`
+                : `✅ Uvezeno ${data.count} slajdova`);
+            setTimeout(() => setUploadStatus(''), 4000);
+        } catch (err) {
+            console.error('Upload error:', err);
+            setUploadError('Greška pri slanju fajla. Pokušajte ponovo.');
+        } finally {
+            setUploadingFile(false);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    };
+
     const openDispatch = (training) => {
         setDispatchTraining(training);
         setDispatchOpen(true);
@@ -421,6 +476,37 @@ export default function TrainingsPage() {
             {/* ─── SLIDES TAB ─────────────────────────────── */}
             {activeFormTab === 'slides' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+                    {/* ── Import from file ── */}
+                    <div className="card" style={{ border: '1px dashed var(--border)', background: uploadingFile ? 'rgba(99,102,241,0.05)' : 'transparent' }}
+                        onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor = '#6366f1'; }}
+                        onDragLeave={e => { e.currentTarget.style.borderColor = ''; }}
+                        onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor = ''; const f = e.dataTransfer.files[0]; if (f) handleFileUpload(f); }}>
+                        <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '16px 20px' }}>
+                            <div style={{ fontSize: '1.8rem' }}>{uploadingFile ? '⏳' : '📂'}</div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ fontWeight: 600, marginBottom: 2 }}>Uvezi iz PowerPoint ili PDF fajla</div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                    <b>.pptx</b> → slajdovi se uvaze direktno &nbsp;·&nbsp; <b>.pdf</b> → 🤖 Gemini AI kreira slajdove iz teksta
+                                </div>
+                                {uploadStatus && !uploadError && (
+                                    <div style={{ fontSize: '0.82rem', color: uploadStatus.startsWith('✅') ? '#22c55e' : '#6366f1', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        {uploadingFile && <span style={{ display: 'inline-block', width: 12, height: 12, border: '2px solid rgba(99,102,241,0.3)', borderTopColor: '#6366f1', borderRadius: '50%', animation: 'spin 0.7s linear infinite', flexShrink: 0 }} />}
+                                        {uploadStatus}
+                                    </div>
+                                )}
+                                {uploadError && <div style={{ fontSize: '0.8rem', color: 'var(--danger)', marginTop: 4 }}>⚠️ {uploadError}</div>}
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                <button className="btn btn-outline btn-sm" disabled={uploadingFile} onClick={() => fileInputRef.current?.click()}>
+                                    📂 Odaberi fajl
+                                </button>
+                                <input ref={fileInputRef} type="file" accept=".pdf,.pptx" style={{ display: 'none' }}
+                                    onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />
+                            </div>
+                        </div>
+                    </div>
+
                     {(formData.slides || []).length === 0 && (
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
