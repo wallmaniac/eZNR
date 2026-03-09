@@ -107,7 +107,7 @@ async function pdfToSlides(buffer) {
 
     const prompt = `Ti si ekspert za zaštitu na radu u Bosni i Hercegovini. Pročitaj CIJELI ovaj PDF dokument od početka do kraja i kreiraj edukativan materijal za radnike u obliku slajdova prezentacije.
 
-VAŽNO: Napravi NAJMANJE 5, a NAJVIŠE 15 slajdova. Svaki slajd pokriva jednu temu ili poglavlje iz dokumenta.
+VAŽNO: Napravi DOVOLJNO slajdova da pokriješ SVE važne teme iz dokumenta. Za kratke dokumente 5-10, za srednje 10-20, za velike (50+ strana) 20-30 slajdova. Svaki slajd pokriva jednu temu ili poglavlje.
 
 Format svakog slajda:
 - naslov: kratki naslov teme (max 10 riječi)
