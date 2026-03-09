@@ -93,13 +93,14 @@ export default function PublicQuestionnairePage({ params }) {
             {/* Decorative background */}
             <div style={bgGradient1} />
             <div style={bgGradient2} />
+            {/* Bottom logo — fixed, always visible */}
+            <div style={{ position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)', zIndex: 50, pointerEvents: 'none' }}>
+                <img src="/blulogo.jpg" alt="eZNR" style={{ height: 48, maxWidth: 180, objectFit: 'contain', opacity: 0.85 }} />
+            </div>
 
             <div style={containerStyle}>
-                {/* Logo / Brand */}
-                <div style={{ textAlign: 'center', marginBottom: 28, position: 'relative', zIndex: 1 }}>
-                    <img src="/blulogo.jpg" alt="eZNR" style={{ height: 90, maxWidth: 280, objectFit: 'contain' }} />
-                </div>
-
+                {/* Bottom logo — fixed */}
+                
                 {/* Loading */}
                 {loading && (
                     <div style={{ textAlign: 'center', padding: '60px 20px' }}>
@@ -255,7 +256,7 @@ const bgGradient2 = {
 
 const containerStyle = {
     maxWidth: 800, margin: '0 auto',
-    padding: '40px 20px',
+    padding: '20px 20px 80px',
     position: 'relative',
     zIndex: 1,
 };

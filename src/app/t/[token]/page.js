@@ -85,15 +85,15 @@ export default function PublicTrainingPage({ params }) {
         if (phase === 'quiz' && questions.length === 0 && !submitting && !submitted) {
             handleSubmitQuiz();
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [phase, questions.length]);
 
     // ── Loading ────────────────────────────────────────────────────────────
     if (loading) return (
         <div style={pageStyle}>
             <BgGlow />
+            <Logo />
             <div style={containerStyle}>
-                <Logo />
                 <div style={{ textAlign: 'center', padding: '60px 0' }}>
                     <Spinner size={52} />
                     <p style={{ color: '#94a3b8', marginTop: 20 }}>Učitavanje obuke...</p>
@@ -106,8 +106,8 @@ export default function PublicTrainingPage({ params }) {
     if (error) return (
         <div style={pageStyle}>
             <BgGlow />
+            <Logo />
             <div style={containerStyle}>
-                <Logo />
                 <div style={{ textAlign: 'center', padding: '60px 0', maxWidth: 480, margin: '0 auto' }}>
                     <div style={iconBox('rgba(239,68,68,0.1)', 72)}>❌</div>
                     <h2 style={{ color: '#e2e8f0', marginBottom: 8 }}>Obuka nije dostupna</h2>
@@ -122,8 +122,8 @@ export default function PublicTrainingPage({ params }) {
     if (submitted) return (
         <div style={pageStyle}>
             <BgGlow />
+            <Logo />
             <div style={containerStyle}>
-                <Logo />
                 <div style={{ textAlign: 'center', padding: '60px 0', maxWidth: 480, margin: '0 auto' }}>
                     <div style={{ ...iconBox('rgba(16,185,129,0.1)', 80), animation: 'popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275)', fontSize: '2.5rem' }}>✅</div>
                     <style>{`@keyframes popIn { from { transform:scale(0.5);opacity:0; } to { transform:scale(1);opacity:1; } }`}</style>
@@ -148,9 +148,9 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
+                <Logo />
                 <style>{`@keyframes spin { to { transform:rotate(360deg); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 860 }}>
-                    <Logo />
 
                     {/* Company header */}
                     {(companyLogo || companyName) && (
@@ -278,9 +278,9 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
+                <Logo />
                 <style>{`@keyframes spin { to { transform:rotate(360deg); } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 720 }}>
-                    <Logo />
 
                     {/* Header — back button only if officer enabled it */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
@@ -413,9 +413,9 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
+                <Logo />
                 <style>{`@keyframes popIn { from { transform:scale(0.5);opacity:0; } to { transform:scale(1);opacity:1; } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
                 <div style={{ ...containerStyle, maxWidth: 640 }}>
-                    <Logo />
 
                     {/* Result hero */}
                     <div style={{ textAlign: 'center', marginBottom: 32 }}>
@@ -502,8 +502,11 @@ export default function PublicTrainingPage({ params }) {
 
 function Logo() {
     return (
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-            <img src="/blulogo.jpg" alt="eZNR" style={{ height: 90, maxWidth: 280, objectFit: 'contain' }} />
+        <div style={{
+            position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+            zIndex: 50, pointerEvents: 'none',
+        }}>
+            <img src="/blulogo.jpg" alt="eZNR" style={{ height: 48, maxWidth: 180, objectFit: 'contain', opacity: 0.85 }} />
         </div>
     );
 }
@@ -543,7 +546,7 @@ function iconBox(bg, size = 72) {
 
 const pageStyle = { minHeight: '100vh', background: '#0f172a', position: 'relative', overflow: 'hidden', fontFamily: 'var(--font-body, system-ui, sans-serif)' };
 
-const containerStyle = { maxWidth: 800, margin: '0 auto', padding: '40px 20px', position: 'relative', zIndex: 1 };
+const containerStyle = { maxWidth: 800, margin: '0 auto', padding: '20px 20px 80px', position: 'relative', zIndex: 1 };
 
 const navBtnStyle = {
     padding: '9px 20px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)',
