@@ -202,30 +202,49 @@ export default function AnnualInjuriesPage() {
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
   };
 
-  // ── PDF generation (Dopis + Table) ──
+  // ── PDF generation (Dopis + Table) — print in new clean window ──
   const generatePdf = useCallback(async (mode = 'download') => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
+    // Ensure dopis tab is active so printRef is mounted
+    setTab('dopis');
+    await new Promise(resolve => setTimeout(resolve, 350));
     const el = printRef.current;
     if (!el) return;
-    const html2pdf = (await import('html2pdf.js')).default;
-    const filename = `Godisnji_izvjestaj_${year}.pdf`;
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    };
-    if (mode === 'open') {
-      const worker = html2pdf().set(opt).from(el);
-      const pdf = await worker.toPdf().get('pdf');
-      const blob = pdf.output('blob');
-      const url = URL.createObjectURL(blob);
-      window.open(url, '_blank');
-    } else {
-      await html2pdf().set(opt).from(el).save();
+
+    const html = el.innerHTML;
+    const win = window.open('', '_blank', 'width=900,height=1200');
+    if (!win) return;
+
+    win.document.write(`<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Godišnji izvještaj o povredama na radu — ${year}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, serif; font-size: 11pt; color: #111; background: #fff; padding: 20mm; }
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 16px; }
+    th, td { border: 1px solid #555; padding: 5px 7px; }
+    th { background: #e8e8e8; font-weight: 700; text-align: center; }
+    td { vertical-align: top; }
+    .card, .card-body { all: unset; display: block; }
+    @media print {
+      body { padding: 10mm; }
+      @page { size: A4; margin: 12mm; }
     }
+  </style>
+</head>
+<body>${html}</body>
+</html>`);
+    win.document.close();
+    win.focus();
+
+    if (mode === 'download') {
+      // Small delay for render then trigger print (user saves as PDF)
+      setTimeout(() => { win.print(); }, 400);
+    }
+    // For 'open' mode: just show the window without auto-printing
   }, [year]);
 
   // Close dropdowns on outside click
@@ -244,15 +263,13 @@ export default function AnnualInjuriesPage() {
         <DialogRenderer />
         <div className="animate-fadeIn">
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-            <h1 style={{ margin: 0 }}>📈 {t('annualInjuryReport')}</h1>
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8, alignItems: 'center' }}>
-              <select className="form-select" style={{ minWidth: 120 }} value={year} onChange={e => setYear(e.target.value)}>
-                {years.map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
-              <button className="btn btn-primary btn-sm" onClick={handleGenerate}>
-                + {lang === 'bs' ? 'Generiši novi izvještaj' : 'Generate new report'}
-              </button>
-            </div>
+            <select className="form-select" style={{ minWidth: 120 }} value={year} onChange={e => setYear(e.target.value)}>
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <button className="btn btn-primary" style={{ padding: '8px 20px', whiteSpace: 'nowrap' }} onClick={handleGenerate}>
+              + {lang === 'bs' ? 'Generiši novi izvještaj' : 'Generate new report'}
+            </button>
+            <h1 style={{ margin: 0, marginLeft: 'auto' }}>📈 {t('annualInjuryReport')}</h1>
           </div>
 
           {/* Deadline reminder */}
@@ -317,8 +334,8 @@ export default function AnnualInjuriesPage() {
                                 <button className="btn btn-ghost btn-sm btn-icon" title="PDF" onClick={e => { e.stopPropagation(); setListPdfDropdown(listPdfDropdown === r.id ? null : r.id); }}>💾</button>
                                 {listPdfDropdown === r.id && (
                                   <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 160, zIndex: 200 }}>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('open'), 800); }}>📄 {lang === 'bs' ? 'Otvori PDF' : 'Open PDF'}</button>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('download'), 800); }}>📥 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}</button>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('open'), 1200); }}>📄 {lang === 'bs' ? 'Otvori PDF' : 'Open PDF'}</button>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('download'), 1200); }}>📥 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}</button>
                                   </div>
                                 )}
                               </div>
