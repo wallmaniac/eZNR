@@ -417,18 +417,27 @@ function WorkersPageInner() {
                             <Field label={t('dateOfBirth')} value={formData.datumRodenja} onChange={v => updateField('datumRodenja', v)} type="date" />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
                             <Field label={t('parentName')} value={formData.imeRoditelja} onChange={v => updateField('imeRoditelja', v)} />
                             <Field label="JMBG" value={formData.jmbg} onChange={v => updateField('jmbg', v)} placeholder="13 cifara" />
                             <Field label={t('oib')} value={formData.oib} onChange={v => updateField('oib', v)} />
-                            
+                            <div className="form-group">
+                                <label className="form-label">{t('age')}</label>
+                                <div style={{padding:'0 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.zivotnaDob?'var(--text)':'var(--text-muted)',height:42,display:'flex',alignItems:'center'}}>{formData.zivotnaDob||'—'}</div>
+                            </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 20, alignItems: 'end' }}>
                             <StazPicker label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} />
                             <Field label={t('employmentDate')} value={formData.datumZaposlenja} onChange={v => updateField('datumZaposlenja', v)} type="date" />
                             <Field label={t('departureDate')} value={formData.datumOdlaska} onChange={v => updateField('datumOdlaska', v)} type="date" />
-                            <div className="form-group"><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{t('totalExperience')} <InfoTip text={lang==='bs'+'? `Automatski se računa: Staž do dolaska + radni staž u firmi (od Datum zaposlenja do Datum odlaska ili danas).` : `Auto-calculated from: prior experience + work tenure since employment date.`'} /></label><div style={{padding:'0 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',height:42,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div></div>
+                            <div className="form-group">
+                                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    {t('totalExperience')}
+                                    <InfoTip text={lang === 'bs' ? 'Automatski se računa: Staž do dolaska + radni staž u firmi (od Datum zaposlenja do Datum odlaska ili danas).' : 'Auto-calculated from: prior experience + work tenure since employment date.'} />
+                                </label>
+                                <div style={{padding:'0 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',height:42,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div>
+                            </div>
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     {t('coefficient')}
@@ -445,7 +454,7 @@ function WorkersPageInner() {
                                 options={orgUnits.map(ou => ({ value: ou.id, label: ou.naziv }))} />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'end' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'end', marginBottom: 20 }}>
                             <Field label={t('location')} value={formData.lokacija} onChange={v => updateField('lokacija', v)} />
                             <Field label={t('evidenceNumber')} value={formData.evidencijskiBroj} onChange={v => updateField('evidencijskiBroj', v)} />
                             <div className="form-group" style={{ display: 'flex', alignItems: 'center', paddingBottom: 0, marginBottom: 0 }}>
@@ -454,6 +463,12 @@ function WorkersPageInner() {
                                     {t('externalAssociate')}
                                 </label>
                             </div>
+                        </div>
+
+                        <div className="form-group" style={{ marginBottom: 0 }}>
+                            <label className="form-label">{lang === 'bs' ? 'Dodatni poslovi' : 'Additional jobs'}</label>
+                            <textarea className="form-textarea" value={formData.dodatniPoslovi || ''} onChange={e => updateField('dodatniPoslovi', e.target.value)}
+                                placeholder={lang === 'bs' ? 'Opišite dodatne poslove i obaveze koje radnik obavlja...' : 'Describe additional jobs...'} rows={2} />
                         </div>
                     </div>
                 </div>
@@ -616,12 +631,6 @@ function WorkersPageInner() {
                     </div>
                 </Accordion>
 
-                {/* ── ACCORDION: Dodatni poslovi ── */}
-                <Accordion title={t('additionalJobs')} open={openSections.dodatniPoslovi} onToggle={() => toggleSection('dodatniPoslovi')}>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                        {lang === 'bs' ? 'Ovdje se mogu dodati dodatni poslovi za radnika.' : 'Additional jobs can be added here.'}
-                    </p>
-                </Accordion>
 
                 {/* ── NAPOMENA ── */}
                 <div className="card" style={{ marginBottom: 24, marginTop: 24 }}>
@@ -973,7 +982,7 @@ function InfoTip({ text }) {
 }
 // -- StazPicker: 3-dropdown prior experience picker --------------------------
 function StazPicker({ label, value, onChange }) {
-    const [showTip, setShowTip] = useState(false); // (kept for hover state below)
+    const { lang } = useLanguage();
     const parse = (v) => {
         if (!v) return { g: '', m: '', d: '' };
         const m1 = v.match(/(\d+)g(\d+)mj(\d+)d/i);
@@ -996,14 +1005,9 @@ function StazPicker({ label, value, onChange }) {
         <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-                <span onMouseEnter={() => setShowTip(true)} onMouseLeave={() => setShowTip(false)} style={{ cursor: 'pointer', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>i</span>
-                {value && <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>{value}</span>}
+                <InfoTip text={lang === 'bs' ? "Staž prije dolaska u firmu: Godina / Mjeseci / Dana" : "Prior experience: Years / Months / Days"} />
+                {value && <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>{value.toUpperCase()}</span>}
             </label>
-            {showTip && (
-                <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', fontSize: '0.78rem', color: 'var(--text-light)', zIndex: 9999, whiteSpace: 'normal', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', pointerEvents: 'none', minWidth: 200, lineHeight: 1.5, fontWeight: 400 }}>
-                    Staž prije dolaska u firmu: <strong>Godina / Mjeseci / Dana</strong>
-                </div>
-            )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
                 <div>
                     <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 2, textAlign: 'center' }}>Godina</div>
