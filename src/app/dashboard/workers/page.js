@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,7 +21,7 @@ const emptyWorker = {
     ulica: '', kucniBroj: '', mjestoId: '', opcina: '',
     telefonTvrtki: '', telefonKuce: '', mobitel: '', email: '',
     spol: '', datumRodenja: '', mjestoRodenja: '', opcinaRodenja: '',
-    aktivan: true, posebniUvjeti: false, napomena: '', slika: '',
+    aktivan: true, posebniUvjeti: false, napomena: '', slika: '', dodatniPoslovi: '',
 };
 
 function WorkersPageInner() {
@@ -428,11 +428,11 @@ function WorkersPageInner() {
                             <StazPicker label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} />
                             <Field label={t('employmentDate')} value={formData.datumZaposlenja} onChange={v => updateField('datumZaposlenja', v)} type="date" />
                             <Field label={t('departureDate')} value={formData.datumOdlaska} onChange={v => updateField('datumOdlaska', v)} type="date" />
-                            <div className="form-group"><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{t('totalExperience')} <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>↺ auto</span></label><div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',minHeight:40,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div></div>
+                            <div className="form-group"><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{t('totalExperience')} <InfoTip text={lang==='bs'+'? `Automatski se računa: Staž do dolaska + radni staž u firmi (od Datum zaposlenja do Datum odlaska ili danas).` : `Auto-calculated from: prior experience + work tenure since employment date.`'} /></label><div style={{padding:'0 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',height:42,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div></div>
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     {t('coefficient')}
-                                    <span onClick={() => {}} title="Koeficijent radnog staža (Minuli rad)" style={{ cursor: 'help', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>i</span>
+                                    <InfoTip text="Koeficijent radnog staža (Minuli rad)" />
                                 </label>
                                 <input className="form-input" value={formData.koef} onChange={e => updateField('koef', e.target.value)} title="Koeficijent radnog staža (Minuli rad)" />
                             </div>
@@ -953,9 +953,27 @@ function SelectField({ label, value, onChange, options, placeholder, required })
 }
 
 
+// -- InfoTip: instant hover tooltip icon -------------------------------------
+function InfoTip({ text }) {
+    const [show, setShow] = useState(false);
+    return (
+        <span style={{ position: 'relative', display: 'inline-flex', flexShrink: 0 }}>
+            <span
+                onMouseEnter={() => setShow(true)}
+                onMouseLeave={() => setShow(false)}
+                style={{ cursor: 'help', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0, lineHeight: 1 }}
+            >i</span>
+            {show && (
+                <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', fontSize: '0.78rem', color: 'var(--text-light)', zIndex: 9999, whiteSpace: 'normal', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', pointerEvents: 'none', minWidth: 200, maxWidth: 300, lineHeight: 1.5, fontWeight: 400 }}>
+                    {text}
+                </div>
+            )}
+        </span>
+    );
+}
 // -- StazPicker: 3-dropdown prior experience picker --------------------------
 function StazPicker({ label, value, onChange }) {
-    const [showTip, setShowTip] = useState(false);
+    const [showTip, setShowTip] = useState(false); // (kept for hover state below)
     const parse = (v) => {
         if (!v) return { g: '', m: '', d: '' };
         const m1 = v.match(/(\d+)g(\d+)mj(\d+)d/i);
@@ -976,14 +994,14 @@ function StazPicker({ label, value, onChange }) {
     const d_opts = Array.from({ length: 31 }, (_, i) => i);
     return (
         <div className="form-group">
-            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-                <span onClick={() => setShowTip(p => !p)} style={{ cursor: 'pointer', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>i</span>
+                <span onMouseEnter={() => setShowTip(true)} onMouseLeave={() => setShowTip(false)} style={{ cursor: 'pointer', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>i</span>
                 {value && <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>{value}</span>}
             </label>
             {showTip && (
-                <div style={{ marginBottom: 6, padding: '5px 10px', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-light)' }}>
-                    Staz prije dolaska u firmu: <strong>Godina / Mjeseci / Dana</strong>
+                <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: 0, backgroundColor: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, padding: '7px 12px', fontSize: '0.78rem', color: 'var(--text-light)', zIndex: 9999, whiteSpace: 'normal', boxShadow: '0 4px 16px rgba(0,0,0,0.3)', pointerEvents: 'none', minWidth: 200, lineHeight: 1.5, fontWeight: 400 }}>
+                    Staž prije dolaska u firmu: <strong>Godina / Mjeseci / Dana</strong>
                 </div>
             )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
