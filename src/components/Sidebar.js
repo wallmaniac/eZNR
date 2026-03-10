@@ -68,6 +68,7 @@ const menuItems = [
         key: 'reports',
         icon: '📊',
         children: [
+            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
             { key: 'addressBook', icon: '📒', path: '/dashboard/address-book' },
             { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
             { key: 'workerPPE', icon: '🦺', path: '/dashboard/worker-ppe' },
@@ -77,7 +78,6 @@ const menuItems = [
             { key: 'ekWorkers', icon: '📇', path: '/dashboard/ek-workers' },
             { key: 'ekEquipment', icon: '📇', path: '/dashboard/ek-equipment' },
             { key: 'equipmentExamList', icon: '🔍', path: '/dashboard/equipment-exams' },
-            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
         ],
     },
     {

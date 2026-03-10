@@ -233,17 +233,17 @@ export default function AnnualInjuriesPage() {
           position: static !important;
           z-index: auto !important;
           font-family: Georgia, serif;
-          font-size: 11pt;
+          font-size: 10pt;
           color: #111;
           background: #fff;
-          padding: 12mm;
+          padding: 0;
         }
-        #__izvj_print__ table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 14px; }
-        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555; padding: 5px 7px; }
+        #__izvj_print__ table { width: 100%; max-width: 100%; table-layout: fixed; word-wrap: break-word; border-collapse: collapse; font-size: 7.5pt; margin-top: 14px; }
+        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555; padding: 4px 5px; overflow-wrap: break-word; }
         #__izvj_print__ th { background: #e8e8e8; font-weight: 700; text-align: center; }
         #__izvj_print__ td { vertical-align: top; }
         #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset; display: block; }
-        @page { size: A4; margin: 10mm; }
+        @page { size: A4; margin: 12mm; }
       }
     `;
     document.head.appendChild(styleEl);
@@ -538,23 +538,23 @@ export default function AnnualInjuriesPage() {
                   <table className="data-table" style={{ fontSize: '0.8rem', fontFamily: 'Georgia, serif' }}>
                     <thead>
                       <tr>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', minWidth: 40 }}>Rb.</th>
-                        <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '4%' }}>Rb.</th>
+                        <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)', width: '16%' }}>
                           Povreda na radu sa smrtnom posljedicom
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', minWidth: 160 }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
                           Lični podaci stradalih<br/><span style={{ fontWeight: 400, fontSize: '0.72rem' }}>(ime i prezime, datum rod., spol)</span>
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', minWidth: 160 }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
                           Datum i mjesto nesreće / povrede
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', minWidth: 160 }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
                           Uzroci pojave, sadišta teške ili kolektivne povrede rada
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', minWidth: 160 }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
                           Prijava MUP stanici i Kantonalnoj inspekciji (broj i datum)
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', minWidth: 120 }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>
                           Napomena
                         </th>
                       </tr>
