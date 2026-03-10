@@ -202,7 +202,7 @@ export default function AnnualInjuriesPage() {
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
   };
 
-  // ── PDF: Direct download using html2pdf.js (no popup) ──
+  // ── PDF: Direct download using html2pdf.js (landscape) ──
   const generatePdf = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
@@ -212,11 +212,10 @@ export default function AnnualInjuriesPage() {
     const el = printRef.current;
     if (!el) return;
 
-    // Inject temporary styles to fix the table scaling specifically for html2canvas
     const tempStyle = document.createElement('style');
     tempStyle.textContent = `
       .card, .card-body { border: none !important; box-shadow: none !important; padding: 0 !important; }
-      table { width: 100% !important; max-width: 100% !important; table-layout: fixed; font-size: 7.5pt !important; }
+      table { width: 100% !important; max-width: 100% !important; table-layout: fixed; }
       th, td { white-space: normal !important; word-break: break-word !important; border: 1px solid #555 !important; padding: 4px !important; }
       th { background-color: #e8e8e8 !important; }
     `;
@@ -228,17 +227,77 @@ export default function AnnualInjuriesPage() {
         margin: [10, 10, 10, 10], // top, left, bottom, right in mm
         filename: `Godisnji_izvjestaj_${year}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
       };
-      // Initiate direct download
       await html2pdf().set(opt).from(el).save();
     } catch (err) {
       console.error('PDF generation error:', err);
-      // Fallback if the library fails or isn't available
-      alert(lang === 'bs' ? 'Greška pri generisanju PDF-a. Pokušajte pomoću tipke "Isprintaj".' : 'PDF generation error. Please try Print.');
+      alert(lang === 'bs' ? 'Greška pri generisanju PDF-a.' : 'PDF generation error.');
     } finally {
       if (el.contains(tempStyle)) el.removeChild(tempStyle);
+    }
+  }, [year, lang]);
+
+  // ── Word: Export .doc ──
+  const generateWord = useCallback(async () => {
+    setPdfDropdown(false);
+    setListPdfDropdown(null);
+    setTab('dopis');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const el = printRef.current;
+    if (!el) return;
+
+    const html = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8">
+        <title>Godisnji_izvjestaj</title>
+        <style>
+          body { font-family: Georgia, serif; font-size: 11pt; color: #000; }
+          .data-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+          .data-table th, .data-table td { border: 1px solid #555; padding: 4px; vertical-align: top; font-size: 9pt; }
+          .data-table th { background-color: #e8e8e8; font-weight: bold; text-align: center; }
+        </style>
+      </head>
+      <body>
+        ${el.innerHTML.replace(/class="card"/g, '')}
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob(['\\ufeff', html], { type: 'application/msword' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Godisnji_izvjestaj_${year}.doc`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, [year]);
+
+  // ── Excel: Export .xlsx ──
+  const generateExcel = useCallback(async () => {
+    setPdfDropdown(false);
+    setListPdfDropdown(null);
+    setTab('dopis');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    const el = printRef.current;
+    if (!el) return;
+    
+    const table = el.querySelector('table');
+    if (!table) return;
+
+    try {
+      const XLSX = await import('xlsx');
+      const wb = XLSX.utils.table_to_book(table, { raw: true, sheet: 'Izvjestaj' });
+      XLSX.writeFile(wb, `Pregled_povreda_${year}.xlsx`);
+    } catch (err) {
+      console.error('Excel export error', err);
+      alert(lang === 'bs' ? 'Greška pri generisanju Excela.' : 'Excel generation error.');
     }
   }, [year, lang]);
 
@@ -278,11 +337,14 @@ export default function AnnualInjuriesPage() {
         #__izvj_print__ th { background: #e8e8e8; font-weight: 700; text-align: center; }
         #__izvj_print__ td { vertical-align: top; }
         #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset; display: block; }
-        @page { size: A4; margin: 12mm; }
+        @page { size: landscape; margin: 12mm; }
       }
     `;
     document.head.appendChild(styleEl);
 
+    // Give browser time to apply styles
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
     window.print();
 
     setTimeout(() => {
@@ -375,7 +437,18 @@ export default function AnnualInjuriesPage() {
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                               <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={() => handleLoadReport(r)}>✏️</button>
                               <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => printReport(), 800); }}>🖨️</button>
-                              <button className="btn btn-ghost btn-sm btn-icon" title="PDF" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf(), 800); }}>💾</button>
+                              
+                              <div style={{ position: 'relative' }}>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={e => { e.stopPropagation(); setListPdfDropdown(listPdfDropdown === r.id ? null : r.id); }}>⬇️</button>
+                                {listPdfDropdown === r.id && (
+                                  <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 140, zIndex: 200, padding: 4 }}>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📄 PDF</button>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generateWord(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📝 WORD</button>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generateExcel(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📊 EXCEL</button>
+                                  </div>
+                                )}
+                              </div>
+                              
                               <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
                             </div>
                           </td>
@@ -425,9 +498,18 @@ export default function AnnualInjuriesPage() {
             <button className="btn btn-outline btn-sm" onClick={printReport}>
               🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
             </button>
-            <button className="btn btn-outline btn-sm" onClick={generatePdf}>
-              📥 PDF
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); setPdfDropdown(!pdfDropdown); }}>
+                ⬇️ {lang === 'bs' ? 'Preuzmi ▾' : 'Download ▾'}
+              </button>
+              {pdfDropdown && (
+                <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, minWidth: 160, zIndex: 200, padding: 4 }}>
+                  <button className="dropdown-item" onClick={generatePdf} style={{ fontSize: '0.85rem' }}>📄 PDF</button>
+                  <button className="dropdown-item" onClick={generateWord} style={{ fontSize: '0.85rem' }}>📝 WORD</button>
+                  <button className="dropdown-item" onClick={generateExcel} style={{ fontSize: '0.85rem' }}>📊 EXCEL</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -550,6 +632,9 @@ export default function AnnualInjuriesPage() {
                 </div>
               </div>
             </div>
+
+            {/* Print break to push table to next page naturally */}
+            <div style={{ pageBreakBefore: 'always', margin: '20px 0' }} />
 
             {/* ─── OFFICIAL TABLE ─── */}
             <div className="card" style={{ marginBottom: 20 }}>
