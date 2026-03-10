@@ -422,8 +422,11 @@ function WorkersPageInner() {
                             <Field label="JMBG" value={formData.jmbg} onChange={v => updateField('jmbg', v)} placeholder="13 cifara" />
                             <Field label={t('oib')} value={formData.oib} onChange={v => updateField('oib', v)} />
                             <div className="form-group">
-                                <label className="form-label">{t('age')}</label>
-                                <div style={{padding:'0 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.zivotnaDob?'var(--text)':'var(--text-muted)',height:42,display:'flex',alignItems:'center'}}>{formData.zivotnaDob||'—'}</div>
+                                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    {t('age')}
+                                    <InfoTip text={lang === 'bs' ? 'Automatski se računa na osnovu datuma rođenja.' : 'Auto-calculated based on date of birth.'} />
+                                </label>
+                                <div className="form-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', color: formData.zivotnaDob ? 'var(--text)' : 'var(--text-muted)', cursor: 'not-allowed' }}>{formData.zivotnaDob || '—'}</div>
                             </div>
                         </div>
 
@@ -436,7 +439,7 @@ function WorkersPageInner() {
                                     {t('totalExperience')}
                                     <InfoTip text={lang === 'bs' ? 'Automatski se računa: Staž do dolaska + radni staž u firmi (od Datum zaposlenja do Datum odlaska ili danas).' : 'Auto-calculated from: prior experience + work tenure since employment date.'} />
                                 </label>
-                                <div style={{padding:'0 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',height:42,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div>
+                                <div className="form-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-input)', color: formData.ukupniStaz ? 'var(--text)' : 'var(--text-muted)', cursor: 'not-allowed' }}>{formData.ukupniStaz || '—'}</div>
                             </div>
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -707,8 +710,24 @@ function WorkersPageInner() {
                             <div className="modal-body">
                                 <div className="form-group" style={{ marginBottom: 16 }}>
                                     <label className="form-label">{t('name')} *</label>
-                                    <select className="form-select" value={ppeFormData.naziv} onChange={e => setPpeFormData({ ...ppeFormData, naziv: e.target.value })}>
+                                    <select className="form-select" value={ppeFormData.naziv} onChange={e => {
+                                        const val = e.target.value;
+                                        if (val === 'NEW_OZO') {
+                                            const newName = window.prompt(lang === 'bs' ? 'Unesite naziv nove OZO:' : 'Enter name of new PPE:');
+                                            if (newName && newName.trim()) {
+                                                const finalName = newName.trim();
+                                                create(COLLECTIONS.PPE_TYPES, { naziv: finalName });
+                                                setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+                                                setPpeFormData({ ...ppeFormData, naziv: finalName });
+                                            } else {
+                                                setPpeFormData({ ...ppeFormData, naziv: '' });
+                                            }
+                                        } else {
+                                            setPpeFormData({ ...ppeFormData, naziv: val });
+                                        }
+                                    }}>
                                         <option value="">-- {lang === 'bs' ? 'Odaberite OZO' : 'Select PPE'} --</option>
+                                        <option value="NEW_OZO" style={{ fontWeight: 'bold', color: 'var(--primary)' }}>+ {lang === 'bs' ? 'Dodaj novu OZO...' : 'Add new PPE...'}</option>
                                         {ppeTypes.map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
                                     </select>
                                 </div>
