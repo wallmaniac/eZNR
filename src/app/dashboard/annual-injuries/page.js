@@ -202,60 +202,67 @@ export default function AnnualInjuriesPage() {
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
   };
 
-  // ── PDF / Print — uses hidden iframe to avoid popup blocker ──
-  const generatePdf = useCallback(async (mode = 'download') => {
+  // ── PDF: inject content into DOM, scope print CSS, call window.print() ──
+  const generatePdf = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
     // Ensure dopis tab is active so printRef is mounted
     setTab('dopis');
-    await new Promise(resolve => setTimeout(resolve, 350));
+    await new Promise(resolve => setTimeout(resolve, 400));
     const el = printRef.current;
     if (!el) return;
 
-    const html = el.innerHTML;
-    const printCSS = `
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { font-family: Georgia, serif; font-size: 11pt; color: #111; background: #fff; padding: 15mm; }
-      table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 16px; }
-      th, td { border: 1px solid #555; padding: 5px 7px; }
-      th { background: #e8e8e8; font-weight: 700; text-align: center; }
-      td { vertical-align: top; }
-      .card, .card-body { all: unset; display: block; }
-      @page { size: A4; margin: 12mm; }
-    `;
+    // Inject a temporary overlay with ONLY the dopis+table content
+    const overlay = document.createElement('div');
+    overlay.id = '__izvj_print__';
+    overlay.innerHTML = el.innerHTML;
+    Object.assign(overlay.style, {
+      position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+      background: '#fff', zIndex: -1, display: 'none',
+    });
+    document.body.appendChild(overlay);
 
-    // Create a hidden iframe in the current document (cannot be blocked)
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument || iframe.contentWindow.document;
-    doc.open();
-    doc.write(`<!DOCTYPE html>
-<html lang="bs">
-<head><meta charset="UTF-8"/>
-<title>Godišnji izvještaj o povredama na radu — ${year}</title>
-<style>${printCSS}</style>
-</head>
-<body>${html}</body>
-</html>`);
-    doc.close();
-
-    // Wait for iframe to render then print
-    iframe.onload = () => {
-      iframe.contentWindow.focus();
-      iframe.contentWindow.print();
-      setTimeout(() => document.body.removeChild(iframe), 1000);
-    };
-    // Fallback if onload already fired
-    setTimeout(() => {
-      if (document.body.contains(iframe)) {
-        iframe.contentWindow.focus();
-        iframe.contentWindow.print();
-        setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 1000);
+    // Scoped print style: hide everything except our overlay
+    const styleEl = document.createElement('style');
+    styleEl.id = '__izvj_print_css__';
+    styleEl.textContent = `
+      @media print {
+        body > *:not(#__izvj_print__) { display: none !important; }
+        #__izvj_print__ {
+          display: block !important;
+          position: static !important;
+          z-index: auto !important;
+          font-family: Georgia, serif;
+          font-size: 11pt;
+          color: #111;
+          background: #fff;
+          padding: 12mm;
+        }
+        #__izvj_print__ table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 14px; }
+        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555; padding: 5px 7px; }
+        #__izvj_print__ th { background: #e8e8e8; font-weight: 700; text-align: center; }
+        #__izvj_print__ td { vertical-align: top; }
+        #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset; display: block; }
+        @page { size: A4; margin: 10mm; }
       }
-    }, 600);
+    `;
+    document.head.appendChild(styleEl);
+
+    window.print();
+
+    // Cleanup after print dialog closes
+    setTimeout(() => {
+      document.getElementById('__izvj_print__')?.remove();
+      document.getElementById('__izvj_print_css__')?.remove();
+    }, 1500);
   }, [year]);
+
+  // ── Simple full-page print (uses global print CSS to hide UI chrome) ──
+  const printReport = useCallback(async () => {
+    setTab('dopis');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    window.print();
+  }, []);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -340,15 +347,8 @@ export default function AnnualInjuriesPage() {
                           <td onClick={e => e.stopPropagation()}>
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                               <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={() => handleLoadReport(r)}>✏️</button>
-                              <div style={{ position: 'relative' }}>
-                                <button className="btn btn-ghost btn-sm btn-icon" title="PDF" onClick={e => { e.stopPropagation(); setListPdfDropdown(listPdfDropdown === r.id ? null : r.id); }}>💾</button>
-                                {listPdfDropdown === r.id && (
-                                  <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 160, zIndex: 200 }}>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('open'), 1200); }}>📄 {lang === 'bs' ? 'Otvori PDF' : 'Open PDF'}</button>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('download'), 1200); }}>📥 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}</button>
-                                  </div>
-                                )}
-                              </div>
+                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => printReport(), 800); }}>🖨️</button>
+                              <button className="btn btn-ghost btn-sm btn-icon" title="PDF" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf(), 800); }}>💾</button>
                               <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
                             </div>
                           </td>
@@ -395,17 +395,12 @@ export default function AnnualInjuriesPage() {
             <button className="btn btn-primary btn-sm" onClick={handleSaveReport}>
               💾 {lang === 'bs' ? 'Sačuvaj izvještaj' : 'Save report'}
             </button>
-            <div style={{ position: 'relative' }}>
-              <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); setPdfDropdown(!pdfDropdown); }}>
-                📥 PDF ▾
-              </button>
-              {pdfDropdown && (
-                <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, minWidth: 180, zIndex: 200 }}>
-                  <button className="dropdown-item" onClick={() => generatePdf('open')}>📄 {lang === 'bs' ? 'Otvori PDF' : 'Open PDF'}</button>
-                  <button className="dropdown-item" onClick={() => generatePdf('download')}>📥 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}</button>
-                </div>
-              )}
-            </div>
+            <button className="btn btn-outline btn-sm" onClick={printReport}>
+              🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={generatePdf}>
+              📥 PDF
+            </button>
           </div>
         </div>
 
