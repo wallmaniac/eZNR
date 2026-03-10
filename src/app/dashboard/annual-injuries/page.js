@@ -355,9 +355,14 @@ export default function AnnualInjuriesPage() {
 
   // Close dropdowns on outside click
   useEffect(() => {
-    const handler = () => { setPdfDropdown(false); setListPdfDropdown(null); };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
+    const handler = (e) => {
+      if (!e.target.closest('.dropdown-container')) {
+        setPdfDropdown(false);
+        setListPdfDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   // ════════════════════════════════════════════════════════════════════════════
@@ -438,8 +443,8 @@ export default function AnnualInjuriesPage() {
                               <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={() => handleLoadReport(r)}>✏️</button>
                               <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => printReport(), 800); }}>🖨️</button>
                               
-                              <div style={{ position: 'relative' }}>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={e => { e.stopPropagation(); setListPdfDropdown(listPdfDropdown === r.id ? null : r.id); }}>⬇️</button>
+                              <div className="dropdown-container" style={{ position: 'relative' }}>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => setListPdfDropdown(listPdfDropdown === r.id ? null : r.id)}>⬇️</button>
                                 {listPdfDropdown === r.id && (
                                   <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 140, zIndex: 200, padding: 4 }}>
                                     <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📄 PDF</button>
@@ -498,8 +503,8 @@ export default function AnnualInjuriesPage() {
             <button className="btn btn-outline btn-sm" onClick={printReport}>
               🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
             </button>
-            <div style={{ position: 'relative' }}>
-              <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); setPdfDropdown(!pdfDropdown); }}>
+            <div className="dropdown-container" style={{ position: 'relative' }}>
+              <button className="btn btn-outline btn-sm" onClick={() => setPdfDropdown(!pdfDropdown)}>
                 ⬇️ {lang === 'bs' ? 'Preuzmi ▾' : 'Download ▾'}
               </button>
               {pdfDropdown && (
