@@ -378,7 +378,7 @@ function WorkersPageInner() {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 20 }}>
-                            <Field label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} placeholder="GGMMDD" />
+                            <Field label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} placeholder="GGMMDD (npr. 050306 = 5g 3mj 6d)" />
                             <Field label={t('employmentDate')} value={formData.datumZaposlenja} onChange={v => updateField('datumZaposlenja', v)} type="date" />
                             <Field label={t('departureDate')} value={formData.datumOdlaska} onChange={v => updateField('datumOdlaska', v)} type="date" />
                             <Field label={t('totalExperience')} value={formData.ukupniStaz} onChange={v => updateField('ukupniStaz', v)} placeholder="GG MM DD" />

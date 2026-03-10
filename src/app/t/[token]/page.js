@@ -255,7 +255,7 @@ export default function PublicTrainingPage({ params }) {
                 <div style={pageStyle}>
                     <BgGlow />
                     <div style={containerStyle}>
-                                <div style={{ textAlign: 'center', padding: '60px 0' }}>
+                        <div style={{ textAlign: 'center', padding: '60px 0' }}>
                             <Spinner size={52} />
                             <p style={{ color: '#94a3b8', marginTop: 20 }}>Završavanje obuke...</p>
                         </div>
