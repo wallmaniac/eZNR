@@ -1,21 +1,21 @@
-﻿'use client';
+'use client';
 /**
- * useDialog — in-app replacement for window.alert() and window.confirm().
+ * useDialog — in-app replacement for window.alert(), window.confirm(), and window.prompt().
  *
  * Usage:
- *   const { alert, confirm, DialogRenderer } = useDialog();
+ *   const { alert, confirm, prompt, DialogRenderer } = useDialog();
  *   // In JSX: <DialogRenderer />
  *   // In handlers: await alert('Something went wrong!');
  *                   const ok = await confirm('Delete this item?');
+ *                   const val = await prompt('Enter name:');
  *
  * The DialogRenderer must be placed once inside the component's return JSX.
  */
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 
 export function useDialog() {
     const [dialog, setDialog] = useState(null);
     const [promptValue, setPromptValue] = useState('');
-    // { type: 'alert'|'confirm', title, message, resolve }
 
     const showAlert = useCallback((message, title) => {
         return new Promise((resolve) => {
@@ -29,9 +29,17 @@ export function useDialog() {
         });
     }, []);
 
+    const showPrompt = useCallback((message, title, defaultValue = '') => {
+        return new Promise((resolve) => {
+            setPromptValue(defaultValue);
+            setDialog({ type: 'prompt', message, title: title || null, resolve });
+        });
+    }, []);
+
     const close = (result) => {
         if (dialog?.resolve) dialog.resolve(result);
         setDialog(null);
+        setPromptValue('');
     };
 
     function DialogRenderer() {
@@ -61,21 +69,33 @@ export function useDialog() {
                     {/* Icon + Title */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                         <span style={{ fontSize: '1.6rem' }}>
-                            {isDanger ? '⚠️' : isConfirm ? '❓' : 'ℹ️'}
+                            {isDanger ? '⚠️' : (isConfirm || isPrompt) ? '❓' : 'ℹ️'}
                         </span>
                         <h3 style={{ margin: 0, fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>
-                            {dialog.title || (isDanger ? (isConfirm ? 'Potvrda brisanja' : 'Upozorenje') : isConfirm ? 'Potvrda' : 'Obavijest')}
+                            {dialog.title || (isDanger ? (isConfirm ? 'Potvrda brisanja' : 'Upozorenje') : isPrompt ? 'Unos' : isConfirm ? 'Potvrda' : 'Obavijest')}
                         </h3>
                     </div>
 
                     {/* Message */}
-                    <p style={{ margin: '0 0 24px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.92rem' }}>
+                    <p style={{ margin: '0 0 16px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.92rem' }}>
                         {dialog.message}
                     </p>
 
+                    {/* Prompt input */}
+                    {isPrompt && (
+                        <input
+                            className="form-input"
+                            style={{ marginBottom: 16 }}
+                            value={promptValue}
+                            onChange={e => setPromptValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter' && promptValue.trim()) close(promptValue.trim()); }}
+                            autoFocus
+                        />
+                    )}
+
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                        {isConfirm && (
+                        {(isConfirm || isPrompt) && (
                             <button
                                 style={{
                                     padding: '9px 20px', borderRadius: 'var(--radius-md)',
@@ -83,7 +103,7 @@ export function useDialog() {
                                     border: '1px solid var(--border)', cursor: 'pointer',
                                     fontWeight: 600, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
                                 }}
-                                onClick={() => close(false)}
+                                onClick={() => close(isPrompt ? null : false)}
                             >
                                 Odustani
                             </button>
@@ -95,10 +115,10 @@ export function useDialog() {
                                 color: 'white', border: 'none', cursor: 'pointer',
                                 fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
                             }}
-                            onClick={() => close(isConfirm ? true : undefined)}
-                            autoFocus
+                            onClick={() => close(isPrompt ? (promptValue.trim() || null) : isConfirm ? true : undefined)}
+                            autoFocus={!isPrompt}
                         >
-                            {isConfirm ? (isDanger ? '🗑️ Da, obriši' : 'Da, potvrdi') : 'U redu'}
+                            {isPrompt ? 'Potvrdi' : isConfirm ? (isDanger ? '🗑️ Da, obriši' : 'Da, potvrdi') : 'U redu'}
                         </button>
                     </div>
                 </div>
