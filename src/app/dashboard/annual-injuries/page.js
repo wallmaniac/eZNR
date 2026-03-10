@@ -263,7 +263,7 @@ export default function AnnualInjuriesPage() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
+                        <th style={{ width: 100 }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                         <th>{lang === 'bs' ? 'Godina' : 'Year'}</th>
                         <th>{lang === 'bs' ? 'Firma' : 'Company'}</th>
                         <th>{lang === 'bs' ? 'Povreda' : 'Injuries'}</th>
@@ -273,11 +273,10 @@ export default function AnnualInjuriesPage() {
                     </thead>
                     <tbody>
                       {savedReports.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map(r => (
-                        <tr key={r.id}>
-                          <td>
+                        <tr key={r.id} onClick={() => handleLoadReport(r)} style={{ cursor: 'pointer' }}>
+                          <td onClick={e => e.stopPropagation()}>
                             <div style={{ display: 'flex', gap: 4 }}>
-                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'Open'} onClick={() => handleLoadReport(r)}>📄</button>
-                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => window.print(), 500); }}>🖨️</button>
+                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'} onClick={() => { handleLoadReport(r); setTimeout(() => window.print(), 600); }}>💾</button>
                               <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
                             </div>
                           </td>
@@ -309,17 +308,8 @@ export default function AnnualInjuriesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        {/* Print styles */}
-        <style>{`
-          @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            body { background: white !important; color: black !important; }
-            .card { box-shadow: none !important; border: 1px solid #ccc !important; }
-            .dopis-letter { border: 2px solid #000 !important; padding: 32px !important; }
-          }
-          .print-only { display: none; }
-        `}</style>
+        {/* print-only items hidden on screen */}
+        <style>{`.print-only { display: none; }`}</style>
 
         {/* Header bar */}
         <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -334,7 +324,10 @@ export default function AnnualInjuriesPage() {
               💾 {lang === 'bs' ? 'Sačuvaj izvještaj' : 'Save report'}
             </button>
             <button className="btn btn-outline btn-sm" onClick={() => window.print()}>
-              🖨️ {lang === 'bs' ? 'Isprintaj / PDF' : 'Print / PDF'}
+              🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Preuzmi kao PDF (Microsoft Print to PDF)' : 'Download as PDF'}>
+              📥 PDF
             </button>
           </div>
         </div>
@@ -389,8 +382,8 @@ export default function AnnualInjuriesPage() {
             </div>
 
             {/* ─── THE OFFICIAL LETTER / DOPIS ─── */}
-            <div className="card dopis-letter" style={{ marginBottom: 20 }}>
-              <div className="card-body" style={{ fontFamily: 'Georgia, serif', color: '#111', lineHeight: 1.7, maxWidth: 900, margin: '0 auto' }}>
+            <div className="card dopis-letter" style={{ marginBottom: 20, background: '#fff', border: '1px solid var(--border)' }}>
+              <div className="card-body" style={{ fontFamily: 'Georgia, serif', color: '#111', lineHeight: 1.7, maxWidth: 900, margin: '0 auto', padding: '32px 40px' }}>
                 {/* Sender */}
                 <div style={{ marginBottom: 24 }}>
                   <div style={{ fontWeight: 700, fontSize: '1rem' }}>{companyInfo.naziv || '[Naziv firme]'}</div>

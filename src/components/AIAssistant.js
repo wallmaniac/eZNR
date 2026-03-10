@@ -629,10 +629,7 @@ export default function AIAssistant() {
                         }
                     }
                 });
-                if (['/dashboard/injuries', '/dashboard/annual-injuries', '/dashboard/injury-list'].includes(pathname)) {
-                    window.location.reload();
-                }
-                return { success: true, message: `Uspješno izmijenjeno ${updatedCount} zapisa o povredama na godinu ${args.target_year}.` };
+                return { success: true, message: `Uspješno izmijenjeno ${updatedCount} zapisa o povredama na godinu ${args.target_year}. Osvježite stranicu za prikaz promjena.` };
             } catch (err) {
                 return { error: `Failed to update injuries: ${err.message}` };
             }
@@ -722,8 +719,14 @@ export default function AIAssistant() {
                 }];
 
                 // Get Zia's final text response after seeing the tool result
-                const finalResult = await callZiaAPI(historyWithResult, systemPrompt, ZIA_TOOLS);
-                const reply = finalResult.text || (lang === 'bs' ? 'Urađeno.' : 'Done.');
+                let reply;
+                try {
+                    const finalResult = await callZiaAPI(historyWithResult, systemPrompt, ZIA_TOOLS);
+                    reply = finalResult.text || (lang === 'bs' ? 'Urađeno.' : 'Done.');
+                } catch {
+                    // If second call fails (rate limit etc), use the tool result message
+                    reply = toolResult.message || toolResult.error || (lang === 'bs' ? 'Urađeno.' : 'Done.');
+                }
 
                 chatHistoryRef.current = [...historyWithResult, { role: 'model', parts: [{ text: reply }] }];
                 setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date(), isAction: true }]);

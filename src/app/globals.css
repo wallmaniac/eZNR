@@ -1364,3 +1364,82 @@ a:hover {
 #ai-assistant-input:focus {
   border-color: var(--primary) !important;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* PRINT STYLES — hides app shell, shows only main content as a clean doc    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+@media print {
+  /* Hide app chrome */
+  aside, .sidebar, .app-header, #ai-assistant-bubble, #ai-assistant-window,
+  .no-print, .zia-fab, footer,
+  [class*="Header"], header {
+    display: none !important;
+  }
+
+  /* Reset page layout */
+  body, html {
+    background: white !important;
+    color: #000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Main content fills the page */
+  main, .main-content, [class*="dashboard"] {
+    margin: 0 !important;
+    margin-left: 0 !important;
+    margin-top: 0 !important;
+    padding: 16px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Cards look like paper */
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+    background: white !important;
+    color: #000 !important;
+    break-inside: avoid;
+  }
+
+  .card-body {
+    padding: 12px 0 !important;
+  }
+
+  /* Tables */
+  .data-table, .data-table th, .data-table td {
+    color: #000 !important;
+    border-color: #999 !important;
+    background: white !important;
+  }
+
+  .data-table th {
+    background: #f0f0f0 !important;
+  }
+
+  /* Dopis letter */
+  .dopis-letter {
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .dopis-letter .card-body {
+    padding: 20px !important;
+    color: #000 !important;
+  }
+
+  /* Print-only items */
+  .print-only {
+    display: block !important;
+  }
+
+  /* Page margins */
+  @page {
+    margin: 15mm;
+    size: A4;
+  }
+}
