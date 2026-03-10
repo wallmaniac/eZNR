@@ -202,7 +202,7 @@ export default function AnnualInjuriesPage() {
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
   };
 
-  // ── PDF generation (Dopis + Table) — print in new clean window ──
+  // ── PDF / Print — uses hidden iframe to avoid popup blocker ──
   const generatePdf = useCallback(async (mode = 'download') => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
@@ -213,38 +213,48 @@ export default function AnnualInjuriesPage() {
     if (!el) return;
 
     const html = el.innerHTML;
-    const win = window.open('', '_blank', 'width=900,height=1200');
-    if (!win) return;
-
-    win.document.write(`<!DOCTYPE html>
-<html lang="bs">
-<head>
-  <meta charset="UTF-8"/>
-  <title>Godišnji izvještaj o povredama na radu — ${year}</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: Georgia, serif; font-size: 11pt; color: #111; background: #fff; padding: 20mm; }
-    table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 16px; }
-    th, td { border: 1px solid #555; padding: 5px 7px; }
-    th { background: #e8e8e8; font-weight: 700; text-align: center; }
-    td { vertical-align: top; }
-    .card, .card-body { all: unset; display: block; }
-    @media print {
-      body { padding: 10mm; }
+    const printCSS = `
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: Georgia, serif; font-size: 11pt; color: #111; background: #fff; padding: 15mm; }
+      table { width: 100%; border-collapse: collapse; font-size: 9pt; margin-top: 16px; }
+      th, td { border: 1px solid #555; padding: 5px 7px; }
+      th { background: #e8e8e8; font-weight: 700; text-align: center; }
+      td { vertical-align: top; }
+      .card, .card-body { all: unset; display: block; }
       @page { size: A4; margin: 12mm; }
-    }
-  </style>
+    `;
+
+    // Create a hidden iframe in the current document (cannot be blocked)
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html>
+<html lang="bs">
+<head><meta charset="UTF-8"/>
+<title>Godišnji izvještaj o povredama na radu — ${year}</title>
+<style>${printCSS}</style>
 </head>
 <body>${html}</body>
 </html>`);
-    win.document.close();
-    win.focus();
+    doc.close();
 
-    if (mode === 'download') {
-      // Small delay for render then trigger print (user saves as PDF)
-      setTimeout(() => { win.print(); }, 400);
-    }
-    // For 'open' mode: just show the window without auto-printing
+    // Wait for iframe to render then print
+    iframe.onload = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      setTimeout(() => document.body.removeChild(iframe), 1000);
+    };
+    // Fallback if onload already fired
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        iframe.contentWindow.focus();
+        iframe.contentWindow.print();
+        setTimeout(() => { if (document.body.contains(iframe)) document.body.removeChild(iframe); }, 1000);
+      }
+    }, 600);
   }, [year]);
 
   // Close dropdowns on outside click
