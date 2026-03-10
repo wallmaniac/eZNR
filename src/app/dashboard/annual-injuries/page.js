@@ -214,10 +214,11 @@ export default function AnnualInjuriesPage() {
 
     const tempStyle = document.createElement('style');
     tempStyle.textContent = `
-      .card, .card-body { border: none !important; box-shadow: none !important; padding: 0 !important; }
+      .card, .card-body { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; color: #000 !important; }
       table { width: 100% !important; max-width: 100% !important; table-layout: fixed; }
-      th, td { white-space: normal !important; word-break: break-word !important; border: 1px solid #555 !important; padding: 4px !important; }
-      th { background-color: #e8e8e8 !important; }
+      th, td { white-space: normal !important; word-break: break-word !important; border: 1px solid #888 !important; padding: 5px !important; color: #000 !important; background: #fff !important; }
+      th { background-color: #f0f0f0 !important; font-weight: bold !important; color: #000 !important; }
+      span { color: #000 !important; }
     `;
     el.appendChild(tempStyle);
 
@@ -278,7 +279,7 @@ export default function AnnualInjuriesPage() {
     URL.revokeObjectURL(url);
   }, [year]);
 
-  // ── Excel: Export .xlsx ──
+  // ── Excel: Export .xlsx (──
   const generateExcel = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
@@ -294,6 +295,25 @@ export default function AnnualInjuriesPage() {
     try {
       const XLSX = await import('xlsx');
       const wb = XLSX.utils.table_to_book(table, { raw: true, sheet: 'Izvjestaj' });
+      const ws = wb.Sheets['Izvjestaj'];
+      
+      // Auto-fit columns based on max content length
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      const colWidths = [];
+      for (let C = range.s.c; C <= range.e.c; C++) {
+        let maxLen = 8;
+        for (let R = range.s.r; R <= range.e.r; R++) {
+          const addr = XLSX.utils.encode_cell({ r: R, c: C });
+          const cell = ws[addr];
+          if (cell && cell.v != null) {
+            const len = String(cell.v).length;
+            if (len > maxLen) maxLen = len;
+          }
+        }
+        colWidths.push({ wch: Math.min(maxLen + 2, 50) }); // cap at 50 chars
+      }
+      ws['!cols'] = colWidths;
+      
       XLSX.writeFile(wb, `Pregled_povreda_${year}.xlsx`);
     } catch (err) {
       console.error('Excel export error', err);
@@ -446,7 +466,7 @@ export default function AnnualInjuriesPage() {
                               <div className="dropdown-container" style={{ position: 'relative' }}>
                                 <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => setListPdfDropdown(listPdfDropdown === r.id ? null : r.id)}>⬇️</button>
                                 {listPdfDropdown === r.id && (
-                                  <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 140, zIndex: 200, padding: 4 }}>
+                                  <div className="dropdown-menu" style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 0, minWidth: 140, zIndex: 9999, padding: 4 }}>
                                     <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📄 PDF</button>
                                     <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generateWord(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📝 WORD</button>
                                     <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generateExcel(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📊 EXCEL</button>
