@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -231,6 +231,7 @@ KADA KORISTITI ALATE:
 - Ako korisnik navede trajanje (npr. "2 godine"), izračunaj vrijediDo = datum + trajanje i proslijeđi u alat
 - Ako korisnik kaže da je radnik dobio opremu, zaštitna sredstva, kaciga, rukavice, prsluk, cipele ili slično (OZO) → koristi assign_ppe s worker_id iz ŽIVIH PODATAKA. Podrazumijevano: datum = danas, kolicina = 1, osim ako korisnik ne navede drugačije. Snima DIREKTNO — nije potrebna forma.
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
+- Ako korisnik traži izmjenu svih povreda na radu za neku godinu → koristi alat bulk_update_injuries
 
 ${pageDesc}
 
@@ -265,6 +266,7 @@ WHEN TO USE TOOLS:
 - If user specifies duration (e.g. "2 years"), calculate vrijediDo = datum + duration and pass it to the tool
 - If the user mentions assigning PPE (equipment, gloves, helmet, vest, boots, etc.) to a worker → use assign_ppe with worker_id from LIVE DATA. Default datum = today, default kolicina = 1 unless user specifies otherwise. This saves DIRECTLY — no form needed.
 - If the user asks about data you already have → answer directly without tools
+- If the user asks to change the year for all work injuries → use bulk_update_injuries tool
 
 ${pageDesc}
 
@@ -411,8 +413,18 @@ const ZIA_TOOLS = [
             required: ['worker_id', 'worker_name', 'ppe_name'],
         },
     },
+    {
+        name: 'bulk_update_injuries',
+        description: 'Update the year of all existing work injury records (povrede na radu). Use this specifically when a user asks to change the dates or the year of all injuries.',
+        parameters: {
+            type: 'object',
+            properties: {
+                target_year: { type: 'string', description: 'The 4-digit year to set for all injuries (e.g., "2025")' }
+            },
+            required: ['target_year'],
+        },
+    },
 ];
-
 
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function AIAssistant() {
@@ -602,8 +614,31 @@ export default function AIAssistant() {
                 return { error: `Failed to save PPE: ${err.message}` };
             }
         }
+        if (name === 'bulk_update_injuries') {
+            try {
+                const { getAll, update, COLLECTIONS } = await import('@/lib/dataStore');
+                const injuries = getAll(COLLECTIONS.INJURIES);
+                let updatedCount = 0;
+                injuries.forEach(inj => {
+                    if (inj.datum) {
+                        const parts = inj.datum.split('-');
+                        if (parts.length === 3 && parts[0] !== args.target_year) {
+                            parts[0] = args.target_year;
+                            update(COLLECTIONS.INJURIES, inj.id, { datum: parts.join('-') });
+                            updatedCount++;
+                        }
+                    }
+                });
+                if (['/dashboard/injuries', '/dashboard/annual-injuries', '/dashboard/injury-list'].includes(pathname)) {
+                    window.location.reload();
+                }
+                return { success: true, message: `Uspješno izmijenjeno ${updatedCount} zapisa o povredama na godinu ${args.target_year}.` };
+            } catch (err) {
+                return { error: `Failed to update injuries: ${err.message}` };
+            }
+        }
         return { error: 'unknown_tool' };
-    }, [router]);
+    }, [router, pathname]);
 
 
     // ── Start retry countdown, then auto-resend ───────────────────────────────
@@ -1115,6 +1150,8 @@ const makeChatStyles = (isDark) => ({
         padding: '14px 16px',
         background: 'linear-gradient(135deg, #0B2A3C, #143d54)',
         flexShrink: 0,
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
     },
     headerLeft: {
         display: 'flex',
@@ -1131,12 +1168,16 @@ const makeChatStyles = (isDark) => ({
         justifyContent: 'center',
         flexShrink: 0,
         boxShadow: '0 2px 8px rgba(0,191,166,0.4)',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
     },
     avatarName: {
         color: 'white',
         fontWeight: 700,
         fontSize: '0.9rem',
         fontFamily: 'var(--font-heading)',
+        WebkitUserSelect: 'none',
+        userSelect: 'none',
     },
     avatarStatus: {
         display: 'flex',

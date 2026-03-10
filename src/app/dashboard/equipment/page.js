@@ -6,6 +6,7 @@ import {
     getOrgUnitName, formatDate,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 const emptyEQ = {
     naziv: '', vrsta: '', tip: '', tvBroj: '', invBroj: '',
@@ -42,6 +43,9 @@ export default function EquipmentPage() {
 
     const equipmentTypes = getAll(COLLECTIONS.EQUIPMENT_TYPES);
     const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+
+    const enrichedItems = filtered.map(eq => ({ ...eq, orgName: getOrgUnitName(eq.orgJedinicaId) }));
+    const { sorted: sortedEquipment, toggleSort, sortIcon, thStyle } = useSortedList(enrichedItems, 'naziv');
 
     const handleNew = () => { setFormData({ ...emptyEQ }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
@@ -179,20 +183,20 @@ export default function EquipmentPage() {
                             <thead>
                                 <tr>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
-                                    <th>{lang === 'bs' ? 'Vrsta' : 'Type'}</th>
-                                    <th>{t('name')} ↑</th>
-                                    <th>{lang === 'bs' ? 'Tv. broj' : 'Serial'}</th>
-                                    <th>{lang === 'bs' ? 'Inv. broj' : 'Inv.'}</th>
-                                    <th>{lang === 'bs' ? 'Org.' : 'Org.'}</th>
-                                    <th>{lang === 'bs' ? 'Posljednji' : 'Last'}</th>
-                                    <th>{lang === 'bs' ? 'Iduci' : 'Next'}</th>
+                                    <th onClick={() => toggleSort('vrsta')} style={thStyle('vrsta')}>{lang === 'bs' ? 'Vrsta' : 'Type'}{sortIcon('vrsta')}</th>
+                                    <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
+                                    <th onClick={() => toggleSort('tvBroj')} style={thStyle('tvBroj')}>{lang === 'bs' ? 'Tv. broj' : 'Serial'}{sortIcon('tvBroj')}</th>
+                                    <th onClick={() => toggleSort('invBroj')} style={thStyle('invBroj')}>{lang === 'bs' ? 'Inv. broj' : 'Inv.'}{sortIcon('invBroj')}</th>
+                                    <th onClick={() => toggleSort('orgName')} style={thStyle('orgName')}>{lang === 'bs' ? 'Organizacija' : 'Organization'}{sortIcon('orgName')}</th>
+                                    <th onClick={() => toggleSort('posljednji')} style={thStyle('posljednji')}>{lang === 'bs' ? 'Posljednji' : 'Last'}{sortIcon('posljednji')}</th>
+                                    <th onClick={() => toggleSort('iduci')} style={thStyle('iduci')}>{lang === 'bs' ? 'Idući' : 'Next'}{sortIcon('iduci')}</th>
                                     <th><input type="checkbox" /></th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtered.length === 0 ? (
+                                {sortedEquipment.length === 0 ? (
                                     <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : filtered.map((eq) => {
+                                ) : sortedEquipment.map((eq) => {
                                     const isExpired = eq.iduci && new Date(eq.iduci) < new Date();
                                     return (
                                         <tr key={eq.id}>
@@ -212,7 +216,7 @@ export default function EquipmentPage() {
                                             <td style={{ fontWeight: 600 }}>{eq.naziv}</td>
                                             <td><code>{eq.tvBroj}</code></td>
                                             <td>{eq.invBroj}</td>
-                                            <td>{getOrgUnitName(eq.orgJedinicaId)}</td>
+                                            <td>{eq.orgName}</td>
                                             <td>{formatDate(eq.posljednji)}</td>
                                             <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>{formatDate(eq.iduci)}</td>
                                             <td><input type="checkbox" /></td>
@@ -224,7 +228,7 @@ export default function EquipmentPage() {
                     </div>
                     <div className="pagination" style={{ marginTop: 12 }}>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            1 - {filtered.length} {t('of')} {filtered.length} {t('records')}
+                            1 - {sortedEquipment.length} {t('of')} {sortedEquipment.length} {t('records')}
                         </div>
                     </div>
                 </div>

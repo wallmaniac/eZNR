@@ -13,6 +13,8 @@ const EMPTY_FORM = {
   tip: 'laka',
   lokacija: '', opisPovrede: '', uzrokPovrede: '',
   povredjeniDio: '', prvaPomoć: false, bolovanje: false,
+  kolektivna: false, brojStradalih: '',
+  prijavaOrgan: '', napomena: '',
   status: 'prijavljena',
 };
 
@@ -254,6 +256,33 @@ export default function InjuriesPage() {
                   <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <input type="checkbox" id="bolovanje" checked={formData.bolovanje} onChange={e => set('bolovanje', e.target.checked)} style={{ width: 16, height: 16 }} />
                     <label htmlFor="bolovanje" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</label>
+                  </div>
+
+                  {/* ── Godišnji izvještaj fields ── */}
+                  <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', marginTop: 4, paddingTop: 12 }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: 10 }}>
+                      {lang === 'bs' ? 'Podaci za godišnji izvještaj' : 'Annual report data'}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                      <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <input type="checkbox" id="kolektivna" checked={formData.kolektivna} onChange={e => set('kolektivna', e.target.checked)} style={{ width: 16, height: 16 }} />
+                        <label htmlFor="kolektivna" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Kolektivna povreda' : 'Collective injury'}</label>
+                      </div>
+                      {formData.kolektivna && (
+                        <div className="form-group">
+                          <label className="form-label">{lang === 'bs' ? 'Broj stradalih' : 'Number of victims'}</label>
+                          <input className="form-input" type="number" min="2" value={formData.brojStradalih} onChange={e => set('brojStradalih', e.target.value)} placeholder="2" />
+                        </div>
+                      )}
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label">{lang === 'bs' ? 'Prijava MUP stanici / Kantonalnoj inspekciji (broj i datum)' : 'Report to police / inspection (number & date)'}</label>
+                        <input className="form-input" value={formData.prijavaOrgan} onChange={e => set('prijavaOrgan', e.target.value)} placeholder={lang === 'bs' ? 'Npr. Br. 12345/2026 od 15.03.2026.' : 'E.g. No. 12345/2026 dated 15.03.2026'} />
+                      </div>
+                      <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                        <label className="form-label">{lang === 'bs' ? 'Napomena (za godišnji izvještaj)' : 'Notes (for annual report)'}</label>
+                        <input className="form-input" value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>

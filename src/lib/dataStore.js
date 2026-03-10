@@ -176,6 +176,7 @@ export const COLLECTIONS = {
     HAZARDS: 'hazards',
     QUESTIONNAIRES: 'questionnaires',
     TRAININGS: 'trainings',
+    ANNUAL_REPORTS: 'annualReports',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',

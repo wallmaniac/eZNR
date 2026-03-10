@@ -348,6 +348,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Prevent accidental text selection on interactive elements */
+button, .btn, .tab, .card-header, .sidebar-link, th, .modal-header, .app-header {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 h1,
 h2,
 h3,

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 /**
  * useDialog — in-app replacement for window.alert() and window.confirm().
  *
@@ -14,6 +14,7 @@ import { useState, useCallback, useRef } from 'react';
 
 export function useDialog() {
     const [dialog, setDialog] = useState(null);
+    const [promptValue, setPromptValue] = useState('');
     // { type: 'alert'|'confirm', title, message, resolve }
 
     const showAlert = useCallback((message, title) => {
@@ -36,6 +37,7 @@ export function useDialog() {
     function DialogRenderer() {
         if (!dialog) return null;
         const isConfirm = dialog.type === 'confirm';
+        const isPrompt = dialog.type === 'prompt';
         const isDanger = dialog.message && (
             dialog.message.toLowerCase().includes('obrisat') ||
             dialog.message.toLowerCase().includes('delet') ||
@@ -111,5 +113,5 @@ export function useDialog() {
         );
     }
 
-    return { alert: showAlert, confirm: showConfirm, DialogRenderer };
+    return { alert: showAlert, confirm: showConfirm, prompt: showPrompt, DialogRenderer };
 }

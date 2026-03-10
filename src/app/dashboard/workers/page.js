@@ -29,7 +29,7 @@ function WorkersPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { markDirty, markClean } = useUnsavedChanges(async () => await handleSave());
-    const { alert, confirm, DialogRenderer } = useDialog();
+    const { alert, confirm, prompt, DialogRenderer } = useDialog();
     const isDirtyRef = useRef(false);
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -710,10 +710,10 @@ function WorkersPageInner() {
                             <div className="modal-body">
                                 <div className="form-group" style={{ marginBottom: 16 }}>
                                     <label className="form-label">{t('name')} *</label>
-                                    <select className="form-select" value={ppeFormData.naziv} onChange={e => {
+                                    <select className="form-select" value={ppeFormData.naziv} onChange={async (e) => {
                                         const val = e.target.value;
                                         if (val === 'NEW_OZO') {
-                                            const newName = window.prompt(lang === 'bs' ? 'Unesite naziv nove OZO:' : 'Enter name of new PPE:');
+                                            const newName = await prompt(lang === 'bs' ? 'Unesite naziv nove OZO:' : 'Enter name of new PPE:');
                                             if (newName && newName.trim()) {
                                                 const finalName = newName.trim();
                                                 create(COLLECTIONS.PPE_TYPES, { naziv: finalName });
