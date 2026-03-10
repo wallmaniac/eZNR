@@ -27,7 +27,6 @@ const menuItems = [
             { key: 'equipment', icon: '⚙️', path: '/dashboard/equipment' },
             { key: 'injuryReport', icon: '🩹', path: '/dashboard/injuries' },
             { key: 'diseaseReport', icon: '🏥', path: '/dashboard/diseases' },
-            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
             {
                 key: 'obrasciIUputnice', icon: '📋', label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
                 children: [
@@ -78,6 +77,7 @@ const menuItems = [
             { key: 'ekWorkers', icon: '📇', path: '/dashboard/ek-workers' },
             { key: 'ekEquipment', icon: '📇', path: '/dashboard/ek-equipment' },
             { key: 'equipmentExamList', icon: '🔍', path: '/dashboard/equipment-exams' },
+            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
         ],
     },
     {

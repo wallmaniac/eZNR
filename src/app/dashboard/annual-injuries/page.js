@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -29,6 +29,9 @@ export default function AnnualInjuriesPage() {
   const [generated, setGenerated] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [view, setView] = useState('list'); // 'list' | 'editor'
+  const [pdfDropdown, setPdfDropdown] = useState(false); // PDF dropdown in editor
+  const [listPdfDropdown, setListPdfDropdown] = useState(null); // PDF dropdown in list (report id)
+  const printRef = useRef(null); // ref to printable content (dopis + table)
 
   // ── Company info (editable) ──
   const [companyInfo, setCompanyInfo] = useState({ ...EMPTY_COMPANY });
@@ -199,6 +202,39 @@ export default function AnnualInjuriesPage() {
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
   };
 
+  // ── PDF generation (Dopis + Table) ──
+  const generatePdf = useCallback(async (mode = 'download') => {
+    setPdfDropdown(false);
+    setListPdfDropdown(null);
+    const el = printRef.current;
+    if (!el) return;
+    const html2pdf = (await import('html2pdf.js')).default;
+    const filename = `Godisnji_izvjestaj_${year}.pdf`;
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    };
+    if (mode === 'open') {
+      const worker = html2pdf().set(opt).from(el);
+      const pdf = await worker.toPdf().get('pdf');
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+    } else {
+      await html2pdf().set(opt).from(el).save();
+    }
+  }, [year]);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handler = () => { setPdfDropdown(false); setListPdfDropdown(null); };
+    document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, []);
+
   // ════════════════════════════════════════════════════════════════════════════
   // LIST VIEW — shows saved reports + generate button
   // ════════════════════════════════════════════════════════════════════════════
@@ -263,7 +299,7 @@ export default function AnnualInjuriesPage() {
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th style={{ width: 100 }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
+                        <th style={{ width: 130 }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                         <th>{lang === 'bs' ? 'Godina' : 'Year'}</th>
                         <th>{lang === 'bs' ? 'Firma' : 'Company'}</th>
                         <th>{lang === 'bs' ? 'Povreda' : 'Injuries'}</th>
@@ -275,8 +311,17 @@ export default function AnnualInjuriesPage() {
                       {savedReports.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)).map(r => (
                         <tr key={r.id} onClick={() => handleLoadReport(r)} style={{ cursor: 'pointer' }}>
                           <td onClick={e => e.stopPropagation()}>
-                            <div style={{ display: 'flex', gap: 4 }}>
-                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'} onClick={() => { handleLoadReport(r); setTimeout(() => window.print(), 600); }}>💾</button>
+                            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={() => handleLoadReport(r)}>✏️</button>
+                              <div style={{ position: 'relative' }}>
+                                <button className="btn btn-ghost btn-sm btn-icon" title="PDF" onClick={e => { e.stopPropagation(); setListPdfDropdown(listPdfDropdown === r.id ? null : r.id); }}>💾</button>
+                                {listPdfDropdown === r.id && (
+                                  <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 160, zIndex: 200 }}>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('open'), 800); }}>📄 {lang === 'bs' ? 'Otvori PDF' : 'Open PDF'}</button>
+                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf('download'), 800); }}>📥 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}</button>
+                                  </div>
+                                )}
+                              </div>
                               <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
                             </div>
                           </td>
@@ -323,12 +368,17 @@ export default function AnnualInjuriesPage() {
             <button className="btn btn-primary btn-sm" onClick={handleSaveReport}>
               💾 {lang === 'bs' ? 'Sačuvaj izvještaj' : 'Save report'}
             </button>
-            <button className="btn btn-outline btn-sm" onClick={() => window.print()}>
-              🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
-            </button>
-            <button className="btn btn-outline btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Preuzmi kao PDF (Microsoft Print to PDF)' : 'Download as PDF'}>
-              📥 PDF
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button className="btn btn-outline btn-sm" onClick={e => { e.stopPropagation(); setPdfDropdown(!pdfDropdown); }}>
+                📥 PDF ▾
+              </button>
+              {pdfDropdown && (
+                <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, minWidth: 180, zIndex: 200 }}>
+                  <button className="dropdown-item" onClick={() => generatePdf('open')}>📄 {lang === 'bs' ? 'Otvori PDF' : 'Open PDF'}</button>
+                  <button className="dropdown-item" onClick={() => generatePdf('download')}>📥 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -380,6 +430,9 @@ export default function AnnualInjuriesPage() {
                 </div>
               </div>
             </div>
+
+            {/* ─── PRINTABLE CONTENT (captured by html2pdf) ─── */}
+            <div ref={printRef} style={{ background: '#fff', padding: 0 }}>
 
             {/* ─── THE OFFICIAL LETTER / DOPIS ─── */}
             <div className="card dopis-letter" style={{ marginBottom: 20, background: '#fff', border: '1px solid var(--border)' }}>
@@ -542,6 +595,8 @@ export default function AnnualInjuriesPage() {
                 </div>
               </div>
             </div>
+
+            </div>{/* /printRef wrapper */}
           </>
         ) : (
           /* ─── STATS TAB ─── */
