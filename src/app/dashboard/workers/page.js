@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -105,6 +105,18 @@ function WorkersPageInner() {
         const result = `${yy}g${mm}mj${dd}d`;
         setFormData(prev => ({ ...prev, ukupniStaz: result }));
     }, [formData.stazDoDolaska, formData.datumZaposlenja, formData.datumOdlaska]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-calculate Zivotna dob from Datum rodenja
+    useEffect(() => {
+        if (!formData.datumRodenja) return;
+        const birth = new Date(formData.datumRodenja);
+        if (isNaN(birth)) return;
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const mth = today.getMonth() - birth.getMonth();
+        if (mth < 0 || (mth === 0 && today.getDate() < birth.getDate())) age--;
+        setFormData(prev => ({ ...prev, zivotnaDob: age }));
+    }, [formData.datumRodenja]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
@@ -333,7 +345,7 @@ function WorkersPageInner() {
                             style={{ display: 'none' }}
                             onChange={handlePhotoUpload}
                         />
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr 80px', gap: 16, marginBottom: 20 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
                             {/* Photo upload area */}
                             <div style={{ gridRow: '1 / 3' }}>
                                 <div
@@ -399,17 +411,17 @@ function WorkersPageInner() {
                                     )}
                                 </div>
                             </div>
-                            <Field label={t('prefix')} value={formData.prefix} onChange={v => updateField('prefix', v)} />
+                            
                             <Field label={t('workerName')} value={formData.ime} onChange={v => updateField('ime', v)} required />
                             <Field label={t('workerSurname')} value={formData.prezime} onChange={v => updateField('prezime', v)} required />
-                            <Field label={t('suffix')} value={formData.sufiks} onChange={v => updateField('sufiks', v)} />
+                            <Field label={t('dateOfBirth')} value={formData.datumRodenja} onChange={v => updateField('datumRodenja', v)} type="date" />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 20 }}>
                             <Field label={t('parentName')} value={formData.imeRoditelja} onChange={v => updateField('imeRoditelja', v)} />
                             <Field label="JMBG" value={formData.jmbg} onChange={v => updateField('jmbg', v)} placeholder="13 cifara" />
                             <Field label={t('oib')} value={formData.oib} onChange={v => updateField('oib', v)} />
-                            <Field label={t('age')} value={formData.zivotnaDob} onChange={v => updateField('zivotnaDob', v)} type="number" />
+                            
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 20, alignItems: 'end' }}>
@@ -433,10 +445,10 @@ function WorkersPageInner() {
                                 options={orgUnits.map(ou => ({ value: ou.id, label: ou.naziv }))} />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 16 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, alignItems: 'end' }}>
                             <Field label={t('location')} value={formData.lokacija} onChange={v => updateField('lokacija', v)} />
                             <Field label={t('evidenceNumber')} value={formData.evidencijskiBroj} onChange={v => updateField('evidencijskiBroj', v)} />
-                            <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 4 }}>
+                            <div className="form-group" style={{ display: 'flex', alignItems: 'center', paddingBottom: 0, marginBottom: 0 }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer' }}>
                                     <input type="checkbox" checked={formData.vanjskiSuradnik} onChange={e => updateField('vanjskiSuradnik', e.target.checked)} />
                                     {t('externalAssociate')}
