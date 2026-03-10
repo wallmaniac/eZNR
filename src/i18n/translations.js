@@ -1,4 +1,4 @@
-export const translations = {
+﻿export const translations = {
   bs: {
     // Auth
     login: 'Prijava',
@@ -131,7 +131,7 @@ export const translations = {
     priorExperience: 'Staž do dolaska',
     employmentDate: 'Datum zaposlenja',
     departureDate: 'Datum odlaska',
-    totalExperience: 'Ukupni staž (informativni)',
+    totalExperience: 'Ukupni staž',
     coefficient: 'Koef.',
     orgUnit: 'Organizacijska jedinica',
     workplace: 'Radno mjesto',
@@ -463,7 +463,7 @@ export const translations = {
     priorExperience: 'Prior experience',
     employmentDate: 'Employment date',
     departureDate: 'Departure date',
-    totalExperience: 'Total experience (informative)',
+    totalExperience: 'Ukupni staž',
     coefficient: 'Coeff.',
     orgUnit: 'Organizational unit',
     workplace: 'Workplace',

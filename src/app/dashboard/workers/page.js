@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -412,12 +412,18 @@ function WorkersPageInner() {
                             <Field label={t('age')} value={formData.zivotnaDob} onChange={v => updateField('zivotnaDob', v)} type="number" />
                         </div>
 
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 20 }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 20, alignItems: 'end' }}>
                             <StazPicker label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} />
                             <Field label={t('employmentDate')} value={formData.datumZaposlenja} onChange={v => updateField('datumZaposlenja', v)} type="date" />
                             <Field label={t('departureDate')} value={formData.datumOdlaska} onChange={v => updateField('datumOdlaska', v)} type="date" />
-                            <div className="form-group"><label className="form-label" style={{fontSize:'0.78rem',color:'var(--text-muted)'}}>⚙️ {t('totalExperience')}</label><div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',minHeight:40,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div></div>
-                            <Field label={t('coefficient')} value={formData.koef} onChange={v => updateField('koef', v)} />
+                            <div className="form-group"><label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>{t('totalExperience')} <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>↺ auto</span></label><div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',minHeight:40,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div></div>
+                            <div className="form-group">
+                                <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    {t('coefficient')}
+                                    <span onClick={() => {}} title="Koeficijent radnog staža (Minuli rad)" style={{ cursor: 'help', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>i</span>
+                                </label>
+                                <input className="form-input" value={formData.koef} onChange={e => updateField('koef', e.target.value)} title="Koeficijent radnog staža (Minuli rad)" />
+                            </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
