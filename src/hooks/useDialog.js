@@ -11,11 +11,11 @@
  *
  * The DialogRenderer must be placed once inside the component's return JSX.
  */
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 export function useDialog() {
     const [dialog, setDialog] = useState(null);
-    const [promptValue, setPromptValue] = useState('');
+    const promptRef = useRef(null);
 
     const showAlert = useCallback((message, title) => {
         return new Promise((resolve) => {
@@ -31,16 +31,14 @@ export function useDialog() {
 
     const showPrompt = useCallback((message, title, defaultValue = '') => {
         return new Promise((resolve) => {
-            setPromptValue(defaultValue);
-            setDialog({ type: 'prompt', message, title: title || null, resolve });
+            setDialog({ type: 'prompt', message, title: title || null, resolve, defaultValue });
         });
     }, []);
 
-    const close = (result) => {
+    const close = useCallback((result) => {
         if (dialog?.resolve) dialog.resolve(result);
         setDialog(null);
-        setPromptValue('');
-    };
+    }, [dialog]);
 
     function DialogRenderer() {
         if (!dialog) return null;
@@ -52,6 +50,11 @@ export function useDialog() {
             dialog.message.toLowerCase().includes('poništit') ||
             dialog.message.toLowerCase().includes('revoke')
         );
+
+        const handlePromptSubmit = () => {
+            const val = promptRef.current?.value?.trim() || null;
+            close(val);
+        };
 
         return (
             <div style={{
@@ -81,14 +84,14 @@ export function useDialog() {
                         {dialog.message}
                     </p>
 
-                    {/* Prompt input */}
+                    {/* Prompt input — uncontrolled to avoid re-render glitch */}
                     {isPrompt && (
                         <input
+                            ref={promptRef}
                             className="form-input"
                             style={{ marginBottom: 16 }}
-                            value={promptValue}
-                            onChange={e => setPromptValue(e.target.value)}
-                            onKeyDown={e => { if (e.key === 'Enter' && promptValue.trim()) close(promptValue.trim()); }}
+                            defaultValue={dialog.defaultValue || ''}
+                            onKeyDown={e => { if (e.key === 'Enter') handlePromptSubmit(); }}
                             autoFocus
                         />
                     )}
@@ -115,7 +118,7 @@ export function useDialog() {
                                 color: 'white', border: 'none', cursor: 'pointer',
                                 fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
                             }}
-                            onClick={() => close(isPrompt ? (promptValue.trim() || null) : isConfirm ? true : undefined)}
+                            onClick={() => isPrompt ? handlePromptSubmit() : close(isConfirm ? true : undefined)}
                             autoFocus={!isPrompt}
                         >
                             {isPrompt ? 'Potvrdi' : isConfirm ? (isDanger ? '🗑️ Da, obriši' : 'Da, potvrdi') : 'U redu'}
