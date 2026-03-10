@@ -202,17 +202,53 @@ export default function AnnualInjuriesPage() {
     return <span style={{ color: s.color, fontWeight: 700, fontSize: '0.78rem' }}>{s.label}</span>;
   };
 
-  // ── PDF: inject content into DOM, scope print CSS, call window.print() ──
+  // ── PDF: Direct download using html2pdf.js (no popup) ──
   const generatePdf = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
-    // Ensure dopis tab is active so printRef is mounted
     setTab('dopis');
-    await new Promise(resolve => setTimeout(resolve, 400));
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
     const el = printRef.current;
     if (!el) return;
 
-    // Inject a temporary overlay with ONLY the dopis+table content
+    // Inject temporary styles to fix the table scaling specifically for html2canvas
+    const tempStyle = document.createElement('style');
+    tempStyle.textContent = `
+      .card, .card-body { border: none !important; box-shadow: none !important; padding: 0 !important; }
+      table { width: 100% !important; max-width: 100% !important; table-layout: fixed; font-size: 7.5pt !important; }
+      th, td { white-space: normal !important; word-break: break-word !important; border: 1px solid #555 !important; padding: 4px !important; }
+      th { background-color: #e8e8e8 !important; }
+    `;
+    el.appendChild(tempStyle);
+
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const opt = {
+        margin: [10, 10, 10, 10], // top, left, bottom, right in mm
+        filename: `Godisnji_izvjestaj_${year}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 800 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      };
+      // Initiate direct download
+      await html2pdf().set(opt).from(el).save();
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      // Fallback if the library fails or isn't available
+      alert(lang === 'bs' ? 'Greška pri generisanju PDF-a. Pokušajte pomoću tipke "Isprintaj".' : 'PDF generation error. Please try Print.');
+    } finally {
+      if (el.contains(tempStyle)) el.removeChild(tempStyle);
+    }
+  }, [year, lang]);
+
+  // ── Print: inject content into DOM, scope print CSS, call window.print() ──
+  const printReport = useCallback(async () => {
+    setTab('dopis');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    const el = printRef.current;
+    if (!el) return;
+
     const overlay = document.createElement('div');
     overlay.id = '__izvj_print__';
     overlay.innerHTML = el.innerHTML;
@@ -222,7 +258,6 @@ export default function AnnualInjuriesPage() {
     });
     document.body.appendChild(overlay);
 
-    // Scoped print style: hide everything except our overlay
     const styleEl = document.createElement('style');
     styleEl.id = '__izvj_print_css__';
     styleEl.textContent = `
@@ -239,7 +274,7 @@ export default function AnnualInjuriesPage() {
           padding: 0;
         }
         #__izvj_print__ table { width: 100%; max-width: 100%; table-layout: fixed; word-wrap: break-word; border-collapse: collapse; font-size: 7.5pt; margin-top: 14px; }
-        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555; padding: 4px 5px; overflow-wrap: break-word; }
+        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555; padding: 4px 5px; overflow-wrap: break-word; white-space: normal !important; }
         #__izvj_print__ th { background: #e8e8e8; font-weight: 700; text-align: center; }
         #__izvj_print__ td { vertical-align: top; }
         #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset; display: block; }
@@ -250,18 +285,10 @@ export default function AnnualInjuriesPage() {
 
     window.print();
 
-    // Cleanup after print dialog closes
     setTimeout(() => {
       document.getElementById('__izvj_print__')?.remove();
       document.getElementById('__izvj_print_css__')?.remove();
     }, 1500);
-  }, [year]);
-
-  // ── Simple full-page print (uses global print CSS to hide UI chrome) ──
-  const printReport = useCallback(async () => {
-    setTab('dopis');
-    await new Promise(resolve => setTimeout(resolve, 300));
-    window.print();
   }, []);
 
   // Close dropdowns on outside click
