@@ -62,7 +62,7 @@ export const translations = {
 
     // Common Elements submenu
     countries: 'Države',
-    counties: 'Županije/Kantoni',
+    counties: 'Kantoni',
     places: 'Mjesta',
     orgUnitGroups: 'Grupe org. jedinica',
     authorizedCompanies: 'Ovlaštene firme',
@@ -394,7 +394,7 @@ export const translations = {
 
     // Common Elements submenu
     countries: 'Countries',
-    counties: 'Counties/Cantons',
+    counties: 'Cantons',
     places: 'Places',
     orgUnitGroups: 'Org. Unit Groups',
     authorizedCompanies: 'Authorized Companies',

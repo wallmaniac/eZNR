@@ -27,12 +27,17 @@ const menuItems = [
             { key: 'equipment', icon: '⚙️', path: '/dashboard/equipment' },
             { key: 'injuryReport', icon: '🩹', path: '/dashboard/injuries' },
             { key: 'diseaseReport', icon: '🏥', path: '/dashboard/diseases' },
-            { key: 'formOIR1', icon: '📄', path: '/dashboard/form-oir1' },
             { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
-            { key: 'medicalReferralRA1', icon: '🩺', path: '/dashboard/referral-ra1' },
-            { key: 'formRO1', icon: '📄', path: '/dashboard/form-ro1' },
-            { key: 'formRO2', icon: '📄', path: '/dashboard/form-ro2' },
-            { key: 'nightWorkReferral', icon: '🌙', path: '/dashboard/night-work' },
+            {
+                key: 'obrasciIUputnice', icon: '📋', label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
+                children: [
+                    { key: 'formOIR1', icon: '📄', path: '/dashboard/form-oir1' },
+                    { key: 'medicalReferralRA1', icon: '🩺', path: '/dashboard/referral-ra1' },
+                    { key: 'formRO1', icon: '📄', path: '/dashboard/form-ro1' },
+                    { key: 'formRO2', icon: '📄', path: '/dashboard/form-ro2' },
+                    { key: 'nightWorkReferral', icon: '🌙', path: '/dashboard/night-work' },
+                ],
+            },
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
             { key: 'requests', icon: '📝', path: '/dashboard/requests' },
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
@@ -100,7 +105,7 @@ const menuItems = [
 ];
 
 export default function Sidebar({ collapsed, onToggle }) {
-    const { t } = useLanguage();
+    const { t, lang } = useLanguage();
     const { user, logout, isAdmin } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
@@ -216,21 +221,68 @@ export default function Sidebar({ collapsed, onToggle }) {
                             {/* Submenu */}
                             {hasChildren && isOpen && !collapsed && (
                                 <div style={sidebarStyles.submenu}>
-                                    {item.children.map((child) => (
-                                        <Link
-                                            key={child.key}
-                                            href={child.path}
-                                            prefetch={true}
-                                            style={{
-                                                ...sidebarStyles.submenuItem,
-                                                ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
-                                                textDecoration: 'none',
-                                            }}
-                                        >
-                                            <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
-                                            <span>{t(child.key)}</span>
-                                        </Link>
-                                    ))}
+                                    {item.children.map((child) => {
+                                        // Nested group (e.g. Obrasci i uputnice)
+                                        if (child.children) {
+                                            const childGroupOpen = openMenus[child.key];
+                                            const childGroupActive = child.children.some(gc => isActive(gc.path));
+                                            const childLabel = lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
+                                            return (
+                                                <div key={child.key}>
+                                                    <button
+                                                        onClick={() => toggleMenu(child.key)}
+                                                        style={{
+                                                            ...sidebarStyles.submenuItem,
+                                                            width: '100%',
+                                                            justifyContent: 'space-between',
+                                                            ...(childGroupActive ? sidebarStyles.submenuItemActive : {}),
+                                                        }}
+                                                    >
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                            <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
+                                                            <span>{childLabel}</span>
+                                                        </span>
+                                                        <span style={{ fontSize: '0.7rem', opacity: 0.5, transition: 'transform 0.2s', transform: childGroupOpen ? 'rotate(90deg)' : 'none' }}>›</span>
+                                                    </button>
+                                                    {childGroupOpen && (
+                                                        <div style={{ ...sidebarStyles.submenu, marginLeft: 12 }}>
+                                                            {child.children.map(gc => (
+                                                                <Link
+                                                                    key={gc.key}
+                                                                    href={gc.path}
+                                                                    prefetch={true}
+                                                                    style={{
+                                                                        ...sidebarStyles.submenuItem,
+                                                                        ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
+                                                                        textDecoration: 'none',
+                                                                    }}
+                                                                >
+                                                                    <span style={{ fontSize: '0.85rem' }}>{gc.icon}</span>
+                                                                    <span>{t(gc.key)}</span>
+                                                                </Link>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        }
+                                        // Normal child link
+                                        return (
+                                            <Link
+                                                key={child.key}
+                                                href={child.path}
+                                                prefetch={true}
+                                                style={{
+                                                    ...sidebarStyles.submenuItem,
+                                                    ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
+                                                    textDecoration: 'none',
+                                                }}
+                                            >
+                                                <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
+                                                <span>{t(child.key)}</span>
+                                            </Link>
+                                        );
+                                    })}
                                 </div>
                             )}
                         </div>
