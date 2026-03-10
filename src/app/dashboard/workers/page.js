@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -70,6 +70,41 @@ function WorkersPageInner() {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
+
+    // ── Auto-calculate Ukupni staž ──────────────────────────────────────────
+    useEffect(() => {
+        const { stazDoDolaska, datumZaposlenja, datumOdlaska } = formData;
+        if (!datumZaposlenja) return;
+
+        // Parse stazDoDolaska (formats: '5g2mj4d', '050204', '5 2 4')
+        let pg = 0, pm = 0, pd = 0;
+        if (stazDoDolaska) {
+            const m1 = stazDoDolaska.match(/(\d+)g(\d+)mj(\d+)d/i);
+            if (m1) { pg = +m1[1]; pm = +m1[2]; pd = +m1[3]; }
+            else {
+                const m2 = stazDoDolaska.match(/^(\d{2})(\d{2})(\d{2})$/);
+                if (m2) { pg = +m2[1]; pm = +m2[2]; pd = +m2[3]; }
+            }
+        }
+
+        const start = new Date(datumZaposlenja);
+        const end = datumOdlaska ? new Date(datumOdlaska) : new Date();
+        if (isNaN(start) || isNaN(end) || end < start) return;
+
+        let yy = end.getFullYear() - start.getFullYear();
+        let mm = end.getMonth() - start.getMonth();
+        let dd = end.getDate() - start.getDate();
+        if (dd < 0) { mm--; dd += 30; }
+        if (mm < 0) { yy--; mm += 12; }
+
+        // Add prior experience
+        dd += pd; if (dd >= 30) { mm++; dd -= 30; }
+        mm += pm; if (mm >= 12) { yy++; mm -= 12; }
+        yy += pg;
+
+        const result = `${yy}g${mm}mj${dd}d`;
+        setFormData(prev => ({ ...prev, ukupniStaz: result }));
+    }, [formData.stazDoDolaska, formData.datumZaposlenja, formData.datumOdlaska]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
@@ -378,10 +413,10 @@ function WorkersPageInner() {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 16, marginBottom: 20 }}>
-                            <Field label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} placeholder="GGMMDD (npr. 050306 = 5g 3mj 6d)" />
+                            <StazPicker label={t('priorExperience')} value={formData.stazDoDolaska} onChange={v => updateField('stazDoDolaska', v)} />
                             <Field label={t('employmentDate')} value={formData.datumZaposlenja} onChange={v => updateField('datumZaposlenja', v)} type="date" />
                             <Field label={t('departureDate')} value={formData.datumOdlaska} onChange={v => updateField('datumOdlaska', v)} type="date" />
-                            <Field label={t('totalExperience')} value={formData.ukupniStaz} onChange={v => updateField('ukupniStaz', v)} placeholder="GG MM DD" />
+                            <div className="form-group"><label className="form-label" style={{fontSize:'0.78rem',color:'var(--text-muted)'}}>⚙️ {t('totalExperience')}</label><div style={{padding:'10px 12px',background:'var(--bg-input)',borderRadius:'var(--radius-md)',border:'1px solid var(--border)',fontSize:'0.88rem',color:formData.ukupniStaz?'var(--text)':'var(--text-muted)',minHeight:40,display:'flex',alignItems:'center'}}>{formData.ukupniStaz||'—'}</div></div>
                             <Field label={t('coefficient')} value={formData.koef} onChange={v => updateField('koef', v)} />
                         </div>
 
@@ -899,6 +934,63 @@ function SelectField({ label, value, onChange, options, placeholder, required })
     );
 }
 
+
+// -- StazPicker: 3-dropdown prior experience picker --------------------------
+function StazPicker({ label, value, onChange }) {
+    const [showTip, setShowTip] = useState(false);
+    const parse = (v) => {
+        if (!v) return { g: '', m: '', d: '' };
+        const m1 = v.match(/(\d+)g(\d+)mj(\d+)d/i);
+        if (m1) return { g: String(+m1[1]), m: String(+m1[2]), d: String(+m1[3]) };
+        const m2 = v.match(/^(\d{2})(\d{2})(\d{2})$/);
+        if (m2) return { g: String(+m2[1]), m: String(+m2[2]), d: String(+m2[3]) };
+        return { g: '', m: '', d: '' };
+    };
+    const parts = parse(value);
+    const update = (field, val) => {
+        const next = { ...parts, [field]: val };
+        const g = next.g || '0', m = next.m || '0', d = next.d || '0';
+        const formatted = `${g}g${m}mj${d}d`;
+        onChange(formatted === '0g0mj0d' ? '' : formatted);
+    };
+    const g_opts = Array.from({ length: 61 }, (_, i) => i);
+    const m_opts = Array.from({ length: 12 }, (_, i) => i);
+    const d_opts = Array.from({ length: 31 }, (_, i) => i);
+    return (
+        <div className="form-group">
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                <span onClick={() => setShowTip(p => !p)} style={{ cursor: 'pointer', fontSize: '0.7rem', width: 15, height: 15, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>i</span>
+                {value && <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>{value}</span>}
+            </label>
+            {showTip && (
+                <div style={{ marginBottom: 6, padding: '5px 10px', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.78rem', color: 'var(--text-light)' }}>
+                    Staz prije dolaska u firmu: <strong>Godina / Mjeseci / Dana</strong>
+                </div>
+            )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>
+                <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 2, textAlign: 'center' }}>Godina</div>
+                    <select className="form-select" style={{ textAlign: 'center', padding: '8px 2px', fontSize: '0.82rem' }} value={parts.g} onChange={e => update('g', e.target.value)}>
+                        {g_opts.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 2, textAlign: 'center' }}>Mjeseci</div>
+                    <select className="form-select" style={{ textAlign: 'center', padding: '8px 2px', fontSize: '0.82rem' }} value={parts.m} onChange={e => update('m', e.target.value)}>
+                        {m_opts.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                </div>
+                <div>
+                    <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 2, textAlign: 'center' }}>Dana</div>
+                    <select className="form-select" style={{ textAlign: 'center', padding: '8px 2px', fontSize: '0.82rem' }} value={parts.d} onChange={e => update('d', e.target.value)}>
+                        {d_opts.map(i => <option key={i} value={i}>{i}</option>)}
+                    </select>
+                </div>
+            </div>
+        </div>
+    );
+}
 function Accordion({ title, open, onToggle, children }) {
     return (
         <div className="card" style={{ marginBottom: 12 }}>
