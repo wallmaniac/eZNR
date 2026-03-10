@@ -262,14 +262,14 @@ export default function AnnualInjuriesPage() {
       <>
         <DialogRenderer />
         <div className="animate-fadeIn">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-            <select className="form-select" style={{ minWidth: 120 }} value={year} onChange={e => setYear(e.target.value)}>
+          <h1 style={{ margin: '0 0 12px 0' }}>📈 {t('annualInjuryReport')}</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
+            <select className="form-select" style={{ width: 100 }} value={year} onChange={e => setYear(e.target.value)}>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <button className="btn btn-primary" style={{ padding: '8px 20px', whiteSpace: 'nowrap' }} onClick={handleGenerate}>
+            <button className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={handleGenerate}>
               + {lang === 'bs' ? 'Generiši novi izvještaj' : 'Generate new report'}
             </button>
-            <h1 style={{ margin: 0, marginLeft: 'auto' }}>📈 {t('annualInjuryReport')}</h1>
           </div>
 
           {/* Deadline reminder */}
