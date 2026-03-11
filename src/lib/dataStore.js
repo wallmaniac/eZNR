@@ -75,12 +75,37 @@ function _autoLog(action, collection, item) {
 }
 
 // ============================================================================
-// GENERIC CRUD
+// COMPANY SCOPING
 // ============================================================================
 
-export function getAll(collection) {
-    return getStore(collection);
+// Collections that are company-scoped (data belongs to a specific company)
+const COMPANY_SCOPED = [
+    'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
+    'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
+    'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
+    'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
+    'trainings', 'annualReports',
+];
+
+// Helper: get active company from localStorage (avoids needing React context)
+function _getActiveCompanyId() {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('eznr_activeCompany') || null;
 }
+
+// Helper: get user's company IDs from localStorage
+function _getUserCompanyIds() {
+    if (typeof window === 'undefined') return [];
+    try {
+        const u = localStorage.getItem('eznr_user');
+        if (u) return JSON.parse(u).companyIds || [];
+    } catch (e) { /* ignore */ }
+    return [];
+}
+
+// ============================================================================
+// GENERIC CRUD
+// ============================================================================
 
 export function getById(collection, id) {
     return getStore(collection).find(item => item.id === id) || null;
@@ -88,8 +113,16 @@ export function getById(collection, id) {
 
 export function create(collection, data) {
     const items = getStore(collection);
+    // Auto-attach companyId for company-scoped collections if not already set
+    let enrichedData = { ...data };
+    if (COMPANY_SCOPED.includes(collection) && !enrichedData.companyId) {
+        const activeId = _getActiveCompanyId();
+        if (activeId && activeId !== 'all') {
+            enrichedData.companyId = activeId;
+        }
+    }
     const newItem = {
-        ...data,
+        ...enrichedData,
         id: genId(),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -182,25 +215,37 @@ export const COLLECTIONS = {
     COMPANIES: 'companies',
 };
 
-// Collections that are company-scoped (data belongs to a specific company)
-const COMPANY_SCOPED = [
-    'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
-    'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
-    'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
-    'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
-];
 
-// Get all records filtered by companyId
+// ── getAll — automatically filters by active company for scoped collections ──
+export function getAll(collection) {
+    const all = getStore(collection);
+    if (!COMPANY_SCOPED.includes(collection)) return all;
+    const companyId = _getActiveCompanyId();
+    if (!companyId) return all;
+    if (companyId === 'all') {
+        const uids = _getUserCompanyIds();
+        if (uids.length > 0) return all.filter(item => !item.companyId || uids.includes(item.companyId));
+        return all;
+    }
+    return all.filter(item => !item.companyId || item.companyId === companyId);
+}
+
+// ── getRawAll — unfiltered, for admin/sync/migration operations ──
+export function getRawAll(collection) {
+    return getStore(collection);
+}
+
+// Get all records filtered by companyId (explicit version, used by dashboard)
 export function getAllForCompany(collection, companyId, userCompanyIds = []) {
-    if (!companyId) return getAll(collection);
-    if (!COMPANY_SCOPED.includes(collection)) return getAll(collection);
+    if (!companyId) return getRawAll(collection);
+    if (!COMPANY_SCOPED.includes(collection)) return getRawAll(collection);
     if (companyId === 'all') {
         if (userCompanyIds.length > 0) {
-            return getAll(collection).filter(item => !item.companyId || userCompanyIds.includes(item.companyId));
+            return getRawAll(collection).filter(item => !item.companyId || userCompanyIds.includes(item.companyId));
         }
-        return getAll(collection);
+        return getRawAll(collection);
     }
-    return getAll(collection).filter(item => !item.companyId || item.companyId === companyId);
+    return getRawAll(collection).filter(item => !item.companyId || item.companyId === companyId);
 }
 
 // Create a record with companyId attached
@@ -209,6 +254,26 @@ export function createForCompany(collection, data, companyId) {
         return create(collection, { ...data, companyId });
     }
     return create(collection, data);
+}
+
+// ── Migrate legacy data: stamp all untagged records with a company ID ──
+export function migrateDataToCompany(targetCompanyId) {
+    if (!targetCompanyId || targetCompanyId === 'all') return 0;
+    let count = 0;
+    COMPANY_SCOPED.forEach(collection => {
+        const items = getStore(collection);
+        let changed = false;
+        items.forEach(item => {
+            if (!item.companyId) {
+                item.companyId = targetCompanyId;
+                changed = true;
+                count++;
+            }
+        });
+        if (changed) setStore(collection, items);
+    });
+    console.log(`[eZNR] Migrated ${count} records to company ${targetCompanyId}`);
+    return count;
 }
 
 // ── User helpers ──

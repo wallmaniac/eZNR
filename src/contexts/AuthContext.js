@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { findUserByUsername } from '@/lib/dataStore';
+import { findUserByUsername, migrateDataToCompany } from '@/lib/dataStore';
 import { initializeFirestore, isFirestoreReady } from '@/lib/firestoreService';
 import { logLogin, updatePresence } from '@/lib/activityLog';
 
@@ -73,7 +73,15 @@ export function AuthProvider({ children }) {
                         setUser(parsed);
                         setIsAuthenticated(true);
                         const savedCompany = localStorage.getItem('eznr_activeCompany');
-                        setActiveCompanyId(savedCompany || (parsed.companyIds?.[0] || null));
+                        const activeId = savedCompany || (parsed.companyIds?.[0] || null);
+                        setActiveCompanyId(activeId);
+
+                        // Auto-migrate legacy data (runs once)
+                        const migrated = localStorage.getItem('eznr_data_migrated');
+                        if (!migrated && parsed.companyIds?.[0]) {
+                            const count = migrateDataToCompany(parsed.companyIds[0]);
+                            if (count > 0) localStorage.setItem('eznr_data_migrated', 'true');
+                        }
                     } catch (e) {
                         console.error("Auth init error:", e);
                     }
