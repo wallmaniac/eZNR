@@ -5,6 +5,8 @@ import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/data
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import * as docx from 'docx';
+import { saveAs } from 'file-saver';
 
 const MONTHS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -255,44 +257,284 @@ export default function AnnualInjuriesPage() {
     }
   }, [year, lang]);
 
-  // ── Word: Export .doc ──
+  // ── Word: Proper .docx export using docx library ──
   const generateWord = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
-    setTab('dopis');
-    await new Promise(resolve => setTimeout(resolve, 300));
-    
-    const el = printRef.current;
-    if (!el) return;
 
-    const html = `
-      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-      <head>
-        <meta charset="utf-8">
-        <title>Godisnji_izvjestaj</title>
-        <style>
-          body { font-family: Georgia, serif; font-size: 11pt; color: #000; }
-          .data-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-          .data-table th, .data-table td { border: 1px solid #555; padding: 4px; vertical-align: top; font-size: 9pt; }
-          .data-table th { background-color: #e8e8e8; font-weight: bold; text-align: center; }
-        </style>
-      </head>
-      <body>
-        ${el.innerHTML.replace(/class="card"/g, '')}
-      </body>
-      </html>
-    `;
-    
-    const blob = new Blob(['\\ufeff', html], { type: 'application/msword' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `Godisnji_izvjestaj_${year}.doc`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }, [year]);
+    const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, HeadingLevel, VerticalAlign, PageOrientation, BorderStyle } = docx;
+
+    const allInjuries = [...smrtnePovreda, ...teskePovreda, ...kolektivnePovreda]
+      .filter((inj, idx, arr) => arr.findIndex(x => x.id === inj.id) === idx);
+
+    const doc = new Document({
+      sections: [{
+        properties: {
+          page: {
+            margin: { top: 720, right: 720, bottom: 720, left: 720 }, // ~1.27cm
+            size: { orientation: PageOrientation.LANDSCAPE },
+          },
+        },
+        children: [
+          // ── SENDER ──
+          new Paragraph({
+            children: [
+              new TextRun({ text: companyInfo.naziv || (lang === 'bs' ? '[Naziv firme]' : '[Company Name]'), bold: true, size: 24 }),
+              new TextRun({ text: `\n${companyInfo.adresa || (lang === 'bs' ? '[Adresa]' : '[Address]')}`, break: 1 }),
+              new TextRun({ text: companyInfo.jib ? `\nJIB: ${companyInfo.jib}` : '', break: companyInfo.jib ? 1 : 0 }),
+              new TextRun({ text: companyInfo.telefon ? `\nTel: ${companyInfo.telefon}` : '', break: companyInfo.telefon ? 1 : 0 }),
+              new TextRun({ text: companyInfo.email ? `\nEmail: ${companyInfo.email}` : '', break: companyInfo.email ? 1 : 0 }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // ── DATE + NUMBER ──
+          new Paragraph({
+            children: [
+              new TextRun({ text: lang === 'bs' ? `Broj: _____ / ${Number(year) + 1}` : `Number: _____ / ${Number(year) + 1}` }),
+              new TextRun({ text: '\t\t\t\t\t\t\t\t', tab: true }),
+              new TextRun({ text: lang === 'bs' ? `Datum: _________________________` : `Date: _________________________` }),
+            ],
+            spacing: { after: 400 },
+          }),
+
+          // ── RECIPIENT ──
+          new Paragraph({
+            children: [
+              new TextRun({ text: lang === 'bs' ? 'KANTONALNA INSPEKCIJA ZNR' : 'CANTONAL INSPECTION ZNR', bold: true }),
+              new TextRun({ text: lang === 'bs' ? '\n(Nadležna kantonalna inspekcija zaštite na radu)' : '\n(Competent occupational safety inspection)', break: 1 }),
+            ],
+            indent: { left: 720 },
+            spacing: { after: 400 },
+          }),
+
+          // ── SUBJECT ──
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: lang === 'bs' 
+                  ? `Predmet: Godišnji izvještaj o povredama na radu za ${year}. godinu` 
+                  : `Subject: Annual occupational injury report for ${year}`, 
+                bold: true 
+              }),
+            ],
+            spacing: { after: 300 },
+          }),
+
+          // ── BODY ──
+          new Paragraph({
+            children: [
+              new TextRun({ text: lang === 'bs' ? 'Poštovani,' : 'Dear sirs,' }),
+            ],
+            spacing: { after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: lang === 'bs' 
+                  ? `U skladu sa odredbama Zakona o zaštiti na radu, dostavljamo Vam godišnji izvještaj o povredama na radu za ` 
+                  : `In accordance with the provisions of the Occupational Health and Safety Act, we hereby submit the annual report on occupational injuries for ` 
+              }),
+              new TextRun({ text: `${year}. godinu`, bold: true }),
+              new TextRun({ text: (lang === 'bs' ? `, za privredni subjekt ` : `, for the company `) }),
+              new TextRun({ text: (companyInfo.naziv || '[Naziv firme]'), bold: true }),
+              new TextRun({ text: '.' }),
+            ],
+            spacing: { after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: lang === 'bs'
+                  ? `U navedenom periodu evidentirano je ukupno `
+                  : `In the specified period, a total of `
+              }),
+              new TextRun({ text: String(yearInjuries.length), bold: true }),
+              new TextRun({ 
+                text: lang === 'bs'
+                  ? ` povreda na radu, od čega: `
+                  : ` work injuries were recorded, of which: `
+              }),
+              new TextRun({ text: String(totals.laka), bold: true }),
+              new TextRun({ text: (lang === 'bs' ? ' lakih, ' : ' minor, ') }),
+              new TextRun({ text: String(totals.teska), bold: true }),
+              new TextRun({ text: (lang === 'bs' ? ' teških, ' : ' severe, ') }),
+              new TextRun({ text: String(totals.smrtna), bold: true }),
+              new TextRun({ text: (lang === 'bs' ? ' smrtnih i ' : ' fatal and ') }),
+              new TextRun({ text: String(totals.kolektivna), bold: true }),
+              new TextRun({ text: (lang === 'bs' ? ' kolektivnih.' : ' collective.') }),
+            ],
+            spacing: { after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: lang === 'bs'
+                  ? `Detaljan pregled povreda na radu sa smrtnom, teškom i kolektivnom posljedicom dat je u tabeli u prilogu ovog dopisa.`
+                  : `A detailed overview of work injuries with fatal, severe, and collective consequences is given in the table attached to this letter.`
+              }),
+            ],
+            spacing: { after: 200 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: lang === 'bs'
+                  ? `Ostajemo na Vašem raspolaganju za sva dodatna pojašnjenja.`
+                  : `We remain at your disposal for any additional clarifications.`
+              }),
+            ],
+            spacing: { after: 600 },
+          }),
+
+          // ── SIGNATURES ──
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: {
+              top: { style: BorderStyle.NONE },
+              bottom: { style: BorderStyle.NONE },
+              left: { style: BorderStyle.NONE },
+              right: { style: BorderStyle.NONE },
+              insideHorizontal: { style: BorderStyle.NONE },
+              insideVertical: { style: BorderStyle.NONE },
+            },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({
+                    children: [
+                      new Paragraph({ children: [new TextRun({ text: lang === 'bs' ? 'S poštovanjem,' : 'Respectfully,' })] }),
+                      new Paragraph({ 
+                        children: [new TextRun({ text: `\n\n\n${companyInfo.odgovornaOsoba || (lang === 'bs' ? 'Odgovorna osoba / Stručnjak ZNR' : 'Responsible person / Safety Expert')}` })],
+                        border: { top: { style: BorderStyle.SINGLE, size: 1 } },
+                        spacing: { before: 800 },
+                        alignment: AlignmentType.CENTER
+                      }),
+                    ],
+                  }),
+                  new TableCell({
+                    children: [
+                      new Paragraph({ 
+                        children: [new TextRun({ text: '\n\n\n' + (lang === 'bs' ? 'Pečat i potpis' : 'Stamp and signature') })],
+                        border: { top: { style: BorderStyle.SINGLE, size: 1 } },
+                        spacing: { before: 800 },
+                        alignment: AlignmentType.CENTER
+                      }),
+                    ],
+                    verticalAlign: VerticalAlign.BOTTOM
+                  }),
+                ],
+              }),
+            ],
+          }),
+
+          // ── PAGE BREAK ──
+          new Paragraph({ children: [new TextRun({ text: '', break: 1 })] }),
+
+          // ── TABLE TITLE ──
+          new Paragraph({
+            children: [
+              new TextRun({ 
+                text: lang === 'bs'
+                  ? `PRILOG: Pregled povreda na radu sa smrtnom, teškom ili kolektivnom posljedicom — ${year}. godina`
+                  : `ATTACHMENT: Overview of occupational injuries with fatal, severe, or collective consequences — ${year}`,
+                bold: true 
+              }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 100 },
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({ text: (lang === 'bs' ? 'Naziv poslodavca: ' : 'Employer name: ') }),
+              new TextRun({ text: companyInfo.naziv || '___________________', bold: true }),
+            ],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 300 },
+          }),
+
+          // ── INJURIES TABLE ──
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              // Header Row 1
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ text: 'Rb.', alignment: AlignmentType.CENTER })], rowSpan: 2, verticalAlign: VerticalAlign.CENTER }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Povreda na radu sa smrtnom posljedicom' : 'Occupational injury with fatal outcome', alignment: AlignmentType.CENTER })], colSpan: 3 }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Lični podaci stradalih (ime, datum rod., spol)' : 'Personal data (name, DOB, gender)', alignment: AlignmentType.CENTER })], rowSpan: 2, verticalAlign: VerticalAlign.CENTER }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Datum i mjesto nesreće' : 'Date and place of accident', alignment: AlignmentType.CENTER })], rowSpan: 2, verticalAlign: VerticalAlign.CENTER }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Uzroci pojave' : 'Causes of occurrence', alignment: AlignmentType.CENTER })], rowSpan: 2, verticalAlign: VerticalAlign.CENTER }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Prijava (MUP/Insp.)' : 'Report (Police/Insp.)', alignment: AlignmentType.CENTER })], rowSpan: 2, verticalAlign: VerticalAlign.CENTER }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Napomena' : 'Note', alignment: AlignmentType.CENTER })], rowSpan: 2, verticalAlign: VerticalAlign.CENTER }),
+                ],
+              }),
+              // Header Row 2
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Pojedin.' : 'Indiv.', alignment: AlignmentType.CENTER })] }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Kolekt.' : 'Collec.', alignment: AlignmentType.CENTER })] }),
+                  new TableCell({ children: [new Paragraph({ text: lang === 'bs' ? 'Broj' : 'No.', alignment: AlignmentType.CENTER })] }),
+                  // (skip spans)
+                ],
+              }),
+              // Data Rows
+              ...(allInjuries.length === 0 
+                ? [
+                    new TableRow({
+                      children: Array(9).fill(0).map(() => new TableCell({ children: [new Paragraph('')] }))
+                    }),
+                    new TableRow({
+                      children: [
+                        new TableCell({ 
+                          children: [new Paragraph({ 
+                            text: lang === 'bs' ? `Nije evidentirano povreda za ${year}. godinu.` : `No injuries recorded for ${year}.`,
+                            alignment: AlignmentType.CENTER 
+                          })], 
+                          colSpan: 9 
+                        })
+                      ]
+                    })
+                  ]
+                : allInjuries.map((inj, idx) => {
+                    const worker = inj.radnikId ? (() => { try { return getById(COLLECTIONS.WORKERS, inj.radnikId); } catch { return null; } })() : null;
+                    const workerInfo = worker
+                      ? `${worker.ime} ${worker.prezime}${worker.datumRodenja ? `, ${new Date(worker.datumRodenja).toLocaleDateString('bs-BA')}` : ''}${worker.spol ? `, ${worker.spol}` : ''}`
+                      : (inj.radnikIme || '—');
+                    
+                    return new TableRow({
+                      children: [
+                        new TableCell({ children: [new Paragraph({ text: String(idx + 1), alignment: AlignmentType.CENTER })] }),
+                        new TableCell({ children: [new Paragraph({ text: (inj.tip === 'smrtna' && !inj.kolektivna ? '✓' : ''), alignment: AlignmentType.CENTER })] }),
+                        new TableCell({ children: [new Paragraph({ text: (inj.kolektivna ? '✓' : ''), alignment: AlignmentType.CENTER })] }),
+                        new TableCell({ children: [new Paragraph({ text: (inj.kolektivna ? String(inj.brojStradalih || '') : (inj.tip === 'smrtna' ? '1' : '')), alignment: AlignmentType.CENTER })] }),
+                        new TableCell({ children: [new Paragraph(workerInfo)] }),
+                        new TableCell({ children: [new Paragraph(`${inj.datum ? new Date(inj.datum).toLocaleDateString('bs-BA') : '—'}${inj.lokacija ? `, ${inj.lokacija}` : ''}`)] }),
+                        new TableCell({ children: [new Paragraph(inj.uzrokPovrede || inj.opisPovrede || '—')] }),
+                        new TableCell({ children: [new Paragraph(inj.prijavaOrgan || '—')] }),
+                        new TableCell({ children: [new Paragraph(inj.napomena || '—')] }),
+                      ],
+                    });
+                  })
+              ),
+              // Footer Row
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ text: 'Ukupno:', alignment: AlignmentType.RIGHT, bold: true })], colSpan: 2 }),
+                  new TableCell({ children: [new Paragraph({ text: String(totals.kolektivna), alignment: AlignmentType.CENTER, bold: true })] }),
+                  new TableCell({ children: [new Paragraph({ text: String(totals.smrtna + totals.kolektivna), alignment: AlignmentType.CENTER, bold: true })] }),
+                  new TableCell({ children: [new Paragraph('')], colSpan: 5 }),
+                ]
+              })
+            ],
+          }),
+        ],
+      }],
+    });
+
+    const blob = await Packer.toBlob(doc);
+    saveAs(blob, `Godisnji_izvjestaj_${year}.docx`);
+  }, [year, lang, companyInfo, yearInjuries, totals, smrtnePovreda, teskePovreda, kolektivnePovreda]);
 
   // ── Excel: Export .xlsx (──
   const generateExcel = useCallback(async () => {
