@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS,
@@ -15,9 +16,11 @@ const emptyEQ = {
     proizvodjac: '', godinaProizvodnje: '', posljednji: '', iduci: '', status: 'active',
 };
 
-export default function EquipmentPage() {
+function EquipmentPageInner() {
     const { t, lang } = useLanguage();
-  const { alert, confirm, DialogRenderer } = useDialog();
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const { alert, confirm, DialogRenderer } = useDialog();
     const [items, setItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -26,6 +29,7 @@ export default function EquipmentPage() {
     const [showOutOfUse, setShowOutOfUse] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
+    const openItemHandledRef = useRef(false);
 
     const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EQUIPMENT)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
@@ -34,6 +38,22 @@ export default function EquipmentPage() {
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
+
+    // Auto-open item from URL param (calendar event click)
+    useEffect(() => {
+        if (openItemHandledRef.current) return;
+        if (items.length === 0) return;
+        const openId = searchParams?.get('openItem');
+        if (openId) {
+            const found = items.find(x => x.id === openId);
+            if (found) {
+                openItemHandledRef.current = true;
+                handleEdit(found);
+                router.replace('/dashboard/equipment', { scroll: false });
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [items, searchParams]);
 
     const filtered = items.filter(eq => {
         const matchSearch = !searchTerm || eq.naziv.toLowerCase().includes(searchTerm.toLowerCase());
@@ -234,5 +254,13 @@ export default function EquipmentPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function EquipmentPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+            <EquipmentPageInner />
+        </Suspense>
     );
 }
