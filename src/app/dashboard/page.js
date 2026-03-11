@@ -46,6 +46,8 @@ export default function DashboardPage() {
     const [ppeTypes, setPpeTypes] = useState([]);
     const [deleteEventTarget, setDeleteEventTarget] = useState(null); // event to confirm-delete
     const [viewWorkerId, setViewWorkerId] = useState(null);
+    const [dayDetailDate, setDayDetailDate] = useState(null);
+    const [dayDetailEvents, setDayDetailEvents] = useState([]);
 
     useEffect(() => {
         const uids = user?.companyIds || [];
@@ -88,6 +90,7 @@ export default function DashboardPage() {
                 opis: `${c.ime || c.oznaka || 'Uvjerenje'}${wName ? ` — ${wName}` : ''}`,
                 auto: true,
                 sourceId: c.id,
+                companyId: c.companyId,
             });
         });
         // Equipment — iduci (next inspection)
@@ -100,6 +103,7 @@ export default function DashboardPage() {
                 opis: `${eq.naziv || eq.invBroj || 'Oprema'}`,
                 auto: true,
                 sourceId: eq.id,
+                companyId: eq.companyId,
             });
         });
         // Employer docs — datumIsteka
@@ -267,14 +271,18 @@ export default function DashboardPage() {
                                     onMouseLeave={(e) => e.currentTarget.style.background = ''}
                                     onClick={() => {
                                         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                        setEventFormDate(dateStr);
-                                        setEventFormData({
-                                            tip: 'cert', opis: '', count: 1, companyId: activeCompanyId === 'all' ? (user?.companyIds?.[0] || '') : activeCompanyId,
-                                            workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dateStr, certVrijediDo: '', certSposobnost: 'Sposoban',
-                                            ppeNaziv: '', ppeDatum: dateStr, ppeKolicina: 1,
-                                            machineId: '',
-                                        });
-                                        setShowEventForm(true);
+                                        if (events.length > 0) {
+                                            setDayDetailDate(dateStr);
+                                            setDayDetailEvents(events);
+                                        } else {
+                                            setEventFormDate(dateStr);
+                                            setEventFormData({
+                                                tip: 'cert', opis: '', count: 1, companyId: activeCompanyId === 'all' ? (user?.companyIds?.[0] || '') : activeCompanyId,
+                                                workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dateStr, certVrijediDo: '', certSposobnost: 'Sposoban',
+                                                ppeNaziv: '', ppeDatum: dateStr, ppeKolicina: 1, machineId: '',
+                                            });
+                                            setShowEventForm(true);
+                                        }
                                     }}>
                                     <div style={{ marginBottom: 4, display: 'flex', alignItems: 'center' }}>
                                         {isToday ? (
@@ -353,6 +361,57 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </div>
+
+            {/* ── Day Detail Popover ── */}
+            {dayDetailDate && (
+                <div className="modal-overlay" onClick={() => setDayDetailDate(null)}>
+                    <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
+                            <h2 style={{ color: 'white' }}>📅 {new Date(dayDetailDate + 'T12:00:00').toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
+                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setDayDetailDate(null)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ maxHeight: 400, overflowY: 'auto' }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase' }}>
+                                {dayDetailEvents.length} {lang === 'bs' ? 'događaj(a)' : 'event(s)'}
+                            </div>
+                            {dayDetailEvents.map((ev, idx) => {
+                                const tipIcon = ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : '📌';
+                                const tipLabel = ev.tip === 'cert' ? (lang === 'bs' ? 'Uvjerenje' : 'Certificate') : ev.tip === 'ppe' ? 'OZO' : ev.tip === 'equip' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : ev.tip === 'doc' ? (lang === 'bs' ? 'Dokument' : 'Document') : ev.tip === 'service' ? 'Servis' : (lang === 'bs' ? 'Događaj' : 'Event');
+                                const isExpired = ev.datum && new Date(ev.datum) < new Date();
+                                return (
+                                    <div key={ev.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, marginBottom: 6, background: isExpired ? 'rgba(198,40,40,0.06)' : 'rgba(0,191,166,0.04)', border: '1px solid ' + (isExpired ? 'rgba(198,40,40,0.15)' : 'var(--border-light)'), cursor: 'pointer', transition: 'all 0.15s' }}
+                                        onClick={() => { setDayDetailDate(null); handleEventClick(ev, { stopPropagation: () => {} }); }}
+                                        onMouseEnter={e => e.currentTarget.style.transform = 'translateX(4px)'}
+                                        onMouseLeave={e => e.currentTarget.style.transform = ''}>
+                                        <span style={{ fontSize: '1.3rem' }}>{tipIcon}</span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{ev.opis || tipLabel}</div>
+                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
+                                                <span style={{ background: isExpired ? '#FFEBEE' : '#E3F2FD', color: isExpired ? '#C62828' : '#1565C0', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (lang === 'bs' ? 'Isteklo' : 'Expired') : tipLabel}</span>
+                                                {ev.auto && <span style={{ background: '#FFF3E0', color: '#E65100', padding: '1px 6px', borderRadius: 4 }}>{lang === 'bs' ? 'Auto' : 'Auto'}</span>}
+                                                {ev.companyName && <span style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 6px', borderRadius: 4 }}>🏢 {ev.companyName}</span>}
+                                            </div>
+                                        </div>
+                                        {!ev.auto && <button onClick={e => { e.stopPropagation(); setDayDetailDate(null); handleDeleteEvent(ev, e); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: '#C62828', opacity: 0.5, padding: 4 }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}>🗑️</button>}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="modal-footer" style={{ justifyContent: 'center' }}>
+                            <button className="btn btn-primary" onClick={() => {
+                                setDayDetailDate(null);
+                                setEventFormDate(dayDetailDate);
+                                setEventFormData({
+                                    tip: 'cert', opis: '', count: 1, companyId: activeCompanyId === 'all' ? (user?.companyIds?.[0] || '') : activeCompanyId,
+                                    workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dayDetailDate, certVrijediDo: '', certSposobnost: 'Sposoban',
+                                    ppeNaziv: '', ppeDatum: dayDetailDate, ppeKolicina: 1, machineId: '',
+                                });
+                                setShowEventForm(true);
+                            }}>➕ {lang === 'bs' ? 'Novi događaj' : 'New event'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showEventForm && (
                 <div className="modal-overlay" onClick={() => setShowEventForm(false)}>
