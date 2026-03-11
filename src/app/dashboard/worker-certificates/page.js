@@ -13,6 +13,10 @@ export default function WorkerCertificatesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [viewWorkerId, setViewWorkerId] = useState(null);
+  const searchParams = useSearchParams();
+  const highlightId = searchParams.get('highlight');
+  const sortByExpiry = searchParams.get('sort') === 'expiry';
+  const highlightRef = useRef(null);
 
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
   const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), []);
@@ -22,6 +26,12 @@ export default function WorkerCertificatesPage() {
       const w = workers.find(x => x.id === c.workerId);
       const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
       return { ...c, workerName: w ? `${w.ime} ${w.prezime}` : '-', isExpired, naziv: c.ime || c.naziv || '' };
+    }).sort((a, b) => {
+      if (!sortByExpiry) return 0;
+      // Expired first, then soonest expiry first
+      const aDate = a.vrijediDo ? new Date(a.vrijediDo).getTime() : 99999999999999;
+      const bDate = b.vrijediDo ? new Date(b.vrijediDo).getTime() : 99999999999999;
+      return aDate - bDate;
     }).filter(r => {
       if (showOnlyValid && r.isExpired) return false;
       if (!searchTerm) return true;
@@ -31,7 +41,16 @@ export default function WorkerCertificatesPage() {
         (r.oznaka || '').toLowerCase().includes(term) ||
         (r.tipUvjerenjaIme || r.tipUvjerenja || '').toLowerCase().includes(term);
     });
-  }, [certs, workers, searchTerm, showOnlyValid]);
+  }, [certs, workers, searchTerm, showOnlyValid, sortByExpiry]);
+
+  // Scroll to highlighted cert after render
+  useEffect(() => {
+    if (highlightId && highlightRef.current) {
+      setTimeout(() => {
+        highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    }
+  }, [highlightId]);
 
   const handleEdit = (id) => {
     setNavigatingId(id);
@@ -68,6 +87,11 @@ export default function WorkerCertificatesPage() {
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
             <th>{t('worker')}</th><th>{t('name')}</th><th>{t('certCode')}</th><th>{t('certDate')}</th><th>{t('certValidUntil')}</th><th>{t('status')}</th><th style={{ width: 48, textAlign: 'center' }}>{lang === 'bs' ? 'Uredi' : 'Edit'}</th>
           </tr></thead><tbody>
+              {sortByExpiry && (
+                <tr><td colSpan={7} style={{ padding: '8px 12px', background: 'rgba(0,191,166,0.06)', fontSize: '0.8rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', textAlign: 'center', fontStyle: 'italic' }}>
+                  📅 {lang === 'bs' ? 'Sortirano po datumu isteka — najskorije prvo' : 'Sorted by expiry date — soonest first'}
+                </td></tr>
+              )}
               {rows.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                   {searchTerm ? (lang === 'bs' ? `Nema rezultata za "${searchTerm}"` : `No results for "${searchTerm}"`) : t('noRecords')}
@@ -76,7 +100,15 @@ export default function WorkerCertificatesPage() {
                 const diff = r.vrijediDo ? (new Date(r.vrijediDo) - new Date()) / (1000 * 60 * 60 * 24) : 999;
                 const isNavigating = navigatingId === r.id && isPending;
                 return (
-                  <tr key={r.id || idx}>
+                  <tr key={r.id || idx}
+                    ref={r.id === highlightId ? highlightRef : null}
+                    style={r.id === highlightId ? {
+                      background: 'rgba(0,191,166,0.12)',
+                      outline: '2px solid var(--primary)',
+                      outlineOffset: -2,
+                      borderRadius: 4,
+                      animation: 'pulse-highlight 1.5s ease-in-out 2',
+                    } : undefined}>
                     <td style={{ fontWeight: 600 }}>
                       <button
                         onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
@@ -130,7 +162,8 @@ export default function WorkerCertificatesPage() {
           onSaved={() => setViewWorkerId(null)}
         />
       )}
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes pulse-highlight { 0%,100% { background: rgba(0,191,166,0.12); } 50% { background: rgba(0,191,166,0.28); } }`}</style>
     </>
   );
 }
