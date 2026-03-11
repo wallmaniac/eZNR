@@ -267,7 +267,7 @@ export default function AnnualInjuriesPage() {
     }
   }, [year, lang]);
 
-  // ── Word: High-Fidelity .doc (Forced Portrait + Editable) ──
+  // ── Word: High-Fidelity .doc (Portrait + Forced Page Break) ──
   const generateWord = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
@@ -277,80 +277,71 @@ export default function AnnualInjuriesPage() {
     const el = printRef.current;
     if (!el) return;
 
-    // Use a high-compatibility template for Word
+    // Word-specific XML and CSS for Portrait orientation and Page Breaks
     const htmlHeader = `
       <html xmlns:o="urn:schemas-microsoft-com:office:office"
             xmlns:w="urn:schemas-microsoft-com:office:word"
-            xmlns:v="urn:schemas-microsoft-com:vml"
             xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset='utf-8'>
         <title>Godišnji izvještaj</title>
         <!--[if gte mso 9]>
         <xml>
-          <o:OfficeDocumentSettings>
-            <o:AllowPNG/>
-          </o:OfficeDocumentSettings>
           <w:WordDocument>
             <w:View>Print</w:View>
             <w:Zoom>100</w:Zoom>
-            <w:DoNotOptimizeForBrowser/>
           </w:WordDocument>
         </xml>
         <![endif]-->
         <style>
-          /* Set whole document to Portrait using MS schemas */
           @page {
-            mso-page-border-surround-header: no;
-            mso-page-border-surround-footer: no;
-          }
-          @page Section1 {
-            size: 595.3pt 841.9pt; /* A4 Portrait in points */
-            margin: 1.0in 1.0in 1.0in 1.0in;
-            mso-header-margin: 35.4pt;
-            mso-footer-margin: 35.4pt;
+            size: 21cm 29.7cm; /* A4 Portrait */
+            margin: 2cm 2cm 2cm 2cm;
             mso-page-orientation: portrait;
-            mso-paper-source: 0;
           }
-          div.Section1 { page: Section1; }
-
           body { font-family: 'Georgia', serif; font-size: 11pt; color: #000; background: #fff; }
           .dopis-letter { width: 100%; border: none; margin-bottom: 30px; }
           
-          /* Table Styles - Force Word to render borders correctly */
-          table { border-collapse: collapse; width: 100%; border: 1.0pt solid #333; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
-          th, td { border: 1.0pt solid #333 !important; padding: 5px; vertical-align: top; font-size: 8.5pt; color: #000; }
+          /* Table Styles */
+          table { border-collapse: collapse; width: 100%; border: 1pt solid #333; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+          th, td { border: 1pt solid #333 !important; padding: 5px; vertical-align: top; font-size: 8.5pt; color: #000; }
           th { background-color: #f2f2f2 !important; font-weight: bold; text-align: center; }
           
-          p { margin: 0 0 12pt 0; }
+          p { margin: 0 0 10pt 0; }
           .no-print { display: none !important; }
           
-          /* Force page break */
-          .page-break { page-break-after: always; mso-special-character: line-break; }
+          /* The magic Word Page Break line */
+          .word-break {
+            page-break-before: always;
+            clear: all;
+            mso-break-type: section-break;
+          }
         </style>
       </head>
       <body>
-        <div class="Section1">
+        <div contenteditable="true">
     `;
 
-    const htmlFooter = `
-          <br clear=all style='mso-special-character:line-break;page-break-before:always'>
-          <div style='mso-element:section-break'>
-            <p class=MsoNormal>&nbsp;</p>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
+    const htmlFooter = `</div></body></html>`;
     
     // Process HTML
     let contentHtml = el.innerHTML;
     
-    // Inject Word-specific page break before the table
-    // Replacing the generic page-break div with a Word section break
-    contentHtml = contentHtml.replace(/<div style="page-break-before: always; margin: 20px 0px;"><\/div>/g, '<br clear=all style="page-break-before:always; mso-break-type:section-break">');
+    // 1. Force the page break by replacing our marked div with Word's section break
+    // We use a regex to catch the div regardless of how the browser formats the style string
+    contentHtml = contentHtml.replace(/<div id="word-page-break"[^>]*><\/div>/g, '<br clear=all style="mso-special-character:line-break;page-break-before:always" class="word-break">');
     
-    // Cleanup React classes
+    // 2. Fix the signature block (Word hates Flexbox)
+    // We replace the flex container with a table for better alignment in Word
+    contentHtml = contentHtml.replace(
+      /<div style="display: flex; justify-content: space-between;[^>]*">([\s\S]*?)<\/div>/,
+      (match) => {
+        // Simple heuristic to keep the structure inside a table
+        return `<table border="0" style="width:100%; border:none;"><tr><td style="width:50%; border:none;">` + match + `</td></tr></table>`;
+      }
+    );
+
+    // 3. Cleanup other dynamic classes
     contentHtml = contentHtml.replace(/class="card[^"]*"/g, 'style="border:none; margin-bottom: 20px; background:white;"');
     contentHtml = contentHtml.replace(/class="card-body[^"]*"/g, 'style="padding: 10px;"');
 
@@ -781,7 +772,7 @@ export default function AnnualInjuriesPage() {
             </div>
 
             {/* Print break to push table to next page naturally */}
-            <div style={{ pageBreakBefore: 'always', margin: '20px 0' }} />
+            <div id="word-page-break" style={{ pageBreakBefore: 'always', margin: '20px 0' }} />
 
             {/* ─── OFFICIAL TABLE ─── */}
             <div className="card" style={{ marginBottom: 20 }}>
