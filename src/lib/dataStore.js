@@ -733,7 +733,7 @@ const DEFAULT_HAZARDS = [
 
 export function seedDefaultData() {
     if (typeof window === 'undefined') return;
-    const SEED_KEY = STORE_PREFIX + '__seeded_procjena_v2';
+    const SEED_KEY = STORE_PREFIX + '__seeded_procjena_v3';
     if (localStorage.getItem(SEED_KEY)) return;
 
     // Seed person types if empty
@@ -747,11 +747,20 @@ export function seedDefaultData() {
     const existing_haz = getStore(COLLECTIONS.HAZARDS);
     if (existing_haz.length === 0) {
         const seeded = DEFAULT_HAZARDS.map((d, i) => {
-            // Tiny delay between IDs to keep order
             const id = Date.now().toString(36) + i.toString(36).padStart(3, '0') + Math.random().toString(36).substr(2, 5);
             return { ...d, id };
         });
         setStore(COLLECTIONS.HAZARDS, seeded);
+    }
+
+    // ── Merge PPE_TYPES: add catalogue items that don't exist yet (by name) ──
+    const seedPpeTypes = SEED_DATA[COLLECTIONS.PPE_TYPES] || [];
+    const existingPpe = getStore(COLLECTIONS.PPE_TYPES);
+    const existingNames = new Set(existingPpe.map(p => p.naziv?.toLowerCase()));
+    const toAdd = seedPpeTypes.filter(p => !existingNames.has(p.naziv?.toLowerCase()));
+    if (toAdd.length > 0) {
+        const merged = [...existingPpe, ...toAdd.map(p => ({ ...p, id: genId() }))];
+        setStore(COLLECTIONS.PPE_TYPES, merged);
     }
 
     localStorage.setItem(SEED_KEY, '1');
