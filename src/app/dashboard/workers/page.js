@@ -49,6 +49,7 @@ function WorkersPageInner() {
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
     const editingWorkerRef = useRef(null); // tracks current worker id even across saves
+    const openWorkerHandledRef = useRef(false); // prevents re-opening loop from loadData()
     // Certificate form state
     const [showCertForm, setShowCertForm] = useState(false);
     const [certFormData, setCertFormData] = useState({ oznaka: '', datum: '', vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' });
@@ -125,13 +126,19 @@ function WorkersPageInner() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Auto-open from WorkerProfileModal "Otvori potpuno" via ?openWorker=ID
+    // Auto-open from WorkerProfileModal "Otvori potpuno" or cert-return via ?openWorker=ID
     useEffect(() => {
         if (workers.length === 0) return;
+        if (openWorkerHandledRef.current) return; // already handled, don't re-open on loadData()
         const openId = searchParams?.get('openWorker');
         if (openId) {
             const found = workers.find(x => x.id === openId);
-            if (found) handleEdit(found);
+            if (found) {
+                openWorkerHandledRef.current = true; // mark as handled
+                handleEdit(found);
+                // Clean URL so param doesn't persist on next loadData()
+                router.replace('/dashboard/workers', { scroll: false });
+            }
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);
@@ -244,12 +251,12 @@ function WorkersPageInner() {
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
             editingWorkerRef.current = null;
+            openWorkerHandledRef.current = false; // reset so new openWorker params work
             setCertificates([]);
             setPpeAssign([]);
-        } else if (!addNew && savedId && savedId !== editingWorker) {
-            // keep form open so user can continue editing the newly created worker
         } else {
             setShowForm(false);
+            openWorkerHandledRef.current = false; // reset for next time
         }
         return savedId;
     };
