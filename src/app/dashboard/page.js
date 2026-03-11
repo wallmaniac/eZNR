@@ -52,7 +52,7 @@ export default function DashboardPage() {
         setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
         setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
         setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
-        setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
+        setEquipment(getRawAll(COLLECTIONS.EQUIPMENT));
         setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
         setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
@@ -118,7 +118,7 @@ export default function DashboardPage() {
         return events;
     }, [certs, equipment, employerDocs, workers]);
 
-    const companies = useMemo(() => getAll(COLLECTIONS.COMPANIES), []);
+    const companies = useMemo(() => getRawAll(COLLECTIONS.COMPANIES), [activeCompanyId]);
     const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
 
     const allCalendarEvents = useMemo(() => {

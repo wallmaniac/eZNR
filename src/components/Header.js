@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies } from '@/lib/dataStore';
+import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies, getRawAll, seedCompanyData } from '@/lib/dataStore';
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -18,6 +18,7 @@ export default function Header({ sidebarCollapsed }) {
     const [showNotifs, setShowNotifs] = useState(false);
     const [showCompanyMenu, setShowCompanyMenu] = useState(false);
     const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
+    const [switchingCompany, setSwitchingCompany] = useState(false);
     const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '' });
     const profileRef = useRef(null);
     const notifRef = useRef(null);
@@ -84,9 +85,15 @@ export default function Header({ sidebarCollapsed }) {
         const newComp = create(COLLECTIONS.COMPANIES, { ...newCompanyData, skraceniNaziv: newCompanyData.naziv, aktivan: true });
         const { update } = require('@/lib/dataStore');
         if (user?.id) {
-            const currentUser = getAll(COLLECTIONS.USERS).find(u => u.id === user.id);
-            if (currentUser) update(COLLECTIONS.USERS, user.id, { companyIds: [...(currentUser.companyIds || []), newComp.id] });
+            const currentUser = getRawAll(COLLECTIONS.USERS).find(u => u.id === user.id);
+            if (currentUser) {
+                const updatedIds = [...(currentUser.companyIds || []), newComp.id];
+                update(COLLECTIONS.USERS, user.id, { companyIds: updatedIds });
+                try { const p = JSON.parse(localStorage.getItem('eznr_user')); p.companyIds = updatedIds; localStorage.setItem('eznr_user', JSON.stringify(p)); } catch(e) {}
+            }
         }
+        const sourceId = (user?.companyIds || [])[0];
+        if (sourceId) seedCompanyData(newComp.id, sourceId);
         switchCompany(newComp.id);
         setShowNewCompanyModal(false);
         setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '' });
@@ -184,7 +191,7 @@ export default function Header({ sidebarCollapsed }) {
                                 <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
                                 </div>
-                                <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); }}
+                                <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
                                     style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: activeCompanyId === 'all' ? 'rgba(0,191,166,0.08)' : undefined, fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
                                     <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span>
                                     <div style={{ flex: 1 }}>
@@ -193,7 +200,7 @@ export default function Header({ sidebarCollapsed }) {
                                 </button>
                                 <div className="dropdown-divider" />
                                 {companies.map(c => (
-                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); }}
+                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }}
                                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: c.id === activeCompanyId ? 'rgba(0,191,166,0.08)' : undefined, fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
                                         <span>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
                                         <div style={{ flex: 1, minWidth: 0 }}>

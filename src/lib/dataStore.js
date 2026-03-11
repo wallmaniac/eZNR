@@ -276,6 +276,36 @@ export function migrateDataToCompany(targetCompanyId) {
     return count;
 }
 
+
+// Seed a new company with universal reference data from existing companies
+export function seedCompanyData(newCompanyId, sourceCompanyId) {
+    if (!newCompanyId || !sourceCompanyId) return 0;
+    let count = 0;
+    const SEED_COLLECTIONS = ['ppeTypes', 'certTypes', 'equipmentTypes', 'personTypes', 'hazards'];
+    SEED_COLLECTIONS.forEach(collection => {
+        const items = getStore(collection);
+        const toCopy = items.filter(item => !item.companyId || item.companyId === sourceCompanyId);
+        toCopy.forEach(item => {
+            const exists = items.find(existing => existing.companyId === newCompanyId && existing.naziv === item.naziv);
+            if (!exists) {
+                items.push({ ...item, id: genId(), companyId: newCompanyId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+                count++;
+            }
+        });
+        if (count > 0) setStore(collection, items);
+    });
+    const orgUnits = getStore('orgUnits');
+    if (!orgUnits.some(u => u.companyId === newCompanyId)) {
+        [{ naziv: 'Uprava', opis: 'Upravljacka struktura' }, { naziv: 'Proizvodnja', opis: 'Proizvodni sektor' }, { naziv: 'Administracija', opis: 'Administrativni sektor' }].forEach(d => {
+            orgUnits.push({ ...d, id: genId(), companyId: newCompanyId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+            count++;
+        });
+        setStore('orgUnits', orgUnits);
+    }
+    console.log('[eZNR] Seeded ' + count + ' records into new company ' + newCompanyId);
+    return count;
+}
+
 // ── User helpers ──
 export function findUserByUsername(username) {
     return getAll(COLLECTIONS.USERS).find(u => u.username === username) || null;
@@ -284,8 +314,8 @@ export function findUserByUsername(username) {
 export function getUserCompanies(userId) {
     const user = getById(COLLECTIONS.USERS, userId);
     if (!user) return [];
-    if (user.role === 'admin') return getAll(COLLECTIONS.COMPANIES);
-    return getAll(COLLECTIONS.COMPANIES).filter(c => (user.companyIds || []).includes(c.id));
+    if (user.role === 'admin') return getRawAll(COLLECTIONS.COMPANIES);
+    return getRawAll(COLLECTIONS.COMPANIES).filter(c => (user.companyIds || []).includes(c.id));
 }
 
 export function getAllUsers() {

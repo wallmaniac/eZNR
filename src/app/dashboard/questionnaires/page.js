@@ -50,7 +50,7 @@ const EMPTY_UPITNIK = {
   responses: [],
 };
 
-// Built-in templates from reference app (WebZNR-ovi ugrađeni primjeri)
+// Built-in templates from reference app (eZNR-ovi ugrađeni primjeri)
 const BUILTIN_TEMPLATES = [
   { naziv: 'Alkotest ovlaštene osobe', oznaka: 'ALKO-oo', zaVrstu: 'DokumentTip', prikaziNaPortalu: false },
   { naziv: 'Alkotest za poslodavce', oznaka: 'ALKO', zaVrstu: 'Djelatnik', prikaziNaPortalu: false },
@@ -394,9 +394,9 @@ export default function QuestionnairesPage() {
           </div>
         </div>
 
-        {/* ═══ Built-in Templates (WebZNR-ovi ugrađeni primjeri) ═══ */}
+        {/* ═══ Built-in Templates (eZNR-ovi ugrađeni primjeri) ═══ */}
         <h2 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          ❓ {lang === 'bs' ? 'WebZNR-ovi ugrađeni primjeri:' : 'Built-in Templates:'}
+          ❓ {lang === 'bs' ? 'eZNR-ovi ugrađeni primjeri:' : 'Built-in Templates:'}
         </h2>
 
         <div className="card" style={{ marginBottom: 8 }}>
