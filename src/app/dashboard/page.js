@@ -31,6 +31,7 @@ export default function DashboardPage() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
     const [showEventForm, setShowEventForm] = useState(false);
+    const [eventFormError, setEventFormError] = useState('');
     const [eventFormDate, setEventFormDate] = useState('');
     const [eventFormData, setEventFormData] = useState({
         tip: 'cert', opis: '', count: 1, companyId: '',
@@ -194,18 +195,67 @@ export default function DashboardPage() {
 
     const handleEventClick = (ev, e) => {
         if (e && e.stopPropagation) e.stopPropagation();
-        // Cert events → find the worker and open workers page at their cert section
+
+        // ── Cert events → open worker page at Uvjerenja section ──
         if (ev.tip === 'cert') {
             if (ev.sourceId) {
                 const certRecord = getRawAll(COLLECTIONS.CERTIFICATES).find(c => c.id === ev.sourceId);
                 if (certRecord && certRecord.workerId) {
-                    router.push('/dashboard/workers?openWorker=' + certRecord.workerId);
+                    router.push('/dashboard/workers?openWorker=' + certRecord.workerId + '&section=uvjerenja');
                     return;
                 }
             }
             router.push('/dashboard/worker-certificates?sort=expiry');
             return;
         }
+
+        // ── Service events → open equipment page for the specific machine ──
+        if (ev.tip === 'service') {
+            if (ev.machineId) {
+                router.push('/dashboard/equipment?openItem=' + ev.machineId);
+                return;
+            }
+            if (ev.sourceId) {
+                router.push('/dashboard/equipment?openItem=' + ev.sourceId);
+                return;
+            }
+            router.push('/dashboard/equipment');
+            return;
+        }
+
+        // ── Equipment inspection events → open specific equipment item ──
+        if (ev.tip === 'equip') {
+            if (ev.sourceId) {
+                router.push('/dashboard/equipment?openItem=' + ev.sourceId);
+                return;
+            }
+            router.push('/dashboard/equipment');
+            return;
+        }
+
+        // ── PPE events → open worker page at OZO section ──
+        if (ev.tip === 'ppe') {
+            // Try to find worker from manual event's workerId or auto-generated
+            const evRecord = ev.auto ? null : getRawAll(COLLECTIONS.CALENDAR_EVENTS).find(c => c.id === ev.id);
+            const wId = evRecord?.workerId || ev.workerId;
+            if (wId) {
+                router.push('/dashboard/workers?openWorker=' + wId + '&section=ozo');
+                return;
+            }
+            router.push('/dashboard/worker-ppe');
+            return;
+        }
+
+        // ── Doc events → open employer docs ──
+        if (ev.tip === 'doc') {
+            if (ev.sourceId) {
+                router.push('/dashboard/employer-docs?highlight=' + ev.sourceId);
+                return;
+            }
+            router.push('/dashboard/employer-docs');
+            return;
+        }
+
         const path = EVENT_ROUTES[ev.tip] || '/dashboard';
         router.push(path);
     };
@@ -293,7 +343,7 @@ export default function DashboardPage() {
                                                 workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dateStr, certVrijediDo: '', certSposobnost: 'Sposoban',
                                                 ppeNaziv: '', ppeDatum: dateStr, ppeKolicina: 1, machineId: '',
                                             });
-                                            setShowEventForm(true);
+                                            setEventFormError(''); setShowEventForm(true);
                                         }
                                     }}>
                                     <div style={{ marginBottom: 4, display: 'flex', alignItems: 'center' }}>
@@ -418,7 +468,7 @@ export default function DashboardPage() {
                                     workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dayDetailDate, certVrijediDo: '', certSposobnost: 'Sposoban',
                                     ppeNaziv: '', ppeDatum: dayDetailDate, ppeKolicina: 1, machineId: '',
                                 });
-                                setShowEventForm(true);
+                                setEventFormError(''); setShowEventForm(true);
                             }}>➕ {lang === 'bs' ? 'Novi događaj' : 'New event'}</button>
                         </div>
                     </div>
@@ -433,6 +483,14 @@ export default function DashboardPage() {
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowEventForm(false)}>✕</button>
                         </div>
                         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+                            {/* Validation error banner */}
+                            {eventFormError && (
+                                <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.85rem', color: '#D32F2F', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                    ⚠️ {eventFormError}
+                                    <button onClick={() => setEventFormError('')} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#D32F2F', fontSize: '1rem' }}>✕</button>
+                                </div>
+                            )}
 
                             {/* Event type */}
                             <div className="form-group">
@@ -452,7 +510,7 @@ export default function DashboardPage() {
                             <div className="form-group">
                                 <label className="form-label">🏢 {lang === 'bs' ? 'Firma' : 'Company'}</label>
                                 <select className="form-select" value={eventFormData.companyId}
-                                    onChange={e => setEventFormData(prev => ({ ...prev, companyId: e.target.value }))}>
+                                    onChange={e => setEventFormData(prev => ({ ...prev, companyId: e.target.value, workerId: '' }))}>
                                     {companies.filter(c => (user?.companyIds || []).includes(c.id)).map(c => (
                                         <option key={c.id} value={c.id}>{c.naziv}</option>
                                     ))}
@@ -482,7 +540,7 @@ export default function DashboardPage() {
                                     <select className="form-select" value={eventFormData.workerId}
                                         onChange={e => setEventFormData(prev => ({ ...prev, workerId: e.target.value }))}>
                                         <option value="">{lang === 'bs' ? '— Bez radnika —' : '— No worker —'}</option>
-                                        {workers.filter(w => w.aktivan).map(w => (
+                                        {workers.filter(w => w.aktivan && (!eventFormData.companyId || w.companyId === eventFormData.companyId)).map(w => (
                                             <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                                         ))}
                                     </select>
@@ -611,10 +669,10 @@ export default function DashboardPage() {
                                      ppeNaziv, ppeDatum, ppeKolicina } = eventFormData;
 
                                 // Validation
-                                if (tip === 'cert' && !certNaziv.trim()) { alert(lang === 'bs' ? 'Naziv uvjerenja je obavezan!' : 'Certificate name is required!'); return; }
-                                if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { alert(lang === 'bs' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
-                                if (tip === 'service' && !machineId) { alert(lang === 'bs' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
-                                 if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { alert(lang === 'bs' ? 'Opis je obavezan!' : 'Description is required!'); return; }
+                                if (tip === 'cert' && !certNaziv.trim()) { setEventFormError(lang === 'bs' ? 'Naziv uvjerenja je obavezan!' : 'Certificate name is required!'); return; }
+                                if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(lang === 'bs' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
+                                if (tip === 'service' && !machineId) { setEventFormError(lang === 'bs' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
+                                 if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { setEventFormError(lang === 'bs' ? 'Opis je obavezan!' : 'Description is required!'); return; }
 
                                 // Auto-generate description
                                 let autoOpis = opis;
@@ -627,7 +685,7 @@ export default function DashboardPage() {
                                      autoOpis = `${lang === 'bs' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`;
                                  }
                                  // Create calendar event (company-scoped)
-                                 createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId }, companyId);
+                                 createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId, workerId: workerId || '' }, companyId);
 
                                 // 2. If cert type + worker selected → also create certificate record
                                  if (tip === 'cert' && workerId) {
@@ -659,7 +717,7 @@ export default function DashboardPage() {
                                  }
 
                                 setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds));
-                                setShowEventForm(false);
+                                setEventFormError(''); setShowEventForm(false);
                             }}>💾 {t('save')}</button>
                         </div>
                     </div>
