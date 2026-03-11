@@ -112,6 +112,29 @@ export default function AnnualInjuriesPage() {
     markDirty();
   };
 
+  // ── Save report ──
+  const handleSaveReport = async () => {
+    const reportData = {
+      year,
+      companyInfo,
+      tab,
+      totalInjuries: yearInjuries.length,
+      totals: { ...totals },
+      savedAt: new Date().toISOString(),
+    };
+
+    if (activeReportId) {
+      update(COLLECTIONS.ANNUAL_REPORTS, activeReportId, reportData);
+    } else {
+      const created = create(COLLECTIONS.ANNUAL_REPORTS, reportData);
+      setActiveReportId(created.id);
+    }
+    setIsDirty(false);
+    markClean();
+    setSavedReports(getAll(COLLECTIONS.ANNUAL_REPORTS));
+    await alert(lang === 'bs' ? '✅ Izvještaj uspješno sačuvan!' : '✅ Report saved successfully!');
+  };
+
   // ── Handle Browser / App Back Button ──
   useEffect(() => {
     const handlePopState = async (e) => {
@@ -150,29 +173,6 @@ export default function AnnualInjuriesPage() {
     window.history.pushState({ annualInjuriesView: 'editor' }, '');
     setView('editor');
     setTab('dopis');
-  };
-
-  // ── Save report ──
-  const handleSaveReport = async () => {
-    const reportData = {
-      year,
-      companyInfo,
-      tab,
-      totalInjuries: yearInjuries.length,
-      totals: { ...totals },
-      savedAt: new Date().toISOString(),
-    };
-
-    if (activeReportId) {
-      update(COLLECTIONS.ANNUAL_REPORTS, activeReportId, reportData);
-    } else {
-      const created = create(COLLECTIONS.ANNUAL_REPORTS, reportData);
-      setActiveReportId(created.id);
-    }
-    setIsDirty(false);
-    markClean();
-    setSavedReports(getAll(COLLECTIONS.ANNUAL_REPORTS));
-    await alert(lang === 'bs' ? '✅ Izvještaj uspješno sačuvan!' : '✅ Report saved successfully!');
   };
 
   // ── Load saved report ──
