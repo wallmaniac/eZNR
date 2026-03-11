@@ -3,17 +3,17 @@ import { useState, useMemo, useTransition, useEffect, useRef, Suspense } from 'r
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 function WorkerCertificatesInner() {
   const { t, lang } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [navigatingId, setNavigatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [viewWorkerId, setViewWorkerId] = useState(null);
-  const searchParams = useSearchParams();
   const highlightId = searchParams.get('highlight');
   const sortByExpiry = searchParams.get('sort') === 'expiry';
   const highlightRef = useRef(null);
@@ -28,7 +28,6 @@ function WorkerCertificatesInner() {
       return { ...c, workerName: w ? `${w.ime} ${w.prezime}` : '-', isExpired, naziv: c.ime || c.naziv || '' };
     }).sort((a, b) => {
       if (!sortByExpiry) return 0;
-      // Expired first, then soonest expiry first
       const aDate = a.vrijediDo ? new Date(a.vrijediDo).getTime() : 99999999999999;
       const bDate = b.vrijediDo ? new Date(b.vrijediDo).getTime() : 99999999999999;
       return aDate - bDate;
