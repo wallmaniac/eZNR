@@ -1,4 +1,4 @@
-﻿export const translations = {
+export const translations = {
   bs: {
     // Auth
     login: 'Prijava',
@@ -96,6 +96,7 @@
     workplaceList: 'Radna mjesta - popis',
     jobsPerWorker: 'Poslovi po radniku',
     ekWorkers: 'EK - Radnici',
+    ekPPE: 'EK - Osobna zaštitna oprema',
     injuryList: 'Popis povreda na radu',
     trainingMasterBook: 'Matična knjiga osposobljavanja',
     ekEquipment: 'EK - Radna oprema ili objekti',
@@ -428,6 +429,7 @@
     workplaceList: 'Workplaces - List',
     jobsPerWorker: 'Jobs per Worker',
     ekWorkers: 'EK - Workers',
+    ekPPE: 'EK - Personal Protective Equipment',
     injuryList: 'Work Injury List',
     trainingMasterBook: 'Training Master Book',
     ekEquipment: 'EK - Work Equipment or Objects',

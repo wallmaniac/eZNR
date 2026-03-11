@@ -29,8 +29,9 @@ export default function AnnualInjuriesPage() {
   const [generated, setGenerated] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [view, setView] = useState('list'); // 'list' | 'editor'
-  const [pdfDropdown, setPdfDropdown] = useState(false); // PDF dropdown in editor
-  const [listPdfDropdown, setListPdfDropdown] = useState(null); // PDF dropdown in list (report id)
+  const [pdfDropdown, setPdfDropdown] = useState(false); // Editor Preuzmi dropdown
+  const [listPdfDropdown, setListPdfDropdown] = useState(null); // list row report id
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 }); // fixed position for list dropdown
   const printRef = useRef(null); // ref to printable content (dopis + table)
 
   // ── Company info (editable) ──
@@ -392,6 +393,36 @@ export default function AnnualInjuriesPage() {
     return (
       <>
         <DialogRenderer />
+        {/* Fixed-position Preuzmi dropdown portal — bypasses overflow:auto clipping */}
+        {listPdfDropdown && (
+          <div
+            className="dropdown-container"
+            style={{
+              position: 'fixed',
+              top: dropdownPos.top,
+              left: dropdownPos.left,
+              zIndex: 99999,
+              minWidth: 150,
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)',
+              boxShadow: 'var(--shadow-lg)',
+              padding: 4,
+            }}
+          >
+            {(() => {
+              const r = savedReports.find(x => x.id === listPdfDropdown);
+              if (!r) return null;
+              return (
+                <>
+                  <button className="dropdown-item" onClick={() => { setListPdfDropdown(null); handleLoadReport(r); setTimeout(() => generatePdf(), 800); }} style={{ fontSize: '0.85rem' }}>📄 PDF</button>
+                  <button className="dropdown-item" onClick={() => { setListPdfDropdown(null); handleLoadReport(r); setTimeout(() => generateWord(), 800); }} style={{ fontSize: '0.85rem' }}>📝 WORD</button>
+                  <button className="dropdown-item" onClick={() => { setListPdfDropdown(null); handleLoadReport(r); setTimeout(() => generateExcel(), 800); }} style={{ fontSize: '0.85rem' }}>📊 EXCEL</button>
+                </>
+              );
+            })()}
+          </div>
+        )}
         <div className="animate-fadeIn">
           <h1 style={{ margin: '0 0 12px 0' }}>📈 {t('annualInjuryReport')}</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
@@ -464,14 +495,18 @@ export default function AnnualInjuriesPage() {
                               <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => printReport(), 800); }}>🖨️</button>
                               
                               <div className="dropdown-container" style={{ position: 'relative' }}>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => setListPdfDropdown(listPdfDropdown === r.id ? null : r.id)}>⬇️</button>
-                                {listPdfDropdown === r.id && (
-                                  <div className="dropdown-menu" style={{ position: 'absolute', bottom: 'calc(100% + 4px)', left: 0, minWidth: 140, zIndex: 9999, padding: 4 }}>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generatePdf(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📄 PDF</button>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generateWord(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📝 WORD</button>
-                                    <button className="dropdown-item" onClick={() => { handleLoadReport(r); setTimeout(() => generateExcel(), 800); }} style={{ fontSize: '0.8rem', padding: '6px 12px' }}>📊 EXCEL</button>
-                                  </div>
-                                )}
+                                <button
+                                  className="btn btn-ghost btn-sm btn-icon"
+                                  title={lang === 'bs' ? 'Preuzmi' : 'Download'}
+                                  onClick={e => {
+                                    const rect = e.currentTarget.getBoundingClientRect();
+                                    // prefer upward; dropdown is ~120px tall
+                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                    const top = spaceBelow < 130 ? rect.top - 130 : rect.bottom + 4;
+                                    setDropdownPos({ top, left: rect.left });
+                                    setListPdfDropdown(listPdfDropdown === r.id ? null : r.id);
+                                  }}
+                                >⬇️</button>
                               </div>
                               
                               <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>

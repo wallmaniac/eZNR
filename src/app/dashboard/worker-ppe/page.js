@@ -16,6 +16,7 @@ export default function WorkerPPEPage() {
 
   const [assignments, setAssignments] = useState(() => getAll(COLLECTIONS.PPE_ASSIGNMENTS));
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
+  const ppeTypes = useMemo(() => getAll(COLLECTIONS.PPE_TYPES), []);
 
   const rows = useMemo(() => {
     return assignments.map(a => {
@@ -125,7 +126,28 @@ export default function WorkerPPEPage() {
               </div>
               <div className="form-group">
                 <label className="form-label">🦺 {lang === 'bs' ? 'Naziv opreme *' : 'Equipment name *'}</label>
-                <input className="form-input" value={addForm.naziv} onChange={e => setAddForm(f => ({ ...f, naziv: e.target.value }))} placeholder={lang === 'bs' ? 'npr. Zaštitne rukavice, Kaska...' : 'e.g. Safety gloves, Hard hat...'} />
+                {/* Select from catalogue */}
+                <select
+                  className="form-select"
+                  value={ppeTypes.some(p => p.naziv === addForm.naziv) ? addForm.naziv : '__custom__'}
+                  onChange={e => {
+                    if (e.target.value !== '__custom__') setAddForm(f => ({ ...f, naziv: e.target.value }));
+                    else setAddForm(f => ({ ...f, naziv: '' }));
+                  }}
+                  style={{ marginBottom: 6 }}
+                >
+                  <option value="__custom__">{lang === 'bs' ? '— Odaberi iz kataloga ili unesi ručno —' : '— Select from catalogue or enter manually —'}</option>
+                  {ppeTypes.sort((a,b) => a.naziv.localeCompare(b.naziv)).map(p => (
+                    <option key={p.id} value={p.naziv}>{p.naziv}</option>
+                  ))}
+                </select>
+                {/* Manual entry fallback */}
+                <input
+                  className="form-input"
+                  value={addForm.naziv}
+                  onChange={e => setAddForm(f => ({ ...f, naziv: e.target.value }))}
+                  placeholder={lang === 'bs' ? 'ili upiši naziv ručno...' : 'or type a custom name...'}
+                />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
                 <div className="form-group">

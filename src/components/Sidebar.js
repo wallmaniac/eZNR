@@ -76,6 +76,7 @@ const menuItems = [
             { key: 'injuryList', icon: '🩹', path: '/dashboard/injury-list' },
             { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
             { key: 'ekWorkers', icon: '📇', path: '/dashboard/ek-workers' },
+            { key: 'ekPPE', icon: '🦺', path: '/dashboard/ek-ppe' },
             { key: 'ekEquipment', icon: '📇', path: '/dashboard/ek-equipment' },
             { key: 'equipmentExamList', icon: '🔍', path: '/dashboard/equipment-exams' },
         ],
