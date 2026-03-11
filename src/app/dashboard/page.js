@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, create, remove, COLLECTIONS, getOrgUnitName, getWorkplaceName,
-    getWorkerCertificates, getWorkerPPE, formatDate, getAllForCompany,
+    getWorkerCertificates, getWorkerPPE, formatDate, getAllForCompany, createForCompany, getRawAll, getUserCompanies,
 } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
