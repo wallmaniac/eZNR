@@ -100,17 +100,17 @@ export default function AnnualInjuriesPage() {
   const MONTHS = lang === 'bs' ? MONTHS_BS : MONTHS_EN;
   const deadline = `15. januar ${Number(year) + 1}. godine`;
 
-  // ── LIVE STATS (Always for actual current year) ──
-  const currentYearInjuries = useMemo(() =>
-    injuries.filter(inj => inj.datum && new Date(inj.datum).getFullYear() === currentYear),
-    [injuries, currentYear]);
+  // ── LIVE STATS (Updates dynamically based on selected year) ──
+  const selectedYearInjuries = useMemo(() =>
+    injuries.filter(inj => inj.datum && new Date(inj.datum).getFullYear() === Number(year)),
+    [injuries, year]);
 
-  const liveTotals = useMemo(() => ({
-    laka: currentYearInjuries.filter(x => x.tip === 'laka' || !x.tip).length,
-    teska: currentYearInjuries.filter(x => x.tip === 'teska').length,
-    smrtna: currentYearInjuries.filter(x => x.tip === 'smrtna').length,
-    kolektivna: currentYearInjuries.filter(x => x.kolektivna).length,
-  }), [currentYearInjuries]);
+  const selectedYearTotals = useMemo(() => ({
+    laka: selectedYearInjuries.filter(x => x.tip === 'laka' || !x.tip).length,
+    teska: selectedYearInjuries.filter(x => x.tip === 'teska').length,
+    smrtna: selectedYearInjuries.filter(x => x.tip === 'smrtna').length,
+    kolektivna: selectedYearInjuries.filter(x => x.kolektivna).length,
+  }), [selectedYearInjuries]);
 
   // ── Saved reports for the selected year ──
   const reportsForYear = useMemo(() =>
@@ -267,7 +267,7 @@ export default function AnnualInjuriesPage() {
     }
   }, [year, lang]);
 
-  // ── Word: High-Fidelity .doc (Forced Landscape + Editable) ──
+  // ── Word: High-Fidelity .doc (Forced Portrait + Editable) ──
   const generateWord = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
@@ -299,17 +299,17 @@ export default function AnnualInjuriesPage() {
         </xml>
         <![endif]-->
         <style>
-          /* Set whole document to Landscape using MS schemas */
+          /* Set whole document to Portrait using MS schemas */
           @page {
             mso-page-border-surround-header: no;
             mso-page-border-surround-footer: no;
           }
           @page Section1 {
-            size: 841.9pt 595.3pt; /* A4 Landscape in points */
+            size: 595.3pt 841.9pt; /* A4 Portrait in points */
             margin: 1.0in 1.0in 1.0in 1.0in;
             mso-header-margin: 35.4pt;
             mso-footer-margin: 35.4pt;
-            mso-page-orientation: landscape;
+            mso-page-orientation: portrait;
             mso-paper-source: 0;
           }
           div.Section1 { page: Section1; }
@@ -529,19 +529,19 @@ export default function AnnualInjuriesPage() {
             </span>
           </div>
 
-          {/* Quick stats (Dashboard for current year) */}
+          {/* Quick stats (Updates dynamically based on selected year) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
             {[
-              { label: 'Ukupno', value: currentYearInjuries.length, color: 'var(--primary)' },
-              { label: 'Lake', value: liveTotals.laka, color: '#F59E0B' },
-              { label: 'Teške', value: liveTotals.teska, color: '#EF4444' },
-              { label: 'Smrtne', value: liveTotals.smrtna, color: '#7C3AED' },
-              { label: 'Kolektivne', value: liveTotals.kolektivna, color: '#10B981' },
+              { label: 'Ukupno', value: selectedYearInjuries.length, color: 'var(--primary)' },
+              { label: 'Lake', value: selectedYearTotals.laka, color: '#F59E0B' },
+              { label: 'Teške', value: selectedYearTotals.teska, color: '#EF4444' },
+              { label: 'Smrtne', value: selectedYearTotals.smrtna, color: '#7C3AED' },
+              { label: 'Kolektivne', value: selectedYearTotals.kolektivna, color: '#10B981' },
             ].map((s, i) => (
               <div key={i} className="card" style={{ textAlign: 'center' }}>
                 <div className="card-body" style={{ padding: '12px 8px' }}>
                   <div style={{ fontSize: '1.8rem', fontWeight: 800, color: s.color, fontFamily: 'var(--font-heading)' }}>{s.value}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{s.label} ({currentYear})</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{s.label} ({year})</div>
                 </div>
               </div>
             ))}
