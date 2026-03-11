@@ -23,6 +23,17 @@ export default function EKPPEPage() {
   const [assignForm, setAssignForm] = useState({ workerId: '', datumZaduzenja: todayISO(), kolicina: 1 });
 
   const reload = useCallback(() => setPpeTypes(getAll(COLLECTIONS.PPE_TYPES)), []);
+  const [selected, setSelected] = useState(new Set()); // selected ids for bulk delete
+
+  const toggleSelect = (id) => setSelected(prev => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); return s; });
+  const toggleAll = () => setSelected(prev => prev.size === filtered.length ? new Set() : new Set(filtered.map(p => p.id)));
+  const handleDeleteSelected = async () => {
+    const ok = await confirm(lang === 'bs' ? `Obrisati ${selected.size} označenih OZO?` : `Delete ${selected.size} selected PPE types?`);
+    if (!ok) return;
+    selected.forEach(id => remove(COLLECTIONS.PPE_TYPES, id));
+    setSelected(new Set());
+    reload();
+  };
 
   // filtered list
   const filtered = useMemo(() =>
@@ -85,6 +96,15 @@ export default function EKPPEPage() {
             />
             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
           </div>
+          {selected.size > 0 && (
+            <button
+              className="btn btn-sm"
+              style={{ background: 'var(--danger)', color: '#fff', fontWeight: 700 }}
+              onClick={handleDeleteSelected}
+            >
+              🗑️ {lang === 'bs' ? `Obriši označene (${selected.size})` : `Delete selected (${selected.size})`}
+            </button>
+          )}
           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>
             {filtered.length} {lang === 'bs' ? 'vrsta OZO' : 'PPE types'}
           </span>
@@ -94,7 +114,10 @@ export default function EKPPEPage() {
         <div className="card"><div className="card-body" style={{ padding: 0 }}>
           <div className="data-table-wrapper"><table className="data-table">
             <thead><tr>
-              <th style={{ width: 50 }}>Rb.</th>
+              <th style={{ width: 40, textAlign: 'center' }}>
+                <input type="checkbox" checked={filtered.length > 0 && selected.size === filtered.length} onChange={toggleAll} title={lang === 'bs' ? 'Označi sve' : 'Select all'} />
+              </th>
+              <th style={{ width: 44 }}>Rb.</th>
               <th>{lang === 'bs' ? 'Naziv OZO' : 'PPE Name'}</th>
               <th style={{ width: 200, textAlign: 'center' }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
             </tr></thead>
@@ -104,7 +127,10 @@ export default function EKPPEPage() {
                     {lang === 'bs' ? 'Nema OZO u katalogu.' : 'No PPE in catalogue.'}
                   </td></tr>
                 : filtered.map((p, idx) => (
-                  <tr key={p.id}>
+                  <tr key={p.id} style={{ background: selected.has(p.id) ? 'rgba(var(--primary-rgb,99,102,241),0.07)' : undefined }}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} />
+                    </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>{idx + 1}</td>
                     <td style={{ fontWeight: 600 }}>🦺 {p.naziv}</td>
                     <td>
