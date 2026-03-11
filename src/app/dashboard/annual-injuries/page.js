@@ -112,6 +112,29 @@ export default function AnnualInjuriesPage() {
     markDirty();
   };
 
+  // ── Handle Browser / App Back Button ──
+  useEffect(() => {
+    const handlePopState = async (e) => {
+      // Occurs when user hits "Back" (browser or app's top-left button)
+      if (view === 'editor') {
+        if (isDirty) {
+          const ok = await confirm(lang === 'bs'
+            ? 'Imate nesačuvane promjene. Želite li sačuvati izvještaj prije napuštanja?'
+            : 'You have unsaved changes. Would you like to save the report before leaving?');
+          if (ok) {
+            await handleSaveReport();
+          }
+        }
+        setView('list');
+        setGenerated(false);
+        setIsDirty(false);
+        markClean();
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [view, isDirty, lang, confirm, markClean, handleSaveReport]); 
+
   // ── Generate new report ──
   const handleGenerate = async () => {
     if (isDirty) {
@@ -124,6 +147,7 @@ export default function AnnualInjuriesPage() {
     setGenerated(true);
     setIsDirty(false);
     markClean();
+    window.history.pushState({ annualInjuriesView: 'editor' }, '');
     setView('editor');
     setTab('dopis');
   };
@@ -134,7 +158,6 @@ export default function AnnualInjuriesPage() {
       year,
       companyInfo,
       tab,
-      // Snapshot of injury stats at save time
       totalInjuries: yearInjuries.length,
       totals: { ...totals },
       savedAt: new Date().toISOString(),
@@ -160,6 +183,7 @@ export default function AnnualInjuriesPage() {
     setGenerated(true);
     setIsDirty(false);
     markClean();
+    window.history.pushState({ annualInjuriesView: 'editor' }, '');
     setView('editor');
     setTab('dopis');
   };
@@ -178,19 +202,9 @@ export default function AnnualInjuriesPage() {
   };
 
   // ── Back to list with unsaved check ──
-  const handleBackToList = async () => {
-    if (isDirty) {
-      const ok = await confirm(lang === 'bs'
-        ? 'Imate nesačuvane promjene. Želite li sačuvati izvještaj prije napuštanja?'
-        : 'You have unsaved changes. Would you like to save the report before leaving?');
-      if (ok) {
-        await handleSaveReport();
-      }
-    }
-    setView('list');
-    setGenerated(false);
-    setIsDirty(false);
-    markClean();
+  const handleBackToList = () => {
+    // We just trigger history back, which will inherently fire popstate and run the logic above
+    window.history.back();
   };
 
   const tipBadge = (tip) => {
