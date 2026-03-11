@@ -1,11 +1,11 @@
 'use client';
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useRouter } from 'next/navigation';
 
-export default function WorkerCertificatesPage() {
+function WorkerCertificatesInner() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -165,5 +165,13 @@ export default function WorkerCertificatesPage() {
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }
       @keyframes pulse-highlight { 0%,100% { background: rgba(0,191,166,0.12); } 50% { background: rgba(0,191,166,0.28); } }`}</style>
     </>
+  );
+}
+
+export default function WorkerCertificatesPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+      <WorkerCertificatesInner />
+    </Suspense>
   );
 }

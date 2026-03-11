@@ -193,7 +193,19 @@ export default function DashboardPage() {
     ];
 
     const handleEventClick = (ev, e) => {
-        e.stopPropagation();
+        if (e && e.stopPropagation) e.stopPropagation();
+        // Cert events → find the worker and open workers page at their cert section
+        if (ev.tip === 'cert') {
+            if (ev.sourceId) {
+                const certRecord = getRawAll(COLLECTIONS.CERTIFICATES).find(c => c.id === ev.sourceId);
+                if (certRecord && certRecord.workerId) {
+                    router.push('/dashboard/workers?openWorker=' + certRecord.workerId);
+                    return;
+                }
+            }
+            router.push('/dashboard/worker-certificates?sort=expiry');
+            return;
+        }
         const path = EVENT_ROUTES[ev.tip] || '/dashboard';
         router.push(path);
     };
