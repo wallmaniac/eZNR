@@ -48,6 +48,7 @@ function WorkersPageInner() {
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
+    const editingWorkerRef = useRef(null); // tracks current worker id even across saves
     // Certificate form state
     const [showCertForm, setShowCertForm] = useState(false);
     const [certFormData, setCertFormData] = useState({ oznaka: '', datum: '', vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' });
@@ -197,6 +198,7 @@ function WorkersPageInner() {
     const handleNew = () => {
         setFormData({ ...emptyWorker });
         setEditingWorker(null);
+        editingWorkerRef.current = null;
         setCertificates([]);
         setPpeAssign([]);
         setShowForm(true);
@@ -205,6 +207,7 @@ function WorkersPageInner() {
     const handleEdit = (worker) => {
         setFormData({ ...worker });
         setEditingWorker(worker.id);
+        editingWorkerRef.current = worker.id;
         setCertificates(getWorkerCertificates(worker.id));
         setPpeAssign(getWorkerPPE(worker.id));
         setActionMenuId(null);
@@ -223,12 +226,16 @@ function WorkersPageInner() {
     const handleSave = async (addNew = false) => {
         if (!formData.ime || !formData.prezime) {
             await alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
-            return;
+            return null;
         }
+        let savedId = editingWorker;
         if (editingWorker) {
             update(COLLECTIONS.WORKERS, editingWorker, formData);
         } else {
-            create(COLLECTIONS.WORKERS, formData);
+            const newWorker = create(COLLECTIONS.WORKERS, formData);
+            savedId = newWorker.id;
+            setEditingWorker(savedId);
+            editingWorkerRef.current = savedId;
         }
         loadData();
         markClean();
@@ -236,11 +243,15 @@ function WorkersPageInner() {
         if (addNew) {
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
+            editingWorkerRef.current = null;
             setCertificates([]);
             setPpeAssign([]);
+        } else if (!addNew && savedId && savedId !== editingWorker) {
+            // keep form open so user can continue editing the newly created worker
         } else {
             setShowForm(false);
         }
+        return savedId;
     };
 
     const handleCancel = () => {
@@ -541,7 +552,20 @@ function WorkersPageInner() {
                                 value={certSearch} onChange={e => setCertSearch(e.target.value)} />
                             {certSearch && <button className="btn btn-ghost btn-sm" onClick={() => setCertSearch('')}>✕</button>}
                         </div>
-                        <button className="btn btn-outline btn-sm" onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}`); }}>+ {t('newCertificate')}</button>
+                        <button className="btn btn-outline btn-sm" onClick={async () => {
+                            // If worker not yet saved, save it first to get a real ID
+                            let wId = editingWorkerRef.current;
+                            if (!wId) {
+                                if (!formData.ime || !formData.prezime) {
+                                    await alert(lang === 'bs' ? 'Molimo unesite ime i prezime radnika prije dodavanja uvjerenja.' : 'Please enter worker name before adding a certificate.');
+                                    return;
+                                }
+                                wId = await handleSave(false);
+                                if (!wId) return;
+                            }
+                            markClean();
+                            router.push(`/dashboard/worker-certificates/create?workerId=${wId}&returnTo=/dashboard/workers?openWorker=${wId}`);
+                        }}>+ {t('newCertificate')}</button>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', marginLeft: 'auto', cursor: 'pointer' }}>
                             <input type="checkbox" checked={showOnlyValidCerts} onChange={e => setShowOnlyValidCerts(e.target.checked)} /> {t('showOnlyValid')}
                         </label>

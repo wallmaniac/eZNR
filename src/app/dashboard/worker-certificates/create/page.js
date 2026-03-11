@@ -260,10 +260,16 @@ export function UvjerenjeFormPage() {
             count++;
         }
         markClean();
-        await alert(lang === 'bs'
-            ? `Uspješno sačuvano ${count} uvjerenje(a)!`
-            : `Successfully saved ${count} certificate(s)!`);
-        router.back();
+        const returnTo = searchParams?.get('returnTo');
+        if (returnTo) {
+            // Came from worker creation — go straight back, no popup
+            router.push(returnTo);
+        } else {
+            await alert(lang === 'bs'
+                ? `Uspješno sačuvano ${count} uvjerenje(a)!`
+                : `Successfully saved ${count} certificate(s)!`);
+            router.back();
+        }
     };
 
     const handleSaveNewExaminer = () => {
