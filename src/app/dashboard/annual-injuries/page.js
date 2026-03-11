@@ -100,6 +100,18 @@ export default function AnnualInjuriesPage() {
   const MONTHS = lang === 'bs' ? MONTHS_BS : MONTHS_EN;
   const deadline = `15. januar ${Number(year) + 1}. godine`;
 
+  // ── LIVE STATS (Always for actual current year) ──
+  const currentYearInjuries = useMemo(() =>
+    injuries.filter(inj => inj.datum && new Date(inj.datum).getFullYear() === currentYear),
+    [injuries, currentYear]);
+
+  const liveTotals = useMemo(() => ({
+    laka: currentYearInjuries.filter(x => x.tip === 'laka' || !x.tip).length,
+    teska: currentYearInjuries.filter(x => x.tip === 'teska').length,
+    smrtna: currentYearInjuries.filter(x => x.tip === 'smrtna').length,
+    kolektivna: currentYearInjuries.filter(x => x.kolektivna).length,
+  }), [currentYearInjuries]);
+
   // ── Saved reports for the selected year ──
   const reportsForYear = useMemo(() =>
     savedReports.filter(r => r.year === year).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)),
@@ -255,7 +267,7 @@ export default function AnnualInjuriesPage() {
     }
   }, [year, lang]);
 
-  // ── Word: High-Fidelity .doc (Forced Landscape + Page Breaks) ──
+  // ── Word: High-Fidelity .doc (Forced Landscape + Editable) ──
   const generateWord = useCallback(async () => {
     setPdfDropdown(false);
     setListPdfDropdown(null);
@@ -265,18 +277,20 @@ export default function AnnualInjuriesPage() {
     const el = printRef.current;
     if (!el) return;
 
-    // We use a robust template with Word-specific XML and CSS for orientation
+    // Use a high-compatibility template for Word
     const htmlHeader = `
-      <html xmlns:v="urn:schemas-microsoft-com:vml"
-            xmlns:o="urn:schemas-microsoft-com:office:office"
+      <html xmlns:o="urn:schemas-microsoft-com:office:office"
             xmlns:w="urn:schemas-microsoft-com:office:word"
-            xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
+            xmlns:v="urn:schemas-microsoft-com:vml"
             xmlns="http://www.w3.org/TR/REC-html40">
       <head>
         <meta charset='utf-8'>
         <title>Godišnji izvještaj</title>
         <!--[if gte mso 9]>
         <xml>
+          <o:OfficeDocumentSettings>
+            <o:AllowPNG/>
+          </o:OfficeDocumentSettings>
           <w:WordDocument>
             <w:View>Print</w:View>
             <w:Zoom>100</w:Zoom>
@@ -285,50 +299,59 @@ export default function AnnualInjuriesPage() {
         </xml>
         <![endif]-->
         <style>
-          /* Set whole document to Landscape */
+          /* Set whole document to Landscape using MS schemas */
+          @page {
+            mso-page-border-surround-header: no;
+            mso-page-border-surround-footer: no;
+          }
           @page Section1 {
-            size: 29.7cm 21.0cm;
-            margin: 1.5cm 1.5cm 1.5cm 1.5cm;
-            mso-page-orientation: landscape;
+            size: 841.9pt 595.3pt; /* A4 Landscape in points */
+            margin: 1.0in 1.0in 1.0in 1.0in;
             mso-header-margin: 35.4pt;
             mso-footer-margin: 35.4pt;
+            mso-page-orientation: landscape;
             mso-paper-source: 0;
           }
           div.Section1 { page: Section1; }
 
           body { font-family: 'Georgia', serif; font-size: 11pt; color: #000; background: #fff; }
-          .dopis-letter { width: 100%; border: none; margin-bottom: 24px; padding: 20px; }
+          .dopis-letter { width: 100%; border: none; margin-bottom: 30px; }
           
-          /* Table Styles - Force sharp borders like PDF */
-          table { border-collapse: collapse; width: 100%; mso-table-lspace: 0pt; mso-table-rspace: 0pt; margin-top: 10px; }
+          /* Table Styles - Force Word to render borders correctly */
+          table { border-collapse: collapse; width: 100%; border: 1.0pt solid #333; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
           th, td { border: 1.0pt solid #333 !important; padding: 5px; vertical-align: top; font-size: 8.5pt; color: #000; }
           th { background-color: #f2f2f2 !important; font-weight: bold; text-align: center; }
           
-          /* Signature specific */
-          .sig-line { border-top: 1px solid #000; width: 220px; margin-top: 40px; text-align: center; font-size: 9pt; }
-          
-          p { margin: 0 0 12px 0; }
+          p { margin: 0 0 12pt 0; }
           .no-print { display: none !important; }
           
-          /* Page Break for Word */
-          .page-break { page-break-before: always; mso-break-type: section-break; }
+          /* Force page break */
+          .page-break { page-break-after: always; mso-special-character: line-break; }
         </style>
       </head>
       <body>
         <div class="Section1">
     `;
 
-    const htmlFooter = `</div></body></html>`;
+    const htmlFooter = `
+          <br clear=all style='mso-special-character:line-break;page-break-before:always'>
+          <div style='mso-element:section-break'>
+            <p class=MsoNormal>&nbsp;</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
     
-    // Process HTML to clean up React classes and inject the Word Page Break
+    // Process HTML
     let contentHtml = el.innerHTML;
     
-    // Replicate the page break for Word specifically
-    // We look for our page-break div and replace it with a more aggressive Word section break
-    contentHtml = contentHtml.replace(/<div style="page-break-before: always; margin: 20px 0px;"><\/div>/g, '<br style="page-break-before:always; clear:both; mso-break-type:section-break" class="page-break">');
+    // Inject Word-specific page break before the table
+    // Replacing the generic page-break div with a Word section break
+    contentHtml = contentHtml.replace(/<div style="page-break-before: always; margin: 20px 0px;"><\/div>/g, '<br clear=all style="page-break-before:always; mso-break-type:section-break">');
     
-    // Clean up other card styles
-    contentHtml = contentHtml.replace(/class="card[^"]*"/g, 'class="word-card" style="border:none; background:white;"');
+    // Cleanup React classes
+    contentHtml = contentHtml.replace(/class="card[^"]*"/g, 'style="border:none; margin-bottom: 20px; background:white;"');
     contentHtml = contentHtml.replace(/class="card-body[^"]*"/g, 'style="padding: 10px;"');
 
     const fullHtml = htmlHeader + contentHtml + htmlFooter;
@@ -506,19 +529,19 @@ export default function AnnualInjuriesPage() {
             </span>
           </div>
 
-          {/* Quick stats */}
+          {/* Quick stats (Dashboard for current year) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>
             {[
-              { label: 'Ukupno', value: yearInjuries.length, color: 'var(--primary)' },
-              { label: 'Lake', value: totals.laka, color: '#F59E0B' },
-              { label: 'Teške', value: totals.teska, color: '#EF4444' },
-              { label: 'Smrtne', value: totals.smrtna, color: '#7C3AED' },
-              { label: 'Kolektivne', value: totals.kolektivna, color: '#10B981' },
+              { label: 'Ukupno', value: currentYearInjuries.length, color: 'var(--primary)' },
+              { label: 'Lake', value: liveTotals.laka, color: '#F59E0B' },
+              { label: 'Teške', value: liveTotals.teska, color: '#EF4444' },
+              { label: 'Smrtne', value: liveTotals.smrtna, color: '#7C3AED' },
+              { label: 'Kolektivne', value: liveTotals.kolektivna, color: '#10B981' },
             ].map((s, i) => (
               <div key={i} className="card" style={{ textAlign: 'center' }}>
                 <div className="card-body" style={{ padding: '12px 8px' }}>
                   <div style={{ fontSize: '1.8rem', fontWeight: 800, color: s.color, fontFamily: 'var(--font-heading)' }}>{s.value}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{s.label} ({year})</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{s.label} ({currentYear})</div>
                 </div>
               </div>
             ))}
