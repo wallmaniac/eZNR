@@ -24,7 +24,7 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(true);
         // Set active company to first company or saved preference
         const savedCompany = typeof window !== 'undefined' ? localStorage.getItem('eznr_activeCompany') : null;
-        const companyId = savedCompany && enriched.companyIds.includes(savedCompany)
+        const companyId = savedCompany && (savedCompany === 'all' || enriched.companyIds.includes(savedCompany))
             ? savedCompany
             : (enriched.companyIds[0] || null);
         setActiveCompanyId(companyId);

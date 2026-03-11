@@ -191,9 +191,15 @@ const COMPANY_SCOPED = [
 ];
 
 // Get all records filtered by companyId
-export function getAllForCompany(collection, companyId) {
+export function getAllForCompany(collection, companyId, userCompanyIds = []) {
     if (!companyId) return getAll(collection);
     if (!COMPANY_SCOPED.includes(collection)) return getAll(collection);
+    if (companyId === 'all') {
+        if (userCompanyIds.length > 0) {
+            return getAll(collection).filter(item => !item.companyId || userCompanyIds.includes(item.companyId));
+        }
+        return getAll(collection);
+    }
     return getAll(collection).filter(item => !item.companyId || item.companyId === companyId);
 }
 

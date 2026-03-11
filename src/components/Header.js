@@ -70,9 +70,9 @@ export default function Header({ sidebarCollapsed }) {
     }, [searchTerm]);
 
     const notifications = useMemo(() => {
-        const { notifications: notifs } = getHeaderNotifications(isAdmin, activeCompanyId);
-        return notifs.map(n => ({ icon: n.icon, text: n.title, detail: n.message, date: '', path: n.actionUrl || '/dashboard', severity: n.severity, id: n.id, actionLabel: n.actionLabel }));
-    }, [isAdmin, activeCompanyId]);
+        const { notifications: notifs } = getHeaderNotifications(isAdmin, activeCompanyId, user?.companyIds || []);
+        return notifs.map(n => ({ ...n, icon: n.icon, text: n.text || n.title, detail: n.detail || n.message, date: '', path: n.path || n.actionUrl || '/dashboard', severity: n.severity, id: n.id, actionLabel: n.actionLabel, companyName: n.companyName }));
+    }, [isAdmin, activeCompanyId, user?.companyIds]);
 
     const handleSearchNav = (result) => { setSearchTerm(''); setSearchFocused(false); router.push(result.path); };
     const handleProfileNav = (path) => { setShowProfile(false); router.push(path); };
@@ -159,19 +159,21 @@ export default function Header({ sidebarCollapsed }) {
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 8,
                                 padding: '5px 12px 5px 7px', borderRadius: 100, border: 'none',
-                                background: 'linear-gradient(135deg, var(--primary) 0%, #009985 100%)',
+                                background: activeCompanyId === 'all'
+                                    ? 'linear-gradient(135deg, #455A64 0%, #263238 100%)'
+                                    : 'linear-gradient(135deg, var(--primary) 0%, #009985 100%)',
                                 cursor: 'pointer', transition: 'all 0.2s',
-                                boxShadow: '0 2px 10px rgba(0,191,166,0.3)',
+                                boxShadow: activeCompanyId === 'all' ? '0 2px 10px rgba(70,90,100,0.3)' : '0 2px 10px rgba(0,191,166,0.3)',
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 5px 18px rgba(0,191,166,0.45)'; }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,191,166,0.3)'; }}>
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = activeCompanyId === 'all' ? '0 5px 18px rgba(70,90,100,0.45)' : '0 5px 18px rgba(0,191,166,0.45)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = activeCompanyId === 'all' ? '0 2px 10px rgba(70,90,100,0.3)' : '0 2px 10px rgba(0,191,166,0.3)'; }}>
                             <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                             <div>
                                 <div style={{ fontSize: '0.58rem', fontWeight: 600, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.3px', lineHeight: 1, marginBottom: 1 }}>
                                     {lang === 'bs' ? 'Aktivna firma' : 'Active company'}
                                 </div>
                                 <div style={{ fontSize: '0.79rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>
-                                    {activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi' : 'Select')}
+                                    {activeCompanyId === 'all' ? (lang === 'bs' ? 'Sve firme' : 'All companies') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang === 'bs' ? 'Odaberi' : 'Select'))}
                                 </div>
                             </div>
                             <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.75)', flexShrink: 0 }}>▼</span>
@@ -182,6 +184,14 @@ export default function Header({ sidebarCollapsed }) {
                                 <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
                                 </div>
+                                <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); }}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: activeCompanyId === 'all' ? 'rgba(0,191,166,0.08)' : undefined, fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
+                                    <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang === 'bs' ? 'Sve firme' : 'All companies'}</div>
+                                    </div>
+                                </button>
+                                <div className="dropdown-divider" />
                                 {companies.map(c => (
                                     <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); }}
                                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: c.id === activeCompanyId ? 'rgba(0,191,166,0.08)' : undefined, fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
@@ -314,7 +324,10 @@ export default function Header({ sidebarCollapsed }) {
                                             <div style={{ display: 'flex', gap: 10 }}>
                                                 <span style={{ fontSize: '1.1rem' }}>{n.icon}</span>
                                                 <div style={{ flex: 1 }}>
-                                                    <div style={{ fontWeight: 700, fontSize: '0.82rem', color: c.titleColor }}>{n.text}</div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 6 }}>
+                                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: c.titleColor }}>{n.text}</div>
+                                                        {n.companyName && <span style={{ fontSize: '0.62rem', fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(0,0,0,0.05)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>🏢 {n.companyName}</span>}
+                                                    </div>
                                                     {n.detail && <div style={{ fontSize: '0.75rem', color: '#4B5563', marginTop: 3 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                                                         {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}

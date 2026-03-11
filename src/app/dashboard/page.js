@@ -4,8 +4,9 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, create, remove, COLLECTIONS, getOrgUnitName, getWorkplaceName,
-    getWorkerCertificates, getWorkerPPE, formatDate,
+    getWorkerCertificates, getWorkerPPE, formatDate, getAllForCompany,
 } from '@/lib/dataStore';
+import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 const EVENT_ROUTES = {
@@ -13,11 +14,13 @@ const EVENT_ROUTES = {
     ppe: '/dashboard/worker-ppe',
     equip: '/dashboard/equipment',
     doc: '/dashboard/employer-docs',
+    service: '/dashboard/equipment',
 };
 
 export default function DashboardPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
+    const { activeCompanyId, user } = useAuth();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
     const [workers, setWorkers] = useState([]);
@@ -30,11 +33,13 @@ export default function DashboardPage() {
     const [showEventForm, setShowEventForm] = useState(false);
     const [eventFormDate, setEventFormDate] = useState('');
     const [eventFormData, setEventFormData] = useState({
-        tip: 'cert', opis: '', count: 1,
+        tip: 'cert', opis: '', count: 1, companyId: '',
         // cert fields
         workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: '', certVrijediDo: '', certSposobnost: 'Sposoban',
         // ppe fields
         ppeNaziv: '', ppeDatum: '', ppeKolicina: 1,
+        // service fields
+        machineId: '',
     });
     const [calEvents, setCalEvents] = useState([]);
     const [certTypes, setCertTypes] = useState([]);
@@ -43,15 +48,16 @@ export default function DashboardPage() {
     const [viewWorkerId, setViewWorkerId] = useState(null);
 
     useEffect(() => {
-        setWorkers(getAll(COLLECTIONS.WORKERS));
-        setCerts(getAll(COLLECTIONS.CERTIFICATES));
-        setPpeAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
-        setEquipment(getAll(COLLECTIONS.EQUIPMENT));
-        setEmployerDocs(getAll(COLLECTIONS.EMPLOYER_DOCS));
-        setCalEvents(getAll(COLLECTIONS.CALENDAR_EVENTS));
+        const uids = user?.companyIds || [];
+        setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
+        setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
+        setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
+        setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
+        setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
+        setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
-    }, []);
+    }, [activeCompanyId, user?.companyIds]);
 
     useEffect(() => {
         const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
@@ -106,12 +112,19 @@ export default function DashboardPage() {
                 opis: `${d.naziv || 'Dokument'}`,
                 auto: true,
                 sourceId: d.id,
+                companyId: d.companyId,
             });
         });
         return events;
     }, [certs, equipment, employerDocs, workers]);
 
-    const allCalendarEvents = useMemo(() => [...calEvents, ...autoEvents], [calEvents, autoEvents]);
+    const companies = useMemo(() => getAll(COLLECTIONS.COMPANIES), []);
+    const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
+
+    const allCalendarEvents = useMemo(() => {
+        const merged = [...calEvents, ...autoEvents];
+        return merged.map(ev => ({ ...ev, companyName: getCompName(ev.companyId) }));
+    }, [calEvents, autoEvents, companies]);
 
     const getDayEvents = (day) => {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -189,7 +202,7 @@ export default function DashboardPage() {
     const confirmDeleteEvent = () => {
         if (!deleteEventTarget) return;
         remove(COLLECTIONS.CALENDAR_EVENTS, deleteEventTarget.id);
-        setCalEvents(getAll(COLLECTIONS.CALENDAR_EVENTS));
+        setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds));
         setDeleteEventTarget(null);
     };
 
@@ -256,9 +269,10 @@ export default function DashboardPage() {
                                         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                                         setEventFormDate(dateStr);
                                         setEventFormData({
-                                            tip: 'cert', opis: '', count: 1,
+                                            tip: 'cert', opis: '', count: 1, companyId: activeCompanyId === 'all' ? (user?.companyIds?.[0] || '') : activeCompanyId,
                                             workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dateStr, certVrijediDo: '', certSposobnost: 'Sposoban',
                                             ppeNaziv: '', ppeDatum: dateStr, ppeKolicina: 1,
+                                            machineId: '',
                                         });
                                         setShowEventForm(true);
                                     }}>
@@ -303,7 +317,8 @@ export default function DashboardPage() {
                                                     style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                                     onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
                                                     onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}>
-                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
+                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
+                                                    {ev.companyName && <span style={{ fontSize: '0.55rem', opacity: 0.7, marginLeft: 4, fontWeight: 700 }}>({ev.companyName})</span>}
                                                 </span>
                                                 {!ev.auto && (
                                                     <button
@@ -329,6 +344,7 @@ export default function DashboardPage() {
 
                     <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem', flexWrap: 'wrap' }}>
                         <Legend color="#1565C0" bg="#E3F2FD" label={lang === 'bs' ? '📜 Uvjerenja' : '📜 Certificates'} />
+                        <Legend color="#2E7D32" bg="#E8F5E9" label={lang === 'bs' ? '🔧 Servis' : '🔧 Service'} />
                         <Legend color="#E65100" bg="#FFF3E0" label="🦺 ZS" />
                         <Legend color="#2E7D32" bg="#E8F5E9" label={lang === 'bs' ? '⚙️ Oprema' : '⚙️ Equipment'} />
                         <Legend color="#6A1B9A" bg="#F3E5F5" label={lang === 'bs' ? '📄 Dokumenti' : '📄 Documents'} />
@@ -353,12 +369,38 @@ export default function DashboardPage() {
                                 <select className="form-select" value={eventFormData.tip}
                                     onChange={e => setEventFormData(prev => ({ ...prev, tip: e.target.value }))}>
                                     <option value="cert">{lang === 'bs' ? '📜 Uvjerenja / Osposobljavanje' : '📜 Certificates / Training'}</option>
+                                    <option value="service">{lang === 'bs' ? '🔧 Servis / Održavanje' : '🔧 Service / Maintenance'}</option>
                                     <option value="ppe">{lang === 'bs' ? '🦺 Zaštitna oprema (OZO)' : '🦺 PPE'}</option>
                                     <option value="equip">{lang === 'bs' ? '⚙️ Radna oprema / Objekti' : '⚙️ Equipment'}</option>
                                     <option value="doc">{lang === 'bs' ? '📋 Dokumentacija' : '📋 Documentation'}</option>
                                     <option value="other">{lang === 'bs' ? 'Ostalo' : 'Other'}</option>
                                 </select>
                             </div>
+
+                            {/* Company selector */}
+                            <div className="form-group">
+                                <label className="form-label">🏢 {lang === 'bs' ? 'Firma' : 'Company'}</label>
+                                <select className="form-select" value={eventFormData.companyId}
+                                    onChange={e => setEventFormData(prev => ({ ...prev, companyId: e.target.value }))}>
+                                    {companies.filter(c => (user?.companyIds || []).includes(c.id)).map(c => (
+                                        <option key={c.id} value={c.id}>{c.naziv}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Machine selector for Service */}
+                            {eventFormData.tip === 'service' && (
+                                <div className="form-group">
+                                    <label className="form-label">⚙️ {lang === 'bs' ? 'Stroj / Oprema' : 'Machine / Equipment'}</label>
+                                    <select className="form-select" value={eventFormData.machineId}
+                                        onChange={e => setEventFormData(prev => ({ ...prev, machineId: e.target.value }))}>
+                                        <option value="">{lang === 'bs' ? '— Odaberi stroj —' : '— Select machine —'}</option>
+                                        {equipment.filter(e => !eventFormData.companyId || e.companyId === eventFormData.companyId).map(eq => (
+                                            <option key={eq.id} value={eq.id}>{eq.naziv} ({eq.invBroj || eq.serijskiBroj})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
 
                             {/* Worker selector — shown for cert and ppe */}
                             {(eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (
@@ -493,53 +535,59 @@ export default function DashboardPage() {
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowEventForm(false)}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={() => {
-                                const { tip, opis, count, workerId,
-                                    certNaziv, certOznaka, certTip, certDatum, certVrijediDo, certSposobnost,
-                                    ppeNaziv, ppeDatum, ppeKolicina } = eventFormData;
+                                const { tip, opis, count, workerId, companyId, machineId,
+                                     certNaziv, certOznaka, certTip, certDatum, certVrijediDo, certSposobnost,
+                                     ppeNaziv, ppeDatum, ppeKolicina } = eventFormData;
 
                                 // Validation
                                 if (tip === 'cert' && !certNaziv.trim()) { alert(lang === 'bs' ? 'Naziv uvjerenja je obavezan!' : 'Certificate name is required!'); return; }
                                 if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { alert(lang === 'bs' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
-                                if (tip !== 'cert' && tip !== 'ppe' && !opis.trim()) { alert(lang === 'bs' ? 'Opis je obavezan!' : 'Description is required!'); return; }
+                                if (tip === 'service' && !machineId) { alert(lang === 'bs' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
+                                 if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { alert(lang === 'bs' ? 'Opis je obavezan!' : 'Description is required!'); return; }
 
                                 // Auto-generate description
                                 let autoOpis = opis;
                                 if (tip === 'cert' && !opis) autoOpis = certNaziv + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
                                 if (tip === 'ppe' && !opis) autoOpis = ppeNaziv + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
 
-                                // 1. Always create calendar event
-                                create(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count });
+                                // 1. Build service description if needed
+                                 if (tip === 'service' && !opis) {
+                                     const m = equipment.find(e => e.id === machineId);
+                                     autoOpis = `${lang === 'bs' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`;
+                                 }
+                                 // Create calendar event (company-scoped)
+                                 createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId }, companyId);
 
                                 // 2. If cert type + worker selected → also create certificate record
-                                if (tip === 'cert' && workerId) {
-                                    create(COLLECTIONS.CERTIFICATES, {
-                                        workerId,
-                                        ime: certNaziv,
-                                        naziv: certNaziv,
-                                        oznaka: certOznaka,
-                                        tipUvjerenja: certTip,
-                                        datum: certDatum || eventFormDate,
-                                        vrijediDo: certVrijediDo,
-                                        sposobnost: certSposobnost,
-                                        upisao: 'Kalendar',
-                                        ogranicenje: '',
-                                    });
-                                    setCerts(getAll(COLLECTIONS.CERTIFICATES));
-                                }
+                                 if (tip === 'cert' && workerId) {
+                                     createForCompany(COLLECTIONS.CERTIFICATES, {
+                                         workerId,
+                                         ime: certNaziv,
+                                         naziv: certNaziv,
+                                         oznaka: certOznaka,
+                                         tipUvjerenja: certTip,
+                                         datum: certDatum || eventFormDate,
+                                         vrijediDo: certVrijediDo,
+                                         sposobnost: certSposobnost,
+                                         upisao: 'Kalendar',
+                                         ogranicenje: '',
+                                     }, companyId);
+                                     setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, user?.companyIds));
+                                 }
 
                                 // 3. If ppe type + worker selected → also create PPE assignment
-                                if (tip === 'ppe' && workerId) {
-                                    create(COLLECTIONS.PPE_ASSIGNMENTS, {
-                                        workerId,
-                                        naziv: ppeNaziv,
-                                        datumZaduzenja: ppeDatum || eventFormDate,
-                                        datumRazduzenja: '',
-                                        kolicina: ppeKolicina,
-                                    });
-                                    setPpeAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
-                                }
+                                 if (tip === 'ppe' && workerId) {
+                                     createForCompany(COLLECTIONS.PPE_ASSIGNMENTS, {
+                                         workerId,
+                                         naziv: ppeNaziv,
+                                         datumZaduzenja: ppeDatum || eventFormDate,
+                                         datumRazduzenja: '',
+                                         kolicina: ppeKolicina,
+                                     }, companyId);
+                                     setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, user?.companyIds));
+                                 }
 
-                                setCalEvents(getAll(COLLECTIONS.CALENDAR_EVENTS));
+                                setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds));
                                 setShowEventForm(false);
                             }}>💾 {t('save')}</button>
                         </div>

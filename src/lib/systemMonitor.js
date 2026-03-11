@@ -237,15 +237,31 @@ export function getAdminNotifications() {
 // USER NOTIFICATIONS — Work-related alerts only
 // ============================================================================
 
-export function getUserNotifications(companyId) {
+export function getUserNotifications(companyId, userCompanyIds = []) {
     const notifications = [];
     const settings = getNotificationSettings();
     const today = new Date();
 
+    const allCompanies = getAll(COLLECTIONS.COMPANIES);
+    const getCompName = (id) => allCompanies.find(c => c.id === id)?.skraceniNaziv || allCompanies.find(c => c.id === id)?.naziv || '';
+
     // Filter data by company if provided
     const filterByCompany = (items) => {
-        if (!companyId) return items;
+        if (!companyId || companyId === 'all') {
+            if (userCompanyIds.length > 0) {
+                return items.filter(i => !i.companyId || userCompanyIds.includes(i.companyId));
+            }
+            return items;
+        }
         return items.filter(i => !i.companyId || i.companyId === companyId);
+    };
+
+    const addCompanyBadge = (n, item) => {
+        if ((companyId === 'all' || !companyId) && item.companyId) {
+            const cName = getCompName(item.companyId);
+            if (cName) return { ...n, companyName: cName };
+        }
+        return n;
     };
 
     // ── Certificate expiry ──
@@ -262,7 +278,7 @@ export function getUserNotifications(companyId) {
         });
 
         if (expired > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_cert_expired',
                 severity: 'urgent',
                 category: 'certificates',
@@ -271,10 +287,10 @@ export function getUserNotifications(companyId) {
                 message: `Ukupno ${expired} radničkih uvjerenja su istekla i trebaju hitnu obnovu.`,
                 actionLabel: 'Pogledaj uvjerenja',
                 actionUrl: '/dashboard/worker-certificates',
-            });
+            }, allCerts.find(c => new Date(c.vrijediDo) < today) || {}));
         }
         if (urgentCount > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_cert_urgent',
                 severity: 'urgent',
                 category: 'certificates',
@@ -283,10 +299,10 @@ export function getUserNotifications(companyId) {
                 message: `Hitno obnovite ${urgentCount} uvjerenja.`,
                 actionLabel: 'Pogledaj uvjerenja',
                 actionUrl: '/dashboard/worker-certificates',
-            });
+            }, allCerts.find(c => { const d = Math.floor((new Date(c.vrijediDo) - today) / 86400000); return d >= 0 && d <= 7; }) || {}));
         }
         if (warningCount > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_cert_warning',
                 severity: 'warning',
                 category: 'certificates',
@@ -295,7 +311,7 @@ export function getUserNotifications(companyId) {
                 message: `Planirajte obnovu za ${warningCount} uvjerenja.`,
                 actionLabel: 'Pogledaj uvjerenja',
                 actionUrl: '/dashboard/worker-certificates',
-            });
+            }, allCerts.find(c => { const d = Math.floor((new Date(c.vrijediDo) - today) / 86400000); return d > 7 && d <= settings.certExpiryDays; }) || {}));
         }
     }
 
@@ -313,7 +329,7 @@ export function getUserNotifications(companyId) {
         });
 
         if (expired > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_equip_expired',
                 severity: 'urgent',
                 category: 'equipment',
@@ -322,10 +338,10 @@ export function getUserNotifications(companyId) {
                 message: `${expired} komada radne opreme ima istekli rok pregleda.`,
                 actionLabel: 'Pogledaj opremu',
                 actionUrl: '/dashboard/equipment',
-            });
+            }, allEquipment.find(e => new Date(e.iduci) < today) || {}));
         }
         if (urgentCount + warningCount > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_equip_warning',
                 severity: 'warning',
                 category: 'equipment',
@@ -334,7 +350,7 @@ export function getUserNotifications(companyId) {
                 message: `${urgentCount} hitno (7 dana), ${warningCount} uskoro (${settings.equipExpiryDays} dana).`,
                 actionLabel: 'Pogledaj opremu',
                 actionUrl: '/dashboard/equipment',
-            });
+            }, allEquipment.find(e => { const d = Math.floor((new Date(e.iduci) - today) / 86400000); return d >= 0 && d <= settings.equipExpiryDays; }) || {}));
         }
     }
 
@@ -351,7 +367,7 @@ export function getUserNotifications(companyId) {
         });
 
         if (expired > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_docs_expired',
                 severity: 'urgent',
                 category: 'documents',
@@ -360,10 +376,10 @@ export function getUserNotifications(companyId) {
                 message: `${expired} dokumenta poslodavca su istekla i trebaju obnovu.`,
                 actionLabel: 'Pogledaj dokumenta',
                 actionUrl: '/dashboard/employer-docs',
-            });
+            }, allDocs.find(d => new Date(d.datumIsteka) < today) || {}));
         }
         if (warningCount > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_docs_warning',
                 severity: 'warning',
                 category: 'documents',
@@ -372,18 +388,19 @@ export function getUserNotifications(companyId) {
                 message: `${warningCount} dokumenta ističu u narednih ${settings.docExpiryDays} dana.`,
                 actionLabel: 'Pogledaj dokumenta',
                 actionUrl: '/dashboard/employer-docs',
-            });
+            }, allDocs.find(d => { const diff = Math.floor((new Date(d.datumIsteka) - today) / 86400000); return diff >= 0 && diff <= settings.docExpiryDays; }) || {}));
         }
     }
 
     // ── Workers without certificates ──
     if (settings.workersNoCerts) {
         const workers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan);
-        const certWorkerIds = new Set(getAll(COLLECTIONS.CERTIFICATES).map(c => c.workerId));
+        const certs = getAll(COLLECTIONS.CERTIFICATES);
+        const certWorkerIds = new Set(certs.map(c => c.workerId));
         const missing = workers.filter(w => !certWorkerIds.has(w.id));
 
         if (missing.length > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_no_certs',
                 severity: 'info',
                 category: 'certificates',
@@ -392,18 +409,19 @@ export function getUserNotifications(companyId) {
                 message: `${missing.length} aktivnih radnika nema uneseno niti jedno uvjerenje.`,
                 actionLabel: 'Pogledaj radnike',
                 actionUrl: '/dashboard/workers',
-            });
+            }, missing[0]));
         }
     }
 
     // ── Workers without PPE ──
     if (settings.workersNoPPE) {
         const workers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan);
-        const ppeWorkerIds = new Set(getAll(COLLECTIONS.PPE_ASSIGNMENTS).map(p => p.workerId));
+        const ppe = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
+        const ppeWorkerIds = new Set(ppe.map(p => p.workerId));
         const missing = workers.filter(w => !ppeWorkerIds.has(w.id));
 
         if (missing.length > 0) {
-            notifications.push({
+            notifications.push(addCompanyBadge({
                 id: 'user_no_ppe',
                 severity: 'info',
                 category: 'ppe',
@@ -412,7 +430,7 @@ export function getUserNotifications(companyId) {
                 message: `${missing.length} aktivnih radnika nema dodijeljenu zaštitnu opremu.`,
                 actionLabel: 'Pogledaj radnike',
                 actionUrl: '/dashboard/workers',
-            });
+            }, missing[0]));
         }
     }
 
@@ -448,7 +466,7 @@ export function clearDismissedNotifications() {
 // FOR HEADER BELL — Returns filtered active notifications
 // ============================================================================
 
-export function getHeaderNotifications(isAdmin, companyId) {
+export function getHeaderNotifications(isAdmin, companyId, userCompanyIds = []) {
     const dismissed = getDismissedNotifications();
 
     if (isAdmin) {
@@ -458,7 +476,7 @@ export function getHeaderNotifications(isAdmin, companyId) {
             stats,
         };
     } else {
-        const notifications = getUserNotifications(companyId);
+        const notifications = getUserNotifications(companyId, userCompanyIds);
         return {
             notifications: notifications.filter(n => !dismissed.includes(n.id)),
             stats: null,
