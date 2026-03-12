@@ -893,7 +893,7 @@ function WorkersPageInner() {
                                                                 </div>
                                                             </div>
                                                             <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/archive'); }}>📁 {t('files')}</button>
-                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); alert(lang === 'bs' ? 'Funkcija preuzimanja dolazi uskoro.' : 'Download coming soon.'); }}>⬇️ {t('downloadFiles')}</button>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); }}>⬇️ {t('downloadFiles')}</button>
                                                             <div className="dropdown-divider" />
                                                             <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                         </div>

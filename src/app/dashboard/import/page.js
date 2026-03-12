@@ -113,6 +113,7 @@ export default function ImportPage() {
     const [importing, setImporting] = useState(false);
     const [result, setResult] = useState(null);
     const [dragOver, setDragOver] = useState(false);
+    const [fileError, setFileError] = useState('');
 
     const companyId = activeCompanyId === 'all'
         ? (user?.companyIds?.[0] || '')
@@ -129,7 +130,7 @@ export default function ImportPage() {
                 setPreview({ workers, certs, ppe });
                 setStep('preview');
             } catch (err) {
-                alert('Greška pri čitanju fajla: ' + err.message);
+                setFileError('Greška pri čitanju fajla: ' + err.message);
             }
         };
         reader.readAsBinaryString(file);
@@ -261,6 +262,11 @@ export default function ImportPage() {
                     : 'Import workers, certificates and PPE from an Excel file. Download the template, fill it in and upload.'}
             </p>
 
+            {fileError && (
+                <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#D32F2F', fontSize: '0.85rem' }}>
+                    ⚠️ {fileError} <button onClick={() => setFileError('')} style={{ marginLeft: 8, background: 'none', border: 'none', cursor: 'pointer', color: '#D32F2F' }}>✕</button>
+                </div>
+            )}
             {/* Step indicator */}
             <div style={{ display: 'flex', gap: 0, marginBottom: 32, background: 'var(--bg-card)', borderRadius: 12, padding: 4, width: 'fit-content' }}>
                 {['upload', 'preview', 'done'].map((s, i) => (

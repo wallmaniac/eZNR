@@ -105,8 +105,8 @@ export default function TrainingsPage() {
         setView('form');
     };
 
-    const handleSave = () => {
-        if (!formData.naziv.trim()) { alert('Unesite naziv obuke.'); return; }
+    const handleSave = async () => {
+        if (!formData.naziv.trim()) { await alert(lang === 'bs' ? 'Unesite naziv obuke.' : 'Enter training name.'); return; }
         if (editingId) update(COLLECTIONS.TRAININGS, editingId, formData);
         else create(COLLECTIONS.TRAININGS, formData);
         loadData();

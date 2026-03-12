@@ -6,6 +6,7 @@ import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useSortedList } from '@/hooks/useSortedList';
 
 export default function AddressBookPage() {
+  const [copyToast, setCopyToast] = useState(false);
   const { t, lang } = useLanguage();
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan), []);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,7 +63,7 @@ export default function AddressBookPage() {
 
   const copyAllEmails = () => {
     const emails = sorted.filter(w => w.email).map(w => w.email).join(', ');
-    navigator.clipboard.writeText(emails).then(() => alert(lang === 'bs' ? 'Sve email adrese kopirane!' : 'All emails copied!'));
+    navigator.clipboard.writeText(emails).then(() => { setCopyToast(true); setTimeout(() => setCopyToast(false), 2500); });
   };
 
   const exportCSV = () => {
@@ -80,7 +81,12 @@ export default function AddressBookPage() {
   return (
     <>
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>📒 {t('addressBook')}</h1>
+        {copyToast && (
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, background: 'var(--primary)', color: 'white', padding: '12px 20px', borderRadius: 10, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.25)', animation: 'fadeIn 0.2s' }}>
+          ✅ {lang === 'bs' ? 'Sve email adrese kopirane!' : 'All emails copied!'}
+        </div>
+      )}
+      <h1 style={{ marginBottom: 24 }}>📒 {t('addressBook')}</h1>
         <div className="card"><div className="card-body">
 
           {/* Toolbar */}

@@ -1,15 +1,20 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS, formatDate,
     getWorkplaceName, getOrgUnitName,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSearchParams } from 'next/navigation';
 
-export default function EmployerDocsPage() {
+function EmployerDocsInner() {
     const { t, lang } = useLanguage();
-  const { alert, confirm, DialogRenderer } = useDialog();
+    const { alert, confirm, DialogRenderer } = useDialog();
+    const searchParams = useSearchParams();
+    const highlightId = searchParams?.get('highlight');
+    const highlightRef = useRef(null);
+
     const [docs, setDocs] = useState([]);
     const [activeTab, setActiveTab] = useState('obavezna');
     const [showForm, setShowForm] = useState(false);
@@ -19,7 +24,17 @@ export default function EmployerDocsPage() {
     const loadData = useCallback(() => { setDocs(getAll(COLLECTIONS.EMPLOYER_DOCS)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
 
-    const filtered = docs.filter(d => d.kategorija === activeTab);
+    // Scroll to highlighted doc from calendar event click
+    useEffect(() => {
+        if (highlightId && docs.length > 0) {
+            // Switch to the correct tab for the highlighted doc
+            const found = docs.find(d => d.id === highlightId);
+            if (found && found.kategorija) setActiveTab(found.kategorija);
+            setTimeout(() => {
+                highlightRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 400);
+        }
+    }, [highlightId, docs]);
 
     const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '' }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
@@ -33,6 +48,8 @@ export default function EmployerDocsPage() {
     };
 
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
+
+    const filtered = docs.filter(d => d.kategorija === activeTab);
 
     const tabs = [
         { key: 'obavezna', label: t('mandatoryDocs'), icon: '📋' },
@@ -133,8 +150,11 @@ export default function EmployerDocsPage() {
                                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : filtered.map((doc) => {
                                     const isExpiring = doc.datumIsteka && new Date(doc.datumIsteka) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
+                                    const isHighlighted = doc.id === highlightId;
                                     return (
-                                        <tr key={doc.id}>
+                                        <tr key={doc.id}
+                                            ref={isHighlighted ? highlightRef : null}
+                                            style={isHighlighted ? { background: 'rgba(0,191,166,0.12)', outline: '2px solid var(--primary)', outlineOffset: -2, borderRadius: 4, animation: 'pulse-highlight 1.5s ease-in-out 2' } : undefined}>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
                                                     <button className="btn btn-primary btn-sm" onClick={() => handleEdit(doc)}>✏️</button>
@@ -161,6 +181,16 @@ export default function EmployerDocsPage() {
                     </div>
                 </div>
             </div>
+            <DialogRenderer />
+            <style>{`@keyframes pulse-highlight { 0%,100% { background: rgba(0,191,166,0.12); } 50% { background: rgba(0,191,166,0.28); } }`}</style>
         </div>
+    );
+}
+
+export default function EmployerDocsPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+            <EmployerDocsInner />
+        </Suspense>
     );
 }

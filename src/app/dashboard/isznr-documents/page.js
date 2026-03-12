@@ -48,8 +48,8 @@ export default function ISZNRDocumentsPage() {
     const handleDelete = async (id) => {
         const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (ok) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
     };
-    const handleSave = () => {
-        if (!formData.naslov || !formData.partyId) { alert(lang === 'bs' ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!'); return; }
+    const handleSave = async () => {
+        if (!formData.naslov || !formData.partyId) { await alert(lang === 'bs' ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!'); return; }
         if (editingId) { update(COLLECTIONS.ISZNR_DOCUMENTS, editingId, formData); } else { create(COLLECTIONS.ISZNR_DOCUMENTS, formData); }
         setShowForm(false); loadData();
     };

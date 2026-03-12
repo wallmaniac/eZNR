@@ -62,7 +62,7 @@ export default function EKPPEPage() {
     setAssignFor(ppe);
     setAssignForm({ workerId: '', datumZaduzenja: todayISO(), kolicina: 1 });
   };
-  const handleAssign = () => {
+  const handleAssign = async () => {
     if (!assignForm.workerId) return;
     create(COLLECTIONS.PPE_ASSIGNMENTS, {
       workerId: assignForm.workerId,
@@ -72,7 +72,7 @@ export default function EKPPEPage() {
       datumRazduzenja: '',
     });
     setAssignFor(null);
-    alert(lang === 'bs' ? `OZO "${assignFor.naziv}" uspješno zaduženo radniku!` : `PPE "${assignFor.naziv}" successfully assigned!`);
+    await dialogAlert(lang === 'bs' ? `OZO "${assignFor.naziv}" uspješno zaduženo radniku!` : `PPE "${assignFor.naziv}" successfully assigned!`);
   };
 
   return (
