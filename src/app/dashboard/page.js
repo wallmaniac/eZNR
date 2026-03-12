@@ -49,6 +49,9 @@ export default function DashboardPage() {
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [dayDetailDate, setDayDetailDate] = useState(null);
     const [dayDetailEvents, setDayDetailEvents] = useState([]);
+    const [workerSearch, setWorkerSearch] = useState('');
+    const [workerDropOpen, setWorkerDropOpen] = useState(false);
+    const workerDropRef = useRef(null);
 
     useEffect(() => {
         const uids = user?.companyIds || [];
@@ -63,7 +66,8 @@ export default function DashboardPage() {
     }, [activeCompanyId, user?.companyIds]);
 
     useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
+        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
+            if (workerDropRef.current && !workerDropRef.current.contains(e.target)) setWorkerDropOpen(false); };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
@@ -531,21 +535,97 @@ export default function DashboardPage() {
                                 </div>
                             )}
 
-                            {/* Worker selector — shown for cert and ppe */}
-                            {(eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (
-                                <div className="form-group">
-                                    <label className="form-label">
-                                        👤 {lang === 'bs' ? 'Radnik (opcionalno)' : 'Worker (optional)'}
-                                    </label>
-                                    <select className="form-select" value={eventFormData.workerId}
-                                        onChange={e => setEventFormData(prev => ({ ...prev, workerId: e.target.value }))}>
-                                        <option value="">{lang === 'bs' ? '— Bez radnika —' : '— No worker —'}</option>
-                                        {workers.filter(w => w.aktivan).map(w => (
-                                            <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
+                            {/* Worker selector — searchable combobox */}
+                            {(eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (() => {
+                                const sortedWorkers = [...workers]
+                                    .filter(w => w.aktivan)
+                                    .sort((a, b) => {
+                                        const pa = (a.prezime || '').localeCompare(b.prezime || '', 'hr', { sensitivity: 'base' });
+                                        return pa !== 0 ? pa : (a.ime || '').localeCompare(b.ime || '', 'hr', { sensitivity: 'base' });
+                                    });
+                                const q = workerSearch.toLowerCase();
+                                const filtered = q
+                                    ? sortedWorkers.filter(w =>
+                                        (w.prezime + ' ' + w.ime).toLowerCase().includes(q) ||
+                                        (w.ime + ' ' + w.prezime).toLowerCase().includes(q)
+                                      )
+                                    : sortedWorkers;
+                                const selectedWorker = workers.find(w => w.id === eventFormData.workerId);
+                                return (
+                                    <div className="form-group">
+                                        <label className="form-label">
+                                            👤 {lang === 'bs' ? 'Radnik (opcionalno)' : 'Worker (optional)'}
+                                        </label>
+                                        <div ref={workerDropRef} style={{ position: 'relative' }}>
+                                            <div style={{
+                                                display: 'flex', alignItems: 'center',
+                                                border: workerDropOpen ? '1px solid var(--primary)' : '1px solid var(--border)',
+                                                borderRadius: 'var(--radius-md)', background: 'var(--bg-input)',
+                                                boxShadow: workerDropOpen ? '0 0 0 3px rgba(0,191,166,0.15)' : 'none',
+                                                transition: 'border-color 0.15s',
+                                            }}>
+                                                <input
+                                                    value={workerSearch}
+                                                    onChange={e => {
+                                                        setWorkerSearch(e.target.value);
+                                                        setWorkerDropOpen(true);
+                                                        if (!e.target.value) setEventFormData(prev => ({ ...prev, workerId: '' }));
+                                                    }}
+                                                    onFocus={() => setWorkerDropOpen(true)}
+                                                    placeholder={selectedWorker ? (selectedWorker.prezime + ' ' + selectedWorker.ime) : (lang === 'bs' ? 'Pretraži radnika...' : 'Search worker...')}
+                                                    style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '10px 12px', fontSize: '0.9rem', fontFamily: 'var(--font-body)', color: 'var(--text)' }}
+                                                />
+                                                {(eventFormData.workerId || workerSearch) && (
+                                                    <button onClick={() => { setEventFormData(prev => ({ ...prev, workerId: '' })); setWorkerSearch(''); setWorkerDropOpen(false); }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px', color: 'var(--text-muted)', fontSize: '1rem' }}>×</button>
+                                                )}
+                                                <button onClick={() => setWorkerDropOpen(o => !o)}
+                                                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 10px', color: 'var(--text-muted)', fontSize: '0.8rem', transform: workerDropOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}>▼</button>
+                                            </div>
+                                            {selectedWorker && !workerDropOpen && (
+                                                <div style={{ fontSize: '0.78rem', color: 'var(--primary)', marginTop: 4, paddingLeft: 2, fontWeight: 600 }}>
+                                                    ✓ {selectedWorker.prezime} {selectedWorker.ime}
+                                                </div>
+                                            )}
+                                            {workerDropOpen && (
+                                                <div style={{
+                                                    position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 9999,
+                                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                                    borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                                                    maxHeight: 220, overflowY: 'auto',
+                                                }}>
+                                                    <div
+                                                        onClick={() => { setEventFormData(prev => ({ ...prev, workerId: '' })); setWorkerSearch(''); setWorkerDropOpen(false); }}
+                                                        style={{ padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', fontStyle: 'italic' }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.07)'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                    >— {lang === 'bs' ? 'Bez radnika' : 'No worker'} —</div>
+                                                    {filtered.length === 0 && (
+                                                        <div style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                                                            {lang === 'bs' ? 'Nema rezultata' : 'No results'}
+                                                        </div>
+                                                    )}
+                                                    {filtered.map(w => (
+                                                        <div key={w.id}
+                                                            onClick={() => { setEventFormData(prev => ({ ...prev, workerId: w.id })); setWorkerSearch(''); setWorkerDropOpen(false); }}
+                                                            style={{
+                                                                padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem',
+                                                                background: eventFormData.workerId === w.id ? 'rgba(0,191,166,0.12)' : 'transparent',
+                                                                color: eventFormData.workerId === w.id ? 'var(--primary)' : 'var(--text)',
+                                                                fontWeight: eventFormData.workerId === w.id ? 700 : 400,
+                                                            }}
+                                                            onMouseEnter={e => { if (eventFormData.workerId !== w.id) e.currentTarget.style.background = 'rgba(0,191,166,0.07)'; }}
+                                                            onMouseLeave={e => { if (eventFormData.workerId !== w.id) e.currentTarget.style.background = 'transparent'; }}
+                                                        >
+                                                            <strong>{w.prezime}</strong> {w.ime}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* ── CERT fields ── */}
                             {eventFormData.tip === 'cert' && (
