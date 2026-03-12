@@ -33,7 +33,7 @@ const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 
 export default function TrainingsPage() {
     const { t, lang } = useLanguage();
-    const { alert, confirm, DialogRenderer } = useDialog();
+    const { alert, confirm, choose, DialogRenderer } = useDialog();
     const { user, activeCompanyId } = useAuth();
     const officerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin';
     const activeCompany = getUserCompanies(user?.id).find(c => c.id === activeCompanyId);
@@ -206,10 +206,47 @@ export default function TrainingsPage() {
                 setUploadError('Nije pronađen nijedan slajd u fajlu.');
                 return;
             }
-            // Confirm if slides already exist
+            // Ask what to do with existing slides
             if ((formData.slides || []).some(s => s.naslov || s.sadrzaj)) {
-                const ok = await confirm(`${lang === 'bs' ? `Pronađeno ${data.slides.length} slajdova. Zamijeniti postojeće slajdove?` : `Found ${data.slides.length} slides. Replace existing slides?`}`);
-                if (!ok) return;
+                const existingCount = (formData.slides || []).length;
+                const newCount = data.slides.length;
+                const action = await choose(
+                    lang === 'bs'
+                        ? `Dokument ima ${newCount} slajdova. Trenutno već postoji ${existingCount} slajdova.\nŠto želite uraditi?`
+                        : `Document has ${newCount} slides. You already have ${existingCount} slide(s).\nWhat would you like to do?`,
+                    [
+                        {
+                            label: lang === 'bs' ? `🔄 Zamijeni sve (zadrži samo novih ${newCount})` : `🔄 Replace all (keep only new ${newCount})`,
+                            value: 'replace',
+                            primary: true,
+                        },
+                        {
+                            label: lang === 'bs' ? `➕ Dodaj na kraj (ukupno ${existingCount + newCount} slajdova)` : `➕ Append to end (total ${existingCount + newCount} slides)`,
+                            value: 'append',
+                        },
+                        {
+                            label: lang === 'bs' ? 'Odustani' : 'Cancel',
+                            value: null,
+                        },
+                    ],
+                    lang === 'bs' ? '📂 Uvoz slajdova' : '📂 Import Slides'
+                );
+                if (action === null || action === undefined) return; // cancelled
+                if (action === 'append') {
+                    // Merge: keep existing, add new at the end
+                    setF('slides', [...(formData.slides || []), ...data.slides]);
+                    if (!formData.naziv.trim()) {
+                        const nameWithout = file.name.replace(/\.(pdf|pptx?)$/i, '').replace(/[-_]/g, ' ');
+                        setF('naziv', nameWithout.charAt(0).toUpperCase() + nameWithout.slice(1));
+                    }
+                    const src = data.source;
+                    setUploadStatus(src === 'pdf-ai'
+                        ? `✅ Dodano ${newCount} AI slajdova (ukupno ${existingCount + newCount})`
+                        : `✅ Dodano ${newCount} slajdova (ukupno ${existingCount + newCount})`);
+                    setTimeout(() => setUploadStatus(''), 4000);
+                    return;
+                }
+                // action === 'replace': fall through to normal replace logic below
             }
             setF('slides', data.slides);
             // Auto-fill name from filename if empty

@@ -3,11 +3,17 @@
  * useDialog — in-app replacement for window.alert(), window.confirm(), and window.prompt().
  *
  * Usage:
- *   const { alert, confirm, prompt, DialogRenderer } = useDialog();
+ *   const { alert, confirm, prompt, choose, DialogRenderer } = useDialog();
  *   // In JSX: <DialogRenderer />
  *   // In handlers: await alert('Something went wrong!');
  *                   const ok = await confirm('Delete this item?');
  *                   const val = await prompt('Enter name:');
+ *                   // choose returns the value of whichever button was clicked, or null if dismissed
+ *                   const action = await choose('What would you like to do?', [
+ *                       { label: '🔄 Zamijeni', value: 'replace', primary: true },
+ *                       { label: '➕ Dodaj', value: 'append' },
+ *                       { label: 'Odustani', value: null },
+ *                   ]);
  *
  * The DialogRenderer must be placed once inside the component's return JSX.
  */
@@ -35,6 +41,14 @@ export function useDialog() {
         });
     }, []);
 
+    // choose: shows a dialog with N custom buttons. Returns the `value` of the clicked button.
+    // buttons: [{ label, value, primary, danger, icon }]
+    const showChoose = useCallback((message, buttons, title) => {
+        return new Promise((resolve) => {
+            setDialog({ type: 'choose', message, title: title || null, buttons, resolve });
+        });
+    }, []);
+
     const close = useCallback((result) => {
         if (dialog?.resolve) dialog.resolve(result);
         setDialog(null);
@@ -44,6 +58,7 @@ export function useDialog() {
         if (!dialog) return null;
         const isConfirm = dialog.type === 'confirm';
         const isPrompt = dialog.type === 'prompt';
+        const isChoose = dialog.type === 'choose';
         const isDanger = dialog.message && (
             dialog.message.toLowerCase().includes('obrisat') ||
             dialog.message.toLowerCase().includes('delet') ||
@@ -56,6 +71,20 @@ export function useDialog() {
             close(val);
         };
 
+        // Icon
+        let icon = 'ℹ️';
+        if (isChoose) icon = '❔';
+        else if (isDanger) icon = '⚠️';
+        else if (isConfirm || isPrompt) icon = '❓';
+
+        // Default title
+        let defaultTitle = 'Obavijest';
+        if (isChoose) defaultTitle = 'Odaberite opciju';
+        else if (isDanger && isConfirm) defaultTitle = 'Potvrda brisanja';
+        else if (isDanger) defaultTitle = 'Upozorenje';
+        else if (isPrompt) defaultTitle = 'Unos';
+        else if (isConfirm) defaultTitle = 'Potvrda';
+
         return (
             <div style={{
                 position: 'fixed', inset: 0, zIndex: 99998,
@@ -65,26 +94,24 @@ export function useDialog() {
             }}>
                 <div style={{
                     background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)',
-                    padding: '28px 32px', maxWidth: 420, width: '90%',
+                    padding: '28px 32px', maxWidth: isChoose ? 460 : 420, width: '90%',
                     boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border)',
                     animation: 'slideUp 0.15s ease-out',
                 }}>
                     {/* Icon + Title */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
-                        <span style={{ fontSize: '1.6rem' }}>
-                            {isDanger ? '⚠️' : (isConfirm || isPrompt) ? '❓' : 'ℹ️'}
-                        </span>
+                        <span style={{ fontSize: '1.6rem' }}>{icon}</span>
                         <h3 style={{ margin: 0, fontSize: '1.05rem', fontFamily: 'var(--font-heading)' }}>
-                            {dialog.title || (isDanger ? (isConfirm ? 'Potvrda brisanja' : 'Upozorenje') : isPrompt ? 'Unos' : isConfirm ? 'Potvrda' : 'Obavijest')}
+                            {dialog.title || defaultTitle}
                         </h3>
                     </div>
 
                     {/* Message */}
-                    <p style={{ margin: '0 0 16px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.92rem' }}>
+                    <p style={{ margin: '0 0 20px', color: 'var(--text-muted)', lineHeight: 1.6, fontSize: '0.92rem' }}>
                         {dialog.message}
                     </p>
 
-                    {/* Prompt input — uncontrolled to avoid re-render glitch */}
+                    {/* Prompt input */}
                     {isPrompt && (
                         <input
                             ref={promptRef}
@@ -96,34 +123,77 @@ export function useDialog() {
                         />
                     )}
 
-                    {/* Actions */}
-                    <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                        {(isConfirm || isPrompt) && (
+                    {/* ── CHOOSE: custom button list ── */}
+                    {isChoose && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {(dialog.buttons || []).map((btn, i) => (
+                                <button
+                                    key={i}
+                                    autoFocus={i === 0}
+                                    onClick={() => close(btn.value)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '11px 18px',
+                                        borderRadius: 'var(--radius-md)',
+                                        border: btn.primary ? 'none' : '1px solid var(--border)',
+                                        cursor: 'pointer',
+                                        fontWeight: btn.primary ? 700 : 600,
+                                        fontSize: '0.92rem',
+                                        fontFamily: 'var(--font-heading)',
+                                        textAlign: 'left',
+                                        background: btn.danger
+                                            ? 'var(--danger, #EF4444)'
+                                            : btn.primary
+                                            ? 'var(--primary)'
+                                            : btn.value === null
+                                            ? 'transparent'
+                                            : 'var(--bg-input)',
+                                        color: (btn.primary || btn.danger)
+                                            ? 'white'
+                                            : btn.value === null
+                                            ? 'var(--text-muted)'
+                                            : 'var(--text)',
+                                        transition: 'opacity 0.15s',
+                                    }}
+                                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.85'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; }}
+                                >
+                                    {btn.label}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* ── ALERT / CONFIRM / PROMPT: standard footer ── */}
+                    {!isChoose && (
+                        <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                            {(isConfirm || isPrompt) && (
+                                <button
+                                    style={{
+                                        padding: '9px 20px', borderRadius: 'var(--radius-md)',
+                                        background: 'var(--bg-input)', color: 'var(--text)',
+                                        border: '1px solid var(--border)', cursor: 'pointer',
+                                        fontWeight: 600, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
+                                    }}
+                                    onClick={() => close(isPrompt ? null : false)}
+                                >
+                                    Odustani
+                                </button>
+                            )}
                             <button
                                 style={{
-                                    padding: '9px 20px', borderRadius: 'var(--radius-md)',
-                                    background: 'var(--bg-input)', color: 'var(--text)',
-                                    border: '1px solid var(--border)', cursor: 'pointer',
-                                    fontWeight: 600, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
+                                    padding: '9px 22px', borderRadius: 'var(--radius-md)',
+                                    background: isDanger && isConfirm ? 'var(--danger, #EF4444)' : 'var(--primary)',
+                                    color: 'white', border: 'none', cursor: 'pointer',
+                                    fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
                                 }}
-                                onClick={() => close(isPrompt ? null : false)}
+                                onClick={() => isPrompt ? handlePromptSubmit() : close(isConfirm ? true : undefined)}
+                                autoFocus={!isPrompt}
                             >
-                                Odustani
+                                {isPrompt ? 'Potvrdi' : isConfirm ? (isDanger ? '🗑️ Da, obriši' : 'Da, potvrdi') : 'U redu'}
                             </button>
-                        )}
-                        <button
-                            style={{
-                                padding: '9px 22px', borderRadius: 'var(--radius-md)',
-                                background: isDanger && isConfirm ? 'var(--danger, #EF4444)' : 'var(--primary)',
-                                color: 'white', border: 'none', cursor: 'pointer',
-                                fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)',
-                            }}
-                            onClick={() => isPrompt ? handlePromptSubmit() : close(isConfirm ? true : undefined)}
-                            autoFocus={!isPrompt}
-                        >
-                            {isPrompt ? 'Potvrdi' : isConfirm ? (isDanger ? '🗑️ Da, obriši' : 'Da, potvrdi') : 'U redu'}
-                        </button>
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 <style>{`
@@ -136,5 +206,5 @@ export function useDialog() {
         );
     }
 
-    return { alert: showAlert, confirm: showConfirm, prompt: showPrompt, DialogRenderer };
+    return { alert: showAlert, confirm: showConfirm, prompt: showPrompt, choose: showChoose, DialogRenderer };
 }
