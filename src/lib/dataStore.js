@@ -211,11 +211,11 @@ export const COLLECTIONS = {
     TRAININGS: 'trainings',
     ANNUAL_REPORTS: 'annualReports',
     SERVICE_LOG: 'serviceLog',
+    DIGITAL_ARCHIVE: 'digitalArchive',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
 };
-
 
 // ── getAll — automatically filters by active company for scoped collections ──
 export function getAll(collection) {
