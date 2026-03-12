@@ -16,6 +16,10 @@ const emptyEQ = {
     proizvodjac: '', godinaProizvodnje: '', posljednji: '', iduci: '', status: 'active',
 };
 
+const emptyServiceEntry = {
+    datum: '', tip: 'pregled', servisirao: '', napomena: '', iduciServis: '', docName: '', docData: '',
+};
+
 function EquipmentPageInner() {
     const { t, lang } = useLanguage();
     const router = useRouter();
@@ -25,11 +29,17 @@ function EquipmentPageInner() {
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyEQ });
+    const [activeTab, setActiveTab] = useState('podaci'); // 'podaci' | 'servis'
+    const [serviceLogs, setServiceLogs] = useState([]);
+    const [showServiceForm, setShowServiceForm] = useState(false);
+    const [serviceFormData, setServiceFormData] = useState({ ...emptyServiceEntry });
+    const [editingServiceId, setEditingServiceId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [showOutOfUse, setShowOutOfUse] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
     const openItemHandledRef = useRef(false);
+    const serviceDocRef = useRef(null);
 
     const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EQUIPMENT)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
@@ -39,16 +49,23 @@ function EquipmentPageInner() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
+    // Load service logs when editing an item
+    const loadServiceLogs = useCallback((equipmentId) => {
+        const all = getAll(COLLECTIONS.SERVICE_LOG);
+        setServiceLogs(all.filter(l => l.equipmentId === equipmentId).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
+    }, []);
+
     // Auto-open item from URL param (calendar event click)
     useEffect(() => {
         if (openItemHandledRef.current) return;
         if (items.length === 0) return;
         const openId = searchParams?.get('openItem');
+        const openTab = searchParams?.get('tab'); // e.g. ?tab=servis
         if (openId) {
             const found = items.find(x => x.id === openId);
             if (found) {
                 openItemHandledRef.current = true;
-                handleEdit(found);
+                handleEdit(found, openTab || 'servis'); // default to servis tab when from calendar
                 router.replace('/dashboard/equipment', { scroll: false });
             }
         }
@@ -67,10 +84,18 @@ function EquipmentPageInner() {
     const enrichedItems = filtered.map(eq => ({ ...eq, orgName: getOrgUnitName(eq.orgJedinicaId) }));
     const { sorted: sortedEquipment, toggleSort, sortIcon, thStyle } = useSortedList(enrichedItems, 'naziv');
 
-    const handleNew = () => { setFormData({ ...emptyEQ }); setEditingId(null); setShowForm(true); };
-    const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
+    const handleNew = () => { setFormData({ ...emptyEQ }); setEditingId(null); setActiveTab('podaci'); setServiceLogs([]); setShowForm(true); };
+    const handleEdit = (item, tab = 'podaci') => {
+        setFormData({ ...item });
+        setEditingId(item.id);
+        setActiveTab(tab);
+        loadServiceLogs(item.id);
+        setShowForm(true);
+        setActionMenuId(null);
+    };
     const handleDelete = async (id) => {
-        const delOk = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (delOk) { remove(COLLECTIONS.EQUIPMENT, id); setActionMenuId(null); loadData(); }
+        const delOk = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?');
+        if (delOk) { remove(COLLECTIONS.EQUIPMENT, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
@@ -79,91 +104,283 @@ function EquipmentPageInner() {
     };
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
 
+    // ── Service log handlers ──────────────────────────────────────
+    const handleNewService = () => {
+        const today = new Date().toISOString().slice(0, 10);
+        setServiceFormData({ ...emptyServiceEntry, datum: today });
+        setEditingServiceId(null);
+        setShowServiceForm(true);
+    };
+
+    const handleEditService = (log) => {
+        setServiceFormData({ ...log });
+        setEditingServiceId(log.id);
+        setShowServiceForm(true);
+    };
+
+    const handleSaveService = async () => {
+        if (!serviceFormData.datum) {
+            await alert(lang === 'bs' ? 'Datum servisa je obavezan!' : 'Service date is required!');
+            return;
+        }
+        if (!editingId) {
+            await alert(lang === 'bs' ? 'Najprije sačuvajte opremu.' : 'Save equipment first.');
+            return;
+        }
+        const data = { ...serviceFormData, equipmentId: editingId };
+        if (editingServiceId) {
+            update(COLLECTIONS.SERVICE_LOG, editingServiceId, data);
+        } else {
+            create(COLLECTIONS.SERVICE_LOG, data);
+        }
+        // Auto-update posljednji/iduci dates on equipment
+        if (serviceFormData.datum) {
+            const updates = { posljednji: serviceFormData.datum };
+            if (serviceFormData.iduciServis) updates.iduci = serviceFormData.iduciServis;
+            update(COLLECTIONS.EQUIPMENT, editingId, { ...formData, ...updates });
+            setFormData(prev => ({ ...prev, ...updates }));
+        }
+        setShowServiceForm(false);
+        loadServiceLogs(editingId);
+        loadData();
+    };
+
+    const handleDeleteService = async (id) => {
+        const ok = await confirm(lang === 'bs' ? 'Obrisati servisni zapis?' : 'Delete service record?');
+        if (ok) { remove(COLLECTIONS.SERVICE_LOG, id); loadServiceLogs(editingId); }
+    };
+
+    const handleDocUpload = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setServiceFormData(prev => ({
+                ...prev,
+                docName: file.name,
+                docData: ev.target.result, // base64
+            }));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const downloadDoc = (log) => {
+        if (!log.docData) return;
+        const a = document.createElement('a');
+        a.href = log.docData;
+        a.download = log.docName || 'servisni_dokument';
+        a.click();
+    };
+
+    const tipLabel = (tip) => ({
+        pregled: lang === 'bs' ? '🔍 Pregled' : '🔍 Inspection',
+        servis: lang === 'bs' ? '🔧 Servis' : '🔧 Service',
+        popravak: lang === 'bs' ? '🛠️ Popravak' : '🛠️ Repair',
+        kalibracija: lang === 'bs' ? '📏 Kalibracija' : '📏 Calibration',
+        zamjena: lang === 'bs' ? '🔄 Zamjena dijela' : '🔄 Part replacement',
+    }[tip] || tip);
+
     return (
         <div className="animate-fadeIn">
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('equipment')}</h1>
 
+            {/* ── Equipment Edit Modal ── */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
-                    <div className="modal" style={{ maxWidth: 800 }} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal" style={{ maxWidth: 860 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'}</h2>
+                            <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'} {formData.naziv && `— ${formData.naziv}`}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
-                        <div className="modal-body">
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label" style={{ fontWeight: 700 }}>{t('name')} <span style={{ color: 'var(--danger)' }}>*</span></label>
-                                    <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Proizvođač' : 'Manufacturer'}</label>
-                                    <input className="form-input" value={formData.proizvodjac} onChange={e => updateField('proizvodjac', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Vrsta' : 'Type'}</label>
-                                    <select className="form-select" value={formData.vrsta} onChange={e => updateField('vrsta', e.target.value)}>
-                                        <option value="">-</option>
-                                        {equipmentTypes.map(et => <option key={et.id} value={et.naziv}>{et.naziv}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Tip/Model' : 'Model'}</label>
-                                    <input className="form-input" value={formData.tip} onChange={e => updateField('tip', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Tv. broj' : 'Serial no.'}</label>
-                                    <input className="form-input" value={formData.tvBroj} onChange={e => updateField('tvBroj', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Inv. broj' : 'Inventory no.'}</label>
-                                    <input className="form-input" value={formData.invBroj} onChange={e => updateField('invBroj', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Godina proizvodnje' : 'Year of production'}</label>
-                                    <input className="form-input" value={formData.godinaProizvodnje} onChange={e => updateField('godinaProizvodnje', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{t('orgUnit')}</label>
-                                    <select className="form-select" value={formData.orgJedinicaId} onChange={e => updateField('orgJedinicaId', e.target.value)}>
-                                        <option value="">-</option>
-                                        {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Zadužena osoba' : 'Responsible person'}</label>
-                                    <input className="form-input" value={formData.zaduzenOsoba} onChange={e => updateField('zaduzenOsoba', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Datum upisa' : 'Entry date'}</label>
-                                    <input className="form-input" type="date" value={formData.datumUpisa} onChange={e => updateField('datumUpisa', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'U primjeni od' : 'In use from'}</label>
-                                    <input className="form-input" type="date" value={formData.uPrimjeniOd} onChange={e => updateField('uPrimjeniOd', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Izvan upotrebe od' : 'Out of use from'}</label>
-                                    <input className="form-input" type="date" value={formData.izvanUpotrebeOd} onChange={e => updateField('izvanUpotrebeOd', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{t('evidenceNumber')}</label>
-                                    <input className="form-input" value={formData.evidencijskiBroj} onChange={e => updateField('evidencijskiBroj', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Broj mjernih mjesta' : 'No. of measuring points'}</label>
-                                    <input className="form-input" type="number" value={formData.brojMjernihMjesta} onChange={e => updateField('brojMjernihMjesta', Number(e.target.value))} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Posljednji pregled' : 'Last examination'}</label>
-                                    <input className="form-input" type="date" value={formData.posljednji} onChange={e => updateField('posljednji', e.target.value)} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Idući pregled' : 'Next examination'}</label>
-                                    <input className="form-input" type="date" value={formData.iduci} onChange={e => updateField('iduci', e.target.value)} />
-                                </div>
-                            </div>
+
+                        {/* Tab bar */}
+                        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)' }}>
+                            {[
+                                { key: 'podaci', icon: '📋', label: lang === 'bs' ? 'Podaci' : 'Details' },
+                                { key: 'servis', icon: '🔧', label: lang === 'bs' ? 'Servisni zapisnici' : 'Service Log' },
+                            ].map(tab => (
+                                <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                                    padding: '10px 20px', border: 'none', cursor: 'pointer',
+                                    fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: activeTab === tab.key ? 700 : 400,
+                                    background: activeTab === tab.key ? 'var(--primary)' : 'var(--bg-card)',
+                                    color: activeTab === tab.key ? '#fff' : 'var(--text)',
+                                    borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
+                                    transition: 'all 0.15s',
+                                }}>
+                                    {tab.icon} {tab.label}
+                                    {tab.key === 'servis' && serviceLogs.length > 0 && (
+                                        <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 6px', fontSize: '0.75rem' }}>
+                                            {serviceLogs.length}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
                         </div>
+
+                        <div className="modal-body">
+                            {/* ── TAB: Podaci ── */}
+                            {activeTab === 'podaci' && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{t('name')} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                        <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Proizvođač' : 'Manufacturer'}</label>
+                                        <input className="form-input" value={formData.proizvodjac} onChange={e => updateField('proizvodjac', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Vrsta' : 'Type'}</label>
+                                        <select className="form-select" value={formData.vrsta} onChange={e => updateField('vrsta', e.target.value)}>
+                                            <option value="">-</option>
+                                            {equipmentTypes.map(et => <option key={et.id} value={et.naziv}>{et.naziv}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Tip/Model' : 'Model'}</label>
+                                        <input className="form-input" value={formData.tip} onChange={e => updateField('tip', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Tv. broj' : 'Serial no.'}</label>
+                                        <input className="form-input" value={formData.tvBroj} onChange={e => updateField('tvBroj', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Inv. broj' : 'Inventory no.'}</label>
+                                        <input className="form-input" value={formData.invBroj} onChange={e => updateField('invBroj', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Godina proizvodnje' : 'Year of production'}</label>
+                                        <input className="form-input" value={formData.godinaProizvodnje} onChange={e => updateField('godinaProizvodnje', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{t('orgUnit')}</label>
+                                        <select className="form-select" value={formData.orgJedinicaId} onChange={e => updateField('orgJedinicaId', e.target.value)}>
+                                            <option value="">-</option>
+                                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Zadužena osoba' : 'Responsible person'}</label>
+                                        <input className="form-input" value={formData.zaduzenOsoba} onChange={e => updateField('zaduzenOsoba', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Datum upisa' : 'Entry date'}</label>
+                                        <input className="form-input" type="date" value={formData.datumUpisa} onChange={e => updateField('datumUpisa', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'U primjeni od' : 'In use from'}</label>
+                                        <input className="form-input" type="date" value={formData.uPrimjeniOd} onChange={e => updateField('uPrimjeniOd', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Izvan upotrebe od' : 'Out of use from'}</label>
+                                        <input className="form-input" type="date" value={formData.izvanUpotrebeOd} onChange={e => updateField('izvanUpotrebeOd', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{t('evidenceNumber')}</label>
+                                        <input className="form-input" value={formData.evidencijskiBroj} onChange={e => updateField('evidencijskiBroj', e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Broj mjernih mjesta' : 'No. of measuring points'}</label>
+                                        <input className="form-input" type="number" value={formData.brojMjernihMjesta} onChange={e => updateField('brojMjernihMjesta', Number(e.target.value))} />
+                                    </div>
+                                    <div className="form-group" style={{ background: 'rgba(0,191,166,0.04)', borderRadius: 8, padding: 12, border: '1px solid rgba(0,191,166,0.15)' }}>
+                                        <label className="form-label" style={{ color: 'var(--primary)' }}>🕐 {lang === 'bs' ? 'Posljednji pregled' : 'Last examination'}</label>
+                                        <input className="form-input" type="date" value={formData.posljednji} onChange={e => updateField('posljednji', e.target.value)} />
+                                    </div>
+                                    <div className="form-group" style={{ background: 'rgba(0,191,166,0.04)', borderRadius: 8, padding: 12, border: '1px solid rgba(0,191,166,0.15)' }}>
+                                        <label className="form-label" style={{ color: 'var(--primary)' }}>📅 {lang === 'bs' ? 'Idući pregled' : 'Next examination'}</label>
+                                        <input className="form-input" type="date" value={formData.iduci} onChange={e => updateField('iduci', e.target.value)} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ── TAB: Servisni zapisnici ── */}
+                            {activeTab === 'servis' && (
+                                <div>
+                                    {!editingId && (
+                                        <div style={{ padding: '20px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, border: '1px solid rgba(255,152,0,0.2)', marginBottom: 16, fontSize: '0.85rem', color: '#E65100' }}>
+                                            ⚠️ {lang === 'bs' ? 'Najprije sačuvajte opremu da biste mogli dodavati servisne zapise.' : 'Save the equipment first before adding service records.'}
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
+                                        <button className="btn btn-primary btn-sm" onClick={handleNewService} disabled={!editingId}>
+                                            + {lang === 'bs' ? 'Novi servisni zapis' : 'New service record'}
+                                        </button>
+                                        {serviceLogs.length > 0 && (
+                                            <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                {serviceLogs.length} {lang === 'bs' ? 'zapis(a)' : 'record(s)'}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {serviceLogs.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
+                                            <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🔧</div>
+                                            <div>{lang === 'bs' ? 'Nema servisnih zapisa.' : 'No service records yet.'}</div>
+                                            <div style={{ fontSize: '0.8rem', marginTop: 6 }}>
+                                                {lang === 'bs' ? 'Dodajte servisni zapis s datumom, tipom i napomenom.' : 'Add service records with date, type and notes.'}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                            {serviceLogs.map(log => (
+                                                <div key={log.id} style={{
+                                                    background: 'var(--bg-card)',
+                                                    border: '1px solid var(--border)',
+                                                    borderRadius: 10,
+                                                    padding: '14px 16px',
+                                                    display: 'grid',
+                                                    gridTemplateColumns: '1fr 1fr auto',
+                                                    gap: 12,
+                                                    alignItems: 'start',
+                                                }}>
+                                                    <div>
+                                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>
+                                                            {tipLabel(log.tip)}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                                            📅 {formatDate(log.datum)}
+                                                            {log.servisirao && <span style={{ marginLeft: 10 }}>👤 {log.servisirao}</span>}
+                                                        </div>
+                                                        {log.iduciServis && (
+                                                            <div style={{ fontSize: '0.78rem', color: 'var(--primary)', marginTop: 4 }}>
+                                                                ⏭ {lang === 'bs' ? 'Idući' : 'Next'}: {formatDate(log.iduciServis)}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        {log.napomena && (
+                                                            <div style={{ fontSize: '0.82rem', color: 'var(--text-light)', fontStyle: 'italic' }}>
+                                                                "{log.napomena}"
+                                                            </div>
+                                                        )}
+                                                        {log.docName && (
+                                                            <button onClick={() => downloadDoc(log)} style={{
+                                                                marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                                background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.2)',
+                                                                borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: '0.78rem', color: '#1565C0',
+                                                            }}>
+                                                                📎 {log.docName}
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 4 }}>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" onClick={() => handleEditService(log)}>✏️</button>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteService(log.id)}>🗑️</button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
@@ -172,6 +389,77 @@ function EquipmentPageInner() {
                 </div>
             )}
 
+            {/* ── Service Entry Form Modal ── */}
+            {showServiceForm && (
+                <div className="modal-overlay" onClick={() => setShowServiceForm(false)}>
+                    <div className="modal" style={{ maxWidth: 560, zIndex: 1100 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🔧 {editingServiceId ? (lang === 'bs' ? 'Uredi servisni zapis' : 'Edit service record') : (lang === 'bs' ? 'Novi servisni zapis' : 'New service record')}</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowServiceForm(false)}>✕</button>
+                        </div>
+                        <div className="modal-body">
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-group">
+                                    <label className="form-label" style={{ fontWeight: 700 }}>📅 {lang === 'bs' ? 'Datum servisa' : 'Service date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <input className="form-input" type="date" value={serviceFormData.datum} onChange={e => setServiceFormData(p => ({ ...p, datum: e.target.value }))} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{lang === 'bs' ? 'Tip servisa' : 'Service type'}</label>
+                                    <select className="form-select" value={serviceFormData.tip} onChange={e => setServiceFormData(p => ({ ...p, tip: e.target.value }))}>
+                                        <option value="pregled">{lang === 'bs' ? '🔍 Pregled' : '🔍 Inspection'}</option>
+                                        <option value="servis">{lang === 'bs' ? '🔧 Servis' : '🔧 Service'}</option>
+                                        <option value="popravak">{lang === 'bs' ? '🛠️ Popravak' : '🛠️ Repair'}</option>
+                                        <option value="kalibracija">{lang === 'bs' ? '📏 Kalibracija' : '📏 Calibration'}</option>
+                                        <option value="zamjena">{lang === 'bs' ? '🔄 Zamjena dijela' : '🔄 Part replacement'}</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">👤 {lang === 'bs' ? 'Servisirao / Ovlaštena firma' : 'Serviced by'}</label>
+                                    <input className="form-input" value={serviceFormData.servisirao} onChange={e => setServiceFormData(p => ({ ...p, servisirao: e.target.value }))} placeholder={lang === 'bs' ? 'Ime ili naziv firme...' : 'Name or company...'} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">📅 {lang === 'bs' ? 'Idući servis' : 'Next service date'}</label>
+                                    <input className="form-input" type="date" value={serviceFormData.iduciServis} onChange={e => setServiceFormData(p => ({ ...p, iduciServis: e.target.value }))} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">📝 {lang === 'bs' ? 'Napomena / Opis radova' : 'Notes / Description'}</label>
+                                    <textarea className="form-textarea" rows={3} value={serviceFormData.napomena} onChange={e => setServiceFormData(p => ({ ...p, napomena: e.target.value }))} placeholder={lang === 'bs' ? 'Opis obavljenih radova, zamijenjeni dijelovi...' : 'Describe work done, replaced parts...'} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">📎 {lang === 'bs' ? 'Prilog (dokaz servisa, maks. 2MB)' : 'Attachment (proof of service, max 2MB)'}</label>
+                                    {serviceFormData.docName ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
+                                            <span style={{ fontSize: '0.85rem', color: '#1565C0' }}>📎 {serviceFormData.docName}</span>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setServiceFormData(p => ({ ...p, docName: '', docData: '' }))} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
+                                        </div>
+                                    ) : (
+                                        <div onClick={() => serviceDocRef.current?.click()} style={{
+                                            border: '2px dashed var(--border)', borderRadius: 8, padding: '16px',
+                                            textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)',
+                                            transition: 'all 0.15s',
+                                        }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                        >
+                                            📂 {lang === 'bs' ? 'Kliknite za upload dokumenta (PDF, slike)' : 'Click to upload document (PDF, images)'}
+                                        </div>
+                                    )}
+                                    <input ref={serviceDocRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
+                                </div>
+                            </div>
+                            <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.04)', borderRadius: 6, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                💡 {lang === 'bs' ? 'Datum posljednjeg i idućeg pregleda na opremi biće automatski ažurirani.' : 'Equipment\'s last/next examination dates will be updated automatically.'}
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-ghost" onClick={() => setShowServiceForm(false)}>{t('cancel')}</button>
+                            <button className="btn btn-primary" onClick={handleSaveService}>💾 {t('save')}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Equipment List ── */}
             <div className="card">
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
@@ -185,18 +473,6 @@ function EquipmentPageInner() {
                             <input type="checkbox" checked={showOutOfUse} onChange={e => setShowOutOfUse(e.target.checked)} />
                             {lang === 'bs' ? 'Radna oprema izvan upotrebe' : 'Out of use equipment'}
                         </label>
-                        <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                            <button className="btn btn-dark btn-sm" onClick={() => {
-                                const el = document.getElementById('group-action-menu-eq');
-                                if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-                            }}>{t('selectGroupAction')} ▼</button>
-                            <div id="group-action-menu-eq" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
-                                <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
-                                <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={async () => { if (confirm(t('confirmDelete'))) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
-                            </div>
-                        </div>
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
@@ -210,7 +486,7 @@ function EquipmentPageInner() {
                                     <th onClick={() => toggleSort('orgName')} style={thStyle('orgName')}>{lang === 'bs' ? 'Organizacija' : 'Organization'}{sortIcon('orgName')}</th>
                                     <th onClick={() => toggleSort('posljednji')} style={thStyle('posljednji')}>{lang === 'bs' ? 'Posljednji' : 'Last'}{sortIcon('posljednji')}</th>
                                     <th onClick={() => toggleSort('iduci')} style={thStyle('iduci')}>{lang === 'bs' ? 'Idući' : 'Next'}{sortIcon('iduci')}</th>
-                                    <th><input type="checkbox" /></th>
+                                    <th style={{ width: 60 }}>{lang === 'bs' ? 'Zapisi' : 'Logs'}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -218,15 +494,17 @@ function EquipmentPageInner() {
                                     <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sortedEquipment.map((eq) => {
                                     const isExpired = eq.iduci && new Date(eq.iduci) < new Date();
+                                    const logCount = getAll(COLLECTIONS.SERVICE_LOG).filter(l => l.equipmentId === eq.id).length;
                                     return (
-                                        <tr key={eq.id}>
-                                            <td style={{ position: 'relative' }} ref={actionMenuId === eq.id ? actionRef : null}>
+                                        <tr key={eq.id} onClick={() => handleEdit(eq, 'podaci')} style={{ cursor: 'pointer' }}>
+                                            <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }} ref={actionMenuId === eq.id ? actionRef : null}>
                                                 <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === eq.id ? null : eq.id)}>
                                                     {t('actions')} ▼
                                                 </button>
                                                 {actionMenuId === eq.id && (
                                                     <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0 }}>
-                                                        <button className="dropdown-item" onClick={() => handleEdit(eq)}>📂 {t('open')}</button>
+                                                        <button className="dropdown-item" onClick={() => handleEdit(eq, 'podaci')}>📂 {t('open')}</button>
+                                                        <button className="dropdown-item" onClick={() => handleEdit(eq, 'servis')}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
                                                         <div className="dropdown-divider" />
                                                         <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(eq.id)}>🗑️ {t('delete')}</button>
                                                     </div>
@@ -238,8 +516,16 @@ function EquipmentPageInner() {
                                             <td>{eq.invBroj}</td>
                                             <td>{eq.orgName}</td>
                                             <td>{formatDate(eq.posljednji)}</td>
-                                            <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>{formatDate(eq.iduci)}</td>
-                                            <td><input type="checkbox" /></td>
+                                            <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>
+                                                {formatDate(eq.iduci)} {isExpired && '⚠️'}
+                                            </td>
+                                            <td>
+                                                {logCount > 0 && (
+                                                    <span style={{ background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 700 }}>
+                                                        🔧 {logCount}
+                                                    </span>
+                                                )}
+                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -253,6 +539,7 @@ function EquipmentPageInner() {
                     </div>
                 </div>
             </div>
+            <DialogRenderer />
         </div>
     );
 }

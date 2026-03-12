@@ -210,6 +210,7 @@ export const COLLECTIONS = {
     QUESTIONNAIRES: 'questionnaires',
     TRAININGS: 'trainings',
     ANNUAL_REPORTS: 'annualReports',
+    SERVICE_LOG: 'serviceLog',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
