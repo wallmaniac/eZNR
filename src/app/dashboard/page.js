@@ -3,11 +3,12 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
-    getAll, create, remove, COLLECTIONS, getOrgUnitName, getWorkplaceName,
+    getAll, create, remove, removeWorkerCascade, COLLECTIONS, getOrgUnitName, getWorkplaceName,
     getWorkerCertificates, getWorkerPPE, formatDate, getAllForCompany, createForCompany, getRawAll, getUserCompanies,
 } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { useDialog } from '@/hooks/useDialog';
 
 const EVENT_ROUTES = {
     cert: '/dashboard/worker-certificates',
@@ -21,6 +22,7 @@ export default function DashboardPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
     const { activeCompanyId, user } = useAuth();
+    const { confirm, DialogRenderer } = useDialog();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
     const [workers, setWorkers] = useState([]);
@@ -283,11 +285,24 @@ export default function DashboardPage() {
     const handleWorkerAction = (action, worker) => {
         setActionMenuId(null);
         switch (action) {
-            case 'open': router.push('/dashboard/workers'); break;
-            case 'certs': router.push('/dashboard/worker-certificates'); break;
-            case 'ppe': router.push('/dashboard/worker-ppe'); break;
+            case 'open': router.push(`/dashboard/workers?openWorker=${worker.id}`); break;
+            case 'certs': router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`); break;
+            case 'ppe': router.push(`/dashboard/workers?openWorker=${worker.id}&section=ozo`); break;
+            case 'delete': handleDeleteWorker(worker); break;
             case 'print': window.print(); break;
             default: break;
+        }
+    };
+
+    const handleDeleteWorker = async (worker) => {
+        const ok = await confirm(lang === 'bs'
+            ? `Obrisati radnika ${worker.ime} ${worker.prezime}? Svi povezani podaci (uvjerenja, OZO, događaji) će biti obrisani.`
+            : `Delete worker ${worker.ime} ${worker.prezime}? All associated data (certs, PPE, events) will be deleted.`);
+        if (ok) {
+            removeWorkerCascade(worker.id);
+            setWorkers(getAll(COLLECTIONS.WORKERS));
+            setCerts(getAll(COLLECTIONS.CERTIFICATES));
+            setPpeAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
         }
     };
 
@@ -874,9 +889,6 @@ export default function DashboardPage() {
 
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
                         <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/workers')}>+ {t('add')}</button>
-                        <div style={{ marginLeft: 'auto' }}>
-                            <button className="btn btn-dark btn-sm" onClick={() => router.push('/dashboard/workers')}>{t('selectGroupAction')} ▼</button>
-                        </div>
                     </div>
 
                     {/* Workers Table (for new/terminations tabs) */}
@@ -909,16 +921,17 @@ export default function DashboardPage() {
                                                         <button className="dropdown-item" onClick={() => handleWorkerAction('ppe', w)}>🦺 {t('personalProtective')}</button>
                                                         <div className="dropdown-divider" />
                                                         <button className="dropdown-item" onClick={() => handleWorkerAction('print', w)}>🖨️ {t('print')}</button>
+                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleWorkerAction('delete', w)}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                                                     </div>
                                                 )}
                                             </td>
                                             <td>{idx + 1}</td>
                                             <td style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}
-                                                onClick={() => router.push('/dashboard/workers')}>
+                                                onClick={() => router.push(`/dashboard/workers?openWorker=${w.id}`)}>
                                                 {w.ime}
                                             </td>
                                             <td style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}
-                                                onClick={() => router.push('/dashboard/workers')}>
+                                                onClick={() => router.push(`/dashboard/workers?openWorker=${w.id}`)}>
                                                 {w.prezime}
                                             </td>
                                             <td><code style={{ fontSize: '0.85rem' }}>{w.jmbg}</code></td>
@@ -954,7 +967,7 @@ export default function DashboardPage() {
                                         const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
                                         return (
                                             <tr key={c.id || idx}>
-                                                <td><button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates')}>{t('actions')} ▼</button></td>
+                                                <td><button className="btn btn-primary btn-sm" onClick={() => { if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`); }}>{t('actions')} ▼</button></td>
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
@@ -1001,7 +1014,7 @@ export default function DashboardPage() {
                                         const worker = workers.find(w => w.id === p.workerId);
                                         return (
                                             <tr key={p.id || idx}>
-                                                <td><button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-ppe')}>{t('actions')} ▼</button></td>
+                                                <td><button className="btn btn-primary btn-sm" onClick={() => { if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=ozo`); }}>{t('actions')} ▼</button></td>
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
@@ -1036,6 +1049,7 @@ export default function DashboardPage() {
                     onSaved={() => setViewWorkerId(null)}
                 />
             )}
+            <DialogRenderer />
         </div>
     );
 }

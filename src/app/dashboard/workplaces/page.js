@@ -331,6 +331,7 @@ export default function WorkplacesPage() {
                     </div>
                 </div>
             </div>
+            <DialogRenderer />
         </div>
     );
 }
