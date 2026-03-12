@@ -8,7 +8,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 export default function AddressBookPage() {
   const [copyToast, setCopyToast] = useState(false);
   const { t, lang } = useLanguage();
-  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan), []);
+  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false), []);
   const [searchTerm, setSearchTerm] = useState('');
   const [selected, setSelected] = useState(new Set());
   const [viewWorkerId, setViewWorkerId] = useState(null);

@@ -256,7 +256,7 @@ export default function FormOIR1Page() {
                 <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>OR{idx + 1}:</div>
                 <select className="form-select" value={o.workerId} onChange={e => setInjured(idx, 'workerId', e.target.value)}>
                   <option value="">{lang === 'bs' ? 'Odaberite OR obrazac' : 'Select OR form'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
                 </select>
@@ -277,7 +277,7 @@ export default function FormOIR1Page() {
                 <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>OR{idx + 1}:</div>
                 <select className="form-select" value={p.workerId} onChange={e => setDeceased(idx, 'workerId', e.target.value)}>
                   <option value="">{lang === 'bs' ? 'Odaberite OR obrazac' : 'Select OR form'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
                 </select>

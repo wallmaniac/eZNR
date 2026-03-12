@@ -119,7 +119,7 @@ export default function WorkerPPEPage() {
                 <label className="form-label">👤 {lang === 'bs' ? 'Radnik *' : 'Worker *'}</label>
                 <select className="form-select" value={addForm.workerId} onChange={e => setAddForm(f => ({ ...f, workerId: e.target.value }))}>
                   <option value="">{lang === 'bs' ? '— Odaberi radnika —' : '— Select worker —'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                   ))}
                 </select>

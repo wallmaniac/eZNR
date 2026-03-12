@@ -318,7 +318,7 @@ export default function ReferralRA1Page() {
                 <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
                 <select className="form-select" value={formData.workerId} onChange={e => handleWorkerChange(e.target.value)}>
                   <option value="">{lang === 'bs' ? '— Odaberite radnika —' : '— Select worker —'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
                 </select>

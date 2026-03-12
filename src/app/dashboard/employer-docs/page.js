@@ -153,9 +153,12 @@ function EmployerDocsInner() {
                                     const isHighlighted = doc.id === highlightId;
                                     return (
                                         <tr key={doc.id}
+                                            onClick={() => handleEdit(doc)}
+                                            onMouseEnter={e => { if (!isHighlighted) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
+                                            onMouseLeave={e => { if (!isHighlighted) e.currentTarget.style.background = ''; }}
                                             ref={isHighlighted ? highlightRef : null}
-                                            style={isHighlighted ? { background: 'rgba(0,191,166,0.12)', outline: '2px solid var(--primary)', outlineOffset: -2, borderRadius: 4, animation: 'pulse-highlight 1.5s ease-in-out 2' } : undefined}>
-                                            <td>
+                                            style={{ cursor: 'pointer', transition: 'background 0.12s', ...(isHighlighted ? { background: 'rgba(0,191,166,0.12)', outline: '2px solid var(--primary)', outlineOffset: -2, borderRadius: 4, animation: 'pulse-highlight 1.5s ease-in-out 2' } : {}) }}>
+                                            <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ display: 'flex', gap: 4 }}>
                                                     <button className="btn btn-primary btn-sm" onClick={() => handleEdit(doc)}>✏️</button>
                                                     <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(doc.id)} style={{ color: 'var(--danger)' }}>🗑️</button>

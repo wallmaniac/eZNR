@@ -301,7 +301,7 @@ export default function RequestsPage() {
                 <div style={labelSt}>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</div>
                 <select className="form-select" value={formData.workerId} onChange={e => set('workerId', e.target.value)}>
                   <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                   ))}
                 </select>
@@ -326,7 +326,7 @@ export default function RequestsPage() {
                 <div style={labelSt}>{lang === 'bs' ? 'Odobrio' : 'Approved by'}</div>
                 <select className="form-select" value={formData.odobrioId} onChange={e => set('odobrioId', e.target.value)}>
                   <option value="">{lang === 'bs' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                   ))}
                 </select>
@@ -335,7 +335,7 @@ export default function RequestsPage() {
                 <div style={labelSt}>{lang === 'bs' ? 'Skladištar' : 'Storekeeper'}</div>
                 <select className="form-select" value={formData.skladistarId} onChange={e => set('skladistarId', e.target.value)}>
                   <option value="">{lang === 'bs' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
-                  {workers.filter(w => w.aktivan).map(w => (
+                  {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                   ))}
                 </select>

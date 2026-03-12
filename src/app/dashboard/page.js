@@ -141,7 +141,7 @@ export default function DashboardPage() {
     };
 
     const stats = useMemo(() => {
-        const activeWorkers = workers.filter(w => w.aktivan).length;
+        const activeWorkers = workers.filter(w => w.aktivan !== false).length;
         const activeCerts = certs.length;
         const expiringSoon = certs.filter(c => {
             if (!c.vrijediDo) return false;
@@ -157,7 +157,7 @@ export default function DashboardPage() {
     }, [workers, certs, equipment]);
 
     // Show all active workers (not just recent hires - date might be too old)
-    const activeWorkers = workers.filter(w => w.aktivan);
+    const activeWorkers = workers.filter(w => w.aktivan !== false);
     const formerWorkers = workers.filter(w => !w.aktivan);
     const terminatedWorkers = formerWorkers;
 
@@ -538,7 +538,7 @@ export default function DashboardPage() {
                             {/* Worker selector — searchable combobox */}
                             {(eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (() => {
                                 const sortedWorkers = [...workers]
-                                    .filter(w => w.aktivan)
+                                    .filter(w => w.aktivan !== false)
                                     .sort((a, b) => {
                                         const pa = (a.prezime || '').localeCompare(b.prezime || '', 'hr', { sensitivity: 'base' });
                                         return pa !== 0 ? pa : (a.ime || '').localeCompare(b.ime || '', 'hr', { sensitivity: 'base' });

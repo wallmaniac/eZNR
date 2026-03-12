@@ -10,7 +10,7 @@ export default function EKPPEPage() {
 
   // ── State ──
   const [ppeTypes, setPpeTypes] = useState(() => getAll(COLLECTIONS.PPE_TYPES));
-  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan), []);
+  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false), []);
   const [search, setSearch] = useState('');
 
   // ── Add/Edit OZO type modal ──

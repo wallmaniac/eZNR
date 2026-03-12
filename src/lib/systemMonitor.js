@@ -394,7 +394,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
     // ── Workers without certificates ──
     if (settings.workersNoCerts) {
-        const workers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan);
+        const workers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan !== false);
         const certs = getAll(COLLECTIONS.CERTIFICATES);
         const certWorkerIds = new Set(certs.map(c => c.workerId));
         const missing = workers.filter(w => !certWorkerIds.has(w.id));
@@ -415,7 +415,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
     // ── Workers without PPE ──
     if (settings.workersNoPPE) {
-        const workers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan);
+        const workers = filterByCompany(getAll(COLLECTIONS.WORKERS)).filter(w => w.aktivan !== false);
         const ppe = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
         const ppeWorkerIds = new Set(ppe.map(p => p.workerId));
         const missing = workers.filter(w => !ppeWorkerIds.has(w.id));
@@ -534,7 +534,7 @@ export function getSystemStats() {
     return {
         totalRecords,
         totalWorkers: allWorkers.length,
-        activeWorkers: allWorkers.filter(w => w.aktivan).length,
+        activeWorkers: allWorkers.filter(w => w.aktivan !== false).length,
         inactiveWorkers: allWorkers.filter(w => !w.aktivan).length,
         totalCompanies: companies.length,
         totalUsers: getAll(COLLECTIONS.USERS).length,

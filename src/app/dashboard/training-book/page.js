@@ -5,7 +5,7 @@ import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 
 export default function TrainingBookPage() {
   const { t, lang } = useLanguage();
-  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan), []);
+  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false), []);
   const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), []);
 
   const rows = useMemo(() => workers.map(w => {
