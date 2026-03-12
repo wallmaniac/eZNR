@@ -99,6 +99,11 @@ const menuItems = [
         path: '/dashboard/employer-docs',
     },
     {
+        key: 'excelImport',
+        icon: '📥',
+        path: '/dashboard/import',
+    },
+    {
         key: 'settings',
         icon: '⚙️',
         path: '/dashboard/settings',
