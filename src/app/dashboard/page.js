@@ -540,7 +540,7 @@ export default function DashboardPage() {
                                     <select className="form-select" value={eventFormData.workerId}
                                         onChange={e => setEventFormData(prev => ({ ...prev, workerId: e.target.value }))}>
                                         <option value="">{lang === 'bs' ? '— Bez radnika —' : '— No worker —'}</option>
-                                        {workers.filter(w => w.aktivan && (!eventFormData.companyId || w.companyId === eventFormData.companyId)).map(w => (
+                                        {workers.filter(w => w.aktivan && (!eventFormData.companyId || !w.companyId || w.companyId === eventFormData.companyId)).map(w => (
                                             <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                                         ))}
                                     </select>
