@@ -762,7 +762,7 @@ function WorkersPageInner() {
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Tip uvjerenja' : 'Cert. type'}</label>
                                         <select className="form-select" value={certFormData.tipUvjerenja} onChange={e => setCertFormData({ ...certFormData, tipUvjerenja: e.target.value })}>
-                                            {certTypes.map(ct => <option key={ct.id} value={ct.oznaka}>{ct.naziv}</option>)}
+                                            {certTypes.filter((ct, i, a) => a.findIndex(x => x.naziv === ct.naziv) === i).map(ct => <option key={ct.id} value={ct.oznaka}>{ct.naziv}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -827,7 +827,7 @@ function WorkersPageInner() {
                                     }}>
                                         <option value="">-- {lang === 'bs' ? 'Odaberite OZO' : 'Select PPE'} --</option>
                                         <option value="NEW_OZO" style={{ fontWeight: 'bold', color: 'var(--primary)' }}>+ {lang === 'bs' ? 'Dodaj novu OZO...' : 'Add new PPE...'}</option>
-                                        {ppeTypes.map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
+                                        {ppeTypes.filter((pt, i, a) => a.findIndex(x => x.naziv === pt.naziv) === i).map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
                                     </select>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

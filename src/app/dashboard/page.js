@@ -645,10 +645,10 @@ export default function DashboardPage() {
                                                     const vrijediDo = ct && eventFormData.certDatum
                                                         ? (() => { const d = new Date(eventFormData.certDatum); d.setMonth(d.getMonth() + ct.trajanjeMjeseci); return d.toISOString().split('T')[0]; })()
                                                         : eventFormData.certVrijediDo;
-                                                    setEventFormData(prev => ({ ...prev, certTip: e.target.value, certOznaka: ct?.oznaka || prev.certOznaka, certVrijediDo: vrijediDo }));
+                                                    setEventFormData(prev => ({ ...prev, certTip: e.target.value, certNaziv: ct?.naziv || prev.certNaziv, certOznaka: ct?.oznaka || prev.certOznaka, certVrijediDo: vrijediDo }));
                                                 }}>
                                                 <option value="">{lang === 'bs' ? '— Odaberi —' : '— Select —'}</option>
-                                                {certTypes.map(ct => <option key={ct.id} value={ct.naziv}>{ct.naziv}</option>)}
+                                                {certTypes.filter((ct, idx, arr) => arr.findIndex(x => x.naziv === ct.naziv) === idx).map(ct => <option key={ct.id} value={ct.naziv}>{ct.naziv}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -749,14 +749,14 @@ export default function DashboardPage() {
                                      ppeNaziv, ppeDatum, ppeKolicina } = eventFormData;
 
                                 // Validation
-                                if (tip === 'cert' && !certNaziv.trim()) { setEventFormError(lang === 'bs' ? 'Naziv uvjerenja je obavezan!' : 'Certificate name is required!'); return; }
+                                if (tip === 'cert' && !certNaziv.trim() && !certTip) { setEventFormError(lang === 'bs' ? 'Naziv ili tip uvjerenja je obavezan!' : 'Certificate name or type is required!'); return; }
                                 if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(lang === 'bs' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
                                 if (tip === 'service' && !machineId) { setEventFormError(lang === 'bs' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
                                  if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { setEventFormError(lang === 'bs' ? 'Opis je obavezan!' : 'Description is required!'); return; }
 
                                 // Auto-generate description
                                 let autoOpis = opis;
-                                if (tip === 'cert' && !opis) autoOpis = certNaziv + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
+                                if (tip === 'cert' && !opis) autoOpis = (certNaziv || certTip || 'Uvjerenje') + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
                                 if (tip === 'ppe' && !opis) autoOpis = ppeNaziv + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
 
                                 // 1. Build service description if needed
@@ -771,8 +771,8 @@ export default function DashboardPage() {
                                  if (tip === 'cert' && workerId) {
                                      createForCompany(COLLECTIONS.CERTIFICATES, {
                                          workerId,
-                                         ime: certNaziv,
-                                         naziv: certNaziv,
+                                         ime: certNaziv || certTip || 'Uvjerenje',
+                                         naziv: certNaziv || certTip || 'Uvjerenje',
                                          oznaka: certOznaka,
                                          tipUvjerenja: certTip,
                                          datum: certDatum || eventFormDate,

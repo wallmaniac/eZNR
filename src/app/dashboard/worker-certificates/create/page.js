@@ -96,12 +96,20 @@ export function UvjerenjeFormPage() {
         // Load cert types - combine defaults with custom
         const stored = getAll(COLLECTIONS.CERT_TYPES);
         const storedNames = stored.map(x => x.naziv);
-        const merged = [
+        const rawMerged = [
             ...stored,
             ...DEFAULT_CERT_TYPES
                 .filter(n => !storedNames.includes(n))
                 .map(n => ({ id: `default_${n}`, naziv: n })),
         ];
+        // Deduplicate by naziv (handles repeated seed runs)
+        const seenNames = new Set();
+        const merged = rawMerged.filter(ct => {
+            const key = (ct.naziv || '').toLowerCase().trim();
+            if (seenNames.has(key)) return false;
+            seenNames.add(key);
+            return true;
+        });
         setCertTypes(merged);
     }, []);
 
@@ -210,9 +218,9 @@ export function UvjerenjeFormPage() {
         return `${ex.ime}${company ? ` (${company.naziv})` : ''}`;
     };
 
-    const filteredTips = certTypes.filter(ct =>
-        !tipSearch || ct.naziv.toLowerCase().includes(tipSearch.toLowerCase())
-    );
+    const filteredTips = certTypes
+        .filter(ct => !tipSearch || ct.naziv.toLowerCase().includes(tipSearch.toLowerCase()))
+        .filter((ct, i, a) => a.findIndex(x => (x.naziv || '').toLowerCase() === (ct.naziv || '').toLowerCase()) === i);
     const filteredIspitivac = examiners.filter(ex =>
         !ispitivacSearch || getExaminerLabel(ex).toLowerCase().includes(ispitivacSearch.toLowerCase())
     );

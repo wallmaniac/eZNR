@@ -348,6 +348,27 @@ export function getRawAll(collection) {
     return getStore(collection);
 }
 
+/**
+ * Deduplicate a collection in localStorage by a given field (default: 'naziv').
+ * Keeps the first occurrence of each unique field value.
+ * Use this to clean up duplicates caused by repeated seed runs.
+ */
+export function deduplicateCollection(collection, field = 'naziv') {
+    const items = getStore(collection);
+    const seen = new Set();
+    const deduped = items.filter(item => {
+        const key = (item[field] || '').toLowerCase().trim();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+    if (deduped.length !== items.length) {
+        setStore(collection, deduped);
+        console.log(`[eZNR] Deduped ${collection}: removed ${items.length - deduped.length} duplicates`);
+    }
+    return deduped;
+}
+
 // Get all records filtered by companyId (explicit version, used by dashboard)
 export function getAllForCompany(collection, companyId, userCompanyIds = []) {
     if (!companyId) return getRawAll(collection);
