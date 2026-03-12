@@ -13,6 +13,8 @@ function WorkerCertificatesInner() {
   const [navigatingId, setNavigatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showOnlyValid, setShowOnlyValid] = useState(false);
+  const [showExpiringSoon, setShowExpiringSoon] = useState(false);
+  const [expiringSoonDays, setExpiringSoonDays] = useState(60);
   const [viewWorkerId, setViewWorkerId] = useState(null);
   const highlightId = searchParams.get('highlight');
   const sortByExpiry = searchParams.get('sort') === 'expiry';
@@ -32,7 +34,14 @@ function WorkerCertificatesInner() {
       const bDate = b.vrijediDo ? new Date(b.vrijediDo).getTime() : 99999999999999;
       return aDate - bDate;
     }).filter(r => {
-      if (showOnlyValid && r.isExpired) return false;
+      const expDate = r.vrijediDo ? new Date(r.vrijediDo) : null;
+      const now = new Date();
+      if (showOnlyValid && expDate && expDate < now) return false;
+      if (showExpiringSoon) {
+        if (!expDate) return false;
+        const diffDays = (expDate - now) / (1000 * 60 * 60 * 24);
+        if (diffDays > expiringSoonDays || diffDays < 0) return false;
+      }
       if (!searchTerm) return true;
       const term = searchTerm.toLowerCase();
       return r.workerName.toLowerCase().includes(term) ||
@@ -40,7 +49,7 @@ function WorkerCertificatesInner() {
         (r.oznaka || '').toLowerCase().includes(term) ||
         (r.tipUvjerenjaIme || r.tipUvjerenja || '').toLowerCase().includes(term);
     });
-  }, [certs, workers, searchTerm, showOnlyValid, sortByExpiry]);
+  }, [certs, workers, searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays, sortByExpiry]);
 
   // Scroll to highlighted cert after render
   useEffect(() => {
@@ -77,9 +86,24 @@ function WorkerCertificatesInner() {
               />
               {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
             </div>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
-              <input type="checkbox" checked={showOnlyValid} onChange={e => setShowOnlyValid(e.target.checked)} />
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} />
               {t('showOnlyValid')}
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} />
+              {lang === 'bs' ? 'Ističe u' : 'Expiring in'}
+              <select
+                value={expiringSoonDays}
+                onChange={e => setExpiringSoonDays(Number(e.target.value))}
+                disabled={!showExpiringSoon}
+                style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', fontSize: '0.82rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
+              >
+                <option value={30}>30 {lang === 'bs' ? 'dana' : 'days'}</option>
+                <option value={60}>60 {lang === 'bs' ? 'dana' : 'days'}</option>
+                <option value={90}>90 {lang === 'bs' ? 'dana' : 'days'}</option>
+                <option value={180}>180 {lang === 'bs' ? 'dana' : 'days'}</option>
+              </select>
             </label>
             <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>{rows.length} {t('records')}</span>
           </div>

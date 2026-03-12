@@ -58,12 +58,15 @@ function WorkersPageInner() {
     const [certEditId, setCertEditId] = useState(null);
     const [certSearch, setCertSearch] = useState('');
     const [showOnlyValidCerts, setShowOnlyValidCerts] = useState(false);
+    const [showExpiringSoon, setShowExpiringSoon] = useState(false);
+    const [expiringSoonDays, setExpiringSoonDays] = useState(60);
     // PPE form state
     const [showPpeForm, setShowPpeForm] = useState(false);
     const [ppeFormData, setPpeFormData] = useState({ naziv: '', datumZaduzenja: '', datumRazduzenja: '' });
     const [ppeEditId, setPpeEditId] = useState(null);
     const [certTypes, setCertTypes] = useState([]);
     const [ppeTypes, setPpeTypes] = useState([]);
+    const [places, setPlaces] = useState([]);
 
     const loadData = useCallback(() => {
         setWorkers(getAll(COLLECTIONS.WORKERS));
@@ -71,6 +74,7 @@ function WorkersPageInner() {
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+        setPlaces(getAll(COLLECTIONS.PLACES));
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
@@ -185,7 +189,15 @@ function WorkersPageInner() {
 
     // Filtered certificates for display
     const filteredCerts = certificates.filter(c => {
-        if (showOnlyValidCerts && c.vrijediDo && new Date(c.vrijediDo) < new Date()) return false;
+        const expDate = c.vrijediDo ? new Date(c.vrijediDo) : null;
+        const now = new Date();
+        const isExpired = expDate && expDate < now;
+        if (showOnlyValidCerts && isExpired) return false;
+        if (showExpiringSoon) {
+            if (!expDate) return false;
+            const diffDays = (expDate - now) / (1000 * 60 * 60 * 24);
+            if (diffDays > expiringSoonDays || diffDays < 0) return false;
+        }
         if (!certSearch) return true;
         const q = certSearch.toLowerCase();
         return (c.oznaka || '').toLowerCase().includes(q) || (c.ime || '').toLowerCase().includes(q) || (c.tipUvjerenja || '').toLowerCase().includes(q);
@@ -532,7 +544,7 @@ function WorkersPageInner() {
                         <Field label={t('street')} value={formData.ulica} onChange={v => updateField('ulica', v)} />
                         <Field label={t('houseNumber')} value={formData.kucniBroj} onChange={v => updateField('kucniBroj', v)} />
                         <SelectField label={t('place')} value={formData.mjestoId} onChange={v => updateField('mjestoId', v)}
-                            options={getAll(COLLECTIONS.PLACES).map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj})` }))} placeholder={lang === 'bs' ? 'Odaberite mjesto' : 'Select place'} />
+                            options={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj})` }))} placeholder={lang === 'bs' ? 'Odaberite mjesto' : 'Select place'} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
                         <Field label={t('municipality')} value={formData.opcina} onChange={v => updateField('opcina', v)} />
@@ -589,8 +601,23 @@ function WorkersPageInner() {
                             markClean();
                             router.push(`/dashboard/worker-certificates/create?workerId=${wId}&returnTo=/dashboard/workers?openWorker=${wId}`);
                         }}>+ {t('newCertificate')}</button>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', marginLeft: 'auto', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                             <input type="checkbox" checked={showOnlyValidCerts} onChange={e => setShowOnlyValidCerts(e.target.checked)} /> {t('showOnlyValid')}
+                        </label>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValidCerts(false); }} />
+                            {lang === 'bs' ? 'Ističe u' : 'Expiring in'}
+                            <select
+                                value={expiringSoonDays}
+                                onChange={e => setExpiringSoonDays(Number(e.target.value))}
+                                disabled={!showExpiringSoon}
+                                style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '2px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
+                            >
+                                <option value={30}>30 {lang === 'bs' ? 'dana' : 'days'}</option>
+                                <option value={60}>60 {lang === 'bs' ? 'dana' : 'days'}</option>
+                                <option value={90}>90 {lang === 'bs' ? 'dana' : 'days'}</option>
+                                <option value={180}>180 {lang === 'bs' ? 'dana' : 'days'}</option>
+                            </select>
                         </label>
                     </div>
                     <div className="data-table-wrapper">
