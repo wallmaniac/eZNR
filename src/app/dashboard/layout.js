@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import AIAssistant from '@/components/AIAssistant';
 import { initializeData } from '@/lib/dataStore';
 import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
+import UndoBar from '@/components/UndoBar';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading } = useAuth();
@@ -71,6 +72,7 @@ export default function DashboardLayout({ children }) {
                     {children}
                 </NavigationGuardProvider>
             </main>
+            <UndoBar />
             <AIAssistant />
         </div>
     );

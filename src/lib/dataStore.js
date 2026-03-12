@@ -143,21 +143,133 @@ export function update(collection, id, data) {
     return items[idx];
 }
 
+// ============================================================================
+// UNDO STACK
+// ============================================================================
+const UNDO_KEY = 'eznr_undo_stack';
+const UNDO_MAX = 30;
+
+export function getUndoStack() {
+    if (typeof window === 'undefined') return [];
+    try { return JSON.parse(localStorage.getItem(UNDO_KEY) || '[]'); } catch { return []; }
+}
+
+function pushUndoEntry(entry) {
+    if (typeof window === 'undefined') return;
+    try {
+        const stack = getUndoStack();
+        stack.unshift({ ...entry, timestamp: new Date().toISOString() });
+        localStorage.setItem(UNDO_KEY, JSON.stringify(stack.slice(0, UNDO_MAX)));
+        window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
+    } catch { /* ignore */ }
+}
+
+export function undoLastDelete() {
+    if (typeof window === 'undefined') return null;
+    try {
+        const stack = getUndoStack();
+        if (!stack.length) return null;
+        const entry = stack[0];
+        entry.items.forEach(({ collection, data }) => {
+            const items = getStore(collection);
+            if (!items.find(i => i.id === data.id)) {
+                items.push(data);
+                setStore(collection, items);
+            }
+        });
+        localStorage.setItem(UNDO_KEY, JSON.stringify(stack.slice(1)));
+        window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
+        return entry;
+    } catch { return null; }
+}
+
+export function clearUndoStack() {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(UNDO_KEY);
+    window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
+}
+
 export function remove(collection, id) {
     const items = getStore(collection);
     const removed = items.find(item => item.id === id);
     const filtered = items.filter(item => item.id !== id);
     setStore(collection, filtered);
-    if (removed) _autoLog('delete', collection, removed);
+    if (removed) {
+        _autoLog('delete', collection, removed);
+        const label = removed.ime ? (removed.ime + ' ' + (removed.prezime || '')).trim()
+            : (removed.naziv || removed.tip || 'Zapis');
+        pushUndoEntry({ label, collection, items: [{ collection, data: removed }] });
+    }
     return filtered;
 }
 
 export function removeMany(collection, ids) {
     const items = getStore(collection);
+    const removed = items.filter(item => ids.includes(item.id));
     const filtered = items.filter(item => !ids.includes(item.id));
     setStore(collection, filtered);
+    if (removed.length) {
+        const first = removed[0];
+        const label = removed.length === 1
+            ? (first.ime ? (first.ime + ' ' + (first.prezime || '')).trim() : (first.naziv || 'Zapis'))
+            : (removed.length + ' zapisa');
+        pushUndoEntry({ label, collection, items: removed.map(data => ({ collection, data })) });
+    }
     return filtered;
 }
+
+export function removeWorkerCascade(workerId) {
+    if (!workerId) return;
+    const undoItems = [];
+    const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1'];
+
+    const worker = getStore('workers').find(w => w.id === workerId);
+    if (worker) undoItems.push({ collection: 'workers', data: worker });
+    cascadeCols.forEach(col => {
+        getStore(col).filter(r => r.workerId === workerId).forEach(data => undoItems.push({ collection: col, data }));
+    });
+
+    const workerLabel = worker ? (worker.ime + ' ' + (worker.prezime || '')).trim() : 'Radnik';
+
+    setStore('workers', getStore('workers').filter(w => w.id !== workerId));
+    cascadeCols.forEach(col => setStore(col, getStore(col).filter(r => r.workerId !== workerId)));
+
+    if (worker) _autoLog('delete', 'workers', worker);
+    pushUndoEntry({
+        label: workerLabel,
+        collection: 'workers',
+        cascade: true,
+        cascadeCount: undoItems.length - 1,
+        items: undoItems,
+    });
+}
+
+export function removeManyWorkersCascade(workerIds) {
+    if (!workerIds || !workerIds.length) return;
+    const undoItems = [];
+    const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1'];
+
+    workerIds.forEach(wid => {
+        const worker = getStore('workers').find(w => w.id === wid);
+        if (worker) undoItems.push({ collection: 'workers', data: worker });
+        cascadeCols.forEach(col => {
+            getStore(col).filter(r => r.workerId === wid).forEach(data => undoItems.push({ collection: col, data }));
+        });
+    });
+
+    setStore('workers', getStore('workers').filter(w => !workerIds.includes(w.id)));
+    cascadeCols.forEach(col => setStore(col, getStore(col).filter(r => !workerIds.includes(r.workerId))));
+
+    const relatedCount = undoItems.filter(i => i.collection !== 'workers').length;
+    pushUndoEntry({
+        label: workerIds.length + ' radnika',
+        collection: 'workers',
+        cascade: true,
+        cascadeCount: relatedCount,
+        items: undoItems,
+    });
+}
+
 
 export function search(collection, query, fields) {
     const items = getStore(collection);

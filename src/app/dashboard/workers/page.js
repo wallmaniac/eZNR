@@ -272,7 +272,7 @@ function WorkersPageInner() {
     const handleDelete = async (id) => {
         const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni da želite obrisati ovog radnika?' : 'Are you sure you want to delete this worker?');
         if (ok) {
-            remove(COLLECTIONS.WORKERS, id);
+            removeWorkerCascade(id);
             setActionMenuId(null);
             loadData();
         }
@@ -925,7 +925,7 @@ function WorkersPageInner() {
                                         if (selectedIds.size === 0) return;
                                         const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
                                         if (ok) {
-                                            selectedIds.forEach(id => remove(COLLECTIONS.WORKERS, id));
+                                            selectedIds.forEach(id => removeWorkerCascade(id));
                                             setSelectedIds(new Set());
                                             loadData();
                                         }
