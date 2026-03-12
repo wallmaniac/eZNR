@@ -46,6 +46,7 @@ function WorkersPageInner() {
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
     const [viewWorkerId, setViewWorkerId] = useState(null);
+    const [selectedIds, setSelectedIds] = useState(new Set());
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
     const editingWorkerRef = useRef(null); // tracks current worker id even across saves
@@ -185,6 +186,26 @@ function WorkersPageInner() {
     const totalPages = Math.max(1, Math.ceil(sortedWorkers.length / perPage));
     const pagedWorkers = sortedWorkers.slice((page - 1) * perPage, page * perPage);
 
+    // ── Selection helpers ──
+    const pagedIds = pagedWorkers.map(w => w.id);
+    const allPageSelected = pagedIds.length > 0 && pagedIds.every(id => selectedIds.has(id));
+    const somePageSelected = pagedIds.some(id => selectedIds.has(id));
+    const toggleSelectAll = () => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (allPageSelected) { pagedIds.forEach(id => next.delete(id)); }
+            else { pagedIds.forEach(id => next.add(id)); }
+            return next;
+        });
+    };
+    const toggleOne = (id) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id); else next.add(id);
+            return next;
+        });
+    };
+
     const toggleSection = (key) => setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
 
     // Filtered certificates for display
@@ -278,13 +299,14 @@ function WorkersPageInner() {
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
             editingWorkerRef.current = null;
-            openWorkerHandledRef.current = false; // reset so new openWorker params work
+            openWorkerHandledRef.current = false;
             setCertificates([]);
             setPpeAssign([]);
         } else {
             setShowForm(false);
-            openWorkerHandledRef.current = false; // reset for next time
+            openWorkerHandledRef.current = false;
         }
+        setSelectedIds(new Set()); // clear selection after save
         return savedId;
     };
 
@@ -871,16 +893,44 @@ function WorkersPageInner() {
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}
                             </label>
-                            <div style={{ marginLeft: 'auto', position: 'relative' }}>
+                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                                {selectedIds.size > 0 && (
+                                    <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                    </span>
+                                )}
+                                <div style={{ position: 'relative' }}>
                                 <button className="btn btn-dark btn-sm" onClick={() => {
                                     const el = document.getElementById('group-action-menu');
                                     if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
                                 }}>{t('selectGroupAction')} ▼</button>
-                                <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                    <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {lang === 'bs' ? 'Geniši dokumente' : 'Generate documents'}</button>
-                                    <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
+                                <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 220 }}>
+                                    <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'radnika odabrano' : 'workers selected'}` : (lang === 'bs' ? 'Odaberite radnike' : 'Select workers first')}
+                                    </div>
                                     <div className="dropdown-divider" />
-                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(t('confirmDelete')); if (ok) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                                    <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={async () => {
+                                        document.getElementById('group-action-menu').style.display = 'none';
+                                        if (selectedIds.size === 0) { await alert(lang === 'bs' ? 'Odaberite radnike kvačicom.' : 'Select workers using checkboxes.'); return; }
+                                        await alert(lang === 'bs' ? `Generisanje dokumenata za ${selectedIds.size} radnika (uskoro)` : `Generate documents for ${selectedIds.size} workers (coming soon)`);
+                                    }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
+                                    <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={async () => {
+                                        document.getElementById('group-action-menu').style.display = 'none';
+                                        if (selectedIds.size === 0) { await alert(lang === 'bs' ? 'Odaberite radnike kvačicom.' : 'Select workers using checkboxes.'); return; }
+                                        await alert(lang === 'bs' ? `Slanje obavijesti za ${selectedIds.size} radnika (uskoro)` : `Send notifications to ${selectedIds.size} workers (coming soon)`);
+                                    }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
+                                    <div className="dropdown-divider" />
+                                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={async () => {
+                                        document.getElementById('group-action-menu').style.display = 'none';
+                                        if (selectedIds.size === 0) return;
+                                        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
+                                        if (ok) {
+                                            selectedIds.forEach(id => remove(COLLECTIONS.WORKERS, id));
+                                            setSelectedIds(new Set());
+                                            loadData();
+                                        }
+                                    }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
+                                </div>
                                 </div>
                             </div>
                         </div>
@@ -896,7 +946,15 @@ function WorkersPageInner() {
                                         <th>{t('oib')}</th>
                                         <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
                                         <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
-                                        <th><input type="checkbox" /></th>
+                                        <th style={{ width: 40, textAlign: 'center' }} title={allPageSelected ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all') : (lang === 'bs' ? 'Odaberi sve na stranici' : 'Select all on page')}>
+                                            <input
+                                                type="checkbox"
+                                                checked={allPageSelected}
+                                                ref={el => { if (el) el.indeterminate = somePageSelected && !allPageSelected; }}
+                                                onChange={toggleSelectAll}
+                                                style={{ cursor: 'pointer', width: 16, height: 16 }}
+                                            />
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -974,7 +1032,14 @@ function WorkersPageInner() {
                                                         </button>
                                                     ) : '—'}
                                                 </td>
-                                                <td><input type="checkbox" /></td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.has(w.id)}
+                                                        onChange={() => toggleOne(w.id)}
+                                                        style={{ cursor: 'pointer', width: 16, height: 16 }}
+                                                    />
+                                                </td>
                                             </tr>
                                         ))
                                     )}
@@ -993,11 +1058,12 @@ function WorkersPageInner() {
                                 <button className="pagination-btn active">{page}</button>
                                 <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>▶</button>
                                 <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>⏭</button>
-                                <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); }}
+                                <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); setSelectedIds(new Set()); }}
                                     style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
                                     <option value={10}>10 {t('perPage')}</option>
                                     <option value={25}>25 {t('perPage')}</option>
                                     <option value={50}>50 {t('perPage')}</option>
+                                    <option value={100}>100 {t('perPage')}</option>
                                 </select>
                             </div>
                         </div>
