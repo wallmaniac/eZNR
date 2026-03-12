@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSortedList } from '@/hooks/useSortedList';
 
 function WorkerCertificatesInner() {
   const { t, lang } = useLanguage();
@@ -23,16 +24,18 @@ function WorkerCertificatesInner() {
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
   const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), []);
 
-  const rows = useMemo(() => {
+  // Build rows with enriched data (no sorting here — useSortedList handles it)
+  const filteredRows = useMemo(() => {
     return certs.map(c => {
       const w = workers.find(x => x.id === c.workerId);
       const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
-      return { ...c, workerName: w ? `${w.ime} ${w.prezime}` : '-', isExpired, naziv: c.ime || c.naziv || '' };
-    }).sort((a, b) => {
-      if (!sortByExpiry) return 0;
-      const aDate = a.vrijediDo ? new Date(a.vrijediDo).getTime() : 99999999999999;
-      const bDate = b.vrijediDo ? new Date(b.vrijediDo).getTime() : 99999999999999;
-      return aDate - bDate;
+      return {
+        ...c,
+        workerName: w ? `${w.ime} ${w.prezime}` : '-',
+        isExpired,
+        naziv: c.ime || c.naziv || '',
+        statusText: isExpired ? 'Isteklo' : 'Važeće',
+      };
     }).filter(r => {
       const expDate = r.vrijediDo ? new Date(r.vrijediDo) : null;
       const now = new Date();
@@ -49,7 +52,14 @@ function WorkerCertificatesInner() {
         (r.oznaka || '').toLowerCase().includes(term) ||
         (r.tipUvjerenjaIme || r.tipUvjerenja || '').toLowerCase().includes(term);
     });
-  }, [certs, workers, searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays, sortByExpiry]);
+  }, [certs, workers, searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays]);
+
+  // sortable — default to vrijediDo asc if ?sort=expiry, else workerName asc
+  const { sorted: rows, toggleSort: tS, sortIcon: siS, thStyle: tsS } = useSortedList(
+    filteredRows,
+    sortByExpiry ? 'vrijediDo' : 'workerName',
+    'asc'
+  );
 
   // Scroll to highlighted cert after render
   useEffect(() => {
@@ -108,13 +118,14 @@ function WorkerCertificatesInner() {
             <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>{rows.length} {t('records')}</span>
           </div>
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-            <th>{t('worker')}</th><th>{t('name')}</th><th>{t('certCode')}</th><th>{t('certDate')}</th><th>{t('certValidUntil')}</th><th>{t('status')}</th><th style={{ width: 48, textAlign: 'center' }}>{lang === 'bs' ? 'Uredi' : 'Edit'}</th>
+            <th style={tsS('workerName')} onClick={() => tS('workerName')}>{t('worker')}{siS('workerName')}</th>
+            <th style={tsS('naziv')} onClick={() => tS('naziv')}>{t('name')}{siS('naziv')}</th>
+            <th style={tsS('oznaka')} onClick={() => tS('oznaka')}>{t('certCode')}{siS('oznaka')}</th>
+            <th style={tsS('datum')} onClick={() => tS('datum')}>{t('certDate')}{siS('datum')}</th>
+            <th style={tsS('vrijediDo')} onClick={() => tS('vrijediDo')}>{t('certValidUntil')}{siS('vrijediDo')}</th>
+            <th style={tsS('statusText')} onClick={() => tS('statusText')}>{t('status')}{siS('statusText')}</th>
+            <th style={{ width: 48, textAlign: 'center' }}>{lang === 'bs' ? 'Uredi' : 'Edit'}</th>
           </tr></thead><tbody>
-              {sortByExpiry && (
-                <tr><td colSpan={7} style={{ padding: '8px 12px', background: 'rgba(0,191,166,0.06)', fontSize: '0.8rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', textAlign: 'center', fontStyle: 'italic' }}>
-                  📅 {lang === 'bs' ? 'Sortirano po datumu isteka — najskorije prvo' : 'Sorted by expiry date — soonest first'}
-                </td></tr>
-              )}
               {rows.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                   {searchTerm ? (lang === 'bs' ? `Nema rezultata za "${searchTerm}"` : `No results for "${searchTerm}"`) : t('noRecords')}
