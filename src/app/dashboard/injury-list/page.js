@@ -187,6 +187,7 @@ export default function InjuryListPage() {
           onSaved={() => setViewWorkerId(null)}
         />
       )}
+    <DialogRenderer />
     </>
   );
 }

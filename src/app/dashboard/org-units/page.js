@@ -399,7 +399,7 @@ export default function OrgUnitsPage() {
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
-    );
+            </div><DialogRenderer />
+</div>
+);
 }

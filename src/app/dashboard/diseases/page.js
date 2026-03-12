@@ -289,6 +289,7 @@ export default function DiseasesPage() {
           onSaved={() => setViewWorkerId(null)}
         />
       )}
+    <DialogRenderer />
     </>
   );
 }

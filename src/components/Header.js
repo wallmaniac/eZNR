@@ -43,9 +43,21 @@ export default function Header({ sidebarCollapsed }) {
             if (searchRef.current && !searchRef.current.contains(e.target)) setSearchFocused(false);
             if (companyRef.current && !companyRef.current.contains(e.target)) setShowCompanyMenu(false);
         };
+        const handleKeyDown = (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                const input = searchRef.current?.querySelector('input');
+                if (input) { input.focus(); setSearchFocused(true); }
+            }
+            if (e.key === 'Escape' && searchFocused) {
+                setSearchFocused(false); setSearchTerm('');
+                searchRef.current?.querySelector('input')?.blur();
+            }
+        };
         document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+        document.addEventListener('keydown', handleKeyDown);
+        return () => { document.removeEventListener('mousedown', handleClick); document.removeEventListener('keydown', handleKeyDown); };
+    }, [searchFocused]);
 
     const searchResults = useMemo(() => {
         if (!searchTerm || searchTerm.length < 2) return [];
@@ -75,7 +87,12 @@ export default function Header({ sidebarCollapsed }) {
         return notifs.map(n => ({ ...n, icon: n.icon, text: n.text || n.title, detail: n.detail || n.message, date: '', path: n.path || n.actionUrl || '/dashboard', severity: n.severity, id: n.id, actionLabel: n.actionLabel, companyName: n.companyName }));
     }, [isAdmin, activeCompanyId, user?.companyIds]);
 
-    const handleSearchNav = (result) => { setSearchTerm(''); setSearchFocused(false); router.push(result.path); };
+    const handleSearchNav = (result) => {
+        setSearchTerm(''); setSearchFocused(false);
+        if (result.type === 'worker') router.push(`/dashboard/workers?openWorker=${result.id}`);
+        else if (result.type === 'equipment') router.push(`/dashboard/equipment?openItem=${result.id}`);
+        else router.push(result.path);
+    };
     const handleProfileNav = (path) => { setShowProfile(false); router.push(path); };
     const handleNotifNav = (path) => { setShowNotifs(false); router.push(path); };
     const handleLogout = () => { setShowProfile(false); logout(); router.push('/'); };
@@ -237,6 +254,9 @@ export default function Header({ sidebarCollapsed }) {
                             onFocus={() => setSearchFocused(true)}
                         />
                         {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}>✕</button>}
+                        {!searchFocused && !searchTerm && (
+                            <span style={{ fontSize: '0.62rem', fontWeight: 600, padding: '2px 6px', borderRadius: 4, background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)', flexShrink: 0, whiteSpace: 'nowrap', opacity: 0.7 }}>Ctrl K</span>
+                        )}
                     </div>
 
                     {searchFocused && searchTerm.length >= 2 && (
