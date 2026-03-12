@@ -709,6 +709,13 @@ export default function TrainingsPage() {
                             </div>
                         </div>
                     ))}
+
+                    {/* Button to add more questions manually */}
+                    {(formData.questions || []).length > 0 && (
+                        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                            <button className="btn btn-outline btn-sm" onClick={addQuestion}>+ Dodaj pitanje ručno</button>
+                        </div>
+                    )}
                 </div>
             )}
 
@@ -744,6 +751,16 @@ export default function TrainingsPage() {
                                 <div>
                                     <div style={{ fontWeight: 600 }}>Dozvoli povratak na prezentaciju tokom testa</div>
                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik može otvoriti prezentaciju tokom testa — odgovori se čuvaju</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+                                <input type="checkbox" className="form-checkbox" checked={formData.prikaziHintove ?? true}
+                                    onChange={e => setF('prikaziHintove', e.target.checked)} />
+                                <div>
+                                    <div style={{ fontWeight: 600 }}>Prikaži objašnjenja (hints) nakon odgovora</div>
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Radnik vidi objašnjenje tačnog odgovora nakon što odgovori na pitanje</div>
                                 </div>
                             </label>
                         </div>
@@ -843,6 +860,7 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                     questions: sendWhat !== 'prezentacija' ? (training.questions || []) : [],
                     prolazniPrag: training.prolazniPrag ?? 70, prikaziRezultate: training.prikaziRezultate ?? true,
                     dozvoliPovratak: training.dozvoliPovratak ?? false,
+                    prikaziHintove: training.prikaziHintove !== false,
                     assignedBy: officerName,
                     companyName,
                     companyLogo,

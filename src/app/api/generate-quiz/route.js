@@ -44,7 +44,7 @@ Pravila:
 - Svako pitanje mora imati TOČNO 4 opcije
 - "tacno" je indeks (0, 1, 2 ili 3) tačnog odgovora
 - Pitanja trebaju direktno testirati znanje iz prezentacije
-- Tačan odgovor ne treba uvijek biti na istoj poziciji — miješaj pozicije
+- VRLO VAŽNO: Tačan odgovor MORA biti ravnomjerno raspoređen — otprilike jednako pitanja sa tacno=0, tacno=1, tacno=2 i tacno=3. NIKAKO ne stavljaj tačan odgovor uvijek na istu poziciju!
 - Neka pitanja budu direktna, neka zahtijevaju razumijevanje
 - Vrati SAMO JSON, bez komentara ili backtick oznaka`;
 
@@ -84,9 +84,25 @@ Pravila:
         // Parse JSON — robust handling
         const parsed = parseQuizJson(text);
 
+        // Post-process: shuffle options in each question to ensure diverse correct answer positions
+        const shuffled = parsed.map(q => {
+            const correctAnswer = q.opcije[q.tacno];
+            // Fisher-Yates shuffle on options
+            const indexed = q.opcije.map((opt, i) => ({ opt, wasCorrect: i === q.tacno }));
+            for (let i = indexed.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indexed[i], indexed[j]] = [indexed[j], indexed[i]];
+            }
+            return {
+                ...q,
+                opcije: indexed.map(x => x.opt),
+                tacno: indexed.findIndex(x => x.wasCorrect),
+            };
+        });
+
         return NextResponse.json({
-            questions: parsed,
-            count: parsed.length,
+            questions: shuffled,
+            count: shuffled.length,
         });
     } catch (err) {
         console.error('Generate quiz error:', err);

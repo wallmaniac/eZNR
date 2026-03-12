@@ -50,6 +50,7 @@ export default function PublicTrainingPage({ params }) {
     const questions = session?.questions || [];
     const prolazniPrag = session?.prolazniPrag ?? 70;
     const dozvoliPovratak = session?.dozvoliPovratak ?? false;
+    const prikaziHintove = session?.prikaziHintove !== false;
     const assignedBy = session?.assignedBy || '';
     const companyName = session?.companyName || '';
     const companyLogo = session?.companyLogo || '';
@@ -342,7 +343,7 @@ export default function PublicTrainingPage({ params }) {
                         </div>
 
                         {/* Explanation (shown after answered) */}
-                        {isAnswered && currentQ?.objasnjenje && (
+                        {isAnswered && prikaziHintove && currentQ?.objasnjenje && (
                             <div style={{ marginTop: 16, padding: '12px 16px', borderRadius: 10, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.15)', fontSize: '0.85rem', color: '#94a3b8', lineHeight: 1.6 }}>
                                 💡 {currentQ.objasnjenje}
                             </div>
@@ -451,7 +452,7 @@ export default function PublicTrainingPage({ params }) {
                                                         <span style={{ color: '#22c55e' }}>Tačan odgovor: {questions[i].opcije?.[d.correctAnswer] || `Opcija ${d.correctAnswer + 1}`}</span>
                                                     </div>
                                                 )}
-                                                {d.isCorrect && questions[i]?.objasnjenje && (
+                                                {d.isCorrect && prikaziHintove && questions[i]?.objasnjenje && (
                                                     <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '4px 0 0' }}>💡 {questions[i].objasnjenje}</p>
                                                 )}
                                             </div>
