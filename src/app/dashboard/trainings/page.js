@@ -208,7 +208,8 @@ export default function TrainingsPage() {
             }
             // Confirm if slides already exist
             if ((formData.slides || []).some(s => s.naslov || s.sadrzaj)) {
-                if (!window.confirm(`Pronađeno ${data.slides.length} slajdova. Zamijeniti postojeće slajdove?`)) return;
+                const ok = await confirm(`${lang === 'bs' ? `Pronađeno ${data.slides.length} slajdova. Zamijeniti postojeće slajdove?` : `Found ${data.slides.length} slides. Replace existing slides?`}`);
+                if (!ok) return;
             }
             setF('slides', data.slides);
             // Auto-fill name from filename if empty
