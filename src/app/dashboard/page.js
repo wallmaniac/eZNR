@@ -52,7 +52,7 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const uids = user?.companyIds || [];
-        setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
+        setWorkers(getRawAll(COLLECTIONS.WORKERS));
         setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
         setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
         setEquipment(getRawAll(COLLECTIONS.EQUIPMENT));
@@ -540,7 +540,7 @@ export default function DashboardPage() {
                                     <select className="form-select" value={eventFormData.workerId}
                                         onChange={e => setEventFormData(prev => ({ ...prev, workerId: e.target.value }))}>
                                         <option value="">{lang === 'bs' ? '— Bez radnika —' : '— No worker —'}</option>
-                                        {workers.filter(w => w.aktivan && (!eventFormData.companyId || !w.companyId || w.companyId === eventFormData.companyId)).map(w => (
+                                        {workers.filter(w => w.aktivan).map(w => (
                                             <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                                         ))}
                                     </select>
