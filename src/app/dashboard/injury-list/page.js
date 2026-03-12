@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import { getAll, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 export default function InjuryListPage() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const { alert, confirm, DialogRenderer } = useDialog();
   const [injuries, setInjuries] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -142,9 +144,14 @@ export default function InjuryListPage() {
                       </td>
                     </tr>
                   ) : filtered.map((inj, idx) => (
-                    <tr key={inj.id}>
+                    <tr key={inj.id}
+                      onClick={() => router.push(`/dashboard/injuries?editId=${inj.id}`)}
+                      style={{ cursor: 'pointer', transition: 'background 0.12s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                      onMouseLeave={e => e.currentTarget.style.background = ''}
+                    >
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{idx + 1}</td>
-                      <td style={{ fontWeight: 600 }}>
+                      <td style={{ fontWeight: 600 }} onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => { const w = workers.find(w => w.id === inj.radnikId); if (w) setViewWorkerId(w.id); }}
                           style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
@@ -158,8 +165,11 @@ export default function InjuryListPage() {
                       <td style={{ textAlign: 'center' }}>{inj.prvaPomoć ? '✅' : '—'}</td>
                       <td style={{ textAlign: 'center' }}>{inj.bolovanje ? '✅' : '—'}</td>
                       <td>{statusBadge(inj.status)}</td>
-                      <td>
-                        <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={() => handleDelete(inj.id)}>🗑️</button>
+                      <td onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => router.push(`/dashboard/injuries?editId=${inj.id}`)}>✏️</button>
+                          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={() => handleDelete(inj.id)}>🗑️</button>
+                        </div>
                       </td>
                     </tr>
                   ))}

@@ -61,6 +61,17 @@ export default function InjuriesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
+  // ── Open edit form from query param (injury-list click-through) ──
+  useEffect(() => {
+    const editId = searchParams?.get('editId');
+    if (!editId) return;
+    const inj = getAll(COLLECTIONS.INJURIES).find(i => i.id === editId);
+    if (inj) {
+      openEdit(inj);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
   // Close worker dropdown on outside click
   useEffect(() => {
     const handler = (e) => {
