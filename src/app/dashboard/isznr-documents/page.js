@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-    getAll, getById, create, update, remove, COLLECTIONS, formatDate,
+    getAll, create, update, remove, COLLECTIONS, formatDate,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
@@ -12,7 +12,7 @@ const emptyDoc = {
 
 export default function ISZNRDocumentsPage() {
     const { t, lang } = useLanguage();
-  const { alert, confirm, DialogRenderer } = useDialog();
+    const { alert, confirm, DialogRenderer } = useDialog();
     const [docs, setDocs] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -46,10 +46,14 @@ export default function ISZNRDocumentsPage() {
     const handleNew = () => { setFormData({ ...emptyDoc }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
     const handleDelete = async (id) => {
-        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (ok) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
+        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?');
+        if (ok) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = async () => {
-        if (!formData.naslov || !formData.partyId) { await alert(lang === 'bs' ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!'); return; }
+        if (!formData.naslov || !formData.partyId) {
+            await alert(lang === 'bs' ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!');
+            return;
+        }
         if (editingId) { update(COLLECTIONS.ISZNR_DOCUMENTS, editingId, formData); } else { create(COLLECTIONS.ISZNR_DOCUMENTS, formData); }
         setShowForm(false); loadData();
     };
@@ -57,6 +61,7 @@ export default function ISZNRDocumentsPage() {
 
     return (
         <div className="animate-fadeIn">
+            <DialogRenderer />
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>🏛️ {t('documents')} — ISZNR</h1>
 
             {showForm && (

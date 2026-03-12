@@ -28,6 +28,7 @@ export default function SettingsPage() {
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'profile');
   const [saved, setSaved] = useState(false);
+  const [logoError, setLogoError] = useState('');
 
   // Profile state
   const [profileData, setProfileData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
@@ -393,12 +394,17 @@ export default function SettingsPage() {
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size > 500000) { alert(lang === 'bs' ? 'Logo mora biti manji od 500KB' : 'Logo must be under 500KB'); return; }
+                          if (file.size > 500000) {
+                            setLogoError(lang === 'bs' ? 'Logo mora biti manji od 500KB' : 'Logo must be under 500KB');
+                            return;
+                          }
+                          setLogoError('');
                           const reader = new FileReader();
                           reader.onload = ev => setCompanyData(p => ({ ...p, logo: ev.target.result }));
                           reader.readAsDataURL(file);
                         }} />
                       </label>
+                      {logoError && <div style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 600 }}>⚠️ {logoError}</div>}
                       {companyData.logo && (
                         <button onClick={() => setCompanyData(p => ({ ...p, logo: '' }))} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
                           🗑️ {lang === 'bs' ? 'Ukloni logo' : 'Remove Logo'}
