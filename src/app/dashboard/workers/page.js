@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-    getAll, getById, create, update, remove, search,
+    getAll, getById, create, update, remove, removeWorkerCascade, removeManyWorkersCascade, search,
     COLLECTIONS, getOrgUnitName, getWorkplaceName,
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
@@ -925,7 +925,7 @@ function WorkersPageInner() {
                                         if (selectedIds.size === 0) return;
                                         const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
                                         if (ok) {
-                                            selectedIds.forEach(id => removeWorkerCascade(id));
+                                            removeManyWorkersCascade([...selectedIds]);
                                             setSelectedIds(new Set());
                                             loadData();
                                         }

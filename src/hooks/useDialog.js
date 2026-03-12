@@ -22,22 +22,27 @@ import { useState, useCallback, useRef } from 'react';
 export function useDialog() {
     const [dialog, setDialog] = useState(null);
     const promptRef = useRef(null);
+    // Use a ref for the resolver so close() never has a stale reference
+    const resolverRef = useRef(null);
 
     const showAlert = useCallback((message, title) => {
         return new Promise((resolve) => {
-            setDialog({ type: 'alert', message, title: title || null, resolve });
+            resolverRef.current = resolve;
+            setDialog({ type: 'alert', message, title: title || null });
         });
     }, []);
 
     const showConfirm = useCallback((message, title) => {
         return new Promise((resolve) => {
-            setDialog({ type: 'confirm', message, title: title || null, resolve });
+            resolverRef.current = resolve;
+            setDialog({ type: 'confirm', message, title: title || null });
         });
     }, []);
 
     const showPrompt = useCallback((message, title, defaultValue = '') => {
         return new Promise((resolve) => {
-            setDialog({ type: 'prompt', message, title: title || null, resolve, defaultValue });
+            resolverRef.current = resolve;
+            setDialog({ type: 'prompt', message, title: title || null, defaultValue });
         });
     }, []);
 
@@ -45,14 +50,21 @@ export function useDialog() {
     // buttons: [{ label, value, primary, danger, icon }]
     const showChoose = useCallback((message, buttons, title) => {
         return new Promise((resolve) => {
-            setDialog({ type: 'choose', message, title: title || null, buttons, resolve });
+            resolverRef.current = resolve;
+            setDialog({ type: 'choose', message, title: title || null, buttons });
         });
     }, []);
 
     const close = useCallback((result) => {
-        if (dialog?.resolve) dialog.resolve(result);
+        const resolver = resolverRef.current;
+        resolverRef.current = null;
         setDialog(null);
-    }, [dialog]);
+        // Resolve after clearing state to prevent re-render with stale dialog
+        if (resolver) {
+            // Use microtask to ensure setDialog(null) commits first
+            Promise.resolve().then(() => resolver(result));
+        }
+    }, []);
 
     function DialogRenderer() {
         if (!dialog) return null;
