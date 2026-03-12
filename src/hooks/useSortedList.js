@@ -15,16 +15,22 @@ export function useSortedList(data, defaultField = null, defaultDir = 'asc') {
 
     const sorted = useMemo(() => {
         if (!sortField || !data) return data || [];
+        const ISO_DATE = /^\d{4}-\d{2}-\d{2}/; // YYYY-MM-DD…
         return [...data].sort((a, b) => {
             const av = (a[sortField] ?? '').toString().toLowerCase();
             const bv = (b[sortField] ?? '').toString().toLowerCase();
-            // Numeric-aware compare
-            const numA = parseFloat(av), numB = parseFloat(bv);
             let cmp;
-            if (!isNaN(numA) && !isNaN(numB)) {
-                cmp = numA - numB;
+            // Date-aware compare (must check BEFORE parseFloat — "2026-03-15" parses to 2026)
+            if (ISO_DATE.test(av) && ISO_DATE.test(bv)) {
+                cmp = new Date(av).getTime() - new Date(bv).getTime();
             } else {
-                cmp = av.localeCompare(bv, 'hr', { sensitivity: 'base' });
+                const numA = parseFloat(av), numB = parseFloat(bv);
+                if (!isNaN(numA) && !isNaN(numB) && av === String(numA) && bv === String(numB)) {
+                    // Only treat as numeric if the entire value IS the number (not "2026-03-15")
+                    cmp = numA - numB;
+                } else {
+                    cmp = av.localeCompare(bv, 'hr', { sensitivity: 'base' });
+                }
             }
             return sortDir === 'asc' ? cmp : -cmp;
         });
