@@ -748,7 +748,7 @@ export default function AnnualInjuriesPage() {
                     <strong>{totals.kolektivna}</strong> kolektivnih.
                   </p>
                   <p>
-                    Detaljan pregled povreda na radu sa smrtnom, teškom i kolektivnom posljedicom dat je u
+                    Detaljan pregled povreda na radu sa lakom, teškom ili smrtnom posljedicom dat je u
                     tabeli u prilogu ovog dopisa.
                   </p>
                   <p>Ostajemo na Vašem raspolaganju za sva dodatna pojašnjenja.</p>
@@ -778,7 +778,7 @@ export default function AnnualInjuriesPage() {
             <div className="card" style={{ marginBottom: 20 }}>
               <div className="card-body">
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 4, textAlign: 'center', fontFamily: 'Georgia, serif' }}>
-                  PRILOG: Pregled povreda na radu sa smrtnom, teškom ili kolektivnom posljedicom — {year}. godina
+                  PRILOG: Pregled povreda na radu sa lakom, teškom ili smrtnom posljedicom — {year}. godina
                 </div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16 }}>
                   Naziv poslodavca: <strong>{companyInfo.naziv || '___________________'}</strong>
@@ -815,7 +815,7 @@ export default function AnnualInjuriesPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {smrtnePovreda.length === 0 && teskePovreda.length === 0 && kolektivnePovreda.length === 0 ? (
+                      {yearInjuries.length === 0 ? (
                         <>
                           {[1, 2, 3].map(i => (
                             <tr key={i} style={{ height: 48 }}>
@@ -825,12 +825,12 @@ export default function AnnualInjuriesPage() {
                           ))}
                           <tr>
                             <td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px', fontStyle: 'italic', fontSize: '0.82rem' }}>
-                              ✅ Nije evidentirano povreda sa smrtnom, teškom ili kolektivnom posljedicom za {year}. godinu.
+                              ✅ Nije evidentirano povreda na radu za {year}. godinu.
                             </td>
                           </tr>
                         </>
-                      ) : [...smrtnePovreda, ...teskePovreda, ...kolektivnePovreda]
-                          .filter((inj, idx, arr) => arr.findIndex(x => x.id === inj.id) === idx) // deduplicate
+                      ) : yearInjuries
+                          .sort((a, b) => new Date(a.datum) - new Date(b.datum))
                           .map((inj, idx) => {
                         const isSmrtna = inj.tip === 'smrtna';
                         const isKolektivna = inj.kolektivna;

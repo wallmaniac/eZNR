@@ -327,7 +327,7 @@ export default function InjuriesPage() {
                   {filtered.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : filtered.map(inj => (
-                    <tr key={inj.id}>
+                    <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => openEdit(inj)}>✏️</button>
