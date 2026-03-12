@@ -27,7 +27,7 @@ export default function PlacesPage() {
   const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.PLACES, id); loadData(); } };
 
   return (
-    <div className="animate-fadeIn">
+    <><DialogRenderer /><div className="animate-fadeIn">
       <h1 style={{ marginBottom: 24 }}>📍 {t('places')}</h1>
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
@@ -59,9 +59,9 @@ export default function PlacesPage() {
         </div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr><th>{t('actions')}</th><th>{t('name')}</th><th>{lang === 'bs' ? 'Poštanski broj' : 'Postal code'}</th></tr></thead>
           <tbody>{filtered.length === 0 ? <tr><td colSpan={3} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : filtered.map(i => (
-            <tr key={i.id}><td><div style={{ display: 'flex', gap: 4 }}><button className="btn btn-primary btn-sm" onClick={() => handleEdit(i)}>✏️</button><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(i.id)} style={{ color: 'var(--danger)' }}>🗑️</button></div></td><td style={{ fontWeight: 600 }}>{i.naziv}</td><td>{i.postBroj}</td></tr>
+            <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}><td onClick={e => e.stopPropagation()}><div style={{ display: 'flex', gap: 4 }}><button className="btn btn-primary btn-sm" onClick={() => handleEdit(i)}>✏️</button><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(i.id)} style={{ color: 'var(--danger)' }}>🗑️</button></div></td><td style={{ fontWeight: 600 }}>{i.naziv}</td><td>{i.postBroj}</td></tr>
           ))}</tbody></table></div>
       </div></div>
-    </div>
+    </div></>
   );
 }

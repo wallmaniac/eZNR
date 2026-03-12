@@ -1,10 +1,12 @@
 'use client';
 import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 
 export default function TrainingBookPage() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false), []);
   const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), []);
 
@@ -21,8 +23,8 @@ export default function TrainingBookPage() {
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>
           <th>Red. br.</th><th>{t('workerName')}</th><th>{t('workerSurname')}</th><th>JMBG</th><th>{lang === 'bs' ? 'Br. uvjerenja' : 'Cert. count'}</th><th>{lang === 'bs' ? 'Posljednje uvjerenje' : 'Latest cert'}</th><th>{t('status')}</th>
         </tr></thead><tbody>
-            {rows.map((r, idx) => (
-              <tr key={r.id}>
+            {rows.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{lang === 'bs' ? '✅ Nema radnika' : '✅ No workers'}</td></tr> : rows.map((r, idx) => (
+              <tr key={r.id} onClick={() => router.push(`/dashboard/workers?openWorker=${r.id}&section=uvjerenja`)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                 <td>{idx + 1}</td>
                 <td style={{ fontWeight: 600 }}>{r.ime}</td>
                 <td style={{ fontWeight: 600 }}>{r.prezime}</td>

@@ -1,10 +1,12 @@
 'use client';
 import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import { getAll, COLLECTIONS, getOrgUnitName, getWorkersInOrgUnit } from '@/lib/dataStore';
 
 export default function WorkplaceListPage() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const workplaces = useMemo(() => getAll(COLLECTIONS.WORKPLACES), []);
 
   return (
@@ -15,8 +17,8 @@ export default function WorkplaceListPage() {
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>
           <th>Red. br.</th><th>{t('name')}</th><th>{t('code')}</th><th>{t('orgUnit')}</th><th>{lang === 'bs' ? 'Stručna sprema' : 'Education'}</th><th>{lang === 'bs' ? 'Posebni uvjeti' : 'Special cond.'}</th>
         </tr></thead><tbody>
-            {workplaces.map((w, idx) => (
-              <tr key={w.id}>
+            {workplaces.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{lang === 'bs' ? '✅ Nema radnih mjesta' : '✅ No workplaces'}</td></tr> : workplaces.map((w, idx) => (
+              <tr key={w.id} onClick={() => router.push(`/dashboard/workplaces?openItem=${w.id}`)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                 <td>{idx + 1}</td>
                 <td style={{ fontWeight: 600 }}>{w.naziv}</td>
                 <td><span className="badge badge-info">{w.oznaka}</span></td>
