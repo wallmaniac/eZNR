@@ -261,7 +261,7 @@ export default function AnnualInjuriesPage() {
       await html2pdf().set(opt).from(el).save();
     } catch (err) {
       console.error('PDF generation error:', err);
-      alert(lang === 'bs' ? 'Greška pri generisanju PDF-a.' : 'PDF generation error.');
+      await alert(lang === 'bs' ? 'Greška pri generisanju PDF-a.' : 'PDF generation error.');
     } finally {
       if (el.contains(tempStyle)) el.removeChild(tempStyle);
     }
@@ -396,7 +396,7 @@ export default function AnnualInjuriesPage() {
       XLSX.writeFile(wb, `Pregled_povreda_${year}.xlsx`);
     } catch (err) {
       console.error('Excel export error', err);
-      alert(lang === 'bs' ? 'Greška pri generisanju Excela.' : 'Excel generation error.');
+      await alert(lang === 'bs' ? 'Greška pri generisanju Excela.' : 'Excel generation error.');
     }
   }, [year, lang]);
 

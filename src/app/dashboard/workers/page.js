@@ -50,6 +50,8 @@ function WorkersPageInner() {
     const photoInputRef = useRef(null);
     const editingWorkerRef = useRef(null); // tracks current worker id even across saves
     const openWorkerHandledRef = useRef(false); // prevents re-opening loop from loadData()
+    const uvjerenjaRef = useRef(null); // ref for scroll-to on cert section
+    const ozoRef = useRef(null);       // ref for scroll-to on OZO section
     // Certificate form state
     const [showCertForm, setShowCertForm] = useState(false);
     const [certFormData, setCertFormData] = useState({ oznaka: '', datum: '', vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' });
@@ -136,6 +138,19 @@ function WorkersPageInner() {
             if (found) {
                 openWorkerHandledRef.current = true; // mark as handled
                 handleEdit(found);
+                // Check for section param — open and scroll to the right accordion
+                const section = searchParams?.get('section');
+                if (section === 'ozo') {
+                    setTimeout(() => {
+                        setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
+                        ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 350);
+                } else if (section === 'uvjerenja') {
+                    setTimeout(() => {
+                        setOpenSections(prev => ({ ...prev, uvjerenja: true }));
+                        uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 350);
+                }
                 // Clean URL so param doesn't persist on next loadData()
                 router.replace('/dashboard/workers', { scroll: false });
             }
@@ -551,6 +566,7 @@ function WorkersPageInner() {
                 </Accordion>
 
                 {/* ── ACCORDION: Uvjerenja radnika ── */}
+                <div ref={uvjerenjaRef}>
                 <Accordion title={t('workerCerts')} open={openSections.uvjerenja} onToggle={() => toggleSection('uvjerenja')}>
                     <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
@@ -621,8 +637,10 @@ function WorkersPageInner() {
                         </table>
                     </div>
                 </Accordion>
+                </div>
 
                 {/* ── ACCORDION: OZO radnika ── */}
+                <div ref={ozoRef}>
                 <Accordion title={t('workerPPESection')} open={openSections.ozo} onToggle={() => toggleSection('ozo')}>
                     <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
                         <button className="btn btn-outline btn-sm" onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '' }); setShowPpeForm(true); }}>+ {lang === 'bs' ? 'Novo zaduženje' : 'New assignment'}</button>
@@ -657,6 +675,7 @@ function WorkersPageInner() {
                         </table>
                     </div>
                 </Accordion>
+                </div>
 
                 {/* ── ACCORDION: Mjesto rada ── */}
                 <Accordion title={t('workLocation')} open={openSections.mjestoRada} onToggle={() => toggleSection('mjestoRada')}>
