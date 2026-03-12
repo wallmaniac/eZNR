@@ -967,7 +967,19 @@ export default function DashboardPage() {
                                         const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
                                         return (
                                             <tr key={c.id || idx}>
-                                                <td><button className="btn btn-primary btn-sm" onClick={() => { if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`); }}>{t('actions')} ▼</button></td>
+                                                <td style={{ position: 'relative' }} ref={actionMenuId === `cert-${c.id}` ? actionRef : null}>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)}>
+                                                        {t('actions')} ▼
+                                                    </button>
+                                                    {actionMenuId === `cert-${c.id}` && (
+                                                        <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, zIndex: 50 }}>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`); }}>📂 {t('open')}</button>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang === 'bs' ? 'Profil radnika' : 'Worker profile'}</button>
+                                                            <div className="dropdown-divider" />
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-certificates'); }}>📜 {lang === 'bs' ? 'Sva uvjerenja' : 'All certificates'}</button>
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
@@ -1014,7 +1026,19 @@ export default function DashboardPage() {
                                         const worker = workers.find(w => w.id === p.workerId);
                                         return (
                                             <tr key={p.id || idx}>
-                                                <td><button className="btn btn-primary btn-sm" onClick={() => { if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=ozo`); }}>{t('actions')} ▼</button></td>
+                                                <td style={{ position: 'relative' }} ref={actionMenuId === `ppe-${p.id}` ? actionRef : null}>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)}>
+                                                        {t('actions')} ▼
+                                                    </button>
+                                                    {actionMenuId === `ppe-${p.id}` && (
+                                                        <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, zIndex: 50 }}>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=ozo`); }}>📂 {t('open')}</button>
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang === 'bs' ? 'Profil radnika' : 'Worker profile'}</button>
+                                                            <div className="dropdown-divider" />
+                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-ppe'); }}>🦺 {lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments'}</button>
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}

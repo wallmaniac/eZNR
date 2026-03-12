@@ -149,6 +149,20 @@ export default function TrainingsPage() {
         questions[qIdx] = { ...questions[qIdx], opcije };
         setF('questions', questions);
     };
+    // Swap correct answer to a new position: swap the option texts so the correct answer moves
+    const swapCorrectAnswer = (qIdx, newIdx) => {
+        const questions = [...formData.questions];
+        const q = { ...questions[qIdx] };
+        const oldIdx = q.tacno;
+        if (oldIdx === newIdx) return; // already correct here
+        const opcije = [...q.opcije];
+        // Swap the text of the old correct position with the new one
+        [opcije[oldIdx], opcije[newIdx]] = [opcije[newIdx], opcije[oldIdx]];
+        q.opcije = opcije;
+        q.tacno = newIdx;
+        questions[qIdx] = q;
+        setF('questions', questions);
+    };
 
     // ── AI QUIZ GENERATION ────────────────────
     const generateQuiz = async () => {
@@ -685,7 +699,7 @@ export default function TrainingsPage() {
                                     {(q.opcije || ['', '', '', '']).map((opt, oIdx) => (
                                         <div key={oIdx} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                             <button
-                                                onClick={() => updateQuestion(qIdx, 'tacno', oIdx)}
+                                                onClick={() => swapCorrectAnswer(qIdx, oIdx)}
                                                 style={{
                                                     width: 28, height: 28, borderRadius: '50%', border: '2px solid',
                                                     borderColor: q.tacno === oIdx ? '#22c55e' : 'var(--border)',
@@ -693,7 +707,7 @@ export default function TrainingsPage() {
                                                     color: q.tacno === oIdx ? '#fff' : 'var(--text-muted)',
                                                     cursor: 'pointer', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0,
                                                 }}
-                                                title="Klikni da označiš kao tačan odgovor">
+                                                title="Klikni da premjestiš tačan odgovor ovdje">
                                                 {String.fromCharCode(65 + oIdx)}
                                             </button>
                                             <input className="form-input" style={{ flex: 1, fontSize: '0.85rem' }}
@@ -709,13 +723,6 @@ export default function TrainingsPage() {
                             </div>
                         </div>
                     ))}
-
-                    {/* Button to add more questions manually */}
-                    {(formData.questions || []).length > 0 && (
-                        <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-                            <button className="btn btn-outline btn-sm" onClick={addQuestion}>+ Dodaj pitanje ručno</button>
-                        </div>
-                    )}
                 </div>
             )}
 
