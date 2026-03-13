@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
-    getAll, create, remove, removeWorkerCascade, COLLECTIONS, getOrgUnitName, formatDate, getAllForCompany, createForCompany, getRawAll,
+    getAll, create, remove, removeWorkerCascade, COLLECTIONS, getAllForCompany, getRawAll,
 } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
@@ -56,10 +56,10 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const uids = user?.companyIds || [];
-        setWorkers(getRawAll(COLLECTIONS.WORKERS));
+        setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
         setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
         setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
-        setEquipment(getRawAll(COLLECTIONS.EQUIPMENT));
+        setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
         setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
         setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
