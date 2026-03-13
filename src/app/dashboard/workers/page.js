@@ -53,7 +53,7 @@ function WorkersPageInner() {
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
     const editingWorkerRef = useRef(null); // tracks current worker id even across saves
-    const openWorkerHandledRef = useRef(false); // prevents re-opening loop from loadData()
+    const openWorkerHandledRef = useRef(null); // stores last handled openWorker ID (not boolean)
     const uvjerenjaRef = useRef(null); // ref for scroll-to on cert section
     const ozoRef = useRef(null);       // ref for scroll-to on OZO section
     // Certificate form state
@@ -153,29 +153,29 @@ function WorkersPageInner() {
     // Auto-open from WorkerProfileModal "Otvori potpuno" or cert-return via ?openWorker=ID
     useEffect(() => {
         if (workers.length === 0) return;
-        if (openWorkerHandledRef.current) return; // already handled, don't re-open on loadData()
         const openId = searchParams?.get('openWorker');
-        if (openId) {
-            const found = workers.find(x => x.id === openId);
-            if (found) {
-                openWorkerHandledRef.current = true; // mark as handled
-                handleEdit(found);
-                // Check for section param — open and scroll to the right accordion
-                const section = searchParams?.get('section');
-                if (section === 'ozo') {
-                    setTimeout(() => {
-                        setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
-                        ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 350);
-                } else if (section === 'uvjerenja') {
-                    setTimeout(() => {
-                        setOpenSections(prev => ({ ...prev, uvjerenja: true }));
-                        uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }, 350);
-                }
-                // Clean URL so param doesn't persist on next loadData()
-                router.replace('/dashboard/workers', { scroll: false });
+        if (!openId) return;
+        // Only skip if we already handled THIS exact ID (prevents refiring on loadData rerenders)
+        if (openWorkerHandledRef.current === openId) return;
+        const found = workers.find(x => x.id === openId);
+        if (found) {
+            openWorkerHandledRef.current = openId; // mark as handled for THIS id
+            handleEdit(found);
+            // Check for section param — open and scroll to the right accordion
+            const section = searchParams?.get('section');
+            if (section === 'ozo') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
+                    ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'uvjerenja') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, uvjerenja: true }));
+                    uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
             }
+            // Clean URL so param doesn't persist on next loadData()
+            router.replace('/dashboard/workers', { scroll: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);
@@ -316,12 +316,12 @@ function WorkersPageInner() {
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
             editingWorkerRef.current = null;
-            openWorkerHandledRef.current = false;
+            openWorkerHandledRef.current = null;
             setCertificates([]);
             setPpeAssign([]);
         } else {
             setShowForm(false);
-            openWorkerHandledRef.current = false;
+            openWorkerHandledRef.current = null;
         }
         setSelectedIds(new Set()); // clear selection after save
         return savedId;

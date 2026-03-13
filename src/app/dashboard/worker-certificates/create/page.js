@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
     getAll, getById, create, update, remove, COLLECTIONS,
 } from '@/lib/dataStore';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
+import { printZosPdf } from '@/lib/zosPdfGenerator';
 
 const EMPTY_CERT = {
     workerId: '',
@@ -49,6 +51,7 @@ const FILE_TYPE_OPTIONS = [
 
 export function UvjerenjeFormPage() {
     const { t, lang } = useLanguage();
+    const { activeCompanyId } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
 
@@ -708,13 +711,37 @@ export function UvjerenjeFormPage() {
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary" onClick={handleSave}>
                             💾 {lang === 'bs' ? 'Snimi' : 'Save'}
                         </button>
                         <button className="btn btn-ghost" onClick={() => { const rt = searchParams?.get('returnTo'); if (rt) router.push(rt); else router.back(); }}>
                             ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
                         </button>
+                        {(formData.tipUvjerenjaIme || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && selectedWorkerIds.size === 1 && (() => {
+                            const wId = [...selectedWorkerIds][0];
+                            const wk = workers.find(x => x.id === wId);
+                            if (!wk) return null;
+                            return (
+                                <button className="btn btn-outline btn-sm" onClick={() => {
+                                    const wps = getAll(COLLECTIONS.WORKPLACES);
+                                    const wpN = wps.find(wp => wp.id === wk.radnoMjestoId)?.naziv || formData.vydanoZaRadnoMjesto || '';
+                                    const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                    printZosPdf({
+                                        company: companyFull,
+                                        worker: wk,
+                                        workplaceName: wpN,
+                                        training: { naziv: formData.tipUvjerenjaIme },
+                                        officer: formData.strucnjakZNR || formData.upisao || '',
+                                        date: formData.datum || new Date().toISOString(),
+                                        certOznaka: formData.oznaka || `ZOS-${Date.now().toString(36).toUpperCase()}`,
+                                        testResult: formData.rezultatTesta || '',
+                                    });
+                                }}>
+                                    🖨️ {lang === 'bs' ? 'Ispiši ZOS' : 'Print ZOS'}
+                                </button>
+                            );
+                        })()}
                         {selectedWorkerIds.size > 0 && (
                             <span style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
                                 💡 {lang === 'bs'
