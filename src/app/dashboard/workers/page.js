@@ -518,7 +518,40 @@ function WorkersPageInner() {
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <SelectField label={t('workplace')} value={formData.radnoMjestoId} onChange={v => updateField('radnoMjestoId', v)}
+                            <SelectField label={t('workplace')} value={formData.radnoMjestoId} onChange={async (v) => {
+                                const oldId = formData.radnoMjestoId;
+                                updateField('radnoMjestoId', v);
+                                // Auto-invalidate ZOS when Radno mjesto changes (Član 34. Zakona o ZNR FBiH)
+                                if (editingWorker && oldId && v && oldId !== v) {
+                                    const allCerts = getWorkerCertificates(editingWorker);
+                                    const zosCerts = allCerts.filter(c =>
+                                        (c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') &&
+                                        c.sposobnost !== 'Nevažeće'
+                                    );
+                                    if (zosCerts.length > 0) {
+                                        const oldWpName = getWorkplaceName(oldId);
+                                        const newWpName = getWorkplaceName(v);
+                                        const ok = await confirm(lang === 'bs'
+                                            ? `Promjena radnog mjesta (${oldWpName} → ${newWpName}) zahtijeva novo osposobljavanje.\n\n${zosCerts.length} ZOS uvjerenje(a) će biti označeno kao "Nevažeće".\n\nNastaviti?`
+                                            : `Workplace change (${oldWpName} → ${newWpName}) requires new training.\n\n${zosCerts.length} ZOS certificate(s) will be marked as "Invalid".\n\nContinue?`);
+                                        if (ok) {
+                                            for (const cert of zosCerts) {
+                                                update(COLLECTIONS.CERTIFICATES, cert.id, {
+                                                    sposobnost: 'Nevažeće',
+                                                    sposoban: false,
+                                                    ogranicenja: `${cert.ogranicenja ? cert.ogranicenja + ' | ' : ''}Nevažeće — promjena radnog mjesta sa "${oldWpName}" na "${newWpName}" (${new Date().toLocaleDateString('hr-HR')})`,
+                                                });
+                                            }
+                                            setCertificates(getWorkerCertificates(editingWorker));
+                                            await alert(lang === 'bs'
+                                                ? `⚠️ ${zosCerts.length} ZOS uvjerenje(a) označeno kao "Nevažeće". Radnik mora proći novo osposobljavanje za novo radno mjesto.`
+                                                : `⚠️ ${zosCerts.length} ZOS certificate(s) marked as "Invalid". Worker must undergo new training.`);
+                                        } else {
+                                            updateField('radnoMjestoId', oldId); // revert
+                                        }
+                                    }
+                                }
+                            }}
                                 options={workplaces.map(wp => ({ value: wp.id, label: wp.naziv }))} />
                             <SelectField label={t('orgUnit')} value={formData.orgJedinicaId} onChange={v => updateField('orgJedinicaId', v)}
                                 options={orgUnits.map(ou => ({ value: ou.id, label: ou.naziv }))} />
@@ -672,13 +705,17 @@ function WorkersPageInner() {
                                             </td>
                                             <td>{c.oznaka}</td>
                                             <td>{formatDate(c.datum)}</td>
-                                            <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>
-                                                {formatDate(c.vrijediDo)} {isExpired && '⚠️'}
+                                            <td style={{ color: isExpired ? 'var(--danger)' : !c.vrijediDo ? 'var(--success)' : undefined, fontWeight: (isExpired || !c.vrijediDo) ? 700 : undefined }}>
+                                                {c.vrijediDo ? (
+                                                    <>{formatDate(c.vrijediDo)} {isExpired && '⚠️'}</>
+                                                ) : (
+                                                    <span title="Vrijedi dok se ne promijeni radno mjesto">Bez isteka ∞</span>
+                                                )}
                                             </td>
                                             <td style={{ fontWeight: 600 }}>{c.ime}</td>
                                             <td><span className="badge badge-info">{c.tipUvjerenja}</span></td>
                                             <td>{c.upisao}</td>
-                                            <td><span className={`badge ${c.sposobnost === 'Sposoban' ? 'badge-success' : 'badge-danger'}`}>{c.sposobnost}</span></td>
+                                            <td><span className={`badge ${c.sposobnost === 'Sposoban' ? 'badge-success' : c.sposobnost === 'Nevažeće' ? 'badge-warning' : 'badge-danger'}`}>{c.sposobnost}</span></td>
                                         </tr>
                                     );
                                 })}

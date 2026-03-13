@@ -346,21 +346,23 @@ export default function TrainingsPage() {
             return;
         }
         const today = new Date().toISOString().split('T')[0];
-        const validUntil = new Date(Date.now() + 730 * 86400000).toISOString().split('T')[0]; // +2 years
+        const workplaces = getAll(COLLECTIONS.WORKPLACES);
+        const wpName = workplaces.find(wp => wp.id === worker.radnoMjestoId)?.naziv || '';
         const certData = {
             workerId: worker.id,
             ime: 'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način',
             tipUvjerenjaIme: 'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način',
             oznaka: `ZOS-${Date.now().toString(36).toUpperCase()}`,
             datum: today,
-            vrijediDo: validUntil,
+            vrijediDo: '', // ZOS nema datum isteka — vrijedi dok se ne promijeni radno mjesto
             sposobnost: 'Sposoban',
             sposoban: true,
             strucnjakZNR: officerName,
             upisao: officerName,
             izdanoIzObuke: resultsTraining?.naziv || '',
+            izdanoZaRadnoMjesto: wpName,
             rezultatTesta: session.grade ? `${session.grade.percentage}%` : '',
-            ogranicenja: `Obuka: ${resultsTraining?.naziv || ''}. Rezultat testa: ${session.grade?.percentage || 0}%.`,
+            ogranicenja: `Obuka: ${resultsTraining?.naziv || ''}. Rezultat testa: ${session.grade?.percentage || 0}%. Radno mjesto: ${wpName || 'nije specificirano'}.`,
         };
         create(COLLECTIONS.CERTIFICATES, certData);
         await alert(lang === 'bs'
