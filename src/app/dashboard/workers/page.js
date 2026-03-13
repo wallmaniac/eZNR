@@ -65,7 +65,8 @@ function WorkersPageInner() {
     const [certMenuId, setCertMenuId] = useState(null); // active cert action dropdown
     const [certMenuPos, setCertMenuPos] = useState({ top: 0, left: 0 }); // fixed position
     const certMenuRef = useRef(null);
-    const certMenuClosingRef = useRef(false); // tracks mousedown-closes-menu so click doesn't reopen
+    const certOpenBtnRef = useRef(null); // ref to the button element that opened the menu
+    const certMenuIdRef = useRef(null);  // ref mirror of certMenuId — never stale in closures
     const [showOnlyValidCerts, setShowOnlyValidCerts] = useState(false);
     const [showExpiringSoon, setShowExpiringSoon] = useState(false);
     const [expiringSoonDays, setExpiringSoonDays] = useState(60);
@@ -152,7 +153,13 @@ function WorkersPageInner() {
     useEffect(() => {
         const handleClick = (e) => {
             if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
-            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) setCertMenuId(null);
+            // Cert menu: skip if clicking the button that opened it (its onClick will toggle)
+            if (certOpenBtnRef.current && certOpenBtnRef.current.contains(e.target)) return;
+            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) {
+                setCertMenuId(null);
+                certMenuIdRef.current = null;
+                certOpenBtnRef.current = null;
+            }
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
@@ -182,8 +189,9 @@ function WorkersPageInner() {
                     uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 350);
             }
-            // Clean URL so param doesn't persist on next loadData()
-            router.replace('/dashboard/workers', { scroll: false });
+            // Keep openWorker in URL so browser back button can re-trigger the open
+            // Just remove it silently so it doesn't re-fire on next render — but leave history intact
+            router.replace(`/dashboard/workers?openWorker=${openId}${section ? `&section=${section}` : ''}`, { scroll: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);
@@ -730,10 +738,16 @@ function WorkersPageInner() {
                                                 <button
                                                     className="btn btn-outline btn-sm"
                                                     style={{ fontSize: '0.78rem', whiteSpace: 'nowrap', paddingLeft: 10, paddingRight: 10 }}
-                                                    onMouseDown={(e) => e.stopPropagation()}
-                                                    onClick={(e) => {
+                                                     onClick={(e) => {
                                                          e.stopPropagation();
-                                                         if (certMenuId === c.id) { setCertMenuId(null); return; }
+                                                         if (certMenuIdRef.current === c.id) {
+                                                             certMenuIdRef.current = null;
+                                                             certOpenBtnRef.current = null;
+                                                             setCertMenuId(null);
+                                                             return;
+                                                         }
+                                                         certMenuIdRef.current = c.id;
+                                                         certOpenBtnRef.current = e.currentTarget;
                                                          const rect = e.currentTarget.getBoundingClientRect();
                                                          const menuW = 230;
                                                          const left = Math.min(rect.left, window.innerWidth - menuW - 8);

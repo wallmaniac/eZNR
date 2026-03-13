@@ -141,14 +141,8 @@ export default function Header({ sidebarCollapsed }) {
     });
     const sep = <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />;
 
-    // Navigate back — window.location.search is safe here (only runs on click, never during SSR)
-    const handleBack = () => {
-        if (typeof window !== 'undefined') {
-            const rt = new URLSearchParams(window.location.search).get('returnTo');
-            if (rt) { router.push(decodeURIComponent(rt)); return; }
-        }
-        router.back();
-    };
+    // Navigate back — browser history handles this correctly since cert pages use router.push()
+    const handleBack = () => router.back();
 
     return (
         <>
