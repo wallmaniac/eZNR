@@ -61,6 +61,8 @@ function WorkersPageInner() {
     const [certFormData, setCertFormData] = useState({ oznaka: '', datum: '', vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' });
     const [certEditId, setCertEditId] = useState(null);
     const [certSearch, setCertSearch] = useState('');
+    const [certMenuId, setCertMenuId] = useState(null); // active cert action dropdown
+    const certMenuRef = useRef(null);
     const [showOnlyValidCerts, setShowOnlyValidCerts] = useState(false);
     const [showExpiringSoon, setShowExpiringSoon] = useState(false);
     const [expiringSoonDays, setExpiringSoonDays] = useState(60);
@@ -145,7 +147,10 @@ function WorkersPageInner() {
     }, [formData.datumRodenja]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
+        const handleClick = (e) => {
+            if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
+            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) setCertMenuId(null);
+        };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
@@ -713,63 +718,96 @@ function WorkersPageInner() {
                                     const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
                                     return (
                                         <tr key={c.id}>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Brza izmjena' : 'Quick edit'} onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
-                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Otvori potpuno' : 'Open full form'} onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`); }}>📄</button>
-                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Kopiraj uvjerenje' : 'Copy certificate'} onClick={() => {
-                                                        markClean();
-                                                        router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}&copyFrom=${c.id}&returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`);
-                                                    }}>📋</button>
-                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>🗑️</button>
-                                                    {(c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && (
-                                                        <>
-                                                            <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem' }} title={lang === 'bs' ? 'Ispiši ZOS dokument' : 'Print ZOS document'} onClick={() => {
-                                                                const wk = getAll(COLLECTIONS.WORKERS).find(x => x.id === editingWorker);
-                                                                if (!wk) return;
-                                                                const wps = getAll(COLLECTIONS.WORKPLACES);
-                                                                const wpN = wps.find(wp => wp.id === wk.radnoMjestoId)?.naziv || c.izdanoZaRadnoMjesto || '';
-                                                                const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
-                                                                printZosPdf({
-                                                                    company: companyFull,
-                                                                    worker: wk,
-                                                                    workplaceName: wpN,
-                                                                    training: { naziv: c.izdanoIzObuke || c.ime },
-                                                                    officer: c.strucnjakZNR || c.upisao || '',
-                                                                    date: c.datum || new Date().toISOString(),
-                                                                    certOznaka: c.oznaka,
-                                                                    testResult: c.rezultatTesta || '',
-                                                                });
-                                                            }}>🖨️ ZOS</button>
-                                                            <label className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem', cursor: 'pointer' }} title={lang === 'bs' ? 'Upload potpisan ZOS scan' : 'Upload signed ZOS scan'}>
-                                                                📎 {c.potpisanScan ? '✅' : 'Scan'}
-                                                                <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
-                                                                    const file = e.target.files?.[0];
-                                                                    if (!file) return;
-                                                                    if (file.size > 5000000) { alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB' : 'File must be under 5MB'); return; };
-                                                                    const reader = new FileReader();
-                                                                    reader.onload = (ev) => {
-                                                                        update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
-                                                                        setCertificates(getWorkerCertificates(editingWorker));
-                                                                    };
-                                                                    reader.readAsDataURL(file);
-                                                                    e.target.value = '';
-                                                                }} />
-                                                            </label>
-                                                            {c.potpisanScan && (
-                                                                <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem' }} title={lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'} onClick={() => {
-                                                                    const w = window.open('', '_blank');
-                                                                    if (c.potpisanScan.startsWith('data:application/pdf')) {
-                                                                        w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`);
-                                                                    } else {
-                                                                        w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`);
-                                                                    }
-                                                                    w.document.close();
-                                                                }}>👁️</button>
-                                                            )}
-                                                        </>
-                                                    )}
-                                                </div>
+                                            <td style={{ position: 'relative' }} ref={certMenuId === c.id ? certMenuRef : null}>
+                                                {/* Akcije dropdown */}
+                                                <button
+                                                    className="btn btn-outline btn-sm"
+                                                    style={{ fontSize: '0.78rem', whiteSpace: 'nowrap', paddingLeft: 10, paddingRight: 10 }}
+                                                    onClick={() => setCertMenuId(certMenuId === c.id ? null : c.id)}
+                                                >
+                                                    ⚙️ {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
+                                                </button>
+                                                {certMenuId === c.id && (
+                                                    <div style={{
+                                                        position: 'absolute', top: '100%', left: 0, zIndex: 999,
+                                                        background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                                        borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
+                                                        minWidth: 210, padding: '4px 0', marginTop: 2,
+                                                    }}>
+                                                        {/* Brza izmjena */}
+                                                        <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                                                            onClick={() => { setCertMenuId(null); setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>
+                                                            ✏️ <span>{lang === 'bs' ? 'Brza izmjena' : 'Quick edit'}</span>
+                                                        </button>
+                                                        {/* Uredi potpuno */}
+                                                        <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`); }}>
+                                                            📄 <span>{lang === 'bs' ? 'Uredi potpuno' : 'Edit full form'}</span>
+                                                        </button>
+                                                        {/* Kopiraj */}
+                                                        <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}&copyFrom=${c.id}&returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`); }}>
+                                                            📋 <span>{lang === 'bs' ? 'Kopiraj uvjerenje' : 'Copy certificate'}</span>
+                                                        </button>
+                                                        {/* ZOS-specific actions */}
+                                                        {(c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && (
+                                                            <>
+                                                                <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
+                                                                {/* Ispiši ZOS */}
+                                                                <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                                                                    onClick={() => {
+                                                                        setCertMenuId(null);
+                                                                        const wk = getAll(COLLECTIONS.WORKERS).find(x => x.id === editingWorker);
+                                                                        if (!wk) return;
+                                                                        const wps = getAll(COLLECTIONS.WORKPLACES);
+                                                                        const wpN = wps.find(wp => wp.id === wk.radnoMjestoId)?.naziv || c.izdanoZaRadnoMjesto || '';
+                                                                        const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                                                        printZosPdf({ company: companyFull, worker: wk, workplaceName: wpN, training: { naziv: c.izdanoIzObuke || c.ime }, officer: c.strucnjakZNR || c.upisao || '', date: c.datum || new Date().toISOString(), certOznaka: c.oznaka, testResult: c.rezultatTesta || '' });
+                                                                    }}>
+                                                                    🖨️ <span>{lang === 'bs' ? 'Ispiši ZOS dokument' : 'Print ZOS document'}</span>
+                                                                </button>
+                                                                {/* Upload / prikaži scan */}
+                                                                <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
+                                                                    📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni potpisan scan' : 'Replace signed scan') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan')}{c.potpisanScan ? ' ✅' : ''}</span>
+                                                                    <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
+                                                                        const file = e.target.files?.[0];
+                                                                        if (!file) return;
+                                                                        if (file.size > 5000000) { alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB' : 'File must be under 5MB'); return; }
+                                                                        const reader = new FileReader();
+                                                                        reader.onload = (ev) => {
+                                                                            update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
+                                                                            setCertificates(getWorkerCertificates(editingWorker));
+                                                                            setCertMenuId(null);
+                                                                        };
+                                                                        reader.readAsDataURL(file);
+                                                                        e.target.value = '';
+                                                                    }} />
+                                                                </label>
+                                                                {c.potpisanScan && (
+                                                                    <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                                                                        onClick={() => {
+                                                                            setCertMenuId(null);
+                                                                            const w = window.open('', '_blank');
+                                                                            if (c.potpisanScan.startsWith('data:application/pdf')) {
+                                                                                w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`);
+                                                                            } else {
+                                                                                w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`);
+                                                                            }
+                                                                            w.document.close();
+                                                                        }}>
+                                                                        👁️ <span>{lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'}</span>
+                                                                    </button>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                        {/* Separator + delete */}
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
+                                                        <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}
+                                                            onClick={async () => { setCertMenuId(null); const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This action is permanent.'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>
+                                                            🗑️ <span>{lang === 'bs' ? 'Obriši uvjerenje' : 'Delete certificate'}</span>
+                                                        </button>
+                                                    </div>
+                                                )}
                                             </td>
                                             <td>{c.oznaka}</td>
                                             <td>{formatDate(c.datum)}</td>
