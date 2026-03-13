@@ -302,7 +302,7 @@ function EquipmentPageInner() {
                             {activeTab === 'servis' && (
                                 <div>
                                     {!editingId && (
-                                        <div style={{ padding: '20px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, border: '1px solid rgba(255,152,0,0.2)', marginBottom: 16, fontSize: '0.85rem', color: '#E65100' }}>
+                                        <div style={{ padding: '20px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, border: '1px solid rgba(255,152,0,0.2)', marginBottom: 16, fontSize: '0.85rem', color: 'var(--warning)' }}>
                                             ⚠️ {lang === 'bs' ? 'Najprije sačuvajte opremu da biste mogli dodavati servisne zapise.' : 'Save the equipment first before adding service records.'}
                                         </div>
                                     )}
@@ -363,7 +363,7 @@ function EquipmentPageInner() {
                                                             <button onClick={() => downloadDoc(log)} style={{
                                                                 marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6,
                                                                 background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.2)',
-                                                                borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: '0.78rem', color: '#1565C0',
+                                                                borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--info)',
                                                             }}>
                                                                 📎 {log.docName}
                                                             </button>
@@ -429,7 +429,7 @@ function EquipmentPageInner() {
                                     <label className="form-label">📎 {lang === 'bs' ? 'Prilog (dokaz servisa, maks. 2MB)' : 'Attachment (proof of service, max 2MB)'}</label>
                                     {serviceFormData.docName ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
-                                            <span style={{ fontSize: '0.85rem', color: '#1565C0' }}>📎 {serviceFormData.docName}</span>
+                                            <span style={{ fontSize: '0.85rem', color: 'var(--info)' }}>📎 {serviceFormData.docName}</span>
                                             <button className="btn btn-ghost btn-sm" onClick={() => setServiceFormData(p => ({ ...p, docName: '', docData: '' }))} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
                                         </div>
                                     ) : (

@@ -275,7 +275,7 @@ export default function Header({ sidebarCollapsed }) {
                                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
                                             <span style={{ fontSize: '1.2rem' }}>{r.icon}</span>
                                             <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{r.label}</div>
+                                                <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{r.label}</div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.sub}</div>
                                             </div>
                                             <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-badge)', color: 'var(--primary-dark)', fontWeight: 600 }}>
@@ -340,10 +340,10 @@ export default function Header({ sidebarCollapsed }) {
                                     <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
                                 ) : notifications.map((n, idx) => {
                                     const sc = {
-                                        critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: '#B91C1C' },
-                                        urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: '#C2410C' },
-                                        warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: '#92400E' },
-                                        info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: '#166534' },
+                                        critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: 'var(--danger)' },
+                                        urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: 'var(--warning)' },
+                                        warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: 'var(--warning)' },
+                                        info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: 'var(--success)' },
                                     };
                                     const c = sc[n.severity] || sc.info;
                                     return (
@@ -355,7 +355,7 @@ export default function Header({ sidebarCollapsed }) {
                                                         <div style={{ fontWeight: 700, fontSize: '0.82rem', color: c.titleColor }}>{n.text}</div>
                                                         {n.companyName && <span style={{ fontSize: '0.62rem', fontWeight: 700, padding: '1px 5px', borderRadius: 4, background: 'rgba(0,0,0,0.05)', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>🏢 {n.companyName}</span>}
                                                     </div>
-                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: '#4B5563', marginTop: 3 }}>{n.detail}</div>}
+                                                    {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 3 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                                                         {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
                                                         {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}</button>}

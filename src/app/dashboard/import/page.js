@@ -335,7 +335,7 @@ export default function ImportPage() {
 
                     {/* Company warning if needed */}
                     {activeCompanyId === 'all' && (
-                        <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: '0.85rem', color: '#E65100' }}>
+                        <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: '0.85rem', color: 'var(--warning)' }}>
                             ⚠️ {lang === 'bs' ? `Podaci će biti uvezeni za prvu firmu u vašoj listi. Odaberite aktivnu firmu u headeru za preciznost.` : `Data will be imported to the first company. Select an active company in the header for accuracy.`}
                         </div>
                     )}

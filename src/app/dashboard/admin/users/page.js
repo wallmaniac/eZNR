@@ -131,8 +131,8 @@ export default function AdminUsersPage() {
                 {[
                     { label: lang === 'bs' ? 'Ukupno' : 'Total', value: users.length, icon: '👥', color: 'var(--primary)' },
                     { label: 'Admin', value: users.filter(u => u.role === 'admin').length, icon: '👑', color: '#7B1FA2' },
-                    { label: lang === 'bs' ? 'Stručnjaci' : 'Officers', value: users.filter(u => u.role === 'officer').length, icon: '🛡️', color: '#1565C0' },
-                    { label: lang === 'bs' ? 'Aktivni' : 'Active', value: users.filter(u => u.aktivan !== false).length, icon: '✅', color: '#2E7D32' },
+                    { label: lang === 'bs' ? 'Stručnjaci' : 'Officers', value: users.filter(u => u.role === 'officer').length, icon: '🛡️', color: 'var(--info)' },
+                    { label: lang === 'bs' ? 'Aktivni' : 'Active', value: users.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
                 ].map((s, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
@@ -244,11 +244,11 @@ export default function AdminUsersPage() {
                                                 {(u.companyIds || []).map(cid => (
                                                     <button key={cid} onClick={() => setShowCompanyDetail(getCompanyById(cid))} style={{
                                                         padding: '2px 8px', borderRadius: 8, fontSize: '0.7rem',
-                                                        background: '#E3F2FD', color: '#1565C0', fontWeight: 600,
+                                                        background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600,
                                                         border: '1px solid transparent', cursor: 'pointer', transition: 'all 0.15s',
                                                     }}
-                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#1565C0'; e.currentTarget.style.background = '#BBDEFB'; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.background = '#E3F2FD'; }}
+                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--info)'; e.currentTarget.style.background = '#BBDEFB'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.background = 'rgba(33,150,243,0.12)'; }}
                                                     >
                                                         🏢 {getCompanyName(cid)}
                                                     </button>
@@ -260,8 +260,8 @@ export default function AdminUsersPage() {
                                             <button onClick={() => handleToggleActive(u)} style={{
                                                 padding: '3px 10px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 600,
                                                 border: 'none', cursor: 'pointer',
-                                                background: u.aktivan !== false ? '#E8F5E9' : '#FFEBEE',
-                                                color: u.aktivan !== false ? '#2E7D32' : '#C62828',
+                                                background: u.aktivan !== false ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
+                                                color: u.aktivan !== false ? 'var(--success)' : 'var(--danger)',
                                             }}>
                                                 {u.aktivan !== false ? '✅ Aktivan' : '⛔ Neaktivan'}
                                             </button>
@@ -399,8 +399,8 @@ export default function AdminUsersPage() {
                                             </div>
                                             <span style={{
                                                 padding: '2px 8px', borderRadius: 8, fontSize: '0.65rem', fontWeight: 700,
-                                                background: u.role === 'admin' ? '#F3E5F5' : '#E3F2FD',
-                                                color: u.role === 'admin' ? '#7B1FA2' : '#1565C0',
+                                                background: u.role === 'admin' ? '#F3E5F5' : 'rgba(33,150,243,0.12)',
+                                                color: u.role === 'admin' ? '#7B1FA2' : 'var(--info)',
                                             }}>{u.role === 'admin' ? '👑 Admin' : '🛡️ Officer'}</span>
                                         </div>
                                     ))}

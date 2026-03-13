@@ -43,7 +43,7 @@ export default function SetupPage() {
                 </button>
             </div>
             {status && (
-                <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f0fdf4', borderRadius: 8, color: '#166534' }}>
+                <div style={{ marginTop: 20, padding: 16, backgroundColor: '#f0fdf4', borderRadius: 8, color: 'var(--success)' }}>
                     {status}
                 </div>
             )}

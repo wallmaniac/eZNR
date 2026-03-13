@@ -5,11 +5,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 // No localStorage cache — server caches for 2h, so every page load is fresh within 2h
 
 const TIP_CONFIG = {
-    zakon: { color: '#1565C0', bg: '#1565C015', label: 'ZAKON', icon: '⚖️' },
+    zakon: { color: 'var(--info)', bg: '#1565C015', label: 'ZAKON', icon: '⚖️' },
     pravilnik: { color: '#6A1B9A', bg: '#6A1B9A15', label: 'PRAVILNIK', icon: '📜' },
     edukacija: { color: '#00897B', bg: '#00897B15', label: 'EDUKACIJA', icon: '🎓' },
-    rok: { color: '#C62828', bg: '#C6282815', label: 'ROK', icon: '⏰' },
-    obavijest: { color: '#E65100', bg: '#E6510015', label: 'OBAVIJEST', icon: '📢' },
+    rok: { color: 'var(--danger)', bg: '#C6282815', label: 'ROK', icon: '⏰' },
+    obavijest: { color: 'var(--warning)', bg: '#E6510015', label: 'OBAVIJEST', icon: '📢' },
     inspekcija: { color: '#37474F', bg: '#37474F15', label: 'INSPEKCIJA', icon: '🔍' },
     smjernice: { color: '#558B2F', bg: '#558B2F15', label: 'SMJERNICE', icon: '📋' },
 };

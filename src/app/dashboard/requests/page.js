@@ -250,7 +250,7 @@ export default function RequestsPage() {
                       <td>{getWorkerName(r.workerId)}</td>
                       <td>{getOrgName(r.orgJedinicaId)}</td>
                       <td>
-                        <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: '#E3F2FD', color: '#1565C0', fontWeight: 600 }}>
+                        <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>
                           {(r.stavke || []).length}
                         </span>
                       </td>

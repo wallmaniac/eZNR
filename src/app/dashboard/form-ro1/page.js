@@ -188,8 +188,8 @@ export default function FormRO1Page() {
                       <td>
                         <span style={{
                           padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem',
-                          background: r.posloviPravilnik ? '#E8F5E9' : '#ECEFF1',
-                          color: r.posloviPravilnik ? '#2E7D32' : '#546E7A', fontWeight: 600,
+                          background: r.posloviPravilnik ? 'rgba(76,175,80,0.12)' : 'var(--bg-input)',
+                          color: r.posloviPravilnik ? 'var(--success)' : 'var(--text-muted)', fontWeight: 600,
                         }}>{r.posloviPravilnik ? 'Da' : 'Ne'}</span>
                       </td>
                       <td>

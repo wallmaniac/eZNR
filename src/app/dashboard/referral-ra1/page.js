@@ -263,7 +263,7 @@ export default function ReferralRA1Page() {
                         <td>{idx + 1}</td>
                         <td style={{ fontWeight: 600 }}>{getWorkerName(r.workerId)}</td>
                         <td>{formatDate(r.datum)}</td>
-                        <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: '#E3F2FD', color: '#1565C0', fontWeight: 600 }}>{examType}</span></td>
+                        <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{examType}</span></td>
                         <td>{r.ustanovaNaziv || '—'}</td>
                         <td>{r.doktorIme || '—'}</td>
                         <td>

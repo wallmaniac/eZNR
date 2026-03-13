@@ -384,11 +384,11 @@ export default function DashboardPage() {
                                         const isSoon = diff >= 0 && diff <= 30;
                                         const statusIcon = ev.auto ? (isExpired ? ' ⚠️' : isSoon ? ' ⏰' : '') : '';
                                         const bgColor = ev.auto && isExpired
-                                            ? (ev.tip === 'cert' ? '#FFEBEE' : ev.tip === 'equip' ? '#FBE9E7' : '#FFEBEE')
-                                            : (ev.tip === 'cert' ? '#E3F2FD' : ev.tip === 'ppe' ? '#FFF3E0' : ev.tip === 'equip' ? '#E8F5E9' : '#F3E5F5');
+                                            ? (ev.tip === 'cert' ? 'rgba(244,67,54,0.12)' : ev.tip === 'equip' ? '#FBE9E7' : 'rgba(244,67,54,0.12)')
+                                            : (ev.tip === 'cert' ? 'rgba(33,150,243,0.12)' : ev.tip === 'ppe' ? 'rgba(255,152,0,0.12)' : ev.tip === 'equip' ? 'rgba(76,175,80,0.12)' : '#F3E5F5');
                                         const fgColor = ev.auto && isExpired
-                                            ? '#C62828'
-                                            : (ev.tip === 'cert' ? '#1565C0' : ev.tip === 'ppe' ? '#E65100' : ev.tip === 'equip' ? '#2E7D32' : '#6A1B9A');
+                                            ? 'var(--danger)'
+                                            : (ev.tip === 'cert' ? 'var(--info)' : ev.tip === 'ppe' ? 'var(--warning)' : ev.tip === 'equip' ? 'var(--success)' : '#6A1B9A');
                                         return (
                                             <div key={ev.id || idx}
                                                 style={{
@@ -432,13 +432,13 @@ export default function DashboardPage() {
                     </div>
 
                     <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem', flexWrap: 'wrap' }}>
-                        <Legend color="#1565C0" bg="#E3F2FD" label={lang === 'bs' ? '📜 Uvjerenja' : '📜 Certificates'} />
-                        <Legend color="#2E7D32" bg="#E8F5E9" label={lang === 'bs' ? '🔧 Servis' : '🔧 Service'} />
-                        <Legend color="#E65100" bg="#FFF3E0" label="🦺 ZS" />
-                        <Legend color="#2E7D32" bg="#E8F5E9" label={lang === 'bs' ? '⚙️ Oprema' : '⚙️ Equipment'} />
+                        <Legend color="var(--info)" bg="rgba(33,150,243,0.12)" label={lang === 'bs' ? '📜 Uvjerenja' : '📜 Certificates'} />
+                        <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang === 'bs' ? '🔧 Servis' : '🔧 Service'} />
+                        <Legend color="var(--warning)" bg="rgba(255,152,0,0.12)" label="🦺 ZS" />
+                        <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang === 'bs' ? '⚙️ Oprema' : '⚙️ Equipment'} />
                         <Legend color="#6A1B9A" bg="#F3E5F5" label={lang === 'bs' ? '📄 Dokumenti' : '📄 Documents'} />
-                        <Legend color="#C62828" bg="#FFEBEE" label={lang === 'bs' ? '⚠️ Isteklo' : '⚠️ Expired'} />
-                        <Legend color="#E65100" bg="#FFF8E1" label={lang === 'bs' ? '⏰ Uskoro' : '⏰ Soon'} />
+                        <Legend color="var(--danger)" bg="rgba(244,67,54,0.12)" label={lang === 'bs' ? '⚠️ Isteklo' : '⚠️ Expired'} />
+                        <Legend color="var(--warning)" bg="#FFF8E1" label={lang === 'bs' ? '⏰ Uskoro' : '⏰ Soon'} />
                     </div>
                 </div>
             </div>
@@ -468,12 +468,12 @@ export default function DashboardPage() {
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{ev.opis || tipLabel}</div>
                                             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
-                                                <span style={{ background: isExpired ? '#FFEBEE' : '#E3F2FD', color: isExpired ? '#C62828' : '#1565C0', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (lang === 'bs' ? 'Isteklo' : 'Expired') : tipLabel}</span>
-                                                {ev.auto && <span style={{ background: '#FFF3E0', color: '#E65100', padding: '1px 6px', borderRadius: 4 }}>{lang === 'bs' ? 'Auto' : 'Auto'}</span>}
+                                                <span style={{ background: isExpired ? 'rgba(244,67,54,0.12)' : 'rgba(33,150,243,0.12)', color: isExpired ? 'var(--danger)' : 'var(--info)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (lang === 'bs' ? 'Isteklo' : 'Expired') : tipLabel}</span>
+                                                {ev.auto && <span style={{ background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', padding: '1px 6px', borderRadius: 4 }}>{lang === 'bs' ? 'Auto' : 'Auto'}</span>}
                                                 {ev.companyName && <span style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 6px', borderRadius: 4 }}>🏢 {ev.companyName}</span>}
                                             </div>
                                         </div>
-                                        {!ev.auto && <button onClick={e => { e.stopPropagation(); setDayDetailDate(null); handleDeleteEvent(ev, e); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: '#C62828', opacity: 0.5, padding: 4 }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}>🗑️</button>}
+                                        {!ev.auto && <button onClick={e => { e.stopPropagation(); setDayDetailDate(null); handleDeleteEvent(ev, e); }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.9rem', color: 'var(--danger)', opacity: 0.5, padding: 4 }} onMouseEnter={e => e.currentTarget.style.opacity = '1'} onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}>🗑️</button>}
                                     </div>
                                 );
                             })}
@@ -1080,12 +1080,12 @@ export default function DashboardPage() {
 
 function StatCard({ icon, label, value, color, onClick, isAlert }) {
     return (
-        <div className="card" style={{ borderLeft: `4px solid ${color}`, cursor: 'pointer', background: isAlert ? 'linear-gradient(135deg, #FFEBEE, #FFCDD2)' : undefined }} onClick={onClick}>
+        <div className="card" style={{ borderLeft: `4px solid ${color}`, cursor: 'pointer', background: isAlert ? 'rgba(244,67,54,0.12)' : undefined }} onClick={onClick}>
             <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 10px' }}>
                 <span style={{ fontSize: '1.5rem', flexShrink: 0, animation: isAlert ? 'pulse 1.5s infinite' : undefined }}>{icon}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-heading)', color }}>{value}</div>
-                    <div style={{ fontSize: '0.75rem', lineHeight: 1.2, color: isAlert ? '#D32F2F' : 'var(--text-muted)', fontWeight: isAlert ? 700 : undefined, wordBreak: 'break-word', hyphens: 'auto' }}>{label}</div>
+                    <div style={{ fontSize: '0.75rem', lineHeight: 1.2, color: isAlert ? 'var(--danger)' : 'var(--text-muted)', fontWeight: isAlert ? 700 : undefined, wordBreak: 'break-word', hyphens: 'auto' }}>{label}</div>
                 </div>
                 {isAlert && <span style={{ marginLeft: 'auto', fontSize: '1.2rem', flexShrink: 0 }}>⚠️</span>}
             </div>

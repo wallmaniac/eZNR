@@ -138,8 +138,8 @@ export default function FormRO2Page() {
                       <td>
                         <span style={{
                           padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600,
-                          background: r.nijeMijenjaoRadnoMjesto ? '#E8F5E9' : '#FBE9E7',
-                          color: r.nijeMijenjaoRadnoMjesto ? '#2E7D32' : '#C62828',
+                          background: r.nijeMijenjaoRadnoMjesto ? 'rgba(76,175,80,0.12)' : '#FBE9E7',
+                          color: r.nijeMijenjaoRadnoMjesto ? 'var(--success)' : 'var(--danger)',
                         }}>{r.nijeMijenjaoRadnoMjesto ? 'Ne' : 'Da'}</span>
                       </td>
                       <td>

@@ -114,8 +114,8 @@ export default function AdminCompaniesPage() {
                                     </div>
                                     <span style={{
                                         padding: '3px 10px', borderRadius: 10, fontSize: '0.7rem', fontWeight: 600,
-                                        background: c.aktivan !== false ? '#E8F5E9' : '#FFEBEE',
-                                        color: c.aktivan !== false ? '#2E7D32' : '#C62828',
+                                        background: c.aktivan !== false ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
+                                        color: c.aktivan !== false ? 'var(--success)' : 'var(--danger)',
                                     }}>
                                         {c.aktivan !== false ? '✅ Aktivna' : '⛔ Neaktivna'}
                                     </span>
@@ -138,8 +138,8 @@ export default function AdminCompaniesPage() {
                                         {companyUsers.map(u => (
                                             <span key={u.id} style={{
                                                 padding: '2px 8px', borderRadius: 8, fontSize: '0.72rem', fontWeight: 600,
-                                                background: u.role === 'admin' ? '#F3E5F5' : '#E3F2FD',
-                                                color: u.role === 'admin' ? '#7B1FA2' : '#1565C0',
+                                                background: u.role === 'admin' ? '#F3E5F5' : 'rgba(33,150,243,0.12)',
+                                                color: u.role === 'admin' ? '#7B1FA2' : 'var(--info)',
                                             }}>
                                                 {u.role === 'admin' ? '👑' : '🛡️'} {u.firstName} {u.lastName}
                                             </span>

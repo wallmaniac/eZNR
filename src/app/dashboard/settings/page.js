@@ -249,8 +249,8 @@ export default function SettingsPage() {
         <div style={{
           position: 'fixed', top: 90, right: 24, zIndex: 500,
           padding: '12px 24px', borderRadius: 12,
-          background: '#E8F5E9', border: '1px solid #A5D6A7',
-          color: '#2E7D32', fontWeight: 600, fontSize: '0.85rem',
+          background: 'rgba(76,175,80,0.1)', border: '1px solid #A5D6A7',
+          color: 'var(--success)', fontWeight: 600, fontSize: '0.85rem',
           boxShadow: '0 4px 20px rgba(0,0,0,0.1)', animation: 'fadeIn 0.3s',
         }}>
           ✅ {lang === 'bs' ? 'Spremljeno!' : 'Saved!'}
@@ -329,8 +329,8 @@ export default function SettingsPage() {
 
             <hr style={{ margin: '28px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
             <h4 style={{ marginBottom: 16 }}>🔐 {lang === 'bs' ? 'Promjena lozinke' : 'Change Password'}</h4>
-            {passwordError && <div style={{ padding: '8px 14px', borderRadius: 8, background: '#FFEBEE', color: '#C62828', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>⚠️ {passwordError}</div>}
-            {passwordSuccess && <div style={{ padding: '8px 14px', borderRadius: 8, background: '#E8F5E9', color: '#2E7D32', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>✅ {passwordSuccess}</div>}
+            {passwordError && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>⚠️ {passwordError}</div>}
+            {passwordSuccess && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(76,175,80,0.1)', color: 'var(--success)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>✅ {passwordSuccess}</div>}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16 }}>
               <div className="form-group">
                 <label className="form-label">{lang === 'bs' ? 'Trenutna lozinka' : 'Current password'}</label>
@@ -692,7 +692,7 @@ export default function SettingsPage() {
                   <div style={{ fontWeight: 700, fontSize: '1rem' }}>eZNR v{APP_VERSION}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Datum izgradnje' : 'Build date'}: {APP_BUILD_DATE}</div>
                 </div>
-                <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700, background: '#E8F5E9', color: '#2E7D32' }}>
+                <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700, background: 'rgba(76,175,80,0.1)', color: 'var(--success)' }}>
                   {lang === 'bs' ? 'Najnovija verzija' : 'Latest version'}
                 </span>
               </div>
@@ -723,21 +723,21 @@ export default function SettingsPage() {
                 <StatCard icon="🏢" value={stats.totalCompanies} label={lang === 'bs' ? 'Kompanije' : 'Companies'} color="var(--primary)" />
                 <StatCard icon="👥" value={stats.totalUsers} label={lang === 'bs' ? 'Korisnici' : 'Users'} color="#7B1FA2" />
                 <StatCard icon="👷" value={stats.totalWorkers} label={lang === 'bs' ? 'Radnici' : 'Workers'} color="#1976D2" />
-                <StatCard icon="📋" value={stats.totalCertificates} label={lang === 'bs' ? 'Uvjerenja' : 'Certificates'} color="#F57C00" />
+                <StatCard icon="📋" value={stats.totalCertificates} label={lang === 'bs' ? 'Uvjerenja' : 'Certificates'} color="var(--warning)" />
                 <StatCard icon="⚙️" value={stats.totalEquipment} label={lang === 'bs' ? 'Oprema' : 'Equipment'} color="#388E3C" />
-                <StatCard icon="💾" value={stats.totalRecords} label={lang === 'bs' ? 'Ukupno zapisa' : 'Total records'} color="#C62828" />
+                <StatCard icon="💾" value={stats.totalRecords} label={lang === 'bs' ? 'Ukupno zapisa' : 'Total records'} color="var(--danger)" />
               </div>
 
               {/* Workers breakdown */}
               <SectionHeader icon="👷" title={lang === 'bs' ? 'Radnici — Pregled' : 'Workers — Breakdown'} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
-                <div style={{ padding: 16, borderRadius: 10, background: '#E3F2FD', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#1565C0' }}>{stats.activeWorkers}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#1565C0' }}>{lang === 'bs' ? 'Aktivni' : 'Active'}</div>
+                <div style={{ padding: 16, borderRadius: 10, background: 'var(--bg-badge)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--info)' }}>{stats.activeWorkers}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--info)' }}>{lang === 'bs' ? 'Aktivni' : 'Active'}</div>
                 </div>
-                <div style={{ padding: 16, borderRadius: 10, background: '#FFF3E0', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#E65100' }}>{stats.inactiveWorkers}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#E65100' }}>{lang === 'bs' ? 'Neaktivni' : 'Inactive'}</div>
+                <div style={{ padding: 16, borderRadius: 10, background: 'rgba(255,152,0,0.1)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--warning)' }}>{stats.inactiveWorkers}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>{lang === 'bs' ? 'Neaktivni' : 'Inactive'}</div>
                 </div>
                 <div style={{ padding: 16, borderRadius: 10, background: '#F3E5F5', textAlign: 'center' }}>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#7B1FA2' }}>{stats.totalWorkers}</div>
@@ -748,13 +748,13 @@ export default function SettingsPage() {
               {/* Certificate breakdown */}
               <SectionHeader icon="📋" title={lang === 'bs' ? 'Uvjerenja — Status' : 'Certificates — Status'} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
-                <div style={{ padding: 16, borderRadius: 10, background: '#E8F5E9', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#2E7D32' }}>{stats.activeCerts}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#2E7D32' }}>{lang === 'bs' ? 'Aktivna' : 'Active'}</div>
+                <div style={{ padding: 16, borderRadius: 10, background: 'rgba(76,175,80,0.1)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success)' }}>{stats.activeCerts}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--success)' }}>{lang === 'bs' ? 'Aktivna' : 'Active'}</div>
                 </div>
-                <div style={{ padding: 16, borderRadius: 10, background: '#FFEBEE', textAlign: 'center' }}>
-                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#C62828' }}>{stats.expiredCerts}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#C62828' }}>{lang === 'bs' ? 'Istekla' : 'Expired'}</div>
+                <div style={{ padding: 16, borderRadius: 10, background: 'rgba(244,67,54,0.1)', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--danger)' }}>{stats.expiredCerts}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--danger)' }}>{lang === 'bs' ? 'Istekla' : 'Expired'}</div>
                 </div>
               </div>
 
@@ -821,10 +821,10 @@ export default function SettingsPage() {
             {/* Connection status */}
             <div style={{
               display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-              borderRadius: 10, background: '#E8F5E9', border: '1px solid #A5D6A7', marginBottom: 20,
+              borderRadius: 10, background: 'rgba(76,175,80,0.1)', border: '1px solid #A5D6A7', marginBottom: 20,
             }}>
               <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }} />
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#2E7D32' }}>
+              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--success)' }}>
                 Spojen na Firebase projekt eznr-ee559
               </span>
             </div>
@@ -867,9 +867,9 @@ export default function SettingsPage() {
                     width: 16, height: 16, border: '2px solid #F57C00', borderTopColor: 'transparent',
                     borderRadius: '50%', animation: 'spin 0.8s linear infinite',
                   }} />
-                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#E65100' }}>Sinkronizacija u tijeku...</span>
+                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--warning)' }}>Sinkronizacija u tijeku...</span>
                 </div>
-                <div style={{ fontSize: '0.78rem', color: '#E65100' }}>{syncProgress}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--warning)' }}>{syncProgress}</div>
               </div>
             )}
 
@@ -877,10 +877,10 @@ export default function SettingsPage() {
             {syncResults && syncStatus !== 'syncing' && (
               <div style={{
                 padding: 16, borderRadius: 10, marginBottom: 20,
-                background: syncResults.errors.length === 0 ? '#E8F5E9' : '#FFF3E0',
+                background: syncResults.errors.length === 0 ? 'rgba(76,175,80,0.12)' : 'rgba(255,152,0,0.12)',
                 border: `1px solid ${syncResults.errors.length === 0 ? '#A5D6A7' : '#FFCC80'}`,
               }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 8, color: syncResults.errors.length === 0 ? '#2E7D32' : '#E65100' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 8, color: syncResults.errors.length === 0 ? 'var(--success)' : 'var(--warning)' }}>
                   {syncResults.errors.length === 0 ? '✅ Sinkronizacija uspješna!' : '⚠️ Sinkronizacija s greškama'}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 8 }}>
@@ -889,7 +889,7 @@ export default function SettingsPage() {
                 {syncResults.errors.length > 0 && (
                   <div>
                     {syncResults.errors.map((e, i) => (
-                      <div key={i} style={{ fontSize: '0.75rem', color: '#C62828', padding: '2px 0' }}>
+                      <div key={i} style={{ fontSize: '0.75rem', color: 'var(--danger)', padding: '2px 0' }}>
                         ❌ {e.collection}: {e.error}
                       </div>
                     ))}

@@ -328,6 +328,96 @@
   border-top-color: var(--border) !important;
 }
 
+/* ── Dark mode: catch hardcoded light-mode inline backgrounds ── */
+/* Light blue badges (#E3F2FD) */
+[data-theme="dark"] [style*="background: '#E3F2FD'"],
+[data-theme="dark"] [style*="background: #E3F2FD"],
+[data-theme="dark"] [style*="background:'#E3F2FD'"] {
+  background: rgba(66, 165, 245, 0.15) !important;
+}
+
+/* Light green backgrounds (#E8F5E9, #e8f5e9) */
+[data-theme="dark"] [style*="background: '#E8F5E9'"],
+[data-theme="dark"] [style*="background: #E8F5E9"],
+[data-theme="dark"] [style*="background:'#E8F5E9'"],
+[data-theme="dark"] [style*="background: '#e8f5e9'"] {
+  background: rgba(92, 199, 95, 0.12) !important;
+}
+
+/* Light orange backgrounds (#FFF3E0) */
+[data-theme="dark"] [style*="background: '#FFF3E0'"],
+[data-theme="dark"] [style*="background: #FFF3E0"],
+[data-theme="dark"] [style*="background:'#FFF3E0'"] {
+  background: rgba(255, 183, 77, 0.12) !important;
+}
+
+/* Light red backgrounds (#FFEBEE, #ffebee) */
+[data-theme="dark"] [style*="background: '#FFEBEE'"],
+[data-theme="dark"] [style*="background: #FFEBEE"],
+[data-theme="dark"] [style*="background:'#FFEBEE'"],
+[data-theme="dark"] [style*="background: '#ffebee'"] {
+  background: rgba(239, 83, 80, 0.12) !important;
+}
+
+/* Grey code/hash backgrounds (#ECEFF1) */
+[data-theme="dark"] [style*="background: '#ECEFF1'"],
+[data-theme="dark"] [style*="background: #ECEFF1"],
+[data-theme="dark"] [style*="background:'#ECEFF1'"] {
+  background: var(--bg-input) !important;
+}
+
+/* Hardcoded dark text colors that become invisible in dark mode */
+[data-theme="dark"] [style*="color: '#546E7A'"],
+[data-theme="dark"] [style*="color: #546E7A"],
+[data-theme="dark"] [style*="color:'#546E7A'"] {
+  color: var(--text-muted) !important;
+}
+
+[data-theme="dark"] [style*="color: '#1565C0'"],
+[data-theme="dark"] [style*="color: #1565C0"],
+[data-theme="dark"] [style*="color:'#1565C0'"] {
+  color: var(--info) !important;
+}
+
+[data-theme="dark"] [style*="color: '#2E7D32'"],
+[data-theme="dark"] [style*="color: #2E7D32"],
+[data-theme="dark"] [style*="color:'#2E7D32'"] {
+  color: var(--success) !important;
+}
+
+[data-theme="dark"] [style*="color: '#C62828'"],
+[data-theme="dark"] [style*="color: #C62828"],
+[data-theme="dark"] [style*="color:'#C62828'"] {
+  color: var(--danger) !important;
+}
+
+[data-theme="dark"] [style*="color: '#E65100'"],
+[data-theme="dark"] [style*="color: #E65100"],
+[data-theme="dark"] [style*="color:'#E65100'"] {
+  color: var(--warning) !important;
+}
+
+[data-theme="dark"] [style*="color: '#F57C00'"],
+[data-theme="dark"] [style*="color: #F57C00"],
+[data-theme="dark"] [style*="color:'#F57C00'"] {
+  color: var(--warning) !important;
+}
+
+/* Catch common hardcoded white button backgrounds inside modals etc. */
+[data-theme="dark"] button[style*="background: 'white'"],
+[data-theme="dark"] button[style*="background: white"] {
+  background: var(--bg-input) !important;
+  color: var(--text) !important;
+}
+
+/* Code elements in dark mode */
+[data-theme="dark"] code {
+  background: var(--bg-input);
+  color: var(--primary);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
 
 * {
   box-sizing: border-box;

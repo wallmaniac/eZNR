@@ -217,9 +217,9 @@ export default function ISZNRSigningPage() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {[
           { label: lang === 'bs' ? 'Ukupno dokumenata' : 'Total documents', value: stats.total, icon: '📄', color: 'var(--primary)' },
-          { label: lang === 'bs' ? 'Potpisano' : 'Signed', value: stats.signed, icon: '✅', color: '#2E7D32' },
-          { label: lang === 'bs' ? 'Čeka potpis' : 'Pending', value: stats.unsigned, icon: '📝', color: '#F57C00' },
-          { label: lang === 'bs' ? 'Certifikat' : 'Certificate', value: 'Aktivan', icon: '🔐', color: '#1565C0' },
+          { label: lang === 'bs' ? 'Potpisano' : 'Signed', value: stats.signed, icon: '✅', color: 'var(--success)' },
+          { label: lang === 'bs' ? 'Čeka potpis' : 'Pending', value: stats.unsigned, icon: '📝', color: 'var(--warning)' },
+          { label: lang === 'bs' ? 'Certifikat' : 'Certificate', value: 'Aktivan', icon: '🔐', color: 'var(--info)' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
             <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
@@ -297,7 +297,7 @@ export default function ISZNRSigningPage() {
                       </div>
                     </td>
                     <td style={{ fontWeight: 600 }}>{doc.naslov}</td>
-                    <td><span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 6, background: '#E3F2FD', color: '#1565C0', fontWeight: 600 }}>{getDocTypeName(doc.tipDokumentaId)}</span></td>
+                    <td><span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{getDocTypeName(doc.tipDokumentaId)}</span></td>
                     <td>{formatDate(doc.datum)}</td>
                     <td>
                       {doc.potpisano ? (
@@ -363,7 +363,7 @@ export default function ISZNRSigningPage() {
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                             {lang === 'bs' ? 'Nepotpisani dokumenti' : 'Unsigned documents'}
-                            <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 10, background: '#FFF3E0', color: '#E65100', fontSize: '0.68rem' }}>
+                            <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', fontSize: '0.68rem' }}>
                               {unsignedDocs.length}
                             </span>
                           </div>
@@ -496,7 +496,7 @@ export default function ISZNRSigningPage() {
                     onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
                     placeholder="PIN" autoFocus
                     style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: 8, maxWidth: 200, margin: '0 auto' }} />
-                  {pinError && <div style={{ color: '#C62828', fontSize: '0.82rem', marginTop: 8, fontWeight: 600 }}>⚠️ {pinError}</div>}
+                  {pinError && <div style={{ color: 'var(--danger)', fontSize: '0.82rem', marginTop: 8, fontWeight: 600 }}>⚠️ {pinError}</div>}
                   <div style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center' }}>
                     <button className="btn btn-ghost" onClick={() => setSignStep(0)}>{lang === 'bs' ? 'Nazad' : 'Back'}</button>
                     <button className="btn btn-primary" onClick={handlePinSubmit} disabled={!pinCode}>
@@ -526,7 +526,7 @@ export default function ISZNRSigningPage() {
               {signStep === 3 && (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ fontSize: '4rem', marginBottom: 12 }}>✅</div>
-                  <h3 style={{ color: '#2E7D32', marginBottom: 8 }}>
+                  <h3 style={{ color: 'var(--success)', marginBottom: 8 }}>
                     {batchMode && batchSelected.length > 1
                       ? (lang === 'bs' ? `${batchSelected.length} dokumenata uspješno potpisano!` : `${batchSelected.length} documents successfully signed!`)
                       : (lang === 'bs' ? 'Dokument uspješno potpisan!' : 'Document successfully signed!')}
@@ -578,10 +578,10 @@ export default function ISZNRSigningPage() {
                   <div style={{
                     textAlign: 'center', padding: 20, marginBottom: 16,
                     borderRadius: 12, border: `2px solid ${verifyResult.valid ? '#A5D6A7' : '#EF9A9A'}`,
-                    background: verifyResult.valid ? '#E8F5E9' : '#FFEBEE',
+                    background: verifyResult.valid ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
                   }}>
                     <span style={{ fontSize: '3rem' }}>{verifyResult.valid ? '✅' : '❌'}</span>
-                    <h3 style={{ color: verifyResult.valid ? '#2E7D32' : '#C62828', marginTop: 8 }}>
+                    <h3 style={{ color: verifyResult.valid ? 'var(--success)' : 'var(--danger)', marginTop: 8 }}>
                       {verifyResult.valid
                         ? (lang === 'bs' ? 'Potpis je validan!' : 'Signature is valid!')
                         : (lang === 'bs' ? 'Potpis nije validan!' : 'Signature is not valid!')}
@@ -594,10 +594,10 @@ export default function ISZNRSigningPage() {
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>📅 {lang === 'bs' ? 'Datum potpisa' : 'Sign date'}</span><strong>{formatDate(verifyResult.signDate)}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🔐 {lang === 'bs' ? 'Certifikat' : 'Certificate'}</span><strong>{verifyResult.certId}</strong></div>
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🔒 {lang === 'bs' ? 'Algoritam' : 'Algorithm'}</span><strong>{verifyResult.algorithm}</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🛡️ {lang === 'bs' ? 'Integritet' : 'Integrity'}</span><strong style={{ color: verifyResult.integrity === 'OK' ? '#2E7D32' : '#C62828' }}>{verifyResult.integrity}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🛡️ {lang === 'bs' ? 'Integritet' : 'Integrity'}</span><strong style={{ color: verifyResult.integrity === 'OK' ? 'var(--success)' : 'var(--danger)' }}>{verifyResult.integrity}</strong></div>
                     </div>
                     {verifyResult.hash && verifyResult.hash !== 'NOT_SIGNED' && (
-                      <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: '#ECEFF1', fontFamily: 'monospace', fontSize: '0.65rem', wordBreak: 'break-all', color: '#546E7A' }}>
+                      <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: 'var(--bg-input)', fontFamily: 'monospace', fontSize: '0.65rem', wordBreak: 'break-all', color: 'var(--text-muted)' }}>
                         {lang === 'bs' ? 'Hash:' : 'Hash:'} {verifyResult.hash}
                       </div>
                     )}
@@ -642,7 +642,7 @@ export default function ISZNRSigningPage() {
                 )}
               </div>
               {showDetailModal.potpis && (
-                <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: '#ECEFF1', fontFamily: 'monospace', fontSize: '0.6rem', wordBreak: 'break-all', color: '#546E7A' }}>
+                <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: 'var(--bg-input)', fontFamily: 'monospace', fontSize: '0.6rem', wordBreak: 'break-all', color: 'var(--text-muted)' }}>
                   <strong>SHA-256 Hash:</strong> {showDetailModal.potpis}
                 </div>
               )}
