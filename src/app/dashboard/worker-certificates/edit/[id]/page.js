@@ -1,11 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter, useParams } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
     getAll, getById, create, update, COLLECTIONS,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { printZosPdf } from '@/lib/zosPdfGenerator';
 
 const DEFAULT_CERT_TYPES = [
     'Koordinatora ZNR tijekom građenja',
@@ -25,9 +27,12 @@ const FILE_TYPE_OPTIONS = ['Sken', 'Original', 'Kopija', 'Email potvrda', 'Digit
 
 function EditCertPageInner() {
     const { t, lang } = useLanguage();
+    const { activeCompanyId } = useAuth();
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const certId = params?.id;
+    const returnTo = searchParams?.get('returnTo');
 
     const [cert, setCert] = useState(null);
     const [worker, setWorker] = useState(null);
@@ -108,7 +113,7 @@ function EditCertPageInner() {
             sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
         });
         await dlgAlert(lang === 'bs' ? 'Uvjerenje sačuvano!' : 'Certificate saved!');
-        router.back();
+        if (returnTo) { router.push(returnTo); } else { router.back(); }
     };
 
     const labelStyle = {
@@ -125,7 +130,7 @@ function EditCertPageInner() {
             <DialogRenderer />
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
+                <button className="btn btn-ghost" onClick={() => { if (returnTo) router.push(returnTo); else router.back(); }}>←</button>
                 <div>
                     <h1 style={{ margin: 0 }}>📄 {lang === 'bs' ? 'Uredi uvjerenje' : 'Edit Certificate'}</h1>
                     {worker && (
@@ -318,16 +323,41 @@ function EditCertPageInner() {
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary" onClick={handleSave}>
                             💾 {lang === 'bs' ? 'Snimi' : 'Save'}
                         </button>
-                        <button className="btn btn-ghost" onClick={() => router.back()}>
+                        <button className="btn btn-ghost" onClick={() => { if (returnTo) router.push(returnTo); else router.back(); }}>
                             ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
                         </button>
+                        <button className="btn btn-outline btn-sm" onClick={() => {
+                            const url = `/dashboard/worker-certificates/create?workerId=${cert?.workerId || ''}&copyFrom=${certId}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ''}`;
+                            router.push(url);
+                        }}>
+                            📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}
+                        </button>
+                        {(formData.tipUvjerenjaIme || formData.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && worker && (
+                            <button className="btn btn-outline btn-sm" onClick={() => {
+                                const wps = getAll(COLLECTIONS.WORKPLACES);
+                                const wpN = wps.find(wp => wp.id === worker.radnoMjestoId)?.naziv || formData.vydanoZaRadnoMjesto || formData.izdanoZaRadnoMjesto || '';
+                                const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                printZosPdf({
+                                    company: companyFull,
+                                    worker,
+                                    workplaceName: wpN,
+                                    training: { naziv: formData.izdanoIzObuke || formData.tipUvjerenjaIme || formData.ime },
+                                    officer: formData.strucnjakZNR || formData.upisao || '',
+                                    date: formData.datum || new Date().toISOString(),
+                                    certOznaka: formData.oznaka,
+                                    testResult: formData.rezultatTesta || '',
+                                });
+                            }}>
+                                🖨️ {lang === 'bs' ? 'Ispiši ZOS' : 'Print ZOS'}
+                            </button>
+                        )}
                         {worker && (
                             <button className="btn btn-outline btn-sm" style={{ marginLeft: 'auto' }}
-                                onClick={() => router.push(`/dashboard/workers?openWorker=${worker.id}`)}>
+                                onClick={() => router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`)}>
                                 👤 {lang === 'bs' ? 'Otvori radnika' : 'Open worker'}
                             </button>
                         )}

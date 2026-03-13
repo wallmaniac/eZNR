@@ -1,12 +1,14 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-    getAll, create, update, remove, removeWorkerCascade, removeManyWorkersCascade, search,
+    getAll, getById, create, update, remove, removeWorkerCascade, removeManyWorkersCascade, search,
     COLLECTIONS, getOrgUnitName, getWorkplaceName,
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';
+import { printZosPdf } from '@/lib/zosPdfGenerator';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -26,6 +28,7 @@ const emptyWorker = {
 
 function WorkersPageInner() {
     const { t, lang } = useLanguage();
+    const { activeCompanyId } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
     const { markDirty, markClean } = useUnsavedChanges(async () => await handleSave());
@@ -73,7 +76,21 @@ function WorkersPageInner() {
         setWorkers(getAll(COLLECTIONS.WORKERS));
         setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
-        setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
+        const stored = getAll(COLLECTIONS.CERT_TYPES);
+        const storedNames = stored.map(x => (x.naziv || '').toLowerCase());
+        const DEFAULT_CT = [
+            'Koordinatora ZNR tijekom građenja', 'Koordinatora ZNR tijekom izrade projekta',
+            'Povremena provjera znanja radnika iz zaštite na radu',
+            'Stručnjak ZNR - opći dio', 'Stručnjak ZNR - opći i posebni dio', 'Stručnjak ZNR - posebni dio',
+            'Usavršavanje stručnjaka ZNR', 'Uvjerenje o osposobljenosti za pružanje prve pomoći',
+            'Uvjerenje o zdravstvenoj sposobnosti radnika',
+            'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način',
+            'PP - Osposobljenost za gašenje požara', 'Licenca / Certifikat',
+        ];
+        setCertTypes([
+            ...stored,
+            ...DEFAULT_CT.filter(n => !storedNames.includes(n.toLowerCase())).map(n => ({ id: `default_${n}`, naziv: n, oznaka: n })),
+        ]);
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
         setPlaces(getAll(COLLECTIONS.PLACES));
     }, []);
@@ -654,7 +671,7 @@ function WorkersPageInner() {
                                 if (!wId) return;
                             }
                             markClean();
-                            router.push(`/dashboard/worker-certificates/create?workerId=${wId}&returnTo=/dashboard/workers?openWorker=${wId}`);
+                            router.push(`/dashboard/worker-certificates/create?workerId=${wId}&returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${wId}&section=uvjerenja`)}`);
                         }}>+ {t('newCertificate')}</button>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                             <input type="checkbox" checked={showOnlyValidCerts} onChange={e => setShowOnlyValidCerts(e.target.checked)} /> {t('showOnlyValid')}
@@ -699,16 +716,37 @@ function WorkersPageInner() {
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Brza izmjena' : 'Quick edit'} onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
-                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Otvori potpuno' : 'Open full form'} onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}`); }}>📄</button>
+                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Otvori potpuno' : 'Open full form'} onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`); }}>📄</button>
+                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Kopiraj uvjerenje' : 'Copy certificate'} onClick={() => {
+                                                        markClean();
+                                                        router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}&copyFrom=${c.id}&returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`);
+                                                    }}>📋</button>
                                                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>🗑️</button>
                                                     {(c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && (
                                                         <>
+                                                            <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem' }} title={lang === 'bs' ? 'Ispiši ZOS dokument' : 'Print ZOS document'} onClick={() => {
+                                                                const wk = getAll(COLLECTIONS.WORKERS).find(x => x.id === editingWorker);
+                                                                if (!wk) return;
+                                                                const wps = getAll(COLLECTIONS.WORKPLACES);
+                                                                const wpN = wps.find(wp => wp.id === wk.radnoMjestoId)?.naziv || c.izdanoZaRadnoMjesto || '';
+                                                                const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                                                printZosPdf({
+                                                                    company: companyFull,
+                                                                    worker: wk,
+                                                                    workplaceName: wpN,
+                                                                    training: { naziv: c.izdanoIzObuke || c.ime },
+                                                                    officer: c.strucnjakZNR || c.upisao || '',
+                                                                    date: c.datum || new Date().toISOString(),
+                                                                    certOznaka: c.oznaka,
+                                                                    testResult: c.rezultatTesta || '',
+                                                                });
+                                                            }}>🖨️ ZOS</button>
                                                             <label className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem', cursor: 'pointer' }} title={lang === 'bs' ? 'Upload potpisan ZOS scan' : 'Upload signed ZOS scan'}>
                                                                 📎 {c.potpisanScan ? '✅' : 'Scan'}
                                                                 <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
                                                                     const file = e.target.files?.[0];
                                                                     if (!file) return;
-                                                                    if (file.size > 5000000) { alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB' : 'File must be under 5MB'); return; }
+                                                                    if (file.size > 5000000) { alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB' : 'File must be under 5MB'); return; };
                                                                     const reader = new FileReader();
                                                                     reader.onload = (ev) => {
                                                                         update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
