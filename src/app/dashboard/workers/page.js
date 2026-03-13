@@ -62,6 +62,7 @@ function WorkersPageInner() {
     const [certEditId, setCertEditId] = useState(null);
     const [certSearch, setCertSearch] = useState('');
     const [certMenuId, setCertMenuId] = useState(null); // active cert action dropdown
+    const [certMenuPos, setCertMenuPos] = useState({ top: 0, left: 0 }); // fixed position
     const certMenuRef = useRef(null);
     const [showOnlyValidCerts, setShowOnlyValidCerts] = useState(false);
     const [showExpiringSoon, setShowExpiringSoon] = useState(false);
@@ -718,21 +719,38 @@ function WorkersPageInner() {
                                     const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
                                     return (
                                         <tr key={c.id}>
-                                            <td style={{ position: 'relative' }} ref={certMenuId === c.id ? certMenuRef : null}>
+                                            <td>
                                                 {/* Akcije dropdown */}
                                                 <button
                                                     className="btn btn-outline btn-sm"
                                                     style={{ fontSize: '0.78rem', whiteSpace: 'nowrap', paddingLeft: 10, paddingRight: 10 }}
-                                                    onClick={() => setCertMenuId(certMenuId === c.id ? null : c.id)}
+                                                    onClick={(e) => {
+                                                        if (certMenuId === c.id) { setCertMenuId(null); return; }
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        // Estimate dropdown height: ~40px base + ~36px per item (8 max)
+                                                        const estHeight = 300;
+                                                        const spaceBelow = window.innerHeight - rect.bottom;
+                                                        const top = spaceBelow >= estHeight
+                                                            ? rect.bottom + 4
+                                                            : Math.max(8, rect.top - estHeight - 4);
+                                                        setCertMenuPos({ top, left: rect.left });
+                                                        setCertMenuId(c.id);
+                                                    }}
                                                 >
                                                     ⚙️ {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
                                                 </button>
                                                 {certMenuId === c.id && (
-                                                    <div style={{
-                                                        position: 'absolute', top: '100%', left: 0, zIndex: 999,
-                                                        background: 'var(--bg-card)', border: '1px solid var(--border)',
-                                                        borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
-                                                        minWidth: 210, padding: '4px 0', marginTop: 2,
+                                                    <div ref={certMenuRef} style={{
+                                                        position: 'fixed',
+                                                        top: certMenuPos.top,
+                                                        left: certMenuPos.left,
+                                                        zIndex: 9999,
+                                                        background: 'var(--bg-card)',
+                                                        border: '1px solid var(--border)',
+                                                        borderRadius: 'var(--radius-md)',
+                                                        boxShadow: 'var(--shadow-lg)',
+                                                        minWidth: 220,
+                                                        padding: '4px 0',
                                                     }}>
                                                         {/* Brza izmjena */}
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
