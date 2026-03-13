@@ -405,11 +405,11 @@ export default function ISZNRSigningPage() {
                         {batchMode && modalFiltered.length > 0 && (
                           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                             <button onClick={() => setBatchSelected(modalFiltered.map(d => d.id))}
-                              style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>
+                              style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>
                               ✅ {lang === 'bs' ? 'Odaberi sve' : 'Select all'} ({modalFiltered.length})
                             </button>
                             <button onClick={() => setBatchSelected([])}
-                              style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'white', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}>
+                              style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}>
                               ☐ {lang === 'bs' ? 'Poništi izbor' : 'Deselect all'}
                             </button>
                           </div>

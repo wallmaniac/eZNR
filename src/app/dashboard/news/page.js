@@ -336,7 +336,7 @@ export default function NewsPage() {
                                 </div>
                             </div>
                             <a href="/dashboard/znr-zakonodavstvo"
-                                style={{ flexShrink: 0, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'white', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem', textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+                                style={{ flexShrink: 0, padding: '8px 20px', borderRadius: 'var(--radius-full)', background: 'var(--bg-card)', color: 'var(--primary)', fontWeight: 800, fontSize: '0.85rem', textDecoration: 'none', whiteSpace: 'nowrap', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
                                 Otvori dokument →
                             </a>
                         </div>
