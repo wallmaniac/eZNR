@@ -152,14 +152,11 @@ function WorkersPageInner() {
     useEffect(() => {
         const handleClick = (e) => {
             if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
-            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) {
-                if (certMenuId !== null) certMenuClosingRef.current = true; // was open — flag closing
-                setCertMenuId(null);
-            }
+            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) setCertMenuId(null);
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
-    }, [certMenuId]);
+    }, []);
 
     // Auto-open from WorkerProfileModal "Otvori potpuno" or cert-return via ?openWorker=ID
     useEffect(() => {
@@ -733,14 +730,12 @@ function WorkersPageInner() {
                                                 <button
                                                     className="btn btn-outline btn-sm"
                                                     style={{ fontSize: '0.78rem', whiteSpace: 'nowrap', paddingLeft: 10, paddingRight: 10 }}
+                                                    onMouseDown={(e) => e.stopPropagation()}
                                                     onClick={(e) => {
                                                          e.stopPropagation();
-                                                         // If mousedown already closed this menu, don't reopen
-                                                         if (certMenuClosingRef.current) { certMenuClosingRef.current = false; return; }
                                                          if (certMenuId === c.id) { setCertMenuId(null); return; }
                                                          const rect = e.currentTarget.getBoundingClientRect();
                                                          const menuW = 230;
-                                                         // Always open BELOW the button, clamp to right edge only
                                                          const left = Math.min(rect.left, window.innerWidth - menuW - 8);
                                                          const top = rect.bottom + 4;
                                                          setCertMenuPos({ top, left });
