@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -717,61 +718,60 @@ function WorkersPageInner() {
                                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : filteredCerts.map(c => {
                                     const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
+                                    const returnToParam = encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`);
+                                    const isZOS = (c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti');
                                     return (
-                                        <tr key={c.id}>
-                                            <td>
-                                                {/* Akcije dropdown */}
+                                        <tr key={c.id}
+                                            style={{ cursor: 'pointer' }}
+                                            onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${returnToParam}`); }}
+                                        >
+                                            <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
                                                 <button
                                                     className="btn btn-outline btn-sm"
                                                     style={{ fontSize: '0.78rem', whiteSpace: 'nowrap', paddingLeft: 10, paddingRight: 10 }}
                                                     onClick={(e) => {
+                                                        e.stopPropagation();
                                                         if (certMenuId === c.id) { setCertMenuId(null); return; }
                                                         const rect = e.currentTarget.getBoundingClientRect();
-                                                        // Estimate dropdown height: ~40px base + ~36px per item (8 max)
-                                                        const estHeight = 300;
-                                                        const spaceBelow = window.innerHeight - rect.bottom;
-                                                        const top = spaceBelow >= estHeight
-                                                            ? rect.bottom + 4
-                                                            : Math.max(8, rect.top - estHeight - 4);
-                                                        setCertMenuPos({ top, left: rect.left });
+                                                        const menuW = 230;
+                                                        // Always open BELOW the button, clamp to right edge only
+                                                        const left = Math.min(rect.left, window.innerWidth - menuW - 8);
+                                                        const top = rect.bottom + 4;
+                                                        setCertMenuPos({ top, left });
                                                         setCertMenuId(c.id);
                                                     }}
                                                 >
                                                     ⚙️ {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
                                                 </button>
-                                                {certMenuId === c.id && (
+                                                {/* Portal: mount dropdown directly on document.body to escape all CSS transforms */}
+                                                {certMenuId === c.id && typeof document !== 'undefined' && createPortal(
                                                     <div ref={certMenuRef} style={{
                                                         position: 'fixed',
                                                         top: certMenuPos.top,
                                                         left: certMenuPos.left,
-                                                        zIndex: 9999,
+                                                        zIndex: 99999,
                                                         background: 'var(--bg-card)',
                                                         border: '1px solid var(--border)',
                                                         borderRadius: 'var(--radius-md)',
-                                                        boxShadow: 'var(--shadow-lg)',
-                                                        minWidth: 220,
+                                                        boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
+                                                        minWidth: 230,
                                                         padding: '4px 0',
                                                     }}>
-                                                        {/* Brza izmjena */}
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                             onClick={() => { setCertMenuId(null); setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>
                                                             ✏️ <span>{lang === 'bs' ? 'Brza izmjena' : 'Quick edit'}</span>
                                                         </button>
-                                                        {/* Uredi potpuno */}
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
-                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`); }}>
+                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${returnToParam}`); }}>
                                                             📄 <span>{lang === 'bs' ? 'Uredi potpuno' : 'Edit full form'}</span>
                                                         </button>
-                                                        {/* Kopiraj */}
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
-                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}&copyFrom=${c.id}&returnTo=${encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`)}`); }}>
+                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}&copyFrom=${c.id}&returnTo=${returnToParam}`); }}>
                                                             📋 <span>{lang === 'bs' ? 'Kopiraj uvjerenje' : 'Copy certificate'}</span>
                                                         </button>
-                                                        {/* ZOS-specific actions */}
-                                                        {(c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && (
+                                                        {isZOS && (
                                                             <>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
-                                                                {/* Ispiši ZOS */}
                                                                 <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                                     onClick={() => {
                                                                         setCertMenuId(null);
@@ -784,21 +784,14 @@ function WorkersPageInner() {
                                                                     }}>
                                                                     🖨️ <span>{lang === 'bs' ? 'Ispiši ZOS dokument' : 'Print ZOS document'}</span>
                                                                 </button>
-                                                                {/* Upload / prikaži scan */}
                                                                 <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
-                                                                    📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni potpisan scan' : 'Replace signed scan') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan')}{c.potpisanScan ? ' ✅' : ''}</span>
+                                                                    📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan')}</span>
                                                                     <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
-                                                                        const file = e.target.files?.[0];
-                                                                        if (!file) return;
-                                                                        if (file.size > 5000000) { alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB' : 'File must be under 5MB'); return; }
+                                                                        const file = e.target.files?.[0]; if (!file) return;
+                                                                        if (file.size > 5000000) { alert(lang === 'bs' ? 'Max 5MB' : 'Max 5MB'); return; }
                                                                         const reader = new FileReader();
-                                                                        reader.onload = (ev) => {
-                                                                            update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
-                                                                            setCertificates(getWorkerCertificates(editingWorker));
-                                                                            setCertMenuId(null);
-                                                                        };
-                                                                        reader.readAsDataURL(file);
-                                                                        e.target.value = '';
+                                                                        reader.onload = (ev) => { update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() }); setCertificates(getWorkerCertificates(editingWorker)); setCertMenuId(null); };
+                                                                        reader.readAsDataURL(file); e.target.value = '';
                                                                     }} />
                                                                 </label>
                                                                 {c.potpisanScan && (
@@ -806,11 +799,8 @@ function WorkersPageInner() {
                                                                         onClick={() => {
                                                                             setCertMenuId(null);
                                                                             const w = window.open('', '_blank');
-                                                                            if (c.potpisanScan.startsWith('data:application/pdf')) {
-                                                                                w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`);
-                                                                            } else {
-                                                                                w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`);
-                                                                            }
+                                                                            if (c.potpisanScan.startsWith('data:application/pdf')) { w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`); }
+                                                                            else { w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`); }
                                                                             w.document.close();
                                                                         }}>
                                                                         👁️ <span>{lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'}</span>
@@ -818,13 +808,13 @@ function WorkersPageInner() {
                                                                 )}
                                                             </>
                                                         )}
-                                                        {/* Separator + delete */}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}
-                                                            onClick={async () => { setCertMenuId(null); const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This action is permanent.'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>
+                                                            onClick={async () => { setCertMenuId(null); const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>
                                                             🗑️ <span>{lang === 'bs' ? 'Obriši uvjerenje' : 'Delete certificate'}</span>
                                                         </button>
-                                                    </div>
+                                                    </div>,
+                                                    document.body
                                                 )}
                                             </td>
                                             <td>{c.oznaka}</td>
