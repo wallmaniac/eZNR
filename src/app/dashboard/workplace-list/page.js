@@ -2,7 +2,7 @@
 import { useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import { getAll, COLLECTIONS, getOrgUnitName, getWorkersInOrgUnit } from '@/lib/dataStore';
+import { getAll, COLLECTIONS, getOrgUnitName } from '@/lib/dataStore';
 
 export default function WorkplaceListPage() {
   const { t, lang } = useLanguage();

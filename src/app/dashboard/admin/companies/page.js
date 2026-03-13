@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
-    getAll, create, update, remove, COLLECTIONS, getAllCompanies, getAllUsers, formatDate,
+    getAll, create, update, remove, COLLECTIONS, getAllCompanies, getAllUsers,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
@@ -138,7 +138,7 @@ export default function AdminCompaniesPage() {
                                         {companyUsers.map(u => (
                                             <span key={u.id} style={{
                                                 padding: '2px 8px', borderRadius: 8, fontSize: '0.72rem', fontWeight: 600,
-                                                background: u.role === 'admin' ? '#F3E5F5' : 'rgba(33,150,243,0.12)',
+                                                background: u.role === 'admin' ? 'rgba(123,31,162,0.15)' : 'rgba(33,150,243,0.12)',
                                                 color: u.role === 'admin' ? '#7B1FA2' : 'var(--info)',
                                             }}>
                                                 {u.role === 'admin' ? '👑' : '🛡️'} {u.firstName} {u.lastName}

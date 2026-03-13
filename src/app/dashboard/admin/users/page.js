@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
-    getAll, create, update, remove, COLLECTIONS, getAllCompanies, formatDate,
+    getAll, create, update, remove, COLLECTIONS, getAllCompanies,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
@@ -337,7 +337,7 @@ export default function AdminUsersPage() {
                                             style={{
                                                 padding: '6px 12px', borderRadius: 8, fontSize: '0.8rem',
                                                 border: formData.companyIds.includes(c.id) ? '2px solid var(--primary)' : '1px solid var(--border)',
-                                                background: formData.companyIds.includes(c.id) ? 'rgba(0,191,166,0.1)' : 'white',
+                                                background: formData.companyIds.includes(c.id) ? 'rgba(0,191,166,0.1)' : 'var(--bg-card)',
                                                 color: formData.companyIds.includes(c.id) ? 'var(--primary)' : 'var(--text)',
                                                 fontWeight: formData.companyIds.includes(c.id) ? 700 : 400,
                                                 cursor: 'pointer', transition: 'all 0.15s',
@@ -399,7 +399,7 @@ export default function AdminUsersPage() {
                                             </div>
                                             <span style={{
                                                 padding: '2px 8px', borderRadius: 8, fontSize: '0.65rem', fontWeight: 700,
-                                                background: u.role === 'admin' ? '#F3E5F5' : 'rgba(33,150,243,0.12)',
+                                                background: u.role === 'admin' ? 'rgba(123,31,162,0.15)' : 'rgba(33,150,243,0.12)',
                                                 color: u.role === 'admin' ? '#7B1FA2' : 'var(--info)',
                                             }}>{u.role === 'admin' ? '👑 Admin' : '🛡️ Officer'}</span>
                                         </div>

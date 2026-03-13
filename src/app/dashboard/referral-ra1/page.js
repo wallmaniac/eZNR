@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
-  getAll, getById, create, update, remove, COLLECTIONS, formatDate, todayISO,
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 

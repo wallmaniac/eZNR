@@ -341,13 +341,13 @@ export default function InjuriesPage() {
                     <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => openEdit(inj)}>✏️</button>
-                          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={() => handleDelete(inj.id)}>🗑️</button>
+                          <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={e => { e.stopPropagation(); openEdit(inj); }}>✏️</button>
+                          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={e => { e.stopPropagation(); handleDelete(inj.id); }}>🗑️</button>
                         </div>
                       </td>
                       <td style={{ fontWeight: 600 }}>
                         <button
-                          onClick={() => { const w = workers.find(w => w.id === inj.radnikId); if (w) setViewWorkerId(w.id); }}
+                          onClick={e => { e.stopPropagation(); const w = workers.find(w => w.id === inj.radnikId); if (w) setViewWorkerId(w.id); }}
                           style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                           title={inj.radnikId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
                         >{inj.radnikIme || '—'}</button>

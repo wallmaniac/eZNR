@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSearchParams } from 'next/navigation';
 import {
-  getAll, getById, update, COLLECTIONS, getAllCompanies, getUserCompanies,
+  getAll, getById, update, COLLECTIONS,
 } from '@/lib/dataStore';
 import {
   getNotificationSettings, saveNotificationSettings,
@@ -14,9 +14,8 @@ import {
   clearDismissedNotifications,
 } from '@/lib/systemMonitor';
 import {
-  getUserLog, getAdminLog, clearUserLog, clearAdminLog,
-  getUserLogCount, getAdminLogCount, formatLogTime, getSeverityColors,
-  getOnlineUsers, LOG_CATEGORY, humanizePage,
+  getUserLog, getAdminLog, clearUserLog, clearAdminLog, formatLogTime, getSeverityColors,
+  getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 
@@ -859,7 +858,7 @@ export default function SettingsPage() {
             {/* Sync progress */}
             {syncStatus === 'syncing' && (
               <div style={{
-                padding: '16px', borderRadius: 10, background: '#FFF8E1',
+                padding: '16px', borderRadius: 10, background: 'rgba(255,193,7,0.1)',
                 border: '1px solid #FFE082', marginBottom: 20,
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>

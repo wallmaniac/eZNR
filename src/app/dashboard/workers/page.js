@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-    getAll, getById, create, update, remove, removeWorkerCascade, removeManyWorkersCascade, search,
+    getAll, create, update, remove, removeWorkerCascade, removeManyWorkersCascade, search,
     COLLECTIONS, getOrgUnitName, getWorkplaceName,
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
 } from '@/lib/dataStore';

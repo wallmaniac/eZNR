@@ -3,8 +3,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
-    getAll, create, remove, removeWorkerCascade, COLLECTIONS, getOrgUnitName, getWorkplaceName,
-    getWorkerCertificates, getWorkerPPE, formatDate, getAllForCompany, createForCompany, getRawAll, getUserCompanies,
+    getAll, create, remove, removeWorkerCascade, COLLECTIONS, getOrgUnitName, formatDate, getAllForCompany, createForCompany, getRawAll,
 } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';

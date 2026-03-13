@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS, formatDate,
-    getWorkplaceName, getOrgUnitName,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSearchParams } from 'next/navigation';

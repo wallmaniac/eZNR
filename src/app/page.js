@@ -361,7 +361,7 @@ export default function LoginPage() {
               {loginError && (
                 <div style={{
                   padding: '10px 14px', borderRadius: 8, marginTop: 8,
-                  background: '#FFEBEE', border: '1px solid #FFCDD2',
+                  background: 'rgba(244,67,54,0.12)', border: '1px solid rgba(244,67,54,0.3)',
                   color: '#C62828', fontSize: '0.85rem', fontWeight: 600,
                   display: 'flex', alignItems: 'center', gap: 8,
                 }}>
@@ -372,7 +372,7 @@ export default function LoginPage() {
               {!isRegister && (
                 <div style={{
                   padding: '10px 14px', borderRadius: 8, marginTop: 8,
-                  background: '#E8F5E9', border: '1px solid #C8E6C9',
+                  background: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.3)',
                   fontSize: '0.78rem', color: '#2E7D32',
                 }}>
                   <strong>Demo:</strong> admin / admin123 {lang === 'bs' ? 'ili' : 'or'} officer / officer123

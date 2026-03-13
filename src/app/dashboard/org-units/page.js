@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, COLLECTIONS,
-    getChildOrgUnits, getWorkersInOrgUnit, getById,
+    getChildOrgUnits, getWorkersInOrgUnit,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
