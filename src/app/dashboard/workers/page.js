@@ -697,10 +697,40 @@ function WorkersPageInner() {
                                     return (
                                         <tr key={c.id}>
                                             <td>
-                                                <div style={{ display: 'flex', gap: 4 }}>
+                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Brza izmjena' : 'Quick edit'} onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Otvori potpuno' : 'Open full form'} onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}`); }}>📄</button>
                                                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje?' : 'Delete certificate?'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>🗑️</button>
+                                                    {(c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && (
+                                                        <>
+                                                            <label className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem', cursor: 'pointer' }} title={lang === 'bs' ? 'Upload potpisan ZOS scan' : 'Upload signed ZOS scan'}>
+                                                                📎 {c.potpisanScan ? '✅' : 'Scan'}
+                                                                <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
+                                                                    const file = e.target.files?.[0];
+                                                                    if (!file) return;
+                                                                    if (file.size > 5000000) { alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB' : 'File must be under 5MB'); return; }
+                                                                    const reader = new FileReader();
+                                                                    reader.onload = (ev) => {
+                                                                        update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
+                                                                        setCertificates(getWorkerCertificates(editingWorker));
+                                                                    };
+                                                                    reader.readAsDataURL(file);
+                                                                    e.target.value = '';
+                                                                }} />
+                                                            </label>
+                                                            {c.potpisanScan && (
+                                                                <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.68rem' }} title={lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'} onClick={() => {
+                                                                    const w = window.open('', '_blank');
+                                                                    if (c.potpisanScan.startsWith('data:application/pdf')) {
+                                                                        w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`);
+                                                                    } else {
+                                                                        w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`);
+                                                                    }
+                                                                    w.document.close();
+                                                                }}>👁️</button>
+                                                            )}
+                                                        </>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td>{c.oznaka}</td>

@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { getAll, create, update, remove, COLLECTIONS, getUserCompanies } from '@/lib/dataStore';
+import { getAll, create, update, remove, COLLECTIONS, getUserCompanies, getById } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
@@ -10,6 +10,7 @@ import {
     createTrainingSession, generateToken, getSessionsForTraining, getTrainingResponse,
 } from '@/lib/firebaseSync';
 import { sendBatchEmails } from '@/lib/emailService';
+import { printZosPdf } from '@/lib/zosPdfGenerator';
 
 /* ═══════════════════════════════════════════════
    Obuke i prezentacije — Training Module Builder
@@ -365,9 +366,22 @@ export default function TrainingsPage() {
             ogranicenja: `Obuka: ${resultsTraining?.naziv || ''}. Rezultat testa: ${session.grade?.percentage || 0}%. Radno mjesto: ${wpName || 'nije specificirano'}.`,
         };
         create(COLLECTIONS.CERTIFICATES, certData);
-        await alert(lang === 'bs'
-            ? `✅ Uvjerenje "Zapisnik o ocjeni osposobljenosti" kreirano za ${worker.ime} ${worker.prezime}!`
-            : `✅ Certificate created for ${worker.ime} ${worker.prezime}!`);
+        const shouldPrint = await confirm(lang === 'bs'
+            ? `✅ Uvjerenje kreirano za ${worker.ime} ${worker.prezime}!\n\nŽelite li odmah ispisati/preuzeti ZOS dokument?`
+            : `✅ Certificate created for ${worker.ime} ${worker.prezime}!\n\nDo you want to print/download the ZOS document now?`);
+        if (shouldPrint) {
+            const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+            printZosPdf({
+                company: companyFull,
+                worker,
+                workplaceName: wpName,
+                training: resultsTraining,
+                officer: officerName,
+                date: today,
+                certOznaka: certData.oznaka,
+                testResult: certData.rezultatTesta,
+            });
+        }
     };
 
     // ── PRINT ──────────────────────────────────
@@ -627,6 +641,27 @@ export default function TrainingsPage() {
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem', color: 'var(--success)' }}
                                                                 onClick={() => autoCreateCertificate(s)}
                                                             >📜 Uvjerenje</button>
+                                                        )}
+                                                        {s.grade?.passed && (
+                                                            <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem' }}
+                                                                onClick={() => {
+                                                                    const w = findWorkerBySession(s);
+                                                                    if (!w) { alert('Radnik nije pronađen u bazi.'); return; }
+                                                                    const wps = getAll(COLLECTIONS.WORKPLACES);
+                                                                    const wpN = wps.find(wp => wp.id === w.radnoMjestoId)?.naziv || '';
+                                                                    const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                                                    printZosPdf({
+                                                                        company: companyFull,
+                                                                        worker: w,
+                                                                        workplaceName: wpN,
+                                                                        training: resultsTraining,
+                                                                        officer: officerName,
+                                                                        date: s.completedAt || new Date().toISOString(),
+                                                                        certOznaka: `ZOS-${Date.now().toString(36).toUpperCase()}`,
+                                                                        testResult: s.grade ? `${s.grade.percentage}%` : '',
+                                                                    });
+                                                                }}
+                                                            >🖨️ ZOS</button>
                                                         )}
                                                     </div>
                                                 </td>
