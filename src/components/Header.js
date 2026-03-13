@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies, getRawAll, seedCompanyData } from '@/lib/dataStore';
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -12,7 +12,6 @@ export default function Header({ sidebarCollapsed }) {
     const { user, logout, isAdmin, activeCompanyId, switchCompany } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const router = useRouter();
-    const searchParams = useSearchParams();
     const [searchFocused, setSearchFocused] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [showProfile, setShowProfile] = useState(false);
@@ -142,10 +141,12 @@ export default function Header({ sidebarCollapsed }) {
     });
     const sep = <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />;
 
-    // Navigate back — useSearchParams is reactive and always reflects current URL in Next.js App Router
+    // Navigate back — window.location.search is safe here (only runs on click, never during SSR)
     const handleBack = () => {
-        const rt = searchParams?.get('returnTo');
-        if (rt) { router.push(rt); return; }
+        if (typeof window !== 'undefined') {
+            const rt = new URLSearchParams(window.location.search).get('returnTo');
+            if (rt) { router.push(decodeURIComponent(rt)); return; }
+        }
         router.back();
     };
 
