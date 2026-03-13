@@ -5,8 +5,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAll, create, update, remove, COLLECTIONS, getUserCompanies } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 import {
-    createTrainingSession, generateToken, getSessionsForTraining,
+    createTrainingSession, generateToken, getSessionsForTraining, getTrainingResponse,
 } from '@/lib/firebaseSync';
 import { sendBatchEmails } from '@/lib/emailService';
 
@@ -59,6 +60,10 @@ export default function TrainingsPage() {
     const [openMenuId, setOpenMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, bottom: undefined, left: 0, maxH: 400 });
     const menuButtonRef = useRef(null);
+    const [viewWorkerId, setViewWorkerId] = useState(null);
+    const [answerDetail, setAnswerDetail] = useState(null); // { session, response, training }
+    const [loadingAnswers, setLoadingAnswers] = useState(false);
+    const [copiedEmail, setCopiedEmail] = useState(null);
 
     const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
     useEffect(() => { loadData(); }, [loadData]);
@@ -301,6 +306,68 @@ export default function TrainingsPage() {
         finally { setLoadingSessions(false); }
     };
 
+    // ── View answers for a session ──────────────
+    const viewSessionAnswers = async (session) => {
+        setLoadingAnswers(true);
+        try {
+            const response = await getTrainingResponse(session.id);
+            setAnswerDetail({ session, response, training: resultsTraining });
+        } catch { await alert('Greška pri učitavanju odgovora.'); }
+        finally { setLoadingAnswers(false); }
+    };
+
+    // ── Copy email to clipboard ─────────────────
+    const copyEmail = (email) => {
+        navigator.clipboard.writeText(email).then(() => {
+            setCopiedEmail(email);
+            setTimeout(() => setCopiedEmail(null), 2000);
+        });
+    };
+
+    // ── Find worker in DB by name or email ──────
+    const findWorkerBySession = (session) => {
+        const allWorkers = getAll(COLLECTIONS.WORKERS);
+        const name = (session.recipientName || '').trim().toLowerCase();
+        const email = (session.recipientEmail || '').trim().toLowerCase();
+        return allWorkers.find(w => {
+            const wName = `${w.ime} ${w.prezime}`.trim().toLowerCase();
+            const wEmail = (w.email || '').toLowerCase();
+            return (name && wName === name) || (email && wEmail && wEmail === email);
+        });
+    };
+
+    // ── Auto-create certificate when worker passes ──────
+    const autoCreateCertificate = async (session) => {
+        const worker = findWorkerBySession(session);
+        if (!worker) {
+            await alert(lang === 'bs'
+                ? `Radnik "${session.recipientName}" nije pronađen u bazi. Uvjerenje se ne može automatski kreirati.`
+                : `Worker "${session.recipientName}" not found in database. Certificate cannot be auto-created.`);
+            return;
+        }
+        const today = new Date().toISOString().split('T')[0];
+        const validUntil = new Date(Date.now() + 730 * 86400000).toISOString().split('T')[0]; // +2 years
+        const certData = {
+            workerId: worker.id,
+            ime: 'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način',
+            tipUvjerenjaIme: 'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način',
+            oznaka: `ZOS-${Date.now().toString(36).toUpperCase()}`,
+            datum: today,
+            vrijediDo: validUntil,
+            sposobnost: 'Sposoban',
+            sposoban: true,
+            strucnjakZNR: officerName,
+            upisao: officerName,
+            izdanoIzObuke: resultsTraining?.naziv || '',
+            rezultatTesta: session.grade ? `${session.grade.percentage}%` : '',
+            ogranicenja: `Obuka: ${resultsTraining?.naziv || ''}. Rezultat testa: ${session.grade?.percentage || 0}%.`,
+        };
+        create(COLLECTIONS.CERTIFICATES, certData);
+        await alert(lang === 'bs'
+            ? `✅ Uvjerenje "Zapisnik o ocjeni osposobljenosti" kreirano za ${worker.ime} ${worker.prezime}!`
+            : `✅ Certificate created for ${worker.ime} ${worker.prezime}!`);
+    };
+
     // ── PRINT ──────────────────────────────────
     const handlePrintTraining = (training, what = 'both') => {
         setOpenMenuId(null);
@@ -473,6 +540,8 @@ export default function TrainingsPage() {
 
         return (
             <div className="animate-fadeIn">
+                <DialogRenderer />
+                {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }}>←</button>
                     <h1 style={{ margin: 0 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
@@ -499,12 +568,32 @@ export default function TrainingsPage() {
                         ) : (
                             <div className="data-table-wrapper">
                                 <table className="data-table">
-                                    <thead><tr><th>Radnik</th><th>Email</th><th>Status</th><th>Rezultat</th><th>Datum</th></tr></thead>
+                                    <thead><tr><th>Radnik</th><th>Email</th><th>Status</th><th>Rezultat</th><th>Datum</th><th>Akcije</th></tr></thead>
                                     <tbody>
-                                        {sessions.map(s => (
+                                        {sessions.map(s => {
+                                            const matchedWorker = findWorkerBySession(s);
+                                            return (
                                             <tr key={s.id}>
-                                                <td style={{ fontWeight: 600 }}>{s.recipientName || '—'}</td>
-                                                <td style={{ fontSize: '0.82rem' }}>{s.recipientEmail}</td>
+                                                <td>
+                                                    {matchedWorker ? (
+                                                        <button
+                                                            onClick={() => setViewWorkerId(matchedWorker.id)}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                                                            title="Klikni za pregled profila"
+                                                        >{s.recipientName || '—'}</button>
+                                                    ) : (
+                                                        <span style={{ fontWeight: 600 }}>{s.recipientName || '—'}</span>
+                                                    )}
+                                                </td>
+                                                <td>
+                                                    <button
+                                                        onClick={() => copyEmail(s.recipientEmail)}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit', padding: '2px 4px', color: copiedEmail === s.recipientEmail ? '#22c55e' : 'var(--text)', borderRadius: 4, transition: 'all 0.15s' }}
+                                                        title="Klikni za kopiranje"
+                                                    >
+                                                        {copiedEmail === s.recipientEmail ? '✅ Kopirano!' : `📋 ${s.recipientEmail}`}
+                                                    </button>
+                                                </td>
                                                 <td>
                                                     <span style={{
                                                         padding: '2px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700,
@@ -524,14 +613,104 @@ export default function TrainingsPage() {
                                                 <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                                     {s.completedAt ? new Date(s.completedAt).toLocaleDateString('hr-HR') : s.createdAt ? new Date(s.createdAt).toLocaleDateString('hr-HR') : '—'}
                                                 </td>
+                                                <td>
+                                                    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                        {s.status === 'completed' && (
+                                                            <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem' }}
+                                                                onClick={() => viewSessionAnswers(s)}
+                                                                disabled={loadingAnswers}
+                                                            >📝 Odgovori</button>
+                                                        )}
+                                                        {s.grade?.passed && (
+                                                            <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem', color: 'var(--success)' }}
+                                                                onClick={() => autoCreateCertificate(s)}
+                                                            >📜 Uvjerenje</button>
+                                                        )}
+                                                    </div>
+                                                </td>
                                             </tr>
-                                        ))}
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
                         )}
                     </div>
                 </div>
+
+                {/* ── Answer Detail Modal ── */}
+                {answerDetail && (
+                    <div className="modal-overlay" onClick={() => setAnswerDetail(null)}>
+                        <div className="modal" style={{ maxWidth: 700, maxHeight: '85vh', overflow: 'auto' }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
+                                <h2 style={{ color: 'white', fontSize: '1rem' }}>
+                                    📝 Odgovori: {answerDetail.session.recipientName}
+                                </h2>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)}>✕</button>
+                            </div>
+                            <div className="modal-body" style={{ padding: 20 }}>
+                                {answerDetail.response?.answers ? (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                        {(answerDetail.training?.questions || []).map((q, qi) => {
+                                            const userAnswer = answerDetail.response.answers[qi];
+                                            const isCorrect = userAnswer === q.tacno;
+                                            return (
+                                                <div key={qi} style={{
+                                                    padding: 14, borderRadius: 'var(--radius-md)',
+                                                    border: `1.5px solid ${isCorrect ? 'rgba(34,197,94,0.4)' : 'rgba(240,82,82,0.4)'}`,
+                                                    background: isCorrect ? 'rgba(34,197,94,0.05)' : 'rgba(240,82,82,0.05)',
+                                                }}>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 8, display: 'flex', gap: 8 }}>
+                                                        <span>{isCorrect ? '✅' : '❌'}</span>
+                                                        <span>{qi + 1}. {q.pitanje}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingLeft: 28 }}>
+                                                        {(q.opcije || []).map((opt, oi) => {
+                                                            const isUserPick = oi === userAnswer;
+                                                            const isCorrectOpt = oi === q.tacno;
+                                                            return (
+                                                                <div key={oi} style={{
+                                                                    fontSize: '0.84rem', padding: '4px 8px', borderRadius: 4,
+                                                                    fontWeight: (isUserPick || isCorrectOpt) ? 700 : 400,
+                                                                    background: isCorrectOpt ? 'rgba(34,197,94,0.15)' : isUserPick ? 'rgba(240,82,82,0.12)' : 'transparent',
+                                                                    color: isCorrectOpt ? '#22c55e' : isUserPick ? '#f05252' : 'var(--text)',
+                                                                }}>
+                                                                    {String.fromCharCode(65 + oi)}) {opt}
+                                                                    {isCorrectOpt && ' ✓'}
+                                                                    {isUserPick && !isCorrectOpt && ' ← odgovor'}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                    {q.objasnjenje && (
+                                                        <div style={{ marginTop: 8, paddingLeft: 28, fontSize: '0.78rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                                            💡 {q.objasnjenje}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div style={{ textAlign: 'center', padding: 30, color: 'var(--text-muted)' }}>
+                                        Odgovori nisu pronađeni za ovu sesiju.
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer">
+                                {answerDetail.session.grade && (
+                                    <span style={{
+                                        fontWeight: 700, fontSize: '0.9rem', marginRight: 'auto',
+                                        color: answerDetail.session.grade.passed ? '#22c55e' : '#f05252',
+                                    }}>
+                                        Rezultat: {answerDetail.session.grade.percentage}% — {answerDetail.session.grade.passed ? 'Prošao/la' : 'Nije prošao/la'}
+                                    </span>
+                                )}
+                                <button className="btn btn-ghost" onClick={() => setAnswerDetail(null)}>Zatvori</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }

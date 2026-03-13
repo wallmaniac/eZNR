@@ -322,3 +322,11 @@ export async function getSessionsForTraining(trainingId) {
         return results;
     }
 }
+
+export async function getTrainingResponse(sessionId) {
+    const { getDoc } = await import('firebase/firestore');
+    const ref = doc(db, 'training_responses', sessionId);
+    const snap = await getDoc(ref);
+    if (!snap.exists()) return null;
+    return snap.data();
+}
