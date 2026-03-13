@@ -141,6 +141,15 @@ export default function Header({ sidebarCollapsed }) {
     });
     const sep = <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }} />;
 
+    // Navigate back — respects returnTo param in current page URL
+    const handleBack = () => {
+        if (typeof window !== 'undefined') {
+            const rt = new URLSearchParams(window.location.search).get('returnTo');
+            if (rt) { router.push(rt); return; }
+        }
+        router.back();
+    };
+
     return (
         <>
             {/* ════════════════════════════════════════
@@ -160,8 +169,8 @@ export default function Header({ sidebarCollapsed }) {
 
                 {/* ══ LEFT ISLAND: Navigation + Company ══ */}
                 <div style={{ ...island, boxShadow: '0 2px 14px rgba(0,191,166,0.12), 0 1px 3px rgba(0,0,0,0.07)' }}>
-                    {/* Back */}
-                    <button title={lang === 'bs' ? 'Nazad' : 'Back'} onClick={() => router.back()}
+                    {/* Back — respects returnTo param if present */}
+                    <button title={lang === 'bs' ? 'Nazad' : 'Back'} onClick={handleBack}
                         style={iBtn()}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>

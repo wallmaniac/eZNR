@@ -65,6 +65,7 @@ function WorkersPageInner() {
     const [certMenuId, setCertMenuId] = useState(null); // active cert action dropdown
     const [certMenuPos, setCertMenuPos] = useState({ top: 0, left: 0 }); // fixed position
     const certMenuRef = useRef(null);
+    const certMenuClosingRef = useRef(false); // tracks mousedown-closes-menu so click doesn't reopen
     const [showOnlyValidCerts, setShowOnlyValidCerts] = useState(false);
     const [showExpiringSoon, setShowExpiringSoon] = useState(false);
     const [expiringSoonDays, setExpiringSoonDays] = useState(60);
@@ -151,11 +152,14 @@ function WorkersPageInner() {
     useEffect(() => {
         const handleClick = (e) => {
             if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
-            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) setCertMenuId(null);
+            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) {
+                if (certMenuId !== null) certMenuClosingRef.current = true; // was open — flag closing
+                setCertMenuId(null);
+            }
         };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+    }, [certMenuId]);
 
     // Auto-open from WorkerProfileModal "Otvori potpuno" or cert-return via ?openWorker=ID
     useEffect(() => {
@@ -730,16 +734,18 @@ function WorkersPageInner() {
                                                     className="btn btn-outline btn-sm"
                                                     style={{ fontSize: '0.78rem', whiteSpace: 'nowrap', paddingLeft: 10, paddingRight: 10 }}
                                                     onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        if (certMenuId === c.id) { setCertMenuId(null); return; }
-                                                        const rect = e.currentTarget.getBoundingClientRect();
-                                                        const menuW = 230;
-                                                        // Always open BELOW the button, clamp to right edge only
-                                                        const left = Math.min(rect.left, window.innerWidth - menuW - 8);
-                                                        const top = rect.bottom + 4;
-                                                        setCertMenuPos({ top, left });
-                                                        setCertMenuId(c.id);
-                                                    }}
+                                                         e.stopPropagation();
+                                                         // If mousedown already closed this menu, don't reopen
+                                                         if (certMenuClosingRef.current) { certMenuClosingRef.current = false; return; }
+                                                         if (certMenuId === c.id) { setCertMenuId(null); return; }
+                                                         const rect = e.currentTarget.getBoundingClientRect();
+                                                         const menuW = 230;
+                                                         // Always open BELOW the button, clamp to right edge only
+                                                         const left = Math.min(rect.left, window.innerWidth - menuW - 8);
+                                                         const top = rect.bottom + 4;
+                                                         setCertMenuPos({ top, left });
+                                                         setCertMenuId(c.id);
+                                                     }}
                                                 >
                                                     ⚙️ {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
                                                 </button>
