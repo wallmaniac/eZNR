@@ -7,108 +7,123 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 const menuItems = [
+    // ── Top-level standalone ───────────────────────────────────────────────────
+    { key: 'dashboard', icon: '📊', path: '/dashboard' },
+    { key: 'home',      icon: '🏠', path: '/dashboard/news' },
+
+    // ── 👷 RADNICI — everything about people ──────────────────────────────────
     {
-        key: 'dashboard',
-        icon: '📊',
-        path: '/dashboard',
-    },
-    {
-        key: 'home',
-        icon: '🏠',
-        path: '/dashboard/news',
-    },
-    {
-        key: 'basicData',
-        icon: '📋',
+        key: 'grpWorkers', icon: '👷',
         children: [
-            { key: 'orgUnits', icon: '🏢', path: '/dashboard/org-units' },
-            { key: 'workplaces', icon: '🔧', path: '/dashboard/workplaces' },
-            { key: 'workers', icon: '👷', path: '/dashboard/workers' },
-            { key: 'equipment', icon: '⚙️', path: '/dashboard/equipment' },
-            { key: 'injuryReport', icon: '🩹', path: '/dashboard/injuries' },
-            { key: 'diseaseReport', icon: '🏥', path: '/dashboard/diseases' },
+            { key: 'workers',            icon: '👷', path: '/dashboard/workers' },
+            { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
+            { key: 'workerPPE',          icon: '🦺', path: '/dashboard/worker-ppe' },
+            { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
+            { key: 'ekPPE',             icon: '🦺', path: '/dashboard/ek-ppe' },
+            { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
+        ],
+    },
+
+    // ── 🏢 ORGANIZACIJA — company structure ───────────────────────────────────
+    {
+        key: 'grpOrganization', icon: '🏢',
+        children: [
+            { key: 'orgUnits',       icon: '🏢', path: '/dashboard/org-units' },
+            { key: 'workplaces',     icon: '🔧', path: '/dashboard/workplaces' },
+            { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
+            { key: 'addressBook',    icon: '📒', path: '/dashboard/address-book' },
+        ],
+    },
+
+    // ── ⚙️ OPREMA — equipment lifecycle ──────────────────────────────────────
+    {
+        key: 'grpEquipment', icon: '⚙️',
+        children: [
+            { key: 'equipment',          icon: '⚙️', path: '/dashboard/equipment' },
+            { key: 'equipmentExamList',  icon: '🔍', path: '/dashboard/equipment-exams' },
+            { key: 'ekEquipment',        icon: '📇', path: '/dashboard/ek-equipment' },
+        ],
+    },
+
+    // ── 🩹 SIGURNOST — incidents & diseases ───────────────────────────────────
+    {
+        key: 'grpSafety', icon: '🩹',
+        children: [
+            { key: 'injuryReport',       icon: '🩹', path: '/dashboard/injuries' },
+            { key: 'injuryList',         icon: '📋', path: '/dashboard/injury-list' },
+            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
+            { key: 'diseaseReport',      icon: '🏥', path: '/dashboard/diseases' },
+        ],
+    },
+
+    // ── 🎓 OSPOSOBLJAVANJE — training & assessments ───────────────────────────
+    {
+        key: 'grpTraining', icon: '🎓',
+        children: [
+            { key: 'trainings',      icon: '🎬', path: '/dashboard/trainings' },
+            { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
+            { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
+        ],
+    },
+
+    // ── 📑 DOKUMENTI — all documents & forms ─────────────────────────────────
+    {
+        key: 'grpDocuments', icon: '📑',
+        children: [
+            { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
+            { key: 'employerDocs',   icon: '📑', path: '/dashboard/employer-docs' },
+            { key: 'requests',       icon: '📝', path: '/dashboard/requests' },
             {
-                key: 'obrasciIUputnice', icon: '📋', label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
+                key: 'obrasciIUputnice', icon: '📋',
+                label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
                 children: [
-                    { key: 'formOIR1', icon: '📄', path: '/dashboard/form-oir1' },
+                    { key: 'formOIR1',          icon: '📄', path: '/dashboard/form-oir1' },
                     { key: 'medicalReferralRA1', icon: '🩺', path: '/dashboard/referral-ra1' },
-                    { key: 'formRO1', icon: '📄', path: '/dashboard/form-ro1' },
-                    { key: 'formRO2', icon: '📄', path: '/dashboard/form-ro2' },
-                    { key: 'nightWorkReferral', icon: '🌙', path: '/dashboard/night-work' },
+                    { key: 'formRO1',            icon: '📄', path: '/dashboard/form-ro1' },
+                    { key: 'formRO2',            icon: '📄', path: '/dashboard/form-ro2' },
+                    { key: 'nightWorkReferral',  icon: '🌙', path: '/dashboard/night-work' },
                 ],
             },
-            { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
-            { key: 'requests', icon: '📝', path: '/dashboard/requests' },
-            { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
-            { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
-            { key: 'trainings', icon: '🎬', path: '/dashboard/trainings' },
+            {
+                key: 'grpISZNR', icon: '🏛️',
+                label_bs: 'ISZNR dokumenti', label_en: 'ISZNR Documents',
+                children: [
+                    { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
+                    { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
+                    { key: 'documentTypes',   icon: '📋', path: '/dashboard/isznr-doc-types' },
+                    { key: 'digitalSigning',  icon: '✍️', path: '/dashboard/isznr-signing' },
+                    { key: 'examiners',       icon: '🔍', path: '/dashboard/isznr-examiners' },
+                    { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
+                ],
+            },
+        ],
+    },
 
-        ],
-    },
+    // ── 🔗 ŠIFARNICI — reference / setup data (formerly "Zajednički elementi") ─
     {
-        key: 'commonElements',
-        icon: '🔗',
+        key: 'grpCodebooks', icon: '🔗',
         children: [
-            { key: 'countries', icon: '🌍', path: '/dashboard/countries' },
-            { key: 'counties', icon: '📍', path: '/dashboard/counties' },
-            { key: 'places', icon: '🏘️', path: '/dashboard/places' },
-            { key: 'orgUnitGroups', icon: '📁', path: '/dashboard/org-groups' },
-            { key: 'authorizedCompanies', icon: '✅', path: '/dashboard/authorized-companies' },
-            { key: 'examiners', icon: '🔍', path: '/dashboard/examiners' },
-            { key: 'doctors', icon: '👨‍⚕️', path: '/dashboard/doctors' },
-            { key: 'examTypes', icon: '📋', path: '/dashboard/exam-types' },
-            { key: 'certTypes', icon: '📜', path: '/dashboard/cert-types' },
-            { key: 'equipmentTypes', icon: '🔩', path: '/dashboard/equipment-types' },
-            { key: 'ppe', icon: '🦺', path: '/dashboard/ppe' },
-            { key: 'fileTypes', icon: '📂', path: '/dashboard/file-types' },
-            { key: 'extraFields', icon: '➕', path: '/dashboard/extra-fields' },
+            { key: 'countries',          icon: '🌍', path: '/dashboard/countries' },
+            { key: 'counties',           icon: '📍', path: '/dashboard/counties' },
+            { key: 'places',             icon: '🏘️', path: '/dashboard/places' },
+            { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
+            { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
+            { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
+            { key: 'doctors',            icon: '👨‍⚕️', path: '/dashboard/doctors' },
+            { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
+            { key: 'certTypes',          icon: '📜', path: '/dashboard/cert-types' },
+            { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },
+            { key: 'ppe',               icon: '🦺', path: '/dashboard/ppe' },
+            { key: 'fileTypes',         icon: '📂', path: '/dashboard/file-types' },
+            { key: 'extraFields',       icon: '➕', path: '/dashboard/extra-fields' },
         ],
     },
-    {
-        key: 'reports',
-        icon: '📊',
-        children: [
-            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
-            { key: 'addressBook', icon: '📒', path: '/dashboard/address-book' },
-            { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
-            { key: 'workerPPE', icon: '🦺', path: '/dashboard/worker-ppe' },
-            { key: 'workplaceList', icon: '📋', path: '/dashboard/workplace-list' },
-            { key: 'injuryList', icon: '🩹', path: '/dashboard/injury-list' },
-            { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
-            { key: 'ekWorkers', icon: '📇', path: '/dashboard/ek-workers' },
-            { key: 'ekPPE', icon: '🦺', path: '/dashboard/ek-ppe' },
-            { key: 'ekEquipment', icon: '📇', path: '/dashboard/ek-equipment' },
-            { key: 'equipmentExamList', icon: '🔍', path: '/dashboard/equipment-exams' },
-        ],
-    },
-    {
-        key: 'isznr',
-        icon: '🏛️',
-        children: [
-            { key: 'documents', icon: '📄', path: '/dashboard/isznr-documents' },
-            { key: 'parties', icon: '👥', path: '/dashboard/isznr-parties' },
-            { key: 'documentTypes', icon: '📋', path: '/dashboard/isznr-doc-types' },
-            { key: 'digitalSigning', icon: '✍️', path: '/dashboard/isznr-signing' },
-            { key: 'examiners', icon: '🔍', path: '/dashboard/isznr-examiners' },
-            { key: 'measureEquipment', icon: '📏', path: '/dashboard/isznr-measure-equipment' },
-        ],
-    },
-    {
-        key: 'employerDocs',
-        icon: '📑',
-        path: '/dashboard/employer-docs',
-    },
-    {
-        key: 'excelImport',
-        icon: '📥',
-        path: '/dashboard/import',
-    },
-    {
-        key: 'settings',
-        icon: '⚙️',
-        path: '/dashboard/settings',
-    },
+
+    // ── Bottom standalone ──────────────────────────────────────────────────────
+    { key: 'excelImport', icon: '📥', path: '/dashboard/import' },
+    { key: 'settings',    icon: '⚙️', path: '/dashboard/settings' },
 ];
+
 
 export default function Sidebar({ collapsed, onToggle }) {
     const { t, lang } = useLanguage();

@@ -40,6 +40,14 @@ export const translations = {
     logout: 'Odjava',
     search: 'Pretraži',
     searchPlaceholder: 'Pretraživanje radnika, radne opreme i objekata...',
+    // Navigation groups (new domain-based nav)
+    grpWorkers: 'Radnici',
+    grpOrganization: 'Organizacija',
+    grpEquipment: 'Oprema',
+    grpSafety: 'Sigurnost',
+    grpTraining: 'Osposobljavanje',
+    grpDocuments: 'Dokumenti',
+    grpCodebooks: 'Šifarnici',
 
     // Basic Data submenu
     orgUnits: 'Organizacijske jedinice',
@@ -374,6 +382,14 @@ export const translations = {
     logout: 'Log out',
     search: 'Search',
     searchPlaceholder: 'Search workers, equipment and objects...',
+    // Navigation groups (new domain-based nav)
+    grpWorkers: 'Workers',
+    grpOrganization: 'Organization',
+    grpEquipment: 'Equipment',
+    grpSafety: 'Safety',
+    grpTraining: 'Training',
+    grpDocuments: 'Documents',
+    grpCodebooks: 'Codebooks',
 
     // Basic Data submenu
     orgUnits: 'Organizational Units',
