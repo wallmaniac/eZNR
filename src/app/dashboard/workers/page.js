@@ -781,7 +781,7 @@ function WorkersPageInner() {
                                                             📄 <span>{lang === 'bs' ? 'Uredi potpuno' : 'Edit full form'}</span>
                                                         </button>
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
-                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/create?workerId=${editingWorker}&copyFrom=${c.id}&returnTo=${returnToParam}`); }}>
+                                                            onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/create?copyFrom=${c.id}&returnTo=${returnToParam}`); }}>
                                                             📋 <span>{lang === 'bs' ? 'Kopiraj uvjerenje' : 'Copy certificate'}</span>
                                                         </button>
                                                         {isZOS && (

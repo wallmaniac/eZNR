@@ -127,12 +127,14 @@ export function UvjerenjeFormPage() {
         if (copyFromId) {
             const src = getById(COLLECTIONS.CERTIFICATES, copyFromId);
             if (src) {
+                // Pre-select the source worker (table still visible for multi-assignment)
+                if (src.workerId) setSelectedWorkerIds(new Set([src.workerId]));
                 setFormData({
                     ...EMPTY_CERT,
                     tipUvjerenjaId: src.tipUvjerenjaId || '',
                     tipUvjerenjaIme: src.tipUvjerenjaIme || src.ime || '',
                     oznaka: src.oznaka || '',
-                    datum: new Date().toISOString().split('T')[0], // today's date for copy
+                    datum: new Date().toISOString().split('T')[0],
                     sposoban: src.sposoban ?? (src.sposobnost !== 'Nesposoban'),
                     vrijediDo: src.vrijediDo || '',
                     ispitivacId: src.ispitivacId || '',
@@ -141,7 +143,7 @@ export function UvjerenjeFormPage() {
                     cijena: src.cijena || '',
                     vydanoZaRadnoMjesto: src.vydanoZaRadnoMjesto || src.izdanoZaRadnoMjesto || '',
                     ogranicenja: src.ogranicenja || '',
-                    // Do NOT copy potpisanScan — new copy needs fresh signature
+                    // Do NOT copy potpisanScan - new copy needs fresh signature
                 });
                 if (src.tipUvjerenjaIme || src.ime) setTipSearch(src.tipUvjerenjaIme || src.ime || '');
             }
