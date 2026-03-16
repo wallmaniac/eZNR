@@ -695,7 +695,35 @@ export function UvjerenjeFormPage() {
                                         className="form-input"
                                         style={{ paddingTop: 6 }}
                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            if (file.size > 5 * 1024 * 1024) { alert('Max 5MB!'); return; }
+                                            const reader = new FileReader();
+                                            reader.onload = (ev) => {
+                                                set('attachedFileData', ev.target.result);
+                                                set('attachedFileName', file.name);
+                                                set('attachedFileSize', file.size);
+                                                set('attachedFileType', file.type);
+                                            };
+                                            reader.readAsDataURL(file);
+                                            e.target.value = '';
+                                        }}
                                     />
+                                    {formData.attachedFileData && (
+                                        <div style={{
+                                            marginTop: 8, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
+                                            background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)',
+                                            display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem',
+                                        }}>
+                                            <span>{formData.attachedFileName?.endsWith('.pdf') ? '📕' : '🖼️'}</span>
+                                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                                                {formData.attachedFileName}
+                                            </span>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
+                                                onClick={() => { set('attachedFileData', null); set('attachedFileName', ''); }}>✕</button>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
                                     <div style={labelStyle}>{lang === 'bs' ? 'Opis datoteke' : 'File description'}</div>

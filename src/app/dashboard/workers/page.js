@@ -176,6 +176,10 @@ function WorkersPageInner() {
         if (found) {
             openWorkerHandledRef.current = openId; // mark as handled for THIS id
             handleEdit(found);
+            // Always clear dirty flag when returning from a cert/ppe subpage — cert saves
+            // are self-contained and should never require re-saving the worker form
+            markClean();
+            isDirtyRef.current = false;
             // Check for section param — open and scroll to the right accordion
             const section = searchParams?.get('section');
             if (section === 'ozo') {
