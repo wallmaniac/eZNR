@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -72,7 +72,7 @@ const EMPTY_RA1 = {
   orgBrziTempo: false,
   orgRitamOdreden: false,
   orgMonotonija: false,
-  // Položaj tijela (checkboxes)
+  // PoloÅ¾aj tijela (checkboxes)
   polRadStojeci: false,
   polRadSjedeci: false,
   polUPokretu: false,
@@ -168,6 +168,15 @@ export default function ReferralRA1Page() {
     }
     setShowForm(false);
     loadData();
+    // If user came here mid-creation of a medical exam, go back to resume it
+    if (typeof window !== 'undefined') {
+      if (sessionStorage.getItem('eznr_draft_medexam')) {
+        router.push('/dashboard/medical-exams');
+      } else if (sessionStorage.getItem('eznr_draft_workers_medexam')) {
+        const d = JSON.parse(sessionStorage.getItem('eznr_draft_workers_medexam'));
+        router.push('/dashboard/workers?openWorker=' + (d.workerId || ''));
+      }
+    }
   };
 
   const handleWorkerChange = (workerId) => {
@@ -185,12 +194,12 @@ export default function ReferralRA1Page() {
 
   const getWorkerName = (id) => {
     const w = workers.find(wk => wk.id === id);
-    return w ? `${w.prezime} ${w.ime}` : '—';
+    return w ? `${w.prezime} ${w.ime}` : 'â€”';
   };
 
   const getWorkerInfo = (id) => workers.find(wk => wk.id === id);
 
-  // ── Styles ──
+  // â”€â”€ Styles â”€â”€
   const sectionStyle = {
     marginBottom: 24, paddingBottom: 12,
     borderBottom: '1px solid var(--border-light)',
@@ -218,12 +227,12 @@ export default function ReferralRA1Page() {
     </label>
   );
 
-  // ── List view ──
+  // â”€â”€ List view â”€â”€
   if (!showForm) {
     return (
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>🩺 {t('medicalReferralRA1')}</h1>
+          <h1 style={{ margin: 0 }}>ðŸ©º {t('medicalReferralRA1')}</h1>
         </div>
         <DialogRenderer />
 
@@ -257,19 +266,19 @@ export default function ReferralRA1Page() {
                   {referrals.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : referrals.map((r, idx) => {
-                    const examType = r.pregledPeriodicki ? 'Periodički' : r.pregledPrethodni ? 'Prethodni' : r.pregledIzvanredni ? 'Izvanredni' : r.pregledKontrolni ? 'Kontrolni' : '—';
+                    const examType = r.pregledPeriodicki ? 'PeriodiÄki' : r.pregledPrethodni ? 'Prethodni' : r.pregledIzvanredni ? 'Izvanredni' : r.pregledKontrolni ? 'Kontrolni' : 'â€”';
                     return (
                       <tr key={r.id}>
                         <td>{idx + 1}</td>
                         <td style={{ fontWeight: 600 }}>{getWorkerName(r.workerId)}</td>
                         <td>{formatDate(r.datum)}</td>
                         <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{examType}</span></td>
-                        <td>{r.ustanovaNaziv || '—'}</td>
-                        <td>{r.doktorIme || '—'}</td>
+                        <td>{r.ustanovaNaziv || 'â€”'}</td>
+                        <td>{r.doktorIme || 'â€”'}</td>
                         <td>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                            <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>âœï¸</button>
+                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>ðŸ—‘ï¸</button>
                           </div>
                         </td>
                       </tr>
@@ -284,25 +293,25 @@ export default function ReferralRA1Page() {
     );
   }
 
-  // ── Form view ──
+  // â”€â”€ Form view â”€â”€
   const worker = getWorkerInfo(formData.workerId);
   const workerOu = worker ? orgUnits.find(o => o.id === worker.orgJedinicaId) : null;
 
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
-        <h1 style={{ margin: 0 }}>🩺 {editingId ? (lang === 'bs' ? 'Uredi uputnicu RA-1' : 'Edit RA-1 referral') : (lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 referral')}</h1>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>â†</button>
+        <h1 style={{ margin: 0 }}>ðŸ©º {editingId ? (lang === 'bs' ? 'Uredi uputnicu RA-1' : 'Edit RA-1 referral') : (lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 referral')}</h1>
       </div>
       <DialogRenderer />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* ═══ SECTION 1: General & Worker ═══ */}
+        {/* â•â•â• SECTION 1: General & Worker â•â•â• */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
-              {lang === 'bs' ? 'Uputnica za utvrđivanje zdravstvene sposobnosti radnika' : 'Referral for determining worker health fitness'}
+              {lang === 'bs' ? 'Uputnica za utvrÄ‘ivanje zdravstvene sposobnosti radnika' : 'Referral for determining worker health fitness'}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr', gap: 16, marginBottom: 16 }}>
@@ -317,7 +326,7 @@ export default function ReferralRA1Page() {
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
                 <select className="form-select" value={formData.workerId} onChange={e => handleWorkerChange(e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                  <option value="">{lang === 'bs' ? 'â€” Odaberite radnika â€”' : 'â€” Select worker â€”'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
@@ -329,17 +338,17 @@ export default function ReferralRA1Page() {
             {worker && (
               <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>OIB:</span> <strong>{worker.oib || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>OIB:</span> <strong>{worker.oib || 'â€”'}</strong></div>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Prezime, ime, ime oca:' : 'Name, father:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum roÄ‘enja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || 'â€”'}</strong></div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* ═══ SECTION 2: Institution & Doctor ═══ */}
+        {/* â•â•â• SECTION 2: Institution & Doctor â•â•â• */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
@@ -357,7 +366,7 @@ export default function ReferralRA1Page() {
                   const doc = doctors.find(d => d.id === e.target.value);
                   setFormData(prev => ({ ...prev, doktorId: e.target.value, doktorIme: doc?.ime || '', doktorEmail: doc?.email || '' }));
                 }}>
-                  <option value="">{lang === 'bs' ? '— Odaberite doktora —' : '— Select doctor —'}</option>
+                  <option value="">{lang === 'bs' ? 'â€” Odaberite doktora â€”' : 'â€” Select doctor â€”'}</option>
                   {doctors.map(d => <option key={d.id} value={d.id}>{d.ime}</option>)}
                 </select>
               </div>
@@ -369,7 +378,7 @@ export default function ReferralRA1Page() {
                 <input className="form-input" value={formData.ustanovaAdresa} onChange={e => set('ustanovaAdresa', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Pošta' : 'Postal'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'PoÅ¡ta' : 'Postal'}</div>
                 <input className="form-input" value={formData.ustanovaPosta} onChange={e => set('ustanovaPosta', e.target.value)} />
               </div>
               <div>
@@ -399,23 +408,23 @@ export default function ReferralRA1Page() {
           </div>
         </div>
 
-        {/* ═══ SECTION 3: RA-1 Job Details ═══ */}
+        {/* â•â•â• SECTION 3: RA-1 Job Details â•â•â• */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>RA-1</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Poslovi za koje se utvrđuje zdravstvena sposobnost' : 'Jobs for health fitness assessment'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'Poslovi za koje se utvrÄ‘uje zdravstvena sposobnost' : 'Jobs for health fitness assessment'}</div>
               <input className="form-input" value={formData.posloviZaKoje} onChange={e => set('posloviZaKoje', e.target.value)}
                 placeholder={lang === 'bs' ? 'npr. Komercijalista' : 'e.g. Sales representative'} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', gap: '4px 8px', alignItems: 'center', marginBottom: 14, fontSize: '0.84rem' }}>
               <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>1) {lang === 'bs' ? 'Poslovi su prema članku' : 'Jobs per article'}</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>1) {lang === 'bs' ? 'Poslovi su prema Älanku' : 'Jobs per article'}</span>
                 <input className="form-input" value={formData.posloviClanak} onChange={e => set('posloviClanak', e.target.value)} style={{ marginTop: 4 }} />
               </div>
-              <span style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'točka' : 'point'}</span>
+              <span style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'toÄka' : 'point'}</span>
               <div>
                 <input className="form-input" value={formData.posloviTocka} onChange={e => set('posloviTocka', e.target.value)} />
               </div>
@@ -429,16 +438,16 @@ export default function ReferralRA1Page() {
             </div>
 
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 14 }}>
-              3) {lang === 'bs' ? 'Poslovi su prema propisima o mirovinskom osiguranju utvrđeni kao poslovi na kojima se staž osiguranja računa s povećanim trajanjem.' : 'Jobs per pension insurance regulations.'}
+              3) {lang === 'bs' ? 'Poslovi su prema propisima o mirovinskom osiguranju utvrÄ‘eni kao poslovi na kojima se staÅ¾ osiguranja raÄuna s poveÄ‡anim trajanjem.' : 'Jobs per pension insurance regulations.'}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Ukupni radni staž' : 'Total work experience'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'Ukupni radni staÅ¾' : 'Total work experience'}</div>
                 <input className="form-input" value={formData.ukupniRadniStaz} onChange={e => set('ukupniRadniStaz', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Radni staž na poslovima za koje se utvrđuje zdr. sposobnost' : 'Experience in assessed position'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'Radni staÅ¾ na poslovima za koje se utvrÄ‘uje zdr. sposobnost' : 'Experience in assessed position'}</div>
                 <input className="form-input" value={formData.radniStazNaPoslovima} onChange={e => set('radniStazNaPoslovima', e.target.value)} />
               </div>
             </div>
@@ -448,7 +457,7 @@ export default function ReferralRA1Page() {
               <div style={labelSt}>{lang === 'bs' ? 'Zdravstveni pregled' : 'Health examination'}</div>
               <div style={checkGroup}>
                 <Chk field="pregledPrethodni" label={lang === 'bs' ? 'prethodni' : 'initial'} />
-                <Chk field="pregledPeriodicki" label={lang === 'bs' ? 'periodički' : 'periodic'} />
+                <Chk field="pregledPeriodicki" label={lang === 'bs' ? 'periodiÄki' : 'periodic'} />
                 <Chk field="pregledIzvanredni" label={lang === 'bs' ? 'izvanredni' : 'extraordinary'} />
                 <Chk field="pregledKontrolni" label={lang === 'bs' ? 'kontrolni' : 'control'} />
               </div>
@@ -461,11 +470,11 @@ export default function ReferralRA1Page() {
                 <input className="form-input" type="date" value={formData.posljednjiPregledDatum} onChange={e => set('posljednjiPregledDatum', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'prema članku' : 'per article'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'prema Älanku' : 'per article'}</div>
                 <input className="form-input" value={formData.posljednjiPregledClanak} onChange={e => set('posljednjiPregledClanak', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'točki' : 'point'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'toÄki' : 'point'}</div>
                 <input className="form-input" value={formData.posljednjiPregledTocka} onChange={e => set('posljednjiPregledTocka', e.target.value)} />
               </div>
             </div>
@@ -482,7 +491,7 @@ export default function ReferralRA1Page() {
           </div>
         </div>
 
-        {/* ═══ SECTION 4: Job Description ═══ */}
+        {/* â•â•â• SECTION 4: Job Description â•â•â• */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>{lang === 'bs' ? 'Opis posla i uvjeti rada' : 'Job description & working conditions'}</div>
@@ -519,33 +528,33 @@ export default function ReferralRA1Page() {
               <div style={labelSt}>{lang === 'bs' ? 'Organizacija rada' : 'Work organization'}</div>
               <div style={checkGroup}>
                 <Chk field="orgSmjene" label={lang === 'bs' ? 'u smjenama' : 'in shifts'} />
-                <Chk field="orgNocniRad" label={lang === 'bs' ? 'noćni rad' : 'night work'} />
+                <Chk field="orgNocniRad" label={lang === 'bs' ? 'noÄ‡ni rad' : 'night work'} />
                 <Chk field="orgTerenskiRad" label={lang === 'bs' ? 'terenski rad' : 'field work'} />
                 <Chk field="orgRadiSam" label={lang === 'bs' ? 'radi sam' : 'works alone'} />
                 <Chk field="orgRadiSGrupom" label={lang === 'bs' ? 'radi s grupom' : 'works in group'} />
                 <Chk field="orgRadiSaStrankama" label={lang === 'bs' ? 'radi sa strankama' : 'works with clients'} />
                 <Chk field="orgRadiNaTraci" label={lang === 'bs' ? 'radi na traci' : 'assembly line'} />
                 <Chk field="orgBrziTempo" label={lang === 'bs' ? 'brzi tempo rada' : 'fast pace'} />
-                <Chk field="orgRitamOdreden" label={lang === 'bs' ? 'ritam određen' : 'fixed rhythm'} />
+                <Chk field="orgRitamOdreden" label={lang === 'bs' ? 'ritam odreÄ‘en' : 'fixed rhythm'} />
                 <Chk field="orgMonotonija" label={lang === 'bs' ? 'monotonija' : 'monotony'} />
               </div>
             </div>
 
-            {/* Položaj tijela */}
+            {/* PoloÅ¾aj tijela */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'Položaj tijela i aktivnosti' : 'Body position & activities'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'PoloÅ¾aj tijela i aktivnosti' : 'Body position & activities'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 16px', marginBottom: 10 }}>
-                <Chk field="polRadStojeci" label={lang === 'bs' ? 'rad stojeći' : 'standing'} />
-                <Chk field="polUcestaloSagibanje" label={lang === 'bs' ? 'učestalo sagibanje' : 'frequent bending'} />
-                <Chk field="polPodvlacenje" label={lang === 'bs' ? 'podvlačenje' : 'crawling under'} />
-                <Chk field="polRadSjedeci" label={lang === 'bs' ? 'rad sjedeći' : 'sitting'} />
+                <Chk field="polRadStojeci" label={lang === 'bs' ? 'rad stojeÄ‡i' : 'standing'} />
+                <Chk field="polUcestaloSagibanje" label={lang === 'bs' ? 'uÄestalo sagibanje' : 'frequent bending'} />
+                <Chk field="polPodvlacenje" label={lang === 'bs' ? 'podvlaÄenje' : 'crawling under'} />
+                <Chk field="polRadSjedeci" label={lang === 'bs' ? 'rad sjedeÄ‡i' : 'sitting'} />
                 <Chk field="polZakretanjeTrupa" label={lang === 'bs' ? 'zakretanje trupa' : 'torso rotation'} />
                 <Chk field="polBalansiranje" label={lang === 'bs' ? 'balansiranje' : 'balancing'} />
                 <Chk field="polUPokretu" label={lang === 'bs' ? 'u pokretu' : 'in motion'} />
-                <Chk field="polKlecanje" label={lang === 'bs' ? 'klečanje' : 'kneeling'} />
+                <Chk field="polKlecanje" label={lang === 'bs' ? 'kleÄanje' : 'kneeling'} />
                 <Chk field="polUspinjanjeLjestvama" label={lang === 'bs' ? 'uspinjanje ljestvama' : 'climbing ladders'} />
                 <Chk field="polKombinirano" label={lang === 'bs' ? 'kombinirano' : 'combined'} />
-                <Chk field="polCucanje" label={lang === 'bs' ? 'čučanje' : 'squatting'} />
+                <Chk field="polCucanje" label={lang === 'bs' ? 'ÄuÄanje' : 'squatting'} />
                 <Chk field="polUspinjanjeStepen" label={lang === 'bs' ? 'uspinjanje stepenicama' : 'climbing stairs'} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -555,7 +564,7 @@ export default function ReferralRA1Page() {
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'prenoš. tereta:' : 'carry:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'prenoÅ¡. tereta:' : 'carry:'}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.prenosTereta} onChange={e => set('prenosTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
@@ -569,7 +578,7 @@ export default function ReferralRA1Page() {
 
             {/* Sensory */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'U poslu je važan' : 'Important in work'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'U poslu je vaÅ¾an' : 'Important in work'}</div>
               <div style={checkGroup}>
                 <Chk field="vidNaDaljinu" label={lang === 'bs' ? 'vid na daljinu' : 'distance vision'} />
                 <Chk field="vidNaBlizinu" label={lang === 'bs' ? 'vid na blizinu' : 'near vision'} />
@@ -584,16 +593,16 @@ export default function ReferralRA1Page() {
               <div style={labelSt}>{lang === 'bs' ? 'Uvjeti rada' : 'Working conditions'}</div>
               <div style={checkGroup}>
                 <Chk field="uvjetiVisokaTemp" label={lang === 'bs' ? 'visoka temperatura' : 'high temp'} />
-                <Chk field="uvjetiVisokaVlaznost" label={lang === 'bs' ? 'visoka vlažnost' : 'high humidity'} />
+                <Chk field="uvjetiVisokaVlaznost" label={lang === 'bs' ? 'visoka vlaÅ¾nost' : 'high humidity'} />
                 <Chk field="uvjetiNiskaTemp" label={lang === 'bs' ? 'niska temperatura' : 'low temp'} />
                 <Chk field="uvjetiBuka" label={lang === 'bs' ? 'buka' : 'noise'} />
                 <Chk field="uvjetiVibracijeStroj" label={lang === 'bs' ? 'vibracije stroja ili alata' : 'machine vibrations'} />
                 <Chk field="uvjetiVibracijePoda" label={lang === 'bs' ? 'vibracije poda' : 'floor vibrations'} />
-                <Chk field="uvjetiPoviseniTlak" label={lang === 'bs' ? 'povišeni atmosferski tlak' : 'increased pressure'} />
-                <Chk field="uvjetiPovecanaOzljeda" label={lang === 'bs' ? 'povećana izloženost ozljedama' : 'increased injury risk'} />
-                <Chk field="uvjetiIonizacija" label={lang === 'bs' ? 'ionizacijska zračenja' : 'ionizing radiation'} />
-                <Chk field="uvjetiNeionizacija" label={lang === 'bs' ? 'neionizacijska zračenja' : 'non-ionizing radiation'} />
-                <Chk field="uvjetiPrasina" label={lang === 'bs' ? 'prašina' : 'dust'} />
+                <Chk field="uvjetiPoviseniTlak" label={lang === 'bs' ? 'poviÅ¡eni atmosferski tlak' : 'increased pressure'} />
+                <Chk field="uvjetiPovecanaOzljeda" label={lang === 'bs' ? 'poveÄ‡ana izloÅ¾enost ozljedama' : 'increased injury risk'} />
+                <Chk field="uvjetiIonizacija" label={lang === 'bs' ? 'ionizacijska zraÄenja' : 'ionizing radiation'} />
+                <Chk field="uvjetiNeionizacija" label={lang === 'bs' ? 'neionizacijska zraÄenja' : 'non-ionizing radiation'} />
+                <Chk field="uvjetiPrasina" label={lang === 'bs' ? 'praÅ¡ina' : 'dust'} />
               </div>
             </div>
 
@@ -603,7 +612,7 @@ export default function ReferralRA1Page() {
               <textarea className="form-input" rows={2} value={formData.kemijskeTvari} onChange={e => set('kemijskeTvari', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Biološke štetnosti' : 'Biological hazards'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'BioloÅ¡ke Å¡tetnosti' : 'Biological hazards'}</div>
               <textarea className="form-input" rows={2} value={formData.bioloskeStetnosti} onChange={e => set('bioloskeStetnosti', e.target.value)} />
             </div>
 
@@ -614,17 +623,17 @@ export default function ReferralRA1Page() {
           </div>
         </div>
 
-        {/* ═══ Action buttons ═══ */}
+        {/* â•â•â• Action buttons â•â•â• */}
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi' : 'Save'}
+              ðŸ’¾ {lang === 'bs' ? 'Snimi' : 'Save'}
             </button>
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
-              💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
+              ðŸ’¾ {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              â†© {lang === 'bs' ? 'Odustani' : 'Cancel'}
             </button>
           </div>
         </div>
