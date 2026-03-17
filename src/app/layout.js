@@ -3,6 +3,10 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 
+// Tell Next.js to never statically prerender any route (app uses auth + localStorage)
+export const dynamic = 'force-dynamic';
+
+
 export const metadata = {
   title: 'eZNR - Digitalna platforma za zaštitu na radu',
   description: 'eZNR je digitalna platforma za zaštitu na radu i zaštitu od požara u Bosni i Hercegovini. Vodite evidencije, upravljajte dokumentacijom i osigurajte usklađenost sa zakonom.',

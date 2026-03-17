@@ -642,7 +642,7 @@ function WorkersPageInner() {
                                 <span style={{fontSize:'1.4rem'}}>??</span>
                                 <div>
                                     <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>{lang==='bs'?'Uvjerenja':'Certs'}</div>
-                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:_expC>0?'var(--danger)':'var(--success)'}}>{_valC} ?{_expC>0&&<span style={{color:'var(--danger)',marginLeft:6}}>· {_expC} ?</span>}</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:_expC>0?'var(--danger)':'var(--success)'}}>{_valC} ?{_expC>0&&<span style={{color:'var(--danger)',marginLeft:6}}>Â· {_expC} ?</span>}</div>
                                 </div>
                             </div>
                             <div onClick={()=>{setOpenSections(p=>({...p,medExams:true})); medExamsRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
@@ -661,7 +661,7 @@ function WorkersPageInner() {
                                 <span style={{fontSize:'1.4rem'}}>??</span>
                                 <div>
                                     <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>OZO</div>
-                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:ppeAssign.length>0?'var(--primary)':'var(--text-muted)'}}>{ppeAssign.length} {lang==='bs'?'zaduženja':'assigned'}</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:ppeAssign.length>0?'var(--primary)':'var(--text-muted)'}}>{ppeAssign.length} {lang==='bs'?'zaduÅ¾enja':'assigned'}</div>
                                 </div>
                             </div>
                         </div>
@@ -993,7 +993,7 @@ function WorkersPageInner() {
                                                 <td style={{ fontSize: '0.85rem' }}>{formatDate(me.datumPregleda)}</td>
                                                 <td><span className={`badge ${badgeCls}`} style={{ fontSize: '0.7rem' }}>{badgeLabel}</span></td>
                                                 <td style={{ fontWeight: 600, color: RCOL[me.rezultat] || 'inherit', fontSize: '0.85rem' }}>{me.rezultat}</td>
-                                                <td style={{ fontSize: '0.8rem' }}>{me.zdravstvenaUstanova || '—'}{me.doktorIme ? ` / Dr. ${me.doktorIme}` : ''}</td>
+                                                <td style={{ fontSize: '0.8rem' }}>{me.zdravstvenaUstanova || 'â€”'}{me.doktorIme ? ` / Dr. ${me.doktorIme}` : ''}</td>
                                                 <td><div style={{ display: 'flex', gap: 4 }}>
                                                     <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); }}>??</button>
                                                     <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>???</button>

@@ -8,9 +8,6 @@ loadDotenv({ path: path.join(__dirname, '.env.local'), override: true });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  eslint: {
-    ignoreDuringBuilds: true, // ESLint warnings should not block production builds
-  },
   env: {
     // Explicitly forward EmailJS vars so workspace root confusion doesn't block them
     NEXT_PUBLIC_EMAILJS_SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
