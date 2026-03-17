@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
@@ -62,10 +62,12 @@ export default function MedicalExamsPage() {
     const [searchQ, setSearchQ] = useState('');
 
     const [isDirty, setIsDirty] = useState(false);
+    const searchParams = useSearchParams();
 
-    // Restore draft if user navigated away mid-form (e.g. to RA-1 referral page)
+    // Auto-open form from URL params (openNew=1) or session draft
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        // 1. Restore sessionStorage draft (from RA-1 navigation)
         const draft = sessionStorage.getItem('eznr_draft_medexam');
         if (draft) {
             try {
@@ -74,9 +76,21 @@ export default function MedicalExamsPage() {
                 setShowForm(true);
                 setIsDirty(true);
                 sessionStorage.removeItem('eznr_draft_medexam');
+                return;
             } catch { sessionStorage.removeItem('eznr_draft_medexam'); }
         }
-    }, []);
+        // 2. Open new form from URL params (e.g. from Workers page)
+        const openNew = searchParams.get('openNew');
+        const workerIdParam = searchParams.get('workerId');
+        if (openNew === '1') {
+            setEditingId(null);
+            setForm(prev => ({
+                ...emptyForm,
+                workerId: workerIdParam || '',
+            }));
+            setShowForm(true);
+        }
+    }, [searchParams]);
 
     const reload = useCallback(() => setExams(getAll(COLLECTIONS.MEDICAL_EXAMS)), []);
     const setField = (k, v) => { setForm(p => ({ ...p, [k]: v })); setIsDirty(true); };
@@ -134,6 +148,12 @@ export default function MedicalExamsPage() {
         setForm({ ...emptyForm });
         setIsDirty(false);
         sessionStorage.removeItem('eznr_draft_medexam');
+        // Return to worker page if we came from there
+        const returnTo = searchParams.get('returnTo');
+        const wId = searchParams.get('workerId');
+        if (returnTo === 'worker' && wId) {
+            router.push('/dashboard/workers?openWorker=' + encodeURIComponent(wId));
+        }
     };
 
     const handleEdit = (exam) => {

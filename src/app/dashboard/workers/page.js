@@ -655,16 +655,16 @@ function WorkersPageInner() {
                             <div onClick={()=>{setOpenSections(p=>({...p,uvjerenja:true})); uvjerenjaRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
                                 style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background: _expC>0?'rgba(239,68,68,0.07)':'rgba(34,197,94,0.06)', border:`1px solid ${_expC>0?'var(--danger)':'var(--success)'}`, display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
                                 onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.95)'} onMouseLeave={e=>e.currentTarget.style.filter=''}>
-                                <span style={{fontSize:'1.4rem'}}>??</span>
+                                <span style={{fontSize:'1.4rem'}}>📋</span>
                                 <div>
                                     <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>{lang==='bs'?'Uvjerenja':'Certs'}</div>
-                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:_expC>0?'var(--danger)':'var(--success)'}}>{_valC} ?{_expC>0&&<span style={{color:'var(--danger)',marginLeft:6}}> {_expC} ?</span>}</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:_expC>0?'var(--danger)':'var(--success)'}}>{_valC} ✓{_expC>0&&<span style={{color:'var(--danger)',marginLeft:6}}> {_expC} ⚠</span>}</div>
                                 </div>
                             </div>
                             <div onClick={()=>{setOpenSections(p=>({...p,medExams:true})); medExamsRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
                                 style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background: _mc==='expired'?'rgba(239,68,68,0.07)':_mc==='soon'?'rgba(245,158,11,0.07)':'rgba(34,197,94,0.05)', border:`1px solid ${_mColor}`, display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
                                 onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.95)'} onMouseLeave={e=>e.currentTarget.style.filter=''}>
-                                <span style={{fontSize:'1.4rem'}}>?????</span>
+                                <span style={{fontSize:'1.4rem'}}>👨‍⚕️</span>
                                 <div>
                                     <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>{lang==='bs'?'Pregled':'Med. Exam'}</div>
                                     <div style={{fontWeight:700,fontSize:'0.9rem',color:_mColor}}>{_lm?(_mc==='expired'?'Istekao!':_mc==='soon'?`${_lmd}d`:'Vrijedi'):'Nema'}</div>
@@ -674,7 +674,7 @@ function WorkersPageInner() {
                             <div onClick={()=>{setOpenSections(p=>({...p,ozo:true})); ozoRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
                                 style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background:'rgba(0,191,166,0.06)', border:'1px solid rgba(0,191,166,0.2)', display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
                                 onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.95)'} onMouseLeave={e=>e.currentTarget.style.filter=''}>
-                                <span style={{fontSize:'1.4rem'}}>??</span>
+                                <span style={{fontSize:'1.4rem'}}>🦺</span>
                                 <div>
                                     <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>OZO</div>
                                     <div style={{fontWeight:700,fontSize:'0.9rem',color:ppeAssign.length>0?'var(--primary)':'var(--text-muted)'}}>{ppeAssign.length} {lang==='bs'?'zaduenja':'assigned'}</div>
@@ -969,16 +969,16 @@ function WorkersPageInner() {
                 
                 {/* ACCORDION: Ljekarski pregledi */}
                 <div ref={medExamsRef}>
-                <Accordion title={"????? " + (lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams')} open={openSections.medExams} onToggle={() => toggleSection('medExams')}>
+                <Accordion title={"👨‍⚕️ " + (lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams')} open={openSections.medExams} onToggle={() => toggleSection('medExams')}>
                     <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-outline btn-sm" onClick={() => { setMedExamEditId(null); setMedExamForm({ tipPregleda: 'prethodni', datumPregleda: '', vrijediDo: '', rezultat: 'Sposoban', zdravstvenaUstanova: '', doktorIme: '', ogranicenja: '', uputnicaBroj: '' }); setShowMedExamForm(true); }}>
+                        <button className="btn btn-outline btn-sm" onClick={() => { markClean(); router.push('/dashboard/medical-exams?openNew=1&workerId=' + encodeURIComponent(editingWorker) + '&returnTo=worker'); }}>
                             + {lang === 'bs' ? 'Novi pregled' : 'New Exam'}
                         </button>
                         <button className="btn btn-ghost btn-sm" onClick={() => { if (showMedExamForm) { sessionStorage.setItem('eznr_draft_workers_medexam', JSON.stringify({ workerId: editingWorker, form: medExamForm, editId: medExamEditId })); } markClean(); router.push('/dashboard/referral-ra1?openNew=1'); }}>
-                            ?? {lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
+                            📋 {lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                         </button>
                         <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', color: 'var(--primary)' }} onClick={() => { markClean(); router.push('/dashboard/medical-exams'); }}>
-                            {lang === 'bs' ? 'Svi pregledi ?' : 'All exams ?'}
+                            {lang === 'bs' ? 'Svi pregledi →' : 'All exams →'}
                         </button>
                     </div>
                     {workerMedExams.length === 0 ? (
@@ -1011,8 +1011,8 @@ function WorkersPageInner() {
                                                 <td style={{ fontWeight: 600, color: RCOL[me.rezultat] || 'inherit', fontSize: '0.85rem' }}>{me.rezultat}</td>
                                                 <td style={{ fontSize: '0.8rem' }}>{me.zdravstvenaUstanova || ''}{me.doktorIme ? ` / Dr. ${me.doktorIme}` : ''}</td>
                                                 <td><div style={{ display: 'flex', gap: 4 }}>
-                                                    <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); }}>??</button>
-                                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>???</button>
+                                                    <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); }}>✏️</button>
+                                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>🗑️</button>
                                                 </div></td>
                                             </tr>
                                         );
@@ -1101,8 +1101,8 @@ function WorkersPageInner() {
                     <div className="modal-overlay" onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>
                         <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
-                                <h2 style={{ color: 'white', margin: 0 }}>????? {medExamEditId ? (lang === 'bs' ? 'Uredi pregled' : 'Edit Exam') : (lang === 'bs' ? 'Novi ljekarski pregled' : 'New Medical Exam')}</h2>
-                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>?</button>
+                                <h2 style={{ color: 'white', margin: 0 }}>👨‍⚕️ {medExamEditId ? (lang === 'bs' ? 'Uredi pregled' : 'Edit Exam') : (lang === 'bs' ? 'Novi ljekarski pregled' : 'New Medical Exam')}</h2>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>✕</button>
                             </div>
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -1135,24 +1135,24 @@ function WorkersPageInner() {
                                         {[{ v: 'Sposoban', c: 'var(--success)' }, { v: 'Uvjetno Sposoban', c: 'var(--warning)' }, { v: 'Nesposoban', c: 'var(--danger)' }].map(r => (
                                             <button key={r.v} type="button" onClick={() => setMedExamForm(p => ({ ...p, rezultat: r.v }))}
                                                 style={{ flex: 1, padding: '8px', borderRadius: 8, border: `2px solid ${medExamForm.rezultat === r.v ? r.c : 'var(--border)'}`, background: medExamForm.rezultat === r.v ? r.c + '18' : 'var(--bg-input)', color: medExamForm.rezultat === r.v ? r.c : 'var(--text)', fontWeight: medExamForm.rezultat === r.v ? 700 : 400, cursor: 'pointer', fontSize: '0.8rem' }}>
-                                                {medExamForm.rezultat === r.v ? '? ' : ''}{r.v}
+                                                {medExamForm.rezultat === r.v ? '✓ ' : ''}{r.v}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
                                 {(medExamForm.rezultat === 'Nesposoban' || medExamForm.rezultat === 'Uvjetno Sposoban') && (
                                     <div className="form-group">
-                                        <label className="form-label" style={{ color: 'var(--warning)' }}>?? {lang === 'bs' ? 'Ogranicenja' : 'Restrictions'}</label>
+                                        <label className="form-label" style={{ color: 'var(--warning)' }}>⚠️ {lang === 'bs' ? 'Ograničenja' : 'Restrictions'}</label>
                                         <textarea className="form-input" rows={2} value={medExamForm.ogranicenja} onChange={e => setMedExamForm(p => ({ ...p, ogranicenja: e.target.value }))} />
                                     </div>
                                 )}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div className="form-group">
-                                        <label className="form-label">?? {lang === 'bs' ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
+                                        <label className="form-label">🏥 {lang === 'bs' ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
                                         <input className="form-input" placeholder={lang === 'bs' ? 'Dom zdravlja...' : 'Health center...'} value={medExamForm.zdravstvenaUstanova} onChange={e => setMedExamForm(p => ({ ...p, zdravstvenaUstanova: e.target.value }))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">????? {lang === 'bs' ? 'Doktor medicine rada' : 'Doctor'}</label>
+                                        <label className="form-label">👨‍⚕️ {lang === 'bs' ? 'Doktor medicine rada' : 'Doctor'}</label>
                                         <input className="form-input" placeholder="Dr. Ime Prezime" value={medExamForm.doktorIme} onChange={e => setMedExamForm(p => ({ ...p, doktorIme: e.target.value }))} />
                                     </div>
                                 </div>
@@ -1166,7 +1166,7 @@ function WorkersPageInner() {
                                     if (medExamEditId) { update(COLLECTIONS.MEDICAL_EXAMS, medExamEditId, payload); } else { create(COLLECTIONS.MEDICAL_EXAMS, payload); }
                                     setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker));
                                     setShowMedExamForm(false); setMedExamEditId(null);
-                                }}>?? {t('save')}</button>
+                                }}>💾 {t('save')}</button>
                             </div>
                         </div>
                     </div>
