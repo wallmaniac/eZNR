@@ -41,7 +41,7 @@ function WorkersPageInner() {
     const [editingWorker, setEditingWorker] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ ...emptyWorker });
-    const [openSections, setOpenSections] = useState({ kontakt: false, osobni: false, posebni: false, uvjerenja: true, ozo: false, mjestoRada: false, dodatniPoslovi: false });
+    const [openSections, setOpenSections] = useState({ kontakt: false, osobni: false, posebni: false, uvjerenja: true, ozo: false, medExams: false, mjestoRada: false, dodatniPoslovi: false });
     const [orgUnits, setOrgUnits] = useState([]);
     const [workplaces, setWorkplaces] = useState([]);
     const [certificates, setCertificates] = useState([]);
@@ -77,6 +77,12 @@ function WorkersPageInner() {
     const [certTypes, setCertTypes] = useState([]);
     const [ppeTypes, setPpeTypes] = useState([]);
     const [places, setPlaces] = useState([]);
+    // Medical exams state
+    const [workerMedExams, setWorkerMedExams] = useState([]);
+    const [showMedExamForm, setShowMedExamForm] = useState(false);
+    const [medExamEditId, setMedExamEditId] = useState(null);
+    const [medExamForm, setMedExamForm] = useState({ tipPregleda: 'prethodni', datumPregleda: '', vrijediDo: '', rezultat: 'Sposoban', zdravstvenaUstanova: '', doktorIme: '', ogranicenja: '', uputnicaBroj: '' });
+    const medExamsRef = useRef(null);
 
     const loadData = useCallback(() => {
         setWorkers(getAll(COLLECTIONS.WORKERS));
@@ -302,6 +308,7 @@ function WorkersPageInner() {
         editingWorkerRef.current = worker.id;
         setCertificates(getWorkerCertificates(worker.id));
         setPpeAssign(getWorkerPPE(worker.id));
+        setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === worker.id));
         setActionMenuId(null);
         setShowForm(true);
     };
@@ -896,7 +903,64 @@ function WorkersPageInner() {
                 </Accordion>
                 </div>
 
-                {/* ── ACCORDION: Mjesto rada ── */}
+                
+                {/* ACCORDION: Ljekarski pregledi */}
+                <div ref={medExamsRef}>
+                <Accordion title={"????? " + (lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams')} open={openSections.medExams} onToggle={() => toggleSection('medExams')}>
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button className="btn btn-outline btn-sm" onClick={() => { setMedExamEditId(null); setMedExamForm({ tipPregleda: 'prethodni', datumPregleda: '', vrijediDo: '', rezultat: 'Sposoban', zdravstvenaUstanova: '', doktorIme: '', ogranicenja: '', uputnicaBroj: '' }); setShowMedExamForm(true); }}>
+                            + {lang === 'bs' ? 'Novi pregled' : 'New Exam'}
+                        </button>
+                        <button className="btn btn-ghost btn-sm" onClick={() => router.push('/dashboard/referral-ra1')}>
+                            ?? {lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
+                        </button>
+                        <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', color: 'var(--primary)' }} onClick={() => { markClean(); router.push('/dashboard/medical-exams'); }}>
+                            {lang === 'bs' ? 'Svi pregledi ?' : 'All exams ?'}
+                        </button>
+                    </div>
+                    {workerMedExams.length === 0 ? (
+                        <div style={{ padding: '16px 0', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
+                            {lang === 'bs' ? 'Nema evidentiranih ljekarskih pregleda za ovog radnika.' : 'No medical exams recorded for this worker.'}
+                        </div>
+                    ) : (
+                        <div className="data-table-wrapper">
+                            <table className="data-table">
+                                <thead><tr>
+                                    <th>{lang === 'bs' ? 'Vrsta pregleda' : 'Type'}</th>
+                                    <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
+                                    <th>{lang === 'bs' ? 'Naredni pregled' : 'Next exam'}</th>
+                                    <th>{lang === 'bs' ? 'Rezultat' : 'Result'}</th>
+                                    <th>{lang === 'bs' ? 'Ustanova' : 'Institution'}</th>
+                                    <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
+                                </tr></thead>
+                                <tbody>
+                                    {workerMedExams.sort((a, b) => (b.datumPregleda || '').localeCompare(a.datumPregleda || '')).map(me => {
+                                        const days = me.vrijediDo ? Math.ceil((new Date(me.vrijediDo) - new Date()) / 86400000) : null;
+                                        const badgeCls = days === null ? '' : days < 0 ? 'badge-danger' : days <= 90 ? 'badge-warning' : 'badge-success';
+                                        const badgeLabel = days === null ? (lang === 'bs' ? 'Bez roka' : 'No deadline') : days < 0 ? (lang === 'bs' ? 'Isteklo' : 'Expired') : formatDate(me.vrijediDo);
+                                        const TMAP = { prethodni: 'Prethodni', 'periodicni': 'Periodicki', vanredni: 'Vanredni', nocniRad: 'Nocni rad', ostalo: 'Ostalo' };
+                                        const RCOL = { 'Sposoban': 'var(--success)', 'Uvjetno Sposoban': 'var(--warning)', 'Nesposoban': 'var(--danger)' };
+                                        return (
+                                            <tr key={me.id} style={{ background: days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : '' }}>
+                                                <td style={{ fontSize: '0.82rem' }}>{TMAP[me.tipPregleda] || me.tipPregleda}</td>
+                                                <td style={{ fontSize: '0.85rem' }}>{formatDate(me.datumPregleda)}</td>
+                                                <td><span className={`badge ${badgeCls}`} style={{ fontSize: '0.7rem' }}>{badgeLabel}</span></td>
+                                                <td style={{ fontWeight: 600, color: RCOL[me.rezultat] || 'inherit', fontSize: '0.85rem' }}>{me.rezultat}</td>
+                                                <td style={{ fontSize: '0.8rem' }}>{me.zdravstvenaUstanova || '�'}{me.doktorIme ? ` / Dr. ${me.doktorIme}` : ''}</td>
+                                                <td><div style={{ display: 'flex', gap: 4 }}>
+                                                    <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); }}>??</button>
+                                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>???</button>
+                                                </div></td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </Accordion>
+                </div>
+{/* ── ACCORDION: Mjesto rada ── */}
                 <Accordion title={t('workLocation')} open={openSections.mjestoRada} onToggle={() => toggleSection('mjestoRada')}>
                     <div className="form-group">
                         <textarea className="form-textarea" placeholder={lang === 'bs' ? 'Opis mjesta rada...' : 'Work location description...'} rows={3} />
@@ -968,7 +1032,83 @@ function WorkersPageInner() {
                     </div>
                 )}
 
-                {/* ── PPE FORM MODAL ── */}
+                
+                {/* MEDICAL EXAM FORM MODAL */}
+                {showMedExamForm && (
+                    <div className="modal-overlay" onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>
+                        <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
+                                <h2 style={{ color: 'white', margin: 0 }}>????? {medExamEditId ? (lang === 'bs' ? 'Uredi pregled' : 'Edit Exam') : (lang === 'bs' ? 'Novi ljekarski pregled' : 'New Medical Exam')}</h2>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>?</button>
+                            </div>
+                            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Vrsta pregleda' : 'Exam Type'}</label>
+                                        <select className="form-select" value={medExamForm.tipPregleda} onChange={e => setMedExamForm(p => ({ ...p, tipPregleda: e.target.value }))}>
+                                            <option value="prethodni">{lang === 'bs' ? 'Prethodni pregled' : 'Pre-employment'}</option>
+                                            <option value="periodicni">{lang === 'bs' ? 'Periodicni pregled' : 'Periodic Exam'}</option>
+                                            <option value="vanredni">{lang === 'bs' ? 'Vanredni pregled' : 'Extraordinary'}</option>
+                                            <option value="nocniRad">{lang === 'bs' ? 'Pregled - nocni rad' : 'Night-work Exam'}</option>
+                                            <option value="ostalo">{lang === 'bs' ? 'Ostalo' : 'Other'}</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Broj uputnice (RA-1)' : 'Referral No.'}</label>
+                                        <input className="form-input" placeholder="RA1-2026-001" value={medExamForm.uputnicaBroj} onChange={e => setMedExamForm(p => ({ ...p, uputnicaBroj: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Datum pregleda *' : 'Exam Date *'}</label>
+                                        <input type="date" className="form-input" value={medExamForm.datumPregleda} onChange={e => setMedExamForm(p => ({ ...p, datumPregleda: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{lang === 'bs' ? 'Naredni pregled do' : 'Next Exam By'}</label>
+                                        <input type="date" className="form-input" value={medExamForm.vrijediDo} onChange={e => setMedExamForm(p => ({ ...p, vrijediDo: e.target.value }))} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{lang === 'bs' ? 'Rezultat' : 'Result'}</label>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        {[{ v: 'Sposoban', c: 'var(--success)' }, { v: 'Uvjetno Sposoban', c: 'var(--warning)' }, { v: 'Nesposoban', c: 'var(--danger)' }].map(r => (
+                                            <button key={r.v} type="button" onClick={() => setMedExamForm(p => ({ ...p, rezultat: r.v }))}
+                                                style={{ flex: 1, padding: '8px', borderRadius: 8, border: `2px solid ${medExamForm.rezultat === r.v ? r.c : 'var(--border)'}`, background: medExamForm.rezultat === r.v ? r.c + '18' : 'var(--bg-input)', color: medExamForm.rezultat === r.v ? r.c : 'var(--text)', fontWeight: medExamForm.rezultat === r.v ? 700 : 400, cursor: 'pointer', fontSize: '0.8rem' }}>
+                                                {medExamForm.rezultat === r.v ? '? ' : ''}{r.v}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                {(medExamForm.rezultat === 'Nesposoban' || medExamForm.rezultat === 'Uvjetno Sposoban') && (
+                                    <div className="form-group">
+                                        <label className="form-label" style={{ color: 'var(--warning)' }}>?? {lang === 'bs' ? 'Ogranicenja' : 'Restrictions'}</label>
+                                        <textarea className="form-input" rows={2} value={medExamForm.ogranicenja} onChange={e => setMedExamForm(p => ({ ...p, ogranicenja: e.target.value }))} />
+                                    </div>
+                                )}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">?? {lang === 'bs' ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
+                                        <input className="form-input" placeholder={lang === 'bs' ? 'Dom zdravlja...' : 'Health center...'} value={medExamForm.zdravstvenaUstanova} onChange={e => setMedExamForm(p => ({ ...p, zdravstvenaUstanova: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">????? {lang === 'bs' ? 'Doktor medicine rada' : 'Doctor'}</label>
+                                        <input className="form-input" placeholder="Dr. Ime Prezime" value={medExamForm.doktorIme} onChange={e => setMedExamForm(p => ({ ...p, doktorIme: e.target.value }))} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-ghost" onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>{t('cancel')}</button>
+                                <button className="btn btn-primary" onClick={async () => {
+                                    if (!medExamForm.datumPregleda) { await alert(lang === 'bs' ? 'Unesite datum pregleda!' : 'Enter exam date!'); return; }
+                                    const w = workers.find(wk => wk.id === editingWorker);
+                                    const payload = { ...medExamForm, workerId: editingWorker, radnikIme: w ? `${w.ime} ${w.prezime}` : '' };
+                                    if (medExamEditId) { update(COLLECTIONS.MEDICAL_EXAMS, medExamEditId, payload); } else { create(COLLECTIONS.MEDICAL_EXAMS, payload); }
+                                    setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker));
+                                    setShowMedExamForm(false); setMedExamEditId(null);
+                                }}>?? {t('save')}</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+{/* ── PPE FORM MODAL ── */}
                 {showPpeForm && (
                     <div className="modal-overlay" onClick={() => { setShowPpeForm(false); setPpeEditId(null); }}>
                         <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
