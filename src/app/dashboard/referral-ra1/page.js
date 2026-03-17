@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
@@ -123,7 +123,8 @@ export default function ReferralRA1Page() {
   const [doctors, setDoctors] = useState([]);
   const [orgUnits, setOrgUnits] = useState([]);
   const [workplaces, setWorkplaces] = useState([]);
-  const [showForm, setShowForm] = useState(false);
+  const searchParams = useSearchParams();
+  const [showForm, setShowForm] = useState(() => searchParams.get('openNew') === '1');
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RA1 });
 

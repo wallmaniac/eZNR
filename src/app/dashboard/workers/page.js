@@ -974,7 +974,7 @@ function WorkersPageInner() {
                         <button className="btn btn-outline btn-sm" onClick={() => { setMedExamEditId(null); setMedExamForm({ tipPregleda: 'prethodni', datumPregleda: '', vrijediDo: '', rezultat: 'Sposoban', zdravstvenaUstanova: '', doktorIme: '', ogranicenja: '', uputnicaBroj: '' }); setShowMedExamForm(true); }}>
                             + {lang === 'bs' ? 'Novi pregled' : 'New Exam'}
                         </button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => { if (showMedExamForm) { sessionStorage.setItem('eznr_draft_workers_medexam', JSON.stringify({ workerId: editingWorker, form: medExamForm, editId: medExamEditId })); } markClean(); router.push('/dashboard/referral-ra1'); }}>
+                        <button className="btn btn-ghost btn-sm" onClick={() => { if (showMedExamForm) { sessionStorage.setItem('eznr_draft_workers_medexam', JSON.stringify({ workerId: editingWorker, form: medExamForm, editId: medExamEditId })); } markClean(); router.push('/dashboard/referral-ra1?openNew=1'); }}>
                             ?? {lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                         </button>
                         <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', color: 'var(--primary)' }} onClick={() => { markClean(); router.push('/dashboard/medical-exams'); }}>
