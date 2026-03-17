@@ -391,6 +391,44 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
             }, allDocs.find(d => { const diff = Math.floor((new Date(d.datumIsteka) - today) / 86400000); return diff >= 0 && diff <= settings.docExpiryDays; }) || {}));
         }
     }
+    // -- Medical exam expiry --
+    {
+        const allMedExams = filterByCompany(getAll(COLLECTIONS.MEDICAL_EXAMS));
+        let medExpired = 0, medUrgent = 0, medWarn = 0;
+        let medExpItem = null, medUrgItem = null;
+        allMedExams.forEach(me => {
+            if (!me.vrijediDo) return;
+            const days = Math.floor((new Date(me.vrijediDo) - today) / (1000 * 60 * 60 * 24));
+            if (days < 0) { medExpired++; if (!medExpItem) medExpItem = me; }
+            else if (days <= 7) { medUrgent++; if (!medUrgItem) medUrgItem = me; }
+            else if (days <= settings.certExpiryDays) medWarn++;
+        });
+        if (medExpired > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_med_expired', severity: 'urgent', category: 'medical', icon: '',
+                title: medExpired + ' ljekarskih pregleda isteklo!',
+                message: 'Zakonska obaveza poslodavca - zakaz. preglede hitno (cl. 44. ZZNA 79/20).',
+                actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
+            }, medExpItem || {}));
+        }
+        if (medUrgent > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_med_urgent', severity: 'urgent', category: 'medical', icon: '',
+                title: medUrgent + ' ljekarskih pregleda istice za 7 dana',
+                message: 'Hitno zakazati preglede.',
+                actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
+            }, medUrgItem || {}));
+        }
+        if (medWarn > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_med_warning', severity: 'warning', category: 'medical', icon: '',
+                title: medWarn + ' ljekarskih pregleda uskoro istice',
+                message: 'Planirajte preglede za ' + medWarn + ' radnika.',
+                actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
+            }, {}));
+        }
+    }
+
 
     // ── Workers without certificates ──
     if (settings.workersNoCerts) {

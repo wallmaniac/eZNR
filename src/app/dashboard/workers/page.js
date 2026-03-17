@@ -37,6 +37,8 @@ function WorkersPageInner() {
     const isDirtyRef = useRef(false);
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [allCerts, setAllCerts] = useState(() => getAll(COLLECTIONS.CERTIFICATES));
+    const [allMedExamsList, setAllMedExamsList] = useState(() => getAll(COLLECTIONS.MEDICAL_EXAMS));
     const [showFormer, setShowFormer] = useState(false);
     const [editingWorker, setEditingWorker] = useState(null);
     const [showForm, setShowForm] = useState(false);
@@ -85,6 +87,8 @@ function WorkersPageInner() {
     const medExamsRef = useRef(null);
 
     const loadData = useCallback(() => {
+        // reload list-level collections
+        if (typeof window !== 'undefined') { setAllCerts(getAll(COLLECTIONS.CERTIFICATES)); setAllMedExamsList(getAll(COLLECTIONS.MEDICAL_EXAMS)); }
         setWorkers(getAll(COLLECTIONS.WORKERS));
         setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
@@ -620,7 +624,50 @@ function WorkersPageInner() {
                     </div>
                 </div>
 
-                {/* ── ACCORDION: Posebni uvjeti rada ── */}
+                
+                {/* WORKER HEALTH SUMMARY */}
+                {editingWorker && (() => {
+                    const _t = new Date();
+                    const _expC = certificates.filter(cx => cx.vrijediDo && new Date(cx.vrijediDo) < _t).length;
+                    const _valC = certificates.filter(cx => !cx.vrijediDo || new Date(cx.vrijediDo) >= _t).length;
+                    const _lm = [...workerMedExams].sort((a,b)=>(b.datumPregleda||'').localeCompare(a.datumPregleda||''))[0];
+                    const _lmd = _lm?.vrijediDo ? Math.ceil((new Date(_lm.vrijediDo)-_t)/86400000) : null;
+                    const _mc = _lmd===null?'none':_lmd<0?'expired':_lmd<=60?'soon':'valid';
+                    const _mColor = {expired:'var(--danger)',soon:'var(--warning)',valid:'var(--success)',none:'var(--text-muted)'}[_mc];
+                    return (
+                        <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
+                            <div onClick={()=>{setOpenSections(p=>({...p,uvjerenja:true})); uvjerenjaRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
+                                style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background: _expC>0?'rgba(239,68,68,0.07)':'rgba(34,197,94,0.06)', border:`1px solid ${_expC>0?'var(--danger)':'var(--success)'}`, display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
+                                onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.95)'} onMouseLeave={e=>e.currentTarget.style.filter=''}>
+                                <span style={{fontSize:'1.4rem'}}>??</span>
+                                <div>
+                                    <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>{lang==='bs'?'Uvjerenja':'Certs'}</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:_expC>0?'var(--danger)':'var(--success)'}}>{_valC} ?{_expC>0&&<span style={{color:'var(--danger)',marginLeft:6}}>� {_expC} ?</span>}</div>
+                                </div>
+                            </div>
+                            <div onClick={()=>{setOpenSections(p=>({...p,medExams:true})); medExamsRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
+                                style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background: _mc==='expired'?'rgba(239,68,68,0.07)':_mc==='soon'?'rgba(245,158,11,0.07)':'rgba(34,197,94,0.05)', border:`1px solid ${_mColor}`, display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
+                                onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.95)'} onMouseLeave={e=>e.currentTarget.style.filter=''}>
+                                <span style={{fontSize:'1.4rem'}}>?????</span>
+                                <div>
+                                    <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>{lang==='bs'?'Pregled':'Med. Exam'}</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:_mColor}}>{_lm?(_mc==='expired'?'Istekao!':_mc==='soon'?`${_lmd}d`:'Vrijedi'):'Nema'}</div>
+                                    {_lm&&<div style={{fontSize:'0.67rem',color:'var(--text-muted)'}}>{formatDate(_lm.vrijediDo)}</div>}
+                                </div>
+                            </div>
+                            <div onClick={()=>{setOpenSections(p=>({...p,ozo:true})); ozoRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
+                                style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background:'rgba(0,191,166,0.06)', border:'1px solid rgba(0,191,166,0.2)', display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
+                                onMouseEnter={e=>e.currentTarget.style.filter='brightness(0.95)'} onMouseLeave={e=>e.currentTarget.style.filter=''}>
+                                <span style={{fontSize:'1.4rem'}}>??</span>
+                                <div>
+                                    <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>OZO</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:ppeAssign.length>0?'var(--primary)':'var(--text-muted)'}}>{ppeAssign.length} {lang==='bs'?'zadu�enja':'assigned'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
+{/* ── ACCORDION: Posebni uvjeti rada ── */}
                 <Accordion title={t('specialConditions')} open={openSections.posebni} onToggle={() => toggleSection('posebni')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', cursor: 'pointer' }}>
@@ -1256,6 +1303,7 @@ function WorkersPageInner() {
                                         <th>{t('oib')}</th>
                                         <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
                                         <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
+                                        <th style={{ width: 70, textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>ST.</th>
                                         <th style={{ width: 40, textAlign: 'center' }} title={allPageSelected ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all') : (lang === 'bs' ? 'Odaberi sve na stranici' : 'Select all on page')}>
                                             <input
                                                 type="checkbox"
@@ -1269,7 +1317,7 @@ function WorkersPageInner() {
                                 </thead>
                                 <tbody>
                                     {pagedWorkers.length === 0 ? (
-                                        <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                        <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                     ) : (
                                         pagedWorkers.map((w) => (
                                             <tr key={w.id}>
@@ -1341,6 +1389,21 @@ function WorkersPageInner() {
                                                             {getWorkplaceName(w.radnoMjestoId)}
                                                         </button>
                                                     ) : '—'}
+                                                </td>
+                                                <td style={{ textAlign: 'center', verticalAlign: 'middle' }}>
+                                                    {(() => {
+                                                        const _today = new Date();
+                                                        const _wC = allCerts.filter(cx => cx.workerId === w.id);
+                                                        const _wM = allMedExamsList.filter(mx => mx.workerId === w.id);
+                                                        const _expC = _wC.some(cx => cx.vrijediDo && new Date(cx.vrijediDo) < _today);
+                                                        const _soonC = _wC.some(cx => { if (!cx.vrijediDo) return false; const d=(new Date(cx.vrijediDo)-_today)/86400000; return d>=0&&d<=30; });
+                                                        const _expM = _wM.some(mx => mx.vrijediDo && new Date(mx.vrijediDo) < _today);
+                                                        const _soonM = _wM.some(mx => { if (!mx.vrijediDo) return false; const d=(new Date(mx.vrijediDo)-_today)/86400000; return d>=0&&d<=60; });
+                                                        if (_expC || _expM) return <span title="Isteklo!" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--danger)',boxShadow:'0 0 5px var(--danger)'}} />;
+                                                        if (_soonC || _soonM) return <span title="Uskoro istice" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--warning)'}} />;
+                                                        if (_wC.length === 0) return <span title="Nema uvjerenja" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--border)',border:'1px dashed var(--text-muted)'}} />;
+                                                        return <span title="Sve u redu" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--success)'}} />;
+                                                    })()}
                                                 </td>
                                                 <td style={{ textAlign: 'center' }}>
                                                     <input
