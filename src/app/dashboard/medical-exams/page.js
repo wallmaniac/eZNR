@@ -1,21 +1,21 @@
-﻿'use client';
+'use client';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
-// â”€â”€ Legal basis â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-// Zakon o zaÅ¡titi na radu FBiH (Sl. novine FBiH br. 79/20)
-// Pravilnik o postupku rasporeÄ‘ivanja radnika na poslove sa poveÄ‡anim rizikom
-//   i o postupku prethodnih i periodiÄnih ljekarskih pregleda (Sl. novine FBiH br. 9/23)
-// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ���� Legal basis ��������������������������������������������������������������������������������������������������������������������������������
+// Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)
+// Pravilnik o postupku raspore�ivanja radnika na poslove sa pove�!anim rizikom
+//   i o postupku prethodnih i periodičnih ljekarskih pregleda (Sl. novine FBiH br. 9/23)
+// ������������������������������������������������������������������������������������������������������������������������������������������������������������
 
 const EXAM_TYPES = [
-    { value: 'prethodni',   labelBs: 'Prethodni pregled',     labelEn: 'Pre-employment Exam',   info: 'ÄŒl. 44. Zakona o ZNR FBiH â€” prije rasporeÄ‘ivanja na radno mjesto' },
-    { value: 'periodiÄni',  labelBs: 'PeriodiÄni pregled',    labelEn: 'Periodic Exam',          info: 'Prilog III Pravilnika (Sl. novine FBiH 9/23) â€” rokovi po vrsti opasnosti' },
-    { value: 'vanredni',    labelBs: 'Vanredni pregled',      labelEn: 'Extraordinary Exam',     info: 'Nakon promjene zdravstvenog stanja, nesreÄ‡e ili dugog bolovanja' },
-    { value: 'nocniRad',    labelBs: 'Pregled - noÄ‡ni rad',  labelEn: 'Night-work Exam',        info: 'ÄŒl. 44. st. 3 â€” min. svake 2 godine za noÄ‡ne radnike' },
+    { value: 'prethodni',   labelBs: 'Prethodni pregled',     labelEn: 'Pre-employment Exam',   info: '�Rl. 44. Zakona o ZNR FBiH � prije raspore�ivanja na radno mjesto' },
+    { value: 'periodični',  labelBs: 'Periodični pregled',    labelEn: 'Periodic Exam',          info: 'Prilog III Pravilnika (Sl. novine FBiH 9/23) � rokovi po vrsti opasnosti' },
+    { value: 'vanredni',    labelBs: 'Vanredni pregled',      labelEn: 'Extraordinary Exam',     info: 'Nakon promjene zdravstvenog stanja, nesre�!e ili dugog bolovanja' },
+    { value: 'nocniRad',    labelBs: 'Pregled - no�!ni rad',  labelEn: 'Night-work Exam',        info: '�Rl. 44. st. 3 � min. svake 2 godine za no�!ne radnike' },
     { value: 'ostalo',      labelBs: 'Ostalo',               labelEn: 'Other',                  info: '' },
 ];
 
@@ -81,7 +81,7 @@ export default function MedicalExamsPage() {
     const reload = useCallback(() => setExams(getAll(COLLECTIONS.MEDICAL_EXAMS)), []);
     const setField = (k, v) => { setForm(p => ({ ...p, [k]: v })); setIsDirty(true); };
 
-    // â”€â”€ Stats â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ���� Stats ������������������������������������������������������������������������������������������������������������������������������������
     const stats = useMemo(() => {
         let expired = 0, soon = 0, valid = 0, noDeadline = 0;
         exams.forEach(e => {
@@ -94,10 +94,10 @@ export default function MedicalExamsPage() {
         return { expired, soon, valid, noDeadline, total: exams.length };
     }, [exams]);
 
-    // â”€â”€ Filter & search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ���� Filter & search ����������������������������������������������������������������������������������������������������������������
     const enriched = useMemo(() => exams.map(e => {
         const w = workers.find(wk => wk.id === e.workerId);
-        return { ...e, _workerName: w ? `${w.ime} ${w.prezime}` : 'â€”' };
+        return { ...e, _workerName: w ? `${w.ime} ${w.prezime}` : '�' };
     }), [exams, workers]);
 
     const filtered = useMemo(() => {
@@ -120,7 +120,7 @@ export default function MedicalExamsPage() {
         });
     }, [enriched, filterTab, searchQ]);
 
-    // â”€â”€ CRUD â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ���� CRUD ��������������������������������������������������������������������������������������������������������������������������������������
     const handleSave = async () => {
         if (!form.workerId) { await alert(bs ? 'Odaberite radnika!' : 'Select a worker!'); return; }
         if (!form.datumPregleda) { await alert(bs ? 'Unesite datum pregleda!' : 'Enter exam date!'); return; }
@@ -162,18 +162,18 @@ export default function MedicalExamsPage() {
         <div className="animate-fadeIn">
             <DialogRenderer />
 
-            {/* â”€â”€ Page header â€” emoji + title only, NO button here â”€â”€ */}
+            {/* ���� Page header � emoji + title only, NO button here ���� */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                <span style={{ fontSize: '1.6rem' }}>ðŸ‘¨â€âš•ï¸</span>
+                <span style={{ fontSize: '1.6rem' }}>�x�⬍�a"️</span>
                 <div>
                     <h1 style={{ margin: 0 }}>{bs ? 'Ljekarski pregledi' : 'Medical Examinations'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {stats.total} {bs ? 'zapisa' : 'records'} Â· {bs ? 'Zakon o ZNR FBiH (79/20) + Pravilnik (9/23)' : 'BiH OSH Law (79/20) + Rulebook (9/23)'}
+                        {stats.total} {bs ? 'zapisa' : 'records'} · {bs ? 'Zakon o ZNR FBiH (79/20) + Pravilnik (9/23)' : 'BiH OSH Law (79/20) + Rulebook (9/23)'}
                     </p>
                 </div>
             </div>
 
-            {/* â”€â”€ Toolbar: New button LEFT, search RIGHT â”€â”€ */}
+            {/* ���� Toolbar: New button LEFT, search RIGHT ���� */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, marginTop: 12, flexWrap: 'wrap' }}>
                 <button className="btn btn-primary btn-sm" id="btn-new-exam" onClick={handleNew}>
                     + {bs ? 'Novi pregled' : 'New Exam'}
@@ -181,21 +181,21 @@ export default function MedicalExamsPage() {
                 <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
                     <input
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.85rem', flex: 1, width: '100%' }}
-                        placeholder={bs ? 'PretraÅ¾i radnika, doktora, ustanovu...' : 'Search worker, doctor, institution...'}
+                        placeholder={bs ? 'Pretraži radnika, doktora, ustanovu...' : 'Search worker, doctor, institution...'}
                         value={searchQ}
                         onChange={e => setSearchQ(e.target.value)}
                     />
-                    {searchQ && <button className="btn btn-ghost btn-sm" onClick={() => setSearchQ('')}>âœ•</button>}
+                    {searchQ && <button className="btn btn-ghost btn-sm" onClick={() => setSearchQ('')}>�S"</button>}
                 </div>
                 {/* Stat chips */}
                 {stats.expired > 0 && (
                     <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'var(--danger)', color: 'white', fontWeight: 700 }}>
-                        âš ï¸ {stats.expired} {bs ? 'isteklo' : 'expired'}
+                        �a�️ {stats.expired} {bs ? 'isteklo' : 'expired'}
                     </span>
                 )}
                 {stats.soon > 0 && (
                     <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', fontWeight: 700, border: '1px solid var(--warning)' }}>
-                        ðŸ• {stats.soon} {bs ? 'uskoro' : 'due soon'}
+                        �x"� {stats.soon} {bs ? 'uskoro' : 'due soon'}
                     </span>
                 )}
                 <span style={{ marginLeft: 'auto', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
@@ -203,7 +203,7 @@ export default function MedicalExamsPage() {
                 </span>
             </div>
 
-            {/* â”€â”€ Filter tabs â”€â”€ */}
+            {/* ���� Filter tabs ���� */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
                 {tabs.map(tab => (
                     <button
@@ -217,15 +217,15 @@ export default function MedicalExamsPage() {
                 ))}
             </div>
 
-            {/* â”€â”€ Legal tip â”€â”€ */}
+            {/* ���� Legal tip ���� */}
             <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', marginBottom: 12, background: 'rgba(33,150,243,0.05)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                <strong style={{ color: 'var(--text)' }}>âš–ï¸</strong>{' '}
+                <strong style={{ color: 'var(--text)' }}>�a️</strong>{' '}
                 {bs
-                    ? 'Preglede obavlja specijalist medicine rada. Radnik koji ne obavi periodiÄni pregled ne moÅ¾e nastaviti s radom. TroÅ¡kove snosi poslodavac (Äl. 44. ZZNA 79/20).'
+                    ? 'Preglede obavlja specijalist medicine rada. Radnik koji ne obavi periodični pregled ne može nastaviti s radom. Troškove snosi poslodavac (čl. 44. ZZNA 79/20).'
                     : 'Exams performed by occupational medicine specialist. Workers who skip periodic exams cannot continue working. Costs paid by employer (Art. 44 OSH Law 79/20).'}
             </div>
 
-            {/* â”€â”€ Table â”€â”€ */}
+            {/* ���� Table ���� */}
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="data-table-wrapper">
@@ -267,7 +267,7 @@ export default function MedicalExamsPage() {
                                             <td style={{ fontSize: '0.82rem' }}>{examTypeLabel(exam.tipPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem' }}>{formatDate(exam.datumPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem', fontWeight: days !== null && days < 0 ? 700 : 400, color: days !== null && days < 0 ? 'var(--danger)' : days !== null && days <= 90 ? 'var(--warning)' : 'inherit' }}>
-                                                {exam.vrijediDo ? formatDate(exam.vrijediDo) : 'â€”'}
+                                                {exam.vrijediDo ? formatDate(exam.vrijediDo) : '�'}
                                             </td>
                                             <td>
                                                 <span className={`badge${badge.bg === 'var(--danger)' ? ' badge-danger' : badge.bg === 'var(--success)' ? ' badge-success' : badge.col === 'var(--warning)' ? ' badge-warning' : ''}`}
@@ -279,13 +279,13 @@ export default function MedicalExamsPage() {
                                                 {resultLabel(exam.rezultat)}
                                             </td>
                                             <td style={{ fontSize: '0.8rem', maxWidth: 180 }}>
-                                                <div style={{ fontWeight: 600 }}>{exam.zdravstvenaUstanova || 'â€”'}</div>
+                                                <div style={{ fontWeight: 600 }}>{exam.zdravstvenaUstanova || '�'}</div>
                                                 {exam.doktorIme && <div style={{ color: 'var(--text-muted)', fontSize: '0.73rem' }}>Dr. {exam.doktorIme}</div>}
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
-                                                    <button className="btn btn-ghost btn-sm btn-icon" title={bs ? 'Uredi' : 'Edit'} onClick={() => handleEdit(exam)}>âœï¸</button>
-                                                    <button className="btn btn-danger btn-sm btn-icon" title={bs ? 'ObriÅ¡i' : 'Delete'} onClick={() => handleDelete(exam)}>ðŸ—‘ï¸</button>
+                                                    <button className="btn btn-ghost btn-sm btn-icon" title={bs ? 'Uredi' : 'Edit'} onClick={() => handleEdit(exam)}>�S�️</button>
+                                                    <button className="btn btn-danger btn-sm btn-icon" title={bs ? 'Obriši' : 'Delete'} onClick={() => handleDelete(exam)}>�x️</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -297,33 +297,33 @@ export default function MedicalExamsPage() {
                 </div>
             </div>
 
-            {/* â”€â”€ Periodicity note â”€â”€ */}
+            {/* ���� Periodicity note ���� */}
             <div style={{ marginTop: 10, padding: '8px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                ðŸ“‹ {bs
-                    ? 'Rokovi periodiÄnih pregleda (Prilog III Pravilnika 9/23) razlikuju se po vrsti ojasnosti. NoÄ‡ni radnici â€” min. svake 2 godine.'
-                    : 'Periodic exam intervals (Annex III, Rulebook 9/23) vary by hazard type. Night workers â€” min. every 2 years.'}
+                �x9 {bs
+                    ? 'Rokovi periodičnih pregleda (Prilog III Pravilnika 9/23) razlikuju se po vrsti ojasnosti. No�!ni radnici � min. svake 2 godine.'
+                    : 'Periodic exam intervals (Annex III, Rulebook 9/23) vary by hazard type. Night workers � min. every 2 years.'}
             </div>
 
-            {/* â”€â”€ Form modal â”€â”€ */}
+            {/* ���� Form modal ���� */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => { setShowForm(false); setEditingId(null); }}>
                     <div className="modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
                             <h2 style={{ color: 'white', margin: 0 }}>
-                                ðŸ‘¨â€âš•ï¸ {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
+                                �x�⬍�a"️ {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
                             </h2>
-                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowForm(false); setEditingId(null); }}>âœ•</button>
+                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowForm(false); setEditingId(null); }}>�S"</button>
                         </div>
 
                         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.06)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                                âš–ï¸ {bs ? 'Preglede obavlja specijalist medicine rada. TroÅ¡kove snosi poslodavac (Äl. 44. ZZNA 79/20).' : 'Exams performed by occupational medicine specialist. Employer bears costs (Art. 44 OSH Law 79/20).'}
+                                �a️ {bs ? 'Preglede obavlja specijalist medicine rada. Troškove snosi poslodavac (čl. 44. ZZNA 79/20).' : 'Exams performed by occupational medicine specialist. Employer bears costs (Art. 44 OSH Law 79/20).'}
                             </div>
 
                             <div className="form-group">
-                                <label className="form-label">ðŸ‘· {bs ? 'Radnik *' : 'Worker *'}</label>
+                                <label className="form-label">�x� {bs ? 'Radnik *' : 'Worker *'}</label>
                                 <select className="form-select" value={form.workerId} onChange={e => setField('workerId', e.target.value)}>
-                                    <option value="">{bs ? 'â€” Odaberite radnika â€”' : 'â€” Select worker â€”'}</option>
+                                    <option value="">{bs ? '� Odaberite radnika �' : '� Select worker �'}</option>
                                     {[...workers].filter(w => w.aktivan !== false).sort((a, b) => a.prezime.localeCompare(b.prezime)).map(w => (
                                         <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                                     ))}
@@ -337,7 +337,7 @@ export default function MedicalExamsPage() {
                                         {EXAM_TYPES.map(t => <option key={t.value} value={t.value}>{bs ? t.labelBs : t.labelEn}</option>)}
                                     </select>
                                     {EXAM_TYPES.find(t => t.value === form.tipPregleda)?.info && (
-                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 3 }}>â„¹ï¸ {EXAM_TYPES.find(t => t.value === form.tipPregleda).info}</div>
+                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', marginTop: 3 }}>��️ {EXAM_TYPES.find(t => t.value === form.tipPregleda).info}</div>
                                     )}
                                 </div>
                                 <div className="form-group">
@@ -363,7 +363,7 @@ export default function MedicalExamsPage() {
                                     {RESULTS.map(r => (
                                         <button key={r.value} type="button" onClick={() => setField('rezultat', r.value)}
                                             style={{ flex: 1, padding: '9px 8px', borderRadius: 'var(--radius-md)', border: `2px solid ${form.rezultat === r.value ? r.color : 'var(--border)'}`, background: form.rezultat === r.value ? r.color + '18' : 'var(--bg-input)', color: form.rezultat === r.value ? r.color : 'var(--text)', fontWeight: form.rezultat === r.value ? 700 : 400, cursor: 'pointer', fontSize: '0.82rem', transition: 'all 0.15s' }}>
-                                            {form.rezultat === r.value ? 'âœ“ ' : ''}{bs ? r.labelBs : r.labelEn}
+                                            {form.rezultat === r.value ? '�S ' : ''}{bs ? r.labelBs : r.labelEn}
                                         </button>
                                     ))}
                                 </div>
@@ -371,18 +371,18 @@ export default function MedicalExamsPage() {
 
                             {(form.rezultat === 'Nesposoban' || form.rezultat === 'Uvjetno Sposoban') && (
                                 <div className="form-group">
-                                    <label className="form-label" style={{ color: 'var(--warning)' }}>âš ï¸ {bs ? 'OgraniÄenja / razlog nesposobnosti' : 'Restrictions / unfitness reason'}</label>
+                                    <label className="form-label" style={{ color: 'var(--warning)' }}>�a�️ {bs ? 'Ograničenja / razlog nesposobnosti' : 'Restrictions / unfitness reason'}</label>
                                     <textarea className="form-input" rows={2} value={form.ogranicenja} placeholder={bs ? 'Npr. Zabranjeno dizanje tereta iznad 20kg...' : 'E.g. No lifting over 20kg...'} onChange={e => setField('ogranicenja', e.target.value)} />
                                 </div>
                             )}
 
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">ðŸ¥ {bs ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
+                                    <label className="form-label">�x�� {bs ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
                                     <input className="form-input" placeholder={bs ? 'Dom zdravlja / Klinika...' : 'Health center...'} value={form.zdravstvenaUstanova} onChange={e => setField('zdravstvenaUstanova', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">ðŸ‘¨â€âš•ï¸ {bs ? 'Doktor medicine rada' : 'Occupational Doctor'}</label>
+                                    <label className="form-label">�x�⬍�a"️ {bs ? 'Doktor medicine rada' : 'Occupational Doctor'}</label>
                                     <input className="form-input" list="doc-list-page" placeholder="Dr. Ime Prezime" value={form.doktorIme} onChange={e => setField('doktorIme', e.target.value)} />
                                     <datalist id="doc-list-page">{doctors.map(d => <option key={d.id} value={d.ime} />)}</datalist>
                                 </div>
@@ -397,9 +397,9 @@ export default function MedicalExamsPage() {
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={async () => { if (isDirty) { const ok = await confirm(bs ? 'Imate nesacuvane podatke. Zelite li odustati?' : 'You have unsaved data. Discard?'); if (!ok) return; } setShowForm(false); setEditingId(null); setIsDirty(false); }}>{bs ? 'Odustani' : 'Cancel'}</button>
                             <button className="btn btn-outline btn-sm" style={{ marginRight: 'auto' }} onClick={() => { sessionStorage.setItem('eznr_draft_medexam', JSON.stringify(form)); router.push('/dashboard/referral-ra1'); }}>
-                                ðŸ“‹ {bs ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
+                                �x9 {bs ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                             </button>
-                            <button className="btn btn-primary" onClick={handleSave}>ðŸ’¾ {bs ? 'SaÄuvaj' : 'Save'}</button>
+                            <button className="btn btn-primary" onClick={handleSave}>�x� {bs ? 'Sačuvaj' : 'Save'}</button>
                         </div>
                     </div>
                 </div>
