@@ -4,7 +4,6 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
-import { useSortedList } from '@/hooks/useSortedList';
 
 // ── Legal basis ────────────────────────────────────────────────────────────────
 // Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)
