@@ -29,6 +29,7 @@ export default function DashboardPage() {
     const [ppeAssignments, setPpeAssignments] = useState([]);
     const [equipment, setEquipment] = useState([]);
     const [employerDocs, setEmployerDocs] = useState([]);
+    const [medicalExams, setMedicalExams] = useState([]);
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
     const [showEventForm, setShowEventForm] = useState(false);
@@ -62,6 +63,7 @@ export default function DashboardPage() {
         setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
         setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
         setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
+        setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
     }, [activeCompanyId, user?.companyIds]);
@@ -148,14 +150,16 @@ export default function DashboardPage() {
             if (!c.vrijediDo) return false;
             const exp = new Date(c.vrijediDo);
             const diff = (exp - today) / (1000 * 60 * 60 * 24);
-            return diff >= 0 && diff <= 30;
+            return diff >= 0 && diff <= 60;
         }).length;
         const activeEquip = equipment.filter(e => e.status === 'active').length;
         const expiredCerts = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today).length;
         const expiredEquip = equipment.filter(e => e.status === 'expired' || (e.iduci && new Date(e.iduci) < today)).length;
-        const totalExpired = expiredCerts + expiredEquip;
-        return { activeWorkers, activeCerts, expiringSoon, activeEquip, totalExpired };
-    }, [workers, certs, equipment]);
+        const expiredMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today).length;
+        const soonMed = medicalExams.filter(m => { if (!m.vrijediDo) return false; const dd=(new Date(m.vrijediDo)-today)/(86400000); return dd>=0 && dd<=60; }).length;
+        const totalExpired = expiredCerts + expiredEquip + expiredMed;
+        return { activeWorkers, activeCerts, expiringSoon: expiringSoon + soonMed, activeEquip, totalExpired };
+    }, [workers, certs, equipment, medicalExams]);
 
     // Show all active workers (not just recent hires - date might be too old)
     const activeWorkers = workers.filter(w => w.aktivan !== false);
@@ -261,6 +265,7 @@ export default function DashboardPage() {
             return;
         }
 
+        if (ev.tip === 'med') { router.push('/dashboard/medical-exams'); return; }
         const path = EVENT_ROUTES[ev.tip] || '/dashboard';
         router.push(path);
     };

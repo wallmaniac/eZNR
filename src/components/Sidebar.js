@@ -18,6 +18,7 @@ const menuItems = [
             { key: 'workers',            icon: '👷', path: '/dashboard/workers' },
             { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
             { key: 'workerPPE',          icon: '🦺', path: '/dashboard/worker-ppe' },
+            { key: 'medicalExams',       icon: '👨‍⚕️', path: '/dashboard/medical-exams' },
             { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
             { key: 'ekPPE',             icon: '🦺', path: '/dashboard/ek-ppe' },
             { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },

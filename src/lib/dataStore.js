@@ -84,7 +84,7 @@ const COMPANY_SCOPED = [
     'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
     'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
-    'trainings', 'annualReports',
+    'trainings', 'annualReports', 'medicalExams',
 ];
 
 // Helper: get active company from localStorage (avoids needing React context)
@@ -221,7 +221,7 @@ export function removeMany(collection, ids) {
 export function removeWorkerCascade(workerId) {
     if (!workerId) return;
     const undoItems = [];
-    const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1'];
+    const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1', 'medicalExams'];
 
     const worker = getStore('workers').find(w => w.id === workerId);
     if (worker) undoItems.push({ collection: 'workers', data: worker });
@@ -247,7 +247,7 @@ export function removeWorkerCascade(workerId) {
 export function removeManyWorkersCascade(workerIds) {
     if (!workerIds || !workerIds.length) return;
     const undoItems = [];
-    const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1'];
+    const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1', 'medicalExams'];
 
     workerIds.forEach(wid => {
         const worker = getStore('workers').find(w => w.id === wid);
@@ -324,6 +324,7 @@ export const COLLECTIONS = {
     ANNUAL_REPORTS: 'annualReports',
     SERVICE_LOG: 'serviceLog',
     DIGITAL_ARCHIVE: 'digitalArchive',
+    MEDICAL_EXAMS: 'medicalExams',
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
