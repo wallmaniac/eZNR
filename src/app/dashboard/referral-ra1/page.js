@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -127,6 +128,11 @@ export default function ReferralRA1Page() {
   const [showForm, setShowForm] = useState(() => searchParams.get('openNew') === '1');
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RA1 });
+  const [filterEstab, setFilterEstab] = useState('');
+  const [filterDoctor, setFilterDoctor] = useState('');
+  const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const menuRef = useRef(null);
 
   const loadData = useCallback(() => {
     setReferrals(getAll(COLLECTIONS.REFERRALS_RA1));
@@ -238,12 +244,24 @@ export default function ReferralRA1Page() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={handleNew}>
               + {lang === 'bs' ? 'Nova uputnica' : 'New referral'}
             </button>
+            {filterEstab && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', background: 'rgba(0,191,166,0.1)', border: '1px solid var(--primary)', borderRadius: 20, padding: '2px 10px', color: 'var(--primary)' }}>
+                🏥 {filterEstab}
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 700, padding: 0, lineHeight: 1 }} onClick={() => setFilterEstab('')}>✕</button>
+              </span>
+            )}
+            {filterDoctor && (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', background: 'rgba(99,102,241,0.1)', border: '1px solid var(--secondary)', borderRadius: 20, padding: '2px 10px', color: 'var(--secondary)' }}>
+                👨‍⚕️ {filterDoctor}
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary)', fontWeight: 700, padding: 0, lineHeight: 1 }} onClick={() => setFilterDoctor('')}>✕</button>
+              </span>
+            )}
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-              {referrals.length} {lang === 'bs' ? 'zapisa' : 'records'}
+              {referrals.filter(r => (!filterEstab || r.ustanovaNaziv === filterEstab) && (!filterDoctor || r.doktorIme === filterDoctor)).length} {lang === 'bs' ? 'zapisa' : 'records'}
             </span>
           </div>
         </div>
@@ -266,23 +284,72 @@ export default function ReferralRA1Page() {
                 <tbody>
                   {referrals.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : referrals.map((r, idx) => {
+                  ) : referrals
+                    .filter(r => (!filterEstab || r.ustanovaNaziv === filterEstab) && (!filterDoctor || r.doktorIme === filterDoctor))
+                    .map((r, idx) => {
                     const examType = r.pregledPeriodicki ? 'Periodički' : r.pregledPrethodni ? 'Prethodni' : r.pregledIzvanredni ? 'Izvanredni' : r.pregledKontrolni ? 'Kontrolni' : '—';
+                    const wName = getWorkerName(r.workerId);
                     return (
                       <tr key={r.id} onClick={() => handleEdit(r)}
                         style={{ cursor: 'pointer' }}
                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, rgba(0,191,166,0.06))'}
                         onMouseLeave={e => e.currentTarget.style.background = ''}>
                         <td>{idx + 1}</td>
-                        <td style={{ fontWeight: 600 }}>{getWorkerName(r.workerId)}</td>
+                        <td>
+                          <button
+                            className="btn btn-ghost"
+                            style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none' }}
+                            onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>
+                            {wName}
+                          </button>
+                        </td>
                         <td>{formatDate(r.datum)}</td>
                         <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{examType}</span></td>
-                        <td>{r.ustanovaNaziv || '—'}</td>
-                        <td>{r.doktorIme || '—'}</td>
                         <td>
-                          <div style={{ display: 'flex', gap: 4 }}>
-                            <button className="btn btn-ghost btn-sm" onClick={e => { e.stopPropagation(); handleEdit(r); }}>✏️</button>
-                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={e => { e.stopPropagation(); handleDelete(r.id); }}>🗑️</button>
+                          {r.ustanovaNaziv
+                            ? <button className="btn btn-ghost" style={{ padding: '0 2px', textDecoration: 'underline', textDecorationColor: 'var(--text-muted)', textUnderlineOffset: 3, color: 'inherit', background: 'none', fontSize: '0.86rem' }}
+                                title={lang === 'bs' ? 'Filtriraj po ustanovi' : 'Filter by institution'}
+                                onClick={e => { e.stopPropagation(); setFilterEstab(f => f === r.ustanovaNaziv ? '' : r.ustanovaNaziv); }}>
+                                {r.ustanovaNaziv}
+                              </button>
+                            : '—'}
+                        </td>
+                        <td>
+                          {r.doktorIme
+                            ? <button className="btn btn-ghost" style={{ padding: '0 2px', textDecoration: 'underline', textDecorationColor: 'var(--text-muted)', textUnderlineOffset: 3, color: 'inherit', background: 'none', fontSize: '0.86rem' }}
+                                title={lang === 'bs' ? 'Filtriraj po doktoru' : 'Filter by doctor'}
+                                onClick={e => { e.stopPropagation(); setFilterDoctor(f => f === r.doktorIme ? '' : r.doktorIme); }}>
+                                {r.doktorIme}
+                              </button>
+                            : '—'}
+                        </td>
+                        <td onClick={e => e.stopPropagation()}>
+                          <div style={{ position: 'relative' }}>
+                            <button
+                              className="btn btn-ghost btn-sm"
+                              style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
+                              onClick={e => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setMenuPos({ top: rect.bottom + 4, left: rect.left }); setActionMenuId(prev => prev === r.id ? null : r.id); }}>
+                              {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
+                            </button>
+                            {actionMenuId === r.id && typeof window !== 'undefined' && createPortal(
+                              <div
+                                style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', minWidth: 160, overflow: 'hidden' }}
+                                onMouseLeave={() => setActionMenuId(null)}>
+                                <button
+                                  className="dropdown-item"
+                                  style={{ width: '100%', textAlign: 'left', padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.86rem', color: 'var(--text)' }}
+                                  onClick={() => { setActionMenuId(null); handleEdit(r); }}>
+                                  ✏️ {lang === 'bs' ? 'Uredi uputnicu' : 'Edit referral'}
+                                </button>
+                                <button
+                                  className="dropdown-item"
+                                  style={{ width: '100%', textAlign: 'left', padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.86rem', color: 'var(--danger)' }}
+                                  onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>
+                                  🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                </button>
+                              </div>,
+                              document.body
+                            )}
                           </div>
                         </td>
                       </tr>

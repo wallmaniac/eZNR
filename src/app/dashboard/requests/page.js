@@ -247,7 +247,7 @@ export default function RequestsPage() {
                     <tr key={r.id}>
                       <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
                       <td>{formatDate(r.datum)}</td>
-                      <td>{getWorkerName(r.workerId)}</td>
+                      <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{getOrgName(r.orgJedinicaId)}</td>
                       <td>
                         <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>

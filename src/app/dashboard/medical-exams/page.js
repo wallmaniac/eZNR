@@ -281,7 +281,7 @@ export default function MedicalExamsPage() {
                                     return (
                                         <tr key={exam.id} style={{ background: rowBg }}>
                                             <td>
-                                                <button className="btn btn-ghost btn-sm" style={{ fontWeight: 600, padding: '2px 4px' }}
+                                                <button className="btn btn-ghost btn-sm" style={{ fontWeight: 600, padding: '2px 4px', textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3 }}
                                                     onClick={() => router.push(`/dashboard/workers?openWorker=${exam.workerId}`)}>
                                                     {exam._workerName}
                                                 </button>

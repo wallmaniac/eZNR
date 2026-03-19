@@ -182,7 +182,7 @@ export default function FormRO1Page() {
                   ) : records.map((r, idx) => (
                     <tr key={r.id}>
                       <td>{idx + 1}</td>
-                      <td style={{ fontWeight: 600 }}>{getWorkerName(r.workerId)}</td>
+                      <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
                       <td>{r.broj || '—'}</td>
                       <td>

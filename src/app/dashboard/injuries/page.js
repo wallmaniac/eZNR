@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
@@ -20,6 +20,7 @@ const EMPTY_FORM = {
 
 export default function InjuriesPage() {
   const { t, lang } = useLanguage();
+  const router = useRouter();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { markDirty, markClean } = useUnsavedChanges();
   const searchParams = useSearchParams();
@@ -347,9 +348,9 @@ export default function InjuriesPage() {
                       </td>
                       <td style={{ fontWeight: 600 }}>
                         <button
-                          onClick={e => { e.stopPropagation(); const w = workers.find(w => w.id === inj.radnikId); if (w) setViewWorkerId(w.id); }}
-                          style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
-                          title={inj.radnikId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
+                          onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }}
+                          style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3 }}
+                          title={inj.radnikId ? (lang === 'bs' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}
                         >{inj.radnikIme || '—'}</button>
                       </td>
                       <td>{inj.datum ? new Date(inj.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : '—'}</td>
