@@ -218,19 +218,8 @@ export default function FormRO1Page() {
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r, idx) => (
                     <tr key={r.id}>
-                      
-                      <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' , background: 'none', color: 'var(--text)'}} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
-                      <td>{formatDate(r.datum)}</td>
-                      <td>{r.broj || '—'}</td>
-                      <td>
-                        <span style={{
-                          padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem',
-                          background: r.posloviPravilnik ? 'rgba(76,175,80,0.12)' : 'var(--bg-input)',
-                          color: r.posloviPravilnik ? 'var(--success)' : 'var(--text-muted)', fontWeight: 600,
-                        }}>{r.posloviPravilnik ? 'Da' : 'Ne'}</span>
-                      </td>
                       <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} /></td>
-                                            <td style={{ position: 'relative' }}>
+                      <td style={{ position: 'relative' }}>
         <button 
           className="btn btn-primary btn-sm" 
           onClick={e => { 
@@ -260,6 +249,18 @@ export default function FormRO1Page() {
           document.body
         )}
       </td>
+                      
+                      <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' , background: 'none', color: 'var(--text)'}} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                      <td>{formatDate(r.datum)}</td>
+                      <td>{r.broj || '—'}</td>
+                      <td>
+                        <span style={{
+                          padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem',
+                          background: r.posloviPravilnik ? 'rgba(76,175,80,0.12)' : 'var(--bg-input)',
+                          color: r.posloviPravilnik ? 'var(--success)' : 'var(--text-muted)', fontWeight: 600,
+                        }}>{r.posloviPravilnik ? 'Da' : 'Ne'}</span>
+                      </td>
+                      
                     </tr>
                   ))}
                 </tbody>
