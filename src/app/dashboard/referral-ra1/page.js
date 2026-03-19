@@ -269,7 +269,10 @@ export default function ReferralRA1Page() {
                   ) : referrals.map((r, idx) => {
                     const examType = r.pregledPeriodicki ? 'Periodički' : r.pregledPrethodni ? 'Prethodni' : r.pregledIzvanredni ? 'Izvanredni' : r.pregledKontrolni ? 'Kontrolni' : '—';
                     return (
-                      <tr key={r.id}>
+                      <tr key={r.id} onClick={() => handleEdit(r)}
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, rgba(0,191,166,0.06))'}
+                        onMouseLeave={e => e.currentTarget.style.background = ''}>
                         <td>{idx + 1}</td>
                         <td style={{ fontWeight: 600 }}>{getWorkerName(r.workerId)}</td>
                         <td>{formatDate(r.datum)}</td>
@@ -278,8 +281,8 @@ export default function ReferralRA1Page() {
                         <td>{r.doktorIme || '—'}</td>
                         <td>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                            <button className="btn btn-ghost btn-sm" onClick={e => { e.stopPropagation(); handleEdit(r); }}>✏️</button>
+                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={e => { e.stopPropagation(); handleDelete(r.id); }}>🗑️</button>
                           </div>
                         </td>
                       </tr>
