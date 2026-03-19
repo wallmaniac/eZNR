@@ -138,7 +138,7 @@ export default function FormRO2Page() {
                   ) : records.map((r, idx) => (
                     <tr key={r.id}>
                       
-                      <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                      <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
                       <td>{r.clanak3Tocke || '—'}</td>
                       <td>{r.radniStazNaRadnomMjestu || '—'}</td>

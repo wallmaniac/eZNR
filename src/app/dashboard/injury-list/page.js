@@ -123,7 +123,7 @@ export default function InjuryListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Rb.</th>
+                    <th>{t('actions')}</th>
                     <th>{t('worker')}</th>
                     <th>{t('date')}</th>
                     <th>{lang === 'bs' ? 'Tip' : 'Type'}</th>
@@ -132,7 +132,6 @@ export default function InjuryListPage() {
                     <th>{lang === 'bs' ? 'Prva pomoć' : 'First aid'}</th>
                     <th>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</th>
                     <th>{t('status')}</th>
-                    <th>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -151,7 +150,16 @@ export default function InjuryListPage() {
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
-                      <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{idx + 1}</td>
+                      <td style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                          {actionMenuId === inj.id && (
+                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 175 }}>
+                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push(`/dashboard/injuries?editId=${inj.id}`); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                        </div>
+                        )}
+                      </td>
                       <td style={{ fontWeight: 600 }} onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => { if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }}
@@ -166,16 +174,6 @@ export default function InjuryListPage() {
                       <td style={{ textAlign: 'center' }}>{inj.prvaPomoć ? '✅' : '—'}</td>
                       <td style={{ textAlign: 'center' }}>{inj.bolovanje ? '✅' : '—'}</td>
                       <td>{statusBadge(inj.status)}</td>
-                      <td style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
-                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                          {actionMenuId === inj.id && (
-                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 175 }}>
-                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push(`/dashboard/injuries?editId=${inj.id}`); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                        </div>
-                        )}
-                      </td>
                     </tr>
                   ))}
                 </tbody>

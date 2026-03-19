@@ -239,12 +239,12 @@ export default function RequestsPage() {
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</th>
                     <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
                     <th>{lang === 'bs' ? 'Stavke' : 'Items'}</th>
-                    <th>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -252,15 +252,6 @@ export default function RequestsPage() {
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
-                      <td>{formatDate(r.datum)}</td>
-                      <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
-                      <td>{getOrgName(r.orgJedinicaId)}</td>
-                      <td>
-                        <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>
-                          {(r.stavke || []).length}
-                        </span>
-                      </td>
                       <td style={{ position: 'relative' }}>
                         <div style={{ display: 'flex', gap: 4 }}>
                           <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
@@ -272,6 +263,15 @@ export default function RequestsPage() {
                           </div>
                         )}
                         </div>
+                      </td>
+                      <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
+                      <td>{formatDate(r.datum)}</td>
+                      <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                      <td>{getOrgName(r.orgJedinicaId)}</td>
+                      <td>
+                        <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>
+                          {(r.stavke || []).length}
+                        </span>
                       </td>
                     </tr>
                   ))}

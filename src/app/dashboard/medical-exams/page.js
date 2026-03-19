@@ -299,7 +299,7 @@ export default function MedicalExamsPage() {
                                                 )}
                                             </td>
                                             <td>
-                                                <button className="btn btn-ghost btn-sm" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                                                     onClick={() => router.push(`/dashboard/workers?openWorker=${exam.workerId}`)}>
                                                     {exam._workerName}
                                                 </button>
