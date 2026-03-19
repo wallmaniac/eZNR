@@ -39,6 +39,7 @@ export default function RequestsPage() {
   const [orgUnits, setOrgUnits] = useState([]);
   const [ppeTypes, setPpeTypes] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [actionMenuId, setActionMenuId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_ZAHTJEVNICA });
   // Item sub-form
@@ -54,6 +55,12 @@ export default function RequestsPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    const handler = () => setActionMenuId(null);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
   const setItem = (field, value) => setItemData(prev => ({ ...prev, [field]: value }));
@@ -247,17 +254,23 @@ export default function RequestsPage() {
                     <tr key={r.id}>
                       <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
                       <td>{formatDate(r.datum)}</td>
-                      <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                      <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{getOrgName(r.orgJedinicaId)}</td>
                       <td>
                         <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>
                           {(r.stavke || []).length}
                         </span>
                       </td>
-                      <td>
+                      <td style={{ position: 'relative' }}>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                          {actionMenuId === r.id && (
+                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>
+                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                          </div>
+                        )}
                         </div>
                       </td>
                     </tr>

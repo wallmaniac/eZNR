@@ -58,6 +58,7 @@ export default function NightWorkPage() {
   const [workers, setWorkers] = useState([]);
   const [orgUnits, setOrgUnits] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [actionMenuId, setActionMenuId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_NR1 });
 
@@ -68,6 +69,12 @@ export default function NightWorkPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    const handler = () => setActionMenuId(null);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -147,12 +154,12 @@ export default function NightWorkPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Noćni rad' : 'Night work'}</th>
                     <th>{lang === 'bs' ? 'Tip pregleda' : 'Exam type'}</th>
-                    <th>{t('actions')}</th>
+                    
                   </tr>
                 </thead>
                 <tbody>
@@ -162,15 +169,15 @@ export default function NightWorkPage() {
                     const examType = r.pregledPrethodni ? (lang === 'bs' ? 'Prethodni' : 'Initial') : r.pregledKontrolni ? (lang === 'bs' ? 'Kontrolni' : 'Control') : '—';
                     return (
                       <tr key={r.id}>
-                        <td>{idx + 1}</td>
-                        <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                        
+                        <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                         <td>{formatDate(r.datum)}</td>
                         <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nocniRadZaKoji || '—'}</td>
                         <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: '#EDE7F6', color: '#4527A0', fontWeight: 600 }}>{examType}</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: 4 }}>
-                            <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                            <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>                                {actionMenuId === r.id && (                                  <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>                                    <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>                                    <div className="dropdown-divider" />                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>                                  </div>                                )}
+                            
                           </div>
                         </td>
                       </tr>

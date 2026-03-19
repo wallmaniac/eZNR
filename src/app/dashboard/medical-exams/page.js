@@ -60,6 +60,7 @@ export default function MedicalExamsPage() {
     const [form, setForm] = useState({ ...emptyForm });
     const [filterTab, setFilterTab] = useState('all');
     const [searchQ, setSearchQ] = useState('');
+    const [actionMenuId, setActionMenuId] = useState(null);
 
     const [isDirty, setIsDirty] = useState(false);
     const searchParams = useSearchParams();
@@ -93,6 +94,12 @@ export default function MedicalExamsPage() {
     }, [searchParams]);
 
     const reload = useCallback(() => setExams(getAll(COLLECTIONS.MEDICAL_EXAMS)), []);
+
+    useEffect(() => {
+        const handler = () => setActionMenuId(null);
+        document.addEventListener('mousedown', handler);
+        return () => document.removeEventListener('mousedown', handler);
+    }, []);
     const setField = (k, v) => { setForm(p => ({ ...p, [k]: v })); setIsDirty(true); };
 
     // ── Stats ──────────────────────────────────────────────────────────────────
@@ -254,6 +261,7 @@ export default function MedicalExamsPage() {
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th>{bs ? 'Akcije' : 'Actions'}</th>
                                     <th>{bs ? 'Radnik' : 'Worker'}</th>
                                     <th>{bs ? 'Vrsta pregleda' : 'Exam Type'}</th>
                                     <th>{bs ? 'Datum' : 'Date'}</th>
@@ -261,7 +269,7 @@ export default function MedicalExamsPage() {
                                     <th>{bs ? 'Status' : 'Status'}</th>
                                     <th>{bs ? 'Rezultat' : 'Result'}</th>
                                     <th>{bs ? 'Ustanova' : 'Institution'}</th>
-                                    <th>{bs ? 'Akcije' : 'Actions'}</th>
+
                                 </tr>
                             </thead>
                             <tbody>
@@ -280,8 +288,18 @@ export default function MedicalExamsPage() {
                                         : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
                                     return (
                                         <tr key={exam.id} style={{ background: rowBg }}>
+                                            <td style={{ position: 'relative' }}>
+                                                    <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(prev => prev === exam.id ? null : exam.id)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                    {actionMenuId === exam.id && (
+                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>
+                                                        <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(exam); }}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                                                        <div className="dropdown-divider" />
+                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(exam); }}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td>
-                                                <button className="btn btn-ghost btn-sm" style={{ fontWeight: 600, padding: '2px 4px', textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3 }}
+                                                <button className="btn btn-ghost btn-sm" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                                                     onClick={() => router.push(`/dashboard/workers?openWorker=${exam.workerId}`)}>
                                                     {exam._workerName}
                                                 </button>
@@ -303,12 +321,6 @@ export default function MedicalExamsPage() {
                                             <td style={{ fontSize: '0.8rem', maxWidth: 180 }}>
                                                 <div style={{ fontWeight: 600 }}>{exam.zdravstvenaUstanova || '—'}</div>
                                                 {exam.doktorIme && <div style={{ color: 'var(--text-muted)', fontSize: '0.73rem' }}>Dr. {exam.doktorIme}</div>}
-                                            </td>
-                                            <td>
-                                                <div style={{ display: 'flex', gap: 4 }}>
-                                                    <button className="btn btn-ghost btn-sm btn-icon" title={bs ? 'Uredi' : 'Edit'} onClick={() => handleEdit(exam)}>✏️</button>
-                                                    <button className="btn btn-danger btn-sm btn-icon" title={bs ? 'Obriši' : 'Delete'} onClick={() => handleDelete(exam)}>🗑️</button>
-                                                </div>
                                             </td>
                                         </tr>
                                     );

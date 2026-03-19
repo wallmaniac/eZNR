@@ -58,6 +58,7 @@ export default function FormRO1Page() {
   const [orgUnits, setOrgUnits] = useState([]);
   const [workplaces, setWorkplaces] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [actionMenuId, setActionMenuId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RO1 });
 
@@ -69,6 +70,12 @@ export default function FormRO1Page() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    const handler = () => setActionMenuId(null);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -168,12 +175,12 @@ export default function FormRO1Page() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
                     <th>{lang === 'bs' ? 'Pravilnik' : 'Regulation'}</th>
-                    <th>{t('actions')}</th>
+                    
                   </tr>
                 </thead>
                 <tbody>
@@ -181,8 +188,8 @@ export default function FormRO1Page() {
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r, idx) => (
                     <tr key={r.id}>
-                      <td>{idx + 1}</td>
-                      <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                      
+                      <td><button style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
                       <td>{r.broj || '—'}</td>
                       <td>
@@ -194,8 +201,8 @@ export default function FormRO1Page() {
                       </td>
                       <td>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>                          {actionMenuId === r.id && (                            <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>                              <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>                              <div className="dropdown-divider" />                              <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>                            </div>                          )}
+                          
                         </div>
                       </td>
                     </tr>

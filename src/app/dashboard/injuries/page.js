@@ -33,6 +33,7 @@ export default function InjuriesPage() {
 
   // ── Form state ──
   const [showForm, setShowForm] = useState(false);
+  const [actionMenuId, setActionMenuId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
@@ -340,16 +341,22 @@ export default function InjuriesPage() {
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : filtered.map(inj => (
                     <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
-                      <td>
+                      <td style={{ position: 'relative' }}>
                         <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={e => { e.stopPropagation(); openEdit(inj); }}>✏️</button>
-                          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={e => { e.stopPropagation(); handleDelete(inj.id); }}>🗑️</button>
+                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                          {actionMenuId === inj.id && (
+                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>
+                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); openEdit(inj); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                          </div>
+                        )}
                         </div>
                       </td>
                       <td style={{ fontWeight: 600 }}>
                         <button
                           onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }}
-                          style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3 }}
+                          style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                           title={inj.radnikId ? (lang === 'bs' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}
                         >{inj.radnikIme || '—'}</button>
                       </td>

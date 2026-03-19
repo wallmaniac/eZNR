@@ -13,6 +13,7 @@ export default function InjuryListPage() {
   const [injuries, setInjuries] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [actionMenuId, setActionMenuId] = useState(null);
   const [filterTip, setFilterTip] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [viewWorkerId, setViewWorkerId] = useState(null);
@@ -153,7 +154,7 @@ export default function InjuryListPage() {
                       <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{idx + 1}</td>
                       <td style={{ fontWeight: 600 }} onClick={e => e.stopPropagation()}>
                         <button
-                          onClick={() => { const w = workers.find(w => w.id === inj.radnikId); if (w) setViewWorkerId(w.id); }}
+                          onClick={() => { if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }}
                           style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                           title={inj.radnikId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
                         >{inj.radnikIme || '—'}</button>
@@ -165,11 +166,15 @@ export default function InjuryListPage() {
                       <td style={{ textAlign: 'center' }}>{inj.prvaPomoć ? '✅' : '—'}</td>
                       <td style={{ textAlign: 'center' }}>{inj.bolovanje ? '✅' : '—'}</td>
                       <td>{statusBadge(inj.status)}</td>
-                      <td onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => router.push(`/dashboard/injuries?editId=${inj.id}`)}>✏️</button>
-                          <button className="btn btn-ghost btn-sm btn-icon" title={t('delete')} onClick={() => handleDelete(inj.id)}>🗑️</button>
+                      <td style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
+                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                          {actionMenuId === inj.id && (
+                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 175 }}>
+                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push(`/dashboard/injuries?editId=${inj.id}`); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                         </div>
+                        )}
                       </td>
                     </tr>
                   ))}

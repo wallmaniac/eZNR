@@ -1,6 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -131,8 +130,6 @@ export default function ReferralRA1Page() {
   const [filterEstab, setFilterEstab] = useState('');
   const [filterDoctor, setFilterDoctor] = useState('');
   const [actionMenuId, setActionMenuId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-  const menuRef = useRef(null);
 
   const loadData = useCallback(() => {
     setReferrals(getAll(COLLECTIONS.REFERRALS_RA1));
@@ -143,6 +140,13 @@ export default function ReferralRA1Page() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Close action menu on outside click
+  useEffect(() => {
+    const handler = () => setActionMenuId(null);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -272,13 +276,12 @@ export default function ReferralRA1Page() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>#</th>
+                    <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Tip pregleda' : 'Exam type'}</th>
                     <th>{lang === 'bs' ? 'Ustanova' : 'Institution'}</th>
                     <th>{lang === 'bs' ? 'Doktor' : 'Doctor'}</th>
-                    <th>{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -290,16 +293,21 @@ export default function ReferralRA1Page() {
                     const examType = r.pregledPeriodicki ? 'Periodički' : r.pregledPrethodni ? 'Prethodni' : r.pregledIzvanredni ? 'Izvanredni' : r.pregledKontrolni ? 'Kontrolni' : '—';
                     const wName = getWorkerName(r.workerId);
                     return (
-                      <tr key={r.id} onClick={() => handleEdit(r)}
-                        style={{ cursor: 'pointer' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover, rgba(0,191,166,0.06))'}
-                        onMouseLeave={e => e.currentTarget.style.background = ''}>
-                        <td>{idx + 1}</td>
+                      <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                        <td style={{ position: 'relative' }}>
+                          <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(prev => prev === r.id ? null : r.id)}>
+                            {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+                          </button>
+                          {actionMenuId === r.id && (
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 175 }}>
+                              <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Uredi uputnicu' : 'Edit referral'}</button>
+                              <div className="dropdown-divider" />
+                              <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                          )}
+                        </td>
                         <td>
-                          <button
-                            className="btn btn-ghost"
-                            style={{ padding: '0 2px', fontWeight: 600, textDecoration: 'underline', textDecorationColor: 'var(--primary)', textUnderlineOffset: 3, color: 'inherit', background: 'none' }}
-                            onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>
+                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }} title={lang === 'bs' ? 'Otvori profil radnika' : 'Open worker profile'}>
                             {wName}
                           </button>
                         </td>
@@ -307,7 +315,7 @@ export default function ReferralRA1Page() {
                         <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{examType}</span></td>
                         <td>
                           {r.ustanovaNaziv
-                            ? <button className="btn btn-ghost" style={{ padding: '0 2px', textDecoration: 'underline', textDecorationColor: 'var(--text-muted)', textUnderlineOffset: 3, color: 'inherit', background: 'none', fontSize: '0.86rem' }}
+                            ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                                 title={lang === 'bs' ? 'Filtriraj po ustanovi' : 'Filter by institution'}
                                 onClick={e => { e.stopPropagation(); setFilterEstab(f => f === r.ustanovaNaziv ? '' : r.ustanovaNaziv); }}>
                                 {r.ustanovaNaziv}
@@ -316,41 +324,12 @@ export default function ReferralRA1Page() {
                         </td>
                         <td>
                           {r.doktorIme
-                            ? <button className="btn btn-ghost" style={{ padding: '0 2px', textDecoration: 'underline', textDecorationColor: 'var(--text-muted)', textUnderlineOffset: 3, color: 'inherit', background: 'none', fontSize: '0.86rem' }}
+                            ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                                 title={lang === 'bs' ? 'Filtriraj po doktoru' : 'Filter by doctor'}
                                 onClick={e => { e.stopPropagation(); setFilterDoctor(f => f === r.doktorIme ? '' : r.doktorIme); }}>
                                 {r.doktorIme}
                               </button>
                             : '—'}
-                        </td>
-                        <td onClick={e => e.stopPropagation()}>
-                          <div style={{ position: 'relative' }}>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              style={{ display: 'flex', alignItems: 'center', gap: 4, whiteSpace: 'nowrap' }}
-                              onClick={e => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setMenuPos({ top: rect.bottom + 4, left: rect.left }); setActionMenuId(prev => prev === r.id ? null : r.id); }}>
-                              {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
-                            </button>
-                            {actionMenuId === r.id && typeof window !== 'undefined' && createPortal(
-                              <div
-                                style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', minWidth: 160, overflow: 'hidden' }}
-                                onMouseLeave={() => setActionMenuId(null)}>
-                                <button
-                                  className="dropdown-item"
-                                  style={{ width: '100%', textAlign: 'left', padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.86rem', color: 'var(--text)' }}
-                                  onClick={() => { setActionMenuId(null); handleEdit(r); }}>
-                                  ✏️ {lang === 'bs' ? 'Uredi uputnicu' : 'Edit referral'}
-                                </button>
-                                <button
-                                  className="dropdown-item"
-                                  style={{ width: '100%', textAlign: 'left', padding: '9px 16px', display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.86rem', color: 'var(--danger)' }}
-                                  onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>
-                                  🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
-                                </button>
-                              </div>,
-                              document.body
-                            )}
-                          </div>
                         </td>
                       </tr>
                     );
