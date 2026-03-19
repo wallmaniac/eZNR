@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -40,6 +41,8 @@ export default function RequestsPage() {
   const [ppeTypes, setPpeTypes] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_ZAHTJEVNICA });
   // Item sub-form
@@ -53,6 +56,36 @@ export default function RequestsPage() {
     setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
     setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
   }, []);
+
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(records.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const handleDuplicate = async (it) => {
+    const copy = { ...it };
+    delete copy.id; delete copy.createdAt; delete copy.updatedAt;
+    copy.datum = new Date().toISOString().split('T')[0];
+    await create(COLLECTIONS.REQUESTS, copy);
+    if (typeof loadData === 'function') loadData();
+    else if (typeof fetchExams === 'function') fetchExams();
+    else if (typeof fetchInjuries === 'function') fetchInjuries();
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+      for (let id of selectedIds) await remove(COLLECTIONS.REQUESTS, id);
+      setSelectedIds(new Set());
+      if (typeof loadData === 'function') loadData();
+      else if (typeof fetchExams === 'function') fetchExams();
+      else if (typeof fetchInjuries === 'function') fetchInjuries();
+    }
+  };
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -239,6 +272,7 @@ export default function RequestsPage() {
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
@@ -252,18 +286,37 @@ export default function RequestsPage() {
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ position: 'relative' }}>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                          {actionMenuId === r.id && (
-                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>
-                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                          </div>
-                        )}
-                        </div>
-                      </td>
+                      <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} /></td>
+                                            <td style={{ position: 'relative' }}>
+        <button 
+          className="btn btn-primary btn-sm" 
+          onClick={e => { 
+            e.stopPropagation(); 
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left });
+            setActionMenuId(prev => prev === r.id ? null : r.id); 
+          }}
+        >
+          {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+        </button>
+        {actionMenuId === r.id && typeof window !== 'undefined' && createPortal(
+          <div className="dropdown-menu" 
+               style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} 
+               onMouseLeave={() => setActionMenuId(null)}>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>✏️</span> {lang === 'bs' ? 'Otvori' : 'Open'}
+            </button>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
+            </button>
+            <div className="dropdown-divider" />
+            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id || r.id); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
+            </button>
+          </div>,
+          document.body
+        )}
+      </td>
                       <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
                       <td>{formatDate(r.datum)}</td>
                       <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>

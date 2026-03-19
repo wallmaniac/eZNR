@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import { getAll, remove, COLLECTIONS } from '@/lib/dataStore';
+import {create,  getAll, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
@@ -14,6 +15,8 @@ export default function InjuryListPage() {
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [filterTip, setFilterTip] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [viewWorkerId, setViewWorkerId] = useState(null);
@@ -22,6 +25,36 @@ export default function InjuryListPage() {
     setInjuries(getAll(COLLECTIONS.INJURIES));
     setWorkers(getAll(COLLECTIONS.WORKERS));
   }, []);
+
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(records.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const handleDuplicate = async (it) => {
+    const copy = { ...it };
+    delete copy.id; delete copy.createdAt; delete copy.updatedAt;
+    copy.datum = new Date().toISOString().split('T')[0];
+    await create(COLLECTIONS.INJURIES, copy);
+    if (typeof loadData === 'function') loadData();
+    else if (typeof fetchExams === 'function') fetchExams();
+    else if (typeof fetchInjuries === 'function') fetchInjuries();
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+      for (let id of selectedIds) await remove(COLLECTIONS.INJURIES, id);
+      setSelectedIds(new Set());
+      if (typeof loadData === 'function') loadData();
+      else if (typeof fetchExams === 'function') fetchExams();
+      else if (typeof fetchInjuries === 'function') fetchInjuries();
+    }
+  };
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -123,6 +156,7 @@ export default function InjuryListPage() {
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{t('worker')}</th>
                     <th>{t('date')}</th>
@@ -150,16 +184,37 @@ export default function InjuryListPage() {
                       onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                       onMouseLeave={e => e.currentTarget.style.background = ''}
                     >
-                      <td style={{ position: 'relative' }} onClick={e => e.stopPropagation()}>
-                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                          {actionMenuId === inj.id && (
-                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 175 }}>
-                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push(`/dashboard/injuries?editId=${inj.id}`); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                        </div>
-                        )}
-                      </td>
+                      <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(inj.id)} onChange={() => toggleOne(inj.id)} /></td>
+                                            <td style={{ position: 'relative' }}>
+        <button 
+          className="btn btn-primary btn-sm" 
+          onClick={e => { 
+            e.stopPropagation(); 
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left });
+            setActionMenuId(prev => prev === inj.id ? null : inj.id); 
+          }}
+        >
+          {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+        </button>
+        {actionMenuId === inj.id && typeof window !== 'undefined' && createPortal(
+          <div className="dropdown-menu" 
+               style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} 
+               onMouseLeave={() => setActionMenuId(null)}>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); router.push(`/dashboard/injuries?editId=${inj.id}`); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>✏️</span> {lang === 'bs' ? 'Otvori' : 'Open'}
+            </button>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(inj); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
+            </button>
+            <div className="dropdown-divider" />
+            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(inj.id || inj.id); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
+            </button>
+          </div>,
+          document.body
+        )}
+      </td>
                       <td style={{ fontWeight: 600 }} onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => { if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }}

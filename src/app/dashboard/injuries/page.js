@@ -327,6 +327,7 @@ export default function InjuriesPage() {
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{t('worker')}</th>
                     <th>{t('date')}</th>
@@ -338,20 +339,21 @@ export default function InjuriesPage() {
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : filtered.map(inj => (
                     <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                      <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(inj.id)} onChange={() => toggleOne(inj.id)} /></td>
                       <td style={{ position: 'relative' }}>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                          {actionMenuId === inj.id && (
-                          <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>
-                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); openEdit(inj); }}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                          </div>
-                        )}
-                        </div>
+<button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left }); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+{actionMenuId === inj.id && typeof window !== 'undefined' && createPortal(
+  <div className="dropdown-menu" style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} onMouseLeave={() => setActionMenuId(null)}>
+    <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); openEdit(inj); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>✏️</span> {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+    <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(inj); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+    <div className="dropdown-divider" />
+    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(inj.id); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+  </div>,
+  document.body
+)}
                       </td>
                       <td style={{ fontWeight: 600 }}>
                         <button

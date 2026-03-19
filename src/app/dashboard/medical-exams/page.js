@@ -1,5 +1,6 @@
 'use client';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import {  useState, useCallback, useMemo, useEffect  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
@@ -61,11 +62,43 @@ export default function MedicalExamsPage() {
     const [filterTab, setFilterTab] = useState('all');
     const [searchQ, setSearchQ] = useState('');
     const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
     const [isDirty, setIsDirty] = useState(false);
     const searchParams = useSearchParams();
 
     // Auto-open form from URL params (openNew=1) or session draft
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(exams.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const handleDuplicate = async (it) => {
+    const copy = { ...it };
+    delete copy.id; delete copy.createdAt; delete copy.updatedAt;
+    copy.datum = new Date().toISOString().split('T')[0];
+    await create(COLLECTIONS.MEDICAL_EXAMS, copy);
+    if (typeof loadData === 'function') loadData();
+    else if (typeof fetchExams === 'function') fetchExams();
+    else if (typeof fetchInjuries === 'function') fetchInjuries();
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+      for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
+      setSelectedIds(new Set());
+      if (typeof loadData === 'function') loadData();
+      else if (typeof fetchExams === 'function') fetchExams();
+      else if (typeof fetchInjuries === 'function') fetchInjuries();
+    }
+  };
+
     useEffect(() => {
         if (typeof window === 'undefined') return;
         // 1. Restore sessionStorage draft (from RA-1 navigation)
@@ -261,6 +294,7 @@ export default function MedicalExamsPage() {
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === exams.length && exams.length > 0} onChange={toggleAll} /></th>
                                     <th>{bs ? 'Akcije' : 'Actions'}</th>
                                     <th>{bs ? 'Radnik' : 'Worker'}</th>
                                     <th>{bs ? 'Vrsta pregleda' : 'Exam Type'}</th>
@@ -288,15 +322,18 @@ export default function MedicalExamsPage() {
                                         : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
                                     return (
                                         <tr key={exam.id} style={{ background: rowBg }}>
+                                            <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(exam.id)} onChange={() => toggleOne(exam.id)} /></td>
                                             <td style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(prev => prev === exam.id ? null : exam.id)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
-                                                    {actionMenuId === exam.id && (
-                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 160 }}>
-                                                        <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(exam); }}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
-                                                        <div className="dropdown-divider" />
-                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(exam); }}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
-                                                    </div>
-                                                )}
+<button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); const rect = e.currentTarget.getBoundingClientRect(); setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left }); setActionMenuId(prev => prev === exam.id ? null : exam.id); }}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+{actionMenuId === exam.id && typeof window !== 'undefined' && createPortal(
+  <div className="dropdown-menu" style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} onMouseLeave={() => setActionMenuId(null)}>
+    <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(exam); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>✏️</span> {bs ? 'Otvori' : 'Open'}</button>
+    <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(exam); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {bs ? 'Kopiraj' : 'Duplicate'}</button>
+    <div className="dropdown-divider" />
+    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(exam); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {bs ? 'Obriši' : 'Delete'}</button>
+  </div>,
+  document.body
+)}
                                             </td>
                                             <td>
                                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}

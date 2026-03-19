@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -130,6 +131,8 @@ export default function ReferralRA1Page() {
   const [filterEstab, setFilterEstab] = useState('');
   const [filterDoctor, setFilterDoctor] = useState('');
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [selectedIds, setSelectedIds] = useState(new Set());
 
   const loadData = useCallback(() => {
     setReferrals(getAll(COLLECTIONS.REFERRALS_RA1));
@@ -138,6 +141,36 @@ export default function ReferralRA1Page() {
     setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
     setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
   }, []);
+
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(records.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const handleDuplicate = async (it) => {
+    const copy = { ...it };
+    delete copy.id; delete copy.createdAt; delete copy.updatedAt;
+    copy.datum = new Date().toISOString().split('T')[0];
+    await create(COLLECTIONS.REFERRALS_RA1, copy);
+    if (typeof loadData === 'function') loadData();
+    else if (typeof fetchExams === 'function') fetchExams();
+    else if (typeof fetchInjuries === 'function') fetchInjuries();
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+      for (let id of selectedIds) await remove(COLLECTIONS.REFERRALS_RA1, id);
+      setSelectedIds(new Set());
+      if (typeof loadData === 'function') loadData();
+      else if (typeof fetchExams === 'function') fetchExams();
+      else if (typeof fetchInjuries === 'function') fetchInjuries();
+    }
+  };
 
   useEffect(() => { loadData(); }, [loadData]);
 
@@ -276,6 +309,7 @@ export default function ReferralRA1Page() {
               <table className="data-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
@@ -294,18 +328,37 @@ export default function ReferralRA1Page() {
                     const wName = getWorkerName(r.workerId);
                     return (
                       <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
-                        <td style={{ position: 'relative' }}>
-                          <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(prev => prev === r.id ? null : r.id)}>
-                            {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
-                          </button>
-                          {actionMenuId === r.id && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 175 }}>
-                              <button className="dropdown-item" onClick={() => { setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Uredi uputnicu' : 'Edit referral'}</button>
-                              <div className="dropdown-divider" />
-                              <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                            </div>
-                          )}
-                        </td>
+                        <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} /></td>
+                                            <td style={{ position: 'relative' }}>
+        <button 
+          className="btn btn-primary btn-sm" 
+          onClick={e => { 
+            e.stopPropagation(); 
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left });
+            setActionMenuId(prev => prev === r.id ? null : r.id); 
+          }}
+        >
+          {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+        </button>
+        {actionMenuId === r.id && typeof window !== 'undefined' && createPortal(
+          <div className="dropdown-menu" 
+               style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} 
+               onMouseLeave={() => setActionMenuId(null)}>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>✏️</span> {lang === 'bs' ? 'Otvori' : 'Open'}
+            </button>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
+            </button>
+            <div className="dropdown-divider" />
+            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id || r.id); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
+            </button>
+          </div>,
+          document.body
+        )}
+      </td>
                         <td>
                           <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }} title={lang === 'bs' ? 'Otvori profil radnika' : 'Open worker profile'}>
                             {wName}
