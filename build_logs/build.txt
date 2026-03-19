@@ -1,0 +1,24 @@
+﻿[dotenv@17.3.1] injecting env (11) from .env.local -- tip: ≡ƒ¢á∩╕Å  run anywhere with `dotenvx run -- yourcommand`
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+[dotenv@17.3.1] injecting env (11) from .env.local -- tip: ≡ƒöÉ prevent building .env in docker: https://dotenvx.com/prebuild
+Γ£ô Compiled successfully in 8.0s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/6) ...
+  Generating static pages using 7 workers (1/6) 
+  Generating static pages using 7 workers (2/6) 
+  Generating static pages using 7 workers (4/6) 
+node.exe : Error occurred prerendering page "/_global-error". Read more: https://nextjs.org/docs/messages/prerender-error
+At line:1 char:1
++ & $node "c:\Users\zzida\Desktop\znrba\app\node_modules\next\dist\bin\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Error occurred ...prerender-error:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Error [InvariantError]: Invariant: Expected workUnitAsyncStorage to have a store. This is a bug in Next.js.
+    at ignore-listed frames
+Export encountered an error on /_global-error/page: /_global-error, exiting the build.
+Γ¿» Next.js build worker exited with code: 1 and signal: null

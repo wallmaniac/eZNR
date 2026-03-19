@@ -84,18 +84,14 @@ export default function MedicalExamsPage() {
     delete copy.id; delete copy.createdAt; delete copy.updatedAt;
     copy.datum = new Date().toISOString().split('T')[0];
     await create(COLLECTIONS.MEDICAL_EXAMS, copy);
-    if (typeof loadData === 'function') loadData();
-    else if (typeof fetchExams === 'function') fetchExams();
-    else if (typeof fetchInjuries === 'function') fetchInjuries();
+    fetchExams();
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
     if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
       setSelectedIds(new Set());
-      if (typeof loadData === 'function') loadData();
-      else if (typeof fetchExams === 'function') fetchExams();
-      else if (typeof fetchInjuries === 'function') fetchInjuries();
+      fetchExams();
     }
   };
 

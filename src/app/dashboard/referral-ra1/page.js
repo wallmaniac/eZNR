@@ -144,7 +144,7 @@ export default function ReferralRA1Page() {
 
 
   const toggleAll = (e) => {
-    if (e.target.checked) setSelectedIds(new Set(records.map(x => x.id)));
+    if (e.target.checked) setSelectedIds(new Set(referrals.map(x => x.id)));
     else setSelectedIds(new Set());
   };
   const toggleOne = (id) => {
@@ -157,18 +157,14 @@ export default function ReferralRA1Page() {
     delete copy.id; delete copy.createdAt; delete copy.updatedAt;
     copy.datum = new Date().toISOString().split('T')[0];
     await create(COLLECTIONS.REFERRALS_RA1, copy);
-    if (typeof loadData === 'function') loadData();
-    else if (typeof fetchExams === 'function') fetchExams();
-    else if (typeof fetchInjuries === 'function') fetchInjuries();
+    loadData();
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
     if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.REFERRALS_RA1, id);
       setSelectedIds(new Set());
-      if (typeof loadData === 'function') loadData();
-      else if (typeof fetchExams === 'function') fetchExams();
-      else if (typeof fetchInjuries === 'function') fetchInjuries();
+      loadData();
     }
   };
 
@@ -309,7 +305,7 @@ export default function ReferralRA1Page() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === referrals.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
