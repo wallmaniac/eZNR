@@ -196,24 +196,30 @@ export default function FormRO1Page() {
                 {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
               </span>
             )}
-            <div style={{ position: 'relative' }}>
-              <button className="btn btn-dark btn-sm" onClick={() => {
-                const el = document.getElementById('group-menu-ro1');
-                if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-              }}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
-              <div id="group-menu-ro1" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 230, zIndex: 999 }}>
-                <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'odabrano' : 'selected'}` : (lang === 'bs' ? 'Odaberite stavke' : 'Select items first')}
-                </div>
-                <div className="dropdown-divider" />
-                <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { document.getElementById('group-menu-ro1').style.display = 'none'; window.print(); }}>🖨️ {lang === 'bs' ? 'Ispiši odabrane' : 'Print selected'}</button>
-                <div className="dropdown-divider" />
-                <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { document.getElementById('group-menu-ro1').style.display = 'none'; handleDeleteSelected(); }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
+            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+              {selectedIds.size > 0 && (
+                <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                </span>
+              )}
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
+                {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
+              </span>
+              <div style={{ position: 'relative' }}>
+                <button className="btn btn-dark" onClick={() => setShowGroupMenu(v => !v)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
+                {showGroupMenu && (
+                  <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', minWidth: 230, zIndex: 9999, display: 'block' }} onMouseLeave={() => setShowGroupMenu(false)}>
+                    <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'odabrano' : 'selected'}` : (lang === 'bs' ? 'Odaberite stavke' : 'Select items first')}
+                    </div>
+                    <div className="dropdown-divider" />
+                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); window.print(); }}>🖨️ {lang === 'bs' ? 'Ispiši odabrane' : 'Print selected'}</button>
+                    <div className="dropdown-divider" />
+                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); handleDeleteSelected(); }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
+                  </div>
+                )}
               </div>
             </div>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-              {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
-            </span>
           </div>
         </div>
 
@@ -237,8 +243,7 @@ export default function FormRO1Page() {
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r, idx) => (
                     <tr key={r.id}>
-                      <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} /></td>
-                      <td style={{ position: 'relative' }}>
+                                            <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
                         {actionMenuId === r.id && (
                           <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 999, display: 'block' }}>

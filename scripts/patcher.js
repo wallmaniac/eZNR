@@ -8,11 +8,11 @@ const pages = [
   { p: 'src/app/dashboard/night-work/page.js', col: 'COLLECTIONS.REFERRALS_NR1', arr: 'records', item: 'r' },
   { p: 'src/app/dashboard/medical-exams/page.js', col: 'COLLECTIONS.MEDICAL_EXAMS', arr: 'exams', item: 'exam' },
   { p: 'src/app/dashboard/injuries/page.js', col: 'COLLECTIONS.INJURIES', arr: 'injuries', item: 'inj' },
-  { p: 'src/app/dashboard/injury-list/page.js', col: 'COLLECTIONS.INJURIES', arr: 'records', item: 'inj' }, 
+  { p: 'src/app/dashboard/injury-list/page.js', col: 'COLLECTIONS.INJURIES', arr: 'records', item: 'inj' },
   { p: 'src/app/dashboard/requests/page.js', col: 'COLLECTIONS.REQUESTS', arr: 'records', item: 'r' }
 ];
 
-pages.forEach(({p, col, arr, item}) => {
+pages.forEach(({ p, col, arr, item }) => {
   let text = fs.readFileSync(p, 'utf-8');
   let changed = false;
 
@@ -26,8 +26,8 @@ pages.forEach(({p, col, arr, item}) => {
 
   // 2. ADD STATES
   if (!text.includes('menuPos')) {
-    text = text.replace(/const \[actionMenuId, setActionMenuId\] = useState\(null\);/, 
-`const [actionMenuId, setActionMenuId] = useState(null);
+    text = text.replace(/const \[actionMenuId, setActionMenuId\] = useState\(null\);/,
+      `const [actionMenuId, setActionMenuId] = useState(null);
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [selectedIds, setSelectedIds] = useState(new Set());`);
     changed = true;
