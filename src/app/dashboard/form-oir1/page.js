@@ -48,8 +48,30 @@ export default function FormOIR1Page() {
   const [records, setRecords] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [actionMenuId, setActionMenuId] = useState(null);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_OIR1 });
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(records.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+      for (let id of selectedIds) await remove(COLLECTIONS.FORMS_OIR1, id);
+      setSelectedIds(new Set());
+      loadData();
+    }
+  };
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.FORMS_OIR1));
@@ -170,18 +192,29 @@ export default function FormOIR1Page() {
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r, idx) => (
                     <tr key={r.id}>
-                      <td>{idx + 1}</td>
+                                            <td style={{ position: 'relative' }}>
+                        <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                        {actionMenuId === r.id && (
+                          <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
+                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>
+                              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📝</span> {lang === 'bs' ? 'Otvori' : 'Open'}
+                            </button>
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id); }}>
+                              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
+                            </button>
+                          </div>
+                          </>
+                        )}
+                      </td>
                       <td>{r.dogadjajNastaoU || '—'}</td>
                       <td>{formatDate(r.datumDogadjaja)}</td>
                       <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getInjuredSummary(r)}</td>
                       <td>{r.podnositelj || '—'}</td>
                       <td>{formatDate(r.datumPrijave)}</td>
-                      <td>
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                          <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
-                        </div>
-                      </td>
+                      <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                     </tr>
                   ))}
                 </tbody>
