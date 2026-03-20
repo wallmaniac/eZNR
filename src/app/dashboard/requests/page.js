@@ -333,6 +333,7 @@ export default function RequestsPage() {
                           {(r.stavke || []).length}
                         </span>
                       </td>
+                      <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                     </tr>
                   ))}
                 </tbody>
