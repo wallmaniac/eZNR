@@ -315,7 +315,6 @@ export default function MedicalExamsPage() {
                         <table className="data-table" style={{ overflow: 'visible' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === exams.length && exams.length > 0} onChange={toggleAll} /></th>
                                     <th>{bs ? 'Akcije' : 'Actions'}</th>
                                     <th>{bs ? 'Radnik' : 'Worker'}</th>
                                     <th>{bs ? 'Vrsta pregleda' : 'Exam Type'}</th>
@@ -324,13 +323,13 @@ export default function MedicalExamsPage() {
                                     <th>{bs ? 'Status' : 'Status'}</th>
                                     <th>{bs ? 'Rezultat' : 'Result'}</th>
                                     <th>{bs ? 'Ustanova' : 'Institution'}</th>
-
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === exams.length && exams.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                 </tr>
                             </thead>
                             <tbody style={{ overflow: 'visible' }}>
                                 {filtered.length === 0 && (
                                     <tr>
-                                        <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
+                                        <td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
                                             {bs ? 'Nema unesenih ljekarskih pregleda' : 'No medical exams recorded'}
                                         </td>
                                     </tr>
@@ -342,24 +341,24 @@ export default function MedicalExamsPage() {
                                         ? 'rgba(239,68,68,0.04)'
                                         : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
                                     return (
-                                        <tr key={exam.id} style={{ background: rowBg }}>
-                                                                                        <td style={{ position: 'relative' }}>
-                        <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === exam.id ? null : exam.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                        {actionMenuId === exam.id && (
-                          <>
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 999, display: 'block' }}>
-                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(exam); }}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(exam); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                          </div>
-                          </>
-                        )}
-                      </td>
+                                        <tr key={exam.id} style={{ background: rowBg }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = rowBg}>
+                                            <td style={{ position: 'relative' }}>
+                                                <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === exam.id ? null : exam.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                                                {actionMenuId === exam.id && (
+                                                  <>
+                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                    <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
+                                                      <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(exam); }}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                                                      <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(exam); }}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                      <div className="dropdown-divider" />
+                                                      <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(exam); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                                    </div>
+                                                  </>
+                                                )}
+                                            </td>
                                             <td>
                                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
-                                                    onClick={() => router.push(`/dashboard/workers?openWorker=${exam.workerId}`)}>
+                                                    onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }}>
                                                     {exam._workerName}
                                                 </button>
                                             </td>
@@ -381,6 +380,7 @@ export default function MedicalExamsPage() {
                                                 <div style={{ fontWeight: 600 }}>{exam.zdravstvenaUstanova || '—'}</div>
                                                 {exam.doktorIme && <div style={{ color: 'var(--text-muted)', fontSize: '0.73rem' }}>Dr. {exam.doktorIme}</div>}
                                             </td>
+                                            <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(exam.id)} onChange={() => toggleOne(exam.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                                         </tr>
                                     );
                                 })}

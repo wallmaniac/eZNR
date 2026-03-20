@@ -358,7 +358,6 @@ export default function InjuriesPage() {
               <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{t('worker')}</th>
                     <th>{t('date')}</th>
@@ -366,24 +365,24 @@ export default function InjuriesPage() {
                     <th>{t('location')}</th>
                     <th>{t('description')}</th>
                     <th>{t('status')}</th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
-                </thead>
+                            </thead>
                 <tbody style={{ overflow: 'visible' }}>
                   {filtered.length === 0 ? (
                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : filtered.map(inj => (
                     <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
-                                            <td style={{ position: 'relative' }}>
+                      <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
                         {actionMenuId === inj.id && (
                           <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 999, display: 'block' }}>
-                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); openEdit(inj); }}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
-                          </div>
+                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
+                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); openEdit(inj); }}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                              <div className="dropdown-divider" />
+                              <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(inj.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                            </div>
                           </>
                         )}
                       </td>
@@ -399,9 +398,10 @@ export default function InjuriesPage() {
                       <td>{inj.lokacija || '—'}</td>
                       <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.opisPovrede || '—'}</td>
                       <td>{statusBadge(inj.status)}</td>
+                      <td style={{ textAlign: 'center', position: 'relative', zIndex: 2 }}><input type="checkbox" checked={selectedIds.has(inj.id)} onChange={() => toggleOne(inj.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                     </tr>
                   ))}
-                </tbody>
+                            </tbody>
               </table>
             </div>
           </div>
