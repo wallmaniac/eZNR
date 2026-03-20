@@ -305,8 +305,8 @@ export default function MedicalExamsPage() {
             {/* ── Table ── */}
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
-                    <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-                        <table className="data-table">
+                    <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+                        <table className="data-table" style={{ overflow: 'visible' }}>
                             <thead>
                                 <tr>
                                     <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === exams.length && exams.length > 0} onChange={toggleAll} /></th>
@@ -321,7 +321,7 @@ export default function MedicalExamsPage() {
 
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody style={{ overflow: 'visible' }}>
                                 {filtered.length === 0 && (
                                     <tr>
                                         <td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>

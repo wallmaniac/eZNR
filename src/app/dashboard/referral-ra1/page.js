@@ -320,8 +320,8 @@ export default function ReferralRA1Page() {
 
         <div className="card">
           <div className="card-body">
-            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-              <table className="data-table">
+            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+              <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
                     <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === referrals.length && referrals.length > 0} onChange={toggleAll} /></th>
@@ -333,7 +333,7 @@ export default function ReferralRA1Page() {
                     <th>{lang === 'bs' ? 'Doktor' : 'Doctor'}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ overflow: 'visible' }}>
                   {referrals.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : referrals

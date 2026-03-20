@@ -344,8 +344,8 @@ export default function InjuriesPage() {
                 {filtered.length} {lang === 'bs' ? 'prijava' : 'reports'}
               </span>
             </div>
-            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-              <table className="data-table">
+            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+              <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
                     <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} /></th>
@@ -358,7 +358,7 @@ export default function InjuriesPage() {
                     <th>{t('status')}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ overflow: 'visible' }}>
                   {filtered.length === 0 ? (
                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : filtered.map(inj => (

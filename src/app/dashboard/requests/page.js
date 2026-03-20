@@ -283,8 +283,8 @@ export default function RequestsPage() {
 
         <div className="card">
           <div className="card-body">
-            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-              <table className="data-table">
+            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+              <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
                     <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
@@ -296,7 +296,7 @@ export default function RequestsPage() {
                     <th>{lang === 'bs' ? 'Stavke' : 'Items'}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ overflow: 'visible' }}>
                   {records.length === 0 ? (
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r) => (
@@ -425,8 +425,8 @@ export default function RequestsPage() {
               </button>
             </div>
 
-            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-              <table className="data-table">
+            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+              <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
@@ -438,7 +438,7 @@ export default function RequestsPage() {
                     <th>{lang === 'bs' ? 'Komada' : 'Qty'}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ overflow: 'visible' }}>
                   {formData.stavke.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
                       {lang === 'bs' ? 'Nema stavki. Dodajte novu stavku zahtjevnice.' : 'No items. Add a new request item.'}

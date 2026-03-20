@@ -219,8 +219,8 @@ export default function FormRO1Page() {
 
         <div className="card">
           <div className="card-body">
-            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-              <table className="data-table">
+            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+              <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
                     <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
@@ -232,7 +232,7 @@ export default function FormRO1Page() {
                     
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ overflow: 'visible' }}>
                   {records.length === 0 ? (
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : records.map((r, idx) => (

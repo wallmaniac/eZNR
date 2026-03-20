@@ -167,8 +167,8 @@ export default function InjuryListPage() {
               </span>
             </div>
 
-            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
-              <table className="data-table">
+            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
+              <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
                     <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
@@ -183,7 +183,7 @@ export default function InjuryListPage() {
                     <th>{t('status')}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody style={{ overflow: 'visible' }}>
                   {filtered.length === 0 ? (
                     <tr>
                       <td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>

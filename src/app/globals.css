@@ -704,6 +704,12 @@ a:hover {
   overflow-x: auto;
 }
 
+/* Allow absolute-positioned Akcije dropdowns to overflow the card boundary */
+.card:has(.data-table-wrapper) {
+  overflow: visible;
+}
+
+
 .data-table {
   width: 100%;
   border-collapse: separate;
