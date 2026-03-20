@@ -1,5 +1,4 @@
 'use client';
-import { createPortal } from 'react-dom';
 import {  useState, useEffect, useCallback  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -60,7 +59,6 @@ export default function FormRO1Page() {
   const [workplaces, setWorkplaces] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RO1 });
@@ -192,6 +190,27 @@ export default function FormRO1Page() {
             <button className="btn btn-primary" onClick={handleNew}>
               + {lang === 'bs' ? 'Nova uputnica RO-1' : 'New RO-1 referral'}
             </button>
+            
+            {selectedIds.size > 0 && (
+              <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+              </span>
+            )}
+            <div style={{ position: 'relative' }}>
+              <button className="btn btn-dark btn-sm" onClick={() => {
+                const el = document.getElementById('group-menu-ro1');
+                if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+              }}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
+              <div id="group-menu-ro1" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 230, zIndex: 999 }}>
+                <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'odabrano' : 'selected'}` : (lang === 'bs' ? 'Odaberite stavke' : 'Select items first')}
+                </div>
+                <div className="dropdown-divider" />
+                <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { document.getElementById('group-menu-ro1').style.display = 'none'; window.print(); }}>🖨️ {lang === 'bs' ? 'Ispiši odabrane' : 'Print selected'}</button>
+                <div className="dropdown-divider" />
+                <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { document.getElementById('group-menu-ro1').style.display = 'none'; handleDeleteSelected(); }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
+              </div>
+            </div>
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
               {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
             </span>
@@ -200,7 +219,7 @@ export default function FormRO1Page() {
 
         <div className="card">
           <div className="card-body">
-            <div className="data-table-wrapper">
+            <div className="data-table-wrapper" style={{ overflow: 'visible' }}>
               <table className="data-table">
                 <thead>
                   <tr>
@@ -220,35 +239,16 @@ export default function FormRO1Page() {
                     <tr key={r.id}>
                       <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} /></td>
                       <td style={{ position: 'relative' }}>
-        <button 
-          className="btn btn-primary btn-sm" 
-          onClick={e => { 
-            e.stopPropagation(); 
-            const rect = e.currentTarget.getBoundingClientRect();
-            setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left });
-            setActionMenuId(prev => prev === r.id ? null : r.id); 
-          }}
-        >
-          {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
-        </button>
-        {actionMenuId === r.id && typeof window !== 'undefined' && createPortal(
-          <div className="dropdown-menu" 
-               style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} 
-               onMouseLeave={() => setActionMenuId(null)}>
-            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>
-              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>✏️</span> {lang === 'bs' ? 'Otvori' : 'Open'}
-            </button>
-            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>
-              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
-            </button>
-            <div className="dropdown-divider" />
-            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id || r.id); }}>
-              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
-            </button>
-          </div>,
-          document.body
-        )}
-      </td>
+                        <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                        {actionMenuId === r.id && (
+                          <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 999, display: 'block' }}>
+                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+                            <div className="dropdown-divider" />
+                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id); }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                          </div>
+                        )}
+                      </td>
                       
                       <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' , background: 'none', color: 'var(--text)'}} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
