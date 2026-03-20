@@ -229,13 +229,12 @@ export default function FormRO1Page() {
               <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
                     <th>{lang === 'bs' ? 'Pravilnik' : 'Regulation'}</th>
-                    
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
                 </thead>
                 <tbody style={{ overflow: 'visible' }}>

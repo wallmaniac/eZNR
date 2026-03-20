@@ -293,13 +293,13 @@ export default function RequestsPage() {
               <table className="data-table" style={{ overflow: 'visible' }}>
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</th>
                     <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
                     <th>{lang === 'bs' ? 'Stavke' : 'Items'}</th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
                 </thead>
                 <tbody style={{ overflow: 'visible' }}>
