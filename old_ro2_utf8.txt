@@ -1,5 +1,6 @@
-'use client';
-import {  useState, useEffect, useCallback, useRef  } from 'react';
+﻿'use client';
+import { createPortal } from 'react-dom';
+import {  useState, useEffect, useCallback  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -14,10 +15,8 @@ const EMPTY_RO2 = {
   // RO-2 specifics
   clanak3Tocke: '',
   datumOcjene: '',
-  nijeMijenjaoRadnoMjesto: true, // Da/Ne — default Ne (true = hasn't changed)
+  nijeMijenjaoRadnoMjesto: true, // Da/Ne ΓÇö default Ne (true = hasn't changed)
   radniStazNaRadnomMjestu: '',
-  docName: '',
-  docData: '',
 };
 
 export default function FormRO2Page() {
@@ -30,11 +29,10 @@ export default function FormRO2Page() {
   const [orgUnits, setOrgUnits] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
-  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RO2 });
-  const docInputRef = useRef(null);
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.FORMS_RO2));
@@ -70,7 +68,11 @@ export default function FormRO2Page() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
-  
+  useEffect(() => {
+    const handler = () => setActionMenuId(null);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -107,7 +109,7 @@ export default function FormRO2Page() {
 
   const getWorkerName = (id) => {
     const w = workers.find(wk => wk.id === id);
-    return w ? `${w.prezime} ${w.ime}` : '—';
+    return w ? `${w.prezime} ${w.ime}` : 'ΓÇö';
   };
   const getWorkerInfo = (id) => workers.find(wk => wk.id === id);
 
@@ -124,12 +126,12 @@ export default function FormRO2Page() {
     cursor: 'pointer', whiteSpace: 'nowrap',
   };
 
-  // ── List view ──
+  // ΓöÇΓöÇ List view ΓöÇΓöÇ
   if (!showForm) {
     return (
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>📄 {t('formRO2')}</h1>
+          <h1 style={{ margin: 0 }}>≡ƒôä {t('formRO2')}</h1>
         </div>
         <DialogRenderer />
 
@@ -138,86 +140,69 @@ export default function FormRO2Page() {
             <button className="btn btn-primary" onClick={handleNew}>
               + {lang === 'bs' ? 'Nova uputnica RO-2' : 'New RO-2 referral'}
             </button>
-            
-            {selectedIds.size > 0 && (
-              <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-              </span>
-            )}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {selectedIds.size > 0 && (
-                <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-                </span>
-              )}
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
-              </span>
-              <div style={{ position: 'relative' }}>
-                <button className="btn btn-dark" onClick={() => setShowGroupMenu(v => !v)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
-                {showGroupMenu && (
-                  <>
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setShowGroupMenu(false); }} />
-                  <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', minWidth: 230, zIndex: 9999, display: 'block' }}>
-                    <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'odabrano' : 'selected'}` : (lang === 'bs' ? 'Odaberite stavke' : 'Select items first')}
-                    </div>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); window.print(); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🖨️</span> {lang === 'bs' ? 'Ispiši odabrane' : 'Print selected'}</button>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); handleDeleteSelected(); }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
-                  </div>
-                  </>
-                )}
-              </div>
-            </div>
+            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+              {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
+            </span>
           </div>
         </div>
 
         <div className="card">
           <div className="card-body">
-            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
-              <table className="data-table" style={{ overflow: 'visible' }}>
+            <div className="data-table-wrapper">
+              <table className="data-table">
                 <thead>
                   <tr>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
-                    <th>{lang === 'bs' ? 'Čl.3 točke' : 'Art.3 point'}</th>
-                    <th>{lang === 'bs' ? 'Radni staž' : 'Experience'}</th>
+                    <th>{lang === 'bs' ? '─îl.3 to─ìke' : 'Art.3 point'}</th>
+                    <th>{lang === 'bs' ? 'Radni sta┼╛' : 'Experience'}</th>
                     <th>{lang === 'bs' ? 'Promjena RM' : 'Changed pos.'}</th>
-                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
+                    
                   </tr>
                 </thead>
-                <tbody style={{ overflow: 'visible' }}>
+                <tbody>
                   {records.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : records.map((r) => (
-                    <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                  ) : records.map((r, idx) => (
+                    <tr key={r.id}>
+                      <td onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} /></td>
                       <td style={{ position: 'relative' }}>
-                        <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                        {actionMenuId === r.id && (
-                          <>
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📝</span> {lang === 'bs' ? 'Otvori' : 'Open'}
-                            </button>
-                            {r.docData && (
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); downloadDoc(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📎</span> {lang === 'bs' ? 'Preuzmi prilog' : 'Download file'}</button>
-                            )}
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
-                            </button>
-                              <div className="dropdown-divider" />
-                              <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
-                            </button>
-                            </div>
-                          </>
-                        )}
-                      </td>
+        <button 
+          className="btn btn-primary btn-sm" 
+          onClick={e => { 
+            e.stopPropagation(); 
+            const rect = e.currentTarget.getBoundingClientRect();
+            setMenuPos({ top: rect.bottom + 4, left: rect.left < 200 ? 50 : rect.left });
+            setActionMenuId(prev => prev === r.id ? null : r.id); 
+          }}
+        >
+          {lang === 'bs' ? 'Akcije' : 'Actions'} Γû╝
+        </button>
+        {actionMenuId === r.id && typeof window !== 'undefined' && createPortal(
+          <div className="dropdown-menu" 
+               style={{ position: 'fixed', top: menuPos.top, left: menuPos.left, zIndex: 9999, minWidth: 160, display: 'block', margin: 0 }} 
+               onMouseLeave={() => setActionMenuId(null)}>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>Γ£Å∩╕Å</span> {lang === 'bs' ? 'Otvori' : 'Open'}
+            </button>
+            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>≡ƒôï</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
+            </button>
+            <div className="dropdown-divider" />
+            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id || r.id); }}>
+              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>≡ƒùæ∩╕Å</span> {lang === 'bs' ? 'Obri┼íi' : 'Delete'}
+            </button>
+          </div>,
+          document.body
+        )}
+      </td>
+                      
                       <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' , background: 'none', color: 'var(--text)'}} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
-                      <td>{r.clanak3Tocke || '—'}</td>
-                      <td>{r.radniStazNaRadnomMjestu || '—'}</td>
+                      <td>{r.clanak3Tocke || 'ΓÇö'}</td>
+                      <td>{r.radniStazNaRadnomMjestu || 'ΓÇö'}</td>
                       <td>
                         <span style={{
                           padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600,
@@ -225,7 +210,7 @@ export default function FormRO2Page() {
                           color: r.nijeMijenjaoRadnoMjesto ? 'var(--success)' : 'var(--danger)',
                         }}>{r.nijeMijenjaoRadnoMjesto ? 'Ne' : 'Da'}</span>
                       </td>
-                      <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
+                      
                     </tr>
                   ))}
                 </tbody>
@@ -237,48 +222,21 @@ export default function FormRO2Page() {
     );
   }
 
-  // ── Form view ──
+  // ΓöÇΓöÇ Form view ΓöÇΓöÇ
   const worker = getWorkerInfo(formData.workerId);
   const workerOu = worker ? orgUnits.find(o => o.id === worker.orgJedinicaId) : null;
-
-
-  const handleDocUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setFormData(prev => ({
-        ...prev,
-        docName: file.name,
-        docData: ev.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const downloadDoc = (log) => {
-    if (!log.docData) return;
-    const a = document.createElement('a');
-    a.href = log.docData;
-    a.download = log.docName || 'prilog_dokumenta';
-    a.click();
-  };
 
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
-        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang === 'bs' ? 'Uredi uputnicu RO-2' : 'Edit RO-2') : (lang === 'bs' ? 'Nova uputnica RO-2' : 'New RO-2')}</h1>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>ΓåÉ</button>
+        <h1 style={{ margin: 0 }}>≡ƒôä {editingId ? (lang === 'bs' ? 'Uredi uputnicu RO-2' : 'Edit RO-2') : (lang === 'bs' ? 'Nova uputnica RO-2' : 'New RO-2')}</h1>
       </div>
       <DialogRenderer />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* ═══ SECTION 1: Worker & General ═══ */}
+        {/* ΓòÉΓòÉΓòÉ SECTION 1: Worker & General ΓòÉΓòÉΓòÉ */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
@@ -299,7 +257,7 @@ export default function FormRO2Page() {
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
                 <select className="form-select" value={formData.workerId} onChange={e => set('workerId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                  <option value="">{lang === 'bs' ? 'ΓÇö Odaberite radnika ΓÇö' : 'ΓÇö Select worker ΓÇö'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
@@ -311,26 +269,26 @@ export default function FormRO2Page() {
             {worker && (
               <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Matični broj:</span> <strong>{worker.jmbg || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Mati─ìni broj:</span> <strong>{worker.jmbg || 'ΓÇö'}</strong></div>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Prezime, ime, ime oca:' : 'Name:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum ro─æenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || 'ΓÇö'}</strong></div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* ═══ SECTION 2: RO-2 Specifics ═══ */}
+        {/* ΓòÉΓòÉΓòÉ SECTION 2: RO-2 Specifics ΓòÉΓòÉΓòÉ */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>RO-2</div>
 
-            {/* Čl.3 točke */}
+            {/* ─îl.3 to─ìke */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', fontSize: '0.84rem' }}>
                 <span style={{ fontWeight: 600 }}>
-                  {lang === 'bs' ? 'Radno mjesto s posebnim uvjetima prema čl3, točke' : 'Workplace with special conditions per art.3, points'}
+                  {lang === 'bs' ? 'Radno mjesto s posebnim uvjetima prema ─ìl3, to─ìke' : 'Workplace with special conditions per art.3, points'}
                 </span>
                 <input className="form-input" style={{ width: 100 }} value={formData.clanak3Tocke} onChange={e => set('clanak3Tocke', e.target.value)} />
                 <span style={{ color: 'var(--text-muted)' }}>
@@ -360,11 +318,11 @@ export default function FormRO2Page() {
               </div>
             </div>
 
-            {/* Radni staž */}
+            {/* Radni sta┼╛ */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.84rem' }}>
                 <span style={{ fontWeight: 600 }}>
-                  {lang === 'bs' ? 'Radni staž na radnom mjestu koji obavlja:' : 'Work experience in current position:'}
+                  {lang === 'bs' ? 'Radni sta┼╛ na radnom mjestu koji obavlja:' : 'Work experience in current position:'}
                 </span>
                 <input className="form-input" style={{ width: 140 }} value={formData.radniStazNaRadnomMjestu} onChange={e => set('radniStazNaRadnomMjestu', e.target.value)} />
               </div>
@@ -372,38 +330,17 @@ export default function FormRO2Page() {
           </div>
         </div>
 
-        {/* ═══ Document Upload ═══ */}
-        <div className="card">
-          <div className="card-body">
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang === 'bs' ? 'Prilog' : 'Attachment'}</div>
-            <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">📎 {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
-              {formData.docName ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
-                      <span style={{ fontSize: '0.85rem', color: 'var(--info)' }}>📎 {formData.docName}</span>
-                      <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
-                  </div>
-              ) : (
-                  <div onClick={() => docInputRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '16px', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      📂 {lang === 'bs' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
-                  </div>
-              )}
-              <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
-            </div>
-          </div>
-        </div>
-
-        {/* ═══ Action buttons ═══ */}
+        {/* ΓòÉΓòÉΓòÉ Action buttons ΓòÉΓòÉΓòÉ */}
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
+              ≡ƒÆ╛ {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
             </button>
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
-              💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
+              ≡ƒÆ╛ {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              Γå⌐ {lang === 'bs' ? 'Odustani' : 'Cancel'}
             </button>
           </div>
         </div>
