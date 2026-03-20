@@ -672,7 +672,7 @@ a:hover {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
-  overflow: hidden;
+  overflow: visible; /* FIXED: WAS HIDDEN AND CLIPPED DROPDOWNS */
   transition: all var(--transition-normal);
 }
 

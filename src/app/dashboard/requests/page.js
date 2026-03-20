@@ -40,6 +40,7 @@ export default function RequestsPage() {
   const [ppeTypes, setPpeTypes] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_ZAHTJEVNICA });

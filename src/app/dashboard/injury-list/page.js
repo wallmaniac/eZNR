@@ -14,6 +14,7 @@ export default function InjuryListPage() {
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [filterTip, setFilterTip] = useState('');
   const [filterStatus, setFilterStatus] = useState('');

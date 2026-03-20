@@ -34,6 +34,7 @@ export default function InjuriesPage() {
   // ── Form state ──
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 

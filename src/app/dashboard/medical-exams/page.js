@@ -61,6 +61,7 @@ export default function MedicalExamsPage() {
     const [filterTab, setFilterTab] = useState('all');
     const [searchQ, setSearchQ] = useState('');
     const [actionMenuId, setActionMenuId] = useState(null);
+  const [showGroupMenu, setShowGroupMenu] = useState(false);
   const [selectedIds, setSelectedIds] = useState(new Set());
 
     const [isDirty, setIsDirty] = useState(false);

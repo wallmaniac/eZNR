@@ -1,0 +1,13 @@
+[dotenv@17.3.1] injecting env (11) from .env.local -- tip: ⚙️  enable debug logging with { debug: true }
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+[dotenv@17.3.1] injecting env (11) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+✓ Compiled successfully in 4.3s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/6) ...
+  Generating static pages using 7 workers (1/6) 
+  Generating static pages using 7 workers (2/6) 
+  Generating static pages using 7 workers (4/6) 
