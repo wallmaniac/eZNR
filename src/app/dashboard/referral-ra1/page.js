@@ -305,7 +305,7 @@ export default function ReferralRA1Page() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === referrals.length && records.length > 0} onChange={toggleAll} /></th>
+                    <th style={{ width: 40 }}><input type="checkbox" checked={selectedIds.size === referrals.length && referrals.length > 0} onChange={toggleAll} /></th>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
