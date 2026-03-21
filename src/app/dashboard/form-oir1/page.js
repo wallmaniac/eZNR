@@ -146,6 +146,41 @@ export default function FormOIR1Page() {
     return names.length > 0 ? names.join(', ') : '—';
   };
 
+  const handleDocUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setFormData(prev => ({
+        ...prev,
+        docName: file.name,
+        docData: ev.target.result,
+      }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const downloadDoc = (log) => {
+    if (!log.docData) return;
+    const a = document.createElement('a');
+    a.href = log.docData;
+    a.download = log.docName || 'prilog_dokumenta';
+    a.click();
+  };
+
+  const openDoc = (docData, docName) => {
+    if (!docData) return;
+    const w = window.open();
+    if (w) {
+      w.document.write('<html><head><title>' + (docName || 'Dokument') + '</title></head><body style="margin:0"><iframe src="' + docData + '" style="width:100%;height:100vh;border:none"></iframe></body></html>');
+      w.document.close();
+    }
+  };
+
   const labelSt = {
     fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)',
     textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4,
