@@ -6,6 +6,7 @@ import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 const EMPTY_OIR1 = {
   // Section 1: General
@@ -55,6 +56,7 @@ export default function FormOIR1Page() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_OIR1 });
+  const [search, setSearch] = useState('');
   const docInputRef = useRef(null);
 
   const toggleAll = (e) => {
@@ -82,6 +84,11 @@ export default function FormOIR1Page() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+  const filteredRecords = search
+    ? records.filter(r => r.dogadjajNastaoU?.toLowerCase().includes(search.toLowerCase()) || r.podnositelj?.toLowerCase().includes(search.toLowerCase()))
+    : records;
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datumDogadjaja');
+
 
   const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
 
@@ -207,6 +214,15 @@ export default function FormOIR1Page() {
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
               {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
             </span>
+            <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
+              <input
+                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+              />
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+            </div>
           </div>
         </div>
 
@@ -218,18 +234,18 @@ export default function FormOIR1Page() {
                 <tr>
                   <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                   <th>#</th>
-                  <th>{lang === 'bs' ? 'Događaj nastao u' : 'Event location'}</th>
-                  <th>{lang === 'bs' ? 'Datum događaja' : 'Event date'}</th>
+                  <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang === 'bs' ? 'Događaj nastao u' : 'Event location'}{sortIcon('dogadjajNastaoU')}</th>
+                  <th onClick={() => toggleSort('datumDogadjaja')} style={thStyle('datumDogadjaja')}>{lang === 'bs' ? 'Datum događaja' : 'Event date'}{sortIcon('datumDogadjaja')}</th>
                   <th>{lang === 'bs' ? 'Ozlijeđeni' : 'Injured'}</th>
                   <th>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}</th>
-                  <th>{lang === 'bs' ? 'Datum prijave' : 'Submit date'}</th>
+                  <th onClick={() => toggleSort('datumPrijave')} style={thStyle('datumPrijave')}>{lang === 'bs' ? 'Datum prijave' : 'Submit date'}{sortIcon('datumPrijave')}</th>
                   <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                 </tr>
                 </thead>
                 <tbody>
-                  {records.length === 0 ? (
+                  {sorted.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : records.map((r, idx) => (
+                  ) : sorted.map((r, idx) => (
                     <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)}>
                                             <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>

@@ -6,6 +6,7 @@ import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 const EMPTY_RO2 = {
   workerId: '',
@@ -34,6 +35,7 @@ export default function FormRO2Page() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RO2 });
+  const [search, setSearch] = useState('');
   const docInputRef = useRef(null);
 
   const loadData = useCallback(() => {
@@ -69,6 +71,11 @@ export default function FormRO2Page() {
   };
 
   useEffect(() => { loadData(); }, [loadData]);
+  const filteredRecords = search
+    ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
+    : records;
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
+
 
   
 
@@ -172,6 +179,15 @@ export default function FormRO2Page() {
               </div>
             </div>
           </div>
+            <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
+              <input
+                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+              />
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+            </div>
         </div>
 
         <div className="card">
@@ -182,7 +198,7 @@ export default function FormRO2Page() {
                   <tr>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
-                    <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
                     <th>{lang === 'bs' ? 'Čl.3 točke' : 'Art.3 point'}</th>
                     <th>{lang === 'bs' ? 'Radni staž' : 'Experience'}</th>
                     <th>{lang === 'bs' ? 'Promjena RM' : 'Changed pos.'}</th>
@@ -190,9 +206,9 @@ export default function FormRO2Page() {
                   </tr>
                 </thead>
                 <tbody style={{ overflow: 'visible' }}>
-                  {records.length === 0 ? (
+                  {sorted.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : records.map((r) => (
+                  ) : sorted.map((r, idx) => (
                     <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                       <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>

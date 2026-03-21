@@ -71,7 +71,6 @@ const menuItems = [
     {
         key: 'grpDocuments', icon: '📑',
         children: [
-            { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
             { key: 'employerDocs',   icon: '📑', path: '/dashboard/employer-docs' },
             { key: 'requests',       icon: '📝', path: '/dashboard/requests' },
             {
@@ -120,8 +119,17 @@ const menuItems = [
         ],
     },
 
+    // ── 🛠️ ALATI — tools ────────────────────────────────────────────────────
+    {
+        key: 'alati', icon: '🛠️',
+        children: [
+            { key: 'excelImport',    icon: '📥', path: '/dashboard/import' },
+            { key: 'converter',      icon: '🔄', path: '/dashboard/converter' },
+            { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
+        ],
+    },
+
     // ── Bottom standalone ──────────────────────────────────────────────────────
-    { key: 'excelImport', icon: '📥', path: '/dashboard/import' },
     { key: 'settings',    icon: '⚙️', path: '/dashboard/settings' },
 ];
 

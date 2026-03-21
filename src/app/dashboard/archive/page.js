@@ -23,12 +23,23 @@ const formatSize = (bytes) => {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
 
-const CATEGORIES = ['Sve', 'Ugovori', 'Certifikati', 'Pravilnici', 'Izvješća', 'Upute', 'Ostalo'];
+const CATEGORIES = ['Sve', 'Obrasci', 'Ugovori', 'Certifikati', 'Pravilnici', 'Izvješća', 'Upute', 'Ostalo'];
+
+// Form collections that contribute read-only attachments classified as Obrasci
+const FORM_SOURCES = [
+  { col: 'requests',      label: 'Zahtjevnica' },
+  { col: 'formsOir1',     label: 'Obrazac OIR-1' },
+  { col: 'formsRo1',      label: 'Obrazac RO-1' },
+  { col: 'formsRo2',      label: 'Obrazac RO-2' },
+  { col: 'referralsNr1',  label: 'Lj. uputnica (NR1)' },
+  { col: 'referralsRa1',  label: 'Lj. uputnica (RA1)' },
+];
 
 export default function ArchivePage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
     const [files, setFiles] = useState(() => getAll(COLLECTIONS.DIGITAL_ARCHIVE));
+    const [formDocs, setFormDocs] = useState([]);
     const [search, setSearch] = useState('');
     const [category, setCategory] = useState('Sve');
     const [dragging, setDragging] = useState(false);
@@ -37,10 +48,33 @@ export default function ArchivePage() {
     const fileInputRef = useRef(null);
     const MAX_MB = 5;
 
-    const reload = useCallback(() => setFiles(getAll(COLLECTIONS.DIGITAL_ARCHIVE)), []);
+    const reload = useCallback(() => {
+        setFiles(getAll(COLLECTIONS.DIGITAL_ARCHIVE));
+        // Aggregate form attachments
+        const docs = [];
+        FORM_SOURCES.forEach(({ col, label }) => {
+            const recs = getAll(col);
+            recs.forEach(r => {
+                if (r.docName && r.docData) {
+                    docs.push({
+                        id: `form-${col}-${r.id}`,
+                        name: r.docName,
+                        data: r.docData,
+                        category: 'Obrasci',
+                        description: label,
+                        size: null,
+                        uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
+                        _readonly: true,
+                        _sourceLabel: label,
+                    });
+                }
+            });
+        });
+        setFormDocs(docs);
+    }, []);
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(
-        files.filter(f => {
+        [...files, ...formDocs].filter(f => {
             const matchSearch = !search || f.name?.toLowerCase().includes(search.toLowerCase()) || f.description?.toLowerCase().includes(search.toLowerCase());
             const matchCat = category === 'Sve' || f.category === category;
             return matchSearch && matchCat;
@@ -93,6 +127,14 @@ export default function ArchivePage() {
         a.href = file.data;
         a.download = file.name;
         a.click();
+    };
+
+    const handleOpen = (file) => {
+        const w = window.open();
+        if (w) {
+            w.document.write(`<html><head><title>${file.name}</title></head><body style="margin:0"><iframe src="${file.data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+            w.document.close();
+        }
     };
 
     const handleCategoryChange = (id, cat) => {
@@ -200,30 +242,41 @@ export default function ArchivePage() {
                                             <td style={{ textAlign: 'center', fontSize: '1.4rem' }}>{getIcon(file.name)}</td>
                                             <td>
                                                 <div style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}
-                                                    onClick={() => handleDownload(file)} title={lang === 'bs' ? 'Preuzmi' : 'Download'}>
+                                                    onClick={() => handleOpen(file)} title={lang === 'bs' ? 'Otvori' : 'Open'}>
                                                     {file.name}
                                                 </div>
-                                                <input
-                                                    defaultValue={file.description || ''}
-                                                    onBlur={e => handleDescChange(file.id, e.target.value)}
-                                                    placeholder={lang === 'bs' ? 'Opis (opcionalno)...' : 'Description (optional)...'}
-                                                    style={{ border: 'none', background: 'transparent', fontSize: '0.75rem', color: 'var(--text-muted)', width: '100%', outline: 'none', marginTop: 2, fontFamily: 'var(--font-body)' }}
-                                                />
+                                                {file._readonly ? (
+                                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                                        📋 {file._sourceLabel}
+                                                    </div>
+                                                ) : (
+                                                    <input
+                                                        defaultValue={file.description || ''}
+                                                        onBlur={e => handleDescChange(file.id, e.target.value)}
+                                                        placeholder={lang === 'bs' ? 'Opis (opcionalno)...' : 'Description (optional)...'}
+                                                        style={{ border: 'none', background: 'transparent', fontSize: '0.75rem', color: 'var(--text-muted)', width: '100%', outline: 'none', marginTop: 2, fontFamily: 'var(--font-body)' }}
+                                                    />
+                                                )}
                                             </td>
                                             <td>
-                                                <select value={file.category || 'Ostalo'} onChange={e => handleCategoryChange(file.id, e.target.value)}
-                                                    style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer', width: '100%' }}>
-                                                    {CATEGORIES.filter(c => c !== 'Sve').map(c => <option key={c} value={c}>{c}</option>)}
-                                                </select>
+                                                {file._readonly ? (
+                                                    <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', fontWeight: 600 }}>Obrasci</span>
+                                                ) : (
+                                                    <select value={file.category || 'Ostalo'} onChange={e => handleCategoryChange(file.id, e.target.value)}
+                                                        style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer', width: '100%' }}>
+                                                        {CATEGORIES.filter(c => c !== 'Sve').map(c => <option key={c} value={c}>{c}</option>)}
+                                                    </select>
+                                                )}
                                             </td>
-                                            <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{formatSize(file.size)}</td>
+                                            <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{file.size ? formatSize(file.size) : '—'}</td>
                                             <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                                 {file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString('hr-HR') : '-'}
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
+                                                    <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'Open'} onClick={() => handleOpen(file)}>👁️</button>
                                                     <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => handleDownload(file)}>⬇️</button>
-                                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>
+                                                    {!file._readonly && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>}
                                                 </div>
                                             </td>
                                         </tr>

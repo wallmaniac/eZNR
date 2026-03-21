@@ -6,6 +6,7 @@ import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 const EMPTY_RA1 = {
   // Worker info (auto-filled from worker selection)
@@ -129,6 +130,7 @@ export default function ReferralRA1Page() {
   const [showForm, setShowForm] = useState(() => searchParams.get('openNew') === '1');
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RA1 });
+  const [search, setSearch] = useState('');
   const docInputRef = useRef(null);
   const [filterEstab, setFilterEstab] = useState('');
   const [filterDoctor, setFilterDoctor] = useState('');
@@ -171,6 +173,11 @@ export default function ReferralRA1Page() {
   };
 
   useEffect(() => { loadData(); }, [loadData]);
+  const filteredRecords = search
+    ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
+    : records;
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
+
 
   
 
@@ -354,6 +361,15 @@ export default function ReferralRA1Page() {
               </div>
             </div>
           </div>
+            <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
+              <input
+                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+              />
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+            </div>
         </div>
 
         <div className="card">
@@ -364,7 +380,7 @@ export default function ReferralRA1Page() {
                   <tr>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
-                    <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
                     <th>{lang === 'bs' ? 'Tip pregleda' : 'Exam type'}</th>
                     <th>{lang === 'bs' ? 'Ustanova' : 'Institution'}</th>
                     <th>{lang === 'bs' ? 'Doktor' : 'Doctor'}</th>
