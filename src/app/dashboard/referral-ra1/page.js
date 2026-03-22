@@ -176,10 +176,10 @@ export default function ReferralRA1Page() {
   const filteredRecords = search
     ? referrals.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
     : referrals;
-    const enrichedRecords = filteredRecords.map(r => ({
-    ...r,
-    _workerName: getWorkerName(r.workerId),
-  }));
+    const enrichedRecords = filteredRecords.map(r => {
+    const _w = workers.find(wk => wk.id === r.workerId);
+    return { ...r, _workerName: _w ? `${_w.prezime} ${_w.ime}` : '—' };
+  });
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
 

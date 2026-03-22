@@ -91,10 +91,10 @@ export default function RequestsPage() {
   const filteredRecords = search
     ? records.filter(r => r.zahtjevnicaBroj?.toLowerCase().includes(search.toLowerCase()) || r.napomena?.toLowerCase().includes(search.toLowerCase()))
     : records;
-    const enrichedRecords = filteredRecords.map(r => ({
-    ...r,
-    _workerName: getWorkerName(r.workerId),
-  }));
+    const enrichedRecords = filteredRecords.map(r => {
+    const _w = workers.find(wk => wk.id === r.workerId);
+    return { ...r, _workerName: _w ? `${_w.prezime} ${_w.ime}` : '—' };
+  });
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
 
