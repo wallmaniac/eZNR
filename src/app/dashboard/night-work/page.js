@@ -105,7 +105,11 @@ export default function NightWorkPage() {
   const filteredRecords = search
     ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
     : records;
-  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
+    const enrichedRecords = filteredRecords.map(r => ({
+    ...r,
+    _workerName: getWorkerName(r.workerId),
+  }));
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
 
   
@@ -228,7 +232,7 @@ export default function NightWorkPage() {
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
                     <th>{lang === 'bs' ? 'Noćni rad' : 'Night work'}</th>
                     <th>{lang === 'bs' ? 'Tip pregleda' : 'Exam type'}</th>

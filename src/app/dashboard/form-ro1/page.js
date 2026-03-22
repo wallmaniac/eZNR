@@ -106,7 +106,11 @@ export default function FormRO1Page() {
   const filteredRecords = search
     ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()) || r.kratakOpisPoslova?.toLowerCase().includes(search.toLowerCase()))
     : records;
-  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
+    const enrichedRecords = filteredRecords.map(r => ({
+    ...r,
+    _workerName: getWorkerName(r.workerId),
+  }));
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
 
   
@@ -249,7 +253,7 @@ export default function FormRO1Page() {
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
                     <th onClick={() => toggleSort('broj')} style={thStyle('broj')}>{lang === 'bs' ? 'Br.' : 'No.'}{sortIcon('broj')}</th>
                     <th>{lang === 'bs' ? 'Pravilnik' : 'Regulation'}</th>

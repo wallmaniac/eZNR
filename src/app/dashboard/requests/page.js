@@ -91,7 +91,11 @@ export default function RequestsPage() {
   const filteredRecords = search
     ? records.filter(r => r.zahtjevnicaBroj?.toLowerCase().includes(search.toLowerCase()) || r.napomena?.toLowerCase().includes(search.toLowerCase()))
     : records;
-  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
+    const enrichedRecords = filteredRecords.map(r => ({
+    ...r,
+    _workerName: getWorkerName(r.workerId),
+  }));
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
 
   
@@ -315,7 +319,7 @@ export default function RequestsPage() {
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}{sortIcon('_workerName')}</th>
                     <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
                     <th>{lang === 'bs' ? 'Stavke' : 'Items'}</th>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>

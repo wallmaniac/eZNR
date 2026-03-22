@@ -74,7 +74,11 @@ export default function FormRO2Page() {
   const filteredRecords = search
     ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
     : records;
-  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
+    const enrichedRecords = filteredRecords.map(r => ({
+    ...r,
+    _workerName: getWorkerName(r.workerId),
+  }));
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
 
   
@@ -197,7 +201,7 @@ export default function FormRO2Page() {
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
                     <th>{lang === 'bs' ? 'Čl.3 točke' : 'Art.3 point'}</th>
                     <th>{lang === 'bs' ? 'Radni staž' : 'Experience'}</th>

@@ -56,7 +56,8 @@ export function useSortedList(data, defaultField = null, defaultDir = 'asc') {
         cursor: 'pointer',
         userSelect: 'none',
         whiteSpace: 'nowrap',
-        color: sortField === field ? 'var(--primary)' : undefined,
+        color: 'var(--primary)',
+        fontWeight: sortField === field ? 700 : undefined,
         transition: 'color 0.15s',
     });
 
