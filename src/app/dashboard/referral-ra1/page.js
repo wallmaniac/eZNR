@@ -174,8 +174,8 @@ export default function ReferralRA1Page() {
 
   useEffect(() => { loadData(); }, [loadData]);
   const filteredRecords = search
-    ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
-    : records;
+    ? referrals.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
+    : referrals;
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datum');
 
 

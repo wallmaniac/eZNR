@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, remove, update, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -72,6 +72,9 @@ export default function ArchivePage() {
         });
         setFormDocs(docs);
     }, []);
+
+    // Populate form docs on mount
+    useEffect(() => { reload(); }, [reload]);
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(
         [...files, ...formDocs].filter(f => {

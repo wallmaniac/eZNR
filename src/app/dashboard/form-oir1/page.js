@@ -233,11 +233,10 @@ export default function FormOIR1Page() {
                 <thead>
                 <tr>
                   <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
-                  <th>#</th>
-                  <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang === 'bs' ? 'Događaj nastao u' : 'Event location'}{sortIcon('dogadjajNastaoU')}</th>
                   <th onClick={() => toggleSort('datumDogadjaja')} style={thStyle('datumDogadjaja')}>{lang === 'bs' ? 'Datum događaja' : 'Event date'}{sortIcon('datumDogadjaja')}</th>
+                  <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang === 'bs' ? 'Lokacija' : 'Location'}{sortIcon('dogadjajNastaoU')}</th>
                   <th>{lang === 'bs' ? 'Ozlijeđeni' : 'Injured'}</th>
-                  <th>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}</th>
+                  <th onClick={() => toggleSort('podnositelj')} style={thStyle('podnositelj')}>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}{sortIcon('podnositelj')}</th>
                   <th onClick={() => toggleSort('datumPrijave')} style={thStyle('datumPrijave')}>{lang === 'bs' ? 'Datum prijave' : 'Submit date'}{sortIcon('datumPrijave')}</th>
                   <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                 </tr>
@@ -267,8 +266,8 @@ export default function FormOIR1Page() {
                           </>
                         )}
                       </td>
-                      <td>{r.dogadjajNastaoU || '—'}</td>
                       <td>{formatDate(r.datumDogadjaja)}</td>
+                      <td>{r.dogadjajNastaoU || '—'}</td>
                       <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getInjuredSummary(r)}</td>
                       <td>{r.podnositelj || '—'}</td>
                       <td>{formatDate(r.datumPrijave)}</td>
