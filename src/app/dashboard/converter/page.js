@@ -363,22 +363,21 @@ export default function ConverterPage() {
   const [loaded, setLoaded] = useState(null);  // loaded.htmlBody = raw mammoth HTML for PDF export
   const [processing, setProcessing] = useState('');
   const [archiveSearch, setArchiveSearch] = useState('');
-  const [archiveFiles, setArchiveFiles] = useState([]);
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
 
-  // Archive: show ALL items from Digital Archive (including those without file data),
-  // plus any other eznr_ items that have actual file data
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    // 1. Always include ALL digitalArchive items, regardless of data field
+  // Archive: synchronous lazy initializer reads localStorage immediately on first render
+  // (no async useEffect delay). Also refreshes when the window regains focus.
+  const readArchive = () => {
+    if (typeof window === 'undefined') return [];
+    // Always include ALL digitalArchive items regardless of data field
     const da = getRawAll(COLLECTIONS.DIGITAL_ARCHIVE).map(f => ({
       ...f,
       name: f.name || f.naziv || 'Dokument',
       hasData: !!(f.data && typeof f.data === 'string' && f.data.startsWith('data:')),
     }));
     const seen = new Set(da.map(f => f.id));
-    // 2. Scan other eznr_ keys for additional file items with actual data
+    // Also scan other eznr_ keys for file items with data (e.g. from forms)
     const extras = [];
     for (let i = 0; i < localStorage.length; i++) {
       const lsKey = localStorage.key(i);
@@ -395,7 +394,16 @@ export default function ConverterPage() {
         }
       } catch { /* ignore */ }
     }
-    setArchiveFiles([...da, ...extras]);
+    return [...da, ...extras];
+  };
+
+  const [archiveFiles, setArchiveFiles] = useState(readArchive); // synchronous init
+
+  // Refresh archive when window regains focus (user may have uploaded in another tab)
+  useEffect(() => {
+    const onFocus = () => setArchiveFiles(readArchive());
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const { sorted: filteredArchive } = useSortedList(
@@ -487,16 +495,17 @@ export default function ConverterPage() {
       const body = loaded.htmlBody || '';
       if (!body) throw new Error('Reload the document first');
 
-      // Build container at FULL opacity (z-index:-9999 = behind UI but painted)
+      // Container placed OFF-SCREEN ABOVE viewport (top:-9999px)
+      // Fully opaque so html2canvas captures real colors; invisible to user
       const container = document.createElement('div');
       container.style.cssText = [
-        'position:fixed', 'top:0', 'left:0',
+        'position:fixed', 'top:-9999px', 'left:0',
         'width:794px',
         'background:#fff', 'color:#111',
         'font-family:Arial,Helvetica,sans-serif',
         'font-size:11pt', 'line-height:1.6',
         'padding:50px 60px', 'box-sizing:border-box',
-        'z-index:-9999', 'pointer-events:none',
+        'pointer-events:none',
       ].join(';');
 
       container.innerHTML = `
