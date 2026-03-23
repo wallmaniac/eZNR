@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, getRawAll, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -48,8 +48,10 @@ td,th{border:1px solid #bbb;padding:6px 10px}h1,h2,h3,h4{color:#111}p{margin:0 0
 async function convertDocxToBlob(arrayBuffer, title) {
   const mammoth = (await import('mammoth/mammoth.browser')).default;
   const result = await mammoth.convertToHtml({ arrayBuffer });
-  const html = makeHtml(title, result.value);
-  return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  const body = result.value;
+  const html = makeHtml(title, body);
+  const blobUrl = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+  return { blobUrl, body }; // Return BOTH for direct PDF use
 }
 
 // ─── MuPDF-powered PDF → DOCX ────────────────────────────────────────────────
@@ -358,27 +360,34 @@ export default function ConverterPage() {
   const { lang } = useLanguage();
   const { alert, DialogRenderer } = useDialog();
   const [dragging, setDragging] = useState(false);
-  const [loaded, setLoaded] = useState(null);
+  const [loaded, setLoaded] = useState(null);  // loaded.htmlBody = raw mammoth HTML for PDF export
   const [processing, setProcessing] = useState('');
   const [archiveSearch, setArchiveSearch] = useState('');
+  const [archiveFiles, setArchiveFiles] = useState([]);
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
 
-  const cleanup = () => {
-    blobUrlsRef.current.forEach(u => URL.revokeObjectURL(u));
-    blobUrlsRef.current = [];
-  };
+  // Read archive from localStorage on mount to pick up ALL files
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const da = getRawAll(COLLECTIONS.DIGITAL_ARCHIVE);
+    const ed = getRawAll(COLLECTIONS.EMPLOYER_DOCS)
+      .filter(d => d.data && (d.naziv || d.name))
+      .map(d => ({ ...d, name: (d.naziv || d.name) + (d.ekstenzija || '.pdf') }));
+    setArchiveFiles([...da, ...ed]);
+  }, []);
 
-  // Archive: show ALL files from Digital Archive (bypass company filter) + employer docs with attached data
-  const archiveFiles = [
-    ...getRawAll(COLLECTIONS.DIGITAL_ARCHIVE),
-    ...getRawAll(COLLECTIONS.EMPLOYER_DOCS).filter(d => d.data && d.naziv).map(d => ({ ...d, name: d.naziv + (d.ekstenzija || '.pdf') })),
-  ];
   const { sorted: filteredArchive } = useSortedList(
     archiveFiles.filter(f =>
       !archiveSearch || (f.name || f.naziv || '').toLowerCase().includes(archiveSearch.toLowerCase())
     ), 'name'
   );
+
+
+  const cleanup = () => {
+    blobUrlsRef.current.forEach(u => URL.revokeObjectURL(u));
+    blobUrlsRef.current = [];
+  };
 
   const loadFile = useCallback(async (arrayBuffer, name, originalDataUri) => {
     const ext = getExt(name);
@@ -386,9 +395,9 @@ export default function ConverterPage() {
     if (isWordExt(ext)) {
       setProcessing('converting');
       try {
-        const htmlBlobUrl = await convertDocxToBlob(arrayBuffer, name);
-        blobUrlsRef.current.push(htmlBlobUrl);
-        setLoaded({ name, data: originalDataUri, iframeSrc: htmlBlobUrl, ext });
+        const { blobUrl, body } = await convertDocxToBlob(arrayBuffer, name);
+        blobUrlsRef.current.push(blobUrl);
+        setLoaded({ name, data: originalDataUri, iframeSrc: blobUrl, htmlBody: body, ext });
       } catch (e) {
         console.error(e);
         await alert(lang === 'bs' ? 'Greška pri čitanju Word dokumenta.' : 'Error reading Word document.');
@@ -443,18 +452,22 @@ export default function ConverterPage() {
   };
 
   const handleConvertWordToPdf = async () => {
-    if (!loaded?.iframeSrc) return;
+    if (!loaded) return;
     setProcessing('word2pdf');
     try {
-      // 1. Fetch the mammoth-generated HTML from the blob URL
-      const htmlContent = await fetch(loaded.iframeSrc).then(r => r.text());
+      // Use stored HTML body directly — no re-fetch needed, blob URL may be gone
+      const body = loaded.htmlBody || '';
+      if (!body) throw new Error('HTML content not available — please reload the document');
 
-      // 2. Render HTML into a visible (0-opacity) container so html2canvas can paint it
+      const html = makeHtml(loaded.name, body);
+
+      // Render into a container at FULL opacity but behind all UI (z-index:-9999)
+      // html2canvas needs full-opacity elements to capture real colors
       const container = document.createElement('div');
       container.style.cssText = [
-        'position:fixed', 'top:0', 'left:0',
-        'width:794px',          // A4 at 96dpi ≈ 210mm
-        'min-height:1123px',    // A4 height
+        'position:fixed',
+        'top:0', 'left:0',
+        'width:794px',
         'background:#fff',
         'color:#222',
         'font-family:Arial,Helvetica,sans-serif',
@@ -462,18 +475,17 @@ export default function ConverterPage() {
         'line-height:1.5',
         'padding:60px 70px',
         'box-sizing:border-box',
-        'opacity:0.01',         // nearly invisible but still renders
+        'z-index:-9999',  // Behind all UI — fully opaque so canvas captures real colors
         'pointer-events:none',
-        'z-index:-1',
       ].join(';');
-      container.innerHTML = htmlContent;
+      // Use innerHTML of just the body content (not full HTML doc)
+      container.innerHTML = body;
       document.body.appendChild(container);
 
-      // Give browser a frame to layout
+      // Two rAF + small delay to ensure full paint
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise(r => setTimeout(r, 500));
 
-      // 3. Render to canvas
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(container, {
         scale: 2,
@@ -487,38 +499,33 @@ export default function ConverterPage() {
 
       document.body.removeChild(container);
 
-      // 4. Slice canvas into A4 pages and add to jsPDF
+      // Slice canvas into A4 pages
       const { jsPDF } = await import('jspdf');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const A4W = 210, A4H = 297;
+      const pxPerMm = canvas.width / A4W;
+      const pageHPx  = A4H * pxPerMm;
 
-      const A4_W_MM = 210;
-      const A4_H_MM = 297;
-      // How many canvas pixels = one A4 page height?
-      const pxPerMm = canvas.width / A4_W_MM;   // canvas px per mm (width basis)
-      const pageHPx = A4_H_MM * pxPerMm;         // canvas px for one page height
-
-      let yPx = 0;
-      let pageIdx = 0;
+      let yPx = 0, page = 0;
       while (yPx < canvas.height) {
-        if (pageIdx > 0) pdf.addPage();
+        if (page > 0) pdf.addPage();
         const sliceH = Math.min(pageHPx, canvas.height - yPx);
-        // Create a slice canvas
         const slice = document.createElement('canvas');
         slice.width  = canvas.width;
-        slice.height = Math.round(sliceH);
-        const ctx = slice.getContext('2d');
-        ctx.drawImage(canvas, 0, Math.round(yPx), canvas.width, Math.round(sliceH), 0, 0, canvas.width, Math.round(sliceH));
-        const imgData = slice.toDataURL('image/jpeg', 0.92);
-        const imgHmm  = (sliceH / pxPerMm);
-        pdf.addImage(imgData, 'JPEG', 0, 0, A4_W_MM, imgHmm);
+        slice.height = Math.ceil(sliceH);
+        slice.getContext('2d').drawImage(
+          canvas, 0, Math.floor(yPx), canvas.width, Math.ceil(sliceH),
+          0, 0, canvas.width, Math.ceil(sliceH)
+        );
+        pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, A4W, sliceH / pxPerMm);
         yPx += pageHPx;
-        pageIdx++;
+        page++;
       }
 
       pdf.save(loaded.name.replace(/\.(docx|doc)$/i, '.pdf'));
     } catch (e) {
       console.error('[word2pdf]', e);
-      await alert(lang === 'bs' ? `Greška pri konverziji: ${e?.message || e}` : `Conversion error: ${e?.message || e}`);
+      await alert(lang === 'bs' ? `Greška: ${e?.message || e}` : `Error: ${e?.message || e}`);
     } finally {
       setProcessing('');
     }
