@@ -52,8 +52,9 @@ async function convertDocxToBlob(arrayBuffer, title) {
   return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
 }
 
-// ─── MuPDF-powered PDF → DOCX (same engine as PyMuPDF / pdf2docx) ────────────
-// Loads MuPDF from CDN (avoids Next.js WASM bundling). Runs 100% in browser.
+// ─── MuPDF-powered PDF → DOCX ────────────────────────────────────────────────
+// mupdf is an ES module with top-level await — runs on the server (Node.js API route)
+// Browser receives structured block JSON, assembles DOCX client-side
 
 function getBlockText(block) {
   return (block.lines || []).map(l => (l.spans || []).map(s => s.text).join('')).join('\n');
@@ -68,50 +69,25 @@ function getBlockFontInfo(block) {
   return { size: maxSize, bold, italic };
 }
 
-// Load MuPDF WASM from CDN once, cache the module
-let mupdfModule = null;
-async function loadMuPDF() {
-  if (mupdfModule) return mupdfModule;
-  // Inject script tag — avoids Next.js Webpack trying to bundle the WASM file
-  await new Promise((resolve, reject) => {
-    if (window.__mupdf_loaded) { resolve(); return; }
-    const s = document.createElement('script');
-    s.src = 'https://cdn.jsdelivr.net/npm/mupdf@1.5.0/dist/mupdf.js';
-    s.onload = () => { window.__mupdf_loaded = true; resolve(); };
-    s.onerror = reject;
-    document.head.appendChild(s);
-  });
-  // MuPDF exposes itself as global `mupdf` after the script loads
-  // Wait for WASM to initialise
-  const m = await window.mupdf.ready;
-  mupdfModule = m || window.mupdf;
-  return mupdfModule;
-}
-
-async function convertPdfToDocxMuPDF(arrayBuffer) {
-  const mupdf = await loadMuPDF();
+async function buildDocxFromPages(pages) {
   const {
     Document: WDoc, Packer, Paragraph, TextRun,
     HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType,
   } = await import('docx');
 
-  const pdf = mupdf.Document.openDocument(new Uint8Array(arrayBuffer), 'application/pdf');
-  const numPages = pdf.countPages();
   const allChildren = [];
 
-  for (let pi = 0; pi < numPages; pi++) {
-    const page = pdf.loadPage(pi);
-    const stext = page.toStructuredText('preserve-whitespace');
-    const { blocks = [] } = JSON.parse(stext.asJSON());
+  for (let pi = 0; pi < pages.length; pi++) {
+    const { blocks = [] } = pages[pi];
 
-    // ── Body font size (mode) ────────────────────────────────────────────
+    // Body font size (mode)
     const sizes = blocks.filter(b => b.type === 'text')
       .flatMap(b => (b.lines || []).flatMap(l => (l.spans || []).map(s => Math.round(s.size || 0))));
     const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
     const bodySize = sizes.length
       ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 11;
 
-    // ── Cluster blocks into rows by Y centre (tolerance 8pt) ─────────────
+    // Cluster text blocks into rows by Y centre (tolerance 8pt)
     const textBlocks = blocks.filter(b => b.type === 'text');
     const rows = [];
     for (const block of textBlocks) {
@@ -128,7 +104,7 @@ async function convertPdfToDocxMuPDF(arrayBuffer) {
     }
     rows.sort((a, b) => a.y - b.y);
 
-    // ── Detect tables: consecutive rows each with 2+ blocks ─────────────
+    // Detect tables: consecutive rows each with 2+ side-by-side blocks
     const groups = [];
     let tableAcc = [];
     const flushTable = () => {
@@ -143,7 +119,7 @@ async function convertPdfToDocxMuPDF(arrayBuffer) {
     }
     flushTable();
 
-    // ── Groups → DOCX elements ───────────────────────────────────────────
+    // Groups → DOCX elements
     for (const g of groups) {
       if (g.type === 'table') {
         const numCols = Math.max(...g.rows.map(r => r.length));
@@ -179,7 +155,7 @@ async function convertPdfToDocxMuPDF(arrayBuffer) {
         else allChildren.push(new Paragraph({ children: runs, spacing: { after: 60 } }));
       }
     }
-    if (pi < numPages - 1) allChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
+    if (pi < pages.length - 1) allChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
   }
 
   const doc = new WDoc({
@@ -189,6 +165,25 @@ async function convertPdfToDocxMuPDF(arrayBuffer) {
   return Packer.toBlob(doc);
 }
 
+async function convertPdfToDocxMuPDF(dataUri) {
+  // 1. Send PDF to server-side API route (mupdf runs in Node.js, ES module works fine)
+  const pdfBlob = dataUriToBlobUrl(dataUri)
+    ? await fetch(dataUriToBlobUrl(dataUri)).then(r => r.blob())
+    : new Blob([dataUriToBuffer(dataUri)], { type: 'application/pdf' });
+
+  const form = new FormData();
+  form.append('file', new Blob([dataUriToBuffer(dataUri)], { type: 'application/pdf' }), 'document.pdf');
+
+  const resp = await fetch('/api/pdf-parse', { method: 'POST', body: form });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error || `Parse failed: ${resp.status}`);
+  }
+  const { pages } = await resp.json();
+
+  // 2. Assemble DOCX in browser from the structured block data
+  return buildDocxFromPages(pages);
+}
 
 export default function ConverterPage() {
   const { lang } = useLanguage();
@@ -286,8 +281,7 @@ export default function ConverterPage() {
     if (!loaded?.data) return;
     setProcessing('pdf2word');
     try {
-      const arrayBuffer = dataUriToBuffer(loaded.data);
-      const blob = await convertPdfToDocxMuPDF(arrayBuffer);
+      const blob = await convertPdfToDocxMuPDF(loaded.data);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -295,8 +289,9 @@ export default function ConverterPage() {
       a.click();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e) {
-      console.error(e);
-      await alert(lang === 'bs' ? `Greška: ${e.message}` : `Error: ${e.message}`);
+      console.error('[pdf2word]', e);
+      const msg = e?.message || String(e) || 'Unknown error';
+      await alert(lang === 'bs' ? `Greška: ${msg}` : `Error: ${msg}`);
     } finally {
       setProcessing('');
     }
