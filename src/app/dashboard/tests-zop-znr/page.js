@@ -1,9 +1,16 @@
 'use client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { getById, COLLECTIONS } from '@/lib/dataStore';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { useState } from 'react';
 
 export default function TestsZopZnrPage() {
     const { lang } = useLanguage();
     const bs = lang === 'bs';
+    const { activeCompanyId } = useAuth();
+    const [loading, setLoading] = useState(null);
 
     const tests = [
         {
@@ -30,6 +37,58 @@ export default function TestsZopZnrPage() {
             ? `Poštovani,\n\nU prilogu Vam šaljemo zvanični dokument "${test.title}".\nMolimo Vas da test popunite i potpišete, te ga vratite referentu ZNR/ZOP ili predate zaduženoj osobi, kako bi Vam se izdalo važeće Uvjerenje.\n\nHvala!`
             : `Dear worker,\n\nPlease find attached the official "${test.title}".\nKindly fill and sign the test, then return it to your OSH officer so your Certificate can be issued.\n\nThank you!`;
         return `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
+    const handleDownload = async (test) => {
+        try {
+            setLoading(test.title);
+            // Fetch template
+            const response = await fetch(test.file);
+            const arrayBuffer = await response.arrayBuffer();
+            
+            // Load zip
+            const zip = await JSZip.loadAsync(arrayBuffer);
+            
+            // Transparent 1x1 image (PNG)
+            const transparentBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+            
+            // Remove ISO 9001, 14001, 45001 certificates on the top right
+            const isoIcons = ['image1.jpeg', 'image2.jpeg', 'image4.jpeg', 'image6.jpeg', 'image7.jpeg', 'image8.jpeg'];
+            isoIcons.forEach(img => {
+                if (zip.file(`word/media/${img}`)) {
+                    zip.file(`word/media/${img}`, transparentBase64, { base64: true });
+                }
+            });
+
+            // Update company logo on the top left
+            if (activeCompanyId) {
+                const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
+                if (company && company.logo) {
+                    let base64Logo = company.logo;
+                    if (base64Logo.includes('base64,')) {
+                        base64Logo = base64Logo.split('base64,')[1];
+                    }
+                    
+                    // Left logo instances across both pages
+                    if (zip.file('word/media/image3.png')) {
+                        zip.file('word/media/image3.png', base64Logo, { base64: true });
+                    }
+                    if (zip.file('word/media/image7.png')) {
+                        zip.file('word/media/image7.png', base64Logo, { base64: true });
+                    }
+                }
+            }
+            
+            // Generate and download
+            const blob = await zip.generateAsync({ type: "blob" });
+            saveAs(blob, test.title + ".docx");
+            setLoading(null);
+            
+        } catch (error) {
+            console.error("Error generating docx:", error);
+            alert(bs ? "Došlo je do greške prilikom preuzimanja." : "Error downloading document.");
+            setLoading(null);
+        }
     };
 
     return (
@@ -62,20 +121,12 @@ export default function TestsZopZnrPage() {
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
-                                    <a href={t.file} download className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
-                                        📥 {bs ? 'Preuzmi DOCX' : 'Download DOCX'}
-                                    </a>
+                                    <button onClick={() => handleDownload(t)} disabled={loading === t.title} className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center' }}>
+                                        {loading === t.title ? '🔄...' : `📥 ${bs ? 'Preuzmi DOCX' : 'Download DOCX'}`}
+                                    </button>
                                     <a href={generateEmailObject(t)} className="btn btn-outline btn-sm btn-icon" title={bs ? 'Pošalji e-mailom' : 'Send via email'}>
                                         ✉️
                                     </a>
-                                    <button onClick={() => {
-                                        const w = window.open(t.file);
-                                        // Some browsers may try to print PDF directly, but with DOCX it triggers download anyway.
-                                        // A simple alert if they just want to print immediately
-                                        alert(bs ? 'Preuzmite DOCX fajl na svoj računar, otvorite ga u Wordu i potom odštampajte.' : 'Please download the DOCX file, open it in Word, and print it.');
-                                    }} className="btn btn-outline btn-sm btn-icon" title={bs ? 'Ispiši' : 'Print'}>
-                                        🖨️
-                                    </button>
                                 </div>
                             </div>
                         ))}

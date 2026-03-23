@@ -243,18 +243,7 @@ export default function SettingsPage() {
     <div className="animate-fadeIn">
       <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('settings')}</h1>
 
-      {/* Success toast */}
-      {saved && (
-        <div style={{
-          position: 'fixed', top: 90, right: 24, zIndex: 500,
-          padding: '12px 24px', borderRadius: 12,
-          background: 'rgba(76,175,80,0.1)', border: '1px solid #A5D6A7',
-          color: 'var(--success)', fontWeight: 600, fontSize: '0.85rem',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.1)', animation: 'fadeIn 0.3s',
-        }}>
-          ✅ {lang === 'bs' ? 'Spremljeno!' : 'Saved!'}
-        </div>
-      )}
+      {/* Removed global Success toast */}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -322,8 +311,9 @@ export default function SettingsPage() {
                 <input className="form-input" value={profileData.phone} onChange={e => setProfileData(p => ({ ...p, phone: e.target.value }))} />
               </div>
             </div>
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
               <button className="btn btn-primary" onClick={handleSaveProfile}>💾 {t('save')}</button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
 
             <hr style={{ margin: '28px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
@@ -416,7 +406,10 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ marginTop: 20 }}><button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button></div>
+                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
+                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
+                </div>
               </>
             )}
           </div>
@@ -546,11 +539,12 @@ export default function SettingsPage() {
               </>
             )}
 
-            <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
               <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
               <button className="btn" style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }} onClick={() => { clearDismissedNotifications(); showSaved(); }}>
                 🔄 {lang === 'bs' ? 'Poništi odbačene obavijesti' : 'Reset dismissed notifications'}
               </button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>
         </div>
@@ -627,8 +621,9 @@ export default function SettingsPage() {
               </button>
             </div>
 
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
               <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke prikaza' : 'Save Display Settings'}</button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>
         </div>
@@ -701,8 +696,9 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            <div style={{ marginTop: 24 }}>
+            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
               <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke sistema' : 'Save System Settings'}</button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>
         </div>
