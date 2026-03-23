@@ -52,145 +52,74 @@ async function convertDocxToBlob(arrayBuffer, title) {
   return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
 }
 
-async function convertPdfToDocxBlob(arrayBuffer, filename) {
+// Render PDF pages as canvas images → embed in DOCX
+// Output looks IDENTICAL to the PDF — works in browser, no external service needed
+async function convertPdfToDocxImages(arrayBuffer) {
   const pdfjsLib = await import('pdfjs-dist');
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     `https://unpkg.com/pdfjs-dist@5.5.207/build/pdf.worker.mjs`;
 
-  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
-  const pdf = await loadingTask.promise;
+  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+  const { Document, Packer, Paragraph, ImageRun } = await import('docx');
 
-  const {
-    Document, Packer, Paragraph, TextRun, HeadingLevel,
-    AlignmentType, UnderlineType,
-  } = await import('docx');
+  // A4 text area at 96 DPI with 1-inch margins = ~6.27in × 96 = ~602px wide
+  const TARGET_WIDTH_PX = 602;
+  const RENDER_SCALE = 3; // render at 3× for HiDPI clarity
 
-  const allChildren = [];
+  const sectionChildren = [];
 
   for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
     const page = await pdf.getPage(pageNum);
-    const tc = await page.getTextContent({ includeMarkedContent: false });
+    const viewport = page.getViewport({ scale: RENDER_SCALE });
 
-    // ── 1. Collect & normalise items ────────────────────────────────────
-    const items = tc.items
-      .filter(it => 'str' in it && it.str.trim() !== '')
-      .map(it => ({
-        str: it.str,
-        x: Math.round(it.transform[4]),
-        y: Math.round(it.transform[5]),
-        h: it.height || 10,
-        w: it.width || 0,
-        font: (it.fontName || '').toLowerCase(),
-      }));
+    // Render page to canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(viewport.width);
+    canvas.height = Math.round(viewport.height);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
 
-    if (items.length === 0) continue;
+    // Canvas → PNG bytes
+    const dataUrl = canvas.toDataURL('image/png');
+    const base64 = dataUrl.split(',')[1];
+    const pngBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 
-    // ── 2. Determine body (mode) font size ──────────────────────────────
-    const heightBuckets = {};
-    items.forEach(it => {
-      const k = Math.round(it.h);
-      heightBuckets[k] = (heightBuckets[k] || 0) + 1;
-    });
-    const bodyH = Number(Object.entries(heightBuckets).sort((a, b) => b[1] - a[1])[0][0]) || 10;
+    // Calculate display size preserving aspect ratio
+    const aspectRatio = canvas.height / canvas.width;
+    const displayW = TARGET_WIDTH_PX;
+    const displayH = Math.round(displayW * aspectRatio);
 
-    // ── 3. Group into lines by Y (tolerance = 2 pts) ────────────────────
-    const lineMap = new Map();
-    items.forEach(it => {
-      // Round Y to nearest 2px bucket to merge items on the same visual line
-      const bucket = Math.round(it.y / 2) * 2;
-      if (!lineMap.has(bucket)) lineMap.set(bucket, []);
-      lineMap.get(bucket).push(it);
-    });
-
-    // Sort lines top-to-bottom (PDF Y is bottom-up, so we need descending Y)
-    const lines = [...lineMap.entries()]
-      .sort((a, b) => b[0] - a[0])          // descending Y = top first
-      .map(([y, its]) => ({
-        y,
-        items: its.sort((a, b) => a.x - b.x), // left to right
-        h: Math.max(...its.map(it => it.h)),
-      }));
-
-    // ── 4. Convert lines → paragraphs ───────────────────────────────────
-    let prevY = null;
-
-    for (const line of lines) {
-      const text = line.items.map(it => it.str).join(' ').trim();
-      if (!text) continue;
-
-      const isBold = line.items.some(it =>
-        it.font.includes('bold') || it.font.includes('heavy') || it.font.includes('demi')
-      );
-      const isItalic = line.items.some(it =>
-        it.font.includes('italic') || it.font.includes('oblique')
-      );
-      const isLarger = line.h > bodyH * 1.25;
-      const isMuchLarger = line.h > bodyH * 1.6;
-
-      // Detect paragraph gap
-      const gap = prevY !== null ? prevY - line.y : 0;
-      const hasParaBreak = gap > line.h * 1.5;
-      if (hasParaBreak && allChildren.length > 0) {
-        allChildren.push(new Paragraph({ children: [] }));
-      }
-      prevY = line.y;
-
-      // Half-point font size: 12pt body → 240 half-pts
-      const halfPtSize = Math.max(Math.round(line.h * 2 * 0.72), 18);
-
-      const runs = line.items.map(it => new TextRun({
-        text: it.str,
-        bold: isBold || isMuchLarger,
-        italics: isItalic,
-        size: halfPtSize,
-      }));
-
-      if (isMuchLarger) {
-        allChildren.push(new Paragraph({
-          children: runs,
-          heading: HeadingLevel.HEADING_1,
-          spacing: { before: 240, after: 120 },
-          alignment: AlignmentType.CENTER,
-        }));
-      } else if (isLarger || (isBold && line.h >= bodyH)) {
-        allChildren.push(new Paragraph({
-          children: runs,
-          heading: HeadingLevel.HEADING_2,
-          spacing: { before: 200, after: 80 },
-        }));
-      } else {
-        allChildren.push(new Paragraph({
-          children: runs,
-          spacing: { after: 40 },
-        }));
-      }
+    if (pageNum > 1) {
+      // Page break before each subsequent page
+      sectionChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
     }
 
-    // Page break between pages
-    if (pageNum < pdf.numPages) {
-      allChildren.push(new Paragraph({
-        children: [new TextRun({ text: '', break: 1 })],
-      }));
-    }
-  }
-
-  if (allChildren.length === 0) {
-    allChildren.push(new Paragraph({
-      children: [new TextRun('Dokument ne sadrži tekst (vjerovatno je skeniran).')],
+    sectionChildren.push(new Paragraph({
+      children: [
+        new ImageRun({
+          data: pngBytes,
+          transformation: { width: displayW, height: displayH },
+          type: 'png',
+        }),
+      ],
+      spacing: { before: 0, after: 0 },
     }));
   }
 
   const doc = new Document({
-    styles: {
-      default: {
-        document: {
-          run: { font: 'Calibri', size: 22 },
-          paragraph: { spacing: { line: 276 } },
+    sections: [{
+      properties: {
+        page: {
+          // Tight margins so the image fills the page nicely
+          margin: { top: 360, right: 360, bottom: 360, left: 360 },
         },
       },
-    },
-    sections: [{ children: allChildren }],
+      children: sectionChildren,
+    }],
   });
+
   return Packer.toBlob(doc);
 }
 
@@ -201,7 +130,6 @@ export default function ConverterPage() {
   const [dragging, setDragging] = useState(false);
   const [loaded, setLoaded] = useState(null);
   const [processing, setProcessing] = useState('');
-  const [setupRequired, setSetupRequired] = useState(false);
   const [archiveSearch, setArchiveSearch] = useState('');
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
@@ -289,27 +217,11 @@ export default function ConverterPage() {
   };
 
   const handleConvertPdfToWord = async () => {
-    if (!loaded?.iframeSrc) return;
+    if (!loaded?.data) return;
     setProcessing('pdf2word');
-    setSetupRequired(false);
     try {
-      const pdfBlob = await fetch(loaded.iframeSrc).then(r => r.blob());
-      const form = new FormData();
-      form.append('file', pdfBlob, loaded.name);
-      form.append('filename', loaded.name);
-
-      const resp = await fetch('/api/pdf-to-word', { method: 'POST', body: form });
-
-      if (resp.status === 503) {
-        setSetupRequired(true);
-        return;
-      }
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Server error ${resp.status}`);
-      }
-
-      const blob = await resp.blob();
+      const arrayBuffer = dataUriToBuffer(loaded.data);
+      const blob = await convertPdfToDocxImages(arrayBuffer);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -380,7 +292,7 @@ export default function ConverterPage() {
                 <div style={{ fontWeight: 600 }}>
                   {processing === 'converting'
                     ? (lang === 'bs' ? 'Konvertovanje Word dokumenta...' : 'Converting Word document...')
-                    : (lang === 'bs' ? 'Ekstrakcija teksta iz PDF-a, kreiranje Word fajla...' : 'Extracting PDF text, building Word file...')}
+                    : (lang === 'bs' ? 'Renderovanje PDF stranica u visoku rezoluciju...' : 'Rendering PDF pages at high resolution...')}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 6 }}>
                   {lang === 'bs' ? 'Ovo može potrajati nekoliko sekundi.' : 'This may take a few seconds.'}
@@ -415,21 +327,10 @@ export default function ConverterPage() {
                 )}
                 {isPdf && (
                   <div style={{ padding: '5px 14px', background: 'rgba(99,102,241,0.05)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang === 'bs' ? 'Konverzija koristi pdf2docx (Python) — čuva tabele, kolone i formatiranje.' : 'Conversion uses pdf2docx (Python) — preserves tables, columns and formatting.'}
+                    💡 {lang === 'bs' ? 'Word dokument će izgledati identično PDF-u. Stranice su slike visoke rezolucije.' : 'The Word file will look identical to the PDF. Pages are embedded as high-res images.'}
                   </div>
                 )}
 
-                {setupRequired && (
-                  <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 8, color: 'var(--danger)' }}>⚙️ {lang === 'bs' ? 'pdf2docx nije instaliran' : 'pdf2docx not installed'}</div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 10 }}>
-                      {lang === 'bs' ? 'Pokrenite ovu komandu u terminalu, zatim osvježite stranicu:' : 'Run this command in your terminal, then refresh the page:'}
-                    </div>
-                    <div style={{ background: 'var(--bg-input)', borderRadius: 6, padding: '8px 12px', fontFamily: 'monospace', fontSize: '0.86rem', color: 'var(--primary)', userSelect: 'all' }}>
-                      pip install pdf2docx
-                    </div>
-                  </div>
-                )}
 
                 {/* Iframe preview — no sandbox so PDFs work, explicit white bg */}
                 <iframe
