@@ -53,38 +53,147 @@ async function convertDocxToBlob(arrayBuffer, title) {
 }
 
 async function convertPdfToDocxBlob(arrayBuffer, filename) {
-  // pdfjs-dist v5 — use the legacy/main entry which works without external worker
   const pdfjsLib = await import('pdfjs-dist');
-  // Use CDN worker to avoid Next.js bundling issues
   pdfjsLib.GlobalWorkerOptions.workerSrc =
     `https://unpkg.com/pdfjs-dist@5.5.207/build/pdf.worker.mjs`;
 
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
   const pdf = await loadingTask.promise;
 
-  const pageTexts = [];
-  for (let p = 1; p <= pdf.numPages; p++) {
-    const page = await pdf.getPage(p);
-    const tc = await page.getTextContent();
-    let lastY = null;
-    const pieces = [];
-    for (const item of tc.items) {
-      if (!('str' in item)) continue;
-      if (lastY !== null && Math.abs(item.transform[5] - lastY) > 4) pieces.push('\n');
-      pieces.push(item.str);
-      lastY = item.transform[5];
+  const {
+    Document, Packer, Paragraph, TextRun, HeadingLevel,
+    AlignmentType, UnderlineType,
+  } = await import('docx');
+
+  const allChildren = [];
+
+  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+    const page = await pdf.getPage(pageNum);
+    const tc = await page.getTextContent({ includeMarkedContent: false });
+
+    // ── 1. Collect & normalise items ────────────────────────────────────
+    const items = tc.items
+      .filter(it => 'str' in it && it.str.trim() !== '')
+      .map(it => ({
+        str: it.str,
+        x: Math.round(it.transform[4]),
+        y: Math.round(it.transform[5]),
+        h: it.height || 10,
+        w: it.width || 0,
+        font: (it.fontName || '').toLowerCase(),
+      }));
+
+    if (items.length === 0) continue;
+
+    // ── 2. Determine body (mode) font size ──────────────────────────────
+    const heightBuckets = {};
+    items.forEach(it => {
+      const k = Math.round(it.h);
+      heightBuckets[k] = (heightBuckets[k] || 0) + 1;
+    });
+    const bodyH = Number(Object.entries(heightBuckets).sort((a, b) => b[1] - a[1])[0][0]) || 10;
+
+    // ── 3. Group into lines by Y (tolerance = 2 pts) ────────────────────
+    const lineMap = new Map();
+    items.forEach(it => {
+      // Round Y to nearest 2px bucket to merge items on the same visual line
+      const bucket = Math.round(it.y / 2) * 2;
+      if (!lineMap.has(bucket)) lineMap.set(bucket, []);
+      lineMap.get(bucket).push(it);
+    });
+
+    // Sort lines top-to-bottom (PDF Y is bottom-up, so we need descending Y)
+    const lines = [...lineMap.entries()]
+      .sort((a, b) => b[0] - a[0])          // descending Y = top first
+      .map(([y, its]) => ({
+        y,
+        items: its.sort((a, b) => a.x - b.x), // left to right
+        h: Math.max(...its.map(it => it.h)),
+      }));
+
+    // ── 4. Convert lines → paragraphs ───────────────────────────────────
+    let prevY = null;
+
+    for (const line of lines) {
+      const text = line.items.map(it => it.str).join(' ').trim();
+      if (!text) continue;
+
+      const isBold = line.items.some(it =>
+        it.font.includes('bold') || it.font.includes('heavy') || it.font.includes('demi')
+      );
+      const isItalic = line.items.some(it =>
+        it.font.includes('italic') || it.font.includes('oblique')
+      );
+      const isLarger = line.h > bodyH * 1.25;
+      const isMuchLarger = line.h > bodyH * 1.6;
+
+      // Detect paragraph gap
+      const gap = prevY !== null ? prevY - line.y : 0;
+      const hasParaBreak = gap > line.h * 1.5;
+      if (hasParaBreak && allChildren.length > 0) {
+        allChildren.push(new Paragraph({ children: [] }));
+      }
+      prevY = line.y;
+
+      // Half-point font size: 12pt body → 240 half-pts
+      const halfPtSize = Math.max(Math.round(line.h * 2 * 0.72), 18);
+
+      const runs = line.items.map(it => new TextRun({
+        text: it.str,
+        bold: isBold || isMuchLarger,
+        italics: isItalic,
+        size: halfPtSize,
+      }));
+
+      if (isMuchLarger) {
+        allChildren.push(new Paragraph({
+          children: runs,
+          heading: HeadingLevel.HEADING_1,
+          spacing: { before: 240, after: 120 },
+          alignment: AlignmentType.CENTER,
+        }));
+      } else if (isLarger || (isBold && line.h >= bodyH)) {
+        allChildren.push(new Paragraph({
+          children: runs,
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 200, after: 80 },
+        }));
+      } else {
+        allChildren.push(new Paragraph({
+          children: runs,
+          spacing: { after: 40 },
+        }));
+      }
     }
-    pageTexts.push(pieces.join(' '));
+
+    // Page break between pages
+    if (pageNum < pdf.numPages) {
+      allChildren.push(new Paragraph({
+        children: [new TextRun({ text: '', break: 1 })],
+      }));
+    }
   }
 
-  const fullText = pageTexts.join('\n\n═══════════════════════════════════\n\n');
-  const { Document, Packer, Paragraph, TextRun } = await import('docx');
-  const children = fullText.split('\n').map(line =>
-    new Paragraph({ children: [new TextRun(line)] })
-  );
-  const doc = new Document({ sections: [{ children }] });
+  if (allChildren.length === 0) {
+    allChildren.push(new Paragraph({
+      children: [new TextRun('Dokument ne sadrži tekst (vjerovatno je skeniran).')],
+    }));
+  }
+
+  const doc = new Document({
+    styles: {
+      default: {
+        document: {
+          run: { font: 'Calibri', size: 22 },
+          paragraph: { spacing: { line: 276 } },
+        },
+      },
+    },
+    sections: [{ children: allChildren }],
+  });
   return Packer.toBlob(doc);
 }
+
 
 export default function ConverterPage() {
   const { lang } = useLanguage();
