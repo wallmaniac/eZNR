@@ -367,30 +367,35 @@ export default function ConverterPage() {
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
 
-  // Archive: scan ALL eznr_ localStorage keys for file-like objects (name + data)
-  // This catches files regardless of which collection they were stored in
+  // Archive: show ALL items from Digital Archive (including those without file data),
+  // plus any other eznr_ items that have actual file data
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const files = [];
-    const seen = new Set();
-    const addItem = (item) => {
-      if (!item || typeof item !== 'object') return;
-      if (!item.data || typeof item.data !== 'string' || !item.data.startsWith('data:')) return;
-      const key = item.id || item.name || item.data.slice(0, 40);
-      if (seen.has(key)) return;
-      seen.add(key);
-      files.push({ ...item, name: item.name || item.naziv || 'Dokument' });
-    };
-    // Scan all eznr_ prefixed keys
+    // 1. Always include ALL digitalArchive items, regardless of data field
+    const da = getRawAll(COLLECTIONS.DIGITAL_ARCHIVE).map(f => ({
+      ...f,
+      name: f.name || f.naziv || 'Dokument',
+      hasData: !!(f.data && typeof f.data === 'string' && f.data.startsWith('data:')),
+    }));
+    const seen = new Set(da.map(f => f.id));
+    // 2. Scan other eznr_ keys for additional file items with actual data
+    const extras = [];
     for (let i = 0; i < localStorage.length; i++) {
       const lsKey = localStorage.key(i);
-      if (!lsKey?.startsWith('eznr_')) continue;
+      if (!lsKey?.startsWith('eznr_') || lsKey === 'eznr_digitalArchive') continue;
       try {
         const val = JSON.parse(localStorage.getItem(lsKey) || '[]');
-        if (Array.isArray(val)) val.forEach(addItem);
+        if (Array.isArray(val)) {
+          val.forEach(item => {
+            if (!item?.data?.startsWith?.('data:')) return;
+            if (seen.has(item.id)) return;
+            seen.add(item.id);
+            extras.push({ ...item, name: item.name || item.naziv || 'Dokument', hasData: true });
+          });
+        }
       } catch { /* ignore */ }
     }
-    setArchiveFiles(files);
+    setArchiveFiles([...da, ...extras]);
   }, []);
 
   const { sorted: filteredArchive } = useSortedList(
@@ -444,7 +449,15 @@ export default function ConverterPage() {
   };
 
   const loadFromArchive = async (file) => {
-    if (!file.data) return;
+    // Files saved without data (metadata-only) can't be previewed/converted
+    if (!file.hasData && !file.data?.startsWith?.('data:')) {
+      await alert(
+        lang === 'bs'
+          ? 'Sadržaj ove datoteke nije pohranjen u arhivi (samo metapodaci). Otvorite datoteku direktno da biste je konvertirali.'
+          : 'This file has no stored content (metadata only). Open the file directly to convert it.'
+      );
+      return;
+    }
     const arrayBuffer = dataUriToBuffer(file.data);
     await loadFile(arrayBuffer, file.name, file.data);
   };
@@ -474,25 +487,28 @@ export default function ConverterPage() {
       const body = loaded.htmlBody || '';
       if (!body) throw new Error('Reload the document first');
 
-      // ── Build a full-width container at FULL opacity, behind UI ────────────
+      // Build container at FULL opacity (z-index:-9999 = behind UI but painted)
       const container = document.createElement('div');
       container.style.cssText = [
         'position:fixed', 'top:0', 'left:0',
         'width:794px',
-        'background:#fff', 'color:#222',
+        'background:#fff', 'color:#111',
         'font-family:Arial,Helvetica,sans-serif',
         'font-size:11pt', 'line-height:1.6',
         'padding:50px 60px', 'box-sizing:border-box',
         'z-index:-9999', 'pointer-events:none',
       ].join(';');
 
-      // Inject both style sheet (with page-break helpers) and the document body
       container.innerHTML = `
         <style>
           *{box-sizing:border-box;color-scheme:light}
-          body,div{background:#fff;color:#222}
-          h1,h2,h3,h4,h5{page-break-after:avoid;break-after:avoid}
-          table{border-collapse:collapse;width:100%;page-break-inside:avoid;break-inside:avoid;margin:10px 0}
+          body,div{background:#fff!important;color:#111!important}
+          /* Force headings to dark navy — overrides Word’s light blue inline styles */
+          h1,h2,h3,h4,h5,h6{
+            color:#1a2e50!important;
+            page-break-after:avoid;break-after:avoid;
+          }
+          table{border-collapse:collapse;width:100%;margin:10px 0}
           td,th{border:1px solid #ccc;padding:5px 8px}
           p{margin:0 0 8px}
           img{max-width:100%}
@@ -501,14 +517,24 @@ export default function ConverterPage() {
       `;
       document.body.appendChild(container);
 
-      // Wait for browser to fully layout
+      // Wait for browser to layout everything
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
       await new Promise(r => setTimeout(r, 600));
 
-      // ── Capture full document as one canvas ────────────────────────────────
+      // ── Record heading Y positions NOW (before canvas removes the DOM element) ──
+      const SCALE = 2;
+      const containerTop = container.getBoundingClientRect().top;
+      const headingYsCanvas = [];
+      for (const h of container.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
+        const relY = h.getBoundingClientRect().top - containerTop;
+        if (relY > 0) headingYsCanvas.push(Math.round(relY * SCALE));
+      }
+      headingYsCanvas.sort((a, b) => a - b);
+
+      // Render full document to one canvas
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(container, {
-        scale: 2,
+        scale: SCALE,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
@@ -518,17 +544,30 @@ export default function ConverterPage() {
       });
       document.body.removeChild(container);
 
-      // ── Smart page breaking: find white rows near A4 boundaries ────────────
-      // Instead of slicing at EXACTLY A4 height (which cuts through text),
-      // scan a ±100px window around each page boundary and pick the row with
-      // the most white pixels (= empty space between paragraphs).
-      const findBreakY = (canvas, targetY, radiusPx = 120) => {
+      // ── Smart break: prefer to start a new page AT a heading (break just before it) ──
+      // This prevents headings from being stranded at the bottom of a page alone.
+      const findBreakY = (targetY, radiusPx) => {
+        // Look for headings in the window [targetY - 2*radius, targetY + radius/2]
+        // Pick the heading JUST BEFORE the nominal boundary (latest heading ≤ targetY)
+        const windowStart = targetY - radiusPx * 2;
+        const windowEnd   = targetY + Math.round(radiusPx * 0.3);
+        let bestHeadingY = null;
+        for (const hY of headingYsCanvas) {
+          if (hY >= windowStart && hY <= windowEnd) {
+            bestHeadingY = hY; // take the last (latest) heading in range
+          }
+        }
+        if (bestHeadingY !== null) {
+          // Break 8px above the heading
+          return Math.max(0, bestHeadingY - 8);
+        }
+        // No heading nearby: find whitest row scanning BACKWARD from targetY only
         const ctx  = canvas.getContext('2d');
         const from = Math.max(0, targetY - radiusPx);
-        const to   = Math.min(canvas.height - 1, targetY + radiusPx / 2);
+        const to   = Math.min(canvas.height - 1, targetY);
         let bestY = targetY, bestWhite = -1;
         for (let y = to; y >= from; y--) {
-          const row  = ctx.getImageData(0, y, canvas.width, 1).data;
+          const row = ctx.getImageData(0, y, canvas.width, 1).data;
           let white = 0;
           for (let i = 0; i < row.length; i += 4) {
             if (row[i] >= 240 && row[i+1] >= 240 && row[i+2] >= 240) white++;
@@ -538,21 +577,20 @@ export default function ConverterPage() {
         return bestY;
       };
 
-      // ── Build jsPDF pages at smart break points ────────────────────────────
+      // Build jsPDF at smart break points
       const { jsPDF } = await import('jspdf');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const A4W = 210, A4H = 297;
       const pxPerMm = canvas.width / A4W;
-      const nominalPageHPx = A4H * pxPerMm; // ideal page height in canvas px
+      const nominalPageHPx = A4H * pxPerMm;
 
       let startY = 0, pageNum = 0;
       while (startY < canvas.height) {
         if (pageNum > 0) pdf.addPage();
-        // Find a natural break near the nominal A4 bottom
         const nomBottom = startY + nominalPageHPx;
         const breakY = nomBottom >= canvas.height
-          ? canvas.height          // last page: take everything
-          : findBreakY(canvas, Math.round(nomBottom), Math.round(pxPerMm * 30)); // search 30mm window
+          ? canvas.height
+          : findBreakY(Math.round(nomBottom), Math.round(pxPerMm * 45)); // 45mm search window
 
         const sliceH = breakY - startY;
         const slice  = document.createElement('canvas');
@@ -562,11 +600,12 @@ export default function ConverterPage() {
           canvas, 0, Math.floor(startY), canvas.width, Math.ceil(sliceH),
           0, 0, canvas.width, Math.ceil(sliceH)
         );
-        // Fill page proportionally; ensure content doesn't exceed A4 height
         const sliceHmm = Math.min(sliceH / pxPerMm, A4H);
         pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, A4W, sliceHmm);
         startY = breakY;
         pageNum++;
+        // Safety: prevent infinite loop if break point doesn't advance
+        if (sliceH < 10) break;
       }
 
       pdf.save(loaded.name.replace(/\.(docx|doc)$/i, '.pdf'));
@@ -734,14 +773,19 @@ export default function ConverterPage() {
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: '74vh', overflowY: 'auto' }}>
-                  {filteredArchive.map(file => (
-                    <button key={file.id} onClick={() => loadFromArchive(file)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: loaded?.name === file.name ? 'rgba(0,191,166,0.08)' : 'var(--bg-card)', cursor: 'pointer', textAlign: 'left', fontSize: '0.82rem', fontFamily: 'var(--font-body)', color: 'var(--text)', transition: 'all 0.15s' }}>
-                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getIcon(file.name)}</span>
-                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
-                      {isWordExt(getExt(file.name)) && <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>WD</span>}
-                    </button>
-                  ))}
+                  {filteredArchive.map(file => {
+                      const noData = !file.hasData && !file.data?.startsWith?.('data:');
+                      return (
+                        <button key={file.id} onClick={() => loadFromArchive(file)}
+                          title={noData ? (lang === 'bs' ? 'Datoteka bez pohranjenog sadržaja' : 'No stored file content') : file.name}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: loaded?.name === file.name ? 'rgba(0,191,166,0.08)' : 'var(--bg-card)', cursor: noData ? 'not-allowed' : 'pointer', textAlign: 'left', fontSize: '0.82rem', fontFamily: 'var(--font-body)', color: noData ? 'var(--text-muted)' : 'var(--text)', opacity: noData ? 0.6 : 1, transition: 'all 0.15s' }}>
+                          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{noData ? '🔒' : getIcon(file.name)}</span>
+                          <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</span>
+                          {!noData && isWordExt(getExt(file.name)) && <span style={{ fontSize: '0.65rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>WD</span>}
+                          {noData && <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', flexShrink: 0 }}>no file</span>}
+                        </button>
+                      );
+                    })}
                 </div>
               )}
             </div>
