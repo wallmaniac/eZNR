@@ -360,41 +360,55 @@ export default function ConverterPage() {
   const { lang } = useLanguage();
   const { alert, DialogRenderer } = useDialog();
   const [dragging, setDragging] = useState(false);
-  const [loaded, setLoaded] = useState(null);  // loaded.htmlBody = raw mammoth HTML for PDF export
+  const [loaded, setLoaded] = useState(null);  // loaded.htmlBody = raw mammoth HTML
   const [processing, setProcessing] = useState('');
   const [archiveSearch, setArchiveSearch] = useState('');
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
 
-  // Archive: synchronous lazy initializer reads localStorage immediately on first render
-  // (no async useEffect delay). Also refreshes when the window regains focus.
+  // Same form collections as the Digital Archive page (archive/page.js)
+  const FORM_SOURCES = [
+    { col: 'requests',     label: 'Zahtjevnica' },
+    { col: 'formsOir1',    label: 'Obrazac OIR-1' },
+    { col: 'formsRo1',     label: 'Obrazac RO-1' },
+    { col: 'formsRo2',     label: 'Obrazac RO-2' },
+    { col: 'referralsNr1', label: 'Lj. uputnica (NR1)' },
+    { col: 'referralsRa1', label: 'Lj. uputnica (RA1)' },
+  ];
+
   const readArchive = () => {
     if (typeof window === 'undefined') return [];
-    // Always include ALL digitalArchive items regardless of data field
+    // 1. All digitalArchive items (with or without binary data)
     const da = getRawAll(COLLECTIONS.DIGITAL_ARCHIVE).map(f => ({
       ...f,
       name: f.name || f.naziv || 'Dokument',
-      hasData: !!(f.data && typeof f.data === 'string' && f.data.startsWith('data:')),
+      hasData: !!(f.data?.startsWith?.('data:')),
     }));
     const seen = new Set(da.map(f => f.id));
-    // Also scan other eznr_ keys for file items with data (e.g. from forms)
-    const extras = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const lsKey = localStorage.key(i);
-      if (!lsKey?.startsWith('eznr_') || lsKey === 'eznr_digitalArchive') continue;
+    // 2. Form/referral generated docs — exactly mirroring archive/page.js FORM_SOURCES
+    const formDocs = [];
+    FORM_SOURCES.forEach(({ col, label }) => {
       try {
-        const val = JSON.parse(localStorage.getItem(lsKey) || '[]');
-        if (Array.isArray(val)) {
-          val.forEach(item => {
-            if (!item?.data?.startsWith?.('data:')) return;
-            if (seen.has(item.id)) return;
-            seen.add(item.id);
-            extras.push({ ...item, name: item.name || item.naziv || 'Dokument', hasData: true });
+        const recs = JSON.parse(localStorage.getItem('eznr_' + col) || '[]');
+        recs.forEach(r => {
+          if (!r.docName || !r.docData) return;
+          const uid = `form-${col}-${r.id}`;
+          if (seen.has(uid)) return;
+          seen.add(uid);
+          formDocs.push({
+            id: uid,
+            name: r.docName,
+            data: r.docData,
+            hasData: true,
+            category: 'Obrasci',
+            description: label,
+            _sourceLabel: label,
           });
-        }
+        });
       } catch { /* ignore */ }
-    }
-    return [...da, ...extras];
+    });
+
+    return [...da, ...formDocs];
   };
 
   const [archiveFiles, setArchiveFiles] = useState([]); // populated by useEffect below
