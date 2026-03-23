@@ -3,11 +3,13 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, getOrgUnitName, formatDate } from '@/lib/dataStore';
+import { useSortedList } from '@/hooks/useSortedList';
 
 export default function EKWorkersPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(workers, 'ime');
 
   return (
     <div className="animate-fadeIn">
@@ -15,13 +17,19 @@ export default function EKWorkersPage() {
       <div className="card"><div className="card-body">
         <div style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{workers.length} {t('records')}</div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-          <th>Red. br.</th><th>{t('workerName')}</th><th>{t('workerSurname')}</th><th>JMBG</th><th>{t('employmentDate')}</th><th>{t('orgUnit')}</th><th>{t('status')}</th>
+          <th>Red. br.</th>
+          <th onClick={() => toggleSort('ime')} style={thStyle('ime')}>{t('workerName')}{sortIcon('ime')}</th>
+          <th onClick={() => toggleSort('prezime')} style={thStyle('prezime')}>{t('workerSurname')}{sortIcon('prezime')}</th>
+          <th onClick={() => toggleSort('jmbg')} style={thStyle('jmbg')}>JMBG{sortIcon('jmbg')}</th>
+          <th onClick={() => toggleSort('datumZaposlenja')} style={thStyle('datumZaposlenja')}>{t('employmentDate')}{sortIcon('datumZaposlenja')}</th>
+          <th onClick={() => toggleSort('orgJedinicaId')} style={thStyle('orgJedinicaId')}>{t('orgUnit')}{sortIcon('orgJedinicaId')}</th>
+          <th onClick={() => toggleSort('aktivan')} style={thStyle('aktivan')}>{t('status')}{sortIcon('aktivan')}</th>
         </tr></thead><tbody>
-            {workers.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                 {lang === 'bs' ? '✅ Nema radnika u evidenciji' : '✅ No workers in records'}
               </td></tr>
-            ) : workers.map((w, idx) => (
+            ) : sorted.map((w, idx) => (
               <tr key={w.id}
                 onClick={() => router.push(`/dashboard/workers?openWorker=${w.id}`)}
                 style={{ cursor: 'pointer', transition: 'background 0.12s' }}

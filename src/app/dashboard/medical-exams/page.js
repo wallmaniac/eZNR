@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 // ── Legal basis ────────────────────────────────────────────────────────────────
 // Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)
@@ -165,6 +166,8 @@ export default function MedicalExamsPage() {
         });
     }, [enriched, filterTab, searchQ]);
 
+    const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, '_workerName');
+
     // ── CRUD ───────────────────────────────────────────────────────────────────
     const handleSave = async () => {
         if (!form.workerId) { await alert(bs ? 'Odaberite radnika!' : 'Select a worker!'); return; }
@@ -316,25 +319,25 @@ export default function MedicalExamsPage() {
                             <thead>
                                 <tr>
                                     <th>{bs ? 'Akcije' : 'Actions'}</th>
-                                    <th>{bs ? 'Radnik' : 'Worker'}</th>
-                                    <th>{bs ? 'Vrsta pregleda' : 'Exam Type'}</th>
-                                    <th>{bs ? 'Datum' : 'Date'}</th>
-                                    <th>{bs ? 'Naredni pregled' : 'Next Exam'}</th>
+                                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{bs ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
+                                    <th onClick={() => toggleSort('tipPregleda')} style={thStyle('tipPregleda')}>{bs ? 'Vrsta pregleda' : 'Exam Type'}{sortIcon('tipPregleda')}</th>
+                                    <th onClick={() => toggleSort('datumPregleda')} style={thStyle('datumPregleda')}>{bs ? 'Datum' : 'Date'}{sortIcon('datumPregleda')}</th>
+                                    <th onClick={() => toggleSort('vrijediDo')} style={thStyle('vrijediDo')}>{bs ? 'Naredni pregled' : 'Next Exam'}{sortIcon('vrijediDo')}</th>
                                     <th>{bs ? 'Status' : 'Status'}</th>
-                                    <th>{bs ? 'Rezultat' : 'Result'}</th>
-                                    <th>{bs ? 'Ustanova' : 'Institution'}</th>
+                                    <th onClick={() => toggleSort('rezultat')} style={thStyle('rezultat')}>{bs ? 'Rezultat' : 'Result'}{sortIcon('rezultat')}</th>
+                                    <th onClick={() => toggleSort('zdravstvenaUstanova')} style={thStyle('zdravstvenaUstanova')}>{bs ? 'Ustanova' : 'Institution'}{sortIcon('zdravstvenaUstanova')}</th>
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === exams.length && exams.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                 </tr>
                             </thead>
                             <tbody style={{ overflow: 'visible' }}>
-                                {filtered.length === 0 && (
+                                {sorted.length === 0 && (
                                     <tr>
                                         <td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
                                             {bs ? 'Nema unesenih ljekarskih pregleda' : 'No medical exams recorded'}
                                         </td>
                                     </tr>
                                 )}
-                                {filtered.map(exam => {
+                                {sorted.map(exam => {
                                     const badge = getStatusBadge(exam);
                                     const days = getDays(exam.vrijediDo);
                                     const rowBg = days !== null && days < 0

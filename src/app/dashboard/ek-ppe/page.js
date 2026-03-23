@@ -3,6 +3,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, todayISO } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 
 export default function EKPPEPage() {
   const { lang } = useLanguage();
@@ -37,10 +38,10 @@ export default function EKPPEPage() {
 
   // filtered list
   const filtered = useMemo(() =>
-    ppeTypes
-      .filter(p => !search || p.naziv?.toLowerCase().includes(search.toLowerCase()))
-      .sort((a, b) => (a.naziv || '').localeCompare(b.naziv || '')),
+    ppeTypes.filter(p => !search || p.naziv?.toLowerCase().includes(search.toLowerCase())),
     [ppeTypes, search]);
+
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'naziv');
 
   // ── CRUD handlers ──
   const handleOpenNew = () => { setForm({ naziv: '' }); setEditingId(null); setShowForm(true); };
@@ -116,18 +117,18 @@ export default function EKPPEPage() {
           <div className="data-table-wrapper"><table className="data-table">
             <thead><tr>
               <th style={{ width: 40, textAlign: 'center' }}>
-                <input type="checkbox" checked={filtered.length > 0 && selected.size === filtered.length} onChange={toggleAll} title={lang === 'bs' ? 'Označi sve' : 'Select all'} />
+                <input type="checkbox" checked={sorted.length > 0 && selected.size === sorted.length} onChange={toggleAll} title={lang === 'bs' ? 'Označi sve' : 'Select all'} />
               </th>
               <th style={{ width: 44 }}>Rb.</th>
-              <th>{lang === 'bs' ? 'Naziv OZO' : 'PPE Name'}</th>
+              <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang === 'bs' ? 'Naziv OZO' : 'PPE Name'}{sortIcon('naziv')}</th>
               <th style={{ width: 200, textAlign: 'center' }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
             </tr></thead>
             <tbody>
-              {filtered.length === 0
-                ? <tr><td colSpan={3} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+              {sorted.length === 0
+                ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                     {lang === 'bs' ? 'Nema OZO u katalogu.' : 'No PPE in catalogue.'}
                   </td></tr>
-                : filtered.map((p, idx) => (
+                : sorted.map((p, idx) => (
                   <tr key={p.id} style={{ background: selected.has(p.id) ? 'rgba(var(--primary-rgb,99,102,241),0.07)' : undefined }}>
                     <td style={{ textAlign: 'center' }}>
                       <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} />
