@@ -149,7 +149,9 @@ async function buildDocxFromPages(pages) {
       ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 11;
 
     // Cluster into rows by Y centre
-    const tol = Math.max(bodySize * 0.6, 5);
+    // Use bodySize as tolerance – labels & values in the same PDF table row
+    // often differ by a few pts in Y. 0.6× was too tight; 1× works much better.
+    const tol = Math.max(bodySize, 8);
     const rows = [];
     for (const block of textBlocks) {
       const cy = bboxCY(block.bbox);
@@ -175,12 +177,19 @@ async function buildDocxFromPages(pages) {
       else if (tableAcc.length === 1) tableAcc[0].forEach(b => groups.push({ type: 'text', block: b }));
       tableAcc = [];
     };
+    // Returns true when a block contains ONLY a checkbox symbol (✓ ☑ etc.)
+    const isCheckboxOnlyBlock = (b) => /^[☑☒✓✔✗✘☐□]$/.test(getBlockText(b).trim());
+
     for (const row of rows) {
       const sorted = [...row.blocks].sort((a, b) => bboxX(a.bbox) - bboxX(b.bbox));
       if (sorted.length >= 3) {
-        // Wide multi-col row: flush pending, emit as its own table
+        // Wide multi-col row (e.g. signature section): flush pending, single-row table
         flushTable();
         groups.push({ type: 'table', rows: [sorted] });
+      } else if (sorted.length === 2 && isCheckboxOnlyBlock(sorted[0])) {
+        // ✓ + text → merge into one inline paragraph (avoids broken 2-col table)
+        flushTable();
+        groups.push({ type: 'checkbox', checkBlock: sorted[0], textBlock: sorted[1] });
       } else if (sorted.length === 2) {
         tableAcc.push(sorted);
       } else {
@@ -192,7 +201,23 @@ async function buildDocxFromPages(pages) {
 
     // ── Render groups ──────────────────────────────────────────────────────
     for (const g of groups) {
-      if (g.type === 'table') {
+      if (g.type === 'checkbox') {
+        // Inline ✓/☑ + text on the same line
+        const cbText  = getBlockText(g.checkBlock).trim();
+        const { size, bold, italic } = getBlockFontInfo(g.textBlock);
+        const halfPt  = Math.max(Math.round(size * 2 * 0.75), 18);
+        const txtRuns = (g.textBlock.lines || []).flatMap((line, li) =>
+          lineToRuns(line, bold, italic, halfPt, DARK, li)
+        );
+        allChildren.push(new Paragraph({
+          children: [
+            new TextRun({ text: cbText + ' ', font: 'Segoe UI Symbol', size: halfPt, color: DARK }),
+            ...txtRuns,
+          ],
+          spacing: { after: 40 },
+        }));
+
+      } else if (g.type === 'table') {
         const numCols = Math.max(...g.rows.map(r => r.length));
         const isSingle = g.rows.length === 1; // e.g. signature row
 
@@ -210,19 +235,17 @@ async function buildDocxFromPages(pages) {
           return Math.max(Math.round((nx - x) / span * 100), 5);
         });
 
-        const tableRows = g.rows.map((rb, ri) => new TableRow({
+        const tableRows = g.rows.map((rb) => new TableRow({
           children: Array.from({ length: numCols }, (_, ci) => {
-            const block = rb[ci];
-            const txt   = block ? getBlockText(block) : '';
+            const block  = rb[ci];
             const { bold, size, italic } = block ? getBlockFontInfo(block) : { bold: false, size: bodySize, italic: false };
-            const halfPt  = Math.max(Math.round(size * 2 * 0.75), 18);
-            const isSmall = size < bodySize * 0.85; // small italic labels like "(potpisnik)"
-            // Alignment: centre if block center is near page centre
+            const halfPt = Math.max(Math.round(size * 2 * 0.75), 18);
+            // Centering only for single-row tables where the block is near page centre
             const blockCX = block ? bboxX(block.bbox) + (block.bbox?.w || 0) / 2 : pageCenterX;
-            const centered = isSingle && Math.abs(blockCX - pageCenterX) < pageWidth * 0.15;
+            const centered = isSingle && Math.abs(blockCX - pageCenterX) < pageWidth * 0.08;
 
             const runs = (block?.lines || []).flatMap((line, li) =>
-              lineToRuns(line, bold, italic || isSmall, halfPt, bold ? NAVY : DARK, li)
+              lineToRuns(line, bold, italic, halfPt, bold ? NAVY : DARK, li)
             );
 
             return new TableCell({
@@ -255,7 +278,7 @@ async function buildDocxFromPages(pages) {
           new Paragraph({ children: [] })
         );
 
-      } else {
+      } else if (g.type === 'text') {
         const { block } = g;
         const rawText = getBlockText(block); if (!rawText.trim()) continue;
         const { size, bold, italic } = getBlockFontInfo(block);
@@ -265,17 +288,18 @@ async function buildDocxFromPages(pages) {
         const isHeading    = isSectionHeading(rawText, bold, size, bodySize);
         const isSmall      = size < bodySize * 0.85;
 
-        // Detect centered text: block centre X near page centre
-        const blockCX = bboxX(block.bbox) + (block.bbox?.w || 0) / 2;
-        const isCentered = Math.abs(blockCX - pageCenterX) < pageWidth * 0.12;
+        // Centered: block's centre X must be within 8% of page centre
+        // Use block.x (not block.x+w/2) for left-edge check to avoid false positives
+        const blockCX   = bboxX(block.bbox) + (block.bbox?.w || 0) / 2;
+        // Only call it centered if the block is also not very wide (wide blocks span the page)
+        const blockWide = (block.bbox?.w || 0) > pageWidth * 0.6;
+        const isCentered = !blockWide && Math.abs(blockCX - pageCenterX) < pageWidth * 0.08;
 
         const color = isHeading || isMuchLarger ? NAVY : (isSmall ? '666666' : DARK);
+        // No italic-from-small: only italic if font says so
         const runs  = (block.lines || []).flatMap((line, li) =>
-          lineToRuns(line, bold || isMuchLarger || isHeading, italic || isSmall, halfPt, color, li)
+          lineToRuns(line, bold || isMuchLarger || isHeading, italic, halfPt, color, li)
         );
-
-        let indent = undefined;
-        if (isCheckLine(rawText)) indent = { left: 200, hanging: 200 };
 
         if (isHeading) {
           allChildren.push(new Paragraph({
@@ -299,9 +323,8 @@ async function buildDocxFromPages(pages) {
         } else {
           allChildren.push(new Paragraph({
             children: runs,
-            spacing: { after: 60 },
+            spacing: { after: isSmall ? 20 : 60 },
             alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-            indent,
           }));
         }
       }
