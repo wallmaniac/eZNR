@@ -87,6 +87,7 @@ export default function FormOIR1Page() {
   const filteredRecords = search
     ? records.filter(r => r.dogadjajNastaoU?.toLowerCase().includes(search.toLowerCase()) || r.podnositelj?.toLowerCase().includes(search.toLowerCase()))
     : records;
+  // NOTE: enrichment happens below after getInjuredSummary is defined
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredRecords, 'datumDogadjaja');
 
 
@@ -152,6 +153,9 @@ export default function FormOIR1Page() {
       .map(o => getWorkerName(o.workerId));
     return names.length > 0 ? names.join(', ') : '—';
   };
+
+  // Enrich sorted list with _injured for sorting (defined here after getInjuredSummary)
+  const enrichedSorted = sorted.map(r => ({ ...r, _injured: getInjuredSummary(r) }));
 
   const handleDocUpload = async (e) => {
     const file = e.target.files?.[0];
@@ -235,7 +239,7 @@ export default function FormOIR1Page() {
                   <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                   <th onClick={() => toggleSort('datumDogadjaja')} style={thStyle('datumDogadjaja')}>{lang === 'bs' ? 'Datum događaja' : 'Event date'}{sortIcon('datumDogadjaja')}</th>
                   <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang === 'bs' ? 'Lokacija' : 'Location'}{sortIcon('dogadjajNastaoU')}</th>
-                  <th>{lang === 'bs' ? 'Ozlijeđeni' : 'Injured'}</th>
+                  <th onClick={() => toggleSort('_injured')} style={thStyle('_injured')}>{lang === 'bs' ? 'Ozlijeđeni' : 'Injured'}{sortIcon('_injured')}</th>
                   <th onClick={() => toggleSort('podnositelj')} style={thStyle('podnositelj')}>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}{sortIcon('podnositelj')}</th>
                   <th onClick={() => toggleSort('datumPrijave')} style={thStyle('datumPrijave')}>{lang === 'bs' ? 'Datum prijave' : 'Submit date'}{sortIcon('datumPrijave')}</th>
                   <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
@@ -244,7 +248,7 @@ export default function FormOIR1Page() {
                 <tbody>
                   {sorted.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : sorted.map((r, idx) => (
+                  ) : enrichedSorted.map((r, idx) => (
                     <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)}>
                                             <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
