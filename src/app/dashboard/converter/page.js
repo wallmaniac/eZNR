@@ -369,10 +369,14 @@ export default function ConverterPage() {
     blobUrlsRef.current = [];
   };
 
-  const archiveFiles = getAll(COLLECTIONS.DIGITAL_ARCHIVE);
+  // Archive: include Digital Archive + Employer Docs that have an attached file (data)
+  const archiveFiles = [
+    ...getAll(COLLECTIONS.DIGITAL_ARCHIVE),
+    ...getAll(COLLECTIONS.EMPLOYER_DOCS).filter(d => d.data && d.naziv).map(d => ({ ...d, name: d.naziv + (d.ekstenzija || '.pdf') })),
+  ];
   const { sorted: filteredArchive } = useSortedList(
     archiveFiles.filter(f =>
-      !archiveSearch || f.name?.toLowerCase().includes(archiveSearch.toLowerCase())
+      !archiveSearch || (f.name || f.naziv || '').toLowerCase().includes(archiveSearch.toLowerCase())
     ), 'name'
   );
 
@@ -436,6 +440,53 @@ export default function ConverterPage() {
     if (!loaded?.iframeSrc) return;
     const w = window.open(loaded.iframeSrc, '_blank');
     if (w) w.addEventListener('load', () => { w.focus(); w.print(); });
+  };
+
+  const handleConvertWordToPdf = async () => {
+    if (!loaded?.iframeSrc) return;
+    setProcessing('word2pdf');
+    try {
+      // Fetch the mammoth-generated HTML from the blob URL
+      const htmlContent = await fetch(loaded.iframeSrc).then(r => r.text());
+
+      // Create an off-screen container styled for A4 output
+      const container = document.createElement('div');
+      container.style.cssText = [
+        'position:fixed', 'top:-9999px', 'left:-9999px',
+        'width:794px',   // A4 at 96dpi
+        'background:#fff', 'color:#222',
+        'font-family:Arial,Helvetica,sans-serif',
+        'font-size:11pt', 'line-height:1.5',
+        'padding:60px 70px',
+      ].join(';');
+      container.innerHTML = htmlContent;
+      document.body.appendChild(container);
+
+      const { jsPDF } = await import('jspdf');
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      await new Promise((resolve, reject) => {
+        doc.html(container, {
+          callback: (d) => {
+            const pdfName = loaded.name.replace(/\.(docx|doc)$/i, '.pdf');
+            d.save(pdfName);
+            resolve();
+          },
+          x: 10,
+          y: 10,
+          width: 190,          // usable A4 width in mm
+          windowWidth: 794,    // matches container px width
+          autoPaging: 'text',
+        });
+      });
+
+      document.body.removeChild(container);
+    } catch (e) {
+      console.error('[word2pdf]', e);
+      await alert(lang === 'bs' ? `Greška pri konverziji: ${e?.message || e}` : `Conversion error: ${e?.message || e}`);
+    } finally {
+      setProcessing('');
+    }
   };
 
   const downloadOriginal = () => {
@@ -544,7 +595,7 @@ export default function ConverterPage() {
                   </span>
                   <button className="btn btn-ghost btn-sm" onClick={openInTab}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
                   {isPdf && <button className="btn btn-primary btn-sm" onClick={handleConvertPdfToWord} disabled={!!processing}>📘 {lang === 'bs' ? 'Konvertuj u Word' : 'Convert to Word'}</button>}
-                  {isWord && <button className="btn btn-primary btn-sm" onClick={printDoc}>🖨️ {lang === 'bs' ? 'Konvertuj u PDF' : 'Convert to PDF'}</button>}
+                  {isWord && <button className="btn btn-primary btn-sm" onClick={handleConvertWordToPdf} disabled={!!processing}>📥 {lang === 'bs' ? 'Konvertuj u PDF' : 'Convert to PDF'}</button>}
                   {isWord && <button className="btn btn-ghost btn-sm" onClick={printDoc}>🖨️ {lang === 'bs' ? 'Ispiši' : 'Print'}</button>}
                   {isPdf && <button className="btn btn-ghost btn-sm" onClick={printDoc}>🖨️ {lang === 'bs' ? 'Ispiši' : 'Print'}</button>}
                   <button className="btn btn-ghost btn-sm" onClick={downloadOriginal}>⬇️ {lang === 'bs' ? 'Preuzmi original' : 'Download'}</button>
@@ -553,7 +604,7 @@ export default function ConverterPage() {
 
                 {isWord && (
                   <div style={{ padding: '5px 14px', background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang === 'bs' ? '"Konvertuj u PDF" otvara dijaloški okvir za ispis — odaberite "Spremi kao PDF".' : '"Convert to PDF" opens the print dialog — select "Save as PDF".'}
+                    💡 {lang === 'bs' ? '"Konvertuj u PDF" automatski preuzima PDF. "Ispiši" otvara dijaloški okvir za ispis.' : '"Convert to PDF" auto-downloads a PDF. "Print" opens the print dialog.'}
                   </div>
                 )}
                 {isPdf && (
