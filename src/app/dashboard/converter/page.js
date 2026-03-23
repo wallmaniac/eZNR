@@ -52,76 +52,6 @@ async function convertDocxToBlob(arrayBuffer, title) {
   return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
 }
 
-// Render PDF pages as canvas images → embed in DOCX
-// Output looks IDENTICAL to the PDF — works in browser, no external service needed
-async function convertPdfToDocxImages(arrayBuffer) {
-  const pdfjsLib = await import('pdfjs-dist');
-  pdfjsLib.GlobalWorkerOptions.workerSrc =
-    `https://unpkg.com/pdfjs-dist@5.5.207/build/pdf.worker.mjs`;
-
-  const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-  const { Document, Packer, Paragraph, ImageRun } = await import('docx');
-
-  // A4 text area at 96 DPI with 1-inch margins = ~6.27in × 96 = ~602px wide
-  const TARGET_WIDTH_PX = 602;
-  const RENDER_SCALE = 3; // render at 3× for HiDPI clarity
-
-  const sectionChildren = [];
-
-  for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-    const page = await pdf.getPage(pageNum);
-    const viewport = page.getViewport({ scale: RENDER_SCALE });
-
-    // Render page to canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.round(viewport.width);
-    canvas.height = Math.round(viewport.height);
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    await page.render({ canvasContext: ctx, viewport }).promise;
-
-    // Canvas → PNG bytes
-    const dataUrl = canvas.toDataURL('image/png');
-    const base64 = dataUrl.split(',')[1];
-    const pngBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-
-    // Calculate display size preserving aspect ratio
-    const aspectRatio = canvas.height / canvas.width;
-    const displayW = TARGET_WIDTH_PX;
-    const displayH = Math.round(displayW * aspectRatio);
-
-    if (pageNum > 1) {
-      // Page break before each subsequent page
-      sectionChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
-    }
-
-    sectionChildren.push(new Paragraph({
-      children: [
-        new ImageRun({
-          data: pngBytes,
-          transformation: { width: displayW, height: displayH },
-          type: 'png',
-        }),
-      ],
-      spacing: { before: 0, after: 0 },
-    }));
-  }
-
-  const doc = new Document({
-    sections: [{
-      properties: {
-        page: {
-          // Tight margins so the image fills the page nicely
-          margin: { top: 360, right: 360, bottom: 360, left: 360 },
-        },
-      },
-      children: sectionChildren,
-    }],
-  });
-
-  return Packer.toBlob(doc);
-}
 
 
 export default function ConverterPage() {
@@ -130,6 +60,7 @@ export default function ConverterPage() {
   const [dragging, setDragging] = useState(false);
   const [loaded, setLoaded] = useState(null);
   const [processing, setProcessing] = useState('');
+  const [pythonMissing, setPythonMissing] = useState(false);
   const [archiveSearch, setArchiveSearch] = useState('');
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
@@ -217,11 +148,21 @@ export default function ConverterPage() {
   };
 
   const handleConvertPdfToWord = async () => {
-    if (!loaded?.data) return;
+    if (!loaded?.iframeSrc) return;
+    setPythonMissing(false);
     setProcessing('pdf2word');
     try {
-      const arrayBuffer = dataUriToBuffer(loaded.data);
-      const blob = await convertPdfToDocxImages(arrayBuffer);
+      const pdfBlob = await fetch(loaded.iframeSrc).then(r => r.blob());
+      const form = new FormData();
+      form.append('file', pdfBlob, loaded.name);
+      form.append('filename', loaded.name);
+      const resp = await fetch('/api/pdf-to-word', { method: 'POST', body: form });
+      if (resp.status === 503) { setPythonMissing(true); return; }
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Server error ${resp.status}`);
+      }
+      const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -292,7 +233,7 @@ export default function ConverterPage() {
                 <div style={{ fontWeight: 600 }}>
                   {processing === 'converting'
                     ? (lang === 'bs' ? 'Konvertovanje Word dokumenta...' : 'Converting Word document...')
-                    : (lang === 'bs' ? 'Renderovanje PDF stranica u visoku rezoluciju...' : 'Rendering PDF pages at high resolution...')}
+                    : (lang === 'bs' ? 'Konvertovanje PDF-a u Word (pdf2docx)...' : 'Converting PDF to editable Word (pdf2docx)...')}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 6 }}>
                   {lang === 'bs' ? 'Ovo može potrajati nekoliko sekundi.' : 'This may take a few seconds.'}
@@ -327,7 +268,23 @@ export default function ConverterPage() {
                 )}
                 {isPdf && (
                   <div style={{ padding: '5px 14px', background: 'rgba(99,102,241,0.05)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang === 'bs' ? 'Word dokument će izgledati identično PDF-u. Stranice su slike visoke rezolucije.' : 'The Word file will look identical to the PDF. Pages are embedded as high-res images.'}
+                    💡 {lang === 'bs' ? 'Konverzija putem pdf2docx — čuva tabele i tekst kao editabilni Word.' : 'Conversion via pdf2docx — preserves tables and text as editable Word.'}
+                  </div>
+                )}
+
+                {pythonMissing && (
+                  <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 6, color: 'var(--danger)' }}>
+                      ⚠️ {lang === 'bs' ? 'Konverzija nije dostupna na ovom serveru' : 'Conversion not available on this server'}
+                    </div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                      {lang === 'bs'
+                        ? 'PDF → Word konverzija zahtijeva Python na serveru. Pokrenite app lokalno ili instalirajte:'
+                        : 'PDF → Word requires Python on the server. Run the app locally, or install:'}
+                    </div>
+                    <div style={{ marginTop: 8, background: 'var(--bg-input)', borderRadius: 6, padding: '7px 12px', fontFamily: 'monospace', fontSize: '0.84rem', color: 'var(--primary)', userSelect: 'all' }}>
+                      pip install pdf2docx
+                    </div>
                   </div>
                 )}
 
