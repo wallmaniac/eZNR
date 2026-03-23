@@ -367,14 +367,30 @@ export default function ConverterPage() {
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
 
-  // Read archive from localStorage on mount to pick up ALL files
+  // Archive: scan ALL eznr_ localStorage keys for file-like objects (name + data)
+  // This catches files regardless of which collection they were stored in
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const da = getRawAll(COLLECTIONS.DIGITAL_ARCHIVE);
-    const ed = getRawAll(COLLECTIONS.EMPLOYER_DOCS)
-      .filter(d => d.data && (d.naziv || d.name))
-      .map(d => ({ ...d, name: (d.naziv || d.name) + (d.ekstenzija || '.pdf') }));
-    setArchiveFiles([...da, ...ed]);
+    const files = [];
+    const seen = new Set();
+    const addItem = (item) => {
+      if (!item || typeof item !== 'object') return;
+      if (!item.data || typeof item.data !== 'string' || !item.data.startsWith('data:')) return;
+      const key = item.id || item.name || item.data.slice(0, 40);
+      if (seen.has(key)) return;
+      seen.add(key);
+      files.push({ ...item, name: item.name || item.naziv || 'Dokument' });
+    };
+    // Scan all eznr_ prefixed keys
+    for (let i = 0; i < localStorage.length; i++) {
+      const lsKey = localStorage.key(i);
+      if (!lsKey?.startsWith('eznr_')) continue;
+      try {
+        const val = JSON.parse(localStorage.getItem(lsKey) || '[]');
+        if (Array.isArray(val)) val.forEach(addItem);
+      } catch { /* ignore */ }
+    }
+    setArchiveFiles(files);
   }, []);
 
   const { sorted: filteredArchive } = useSortedList(
@@ -455,37 +471,41 @@ export default function ConverterPage() {
     if (!loaded) return;
     setProcessing('word2pdf');
     try {
-      // Use stored HTML body directly — no re-fetch needed, blob URL may be gone
       const body = loaded.htmlBody || '';
-      if (!body) throw new Error('HTML content not available — please reload the document');
+      if (!body) throw new Error('Reload the document first');
 
-      const html = makeHtml(loaded.name, body);
-
-      // Render into a container at FULL opacity but behind all UI (z-index:-9999)
-      // html2canvas needs full-opacity elements to capture real colors
+      // ── Build a full-width container at FULL opacity, behind UI ────────────
       const container = document.createElement('div');
       container.style.cssText = [
-        'position:fixed',
-        'top:0', 'left:0',
+        'position:fixed', 'top:0', 'left:0',
         'width:794px',
-        'background:#fff',
-        'color:#222',
+        'background:#fff', 'color:#222',
         'font-family:Arial,Helvetica,sans-serif',
-        'font-size:11pt',
-        'line-height:1.5',
-        'padding:60px 70px',
-        'box-sizing:border-box',
-        'z-index:-9999',  // Behind all UI — fully opaque so canvas captures real colors
-        'pointer-events:none',
+        'font-size:11pt', 'line-height:1.6',
+        'padding:50px 60px', 'box-sizing:border-box',
+        'z-index:-9999', 'pointer-events:none',
       ].join(';');
-      // Use innerHTML of just the body content (not full HTML doc)
-      container.innerHTML = body;
+
+      // Inject both style sheet (with page-break helpers) and the document body
+      container.innerHTML = `
+        <style>
+          *{box-sizing:border-box;color-scheme:light}
+          body,div{background:#fff;color:#222}
+          h1,h2,h3,h4,h5{page-break-after:avoid;break-after:avoid}
+          table{border-collapse:collapse;width:100%;page-break-inside:avoid;break-inside:avoid;margin:10px 0}
+          td,th{border:1px solid #ccc;padding:5px 8px}
+          p{margin:0 0 8px}
+          img{max-width:100%}
+        </style>
+        ${body}
+      `;
       document.body.appendChild(container);
 
-      // Two rAF + small delay to ensure full paint
+      // Wait for browser to fully layout
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise(r => setTimeout(r, 600));
 
+      // ── Capture full document as one canvas ────────────────────────────────
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(container, {
         scale: 2,
@@ -496,30 +516,57 @@ export default function ConverterPage() {
         windowWidth: 794,
         logging: false,
       });
-
       document.body.removeChild(container);
 
-      // Slice canvas into A4 pages
+      // ── Smart page breaking: find white rows near A4 boundaries ────────────
+      // Instead of slicing at EXACTLY A4 height (which cuts through text),
+      // scan a ±100px window around each page boundary and pick the row with
+      // the most white pixels (= empty space between paragraphs).
+      const findBreakY = (canvas, targetY, radiusPx = 120) => {
+        const ctx  = canvas.getContext('2d');
+        const from = Math.max(0, targetY - radiusPx);
+        const to   = Math.min(canvas.height - 1, targetY + radiusPx / 2);
+        let bestY = targetY, bestWhite = -1;
+        for (let y = to; y >= from; y--) {
+          const row  = ctx.getImageData(0, y, canvas.width, 1).data;
+          let white = 0;
+          for (let i = 0; i < row.length; i += 4) {
+            if (row[i] >= 240 && row[i+1] >= 240 && row[i+2] >= 240) white++;
+          }
+          if (white > bestWhite) { bestWhite = white; bestY = y; }
+        }
+        return bestY;
+      };
+
+      // ── Build jsPDF pages at smart break points ────────────────────────────
       const { jsPDF } = await import('jspdf');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const A4W = 210, A4H = 297;
       const pxPerMm = canvas.width / A4W;
-      const pageHPx  = A4H * pxPerMm;
+      const nominalPageHPx = A4H * pxPerMm; // ideal page height in canvas px
 
-      let yPx = 0, page = 0;
-      while (yPx < canvas.height) {
-        if (page > 0) pdf.addPage();
-        const sliceH = Math.min(pageHPx, canvas.height - yPx);
-        const slice = document.createElement('canvas');
+      let startY = 0, pageNum = 0;
+      while (startY < canvas.height) {
+        if (pageNum > 0) pdf.addPage();
+        // Find a natural break near the nominal A4 bottom
+        const nomBottom = startY + nominalPageHPx;
+        const breakY = nomBottom >= canvas.height
+          ? canvas.height          // last page: take everything
+          : findBreakY(canvas, Math.round(nomBottom), Math.round(pxPerMm * 30)); // search 30mm window
+
+        const sliceH = breakY - startY;
+        const slice  = document.createElement('canvas');
         slice.width  = canvas.width;
         slice.height = Math.ceil(sliceH);
         slice.getContext('2d').drawImage(
-          canvas, 0, Math.floor(yPx), canvas.width, Math.ceil(sliceH),
+          canvas, 0, Math.floor(startY), canvas.width, Math.ceil(sliceH),
           0, 0, canvas.width, Math.ceil(sliceH)
         );
-        pdf.addImage(slice.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, A4W, sliceH / pxPerMm);
-        yPx += pageHPx;
-        page++;
+        // Fill page proportionally; ensure content doesn't exceed A4 height
+        const sliceHmm = Math.min(sliceH / pxPerMm, A4H);
+        pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, A4W, sliceHmm);
+        startY = breakY;
+        pageNum++;
       }
 
       pdf.save(loaded.name.replace(/\.(docx|doc)$/i, '.pdf'));
