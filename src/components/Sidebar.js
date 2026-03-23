@@ -62,6 +62,7 @@ const menuItems = [
         key: 'grpTraining', icon: '🎓',
         children: [
             { key: 'trainings',      icon: '🎬', path: '/dashboard/trainings' },
+            { key: 'testoviZopZnr',  icon: '📝', path: '/dashboard/tests-zop-znr', label_bs: 'Testovi ZOP i ZNR', label_en: 'ZOP & ZNR Tests' },
             { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
         ],
@@ -309,7 +310,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                                                 }}
                                             >
                                                 <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
-                                                <span>{t(child.key)}</span>
+                                                <span>{lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
                                             </Link>
                                         );
                                     })}

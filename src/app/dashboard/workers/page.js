@@ -677,7 +677,7 @@ function WorkersPageInner() {
                                 <span style={{fontSize:'1.4rem'}}>🦺</span>
                                 <div>
                                     <div style={{fontSize:'0.68rem',color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.5px',fontWeight:700}}>OZO</div>
-                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:ppeAssign.length>0?'var(--primary)':'var(--text-muted)'}}>{ppeAssign.length} {lang==='bs'?'zaduenja':'assigned'}</div>
+                                    <div style={{fontWeight:700,fontSize:'0.9rem',color:ppeAssign.length>0?'var(--primary)':'var(--text-muted)'}}>{ppeAssign.length} {lang==='bs'?'zaduženja':'assigned'}</div>
                                 </div>
                             </div>
                         </div>
@@ -802,7 +802,10 @@ function WorkersPageInner() {
                                 ) : filteredCerts.map(c => {
                                     const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
                                     const returnToParam = encodeURIComponent(`/dashboard/workers?openWorker=${editingWorker}&section=uvjerenja`);
-                                    const isZOS = (c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti');
+                                    const cName = (c.ime || '').toLowerCase();
+                                    const isZOS = cName.includes('zapisnik o ocjeni osposobljenosti');
+                                    const isZNR = isZOS || cName.includes('zaštita na radu') || cName.includes('zastita na radu');
+                                    const isZOP = cName.includes('požar') || cName.includes('pozar');
                                     return (
                                         <tr key={c.id}
                                             style={{ cursor: 'pointer' }}
@@ -873,29 +876,37 @@ function WorkersPageInner() {
                                                                     }}>
                                                                     🖨️ <span>{lang === 'bs' ? 'Ispiši ZOS dokument' : 'Print ZOS document'}</span>
                                                                 </button>
-                                                                <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
-                                                                    📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan')}</span>
-                                                                    <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
-                                                                        const file = e.target.files?.[0]; if (!file) return;
-                                                                        if (file.size > 5000000) { alert(lang === 'bs' ? 'Max 5MB' : 'Max 5MB'); return; }
-                                                                        const reader = new FileReader();
-                                                                        reader.onload = (ev) => { update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() }); setCertificates(getWorkerCertificates(editingWorker)); setCertMenuId(null); };
-                                                                        reader.readAsDataURL(file); e.target.value = '';
-                                                                    }} />
-                                                                </label>
-                                                                {c.potpisanScan && (
-                                                                    <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
-                                                                        onClick={() => {
-                                                                            setCertMenuId(null);
-                                                                            const w = window.open('', '_blank');
-                                                                            if (c.potpisanScan.startsWith('data:application/pdf')) { w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`); }
-                                                                            else { w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`); }
-                                                                            w.document.close();
-                                                                        }}>
-                                                                        👁️ <span>{lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'}</span>
-                                                                    </button>
-                                                                )}
                                                             </>
+                                                        )}
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
+                                                        {!c.potpisanScan && (isZNR || isZOP) && (
+                                                            <div style={{ padding: '6px 14px', fontSize: '0.72rem', color: 'var(--warning)', background: 'rgba(245,158,11,0.05)', lineHeight: 1.4, borderBottom: '1px solid var(--border-light)' }}>
+                                                                ⚠️ {lang === 'bs' 
+                                                                    ? `Priložiti ispunjen i potpisan ${isZOP ? 'Test ZOP' : 'Test ZNR'}.` 
+                                                                    : `Upload signed ${isZOP ? 'ZOP Test' : 'ZNR Test'}.`}
+                                                            </div>
+                                                        )}
+                                                        <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
+                                                            📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (isZNR ? (lang === 'bs' ? 'Upload potpisan Test ZNR' : 'Upload signed ZNR Test') : isZOP ? (lang === 'bs' ? 'Upload potpisan Test ZOP' : 'Upload signed ZOP Test') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan'))}</span>
+                                                            <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
+                                                                const file = e.target.files?.[0]; if (!file) return;
+                                                                if (file.size > 5000000) { alert(lang === 'bs' ? 'Max 5MB' : 'Max 5MB'); return; }
+                                                                const reader = new FileReader();
+                                                                reader.onload = (ev) => { update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() }); setCertificates(getWorkerCertificates(editingWorker)); setCertMenuId(null); };
+                                                                reader.readAsDataURL(file); e.target.value = '';
+                                                            }} />
+                                                        </label>
+                                                        {c.potpisanScan && (
+                                                            <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+                                                                onClick={() => {
+                                                                    setCertMenuId(null);
+                                                                    const w = window.open('', '_blank');
+                                                                    if (c.potpisanScan.startsWith('data:application/pdf')) { w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`); }
+                                                                    else { w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`); }
+                                                                    w.document.close();
+                                                                }}>
+                                                                👁️ <span>{lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'}</span>
+                                                            </button>
                                                         )}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
                                                         <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}
