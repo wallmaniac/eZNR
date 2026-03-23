@@ -53,21 +53,43 @@ async function convertDocxToBlob(arrayBuffer, title) {
 }
 
 // ─── MuPDF-powered PDF → DOCX ────────────────────────────────────────────────
-// mupdf is an ES module with top-level await — runs on the server (Node.js API route)
-// Browser receives structured block JSON, assembles DOCX client-side
+// mupdf runs server-side (Node.js API route /api/pdf-parse)
+// Actual mupdf JSON structure:
+//   block: { type, bbox:{x,y,w,h}, lines:[{ font:{name,weight,style,size}, x, y, text, bbox }] }
+
+function getLineText(line) {
+  // Lines may have spans[] OR direct .text depending on mupdf version
+  if (line.spans?.length) return line.spans.map(s => s.text || '').join('');
+  return line.text || '';
+}
 
 function getBlockText(block) {
-  return (block.lines || []).map(l => (l.spans || []).map(s => s.text).join('')).join('\n');
+  return (block.lines || []).map(getLineText).join('\n');
+}
+
+function getLineFontInfo(line) {
+  const font = line.font || {};
+  const size = font.size || line.bbox?.h || 11;
+  const bold = font.weight === 'bold' || (font.name || '').toLowerCase().includes('bold');
+  const italic = font.style === 'italic' || (font.name || '').toLowerCase().includes('italic');
+  return { size, bold, italic };
 }
 
 function getBlockFontInfo(block) {
-  const spans = (block.lines || []).flatMap(l => l.spans || []);
-  if (!spans.length) return { size: 11, bold: false, italic: false };
-  const maxSize = Math.max(...spans.map(s => s.size || 0));
-  const bold = spans.some(s => (s.flags & 16) || (s.font || '').toLowerCase().includes('bold'));
-  const italic = spans.some(s => (s.flags & 2) || (s.font || '').toLowerCase().includes('italic'));
-  return { size: maxSize, bold, italic };
+  const lines = block.lines || [];
+  if (!lines.length) return { size: 11, bold: false, italic: false };
+  // Use the dominant font info from the first non-empty line
+  for (const line of lines) {
+    const text = getLineText(line);
+    if (text.trim()) return getLineFontInfo(line);
+  }
+  return getLineFontInfo(lines[0]);
 }
+
+// bbox helper: mupdf returns {x, y, w, h}  (origin is top-left in screen coords)
+function bboxCY(bbox) { return bbox.y + bbox.h / 2; }
+function bboxX(bbox)  { return bbox.x; }
+function bboxY(bbox)  { return bbox.y; }
 
 async function buildDocxFromPages(pages) {
   const {
@@ -79,32 +101,34 @@ async function buildDocxFromPages(pages) {
 
   for (let pi = 0; pi < pages.length; pi++) {
     const { blocks = [] } = pages[pi];
+    const textBlocks = blocks.filter(b => b.type === 'text');
 
-    // Body font size (mode)
-    const sizes = blocks.filter(b => b.type === 'text')
-      .flatMap(b => (b.lines || []).flatMap(l => (l.spans || []).map(s => Math.round(s.size || 0))));
+    // Body font size (mode across all lines on page)
+    const sizes = textBlocks.flatMap(b =>
+      (b.lines || []).map(l => Math.round((l.font?.size || l.bbox?.h || 0)))
+    ).filter(s => s > 0);
     const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
     const bodySize = sizes.length
       ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 11;
 
-    // Cluster text blocks into rows by Y centre (tolerance 8pt)
-    const textBlocks = blocks.filter(b => b.type === 'text');
+    // Cluster text blocks into rows by Y centre (tolerance = half body size)
+    const tolerance = Math.max(bodySize * 0.6, 6);
     const rows = [];
     for (const block of textBlocks) {
-      const cy = (block.bbox[1] + block.bbox[3]) / 2;
+      const cy = bboxCY(block.bbox);
       let placed = false;
       for (const row of rows) {
-        if (Math.abs(row.cy - cy) < 8) {
+        if (Math.abs(row.cy - cy) < tolerance) {
           row.blocks.push(block);
-          row.cy = row.blocks.reduce((s, b) => s + (b.bbox[1] + b.bbox[3]) / 2, 0) / row.blocks.length;
+          row.cy = row.blocks.reduce((s, b) => s + bboxCY(b.bbox), 0) / row.blocks.length;
           placed = true; break;
         }
       }
-      if (!placed) rows.push({ cy, y: block.bbox[1], blocks: [block] });
+      if (!placed) rows.push({ cy, y: bboxY(block.bbox), blocks: [block] });
     }
     rows.sort((a, b) => a.y - b.y);
 
-    // Detect tables: consecutive rows each with 2+ side-by-side blocks
+    // Detect tables: ≥2 consecutive rows each with 2+ side-by-side blocks
     const groups = [];
     let tableAcc = [];
     const flushTable = () => {
@@ -113,7 +137,7 @@ async function buildDocxFromPages(pages) {
       tableAcc = [];
     };
     for (const row of rows) {
-      const sorted = [...row.blocks].sort((a, b) => a.bbox[0] - b.bbox[0]);
+      const sorted = [...row.blocks].sort((a, b) => bboxX(a.bbox) - bboxX(b.bbox));
       if (sorted.length > 1) { tableAcc.push(sorted); }
       else { flushTable(); groups.push({ type: 'text', block: sorted[0] }); }
     }
@@ -148,7 +172,13 @@ async function buildDocxFromPages(pages) {
         const isLarger = size > bodySize * 1.22;
         const isMuchLarger = size > bodySize * 1.6;
         const runs = (block.lines || []).map((line, li) =>
-          new TextRun({ text: (line.spans || []).map(s => s.text).join(''), bold: bold || isMuchLarger, italics: italic, size: halfPt, break: li > 0 ? 1 : 0 })
+          new TextRun({
+            text: getLineText(line),
+            bold: bold || isMuchLarger,
+            italics: italic,
+            size: halfPt,
+            break: li > 0 ? 1 : 0,
+          })
         );
         if (isMuchLarger) allChildren.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_1, spacing: { before: 240, after: 120 }, alignment: AlignmentType.CENTER }));
         else if (isLarger || bold) allChildren.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_2, spacing: { before: 180, after: 80 } }));
@@ -166,11 +196,6 @@ async function buildDocxFromPages(pages) {
 }
 
 async function convertPdfToDocxMuPDF(dataUri) {
-  // 1. Send PDF to server-side API route (mupdf runs in Node.js, ES module works fine)
-  const pdfBlob = dataUriToBlobUrl(dataUri)
-    ? await fetch(dataUriToBlobUrl(dataUri)).then(r => r.blob())
-    : new Blob([dataUriToBuffer(dataUri)], { type: 'application/pdf' });
-
   const form = new FormData();
   form.append('file', new Blob([dataUriToBuffer(dataUri)], { type: 'application/pdf' }), 'document.pdf');
 
@@ -180,8 +205,6 @@ async function convertPdfToDocxMuPDF(dataUri) {
     throw new Error(err.error || `Parse failed: ${resp.status}`);
   }
   const { pages } = await resp.json();
-
-  // 2. Assemble DOCX in browser from the structured block data
   return buildDocxFromPages(pages);
 }
 
