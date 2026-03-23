@@ -397,11 +397,13 @@ export default function ConverterPage() {
     return [...da, ...extras];
   };
 
-  const [archiveFiles, setArchiveFiles] = useState(readArchive); // synchronous init
+  const [archiveFiles, setArchiveFiles] = useState([]); // populated by useEffect below
 
-  // Refresh archive when window regains focus (user may have uploaded in another tab)
+  // useEffect runs CLIENT-SIDE ONLY.
+  // useState lazy init runs on server too (returns []) so we MUST load here.
   useEffect(() => {
-    const onFocus = () => setArchiveFiles(readArchive());
+    setArchiveFiles(readArchive()); // load immediately on mount
+    const onFocus = () => setArchiveFiles(readArchive()); // refresh when tab regains focus
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, []);
@@ -477,6 +479,7 @@ export default function ConverterPage() {
     if (file) loadFromFile(file);
   };
 
+
   const openInTab = () => {
     if (!loaded?.iframeSrc) return;
     window.open(loaded.iframeSrc, '_blank');
@@ -495,82 +498,81 @@ export default function ConverterPage() {
       const body = loaded.htmlBody || '';
       if (!body) throw new Error('Reload the document first');
 
-      // Container placed OFF-SCREEN ABOVE viewport (top:-9999px)
-      // Fully opaque so html2canvas captures real colors; invisible to user
-      const container = document.createElement('div');
-      container.style.cssText = [
-        'position:fixed', 'top:-9999px', 'left:0',
-        'width:794px',
-        'background:#fff', 'color:#111',
-        'font-family:Arial,Helvetica,sans-serif',
-        'font-size:11pt', 'line-height:1.6',
-        'padding:50px 60px', 'box-sizing:border-box',
-        'pointer-events:none',
+      // ── Render in a HIDDEN IFRAME (isolated context, no visual interference) ──
+      // The iframe is off-screen to the LEFT so it never overlaps the visible UI.
+      // Its rendering context is completely separate from the main page.
+      const fullHtml = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"><style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:50px 60px;background:#fff!important;color:#111!important;
+    font-family:Arial,Helvetica,sans-serif;font-size:11pt;line-height:1.6;
+    width:794px;max-width:794px}
+  h1,h2,h3,h4,h5,h6{color:#1a2e50!important;page-break-after:avoid;break-after:avoid}
+  table{border-collapse:collapse;width:100%;margin:10px 0}
+  td,th{border:1px solid #ccc;padding:5px 8px}
+  p{margin:0 0 8px}img{max-width:100%}
+</style></head><body>${body}</body></html>`;
+
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = [
+        'position:fixed', 'left:-9999px', 'top:0',
+        'width:794px', 'height:1123px',
+        'border:none', 'pointer-events:none',
       ].join(';');
+      // srcdoc = same-origin → html2canvas can access contentDocument
+      iframe.srcdoc = fullHtml;
+      document.body.appendChild(iframe);
 
-      container.innerHTML = `
-        <style>
-          *{box-sizing:border-box;color-scheme:light}
-          body,div{background:#fff!important;color:#111!important}
-          /* Force headings to dark navy — overrides Word’s light blue inline styles */
-          h1,h2,h3,h4,h5,h6{
-            color:#1a2e50!important;
-            page-break-after:avoid;break-after:avoid;
-          }
-          table{border-collapse:collapse;width:100%;margin:10px 0}
-          td,th{border:1px solid #ccc;padding:5px 8px}
-          p{margin:0 0 8px}
-          img{max-width:100%}
-        </style>
-        ${body}
-      `;
-      document.body.appendChild(container);
+      // Wait for iframe to load content + settle
+      await new Promise(r => {
+        iframe.addEventListener('load', r, { once: true });
+        setTimeout(r, 2000); // fallback
+      });
+      await new Promise(r => setTimeout(r, 400));
 
-      // Wait for browser to layout everything
+      const iframeDoc  = iframe.contentDocument;
+      const iframeBody = iframeDoc.body;
+
+      // Expand iframe to full document height so nothing is clipped
+      const contentH = iframeBody.scrollHeight;
+      iframe.style.height = contentH + 'px';
       await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-      await new Promise(r => setTimeout(r, 600));
 
-      // ── Record heading Y positions NOW (before canvas removes the DOM element) ──
+      // ── Record heading Y positions inside iframe for smart page breaks ──
       const SCALE = 2;
-      const containerTop = container.getBoundingClientRect().top;
+      const bodyTop = iframeBody.getBoundingClientRect().top;
       const headingYsCanvas = [];
-      for (const h of container.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
-        const relY = h.getBoundingClientRect().top - containerTop;
+      for (const h of iframeBody.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
+        const relY = h.getBoundingClientRect().top - bodyTop;
         if (relY > 0) headingYsCanvas.push(Math.round(relY * SCALE));
       }
       headingYsCanvas.sort((a, b) => a - b);
 
-      // Render full document to one canvas
+      // ── Capture iframe body to canvas (no main-page interference) ──
       const html2canvas = (await import('html2canvas')).default;
-      const canvas = await html2canvas(container, {
+      const canvas = await html2canvas(iframeBody, {
         scale: SCALE,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
-        width: 794,
         windowWidth: 794,
+        scrollX: 0,
+        scrollY: 0,
         logging: false,
       });
-      document.body.removeChild(container);
 
-      // ── Smart break: prefer to start a new page AT a heading (break just before it) ──
-      // This prevents headings from being stranded at the bottom of a page alone.
+      document.body.removeChild(iframe);
+
+      // ── Smart page breaks: prefer to break just before each heading ──
       const findBreakY = (targetY, radiusPx) => {
-        // Look for headings in the window [targetY - 2*radius, targetY + radius/2]
-        // Pick the heading JUST BEFORE the nominal boundary (latest heading ≤ targetY)
         const windowStart = targetY - radiusPx * 2;
         const windowEnd   = targetY + Math.round(radiusPx * 0.3);
         let bestHeadingY = null;
         for (const hY of headingYsCanvas) {
-          if (hY >= windowStart && hY <= windowEnd) {
-            bestHeadingY = hY; // take the last (latest) heading in range
-          }
+          if (hY >= windowStart && hY <= windowEnd) bestHeadingY = hY;
         }
-        if (bestHeadingY !== null) {
-          // Break 8px above the heading
-          return Math.max(0, bestHeadingY - 8);
-        }
-        // No heading nearby: find whitest row scanning BACKWARD from targetY only
+        if (bestHeadingY !== null) return Math.max(0, bestHeadingY - 8);
+        // Fallback: find whitest row scanning backward
         const ctx  = canvas.getContext('2d');
         const from = Math.max(0, targetY - radiusPx);
         const to   = Math.min(canvas.height - 1, targetY);
@@ -586,7 +588,7 @@ export default function ConverterPage() {
         return bestY;
       };
 
-      // Build jsPDF at smart break points
+      // ── Build PDF ──
       const { jsPDF } = await import('jspdf');
       const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
       const A4W = 210, A4H = 297;
@@ -599,9 +601,9 @@ export default function ConverterPage() {
         const nomBottom = startY + nominalPageHPx;
         const breakY = nomBottom >= canvas.height
           ? canvas.height
-          : findBreakY(Math.round(nomBottom), Math.round(pxPerMm * 45)); // 45mm search window
-
+          : findBreakY(Math.round(nomBottom), Math.round(pxPerMm * 45));
         const sliceH = breakY - startY;
+        if (sliceH < 2) break; // safety
         const slice  = document.createElement('canvas');
         slice.width  = canvas.width;
         slice.height = Math.ceil(sliceH);
@@ -609,12 +611,9 @@ export default function ConverterPage() {
           canvas, 0, Math.floor(startY), canvas.width, Math.ceil(sliceH),
           0, 0, canvas.width, Math.ceil(sliceH)
         );
-        const sliceHmm = Math.min(sliceH / pxPerMm, A4H);
-        pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, A4W, sliceHmm);
+        pdf.addImage(slice.toDataURL('image/png'), 'PNG', 0, 0, A4W, Math.min(sliceH / pxPerMm, A4H));
         startY = breakY;
         pageNum++;
-        // Safety: prevent infinite loop if break point doesn't advance
-        if (sliceH < 10) break;
       }
 
       pdf.save(loaded.name.replace(/\.(docx|doc)$/i, '.pdf'));
@@ -625,6 +624,7 @@ export default function ConverterPage() {
       setProcessing('');
     }
   };
+
 
   const downloadOriginal = () => {
     if (!loaded?.data) return;
