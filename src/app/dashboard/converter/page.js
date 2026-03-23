@@ -98,237 +98,228 @@ async function buildDocxFromPages(pages) {
     WidthType, BorderStyle,
   } = await import('docx');
 
-  const NAVY  = '1F3864';
-  const BLACK = '222222';
-  const DARK  = '333333';
+  const NAVY = '1F3864';
+  const DARK = '222222';
+  const GRAY = '666666';
 
-  const mkBorderNone  = () => ({ style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' });
-  const mkBorderThin  = () => ({ style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' });
-  const mkBorderNavy  = () => ({ style: BorderStyle.SINGLE, size: 6, color: NAVY });
+  const none  = () => ({ style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' });
+  const thin  = () => ({ style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' });
 
-  // Checkbox chars used in PDFs
-  const CHECKBOX_RE = /^[☑☒✓✔✗✘☐□▪▸]/;
-  const isCheckLine = (t) => CHECKBOX_RE.test(t.trim());
-
-  const isSectionHeading = (text, bold, size, bodySize) => {
+  // Detect section headings: Roman numerals or all-caps bold
+  const isHeading = (text, bold, size, body) => {
     const t = text.trim();
-    if (/^(I{1,3}|IV|V{0,3}(I{1,3})?|IX|X{1,3}(I{1,3})?|XIV)\.\s+\p{Lu}/u.test(t)) return true;
-    if (t.length > 3 && t === t.toUpperCase() && (bold || size > bodySize * 1.05)) return true;
+    if (/^(I{1,3}|IV|V{1,3}I{0,3}|IX|X{1,3}I{0,3})\.\s+\p{Lu}/u.test(t)) return true;
+    if (t.length > 3 && t === t.toUpperCase() && (bold || size >= body)) return true;
     return false;
   };
 
-  // Build per-line TextRuns, handling checkboxes with symbol font
-  const lineToRuns = (line, forceBold, forceItalic, halfPt, color, lineIdx) => {
-    const raw = getLineText(line);
-    const br  = lineIdx > 0 ? 1 : 0;
-    if (isCheckLine(raw)) {
-      // Checkbox character + rest of line (normal font)
-      const [, cb, rest = ''] = raw.match(/^([☑☒✓✔✗✘☐□▪▸]+)\s*(.*)$/) || [, raw, ''];
-      const runs = [
-        new TextRun({ text: cb, font: 'Segoe UI Symbol', size: halfPt, color, break: br }),
-      ];
-      if (rest) runs.push(new TextRun({ text: ' ' + rest, bold: forceBold, italics: forceItalic, size: halfPt, color }));
-      return runs;
-    }
-    return [new TextRun({ text: raw, bold: forceBold, italics: forceItalic, size: halfPt, color, break: br })];
-  };
+  // Is text a solo checkbox symbol?
+  const CB_RE = /^[✓✔☑☒☐□]$/;
 
   const allChildren = [];
 
   for (let pi = 0; pi < pages.length; pi++) {
     const { blocks = [], pageWidth = 595 } = pages[pi];
     const pageCenterX = pageWidth / 2;
-    const textBlocks  = blocks.filter(b => b.type === 'text');
+
+    // ── Flatten all lines from all text blocks ──────────────────────────────
+    // Each line: { text, font:{weight,style,size,name}, bbox, blockBbox, x, y }
+    const allLines = [];
+    for (const block of blocks) {
+      if (block.type !== 'text') continue;
+      for (const line of block.lines || []) {
+        const text = line.text || (line.spans || []).map(s => s.text).join('') || '';
+        if (!text.trim()) continue;
+        allLines.push({
+          text:     text.trim(),
+          font:     line.font || {},
+          x:        line.x ?? block.bbox.x,
+          y:        Math.round(line.y ?? block.bbox.y),
+          bbox:     line.bbox || block.bbox,
+          blockW:   block.bbox.w,
+        });
+      }
+    }
+
+    // Skip header/footer lines (very top or very bottom of page)
+    const margin = 30;
+    const bodyLines = allLines.filter(l => l.y > margin && l.y < (pages[pi].pageHeight || 842) - margin);
 
     // Body font size (mode)
-    const sizes = textBlocks.flatMap(b =>
-      (b.lines || []).map(l => Math.round(l.font?.size || l.bbox?.h || 0))
-    ).filter(s => s > 0);
+    const sizes = bodyLines.map(l => Math.round(l.font.size || 9)).filter(s => s > 0);
     const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
-    const bodySize = sizes.length
-      ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 11;
+    const bodySize = sizes.length ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 9;
 
-    // Cluster into rows by Y centre
-    // Use bodySize as tolerance – labels & values in the same PDF table row
-    // often differ by a few pts in Y. 0.6× was too tight; 1× works much better.
-    const tol = Math.max(bodySize, 8);
-    const rows = [];
-    for (const block of textBlocks) {
-      const cy = bboxCY(block.bbox);
+    // ── Group lines by Y position (same Y = same table row) ─────────────────
+    const tol = Math.max(bodySize * 0.5, 4);
+    const yGroups = []; // [{y, lines:[...]}]
+    for (const line of bodyLines) {
       let placed = false;
-      for (const row of rows) {
-        if (Math.abs(row.cy - cy) < tol) {
-          row.blocks.push(block);
-          row.cy = row.blocks.reduce((s, b) => s + bboxCY(b.bbox), 0) / row.blocks.length;
+      for (const g of yGroups) {
+        if (Math.abs(g.y - line.y) <= tol) {
+          g.lines.push(line);
+          g.y = g.lines.reduce((s, l) => s + l.y, 0) / g.lines.length;
           placed = true; break;
         }
       }
-      if (!placed) rows.push({ cy, y: bboxY(block.bbox), blocks: [block] });
+      if (!placed) yGroups.push({ y: line.y, lines: [line] });
     }
-    rows.sort((a, b) => a.y - b.y);
+    yGroups.sort((a, b) => a.y - b.y);
 
-    // Group rows into tables:
-    // - ≥2 consecutive 2-col rows → table
-    // - ANY row with 3+ cols → immediate single-row table (signature / header)
-    const groups = [];
+    // ── Classify each Y-group and build DOCX elements ───────────────────────
+    // A Y-group with 2+ lines at same Y = potential table row (label | value)
+    // A Y-group with 1 line = paragraph
+
+    // Accumulate consecutive 2-col table rows
     let tableAcc = [];
     const flushTable = () => {
-      if (tableAcc.length >= 2) groups.push({ type: 'table', rows: tableAcc });
-      else if (tableAcc.length === 1) tableAcc[0].forEach(b => groups.push({ type: 'text', block: b }));
+      if (!tableAcc.length) return;
+      if (tableAcc.length === 1 && tableAcc[0].length <= 3) {
+        // Single-row multi-col (signature) — emit as table
+        buildTable(tableAcc);
+      } else if (tableAcc.length >= 2) {
+        buildTable(tableAcc);
+      } else {
+        // Single-row, 1 col — emit as paragraph
+        for (const row of tableAcc) for (const ln of row) emitLine(ln);
+      }
       tableAcc = [];
     };
-    // Returns true when a block contains ONLY a checkbox symbol (✓ ☑ etc.)
-    const isCheckboxOnlyBlock = (b) => /^[☑☒✓✔✗✘☐□]$/.test(getBlockText(b).trim());
 
-    for (const row of rows) {
-      const sorted = [...row.blocks].sort((a, b) => bboxX(a.bbox) - bboxX(b.bbox));
-      if (sorted.length >= 3) {
-        // Wide multi-col row (e.g. signature section): flush pending, single-row table
-        flushTable();
-        groups.push({ type: 'table', rows: [sorted] });
-      } else if (sorted.length === 2 && isCheckboxOnlyBlock(sorted[0])) {
-        // ✓ + text → merge into one inline paragraph (avoids broken 2-col table)
-        flushTable();
-        groups.push({ type: 'checkbox', checkBlock: sorted[0], textBlock: sorted[1] });
-      } else if (sorted.length === 2) {
-        tableAcc.push(sorted);
+    const buildTable = (rows) => {
+      const numCols = Math.max(...rows.map(r => r.length));
+
+      // Calculate column widths from x positions
+      // Col boundary: x position of second column (first unique x > first col x)
+      // Use consistent x across all rows
+      const col0xs = rows.map(r => r[0]?.x ?? 0);
+      const col1xs = rows.filter(r => r[1]).map(r => r[1]?.x ?? 0);
+      const col0x = Math.min(...col0xs);
+      const col1x = col1xs.length ? Math.min(...col1xs) : col0x + 100;
+      // Page content width from left col start to ~right margin
+      const rightEdge = Math.max(...rows.flatMap(r => r.map(l => (l.x || 0) + (l.blockW || 0))));
+      const totalW = Math.max(rightEdge - col0x, 1);
+      const col0pct = numCols === 1 ? 100 : Math.max(Math.round((col1x - col0x) / totalW * 100), 10);
+      const col1pct = 100 - col0pct;
+
+      const isSingle = rows.length === 1;
+      const tableRows = rows.map(row => {
+        const cells = Array.from({ length: numCols }, (_, ci) => {
+          const ln = row[ci];
+          if (!ln) return new TableCell({ children: [new Paragraph({ children: [] })], width: { size: ci === 0 ? col0pct : col1pct, type: WidthType.PERCENTAGE }, borders: { top: none(), bottom: thin(), left: none(), right: none() }, margins: { top: 40, bottom: 40, left: 100, right: 100 } });
+          const bold = ln.font.weight === 'bold' || (ln.font.name || '').toLowerCase().includes('bold') || (ln.font.name || '').toLowerCase().includes('semibold');
+          const italic = ln.font.style === 'italic' || (ln.font.name || '').toLowerCase().includes('italic');
+          const size = Math.max(Math.round((ln.font.size || bodySize) * 2 * 0.75), 16);
+          const centered = isSingle && Math.abs((ln.x + ln.blockW / 2) - pageCenterX) < pageWidth * 0.1;
+          const isSmall = (ln.font.size || bodySize) < bodySize * 0.85;
+          const color = bold ? NAVY : (isSmall ? GRAY : DARK);
+          const runs = CB_RE.test(ln.text)
+            ? [new TextRun({ text: ln.text, font: 'Segoe UI Symbol', size, color })]
+            : [new TextRun({ text: ln.text, bold, italics: italic, size, color })];
+          return new TableCell({
+            width: { size: ci === 0 ? col0pct : col1pct, type: WidthType.PERCENTAGE },
+            children: [new Paragraph({ children: runs, alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT })],
+            margins: { top: 40, bottom: 40, left: 100, right: 100 },
+            borders: { top: none(), bottom: thin(), left: none(), right: none() },
+          });
+        });
+        return new TableRow({ children: cells });
+      });
+
+      allChildren.push(
+        new Table({
+          rows: tableRows,
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          borders: { top: none(), bottom: none(), left: none(), right: none(), insideH: thin(), insideV: none() },
+        }),
+        new Paragraph({ children: [], spacing: { after: 80 } })
+      );
+    };
+
+    const emitLine = (ln) => {
+      const text = ln.text;
+      const bold = ln.font.weight === 'bold' || (ln.font.name || '').toLowerCase().includes('bold') || (ln.font.name || '').toLowerCase().includes('semibold') || (ln.font.name || '').toLowerCase().includes('black');
+      const italic = ln.font.style === 'italic' || (ln.font.name || '').toLowerCase().includes('italic');
+      const size = ln.font.size || bodySize;
+      const halfPt = Math.max(Math.round(size * 2 * 0.75), 16);
+      const isLarger = size > bodySize * 1.2;
+      const isMuchLarger = size > bodySize * 1.5;
+      const isHead = isHeading(text, bold, size, bodySize);
+      const isSmall = size < bodySize * 0.85;
+      const blockCX = (ln.x || 0) + (ln.blockW || 0) / 2;
+      const blockWide = (ln.blockW || 0) > pageWidth * 0.55;
+      const isCentered = !blockWide && Math.abs(blockCX - pageCenterX) < pageWidth * 0.08;
+      const color = isHead || isMuchLarger ? NAVY : (isSmall ? GRAY : DARK);
+
+      let run;
+      if (CB_RE.test(text)) {
+        run = new TextRun({ text, font: 'Segoe UI Symbol', size: halfPt, color });
       } else {
-        flushTable();
-        groups.push({ type: 'text', block: sorted[0] });
+        run = new TextRun({ text, bold: bold || isHead || isMuchLarger, italics: italic, size: halfPt, color });
       }
-    }
-    flushTable();
 
-    // ── Render groups ──────────────────────────────────────────────────────
-    for (const g of groups) {
-      if (g.type === 'checkbox') {
-        // Inline ✓/☑ + text on the same line
-        const cbText  = getBlockText(g.checkBlock).trim();
-        const { size, bold, italic } = getBlockFontInfo(g.textBlock);
-        const halfPt  = Math.max(Math.round(size * 2 * 0.75), 18);
-        const txtRuns = (g.textBlock.lines || []).flatMap((line, li) =>
-          lineToRuns(line, bold, italic, halfPt, DARK, li)
-        );
+      if (isHead) {
+        allChildren.push(new Paragraph({
+          children: [run],
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 280, after: 100 },
+          border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 4 } },
+        }));
+      } else if (isMuchLarger) {
+        allChildren.push(new Paragraph({
+          children: [run],
+          spacing: { before: 160, after: 80 },
+          alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+        }));
+      } else if (isLarger || bold) {
+        allChildren.push(new Paragraph({
+          children: [run],
+          spacing: { before: 100, after: 40 },
+          alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+        }));
+      } else {
+        allChildren.push(new Paragraph({
+          children: [run],
+          spacing: { after: isSmall ? 20 : 60 },
+          alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+        }));
+      }
+    };
+
+    for (const g of yGroups) {
+      const { lines } = g;
+      // Sort lines within group by x
+      lines.sort((a, b) => (a.x || 0) - (b.x || 0));
+
+      // Checkbox row: first line is solo checkbox, second is text
+      if (lines.length === 2 && CB_RE.test(lines[0].text)) {
+        flushTable();
+        const ln = lines[1];
+        const bold = (ln.font.name || '').toLowerCase().includes('bold') || (ln.font.name || '').toLowerCase().includes('semibold');
+        const italic = ln.font.style === 'italic' || (ln.font.name || '').toLowerCase().includes('italic');
+        const sz = Math.max(Math.round((ln.font.size || bodySize) * 2 * 0.75), 16);
         allChildren.push(new Paragraph({
           children: [
-            new TextRun({ text: cbText + ' ', font: 'Segoe UI Symbol', size: halfPt, color: DARK }),
-            ...txtRuns,
+            new TextRun({ text: lines[0].text + '  ', font: 'Segoe UI Symbol', size: sz }),
+            new TextRun({ text: ln.text, bold, italics: italic, size: sz, color: DARK }),
           ],
           spacing: { after: 40 },
+          indent: { left: 0 },
         }));
-
-      } else if (g.type === 'table') {
-        const numCols = Math.max(...g.rows.map(r => r.length));
-        const isSingle = g.rows.length === 1; // e.g. signature row
-
-        // Proportional column widths from actual X positions
-        const allL = g.rows.flatMap(rb => rb.map(b => b ? bboxX(b.bbox) : null).filter(x => x != null));
-        const allR = g.rows.flatMap(rb => rb.map(b => b ? bboxX(b.bbox) + (b.bbox?.w || 0) : null).filter(x => x != null));
-        const minX = Math.min(...allL), maxX = Math.max(...allR);
-        const span = Math.max(maxX - minX, 1);
-        const colXs = Array.from({ length: numCols }, (_, ci) => {
-          const xs = g.rows.map(rb => rb[ci] ? bboxX(rb[ci].bbox) : null).filter(x => x != null);
-          return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : minX + ci * span / numCols;
-        });
-        const colWidths = colXs.map((x, ci) => {
-          const nx = ci < numCols - 1 ? colXs[ci + 1] : maxX;
-          return Math.max(Math.round((nx - x) / span * 100), 5);
-        });
-
-        const tableRows = g.rows.map((rb) => new TableRow({
-          children: Array.from({ length: numCols }, (_, ci) => {
-            const block  = rb[ci];
-            const { bold, size, italic } = block ? getBlockFontInfo(block) : { bold: false, size: bodySize, italic: false };
-            const halfPt = Math.max(Math.round(size * 2 * 0.75), 18);
-            // Centering only for single-row tables where the block is near page centre
-            const blockCX = block ? bboxX(block.bbox) + (block.bbox?.w || 0) / 2 : pageCenterX;
-            const centered = isSingle && Math.abs(blockCX - pageCenterX) < pageWidth * 0.08;
-
-            const runs = (block?.lines || []).flatMap((line, li) =>
-              lineToRuns(line, bold, italic, halfPt, bold ? NAVY : DARK, li)
-            );
-
-            return new TableCell({
-              width: { size: colWidths[ci], type: WidthType.PERCENTAGE },
-              children: [new Paragraph({
-                children: runs.length ? runs : [new TextRun('')],
-                alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT,
-              })],
-              margins: { top: 60, bottom: 60, left: 100, right: 100 },
-              borders: {
-                top:    mkBorderNone(),
-                bottom: mkBorderThin(),
-                left:   mkBorderNone(),
-                right:  mkBorderNone(),
-              },
-            });
-          }),
-        }));
-
-        allChildren.push(
-          new Table({
-            rows: tableRows,
-            width: { size: 100, type: WidthType.PERCENTAGE },
-            borders: {
-              top: mkBorderNone(), bottom: mkBorderNone(),
-              left: mkBorderNone(), right: mkBorderNone(),
-              insideH: mkBorderThin(), insideV: mkBorderNone(),
-            },
-          }),
-          new Paragraph({ children: [] })
-        );
-
-      } else if (g.type === 'text') {
-        const { block } = g;
-        const rawText = getBlockText(block); if (!rawText.trim()) continue;
-        const { size, bold, italic } = getBlockFontInfo(block);
-        const halfPt       = Math.max(Math.round(size * 2 * 0.75), 18);
-        const isLarger     = size > bodySize * 1.22;
-        const isMuchLarger = size > bodySize * 1.6;
-        const isHeading    = isSectionHeading(rawText, bold, size, bodySize);
-        const isSmall      = size < bodySize * 0.85;
-
-        // Centered: block's centre X must be within 8% of page centre
-        // Use block.x (not block.x+w/2) for left-edge check to avoid false positives
-        const blockCX   = bboxX(block.bbox) + (block.bbox?.w || 0) / 2;
-        // Only call it centered if the block is also not very wide (wide blocks span the page)
-        const blockWide = (block.bbox?.w || 0) > pageWidth * 0.6;
-        const isCentered = !blockWide && Math.abs(blockCX - pageCenterX) < pageWidth * 0.08;
-
-        const color = isHeading || isMuchLarger ? NAVY : (isSmall ? '666666' : DARK);
-        // No italic-from-small: only italic if font says so
-        const runs  = (block.lines || []).flatMap((line, li) =>
-          lineToRuns(line, bold || isMuchLarger || isHeading, italic, halfPt, color, li)
-        );
-
-        if (isHeading) {
-          allChildren.push(new Paragraph({
-            children: runs,
-            heading: HeadingLevel.HEADING_2,
-            spacing: { before: 300, after: 120 },
-            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 4 } },
-          }));
-        } else if (isMuchLarger) {
-          allChildren.push(new Paragraph({
-            children: runs,
-            spacing: { before: 200, after: 100 },
-            alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-          }));
-        } else if (isLarger || bold) {
-          allChildren.push(new Paragraph({
-            children: runs,
-            spacing: { before: 120, after: 60 },
-            alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-          }));
-        } else {
-          allChildren.push(new Paragraph({
-            children: runs,
-            spacing: { after: isSmall ? 20 : 60 },
-            alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
-          }));
-        }
+        continue;
       }
+
+      // Multi-column row (label | value or signature)
+      if (lines.length >= 2) {
+        tableAcc.push(lines);
+        continue;
+      }
+
+      // Single line = paragraph
+      flushTable();
+      emitLine(lines[0]);
     }
+    flushTable();
 
     if (pi < pages.length - 1)
       allChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
@@ -337,15 +328,17 @@ async function buildDocxFromPages(pages) {
   const doc = new WDoc({
     styles: {
       default: {
-        document: { run: { font: 'Calibri', size: 22, color: DARK }, paragraph: { spacing: { line: 276 } } },
-        heading2: { run: { bold: true, color: NAVY, size: 24, font: 'Calibri' } },
-        heading1: { run: { bold: true, color: NAVY, size: 28, font: 'Calibri' } },
+        document: { run: { font: 'Calibri', size: 20, color: DARK }, paragraph: { spacing: { line: 276 } } },
+        heading2: { run: { bold: true, color: NAVY, size: 22, font: 'Calibri' } },
       },
     },
     sections: [{ children: allChildren }],
   });
   return Packer.toBlob(doc);
 }
+
+
+
 
 
 async function convertPdfToDocxMuPDF(dataUri) {
