@@ -49,33 +49,59 @@ export default function TestsZopZnrPage() {
             // Load zip
             const zip = await JSZip.loadAsync(arrayBuffer);
             
-            // Transparent 1x1 image (PNG)
-            const transparentBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
-            
-            // Remove ISO 9001, 14001, 45001 certificates on the top right
-            const isoIcons = ['image1.jpeg', 'image2.jpeg', 'image4.jpeg', 'image6.jpeg', 'image7.jpeg', 'image8.jpeg'];
-            isoIcons.forEach(img => {
-                if (zip.file(`word/media/${img}`)) {
-                    zip.file(`word/media/${img}`, transparentBase64, { base64: true });
+            // Find which media files are actually referenced in the header rels
+            const usedMedia = new Set();
+            for (let i = 1; i <= 3; i++) {
+                const relFile = zip.file(`word/_rels/header${i}.xml.rels`);
+                if (relFile) {
+                    const relText = await relFile.async('string');
+                    // Regex to find Target="media/imageX.ext"
+                    const matches = relText.match(/Target="media\/[^"]+"/g);
+                    if (matches) {
+                        matches.forEach(m => {
+                            const imgName = m.split('"')[1];
+                            usedMedia.add(`word/${imgName}`);
+                        });
+                    }
                 }
-            });
+            }
 
-            // Update company logo on the top left
+            // Update company logo and text
             if (activeCompanyId) {
                 const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
+                
+                // Replace {{COMPANY_NAME}} in all headers
+                let companyName = "Vaša Kompanija";
+                if (company) companyName = company.naziv || company.skraceniNaziv || companyName;
+                
+                for (let i = 1; i <= 3; i++) {
+                    const f = zip.file(`word/header${i}.xml`);
+                    if (f) {
+                        let xmlData = await f.async('string');
+                        xmlData = xmlData.replace(/{{COMPANY_NAME}}/g, companyName);
+                        zip.file(`word/header${i}.xml`, xmlData);
+                    }
+                }
+                
                 if (company && company.logo) {
                     let base64Logo = company.logo;
                     if (base64Logo.includes('base64,')) {
                         base64Logo = base64Logo.split('base64,')[1];
                     }
                     
-                    // Left logo instances across both pages
-                    if (zip.file('word/media/image3.png')) {
-                        zip.file('word/media/image3.png', base64Logo, { base64: true });
-                    }
-                    if (zip.file('word/media/image7.png')) {
-                        zip.file('word/media/image7.png', base64Logo, { base64: true });
-                    }
+                    usedMedia.forEach(mediaPath => {
+                        if (zip.file(mediaPath)) {
+                            zip.file(mediaPath, base64Logo, { base64: true });
+                        }
+                    });
+                } else {
+                    // Transparent 1x1 image (PNG)
+                    const transparentBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+                    usedMedia.forEach(mediaPath => {
+                        if (zip.file(mediaPath)) {
+                            zip.file(mediaPath, transparentBase64, { base64: true });
+                        }
+                    });
                 }
             }
             
