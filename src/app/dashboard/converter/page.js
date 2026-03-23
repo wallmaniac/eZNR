@@ -98,35 +98,47 @@ async function buildDocxFromPages(pages) {
     WidthType, BorderStyle,
   } = await import('docx');
 
-  // Document colors matching professional ZOS-style docs
-  const NAVY   = '1F3864'; // dark navy for section headers
-  const BLACK  = '222222';
-  const GRAY   = '555555';
+  const NAVY  = '1F3864';
+  const BLACK = '222222';
+  const DARK  = '333333';
 
-  // Thin horizontal border (no vertical)
-  const mkTableBorders = () => ({
-    top:     { style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' },
-    bottom:  { style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' },
-    left:    { style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' },
-    right:   { style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' },
-    insideH: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' },
-    insideV: { style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' },
-  });
+  const mkBorderNone  = () => ({ style: BorderStyle.NONE,   size: 0, color: 'FFFFFF' });
+  const mkBorderThin  = () => ({ style: BorderStyle.SINGLE, size: 1, color: 'CCCCCC' });
+  const mkBorderNavy  = () => ({ style: BorderStyle.SINGLE, size: 6, color: NAVY });
+
+  // Checkbox chars used in PDFs
+  const CHECKBOX_RE = /^[☑☒✓✔✗✘☐□▪▸]/;
+  const isCheckLine = (t) => CHECKBOX_RE.test(t.trim());
 
   const isSectionHeading = (text, bold, size, bodySize) => {
     const t = text.trim();
-    // Roman-numeral sections: "I. PODACI...", "II. OCJENA...", etc.
-    if (/^(I{1,3}|IV|V{0,3}(I{1,3})?|IX|XI{0,3}|XIV)\.?\s+\w/i.test(t)) return true;
-    // All-caps short line that is bold or larger
-    if (t === t.toUpperCase() && t.length > 3 && (bold || size > bodySize * 1.1)) return true;
+    if (/^(I{1,3}|IV|V{0,3}(I{1,3})?|IX|X{1,3}(I{1,3})?|XIV)\.\s+\p{Lu}/u.test(t)) return true;
+    if (t.length > 3 && t === t.toUpperCase() && (bold || size > bodySize * 1.05)) return true;
     return false;
+  };
+
+  // Build per-line TextRuns, handling checkboxes with symbol font
+  const lineToRuns = (line, forceBold, forceItalic, halfPt, color, lineIdx) => {
+    const raw = getLineText(line);
+    const br  = lineIdx > 0 ? 1 : 0;
+    if (isCheckLine(raw)) {
+      // Checkbox character + rest of line (normal font)
+      const [, cb, rest = ''] = raw.match(/^([☑☒✓✔✗✘☐□▪▸]+)\s*(.*)$/) || [, raw, ''];
+      const runs = [
+        new TextRun({ text: cb, font: 'Segoe UI Symbol', size: halfPt, color, break: br }),
+      ];
+      if (rest) runs.push(new TextRun({ text: ' ' + rest, bold: forceBold, italics: forceItalic, size: halfPt, color }));
+      return runs;
+    }
+    return [new TextRun({ text: raw, bold: forceBold, italics: forceItalic, size: halfPt, color, break: br })];
   };
 
   const allChildren = [];
 
   for (let pi = 0; pi < pages.length; pi++) {
     const { blocks = [], pageWidth = 595 } = pages[pi];
-    const textBlocks = blocks.filter(b => b.type === 'text');
+    const pageCenterX = pageWidth / 2;
+    const textBlocks  = blocks.filter(b => b.type === 'text');
 
     // Body font size (mode)
     const sizes = textBlocks.flatMap(b =>
@@ -136,14 +148,14 @@ async function buildDocxFromPages(pages) {
     const bodySize = sizes.length
       ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 11;
 
-    // Cluster blocks into rows by Y centre
-    const tolerance = Math.max(bodySize * 0.6, 5);
+    // Cluster into rows by Y centre
+    const tol = Math.max(bodySize * 0.6, 5);
     const rows = [];
     for (const block of textBlocks) {
       const cy = bboxCY(block.bbox);
       let placed = false;
       for (const row of rows) {
-        if (Math.abs(row.cy - cy) < tolerance) {
+        if (Math.abs(row.cy - cy) < tol) {
           row.blocks.push(block);
           row.cy = row.blocks.reduce((s, b) => s + bboxCY(b.bbox), 0) / row.blocks.length;
           placed = true; break;
@@ -153,7 +165,9 @@ async function buildDocxFromPages(pages) {
     }
     rows.sort((a, b) => a.y - b.y);
 
-    // Detect tables: ≥2 consecutive rows each with 2+ blocks
+    // Group rows into tables:
+    // - ≥2 consecutive 2-col rows → table
+    // - ANY row with 3+ cols → immediate single-row table (signature / header)
     const groups = [];
     let tableAcc = [];
     const flushTable = () => {
@@ -163,54 +177,66 @@ async function buildDocxFromPages(pages) {
     };
     for (const row of rows) {
       const sorted = [...row.blocks].sort((a, b) => bboxX(a.bbox) - bboxX(b.bbox));
-      if (sorted.length > 1) { tableAcc.push(sorted); }
-      else { flushTable(); groups.push({ type: 'text', block: sorted[0] }); }
+      if (sorted.length >= 3) {
+        // Wide multi-col row: flush pending, emit as its own table
+        flushTable();
+        groups.push({ type: 'table', rows: [sorted] });
+      } else if (sorted.length === 2) {
+        tableAcc.push(sorted);
+      } else {
+        flushTable();
+        groups.push({ type: 'text', block: sorted[0] });
+      }
     }
     flushTable();
 
-    // ── Groups → DOCX elements ────────────────────────────────────────────
+    // ── Render groups ──────────────────────────────────────────────────────
     for (const g of groups) {
       if (g.type === 'table') {
         const numCols = Math.max(...g.rows.map(r => r.length));
+        const isSingle = g.rows.length === 1; // e.g. signature row
 
-        // Calculate proportional column widths from X positions
-        const allLeftEdges = g.rows.flatMap(rb =>
-          rb.map(b => bboxX(b.bbox)).filter(x => x != null)
-        );
-        const allRightEdges = g.rows.flatMap(rb =>
-          rb.map(b => bboxX(b.bbox) + (b.bbox?.w || 0)).filter(x => x != null)
-        );
-        const minX = Math.min(...allLeftEdges);
-        const maxX = Math.max(...allRightEdges);
-        const contentWidth = Math.max(maxX - minX, 1);
-
-        // Column dividers: average left edge of each column
+        // Proportional column widths from actual X positions
+        const allL = g.rows.flatMap(rb => rb.map(b => b ? bboxX(b.bbox) : null).filter(x => x != null));
+        const allR = g.rows.flatMap(rb => rb.map(b => b ? bboxX(b.bbox) + (b.bbox?.w || 0) : null).filter(x => x != null));
+        const minX = Math.min(...allL), maxX = Math.max(...allR);
+        const span = Math.max(maxX - minX, 1);
         const colXs = Array.from({ length: numCols }, (_, ci) => {
           const xs = g.rows.map(rb => rb[ci] ? bboxX(rb[ci].bbox) : null).filter(x => x != null);
-          return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : minX + (ci * contentWidth / numCols);
+          return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : minX + ci * span / numCols;
         });
-        const colWidthsPct = colXs.map((x, ci) => {
-          const nextX = ci < numCols - 1 ? colXs[ci + 1] : maxX;
-          return Math.round((nextX - x) / contentWidth * 100);
+        const colWidths = colXs.map((x, ci) => {
+          const nx = ci < numCols - 1 ? colXs[ci + 1] : maxX;
+          return Math.max(Math.round((nx - x) / span * 100), 5);
         });
 
-        const tableRows = g.rows.map(rb => new TableRow({
+        const tableRows = g.rows.map((rb, ri) => new TableRow({
           children: Array.from({ length: numCols }, (_, ci) => {
             const block = rb[ci];
             const txt   = block ? getBlockText(block) : '';
-            const { bold, size } = block ? getBlockFontInfo(block) : { bold: false, size: bodySize };
-            const halfPt = Math.max(Math.round(size * 2 * 0.75), 18);
+            const { bold, size, italic } = block ? getBlockFontInfo(block) : { bold: false, size: bodySize, italic: false };
+            const halfPt  = Math.max(Math.round(size * 2 * 0.75), 18);
+            const isSmall = size < bodySize * 0.85; // small italic labels like "(potpisnik)"
+            // Alignment: centre if block center is near page centre
+            const blockCX = block ? bboxX(block.bbox) + (block.bbox?.w || 0) / 2 : pageCenterX;
+            const centered = isSingle && Math.abs(blockCX - pageCenterX) < pageWidth * 0.15;
+
+            const runs = (block?.lines || []).flatMap((line, li) =>
+              lineToRuns(line, bold, italic || isSmall, halfPt, bold ? NAVY : DARK, li)
+            );
+
             return new TableCell({
-              width: { size: colWidthsPct[ci], type: WidthType.PERCENTAGE },
+              width: { size: colWidths[ci], type: WidthType.PERCENTAGE },
               children: [new Paragraph({
-                children: [new TextRun({ text: txt, bold, size: halfPt, color: bold ? NAVY : BLACK })],
+                children: runs.length ? runs : [new TextRun('')],
+                alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT,
               })],
-              margins: { top: 60, bottom: 60, left: 80, right: 80 },
+              margins: { top: 60, bottom: 60, left: 100, right: 100 },
               borders: {
-                top:    { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-                bottom: { style: BorderStyle.SINGLE, size: 1, color: 'DDDDDD' },
-                left:   { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
-                right:  { style: BorderStyle.NONE, size: 0, color: 'FFFFFF' },
+                top:    mkBorderNone(),
+                bottom: mkBorderThin(),
+                left:   mkBorderNone(),
+                right:  mkBorderNone(),
               },
             });
           }),
@@ -220,49 +246,62 @@ async function buildDocxFromPages(pages) {
           new Table({
             rows: tableRows,
             width: { size: 100, type: WidthType.PERCENTAGE },
-            borders: mkTableBorders(),
+            borders: {
+              top: mkBorderNone(), bottom: mkBorderNone(),
+              left: mkBorderNone(), right: mkBorderNone(),
+              insideH: mkBorderThin(), insideV: mkBorderNone(),
+            },
           }),
           new Paragraph({ children: [] })
         );
 
       } else {
         const { block } = g;
-        const text = getBlockText(block); if (!text.trim()) continue;
+        const rawText = getBlockText(block); if (!rawText.trim()) continue;
         const { size, bold, italic } = getBlockFontInfo(block);
-        const halfPt = Math.max(Math.round(size * 2 * 0.75), 18);
+        const halfPt       = Math.max(Math.round(size * 2 * 0.75), 18);
         const isLarger     = size > bodySize * 1.22;
         const isMuchLarger = size > bodySize * 1.6;
-        const isHeading    = isSectionHeading(text, bold, size, bodySize);
+        const isHeading    = isSectionHeading(rawText, bold, size, bodySize);
+        const isSmall      = size < bodySize * 0.85;
 
-        const runs = (block.lines || []).map((line, li) => {
-          const { bold: lb, italic: li2, size: ls } = getLineFontInfo(line);
-          const lhp = Math.max(Math.round(ls * 2 * 0.75), 18);
-          return new TextRun({
-            text: getLineText(line),
-            bold: lb || isMuchLarger || isHeading,
-            italics: li2 || italic,
-            size: li > 0 ? lhp : halfPt,
-            color: isHeading ? NAVY : (isMuchLarger ? NAVY : BLACK),
-            break: li > 0 ? 1 : 0,
-          });
-        });
+        // Detect centered text: block centre X near page centre
+        const blockCX = bboxX(block.bbox) + (block.bbox?.w || 0) / 2;
+        const isCentered = Math.abs(blockCX - pageCenterX) < pageWidth * 0.12;
 
-        if (isMuchLarger || isHeading) {
+        const color = isHeading || isMuchLarger ? NAVY : (isSmall ? '666666' : DARK);
+        const runs  = (block.lines || []).flatMap((line, li) =>
+          lineToRuns(line, bold || isMuchLarger || isHeading, italic || isSmall, halfPt, color, li)
+        );
+
+        let indent = undefined;
+        if (isCheckLine(rawText)) indent = { left: 200, hanging: 200 };
+
+        if (isHeading) {
           allChildren.push(new Paragraph({
             children: runs,
-            heading: isHeading ? HeadingLevel.HEADING_2 : HeadingLevel.HEADING_1,
-            spacing: { before: 280, after: 100 },
-            border: isHeading ? { bottom: { style: BorderStyle.SINGLE, size: 3, color: NAVY } } : undefined,
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 300, after: 120 },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 4 } },
+          }));
+        } else if (isMuchLarger) {
+          allChildren.push(new Paragraph({
+            children: runs,
+            spacing: { before: 200, after: 100 },
+            alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
           }));
         } else if (isLarger || bold) {
           allChildren.push(new Paragraph({
             children: runs,
-            spacing: { before: 160, after: 60 },
+            spacing: { before: 120, after: 60 },
+            alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
           }));
         } else {
           allChildren.push(new Paragraph({
             children: runs,
             spacing: { after: 60 },
+            alignment: isCentered ? AlignmentType.CENTER : AlignmentType.LEFT,
+            indent,
           }));
         }
       }
@@ -275,15 +314,16 @@ async function buildDocxFromPages(pages) {
   const doc = new WDoc({
     styles: {
       default: {
-        document: { run: { font: 'Calibri', size: 22, color: BLACK }, paragraph: { spacing: { line: 276 } } },
-        heading2: { run: { bold: true, color: NAVY, size: 24 } },
-        heading1: { run: { bold: true, color: NAVY, size: 28 } },
+        document: { run: { font: 'Calibri', size: 22, color: DARK }, paragraph: { spacing: { line: 276 } } },
+        heading2: { run: { bold: true, color: NAVY, size: 24, font: 'Calibri' } },
+        heading1: { run: { bold: true, color: NAVY, size: 28, font: 'Calibri' } },
       },
     },
     sections: [{ children: allChildren }],
   });
   return Packer.toBlob(doc);
 }
+
 
 async function convertPdfToDocxMuPDF(dataUri) {
   const form = new FormData();
