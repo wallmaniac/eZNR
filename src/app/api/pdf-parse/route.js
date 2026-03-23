@@ -24,8 +24,14 @@ export async function POST(request) {
     const pageData = [];
     for (let pi = 0; pi < numPages; pi++) {
       const page = pdf.loadPage(pi);
+      const bounds = page.getBounds(); // {x, y, w, h}
       const stext = page.toStructuredText('preserve-whitespace');
-      pageData.push(JSON.parse(stext.asJSON()));
+      const parsed = JSON.parse(stext.asJSON());
+      pageData.push({
+        ...parsed,
+        pageWidth: bounds.w,
+        pageHeight: bounds.h,
+      });
     }
 
     return NextResponse.json({ pages: pageData, numPages });
