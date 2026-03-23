@@ -52,6 +52,142 @@ async function convertDocxToBlob(arrayBuffer, title) {
   return URL.createObjectURL(new Blob([html], { type: 'text/html' }));
 }
 
+// ─── MuPDF-powered PDF → DOCX (same engine as PyMuPDF / pdf2docx) ────────────
+// Loads MuPDF from CDN (avoids Next.js WASM bundling). Runs 100% in browser.
+
+function getBlockText(block) {
+  return (block.lines || []).map(l => (l.spans || []).map(s => s.text).join('')).join('\n');
+}
+
+function getBlockFontInfo(block) {
+  const spans = (block.lines || []).flatMap(l => l.spans || []);
+  if (!spans.length) return { size: 11, bold: false, italic: false };
+  const maxSize = Math.max(...spans.map(s => s.size || 0));
+  const bold = spans.some(s => (s.flags & 16) || (s.font || '').toLowerCase().includes('bold'));
+  const italic = spans.some(s => (s.flags & 2) || (s.font || '').toLowerCase().includes('italic'));
+  return { size: maxSize, bold, italic };
+}
+
+// Load MuPDF WASM from CDN once, cache the module
+let mupdfModule = null;
+async function loadMuPDF() {
+  if (mupdfModule) return mupdfModule;
+  // Inject script tag — avoids Next.js Webpack trying to bundle the WASM file
+  await new Promise((resolve, reject) => {
+    if (window.__mupdf_loaded) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/mupdf@1.5.0/dist/mupdf.js';
+    s.onload = () => { window.__mupdf_loaded = true; resolve(); };
+    s.onerror = reject;
+    document.head.appendChild(s);
+  });
+  // MuPDF exposes itself as global `mupdf` after the script loads
+  // Wait for WASM to initialise
+  const m = await window.mupdf.ready;
+  mupdfModule = m || window.mupdf;
+  return mupdfModule;
+}
+
+async function convertPdfToDocxMuPDF(arrayBuffer) {
+  const mupdf = await loadMuPDF();
+  const {
+    Document: WDoc, Packer, Paragraph, TextRun,
+    HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType,
+  } = await import('docx');
+
+  const pdf = mupdf.Document.openDocument(new Uint8Array(arrayBuffer), 'application/pdf');
+  const numPages = pdf.countPages();
+  const allChildren = [];
+
+  for (let pi = 0; pi < numPages; pi++) {
+    const page = pdf.loadPage(pi);
+    const stext = page.toStructuredText('preserve-whitespace');
+    const { blocks = [] } = JSON.parse(stext.asJSON());
+
+    // ── Body font size (mode) ────────────────────────────────────────────
+    const sizes = blocks.filter(b => b.type === 'text')
+      .flatMap(b => (b.lines || []).flatMap(l => (l.spans || []).map(s => Math.round(s.size || 0))));
+    const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
+    const bodySize = sizes.length
+      ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 11;
+
+    // ── Cluster blocks into rows by Y centre (tolerance 8pt) ─────────────
+    const textBlocks = blocks.filter(b => b.type === 'text');
+    const rows = [];
+    for (const block of textBlocks) {
+      const cy = (block.bbox[1] + block.bbox[3]) / 2;
+      let placed = false;
+      for (const row of rows) {
+        if (Math.abs(row.cy - cy) < 8) {
+          row.blocks.push(block);
+          row.cy = row.blocks.reduce((s, b) => s + (b.bbox[1] + b.bbox[3]) / 2, 0) / row.blocks.length;
+          placed = true; break;
+        }
+      }
+      if (!placed) rows.push({ cy, y: block.bbox[1], blocks: [block] });
+    }
+    rows.sort((a, b) => a.y - b.y);
+
+    // ── Detect tables: consecutive rows each with 2+ blocks ─────────────
+    const groups = [];
+    let tableAcc = [];
+    const flushTable = () => {
+      if (tableAcc.length >= 2) groups.push({ type: 'table', rows: tableAcc });
+      else if (tableAcc.length === 1) tableAcc[0].forEach(b => groups.push({ type: 'text', block: b }));
+      tableAcc = [];
+    };
+    for (const row of rows) {
+      const sorted = [...row.blocks].sort((a, b) => a.bbox[0] - b.bbox[0]);
+      if (sorted.length > 1) { tableAcc.push(sorted); }
+      else { flushTable(); groups.push({ type: 'text', block: sorted[0] }); }
+    }
+    flushTable();
+
+    // ── Groups → DOCX elements ───────────────────────────────────────────
+    for (const g of groups) {
+      if (g.type === 'table') {
+        const numCols = Math.max(...g.rows.map(r => r.length));
+        allChildren.push(
+          new Table({
+            rows: g.rows.map(rb => new TableRow({
+              children: Array.from({ length: numCols }, (_, ci) => {
+                const block = rb[ci];
+                const txt = block ? getBlockText(block) : '';
+                const { bold } = block ? getBlockFontInfo(block) : { bold: false };
+                return new TableCell({
+                  children: [new Paragraph({ children: [new TextRun({ text: txt, bold })] })],
+                  margins: { top: 60, bottom: 60, left: 100, right: 100 },
+                });
+              }),
+            })),
+            width: { size: 100, type: WidthType.PERCENTAGE },
+          }),
+          new Paragraph({ children: [] })
+        );
+      } else {
+        const { block } = g;
+        const text = getBlockText(block); if (!text.trim()) continue;
+        const { size, bold, italic } = getBlockFontInfo(block);
+        const halfPt = Math.max(Math.round(size * 2 * 0.75), 18);
+        const isLarger = size > bodySize * 1.22;
+        const isMuchLarger = size > bodySize * 1.6;
+        const runs = (block.lines || []).map((line, li) =>
+          new TextRun({ text: (line.spans || []).map(s => s.text).join(''), bold: bold || isMuchLarger, italics: italic, size: halfPt, break: li > 0 ? 1 : 0 })
+        );
+        if (isMuchLarger) allChildren.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_1, spacing: { before: 240, after: 120 }, alignment: AlignmentType.CENTER }));
+        else if (isLarger || bold) allChildren.push(new Paragraph({ children: runs, heading: HeadingLevel.HEADING_2, spacing: { before: 180, after: 80 } }));
+        else allChildren.push(new Paragraph({ children: runs, spacing: { after: 60 } }));
+      }
+    }
+    if (pi < numPages - 1) allChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
+  }
+
+  const doc = new WDoc({
+    styles: { default: { document: { run: { font: 'Calibri', size: 22 }, paragraph: { spacing: { line: 276 } } } } },
+    sections: [{ children: allChildren }],
+  });
+  return Packer.toBlob(doc);
+}
 
 
 export default function ConverterPage() {
@@ -60,7 +196,6 @@ export default function ConverterPage() {
   const [dragging, setDragging] = useState(false);
   const [loaded, setLoaded] = useState(null);
   const [processing, setProcessing] = useState('');
-  const [pythonMissing, setPythonMissing] = useState(false);
   const [archiveSearch, setArchiveSearch] = useState('');
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
@@ -148,21 +283,11 @@ export default function ConverterPage() {
   };
 
   const handleConvertPdfToWord = async () => {
-    if (!loaded?.iframeSrc) return;
-    setPythonMissing(false);
+    if (!loaded?.data) return;
     setProcessing('pdf2word');
     try {
-      const pdfBlob = await fetch(loaded.iframeSrc).then(r => r.blob());
-      const form = new FormData();
-      form.append('file', pdfBlob, loaded.name);
-      form.append('filename', loaded.name);
-      const resp = await fetch('/api/pdf-to-word', { method: 'POST', body: form });
-      if (resp.status === 503) { setPythonMissing(true); return; }
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({}));
-        throw new Error(err.error || `Server error ${resp.status}`);
-      }
-      const blob = await resp.blob();
+      const arrayBuffer = dataUriToBuffer(loaded.data);
+      const blob = await convertPdfToDocxMuPDF(arrayBuffer);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -233,7 +358,7 @@ export default function ConverterPage() {
                 <div style={{ fontWeight: 600 }}>
                   {processing === 'converting'
                     ? (lang === 'bs' ? 'Konvertovanje Word dokumenta...' : 'Converting Word document...')
-                    : (lang === 'bs' ? 'Konvertovanje PDF-a u Word (pdf2docx)...' : 'Converting PDF to editable Word (pdf2docx)...')}
+                    : (lang === 'bs' ? 'Konvertovanje PDF-a u Word (MuPDF)...' : 'Converting PDF to editable Word (MuPDF)...')}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 6 }}>
                   {lang === 'bs' ? 'Ovo može potrajati nekoliko sekundi.' : 'This may take a few seconds.'}
@@ -268,23 +393,7 @@ export default function ConverterPage() {
                 )}
                 {isPdf && (
                   <div style={{ padding: '5px 14px', background: 'rgba(99,102,241,0.05)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang === 'bs' ? 'Konverzija putem pdf2docx — čuva tabele i tekst kao editabilni Word.' : 'Conversion via pdf2docx — preserves tables and text as editable Word.'}
-                  </div>
-                )}
-
-                {pythonMissing && (
-                  <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10 }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 6, color: 'var(--danger)' }}>
-                      ⚠️ {lang === 'bs' ? 'Konverzija nije dostupna na ovom serveru' : 'Conversion not available on this server'}
-                    </div>
-                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                      {lang === 'bs'
-                        ? 'PDF → Word konverzija zahtijeva Python na serveru. Pokrenite app lokalno ili instalirajte:'
-                        : 'PDF → Word requires Python on the server. Run the app locally, or install:'}
-                    </div>
-                    <div style={{ marginTop: 8, background: 'var(--bg-input)', borderRadius: 6, padding: '7px 12px', fontFamily: 'monospace', fontSize: '0.84rem', color: 'var(--primary)', userSelect: 'all' }}>
-                      pip install pdf2docx
-                    </div>
+                    💡 {lang === 'bs' ? 'Konverzija putem MuPDF (WASM) — editabilni tekst + tabele, bez vanjskog servisa.' : 'Conversion via MuPDF (WASM) — editable text + tables, no external service.'}
                   </div>
                 )}
 
