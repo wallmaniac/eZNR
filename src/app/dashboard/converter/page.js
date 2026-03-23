@@ -201,6 +201,7 @@ export default function ConverterPage() {
   const [dragging, setDragging] = useState(false);
   const [loaded, setLoaded] = useState(null);
   const [processing, setProcessing] = useState('');
+  const [setupRequired, setSetupRequired] = useState(false);
   const [archiveSearch, setArchiveSearch] = useState('');
   const fileInputRef = useRef(null);
   const blobUrlsRef = useRef([]);
@@ -288,11 +289,27 @@ export default function ConverterPage() {
   };
 
   const handleConvertPdfToWord = async () => {
-    if (!loaded?.data) return;
+    if (!loaded?.iframeSrc) return;
     setProcessing('pdf2word');
+    setSetupRequired(false);
     try {
-      const arrayBuffer = dataUriToBuffer(loaded.data);
-      const blob = await convertPdfToDocxBlob(arrayBuffer, loaded.name);
+      const pdfBlob = await fetch(loaded.iframeSrc).then(r => r.blob());
+      const form = new FormData();
+      form.append('file', pdfBlob, loaded.name);
+      form.append('filename', loaded.name);
+
+      const resp = await fetch('/api/pdf-to-word', { method: 'POST', body: form });
+
+      if (resp.status === 503) {
+        setSetupRequired(true);
+        return;
+      }
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        throw new Error(err.error || `Server error ${resp.status}`);
+      }
+
+      const blob = await resp.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -301,9 +318,7 @@ export default function ConverterPage() {
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e) {
       console.error(e);
-      await alert(lang === 'bs'
-        ? 'Greška pri konverziji PDF-a u Word. PDF možda nema tekst (skeniran dokument).'
-        : 'PDF conversion failed. The PDF may be scanned (image-only) without text.');
+      await alert(lang === 'bs' ? `Greška: ${e.message}` : `Error: ${e.message}`);
     } finally {
       setProcessing('');
     }
@@ -400,7 +415,19 @@ export default function ConverterPage() {
                 )}
                 {isPdf && (
                   <div style={{ padding: '5px 14px', background: 'rgba(99,102,241,0.05)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang === 'bs' ? '"Konvertuj u Word" ekstrahira tekst i preuzima .docx fajl. Radi samo za PDF sa tekstom (ne skenirani).' : '"Convert to Word" extracts text and downloads a .docx. Works only on text-based PDFs, not scanned images.'}
+                    💡 {lang === 'bs' ? 'Konverzija koristi pdf2docx (Python) — čuva tabele, kolone i formatiranje.' : 'Conversion uses pdf2docx (Python) — preserves tables, columns and formatting.'}
+                  </div>
+                )}
+
+                {setupRequired && (
+                  <div style={{ margin: '12px 16px', padding: '14px 16px', background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.25)', borderRadius: 10 }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 8, color: 'var(--danger)' }}>⚙️ {lang === 'bs' ? 'pdf2docx nije instaliran' : 'pdf2docx not installed'}</div>
+                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 10 }}>
+                      {lang === 'bs' ? 'Pokrenite ovu komandu u terminalu, zatim osvježite stranicu:' : 'Run this command in your terminal, then refresh the page:'}
+                    </div>
+                    <div style={{ background: 'var(--bg-input)', borderRadius: 6, padding: '8px 12px', fontFamily: 'monospace', fontSize: '0.86rem', color: 'var(--primary)', userSelect: 'all' }}>
+                      pip install pdf2docx
+                    </div>
                   </div>
                 )}
 
