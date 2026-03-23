@@ -1,7 +1,7 @@
 'use client';
 import { useState, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, COLLECTIONS } from '@/lib/dataStore';
+import { getAll, getRawAll, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 
@@ -369,10 +369,10 @@ export default function ConverterPage() {
     blobUrlsRef.current = [];
   };
 
-  // Archive: include Digital Archive + Employer Docs that have an attached file (data)
+  // Archive: show ALL files from Digital Archive (bypass company filter) + employer docs with attached data
   const archiveFiles = [
-    ...getAll(COLLECTIONS.DIGITAL_ARCHIVE),
-    ...getAll(COLLECTIONS.EMPLOYER_DOCS).filter(d => d.data && d.naziv).map(d => ({ ...d, name: d.naziv + (d.ekstenzija || '.pdf') })),
+    ...getRawAll(COLLECTIONS.DIGITAL_ARCHIVE),
+    ...getRawAll(COLLECTIONS.EMPLOYER_DOCS).filter(d => d.data && d.naziv).map(d => ({ ...d, name: d.naziv + (d.ekstenzija || '.pdf') })),
   ];
   const { sorted: filteredArchive } = useSortedList(
     archiveFiles.filter(f =>
@@ -446,41 +446,76 @@ export default function ConverterPage() {
     if (!loaded?.iframeSrc) return;
     setProcessing('word2pdf');
     try {
-      // Fetch the mammoth-generated HTML from the blob URL
+      // 1. Fetch the mammoth-generated HTML from the blob URL
       const htmlContent = await fetch(loaded.iframeSrc).then(r => r.text());
 
-      // Create an off-screen container styled for A4 output
+      // 2. Render HTML into a visible (0-opacity) container so html2canvas can paint it
       const container = document.createElement('div');
       container.style.cssText = [
-        'position:fixed', 'top:-9999px', 'left:-9999px',
-        'width:794px',   // A4 at 96dpi
-        'background:#fff', 'color:#222',
+        'position:fixed', 'top:0', 'left:0',
+        'width:794px',          // A4 at 96dpi ≈ 210mm
+        'min-height:1123px',    // A4 height
+        'background:#fff',
+        'color:#222',
         'font-family:Arial,Helvetica,sans-serif',
-        'font-size:11pt', 'line-height:1.5',
+        'font-size:11pt',
+        'line-height:1.5',
         'padding:60px 70px',
+        'box-sizing:border-box',
+        'opacity:0.01',         // nearly invisible but still renders
+        'pointer-events:none',
+        'z-index:-1',
       ].join(';');
       container.innerHTML = htmlContent;
       document.body.appendChild(container);
 
-      const { jsPDF } = await import('jspdf');
-      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      // Give browser a frame to layout
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await new Promise(r => setTimeout(r, 300));
 
-      await new Promise((resolve, reject) => {
-        doc.html(container, {
-          callback: (d) => {
-            const pdfName = loaded.name.replace(/\.(docx|doc)$/i, '.pdf');
-            d.save(pdfName);
-            resolve();
-          },
-          x: 10,
-          y: 10,
-          width: 190,          // usable A4 width in mm
-          windowWidth: 794,    // matches container px width
-          autoPaging: 'text',
-        });
+      // 3. Render to canvas
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 794,
+        logging: false,
       });
 
       document.body.removeChild(container);
+
+      // 4. Slice canvas into A4 pages and add to jsPDF
+      const { jsPDF } = await import('jspdf');
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+      const A4_W_MM = 210;
+      const A4_H_MM = 297;
+      // How many canvas pixels = one A4 page height?
+      const pxPerMm = canvas.width / A4_W_MM;   // canvas px per mm (width basis)
+      const pageHPx = A4_H_MM * pxPerMm;         // canvas px for one page height
+
+      let yPx = 0;
+      let pageIdx = 0;
+      while (yPx < canvas.height) {
+        if (pageIdx > 0) pdf.addPage();
+        const sliceH = Math.min(pageHPx, canvas.height - yPx);
+        // Create a slice canvas
+        const slice = document.createElement('canvas');
+        slice.width  = canvas.width;
+        slice.height = Math.round(sliceH);
+        const ctx = slice.getContext('2d');
+        ctx.drawImage(canvas, 0, Math.round(yPx), canvas.width, Math.round(sliceH), 0, 0, canvas.width, Math.round(sliceH));
+        const imgData = slice.toDataURL('image/jpeg', 0.92);
+        const imgHmm  = (sliceH / pxPerMm);
+        pdf.addImage(imgData, 'JPEG', 0, 0, A4_W_MM, imgHmm);
+        yPx += pageHPx;
+        pageIdx++;
+      }
+
+      pdf.save(loaded.name.replace(/\.(docx|doc)$/i, '.pdf'));
     } catch (e) {
       console.error('[word2pdf]', e);
       await alert(lang === 'bs' ? `Greška pri konverziji: ${e?.message || e}` : `Conversion error: ${e?.message || e}`);
