@@ -1243,6 +1243,31 @@ function WorkersPageInner() {
                     </div>
                 )}
 
+
+                {/* ── FOOTER ACTIONS (sticky) ── */}
+                <div className="sticky-footer" style={{
+                    position: 'sticky', bottom: 0, background: 'var(--bg-card)', borderTop: '1px solid var(--border)', padding: '12px 0',
+                    display: 'flex', alignItems: 'center', gap: 12, zIndex: 50,
+                }}>
+                    <button className="btn btn-ghost" onClick={handleCancel}>← </button>
+                    <button className="btn btn-primary" onClick={() => handleSave(false)}>💾 {t('save')}</button>
+                    <button className="btn btn-outline" onClick={() => handleSave(true)}>💾 {t('saveAndAddNew')}</button>
+                    <button className="btn btn-ghost" onClick={handleCancel}>↩ {t('discard')}</button>
+                </div>
+            </div>
+        );
+    }
+
+    // ── LIST VIEW ──
+
+    return (
+        <>
+            <div className="animate-fadeIn">
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                    👷 {t('workers')}
+                </h1>
+                <DialogRenderer />
+
                 {/* ── EXCEL EXPORT MODAL ── */}
                 {showExportModal && (
                     <div className="modal-overlay" onClick={() => setShowExportModal(false)} style={{ zIndex: 9999 }}>
@@ -1339,30 +1364,6 @@ function WorkersPageInner() {
                     </div>
                 )}
 
-                {/* ── FOOTER ACTIONS (sticky) ── */}
-                <div className="sticky-footer" style={{
-                    position: 'sticky', bottom: 0, background: 'var(--bg-card)', borderTop: '1px solid var(--border)', padding: '12px 0',
-                    display: 'flex', alignItems: 'center', gap: 12, zIndex: 50,
-                }}>
-                    <button className="btn btn-ghost" onClick={handleCancel}>← </button>
-                    <button className="btn btn-primary" onClick={() => handleSave(false)}>💾 {t('save')}</button>
-                    <button className="btn btn-outline" onClick={() => handleSave(true)}>💾 {t('saveAndAddNew')}</button>
-                    <button className="btn btn-ghost" onClick={handleCancel}>↩ {t('discard')}</button>
-                </div>
-            </div>
-        );
-    }
-
-    // ── LIST VIEW ──
-
-    return (
-        <>
-            <div className="animate-fadeIn">
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    👷 {t('workers')}
-                </h1>
-                <DialogRenderer />
-
                 <div className="card">
                     <div className="card-body">
                         {/* Toolbar */}
@@ -1436,7 +1437,7 @@ function WorkersPageInner() {
                                         <th>{t('oib')}</th>
                                         <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
                                         <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
-                                        <th style={{ width: 70, textAlign: 'center', fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>ST.</th>
+                                        <th style={{ width: 140, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Status ZNR/MBR' : 'Status'}</th>
                                         <th style={{ width: 40, textAlign: 'center' }} title={allPageSelected ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all') : (lang === 'bs' ? 'Odaberi sve na stranici' : 'Select all on page')}>
                                             <input
                                                 type="checkbox"
@@ -1532,10 +1533,22 @@ function WorkersPageInner() {
                                                         const _soonC = _wC.some(cx => { if (!cx.vrijediDo) return false; const d=(new Date(cx.vrijediDo)-_today)/86400000; return d>=0&&d<=30; });
                                                         const _expM = _wM.some(mx => mx.vrijediDo && new Date(mx.vrijediDo) < _today);
                                                         const _soonM = _wM.some(mx => { if (!mx.vrijediDo) return false; const d=(new Date(mx.vrijediDo)-_today)/86400000; return d>=0&&d<=60; });
-                                                        if (_expC || _expM) return <span title="Isteklo!" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--danger)',boxShadow:'0 0 5px var(--danger)'}} />;
-                                                        if (_soonC || _soonM) return <span title="Uskoro istice" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--warning)'}} />;
-                                                        if (_wC.length === 0) return <span title="Nema uvjerenja" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--border)',border:'1px dashed var(--text-muted)'}} />;
-                                                        return <span title="Sve u redu" style={{display:'inline-flex',width:12,height:12,borderRadius:'50%',background:'var(--success)'}} />;
+                                                        
+                                                        let badgeCls = 'badge-success';
+                                                        let badgeTxt = lang === 'bs' ? 'U redu' : 'Ok';
+                                                        
+                                                        if (_expC || _expM) {
+                                                            badgeCls = 'badge-danger';
+                                                            badgeTxt = lang === 'bs' ? 'Isteklo!' : 'Expired!';
+                                                        } else if (_soonC || _soonM) {
+                                                            badgeCls = 'badge-warning';
+                                                            badgeTxt = lang === 'bs' ? 'Uskoro ističe' : 'Expiring soon';
+                                                        } else if (_wC.length === 0) {
+                                                            badgeCls = '';
+                                                            badgeTxt = lang === 'bs' ? 'Nema podataka' : 'No data';
+                                                        }
+                                                        
+                                                        return <span className={`badge ${badgeCls}`} style={{ width: '100px', display: 'inline-flex', justifyContent: 'center' }}>{badgeTxt}</span>;
                                                     })()}
                                                 </td>
                                                 <td style={{ textAlign: 'center' }}>
