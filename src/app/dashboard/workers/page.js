@@ -14,6 +14,7 @@ import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
+import * as XLSX from 'xlsx';
 
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
@@ -85,6 +86,15 @@ function WorkersPageInner() {
     const [medExamEditId, setMedExamEditId] = useState(null);
     const [medExamForm, setMedExamForm] = useState({ tipPregleda: 'prethodni', datumPregleda: '', vrijediDo: '', rezultat: 'Sposoban', zdravstvenaUstanova: '', doktorIme: '', ogranicenja: '', uputnicaBroj: '' });
     const medExamsRef = useRef(null);
+
+    // EXCEL EXPORT
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [exportColumns, setExportColumns] = useState({
+        ime: true, prezime: true, jmbg: true, oib: true, datumRodenja: true, spol: false, 
+        zivotnaDob: false, orgJedinicaId: true, radnoMjestoId: true, datumZaposlenja: true, 
+        stazDoDolaska: false, ukupniStaz: false, lokacija: false, ulica: false, kucniBroj: false, 
+        mjestoId: false, opcina: false, telefonTvrtki: false, mobitel: false, email: false, aktivan: true, evidencijskiBroj: false
+    });
 
     const loadData = useCallback(() => {
         // reload list-level collections
@@ -1233,6 +1243,102 @@ function WorkersPageInner() {
                     </div>
                 )}
 
+                {/* ── EXCEL EXPORT MODAL ── */}
+                {showExportModal && (
+                    <div className="modal-overlay" onClick={() => setShowExportModal(false)} style={{ zIndex: 9999 }}>
+                        <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #107c41, #185c37)' }}>
+                                <h2 style={{ color: 'white', margin: 0 }}>📊 {lang === 'bs' ? 'Izvoz liste radnika (Excel)' : 'Export Worker List (Excel)'}</h2>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowExportModal(false)}>✕</button>
+                            </div>
+                            <div className="modal-body">
+                                <p style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--text-light)' }}>
+                                    {lang === 'bs' 
+                                        ? `Odaberite koje podatke želite uključiti u Excel tablicu (odabrano ${selectedIds.size} radnika):` 
+                                        : `Select which data to include in the Excel table (${selectedIds.size} workers selected):`}
+                                </p>
+                                <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                                    <button className="btn btn-outline btn-sm" onClick={() => {
+                                        const all = {};
+                                        Object.keys(exportColumns).forEach(k => all[k] = true);
+                                        setExportColumns(all);
+                                    }}>{lang==='bs'?'Odaberi sve':'Select all'}</button>
+                                    <button className="btn btn-outline btn-sm" onClick={() => {
+                                        const none = {};
+                                        Object.keys(exportColumns).forEach(k => none[k] = false);
+                                        setExportColumns(none);
+                                    }}>{lang==='bs'?'Odznači sve':'Deselect all'}</button>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px 16px', background: 'var(--bg-card)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                                    {[
+                                        {key: 'ime', label: 'Ime'}, {key: 'prezime', label: 'Prezime'},
+                                        {key: 'jmbg', label: 'JMBG'}, {key: 'oib', label: 'OIB'},
+                                        {key: 'evidencijskiBroj', label: 'Evid. br.'},
+                                        {key: 'datumRodenja', label: 'Datum rođenja'}, {key: 'spol', label: 'Spol'},
+                                        {key: 'zivotnaDob', label: 'Životna dob'},
+                                        {key: 'orgJedinicaId', label: 'Organizacijska jed.'}, {key: 'radnoMjestoId', label: 'Radno mjesto'},
+                                        {key: 'lokacija', label: 'Lokacija'},
+                                        {key: 'datumZaposlenja', label: 'Datum zapošlj.'}, {key: 'stazDoDolaska', label: 'Staž do dolaska'},
+                                        {key: 'ukupniStaz', label: 'Ukupni staž'},
+                                        {key: 'ulica', label: 'Ulica'}, {key: 'kucniBroj', label: 'Kućni broj'},
+                                        {key: 'mjestoId', label: 'Mjesto'}, {key: 'opcina', label: 'Općina'},
+                                        {key: 'telefonTvrtki', label: 'Tel (Firma)'}, {key: 'mobitel', label: 'Mobitel'},
+                                        {key: 'email', label: 'Email'}, {key: 'aktivan', label: 'Status (Aktivan)'}
+                                    ].map(col => (
+                                        <label key={col.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                            <input type="checkbox" checked={exportColumns[col.key]} onChange={e => setExportColumns(p => ({...p, [col.key]: e.target.checked}))} />
+                                            {col.label}
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-ghost" onClick={() => setShowExportModal(false)}>{t('cancel')}</button>
+                                <button className="btn btn-primary" style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }} onClick={() => {
+                                    const selectedWorkers = workers.filter(w => selectedIds.has(w.id));
+                                    const dataRows = selectedWorkers.map(w => {
+                                        const row = {};
+                                        if (exportColumns.ime) row['Ime'] = w.ime;
+                                        if (exportColumns.prezime) row['Prezime'] = w.prezime;
+                                        if (exportColumns.jmbg) row['JMBG'] = w.jmbg;
+                                        if (exportColumns.oib) row['OIB/Osobni br.'] = w.oib;
+                                        if (exportColumns.evidencijskiBroj) row['Evidencijski broj'] = w.evidencijskiBroj;
+                                        if (exportColumns.datumRodenja) row['Datum rođenja'] = w.datumRodenja ? formatDate(w.datumRodenja) : '';
+                                        if (exportColumns.spol) row['Spol'] = w.spol;
+                                        if (exportColumns.zivotnaDob) row['Životna dob'] = w.zivotnaDob;
+                                        if (exportColumns.orgJedinicaId) row['Organizacijska jedinica'] = getOrgUnitName(w.orgJedinicaId);
+                                        if (exportColumns.radnoMjestoId) row['Radno mjesto'] = getWorkplaceName(w.radnoMjestoId);
+                                        if (exportColumns.lokacija) row['Lokacija'] = w.lokacija;
+                                        if (exportColumns.datumZaposlenja) row['Datum zaposlenja'] = w.datumZaposlenja ? formatDate(w.datumZaposlenja) : '';
+                                        if (exportColumns.stazDoDolaska) row['Staž do dolaska'] = w.stazDoDolaska;
+                                        if (exportColumns.ukupniStaz) row['Ukupni radni staž'] = w.ukupniStaz;
+                                        if (exportColumns.ulica) row['Ulica'] = w.ulica;
+                                        if (exportColumns.kucniBroj) row['Kućni broj'] = w.kucniBroj;
+                                        if (exportColumns.mjestoId) row['Mjesto'] = places.find(p => p.id === w.mjestoId)?.naziv || '';
+                                        if (exportColumns.opcina) row['Općina'] = w.opcina;
+                                        if (exportColumns.telefonTvrtki) row['Telefon (Firma)'] = w.telefonTvrtki;
+                                        if (exportColumns.mobitel) row['Mobitel'] = w.mobitel;
+                                        if (exportColumns.email) row['Email'] = w.email;
+                                        if (exportColumns.aktivan) row['Status'] = w.aktivan ? 'Aktivan' : 'Bivši radnik';
+                                        return row;
+                                    });
+                                    const ws = XLSX.utils.json_to_sheet(dataRows);
+                                    
+                                    const colWidths = Object.keys(dataRows[0] || {}).map(key => ({
+                                        wch: Math.max(key.length, ...dataRows.map(row => (row[key] || '').toString().length)) + 2
+                                    }));
+                                    ws['!cols'] = colWidths;
+
+                                    const wb = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(wb, ws, "Lista radnika");
+                                    XLSX.writeFile(wb, `Lista_radnika_${formatDate(new Date())}.xlsx`);
+                                    setShowExportModal(false);
+                                }}>⬇️ {lang === 'bs' ? 'Preuzmi Excel' : 'Download Excel'}</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* ── FOOTER ACTIONS (sticky) ── */}
                 <div className="sticky-footer" style={{
                     position: 'sticky', bottom: 0, background: 'var(--bg-card)', borderTop: '1px solid var(--border)', padding: '12px 0',
@@ -1293,11 +1399,11 @@ function WorkersPageInner() {
                                         {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'radnika odabrano' : 'workers selected'}` : (lang === 'bs' ? 'Odaberite radnike' : 'Select workers first')}
                                     </div>
                                     <div className="dropdown-divider" />
-                                    <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={async () => {
+                                    <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={() => {
                                         document.getElementById('group-action-menu').style.display = 'none';
-                                        if (selectedIds.size === 0) { await alert(lang === 'bs' ? 'Odaberite radnike kvačicom.' : 'Select workers using checkboxes.'); return; }
-                                        await alert(lang === 'bs' ? `Generisanje dokumenata za ${selectedIds.size} radnika (uskoro)` : `Generate documents for ${selectedIds.size} workers (coming soon)`);
-                                    }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
+                                        if (selectedIds.size === 0) return;
+                                        setShowExportModal(true);
+                                    }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📊 {lang === 'bs' ? 'Generiši Excel listu' : 'Generate Excel list'}</button>
                                     <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={async () => {
                                         document.getElementById('group-action-menu').style.display = 'none';
                                         if (selectedIds.size === 0) { await alert(lang === 'bs' ? 'Odaberite radnike kvačicom.' : 'Select workers using checkboxes.'); return; }
