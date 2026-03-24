@@ -9,6 +9,8 @@ import PizZip from 'pizzip'; // Actually docxtemplater uses pizzip
 import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
 
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+
 export default function TestGenerator() {
     const { lang } = useLanguage();
     const bs = lang === 'bs';
@@ -35,7 +37,6 @@ export default function TestGenerator() {
 
     const handleShuffleQuestions = () => {
         const shuffled = [...questions].sort(() => Math.random() - 0.5);
-        // reassign IDs to keep numbering
         shuffled.forEach((q, i) => q.id = i + 1);
         setQuestions(shuffled);
     };
@@ -44,7 +45,6 @@ export default function TestGenerator() {
         setQuestions(prev => prev.map(q => {
             if (q.id === qId) {
                 const shuffledOpts = [...q.options].sort(() => Math.random() - 0.5);
-                // reassign letters
                 const letters = ['a', 'b', 'c', 'd', 'e'];
                 shuffledOpts.forEach((opt, i) => opt.label = letters[i] || 'x');
                 return { ...q, options: shuffledOpts };
@@ -76,15 +76,24 @@ export default function TestGenerator() {
 
     const handleAddQuestion = () => {
         const newQ = {
-            id: questions.length + 1,
+            id: 0, // temporary, will be mapped to 1
             text: bs ? 'Novo pitanje' : 'New Question',
             options: [
                 { label: 'a', text: bs ? 'Opcija A' : 'Option A' },
                 { label: 'b', text: bs ? 'Opcija B' : 'Option B' }
             ]
         };
-        setQuestions([...questions, newQ]);
-        startEditing(newQ);
+        const newList = [newQ, ...questions];
+        newList.forEach((q, i) => q.id = i + 1);
+        setQuestions(newList);
+        
+        // Timeout to allow re-render with new states before editing
+        setTimeout(() => {
+            setEditingId(1);
+            setEditText(newList[0].text);
+            setEditOptions(JSON.parse(JSON.stringify(newList[0].options)));
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 50);
     };
 
     const handleAddOptionToEdit = () => {
@@ -105,13 +114,28 @@ export default function TestGenerator() {
         setEditOptions(newOpts);
     };
 
+    const onDragEnd = (result) => {
+        if (!result.destination) return;
+        const sourceIndex = result.source.index;
+        const destIndex = result.destination.index;
+        
+        if (sourceIndex === destIndex) return;
+
+        const newItems = Array.from(questions);
+        const [removed] = newItems.splice(sourceIndex, 1);
+        newItems.splice(destIndex, 0, removed);
+        
+        // Re-number
+        newItems.forEach((q, i) => q.id = i + 1);
+        setQuestions(newItems);
+    };
+
     const handleDownload = async () => {
         try {
             setLoading(true);
             const response = await fetch('/templates/GeneratedTestTemplate.docx');
             const arrayBuffer = await response.arrayBuffer();
 
-            // 1. Docxtemplater Replacement
             const tempZip = new PizZip(arrayBuffer);
             const doc = new Docxtemplater(tempZip, {
                 paragraphLoop: true,
@@ -134,7 +158,6 @@ export default function TestGenerator() {
 
             const docxtemplaterBlob = doc.getZip().generate({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 
-            // 2. JSZip Header Modifications
             const zip = await JSZip.loadAsync(docxtemplaterBlob);
             
             const usedMedia = new Set();
@@ -193,6 +216,16 @@ export default function TestGenerator() {
         }
     };
 
+    const inputStyles = {
+        width: '100%', 
+        padding: '10px 14px', 
+        borderRadius: 'var(--radius-sm)', 
+        border: '1px solid var(--border-color)', 
+        background: 'var(--bg-element)', 
+        color: 'var(--text)',
+        fontSize: '0.95rem'
+    };
+
     return (
         <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -226,91 +259,116 @@ export default function TestGenerator() {
             <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: 0 }}>
                     {bs 
-                        ? 'Ovdje možete uređivati pitanja, mijenjati njihov redoslijed ili miješati odgovore. Kada završite, preuzmite dokument u DOCX formatu.' 
-                        : 'Here you can edit questions, change their order or shuffle options. When done, download the document in DOCX format.'}
+                        ? 'Ovdje možete uređivati pitanja, mijenjati njihov redoslijed prevlačenjem (drag & drop) ili miješati odgovore. Kada završite, preuzmite dokument u DOCX formatu.' 
+                        : 'Here you can edit questions, change their order using drag & drop, or shuffle options. When done, download the document in DOCX format.'}
                 </p>
 
-                {questions.map((q) => (
-                    <div key={q.id} style={{
-                        padding: 16,
-                        border: '1px solid var(--border-color)',
-                        borderRadius: 'var(--radius-md)',
-                        background: editingId === q.id ? 'var(--bg-hover)' : 'var(--bg-panel)'
-                    }}>
-                        {editingId === q.id ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>Pitanje</label>
-                                    <input 
-                                        type="text" 
-                                        className="input-field" 
-                                        value={editText} 
-                                        onChange={e => setEditText(e.target.value)}
-                                        style={{ width: '100%', fontWeight: 'bold' }}
-                                    />
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 4 }}>Opcije</label>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                                        {editOptions.map((opt, idx) => (
-                                            <div key={idx} style={{ display: 'flex', gap: 8 }}>
-                                                <span style={{ padding: '8px', background: 'var(--bg-element)', borderRadius: 'var(--radius-sm)' }}>{opt.label})</span>
-                                                <input 
-                                                    type="text" 
-                                                    className="input-field" 
-                                                    value={opt.text}
-                                                    onChange={e => handleUpdateOptionText(idx, e.target.value)}
-                                                    style={{ flex: 1 }}
-                                                />
-                                                <button className="btn btn-outline btn-sm btn-icon" onClick={() => handleRemoveOptionFromEdit(idx)}>
-                                                    🗑️
-                                                </button>
+                <DragDropContext onDragEnd={onDragEnd}>
+                    <Droppable droppableId="questions-list">
+                        {(provided) => (
+                            <div {...provided.droppableProps} ref={provided.innerRef} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                {questions.map((q, index) => (
+                                    <Draggable key={q.id.toString() + '-' + index} draggableId={q.id.toString()} index={index} isDragDisabled={editingId !== null}>
+                                        {(provided, snapshot) => (
+                                            <div 
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                style={{
+                                                    ...provided.draggableProps.style,
+                                                    padding: 16,
+                                                    border: '1px solid var(--border-color)',
+                                                    borderRadius: 'var(--radius-md)',
+                                                    background: snapshot.isDragging ? 'var(--bg-hover)' : 'var(--bg-panel)',
+                                                    opacity: editingId && editingId !== q.id ? 0.5 : 1,
+                                                    transition: snapshot.isDragging ? 'none' : 'opacity 0.2s'
+                                                }}
+                                            >
+                                                {editingId === q.id ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                                        <div>
+                                                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6 }}>Pitanje</label>
+                                                            <input 
+                                                                type="text" 
+                                                                value={editText} 
+                                                                onChange={e => setEditText(e.target.value)}
+                                                                style={{ ...inputStyles, fontWeight: 'bold' }}
+                                                            />
+                                                        </div>
+                                                        <div>
+                                                            <label style={{ display: 'block', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 6 }}>Opcije</label>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                                                {editOptions.map((opt, idx) => (
+                                                                    <div key={idx} style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                                                                        <span style={{ fontWeight: 'bold', color: 'var(--text-muted)', width: '20px' }}>{opt.label})</span>
+                                                                        <input 
+                                                                            type="text" 
+                                                                            value={opt.text}
+                                                                            onChange={e => handleUpdateOptionText(idx, e.target.value)}
+                                                                            style={{ ...inputStyles, flex: 1 }}
+                                                                        />
+                                                                        <button className="btn btn-outline-danger btn-sm btn-icon" onClick={() => handleRemoveOptionFromEdit(idx)}>
+                                                                            🗑️
+                                                                        </button>
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                            <button className="btn btn-outline btn-sm" style={{ marginTop: 12 }} onClick={handleAddOptionToEdit}>
+                                                                + {bs ? 'Dodaj opciju' : 'Add Option'}
+                                                            </button>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12, borderTop: '1px solid var(--border-color)', paddingTop: 16 }}>
+                                                            <button className="btn btn-outline" onClick={() => setEditingId(null)}>
+                                                                {bs ? 'Odustani' : 'Cancel'}
+                                                            </button>
+                                                            <button className="btn btn-primary" onClick={saveEditing}>
+                                                                {bs ? 'Sačuvaj promjene' : 'Save Changes'}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+                                                        <div {...provided.dragHandleProps} style={{ padding: '4px', cursor: 'grab', color: 'var(--text-muted)' }}>
+                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
+                                                                <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+                                                            </svg>
+                                                        </div>
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                                <h4 style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.4 }}>
+                                                                    {q.id}. {q.text}
+                                                                </h4>
+                                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                                    <button className="btn btn-outline btn-sm btn-icon" title="Izmiješaj opcije" onClick={() => handleShuffleOptionsForQuestion(q.id)}>
+                                                                        🔀
+                                                                    </button>
+                                                                    <button className="btn btn-outline btn-sm btn-icon" title="Uredi" onClick={() => startEditing(q)}>
+                                                                        ✏️
+                                                                    </button>
+                                                                    <button className="btn btn-outline-danger btn-sm btn-icon" title="Obriši" onClick={() => handleDeleteQuestion(q.id)}>
+                                                                        🗑️
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                                                                {q.options.map(opt => (
+                                                                    <div key={opt.label} style={{ paddingLeft: 12, color: 'var(--text)' }}>
+                                                                        <strong style={{ color: 'var(--text-muted)', marginRight: 6 }}>{opt.label})</strong> {opt.text}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
-                                        ))}
-                                    </div>
-                                    <button className="btn btn-outline btn-sm" style={{ marginTop: 8 }} onClick={handleAddOptionToEdit}>
-                                        + {bs ? 'Dodaj opciju' : 'Add Option'}
-                                    </button>
-                                </div>
-                                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 8 }}>
-                                    <button className="btn btn-outline btn-sm" onClick={() => setEditingId(null)}>
-                                        {bs ? 'Odustani' : 'Cancel'}
-                                    </button>
-                                    <button className="btn btn-primary btn-sm" onClick={saveEditing}>
-                                        {bs ? 'Sačuvaj promjene' : 'Save Changes'}
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <h4 style={{ margin: 0, fontSize: '1.05rem', lineHeight: 1.4 }}>
-                                        {q.id}. {q.text}
-                                    </h4>
-                                    <div style={{ display: 'flex', gap: 6 }}>
-                                        <button className="btn btn-outline btn-sm btn-icon" title="Izmiješaj opcije" onClick={() => handleShuffleOptionsForQuestion(q.id)}>
-                                            🔀
-                                        </button>
-                                        <button className="btn btn-outline btn-sm btn-icon" title="Uredi" onClick={() => startEditing(q)}>
-                                            ✏️
-                                        </button>
-                                        <button className="btn btn-outline-danger btn-sm btn-icon" title="Obriši" onClick={() => handleDeleteQuestion(q.id)}>
-                                            🗑️
-                                        </button>
-                                    </div>
-                                </div>
-                                <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                    {q.options.map(opt => (
-                                        <div key={opt.label} style={{ paddingLeft: 12 }}>
-                                            <strong>{opt.label})</strong> {opt.text}
-                                        </div>
-                                    ))}
-                                </div>
+                                        )}
+                                    </Draggable>
+                                ))}
+                                {provided.placeholder}
                             </div>
                         )}
-                    </div>
-                ))}
-
+                    </Droppable>
+                </DragDropContext>
             </div>
         </div>
     );
