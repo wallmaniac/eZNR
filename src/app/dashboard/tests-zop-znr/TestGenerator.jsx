@@ -140,6 +140,7 @@ export default function TestGenerator() {
             const doc = new Docxtemplater(tempZip, {
                 paragraphLoop: true,
                 linebreaks: true,
+                delimiters: { start: '[[', end: ']]' }
             });
 
             doc.render({
