@@ -69,7 +69,7 @@ Generiši upitnik za ovo radno mjesto.`;
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 4096, topP: 0.9, responseMimeType: 'application/json' },
+        generationConfig: { temperature: 0.4, maxOutputTokens: 8192, topP: 0.9, responseMimeType: 'application/json' },
     };
 
     for (const model of MODELS) {
@@ -83,18 +83,59 @@ Generiši upitnik za ovo radno mjesto.`;
 
             if (!res.ok) {
                 if (model !== MODELS[MODELS.length - 1]) continue;
-                return NextResponse.json({ error: `API error ${res.status}` }, { status: 500 });
+                const errText = await res.text();
+                return NextResponse.json({ error: `API error ${res.status}: ${errText.substring(0, 200)}` }, { status: 500 });
             }
 
             const data = await res.json();
             const text = data.candidates?.[0]?.content?.parts?.find(p => p.text)?.text ?? '';
 
-            try {
-                const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                const parsed = JSON.parse(cleaned);
+            // Robust JSON extraction — try multiple strategies
+            const tryParse = (str) => {
+                // Strategy 1: direct parse
+                try { return JSON.parse(str); } catch {}
+                // Strategy 2: strip markdown fences
+                try {
+                    const stripped = str.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim();
+                    return JSON.parse(stripped);
+                } catch {}
+                // Strategy 3: extract first { ... } block
+                try {
+                    const first = str.indexOf('{');
+                    const last = str.lastIndexOf('}');
+                    if (first !== -1 && last > first) {
+                        return JSON.parse(str.substring(first, last + 1));
+                    }
+                } catch {}
+                return null;
+            };
+
+            const parsed = tryParse(text);
+            if (parsed && parsed.pages) {
                 return NextResponse.json({ success: true, surveyJson: parsed, model });
-            } catch {
-                return NextResponse.json({ error: 'Failed to parse AI response', raw: text.substring(0, 500) }, { status: 500 });
+            }
+
+            // If no responseMimeType support, retry without it
+            if (!parsed) {
+                const geminiBody2 = { ...geminiBody, generationConfig: { ...geminiBody.generationConfig } };
+                delete geminiBody2.generationConfig.responseMimeType;
+                const res2 = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(geminiBody2),
+                });
+                if (res2.ok) {
+                    const data2 = await res2.json();
+                    const text2 = data2.candidates?.[0]?.content?.parts?.find(p => p.text)?.text ?? '';
+                    const parsed2 = tryParse(text2);
+                    if (parsed2 && parsed2.pages) {
+                        return NextResponse.json({ success: true, surveyJson: parsed2, model });
+                    }
+                }
+            }
+
+            if (model === MODELS[MODELS.length - 1]) {
+                return NextResponse.json({ error: 'Failed to parse AI response', raw: text.substring(0, 300) }, { status: 500 });
             }
         } catch (err) {
             if (model === MODELS[MODELS.length - 1]) {
@@ -104,3 +145,4 @@ Generiši upitnik za ovo radno mjesto.`;
     }
     return NextResponse.json({ error: 'all_models_failed' }, { status: 500 });
 }
+
