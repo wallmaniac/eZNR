@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 /* ═══════════════════════════════════════════════
    Sistematizacija radnih mjesta
@@ -21,6 +22,7 @@ export default function SistematizacijaPage() {
     const [uploadLoading, setUploadLoading] = useState(false);
     const [editData, setEditData] = useState(null);
     const [searchQ, setSearchQ] = useState('');
+    const { showFlash, SavedFlash } = useSavedFlash();
 
     const loadData = useCallback(() => {
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
@@ -103,6 +105,7 @@ export default function SistematizacijaPage() {
         }
         loadData();
         setEditData(null);
+        showFlash();
     };
 
     const handleDeleteSist = (wpId) => {
@@ -135,6 +138,7 @@ export default function SistematizacijaPage() {
                     <div style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', background: completedWp === totalWp && totalWp > 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${completedWp === totalWp && totalWp > 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.82rem', color: completedWp === totalWp && totalWp > 0 ? '#4caf50' : '#ffc107' }}>
                         {completedWp}/{totalWp} {lang === 'bs' ? 'popunjeno' : 'completed'}
                     </div>
+                    <SavedFlash />
                 </div>
             </div>
 

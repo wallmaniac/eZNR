@@ -7,10 +7,12 @@ import {
 import { useDialog } from '@/hooks/useDialog';
 import { useSearchParams } from 'next/navigation';
 import HelpTip from '@/components/HelpTip';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 function EmployerDocsInner() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
+    const { showFlash, SavedFlash } = useSavedFlash();
     const searchParams = useSearchParams();
     const highlightId = searchParams?.get('highlight');
     const highlightRef = useRef(null);
@@ -41,7 +43,7 @@ function EmployerDocsInner() {
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, formData); } else { create(COLLECTIONS.EMPLOYER_DOCS, formData); }
-        setShowForm(false); loadData();
+        setShowForm(false); loadData(); showFlash();
     };
     const handleDelete = async (id) => {
         const delOk = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (delOk) { remove(COLLECTIONS.EMPLOYER_DOCS, id); loadData(); }
@@ -129,8 +131,9 @@ function EmployerDocsInner() {
 
             <div className="card">
                 <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+                        <SavedFlash />
                     </div>
 
                     <div className="data-table-wrapper">

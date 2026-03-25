@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
@@ -22,6 +23,7 @@ export default function InjuriesPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const { alert, confirm, DialogRenderer } = useDialog();
+  const { showFlash, SavedFlash } = useSavedFlash();
   const { markDirty, markClean } = useUnsavedChanges();
   const searchParams = useSearchParams();
 
@@ -133,6 +135,7 @@ export default function InjuriesPage() {
     loadData();
     markClean();
     setShowForm(false);
+    showFlash();
   };
 
   const handleDelete = async (id) => {
@@ -313,6 +316,7 @@ export default function InjuriesPage() {
           <div className="card-body">
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
+              <SavedFlash />
               <input
                 className="form-input"
                 style={{ maxWidth: 280 }}

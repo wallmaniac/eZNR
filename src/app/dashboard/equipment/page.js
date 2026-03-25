@@ -7,6 +7,7 @@ import {
     getOrgUnitName, formatDate,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 
 const emptyEQ = {
@@ -25,6 +26,7 @@ function EquipmentPageInner() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const { alert, confirm, DialogRenderer } = useDialog();
+    const { showFlash, SavedFlash } = useSavedFlash();
     const [items, setItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -100,7 +102,7 @@ function EquipmentPageInner() {
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EQUIPMENT, editingId, formData); } else { create(COLLECTIONS.EQUIPMENT, formData); }
-        setShowForm(false); loadData();
+        setShowForm(false); loadData(); showFlash();
     };
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
 
@@ -464,6 +466,7 @@ function EquipmentPageInner() {
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+                        <SavedFlash />
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />

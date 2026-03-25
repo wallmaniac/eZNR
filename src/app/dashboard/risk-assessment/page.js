@@ -6,6 +6,7 @@ import {
 } from '@/lib/dataStore';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import HelpTip from '@/components/HelpTip';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
 
 /* ═══════════════════════════════════════════════
@@ -135,6 +136,7 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
 export default function RiskAssessmentPage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
+    const { showFlash, SavedFlash } = useSavedFlash();
 
     const [view, setView] = useState('list');
     const [records, setRecords] = useState([]);
@@ -228,6 +230,7 @@ export default function RiskAssessmentPage() {
         if (editingId) update(COLLECTIONS.RISK_ASSESSMENTS, editingId, formData);
         else { const n = create(COLLECTIONS.RISK_ASSESSMENTS, formData); savedId = n.id; setEditingId(savedId); }
         loadData();
+        showFlash();
     };
 
     // ─── Risk Items CRUD ───
@@ -253,6 +256,7 @@ export default function RiskAssessmentPage() {
         if (riEditId) update(COLLECTIONS.RISK_ITEMS, riEditId, data);
         else create(COLLECTIONS.RISK_ITEMS, data);
         setShowRiForm(false); setRiEditId(null); loadRiskItems(editingId);
+        showFlash();
     };
     // ─── AI Measures Suggestion ───
     const handleAiSuggest = async () => {
@@ -671,9 +675,10 @@ ${highRiskItems.map((ri, i) => {
                                 </select>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                             <button className="btn btn-ghost" onClick={() => setView('list')}>↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                            <SavedFlash />
                         </div>
                     </div></div>
                 )}
@@ -687,8 +692,9 @@ ${highRiskItems.map((ri, i) => {
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>ANALIZA ORGANIZACIJE RADA</div>
                         <textarea className="form-input" rows={4} value={formData.analizaOrganizacije || ''} onChange={e => set('analizaOrganizacije', e.target.value)}
                             placeholder="Opišite organizaciju rada, smjene, posebne uvjete..." style={{ resize: 'vertical' }} />
-                        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+                        <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <SavedFlash />
                         </div>
                     </div></div>
                 )}
@@ -997,8 +1003,9 @@ ${highRiskItems.map((ri, i) => {
                         </div>
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
-                        <div style={{ display: 'flex', gap: 10 }}>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <SavedFlash />
                             <button className="btn btn-outline" onClick={handleGenerateReport}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                 📄 {lang === 'bs' ? 'Preuzmi izvještaj (PDF)' : 'Download Report (PDF)'}
