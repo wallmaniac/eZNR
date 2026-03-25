@@ -15,9 +15,18 @@ export async function POST(request) {
 
     const { workplaceName, surveyJson, responses } = body;
 
-    // Build a text summary of questions + answers
-    const pages = surveyJson?.pages || [];
-    const allQuestions = pages.flatMap(p => p.elements || []);
+    // Parse surveyJson — could be a string or object, in SurveyJS or native format
+    let allQuestions = [];
+    try {
+        const sj = typeof surveyJson === 'string' ? JSON.parse(surveyJson || '{}') : (surveyJson || {});
+        if (sj.questions && Array.isArray(sj.questions)) {
+            // Native builder format { questions: [] }
+            allQuestions = sj.questions.filter(q => q.type !== 'heading' && q.type !== 'html');
+        } else if (sj.pages && Array.isArray(sj.pages)) {
+            // SurveyJS format { pages: [{ elements: [] }] }
+            allQuestions = sj.pages.flatMap(p => p.elements || []);
+        }
+    } catch { /* ignore parse errors */ }
     
     let responseSummary = '';
     if (Array.isArray(responses) && responses.length > 0) {
@@ -25,12 +34,17 @@ export async function POST(request) {
         const latest = responses[responses.length - 1]; // most recent
         const answers = latest?.answers || latest?.data || latest || {};
         responseSummary = allQuestions.map(q => {
-            const ans = answers[q.name];
-            return `Q: ${q.title || q.name}\nA: ${ans !== undefined ? (Array.isArray(ans) ? ans.join(', ') : ans) : 'Bez odgovora'}`;
+            const qId = q.id || q.name;
+            const ans = answers[qId];
+            return `Q: ${q.title || q.name || qId}\nA: ${ans !== undefined ? (Array.isArray(ans) ? ans.join(', ') : ans) : 'Bez odgovora'}`;
         }).join('\n\n');
     } else {
         // No responses yet — just list the questions
-        responseSummary = allQuestions.map(q => `Q: ${q.title || q.name}\nA: (nema odgovora)`).join('\n\n');
+        responseSummary = allQuestions.map(q => `Q: ${q.title || q.name || q.id}\nA: (nema odgovora)`).join('\n\n');
+    }
+    
+    if (allQuestions.length === 0) {
+        responseSummary = `Radno mjesto: ${workplaceName || 'Nepoznato'}\nNapomena: Nema pitanja iz upitnika. Generiši generičke stavke procjene rizika za ovo radno mjesto.`;
     }
 
     const systemPrompt = `Ti si stručnjak za zaštitu na radu (ZNR) u Bosni i Hercegovini.
