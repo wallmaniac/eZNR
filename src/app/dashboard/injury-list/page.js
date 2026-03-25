@@ -2,7 +2,7 @@
 import {  useState, useEffect, useCallback  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import {create,  getAll, remove, COLLECTIONS } from '@/lib/dataStore';
+import {create,  getAll, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
@@ -27,7 +27,7 @@ export default function InjuryListPage() {
 
 
   const toggleAll = (e) => {
-    if (e.target.checked) setSelectedIds(new Set(records.map(x => x.id)));
+    if (e.target.checked) setSelectedIds(new Set(filtered.map(x => x.id)));
     else setSelectedIds(new Set());
   };
   const toggleOne = (id) => {
@@ -57,6 +57,15 @@ export default function InjuryListPage() {
     const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?'); if (!ok) return;
     remove(COLLECTIONS.INJURIES, id);
     loadData();
+  };
+
+  const handleEdit = (inj) => {
+    router.push('/dashboard/injuries?editId=' + inj.id);
+  };
+
+  const getWorkerName = (id) => {
+    const w = workers.find(x => x.id === id);
+    return w ? `${w.ime} ${w.prezime}` : '—';
   };
 
   const filtered = injuries.filter(inj => {
@@ -99,6 +108,7 @@ export default function InjuryListPage() {
 
   return (
     <>
+      <DialogRenderer />
       <div className="animate-fadeIn">
         <h1 style={{ marginBottom: 24 }}>🩹 {t('injuryList')}</h1>
 
@@ -123,13 +133,16 @@ export default function InjuryListPage() {
           <div className="card-body">
             {/* Filters */}
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-              <input
-                className="form-input"
-                style={{ maxWidth: 260 }}
-                placeholder={lang === 'bs' ? '🔍 Pretraži...' : '🔍 Search...'}
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
+              <div className="search-bar" style={{ flex: 1, maxWidth: 300, display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                <input
+                  placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+                />
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+              </div>
               <select className="form-select" style={{ maxWidth: 160 }} value={filterTip} onChange={e => setFilterTip(e.target.value)}>
                 <option value="">{lang === 'bs' ? 'Svi tipovi' : 'All types'}</option>
                 <option value="laka">{lang === 'bs' ? 'Laka' : 'Minor'}</option>
@@ -142,12 +155,7 @@ export default function InjuryListPage() {
                 <option value="u_obradi">{lang === 'bs' ? 'U obradi' : 'Processing'}</option>
                 <option value="zatvorena">{lang === 'bs' ? 'Zatvorena' : 'Closed'}</option>
               </select>
-              
-            {selectedIds.size > 0 && (
-              <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-              </span>
-            )}
+
             <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
               {selectedIds.size > 0 && (
                 <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
@@ -155,7 +163,7 @@ export default function InjuryListPage() {
                 </span>
               )}
               <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
+                {filtered.length} {lang === 'bs' ? 'zapisa' : 'records'}
               </span>
               <div style={{ position: 'relative' }}>
                 <button className="btn btn-dark" onClick={() => setShowGroupMenu(v => !v)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
@@ -186,13 +194,13 @@ export default function InjuryListPage() {
                     <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
                     <th>{lang === 'bs' ? 'Datum dog.' : 'Date'}</th>
                     <th>{lang === 'bs' ? 'Ime roditelja' : 'Parent name'}</th>
-                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
                             </thead>
                 <tbody style={{ overflow: 'visible' }}>
-                  {records.length === 0 ? (
+                  {filtered.length === 0 ? (
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : records.map((r) => (
+                  ) : filtered.map((r) => (
                     <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                       <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
@@ -232,7 +240,6 @@ export default function InjuryListPage() {
           onSaved={() => setViewWorkerId(null)}
         />
       )}
-    <DialogRenderer />
     </>
   );
 }

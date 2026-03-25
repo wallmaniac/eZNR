@@ -37,6 +37,7 @@ export default function InjuriesPage() {
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
   const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
@@ -51,6 +52,24 @@ export default function InjuriesPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(filtered.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+      for (let id of selectedIds) await remove(COLLECTIONS.INJURIES, id);
+      setSelectedIds(new Set());
+      loadData();
+    }
+  };
 
   // ── Zia agent: auto-open injury form with pre-filled worker ──────────────
   useEffect(() => {
@@ -317,14 +336,16 @@ export default function InjuriesPage() {
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
               <SavedFlash />
-              <input
-                className="form-input"
-                style={{ maxWidth: 280 }}
-                placeholder={lang === 'bs' ? '🔍 Pretraži prijave...' : '🔍 Search reports...'}
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-              
+              <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                <input
+                  placeholder={lang === 'bs' ? 'Pretraži prijave...' : 'Search reports...'}
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+                />
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+              </div>
             {selectedIds.size > 0 && (
               <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
                 {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
