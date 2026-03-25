@@ -32,6 +32,7 @@ const menuItems = [
             { key: 'orgUnits',       icon: '🏢', path: '/dashboard/org-units' },
             { key: 'workplaces',     icon: '🔧', path: '/dashboard/workplaces' },
             { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
+            { key: 'sistematizacija', icon: '📑', path: '/dashboard/sistematizacija' },
             { key: 'addressBook',    icon: '📒', path: '/dashboard/address-book' },
         ],
     },

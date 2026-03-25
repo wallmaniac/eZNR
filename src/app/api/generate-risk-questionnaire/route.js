@@ -13,7 +13,7 @@ export async function POST(request) {
     try { body = await request.json(); }
     catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }); }
 
-    const { workplaceName, workplaceDescription, hazards, existingPPE, existingEquipment } = body;
+    const { workplaceName, workplaceDescription, hazards, existingPPE, existingEquipment, sistematizacija } = body;
 
     const systemPrompt = `Ti si stručnjak za zaštitu na radu (ZNR) u Bosni i Hercegovini.
 Generišeš profesionalne upitnike za procjenu rizika na radnom mjestu.
@@ -58,11 +58,28 @@ JSON FORMAT:
 
 Generiši 5-8 pitanja po sekciji. Pitanja moraju biti specifična za dato radno mjesto.`;
 
+    // Build sistematizacija context block if available
+    const sistBlock = sistematizacija ? `
+SISTEMATIZACIJA RADNOG MJESTA:
+- Opis poslova: ${sistematizacija.opisPoslova || 'N/A'}
+- Stručna sprema: ${sistematizacija.strucnaSprema || 'N/A'}
+- Fizički uvjeti: ${(sistematizacija.uvjetiRada?.fizicki || []).join(', ') || 'N/A'}
+- Kemijski uvjeti: ${(sistematizacija.uvjetiRada?.kemijski || []).join(', ') || 'N/A'}
+- Ergonomski uvjeti: ${(sistematizacija.uvjetiRada?.ergonomski || []).join(', ') || 'N/A'}
+- Psihosocijalni: ${(sistematizacija.uvjetiRada?.psihosocijalni || []).join(', ') || 'N/A'}
+- Potrebna OZO: ${(sistematizacija.potrebnaOZO || []).join(', ') || 'N/A'}
+- Radna oprema: ${(sistematizacija.radnaOprema || []).join(', ') || 'N/A'}
+- Zdravstveni zahtjevi: ${(sistematizacija.zdravstveniZahtjevi || []).join(', ') || 'N/A'}
+- Certifikati: ${(sistematizacija.certifikati || []).join(', ') || 'N/A'}
+
+KORISTI OVE PODATKE za generisanje preciznijih pitanja! Pitanja o OZO moraju uključiti specifičnu opremu iz sistematizacije. Pitanja o opasnostima moraju se odnositi na konkretne uvjete rada.` : '';
+
     const userMsg = `RADNO MJESTO: ${workplaceName || 'Nepoznato'}
 OPIS: ${workplaceDescription || 'Nema opisa'}
 ${hazards?.length ? `POZNATE OPASNOSTI: ${hazards.join(', ')}` : ''}
 ${existingPPE?.length ? `POSTOJEĆA OZO: ${existingPPE.join(', ')}` : ''}
 ${existingEquipment?.length ? `RADNA OPREMA: ${existingEquipment.join(', ')}` : ''}
+${sistBlock}
 
 Generiši upitnik za ovo radno mjesto.`;
 

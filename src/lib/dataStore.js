@@ -84,7 +84,7 @@ const COMPANY_SCOPED = [
     'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
     'digitalArchive', 'requests', 'riskAssessments', 'riskItems', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
-    'trainings', 'annualReports', 'medicalExams',
+    'trainings', 'annualReports', 'medicalExams', 'sistematizacije',
 ];
 
 // Helper: get active company from localStorage (avoids needing React context)
@@ -329,6 +329,7 @@ export const COLLECTIONS = {
     // ── Multi-company & User Management ──
     USERS: 'users',
     COMPANIES: 'companies',
+    SISTEMATIZACIJE: 'sistematizacije',
 };
 
 // ── getAll — automatically filters by active company for scoped collections ──

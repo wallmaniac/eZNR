@@ -236,6 +236,8 @@ export default function QuestionnairesPage() {
       const allHazards = getAll(COLLECTIONS.HAZARDS);
       const allPpe = getAll(COLLECTIONS.PPE_TYPES || 'ppeTypes');
       const allEquip = getAll(COLLECTIONS.EQUIPMENT || 'equipment');
+      // Load sistematizacija for this workplace (if available)
+      const sist = getAll(COLLECTIONS.SISTEMATIZACIJE).find(s => s.radnoMjestoId === wp.id);
       const res = await fetch('/api/generate-risk-questionnaire', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -244,6 +246,15 @@ export default function QuestionnairesPage() {
           hazards: allHazards.map(h => h.naziv).filter(Boolean).slice(0, 20),
           existingPPE: allPpe.map(p => p.naziv).filter(Boolean).slice(0, 10),
           existingEquipment: allEquip.map(e => e.naziv).filter(Boolean).slice(0, 10),
+          sistematizacija: sist ? {
+            opisPoslova: sist.opisPoslova,
+            strucnaSprema: sist.strucnaSprema,
+            uvjetiRada: sist.uvjetiRada,
+            potrebnaOZO: sist.potrebnaOZO,
+            radnaOprema: sist.radnaOprema,
+            zdravstveniZahtjevi: sist.zdravstveniZahtjevi,
+            certifikati: sist.certifikati,
+          } : null,
         }),
       });
       const data = await res.json();

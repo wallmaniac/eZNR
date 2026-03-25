@@ -67,6 +67,7 @@ export const translations = {
     digitalArchive: 'Digitalna arhiva',
     requests: 'Zahtjevnice',
     riskAssessment: 'Procjena rizika',
+    sistematizacija: 'Sistematizacija radnih mjesta',
     questionnaires: 'Upitnici',
     trainings: 'Obuke i prezentacije',
 
@@ -427,6 +428,7 @@ export const translations = {
     digitalArchive: 'Digital Archive',
     requests: 'Requests',
     riskAssessment: 'Risk Assessment',
+    sistematizacija: 'Job Systematization',
     questionnaires: 'Questionnaires',
     trainings: 'Training Modules',
 
