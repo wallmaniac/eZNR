@@ -160,12 +160,18 @@ export default function RiskAssessmentPage() {
     const [showRiForm, setShowRiForm] = useState(false);
     const [workplaces, setWorkplaces] = useState([]);
     const [aiLoading, setAiLoading] = useState(false);
+    // Import from questionnaire
+    const [showImportModal, setShowImportModal] = useState(false);
+    const [questionnaires, setQuestionnaires] = useState([]);
+    const [importLoading, setImportLoading] = useState(false);
+    const [conclusionLoading, setConclusionLoading] = useState(false);
 
     const loadData = useCallback(() => {
         setRecords(getAll(COLLECTIONS.RISK_ASSESSMENTS));
         setPersonTypes(getAll(COLLECTIONS.PERSON_TYPES));
         setHazards(getAll(COLLECTIONS.HAZARDS));
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
+        setQuestionnaires(getAll(COLLECTIONS.QUESTIONNAIRES).filter(q => q.dodajUPrilogProcjeniRizika === 'Dodaje se u procjenu rizika'));
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
@@ -257,6 +263,92 @@ export default function RiskAssessmentPage() {
         setAiLoading(false);
     };
     const setRi = (f, v) => setRiForm(prev => ({ ...prev, [f]: v }));
+
+    // ─── Import from Questionnaire ───
+    const handleImportFromQuestionnaire = async (q) => {
+        if (!editingId) return;
+        setImportLoading(true);
+        try {
+            const wp = workplaces.find(w => w.id === q.radnoMjestoId);
+            const res = await fetch('/api/analyze-questionnaire', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    workplaceName: wp?.naziv || q.naziv || '',
+                    surveyJson: q.surveyJson,
+                    responses: q.responses || [],
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.analysis?.items) {
+                const items = data.analysis.items;
+                let created = 0;
+                items.forEach(item => {
+                    const v = Math.min(5, Math.max(1, item.vjerovatnoca || 3));
+                    const p = Math.min(5, Math.max(1, item.posljedica || 3));
+                    const vN = Math.min(5, Math.max(1, item.vjerovatnocaNakon || Math.max(1, v - 1)));
+                    const pN = Math.min(5, Math.max(1, item.posljedlicaNakon || Math.max(1, p - 1)));
+                    const score = v * p;
+                    const scoreAfter = vN * pN;
+                    const daysStr = item.rokProvedbe || '90';
+                    const days = parseInt(daysStr) || 90;
+                    const deadline = new Date(); deadline.setDate(deadline.getDate() + days);
+                    create(COLLECTIONS.RISK_ITEMS, {
+                        procjenaId: editingId,
+                        radnoMjestoId: q.radnoMjestoId || '',
+                        opasnostId: '',
+                        opisOpasnosti: item.opisOpasnosti || '',
+                        vjerovatnoca: v, posljedica: p,
+                        rizik: score, nivoRizika: riskLevel(score).label,
+                        postojeceMjere: item.postojeceMjere || '',
+                        predlozeneMjere: item.predlozeneMjere || '',
+                        vjerovatnocaNakon: vN, posljedlicaNakon: pN,
+                        rizikNakon: scoreAfter, nivoRizikaNakon: riskLevel(scoreAfter).label,
+                        odgovornaOsoba: '', rokProvedbe: deadline.toISOString().split('T')[0],
+                        status: 'draft', aiGenerated: true,
+                    });
+                    created++;
+                });
+                loadRiskItems(editingId);
+                setShowImportModal(false);
+            } else {
+                window.alert('AI greška: ' + (data.error || 'Nepoznata greška'));
+            }
+        } catch (err) { window.alert('Greška: ' + err.message); }
+        setImportLoading(false);
+    };
+
+    // ─── AI Auto-Conclusion ───
+    const handleAutoConclusion = async () => {
+        if (riskItems.length === 0) return;
+        setConclusionLoading(true);
+        try {
+            const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+            const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+            const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+            const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+            const res = await fetch('/api/zia', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systemPrompt: 'Ti si stručnjak za zaštitu na radu u FBiH. Piši formalno, profesionalno, na bosanskom jeziku. Generiši zaključak za akt o procjeni rizika.',
+                    messages: [{ role: 'user', parts: [{ text: `Na osnovu procjene rizika sa ${riskItems.length} stavki:
+- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})
+- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}
+- Smanjenje: ${avgAfter > 0 && avgBefore > 0 ? ((1-avgAfter/avgBefore)*100).toFixed(0) + '%' : 'N/A'}
+- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}
+- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}
+- Naziv tvrtke: ${formData.nazivTvrtke || 'N/A'}
+- Djelatnost: ${formData.djelatnost || 'N/A'}
+
+Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uključi: opći zaključak, ključne rizike, obaveze poslodavca, rok za reviziju.` }] }],
+                }),
+            });
+            const data = await res.json();
+            if (data.text) {
+                set('zakljucak', data.text);
+            }
+        } catch (err) { window.alert('Greška: ' + err.message); }
+        setConclusionLoading(false);
+    };
 
     // ─── Person Types & Hazards CRUD (same as before) ───
     const startNewPt = () => { setPtEdit('__new__'); setPtNaziv(''); setPtVrsta(''); };
@@ -427,7 +519,13 @@ export default function RiskAssessmentPage() {
                             <div className="card" style={{ marginBottom: 16 }}><div className="card-body">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                                     <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>STAVKE PROCJENE ({riskItems.length})</div>
-                                    <button className="btn btn-outline btn-sm" onClick={handleNewRi}>+ {lang === 'bs' ? 'Dodaj stavku' : 'Add item'}</button>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)}
+                                            style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                            📋 Uvezi iz upitnika
+                                        </button>
+                                        <button className="btn btn-outline btn-sm" onClick={handleNewRi}>+ {lang === 'bs' ? 'Dodaj stavku' : 'Add item'}</button>
+                                    </div>
                                 </div>
 
                                 {showRiForm && (
@@ -552,6 +650,48 @@ export default function RiskAssessmentPage() {
                                 )}
                             </div></div>
                         </>}
+
+                        {/* Import from Questionnaire Modal */}
+                        {showImportModal && (
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
+                                onClick={(e) => { if (e.target === e.currentTarget) setShowImportModal(false); }}>
+                                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 450, maxWidth: 600, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>📋 Uvezi stavke iz upitnika</div>
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+                                        AI će analizirati odgovore iz upitnika i automatski kreirati stavke procjene rizika sa V×P ocjenama i predloženim mjerama.
+                                    </div>
+                                    {questionnaires.length === 0 ? (
+                                        <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)' }}>
+                                            Nema upitnika označenih za procjenu rizika. Kreirajte upitnik u modulu Upitnici i označite &quot;Dodaje se u procjenu rizika&quot;.
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
+                                            {questionnaires.map(q => {
+                                                const wp = workplaces.find(w => w.id === q.radnoMjestoId);
+                                                const qCount = q.surveyJson?.pages?.reduce((s, p) => s + (p.elements?.length || 0), 0) || 0;
+                                                const rCount = q.responses?.length || 0;
+                                                return (
+                                                    <div key={q.id} style={{ padding: 14, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--bg-input)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div>
+                                                            <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{q.naziv || 'Bez naziva'}</div>
+                                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                                                {wp ? `🏢 ${wp.naziv}` : ''} • {qCount} pitanja • {rCount} odgovora
+                                                                {q.aiGenerated && <span style={{ color: '#667eea', marginLeft: 6 }}>🤖 AI</span>}
+                                                            </div>
+                                                        </div>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => handleImportFromQuestionnaire(q)} disabled={importLoading}
+                                                            style={{ minWidth: 90 }}>
+                                                            {importLoading ? '⏳' : '↓ Uvezi'}
+                                                        </button>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                    <button className="btn btn-ghost" onClick={() => setShowImportModal(false)} disabled={importLoading}>Zatvori</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -651,6 +791,13 @@ export default function RiskAssessmentPage() {
                             </div>
                         )}
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>ZAKLJUČAK</div>
+                        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+                            <button className="btn btn-outline btn-sm" onClick={handleAutoConclusion} disabled={conclusionLoading || riskItems.length === 0}
+                                style={{ background: conclusionLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                {conclusionLoading ? '⏳ Generisanje...' : '🤖 AI Generiši zaključak'}
+                            </button>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', alignSelf: 'center' }}>AI će napisati profesionalni zaključak na osnovu procjene</span>
+                        </div>
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
                         <div style={{ display: 'flex', gap: 10 }}>

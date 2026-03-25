@@ -95,9 +95,15 @@ export default function QuestionnairesPage() {
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
   const [dispatchQuestionnaire, setDispatchQuestionnaire] = useState(null);
   const [resultsQuestionnaire, setResultsQuestionnaire] = useState(null);
+  // AI Questionnaire Generation
+  const [showAiModal, setShowAiModal] = useState(false);
+  const [aiWorkplaces, setAiWorkplaces] = useState([]);
+  const [selectedWpId, setSelectedWpId] = useState('');
+  const [aiGenerating, setAiGenerating] = useState(false);
 
   const loadData = useCallback(() => {
     setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
+    setAiWorkplaces(getAll(COLLECTIONS.WORKPLACES));
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -220,6 +226,49 @@ export default function QuestionnairesPage() {
     loadData();
   };
 
+  // AI Generate Questionnaire for Workplace
+  const handleAiGenerate = async () => {
+    if (!selectedWpId) { await alert('Odaberite radno mjesto!'); return; }
+    const wp = aiWorkplaces.find(w => w.id === selectedWpId);
+    if (!wp) return;
+    setAiGenerating(true);
+    try {
+      const allHazards = getAll(COLLECTIONS.HAZARDS);
+      const allPpe = getAll(COLLECTIONS.PPE_TYPES || 'ppeTypes');
+      const allEquip = getAll(COLLECTIONS.EQUIPMENT || 'equipment');
+      const res = await fetch('/api/generate-risk-questionnaire', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          workplaceName: wp.naziv || '',
+          workplaceDescription: wp.opis || wp.napomena || '',
+          hazards: allHazards.map(h => h.naziv).filter(Boolean).slice(0, 20),
+          existingPPE: allPpe.map(p => p.naziv).filter(Boolean).slice(0, 10),
+          existingEquipment: allEquip.map(e => e.naziv).filter(Boolean).slice(0, 10),
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.surveyJson) {
+        const newQ = create(COLLECTIONS.QUESTIONNAIRES, {
+          ...EMPTY_UPITNIK,
+          naziv: `Procjena rizika — ${wp.naziv}`,
+          oznaka: 'PR-AI',
+          zaVrstu: 'Posao',
+          dodajUPrilogProcjeniRizika: 'Dodaje se u procjenu rizika',
+          surveyJson: data.surveyJson,
+          radnoMjestoId: wp.id,
+          aiGenerated: true,
+        });
+        setShowAiModal(false);
+        setSelectedWpId('');
+        loadData();
+        handleEdit(newQ);
+      } else {
+        await alert('AI greška: ' + (data.error || 'Nepoznata greška'));
+      }
+    } catch (err) { await alert('Greška: ' + err.message); }
+    setAiGenerating(false);
+  };
+
   // Print questionnaire to new window
   const handlePrintQuestionnaire = (q) => {
     setOpenMenuId(null);
@@ -276,6 +325,10 @@ export default function QuestionnairesPage() {
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary btn-sm" onClick={handleNew}>
               + {lang === 'bs' ? 'Novi' : 'New'}
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => setShowAiModal(true)}
+              style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+              🤖 {lang === 'bs' ? 'Generiši za radno mjesto' : 'Generate for workplace'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
               <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
@@ -445,6 +498,42 @@ export default function QuestionnairesPage() {
             </div>
           </div>
         </div>
+
+        {/* AI Generate Modal */}
+        {showAiModal && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
+            onClick={(e) => { if (e.target === e.currentTarget) setShowAiModal(false); }}>
+            <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 400, maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                🤖 {lang === 'bs' ? 'AI Generator upitnika za procjenu rizika' : 'AI Risk Assessment Questionnaire Generator'}
+              </div>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
+                AI će generisati upitnik specifičan za odabrano radno mjesto, pokrivajući opasnosti, zaštitnu opremu, osposobljavanje, radnu opremu i zdravstvene preglede.
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Odaberite radno mjesto</div>
+                <select className="form-select" value={selectedWpId} onChange={e => setSelectedWpId(e.target.value)} style={{ width: '100%' }}>
+                  <option value="">— Odaberite radno mjesto —</option>
+                  {aiWorkplaces.map(wp => <option key={wp.id} value={wp.id}>{wp.naziv}</option>)}
+                </select>
+              </div>
+              {aiWorkplaces.length === 0 && (
+                <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(255,193,7,0.1)', border: '1px solid #ffc107', fontSize: '0.82rem', color: '#ffc107', marginBottom: 16 }}>
+                  ⚠ Nemate definisana radna mjesta. Prvo ih dodajte u modulu "Radna mjesta".
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button className="btn btn-primary" onClick={handleAiGenerate} disabled={aiGenerating || !selectedWpId}
+                  style={{ background: aiGenerating ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                  {aiGenerating ? '⏳ Generisanje...' : '🤖 Generiši upitnik'}
+                </button>
+                <button className="btn btn-ghost" onClick={() => setShowAiModal(false)} disabled={aiGenerating}>
+                  Odustani
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Email Dispatch Modal */}
         <EmailDispatchModal
