@@ -311,7 +311,7 @@ export default function RiskAssessmentPage() {
                 loadRiskItems(editingId);
                 setShowImportModal(false);
             } else {
-                window.alert('AI greška: ' + (data.error || 'Nepoznata greška'));
+                window.alert('AI greška: ' + (data.error || 'Nepoznata greška') + (data.raw ? '\n\nRaw: ' + data.raw.substring(0, 200) : ''));
             }
         } catch (err) { window.alert('Greška: ' + err.message); }
         setImportLoading(false);

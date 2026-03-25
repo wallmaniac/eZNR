@@ -103,23 +103,55 @@ Analiziraj odgovore i generiši stavke procjene rizika.`;
             });
 
             if (!res.ok) {
+                const errBody = await res.text().catch(() => '');
                 if (model !== MODELS[MODELS.length - 1]) continue;
-                return NextResponse.json({ error: `API error ${res.status}` }, { status: 500 });
+                return NextResponse.json({ error: `API error ${res.status}: ${errBody.substring(0, 300)}` }, { status: 500 });
             }
 
             const data = await res.json();
             const text = data.candidates?.[0]?.content?.parts?.find(p => p.text)?.text ?? '';
+            
+            if (!text) {
+                // Check for blocked content or empty response
+                const finishReason = data.candidates?.[0]?.finishReason;
+                const blockReason = data.candidates?.[0]?.safetyRatings?.find(r => r.blocked)?.category;
+                if (model !== MODELS[MODELS.length - 1]) continue;
+                return NextResponse.json({ 
+                    error: `AI returned empty response. Finish: ${finishReason || 'unknown'}, Block: ${blockReason || 'none'}`,
+                }, { status: 500 });
+            }
 
+            // Robust JSON extraction
             try {
-                const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                const parsed = JSON.parse(cleaned);
+                // Method 1: Direct parse
+                const parsed = JSON.parse(text);
                 return NextResponse.json({ success: true, analysis: parsed, model });
             } catch {
-                return NextResponse.json({ error: 'Failed to parse AI response', raw: text.substring(0, 500) }, { status: 500 });
+                try {
+                    // Method 2: Strip markdown code blocks
+                    const cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    const parsed = JSON.parse(cleaned);
+                    return NextResponse.json({ success: true, analysis: parsed, model });
+                } catch {
+                    try {
+                        // Method 3: Extract JSON between first { and last }
+                        const start = text.indexOf('{');
+                        const end = text.lastIndexOf('}');
+                        if (start >= 0 && end > start) {
+                            const parsed = JSON.parse(text.substring(start, end + 1));
+                            return NextResponse.json({ success: true, analysis: parsed, model });
+                        }
+                    } catch { /* fall through */ }
+                    return NextResponse.json({ 
+                        error: 'Failed to parse AI response', 
+                        raw: text.substring(0, 500),
+                        hint: 'AI returned non-JSON text'
+                    }, { status: 500 });
+                }
             }
         } catch (err) {
             if (model === MODELS[MODELS.length - 1]) {
-                return NextResponse.json({ error: err.message }, { status: 500 });
+                return NextResponse.json({ error: `Network/fetch error: ${err.message}` }, { status: 500 });
             }
         }
     }
