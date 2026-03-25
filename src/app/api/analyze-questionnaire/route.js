@@ -13,7 +13,7 @@ export async function POST(request) {
     try { body = await request.json(); }
     catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }); }
 
-    const { workplaceName, surveyJson, responses } = body;
+    const { workplaceName, surveyJson, responses, sistematizacija } = body;
 
     // Parse surveyJson — could be a string or object, in SurveyJS or native format
     let allQuestions = [];
@@ -30,8 +30,8 @@ export async function POST(request) {
     
     let responseSummary = '';
     if (Array.isArray(responses) && responses.length > 0) {
-        // Aggregate all responses
-        const latest = responses[responses.length - 1]; // most recent
+        // Aggregate all responses — session objects from Firestore
+        const latest = responses[responses.length - 1];
         const answers = latest?.answers || latest?.data || latest || {};
         responseSummary = allQuestions.map(q => {
             const qId = q.id || q.name;
@@ -47,10 +47,26 @@ export async function POST(request) {
         responseSummary = `Radno mjesto: ${workplaceName || 'Nepoznato'}\nNapomena: Nema pitanja iz upitnika. Generiši generičke stavke procjene rizika za ovo radno mjesto.`;
     }
 
+    // Build sistematizacija context if available
+    let sistContext = '';
+    if (sistematizacija) {
+        sistContext = `\n\nSISTEMATIZACIJA RADNOG MJESTA:`;
+        if (sistematizacija.opisPoslova) sistContext += `\nOpis poslova: ${sistematizacija.opisPoslova}`;
+        if (sistematizacija.posebniUvjeti?.length) sistContext += `\nPosebni uvjeti: ${sistematizacija.posebniUvjeti.join(', ')}`;
+        if (sistematizacija.uvjetiRada) {
+            const uv = sistematizacija.uvjetiRada;
+            const parts = Object.entries(uv).filter(([, v]) => v?.length > 0).map(([k, v]) => `${k}: ${v.join(', ')}`);
+            if (parts.length) sistContext += `\nUvjeti rada: ${parts.join('; ')}`;
+        }
+        if (sistematizacija.potrebnaOZO?.length) sistContext += `\nPotrebna OZO: ${sistematizacija.potrebnaOZO.join(', ')}`;
+        if (sistematizacija.radnaOprema?.length) sistContext += `\nRadna oprema: ${sistematizacija.radnaOprema.join(', ')}`;
+        if (sistematizacija.zdravstveniZahtjevi?.length) sistContext += `\nZdravstveni zahtjevi: ${sistematizacija.zdravstveniZahtjevi.join(', ')}`;
+    }
+
     const systemPrompt = `Ti si stručnjak za zaštitu na radu (ZNR) u Bosni i Hercegovini.
 Analiziraš odgovore iz upitnika radnika i generišeš stavke procjene rizika.
 
-ZADATAK: Na osnovu odgovora iz upitnika, identifikuj sve opasnosti i štetnosti na radnom mjestu i za svaku procijeni vjerovatnoću (V) i posljedicu (P) na skali 1-5.
+ZADATAK: Na osnovu odgovora iz upitnika${sistematizacija ? ' i sistematizacije radnog mjesta' : ''}, identifikuj sve opasnosti i štetnosti i za svaku procijeni vjerovatnoću (V) i posljedicu (P) na skali 1-5.
 
 PRAVILA:
 - Odgovori ISKLJUČIVO u JSON formatu
@@ -58,6 +74,7 @@ PRAVILA:
 - Procijeni V (1-5) i P (1-5) na osnovu odgovora radnika
 - Ako radnik navede da nema obuku ili opremu → veći V
 - Ako radnik navede opasne situacije → veći P
+- Ako postoji sistematizacija, koristi uvjete rada za identifikaciju opasnosti
 - Predloži i postojeće mjere (iz odgovora) i dodatne predložene mjere
 - Generiši 5-8 stavki, KRATKO i SAŽETO
 - Drži opise kratkim (max 1 rečenica po polju)
@@ -71,7 +88,7 @@ JSON FORMAT:
       "kategorija": "fizička|kemijska|biološka|ergonomska|psihosocijalna|mehanička|električna",
       "vjerovatnoca": 3,
       "posljedica": 4,
-      "postojeceMjere": "Mjere koje su već na snazi prema odgovorima",
+      "postojeceMjere": "Mjere koje su već na snazi",
       "predlozeneMjere": "Dodatne preporučene mjere",
       "vjerovatnocaNakon": 2,
       "posljedlicaNakon": 3,
@@ -79,15 +96,15 @@ JSON FORMAT:
       "obrazlozenje": "Kratko obrazloženje"
     }
   ],
-  "ukupniKomentar": "Kratki sažetak analize upitnika"
+  "ukupniKomentar": "Kratki sažetak analize"
 }`;
 
     const userMsg = `RADNO MJESTO: ${workplaceName || 'Nepoznato'}
 
 ODGOVORI IZ UPITNIKA:
-${responseSummary}
+${responseSummary}${sistContext}
 
-Analiziraj odgovore i generiši stavke procjene rizika.`;
+Analiziraj odgovore${sistematizacija ? ' i sistematizaciju radnog mjesta' : ''} i generiši stavke procjene rizika.`;
 
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },

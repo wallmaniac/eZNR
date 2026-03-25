@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
+import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import { useDialog } from '@/hooks/useDialog';
 
 /* ═══════════════════════════════════════════════
@@ -165,6 +166,9 @@ export default function RiskAssessmentPage() {
     const [questionnaires, setQuestionnaires] = useState([]);
     const [importLoading, setImportLoading] = useState(false);
     const [conclusionLoading, setConclusionLoading] = useState(false);
+    // Sistematizacija + response counts
+    const [sistematizacije, setSistematizacije] = useState([]);
+    const [responseCounts, setResponseCounts] = useState({});
 
     const loadData = useCallback(() => {
         setRecords(getAll(COLLECTIONS.RISK_ASSESSMENTS));
@@ -172,7 +176,24 @@ export default function RiskAssessmentPage() {
         setHazards(getAll(COLLECTIONS.HAZARDS));
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
         setQuestionnaires(getAll(COLLECTIONS.QUESTIONNAIRES).filter(q => q.dodajUPrilogProcjeniRizika === 'Dodaje se u procjenu rizika'));
+        setSistematizacije(getAll(COLLECTIONS.SISTEMATIZACIJE));
     }, []);
+
+    // Load response counts from Firestore for each questionnaire
+    useEffect(() => {
+        if (questionnaires.length === 0) return;
+        const fetchCounts = async () => {
+            const counts = {};
+            for (const q of questionnaires) {
+                try {
+                    const sessions = await getSessionsForQuestionnaire(q.id);
+                    counts[q.id] = sessions.filter(s => s.status === 'completed').length;
+                } catch { counts[q.id] = 0; }
+            }
+            setResponseCounts(counts);
+        };
+        fetchCounts();
+    }, [questionnaires]);
 
     useEffect(() => { loadData(); }, [loadData]);
 
@@ -270,12 +291,28 @@ export default function RiskAssessmentPage() {
         setImportLoading(true);
         try {
             const wp = workplaces.find(w => w.id === q.radnoMjestoId);
+            // Get sistematizacija for this workplace
+            const sist = sistematizacije.find(s => s.radnoMjestoId === q.radnoMjestoId);
+            // Get completed responses from Firestore
+            let responses = [];
+            try {
+                const sessions = await getSessionsForQuestionnaire(q.id);
+                responses = sessions.filter(s => s.status === 'completed');
+            } catch { /* no responses */ }
             const res = await fetch('/api/analyze-questionnaire', {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     workplaceName: wp?.naziv || q.naziv || '',
                     surveyJson: q.surveyJson,
-                    responses: q.responses || [],
+                    responses,
+                    sistematizacija: sist ? {
+                        opisPoslova: sist.opisPoslova,
+                        posebniUvjeti: sist.posebniUvjeti,
+                        uvjetiRada: sist.uvjetiRada,
+                        potrebnaOZO: sist.potrebnaOZO,
+                        radnaOprema: sist.radnaOprema,
+                        zdravstveniZahtjevi: sist.zdravstveniZahtjevi,
+                    } : null,
                 }),
             });
             const data = await res.json();
@@ -819,8 +856,15 @@ ${highRiskItems.map((ri, i) => {
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
                                             {questionnaires.map(q => {
                                                 const wp = workplaces.find(w => w.id === q.radnoMjestoId);
-                                                const qCount = q.surveyJson?.pages?.reduce((s, p) => s + (p.elements?.length || 0), 0) || 0;
-                                                const rCount = q.responses?.length || 0;
+                                                const sist = sistematizacije.find(s => s.radnoMjestoId === q.radnoMjestoId);
+                                                // Parse surveyJson to count questions
+                                                let qCount = 0;
+                                                try {
+                                                    const sj = typeof q.surveyJson === 'string' ? JSON.parse(q.surveyJson || '{}') : (q.surveyJson || {});
+                                                    if (sj.questions) qCount = sj.questions.filter(qq => qq.type !== 'heading').length;
+                                                    else if (sj.pages) qCount = sj.pages.reduce((s, p) => s + (p.elements?.length || 0), 0);
+                                                } catch { /* ignore */ }
+                                                const rCount = responseCounts[q.id] || 0;
                                                 return (
                                                     <div key={q.id} style={{ padding: 14, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: 'var(--bg-input)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <div>
@@ -828,6 +872,7 @@ ${highRiskItems.map((ri, i) => {
                                                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                                                                 {wp ? `🏢 ${wp.naziv}` : ''} • {qCount} pitanja • {rCount} odgovora
                                                                 {q.aiGenerated && <span style={{ color: '#667eea', marginLeft: 6 }}>🤖 AI</span>}
+                                                                {sist && <span style={{ color: '#11998e', marginLeft: 6 }}>📑 Sistematizacija</span>}
                                                             </div>
                                                         </div>
                                                         <button className="btn btn-primary btn-sm" onClick={() => handleImportFromQuestionnaire(q)} disabled={importLoading}
