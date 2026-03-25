@@ -24,6 +24,9 @@ const EMPTY_RISK_ITEM = {
     rizik: 0, nivoRizika: '',
     postojeceMjere: '', predlozeneMjere: '',
     odgovornaOsoba: '', rokProvedbe: '',
+    // Residual risk (after measures)
+    vjerovatnocaNakon: 0, posljedlicaNakon: 0,
+    rizikNakon: 0, nivoRizikaNakon: '',
 };
 
 const V_LABELS = [
@@ -156,6 +159,7 @@ export default function RiskAssessmentPage() {
     const [riEditId, setRiEditId] = useState(null);
     const [showRiForm, setShowRiForm] = useState(false);
     const [workplaces, setWorkplaces] = useState([]);
+    const [aiLoading, setAiLoading] = useState(false);
 
     const loadData = useCallback(() => {
         setRecords(getAll(COLLECTIONS.RISK_ASSESSMENTS));
@@ -214,10 +218,43 @@ export default function RiskAssessmentPage() {
         if (!riForm.opasnostId && !riForm.opisOpasnosti) { alert('Odaberite opasnost ili unesite opis!'); return; }
         if (!riForm.vjerovatnoca || !riForm.posljedica) { alert('Vjerovatnoća i Posljedica su obavezni (1-5)!'); return; }
         const score = riForm.vjerovatnoca * riForm.posljedica;
-        const data = { ...riForm, rizik: score, nivoRizika: riskLevel(score).label };
+        const vN = riForm.vjerovatnocaNakon || 0;
+        const pN = riForm.posljedlicaNakon || 0;
+        const scoreAfter = vN > 0 && pN > 0 ? vN * pN : 0;
+        const data = { ...riForm, rizik: score, nivoRizika: riskLevel(score).label, rizikNakon: scoreAfter, nivoRizikaNakon: scoreAfter > 0 ? riskLevel(scoreAfter).label : '' };
         if (riEditId) update(COLLECTIONS.RISK_ITEMS, riEditId, data);
         else create(COLLECTIONS.RISK_ITEMS, data);
         setShowRiForm(false); setRiEditId(null); loadRiskItems(editingId);
+    };
+    // ─── AI Measures Suggestion ───
+    const handleAiSuggest = async () => {
+        if (!riForm.vjerovatnoca || !riForm.posljedica) { alert('Prvo unesite V i P!'); return; }
+        setAiLoading(true);
+        try {
+            const hz = hazards.find(h => h.id === riForm.opasnostId);
+            const wp = workplaces.find(w => w.id === riForm.radnoMjestoId);
+            const res = await fetch('/api/risk-measures', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    hazardName: hz?.naziv || '', hazardCode: hz?.oznaka || '',
+                    workplaceName: wp?.naziv || '', opisOpasnosti: riForm.opisOpasnosti || '',
+                    vjerovatnoca: riForm.vjerovatnoca, posljedica: riForm.posljedica,
+                    postojeceMjere: riForm.postojeceMjere || '',
+                }),
+            });
+            const data = await res.json();
+            if (data.success && data.measures) {
+                const m = data.measures;
+                setRiForm(prev => ({
+                    ...prev,
+                    postojeceMjere: m.postojeceMjere || prev.postojeceMjere,
+                    predlozeneMjere: m.predlozeneMjere || prev.predlozeneMjere,
+                    vjerovatnocaNakon: m.vjerovatnocaNakon || prev.vjerovatnocaNakon,
+                    posljedlicaNakon: m.posljedlicaNakon || prev.posljedlicaNakon,
+                }));
+            } else { alert('AI greška: ' + (data.error || 'Nepoznata greška')); }
+        } catch (err) { alert('Greška: ' + err.message); }
+        setAiLoading(false);
     };
     const setRi = (f, v) => setRiForm(prev => ({ ...prev, [f]: v }));
 
@@ -434,9 +471,39 @@ export default function RiskAssessmentPage() {
                                                 })() : <div className="form-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>}
                                             </div>
                                         </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                            <button className="btn btn-outline btn-sm" onClick={handleAiSuggest} disabled={aiLoading}
+                                                style={{ background: aiLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                                {aiLoading ? '⏳ AI analizira...' : '🤖 AI Predloži mjere'}
+                                            </button>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AI će predložiti mjere i novu ocjenu nakon mjera</span>
+                                        </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>Postojeće mjere</div><input className="form-input" value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} /></div>
-                                            <div><div style={labelSt}>Predložene mjere</div><input className="form-input" value={riForm.predlozeneMjere || ''} onChange={e => setRi('predlozeneMjere', e.target.value)} /></div>
+                                            <div><div style={labelSt}>Postojeće mjere</div><textarea className="form-input" rows={2} value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
+                                            <div><div style={labelSt}>Predložene mjere</div><textarea className="form-input" rows={2} value={riForm.predlozeneMjere || ''} onChange={e => setRi('predlozeneMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
+                                        </div>
+                                        <div style={{ ...labelSt, fontSize: '0.78rem', color: '#667eea', marginBottom: 10, marginTop: 6 }}>PREOSTALI RIZIK (NAKON MJERA)</div>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
+                                            <div><div style={labelSt}>V nakon mjera (1–5)</div>
+                                                <select className="form-select" value={riForm.vjerovatnocaNakon || 0} onChange={e => setRi('vjerovatnocaNakon', +e.target.value)}>
+                                                    <option value={0}>—</option>
+                                                    {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
+                                                </select>
+                                            </div>
+                                            <div><div style={labelSt}>P nakon mjera (1–5)</div>
+                                                <select className="form-select" value={riForm.posljedlicaNakon || 0} onChange={e => setRi('posljedlicaNakon', +e.target.value)}>
+                                                    <option value={0}>—</option>
+                                                    {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <div style={labelSt}>R nakon</div>
+                                                {riForm.vjerovatnocaNakon > 0 && riForm.posljedlicaNakon > 0 ? (() => {
+                                                    const sc2 = riForm.vjerovatnocaNakon * riForm.posljedlicaNakon;
+                                                    const rl2 = riskLevel(sc2);
+                                                    return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl2.bg, color: rl2.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl2.color}` }}>{sc2} — {rl2.label}</div>;
+                                                })() : <div className="form-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>}
+                                            </div>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
                                             <div><div style={labelSt}>Odgovorna osoba</div><input className="form-input" value={riForm.odgovornaOsoba || ''} onChange={e => setRi('odgovornaOsoba', e.target.value)} /></div>
@@ -452,14 +519,17 @@ export default function RiskAssessmentPage() {
                                 {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki. Kliknite na matricu ili "Dodaj stavku".' : 'No items yet.'}</div>}
                                 {riSorted.length > 0 && (
                                     <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                                        <th style={{ width: 70 }}></th><th>Radno mjesto</th><th>Opasnost</th><th>Opis</th>
+                                        <th style={{ width: 70 }}></th><th>Radno mjesto</th><th>Opasnost</th>
                                         <th style={{ width: 50, textAlign: 'center' }}>V</th><th style={{ width: 50, textAlign: 'center' }}>P</th>
-                                        <th style={{ width: 60, textAlign: 'center' }}>R</th><th>Nivo</th>
+                                        <th style={{ width: 50, textAlign: 'center' }}>R₀</th><th>Prije</th>
+                                        <th style={{ width: 50, textAlign: 'center' }}>R₁</th><th>Nakon</th><th style={{ width: 40 }}></th>
                                     </tr></thead><tbody>
                                         {riSorted.map(ri => {
                                             const rl = riskLevel(ri.rizik || 0);
+                                            const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
                                             const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
                                             const hz = hazards.find(h => h.id === ri.opasnostId);
+                                            const improved = rlA && ri.rizikNakon < ri.rizik;
                                             return (
                                                 <tr key={ri.id}>
                                                     <td><div style={{ display: 'flex', gap: 4 }}>
@@ -468,11 +538,13 @@ export default function RiskAssessmentPage() {
                                                     </div></td>
                                                     <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
                                                     <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : '—'}</td>
-                                                    <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{ri.opisOpasnosti || '—'}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.posljedica}</td>
+                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}×{ri.posljedica}</td>
+                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}></td>
                                                     <td style={{ textAlign: 'center', fontWeight: 800, color: rl.color }}>{ri.rizik}</td>
-                                                    <td><span style={{ padding: '3px 10px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '0.72rem' }}>{rl.label}</span></td>
+                                                    <td><span style={{ padding: '3px 8px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '0.7rem' }}>{rl.label}</span></td>
+                                                    <td style={{ textAlign: 'center', fontWeight: 800, color: rlA?.color || 'var(--text-muted)' }}>{ri.rizikNakon || '—'}</td>
+                                                    <td>{rlA ? <span style={{ padding: '3px 8px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 700, fontSize: '0.7rem' }}>{rlA.label}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>—</span>}</td>
+                                                    <td>{improved && <span style={{ color: '#4caf50', fontWeight: 800 }}>↓</span>}</td>
                                                 </tr>
                                             );
                                         })}
@@ -489,12 +561,14 @@ export default function RiskAssessmentPage() {
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
                         {highRisk.length === 0 ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki sa rizikom ≥ 6. Sve je u prihvatljivom okviru.' : 'No items with risk ≥ 6.'}</div>
                         : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                            <th>R</th><th>Opasnost</th><th>Radno mjesto</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>Odgovorna osoba</th><th>Rok</th>
+                            <th>R₀</th><th>R₁</th><th>Opasnost</th><th>Radno mjesto</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>Odgovorna osoba</th><th>Rok</th>
                         </tr></thead><tbody>
                             {highRisk.sort((a, b) => b.rizik - a.rizik).map(ri => {
-                                const rl = riskLevel(ri.rizik); const hp = hazards.find(h => h.id === ri.opasnostId); const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
+                                const rl = riskLevel(ri.rizik); const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
+                                const hp = hazards.find(h => h.id === ri.opasnostId); const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
                                 return <tr key={ri.id}>
                                     <td><span style={{ padding: '3px 10px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizik}</span></td>
+                                    <td>{rlA ? <span style={{ padding: '3px 10px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizikNakon}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                                     <td style={{ fontSize: '0.82rem' }}>{hp ? `${hp.oznaka || ''} ${hp.naziv}` : ri.opisOpasnosti || '—'}</td>
                                     <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
                                     <td style={{ fontSize: '0.82rem' }}>{ri.postojeceMjere || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
@@ -508,25 +582,72 @@ export default function RiskAssessmentPage() {
                 )}
 
                 {/* ── TAB: Zaključak ── */}
-                {activeTab === 'zakljucak' && (
+                {activeTab === 'zakljucak' && (() => {
+                    const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+                    const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+                    const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+                    const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+                    const gradeBefore = avgBefore > 0 ? riskLevel(Math.round(avgBefore)) : null;
+                    const gradeAfter = avgAfter > 0 ? riskLevel(Math.round(avgAfter)) : null;
+                    const bandsAfter = { neznatan: 0, dopustiv: 0, umjeren: 0, znatan: 0, nedopustiv: 0 };
+                    itemsWithAfter.forEach(ri => {
+                        const s = ri.rizikNakon || 0;
+                        if (s <= 5) bandsAfter.neznatan++; else if (s <= 10) bandsAfter.dopustiv++; else if (s <= 15) bandsAfter.umjeren++;
+                        else if (s <= 20) bandsAfter.znatan++; else bandsAfter.nedopustiv++;
+                    });
+                    return (
                     <div className="card"><div className="card-body">
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>SAŽETAK PROCJENE RIZIKA</div>
+                        {/* ── Overall Grade ── */}
                         {riskItems.length > 0 && (
-                            <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>UKUPNA OCJENA RIZIKA</div>
+                                <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
+                                    <div style={{ textAlign: 'center', padding: '16px 24px', borderRadius: 'var(--radius-lg)', background: gradeBefore ? gradeBefore.bg : 'var(--bg-input)', border: gradeBefore ? `3px solid ${gradeBefore.color}` : '2px solid var(--border-light)', minWidth: 140 }}>
+                                        <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Prije mjera (Početni rizik)</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeBefore?.color || 'var(--text-muted)' }}>{avgBefore > 0 ? avgBefore.toFixed(1) : '—'}</div>
+                                        {gradeBefore && <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeBefore.color, marginTop: 4 }}>{gradeBefore.label}</div>}
+                                    </div>
+                                    {gradeAfter && <div style={{ fontSize: '2rem', fontWeight: 900, color: avgAfter < avgBefore ? '#4caf50' : '#f44336' }}>→</div>}
+                                    {gradeAfter && (
+                                        <div style={{ textAlign: 'center', padding: '16px 24px', borderRadius: 'var(--radius-lg)', background: gradeAfter.bg, border: `3px solid ${gradeAfter.color}`, minWidth: 140 }}>
+                                            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Nakon mjera (Preostali rizik)</div>
+                                            <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeAfter.color }}>{avgAfter.toFixed(1)}</div>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeAfter.color, marginTop: 4 }}>{gradeAfter.label}</div>
+                                        </div>
+                                    )}
+                                    {gradeAfter && avgAfter < avgBefore && (
+                                        <div style={{ padding: '12px 20px', borderRadius: 'var(--radius-md)', background: 'rgba(76,175,80,0.1)', border: '2px solid #4caf50', textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#4caf50' }}>↓ {((1 - avgAfter / avgBefore) * 100).toFixed(0)}%</div>
+                                            <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#4caf50' }}>SMANJENJE RIZIKA</div>
+                                        </div>
+                                    )}
+                                </div>
+                                {!gradeAfter && itemsWithScores.length > 0 && (
+                                    <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(255,193,7,0.1)', border: '1px solid #ffc107', fontSize: '0.82rem', color: '#ffc107' }}>
+                                        ⚠ Koristite tab "Procjena rizika" i dugme "🤖 AI Predloži mjere" da dobijete ocjenu nakon mjera.
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                        {/* ── Distribution cards ── */}
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>DISTRIBUCIJA PO NIVOU RIZIKA</div>
+                        {riskItems.length > 0 && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10, marginBottom: 20 }}>
                                 {[
                                     { k: 'neznatan', l: 'Neznatan', c: '#4caf50' }, { k: 'dopustiv', l: 'Dopustiv', c: '#ffc107' },
                                     { k: 'umjeren', l: 'Umjeren', c: '#ff9800' }, { k: 'znatan', l: 'Znatan', c: '#f44336' },
                                     { k: 'nedopustiv', l: 'Nedopustiv', c: '#b71c1c' },
                                 ].map(b => (
-                                    <div key={b.k} style={{ padding: '12px 20px', borderRadius: 'var(--radius-md)', background: `${b.c}22`, border: `2px solid ${b.c}`, textAlign: 'center', minWidth: 100 }}>
-                                        <div style={{ fontSize: '1.5rem', fontWeight: 800, color: b.c }}>{bands[b.k]}</div>
-                                        <div style={{ fontSize: '0.72rem', fontWeight: 600, color: b.c }}>{b.l}</div>
+                                    <div key={b.k} style={{ padding: '10px', borderRadius: 'var(--radius-md)', background: `${b.c}15`, border: `2px solid ${b.c}`, textAlign: 'center' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'baseline' }}>
+                                            <div style={{ fontSize: '1.3rem', fontWeight: 800, color: b.c }}>{bands[b.k]}</div>
+                                            {itemsWithAfter.length > 0 && bandsAfter[b.k] !== bands[b.k] && (
+                                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: bandsAfter[b.k] < bands[b.k] ? '#4caf50' : '#f44336' }}>→ {bandsAfter[b.k]}</div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '0.65rem', fontWeight: 600, color: b.c }}>{b.l}</div>
                                     </div>
                                 ))}
-                                <div style={{ padding: '12px 20px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', textAlign: 'center', minWidth: 100 }}>
-                                    <div style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text)' }}>{riskItems.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)' }}>UKUPNO</div>
-                                </div>
                             </div>
                         )}
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>ZAKLJUČAK</div>
@@ -536,7 +657,8 @@ export default function RiskAssessmentPage() {
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                         </div>
                     </div></div>
-                )}
+                    );
+                })()}
             </div>
         );
     }
