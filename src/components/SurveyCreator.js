@@ -44,7 +44,39 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
     const parseQuestions = useCallback(() => {
         try {
             const parsed = typeof json === 'string' ? JSON.parse(json || '{}') : (json || {});
-            return parsed.questions || [];
+            // Native builder format
+            if (parsed.questions && parsed.questions.length > 0) return parsed.questions;
+            // SurveyJS format from AI (pages → elements)
+            if (parsed.pages && Array.isArray(parsed.pages)) {
+                const converted = [];
+                parsed.pages.forEach(page => {
+                    // Add page title as heading
+                    if (page.title) {
+                        converted.push({
+                            id: 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            type: 'heading', title: page.title, description: '', required: false, choices: [],
+                        });
+                    }
+                    (page.elements || []).forEach(el => {
+                        // Map SurveyJS types → builder types
+                        const typeMap = { radiogroup: 'radio', comment: 'textarea', text: 'text', checkbox: 'checkbox', rating: 'rating', boolean: 'boolean', dropdown: 'dropdown' };
+                        const builderType = typeMap[el.type] || el.type || 'text';
+                        converted.push({
+                            id: el.name || 'q_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                            type: builderType,
+                            title: el.title || '',
+                            description: el.description || '',
+                            required: el.isRequired || false,
+                            choices: (el.choices || []).map(c => typeof c === 'string' ? c : (c.text || c.value || '')),
+                            correctAnswer: null,
+                            ratingMax: builderType === 'rating' ? (el.rateMax || 5) : undefined,
+                            placeholder: el.placeholder || '',
+                        });
+                    });
+                });
+                return converted;
+            }
+            return [];
         } catch { return []; }
     }, [json]);
 
