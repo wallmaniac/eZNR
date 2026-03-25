@@ -59,7 +59,9 @@ PRAVILA:
 - Ako radnik navede da nema obuku ili opremu → veći V
 - Ako radnik navede opasne situacije → veći P
 - Predloži i postojeće mjere (iz odgovora) i dodatne predložene mjere
-- Generiši 3-10 stavki, ovisno o kompleksnosti radnog mjesta
+- Generiši 5-8 stavki, KRATKO i SAŽETO
+- Drži opise kratkim (max 1 rečenica po polju)
+- NE generiši više od 8 stavki
 
 JSON FORMAT:
 {
@@ -90,7 +92,7 @@ Analiziraj odgovore i generiši stavke procjene rizika.`;
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 4096, topP: 0.9, responseMimeType: 'application/json' },
+        generationConfig: { temperature: 0.3, maxOutputTokens: 16384, topP: 0.9, responseMimeType: 'application/json' },
     };
 
     for (const model of MODELS) {
