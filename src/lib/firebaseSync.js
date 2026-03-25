@@ -142,12 +142,14 @@ export function getSyncStats() {
 // ─── Questionnaire session helpers (for email dispatch feature) ───────────────
 export async function createQuestionnaireSession(session) {
     const ref = doc(fsCollection(db, 'questionnaire_sessions'));
-    const data = {
+    const raw = {
         ...session,
         id: ref.id,
         createdAt: new Date().toISOString(),
         status: 'sent', // sent | opened | completed | expired
     };
+    // Sanitize: Firestore rejects undefined values
+    const data = sanitize(raw);
     await setDoc(ref, data);
     return data;
 }

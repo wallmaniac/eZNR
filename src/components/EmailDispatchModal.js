@@ -10,33 +10,36 @@ import { sendBatchEmails } from '@/lib/emailService';
    ═══════════════════════════════════════════════════════ */
 
 // Normalize SurveyJS { pages: [{ elements }] } → { questions: [] } for consistent storage
+// Always returns a JSON STRING to avoid Firestore serialization issues
 function normalizeSurveyJson(json) {
     try {
         const parsed = typeof json === 'string' ? JSON.parse(json || '{}') : (json || {});
-        if (parsed.questions && parsed.questions.length > 0) return parsed; // already native
+        if (parsed.questions && parsed.questions.length > 0) return JSON.stringify(parsed);
         if (parsed.pages && Array.isArray(parsed.pages)) {
             const questions = [];
             const typeMap = { radiogroup: 'radio', comment: 'textarea', text: 'text', checkbox: 'checkbox', rating: 'rating', boolean: 'boolean', dropdown: 'dropdown' };
             parsed.pages.forEach(page => {
                 if (page.title) questions.push({ id: 'h_' + Math.random().toString(36).substr(2,6), type: 'heading', title: page.title, description: '', required: false, choices: [] });
                 (page.elements || []).forEach(el => {
-                    questions.push({
+                    const bt = typeMap[el.type] || el.type || 'text';
+                    const q = {
                         id: el.name || 'q_' + Math.random().toString(36).substr(2,6),
-                        type: typeMap[el.type] || el.type || 'text',
+                        type: bt,
                         title: el.title || '', description: el.description || '',
                         required: el.isRequired || false,
                         choices: (el.choices || []).map(c => typeof c === 'string' ? c : (c.text || c.value || '')),
                         correctAnswer: null,
-                        ratingMax: (typeMap[el.type] || el.type) === 'rating' ? (el.rateMax || 5) : undefined,
                         placeholder: el.placeholder || '',
-                        imageUrl: el.imageUrl || null,
-                    });
+                    };
+                    if (bt === 'rating') q.ratingMax = el.rateMax || 5;
+                    if (el.imageUrl) q.imageUrl = el.imageUrl;
+                    questions.push(q);
                 });
             });
-            return { questions };
+            return JSON.stringify({ questions });
         }
-        return parsed;
-    } catch { return json; }
+        return typeof json === 'string' ? json : JSON.stringify(parsed);
+    } catch { return typeof json === 'string' ? json : JSON.stringify(json); }
 }
 
 export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lang = 'bs', officerName = '', companyName = '', companyLogo = '' }) {
@@ -147,7 +150,8 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                 });
                 tokens.push(`${baseUrl}${token}`);
             } catch (err) {
-                console.error('Failed to create session:', err);
+                console.error('Failed to create session for', r.toEmail, ':', err);
+                alert(`Greška pri kreiranju sesije za ${r.toEmail}: ${err.message || err.code || 'Nepoznata greška'}`);
                 tokens.push(`${baseUrl}error`);
             }
         }
