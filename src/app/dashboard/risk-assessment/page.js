@@ -350,6 +350,157 @@ Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uklju
         setConclusionLoading(false);
     };
 
+    // ─── PDF Report Generator ───
+    const handleGenerateReport = () => {
+        const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+        const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+        const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+        const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+        const gradeBefore = avgBefore > 0 ? riskLevel(Math.round(avgBefore)) : null;
+        const gradeAfter = avgAfter > 0 ? riskLevel(Math.round(avgAfter)) : null;
+        const sorted = [...riskItems].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
+        const highRiskItems = riskItems.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
+        const today = new Date().toLocaleDateString('hr-HR');
+
+        const rlColor = (score) => {
+            if (score <= 5) return '#4caf50'; if (score <= 10) return '#f59e0b';
+            if (score <= 15) return '#ff9800'; if (score <= 20) return '#f44336'; return '#b71c1c';
+        };
+        const rlBg = (score) => {
+            if (score <= 5) return '#e8f5e9'; if (score <= 10) return '#fff8e1';
+            if (score <= 15) return '#fff3e0'; if (score <= 20) return '#ffebee'; return '#ffcdd2';
+        };
+        const rlLabel = (score) => riskLevel(score).label;
+
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Akt o procjeni rizika — ${formData.nazivTvrtke || 'Procjena'}</title>
+<style>
+@page { size: A4; margin: 20mm 15mm; }
+body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; font-size: 11pt; line-height: 1.5; padding: 0; margin: 0; }
+h1 { font-size: 20pt; margin: 0 0 6px; color: #1a237e; }
+h2 { font-size: 14pt; color: #283593; border-bottom: 2px solid #3f51b5; padding-bottom: 4px; margin: 28px 0 12px; }
+h3 { font-size: 12pt; color: #1a237e; margin: 18px 0 8px; }
+.cover { text-align: center; padding: 60px 0 40px; page-break-after: always; }
+.cover h1 { font-size: 28pt; margin-bottom: 12px; }
+.cover .subtitle { font-size: 14pt; color: #555; margin-bottom: 40px; }
+.cover .meta { font-size: 11pt; color: #666; margin: 6px 0; }
+table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9pt; }
+th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+th { background: #e8eaf6; font-weight: 700; color: #283593; }
+tr:nth-child(even) { background: #fafafa; }
+.badge { padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 8pt; display: inline-block; }
+.grade-box { display: inline-block; padding: 12px 20px; border-radius: 8px; text-align: center; margin: 0 12px 12px 0; }
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; margin: 8px 0 16px; }
+.info-grid dt { font-weight: 600; color: #555; font-size: 9pt; }
+.info-grid dd { margin: 0 0 4px; font-size: 10pt; }
+.conclusion { background: #f5f5f5; border-left: 4px solid #3f51b5; padding: 16px 20px; margin: 16px 0; white-space: pre-wrap; }
+.footer { font-size: 8pt; color: #999; text-align: center; margin-top: 40px; border-top: 1px solid #ddd; padding-top: 8px; }
+@media print { button { display: none !important; } }
+</style></head><body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+    <div style="font-size:10pt;color:#999;margin-bottom:30px">Bosna i Hercegovina — Federacija BiH</div>
+    <h1>AKT O PROCJENI RIZIKA</h1>
+    <div class="subtitle">na radnim mjestima i u radnim prostorijama</div>
+    <div style="margin:30px 0;padding:20px;background:#f5f5f5;border-radius:8px;display:inline-block;min-width:300px">
+        <div style="font-size:16pt;font-weight:700;color:#1a237e">${formData.nazivTvrtke || '—'}</div>
+        <div style="font-size:10pt;color:#666;margin-top:4px">${formData.sjediste || ''}</div>
+        <div style="font-size:10pt;color:#666">${formData.djelatnost || ''}</div>
+    </div>
+    <div class="meta">Datum izrade: ${formData.datumIzrade ? new Date(formData.datumIzrade).toLocaleDateString('hr-HR') : today}</div>
+    <div class="meta">Revizija: ${formData.revizija || '1'}</div>
+    ${formData.ovlOrganizacija ? `<div class="meta" style="margin-top:16px">Izradila: ${formData.ovlOrganizacija}</div>` : ''}
+    ${formData.ovlOsobaIme ? `<div class="meta">Ovlaštena osoba: ${formData.ovlOsobaIme} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}</div>` : ''}
+</div>
+
+<!-- SECTION 1: GENERAL DATA -->
+<h2>1. Opšti podaci o poslodavcu</h2>
+<div class="info-grid">
+    <dt>Naziv:</dt><dd>${formData.nazivTvrtke || '—'}</dd>
+    <dt>Sjedište:</dt><dd>${formData.sjediste || '—'}</dd>
+    <dt>Djelatnost:</dt><dd>${formData.djelatnost || '—'}</dd>
+    <dt>Ukupno zaposlenih:</dt><dd>${formData.ukupnoZaposlenih || '—'}</dd>
+    <dt>Ovlaštena organizacija:</dt><dd>${formData.ovlOrganizacija || '—'}</dd>
+    <dt>Ovlaštena osoba:</dt><dd>${formData.ovlOsobaIme || '—'} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}</dd>
+</div>
+
+<!-- SECTION 2: PROCESS -->
+<h2>2. Opis tehničko-tehnološkog procesa</h2>
+<p>${(formData.opisProcesa || 'Nije uneseno.').replace(/\n/g, '<br>')}</p>
+${formData.analizaOrganizacije ? `<h3>Analiza organizacije rada</h3><p>${formData.analizaOrganizacije.replace(/\n/g, '<br>')}</p>` : ''}
+
+<!-- SECTION 3: RISK MATRIX RESULTS -->
+<h2>3. Procjena rizika — rezultati</h2>
+<p>Ukupno procijenjeno: <strong>${riskItems.length}</strong> stavki na <strong>${[...new Set(riskItems.map(r => r.radnoMjestoId))].length}</strong> radnih mjesta.</p>
+<table>
+<thead><tr><th>#</th><th>Radno mjesto</th><th>Opasnost / Štetnost</th><th>V₀</th><th>P₀</th><th>R₀</th><th>Nivo</th><th>V₁</th><th>P₁</th><th>R₁</th><th>Nivo nakon</th></tr></thead>
+<tbody>
+${sorted.map((ri, i) => {
+    const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
+    const hz = hazards.find(h => h.id === ri.opasnostId);
+    const hasAfter = ri.rizikNakon > 0;
+    return `<tr>
+        <td>${i + 1}</td>
+        <td>${wp?.naziv || '—'}</td>
+        <td>${hz ? (hz.oznaka ? hz.oznaka + ' ' : '') + hz.naziv : ri.opisOpasnosti || '—'}</td>
+        <td style="text-align:center">${ri.vjerovatnoca}</td>
+        <td style="text-align:center">${ri.posljedica}</td>
+        <td style="text-align:center;font-weight:700;color:${rlColor(ri.rizik)}">${ri.rizik}</td>
+        <td><span class="badge" style="background:${rlBg(ri.rizik)};color:${rlColor(ri.rizik)}">${rlLabel(ri.rizik)}</span></td>
+        <td style="text-align:center">${hasAfter ? ri.vjerovatnocaNakon : '—'}</td>
+        <td style="text-align:center">${hasAfter ? ri.posljedlicaNakon : '—'}</td>
+        <td style="text-align:center;font-weight:700;color:${hasAfter ? rlColor(ri.rizikNakon) : '#999'}">${hasAfter ? ri.rizikNakon : '—'}</td>
+        <td>${hasAfter ? '<span class="badge" style="background:' + rlBg(ri.rizikNakon) + ';color:' + rlColor(ri.rizikNakon) + '">' + rlLabel(ri.rizikNakon) + '</span>' : '—'}</td>
+    </tr>`;
+}).join('')}
+</tbody>
+</table>
+
+<!-- SECTION 4: OVERALL GRADE -->
+<h2>4. Ukupna ocjena rizika</h2>
+<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0">
+    <div class="grade-box" style="background:${gradeBefore ? rlBg(Math.round(avgBefore)) : '#f5f5f5'};border:2px solid ${gradeBefore ? rlColor(Math.round(avgBefore)) : '#ddd'}">
+        <div style="font-size:8pt;color:#666;margin-bottom:4px">PRIJE MJERA</div>
+        <div style="font-size:20pt;font-weight:900;color:${gradeBefore ? rlColor(Math.round(avgBefore)) : '#999'}">${avgBefore > 0 ? avgBefore.toFixed(1) : '—'}</div>
+        ${gradeBefore ? '<div style="font-size:9pt;font-weight:700;color:' + rlColor(Math.round(avgBefore)) + '">' + gradeBefore.label + '</div>' : ''}
+    </div>
+    ${gradeAfter ? '<div style="font-size:20pt;font-weight:900;color:#4caf50">→</div>' : ''}
+    ${gradeAfter ? '<div class="grade-box" style="background:' + rlBg(Math.round(avgAfter)) + ';border:2px solid ' + rlColor(Math.round(avgAfter)) + '"><div style="font-size:8pt;color:#666;margin-bottom:4px">NAKON MJERA</div><div style="font-size:20pt;font-weight:900;color:' + rlColor(Math.round(avgAfter)) + '">' + avgAfter.toFixed(1) + '</div><div style="font-size:9pt;font-weight:700;color:' + rlColor(Math.round(avgAfter)) + '">' + gradeAfter.label + '</div></div>' : ''}
+    ${gradeAfter && avgAfter < avgBefore ? '<div class="grade-box" style="background:#e8f5e9;border:2px solid #4caf50"><div style="font-size:8pt;color:#4caf50">SMANJENJE</div><div style="font-size:18pt;font-weight:900;color:#4caf50">↓ ' + ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%</div></div>' : ''}
+</div>
+
+<!-- SECTION 5: MEASURES -->
+${highRiskItems.length > 0 ? `<h2>5. Plan mjera za smanjenje rizika</h2>
+<p>Stavke sa početnim rizikom R₀ ≥ 6 koje zahtijevaju dodatne mjere:</p>
+<table>
+<thead><tr><th>#</th><th>Opasnost</th><th>R₀</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>R₁</th><th>Odgovorna osoba</th><th>Rok</th></tr></thead>
+<tbody>
+${highRiskItems.map((ri, i) => {
+    const hz = hazards.find(h => h.id === ri.opasnostId);
+    const hasAfter = ri.rizikNakon > 0;
+    return '<tr><td>' + (i + 1) + '</td><td>' + (hz ? (hz.oznaka ? hz.oznaka + ' ' : '') + hz.naziv : ri.opisOpasnosti || '—') + '</td><td style="text-align:center;font-weight:700;color:' + rlColor(ri.rizik) + '">' + ri.rizik + '</td><td>' + (ri.postojeceMjere || '—') + '</td><td style="font-weight:600">' + (ri.predlozeneMjere || '—') + '</td><td style="text-align:center;font-weight:700;color:' + (hasAfter ? rlColor(ri.rizikNakon) : '#999') + '">' + (hasAfter ? ri.rizikNakon : '—') + '</td><td>' + (ri.odgovornaOsoba || '—') + '</td><td>' + (ri.rokProvedbe ? new Date(ri.rokProvedbe).toLocaleDateString('hr-HR') : '—') + '</td></tr>';
+}).join('')}
+</tbody>
+</table>` : ''}
+
+<!-- SECTION 6: CONCLUSION -->
+<h2>${highRiskItems.length > 0 ? '6' : '5'}. Zaključak</h2>
+<div class="conclusion">${(formData.zakljucak || 'Zaključak nije unesen.').replace(/\n/g, '<br>')}</div>
+
+<div style="margin-top:60px;display:flex;justify-content:space-between">
+    <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">Poslodavac</div></div>
+    <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">Ovlaštena osoba za ZNR</div></div>
+</div>
+
+<div class="footer">Akt o procjeni rizika — ${formData.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform</div>
+
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">📄 Preuzmi PDF (Print)</button>
+</body></html>`;
+
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(html); w.document.close(); }
+    };
+
     // ─── Person Types & Hazards CRUD (same as before) ───
     const startNewPt = () => { setPtEdit('__new__'); setPtNaziv(''); setPtVrsta(''); };
     const startEditPt = (p) => { setPtEdit(p.id); setPtNaziv(p.naziv || ''); setPtVrsta(p.vrsta || ''); };
@@ -802,6 +953,10 @@ Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uklju
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
                         <div style={{ display: 'flex', gap: 10 }}>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-outline" onClick={handleGenerateReport}
+                                style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                📄 {lang === 'bs' ? 'Preuzmi izvještaj (PDF)' : 'Download Report (PDF)'}
+                            </button>
                         </div>
                     </div></div>
                     );
