@@ -58,6 +58,7 @@ function WorkersPageInner() {
     const photoInputRef = useRef(null);
     const editingWorkerRef = useRef(null); // tracks current worker id even across saves
     const openWorkerHandledRef = useRef(null); // stores last handled openWorker ID (not boolean)
+    const openedViaUrlRef = useRef(false); // true when form was opened via ?openWorker= param
     const uvjerenjaRef = useRef(null); // ref for scroll-to on cert section
     const ozoRef = useRef(null);       // ref for scroll-to on OZO section
     // Certificate form state
@@ -202,13 +203,11 @@ function WorkersPageInner() {
         if (openWorkerHandledRef.current === openId) return;
         const found = workers.find(x => x.id === openId);
         if (found) {
-            openWorkerHandledRef.current = openId; // mark as handled for THIS id
+            openWorkerHandledRef.current = openId;
+            openedViaUrlRef.current = true; // remember we came via URL — back/save must navigate
             handleEdit(found);
-            // Always clear dirty flag when returning from a cert/ppe subpage — cert saves
-            // are self-contained and should never require re-saving the worker form
             markClean();
             isDirtyRef.current = false;
-            // Check for section param — open and scroll to the right accordion
             const section = searchParams?.get('section');
             if (section === 'ozo') {
                 setTimeout(() => {
@@ -221,9 +220,8 @@ function WorkersPageInner() {
                     uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 350);
             }
-            // Keep openWorker in URL so browser back button can re-trigger the open
-            // Just remove it silently so it doesn't re-fire on next render — but leave history intact
-            router.replace(`/dashboard/workers?openWorker=${openId}${section ? `&section=${section}` : ''}`, { scroll: false });
+            // Strip the param from the URL immediately so this effect never re-fires
+            router.replace('/dashboard/workers', { scroll: false });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);
@@ -377,31 +375,47 @@ function WorkersPageInner() {
         loadData();
         markClean();
         isDirtyRef.current = false;
+        
+        const cameViaUrl = openedViaUrlRef.current;
+        // Clear all refs BEFORE changing any state, so the openWorker watcher
+        // never fires again after we navigate away
+        openWorkerHandledRef.current = null;
+        openedViaUrlRef.current = false;
+        
         if (addNew) {
+            if (cameViaUrl) {
+                // Replace URL first so watcher can't re-open, then reset form
+                await router.push('/dashboard/workers');
+            }
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
             editingWorkerRef.current = null;
-            openWorkerHandledRef.current = null;
             setCertificates([]);
             setPpeAssign([]);
-            if (searchParams?.get('openWorker')) router.push('/dashboard/workers');
         } else {
-            setShowForm(false);
-            openWorkerHandledRef.current = null;
-            if (searchParams?.get('openWorker')) router.push('/dashboard/workers');
+            if (cameViaUrl) {
+                // Navigate back to the radnici list (clears ?openWorker from URL)
+                router.push('/dashboard/workers');
+            } else {
+                setShowForm(false);
+            }
         }
-        setSelectedIds(new Set()); // clear selection after save
+        setSelectedIds(new Set());
         return savedId;
     };
 
     const handleCancel = () => {
         markClean();
         isDirtyRef.current = false;
-        setShowForm(false);
-        setEditingWorker(null);
+        const cameViaUrl = openedViaUrlRef.current;
         openWorkerHandledRef.current = null;
-        if (searchParams?.get('openWorker')) {
+        openedViaUrlRef.current = false;
+        setEditingWorker(null);
+        if (cameViaUrl) {
+            // Navigate back to radnici list — this also hides the form naturally
             router.push('/dashboard/workers');
+        } else {
+            setShowForm(false);
         }
     };
 
@@ -412,7 +426,7 @@ function WorkersPageInner() {
                     ? 'Imate nesačuvane promjene. Odbaciti promjene?'
                     : 'You have unsaved changes. Discard changes?'
             );
-            if (!choice) return; // stay
+            if (!choice) return;
         }
         handleCancel();
     };
@@ -1434,6 +1448,18 @@ function WorkersPageInner() {
                                             if (selectedIds.size === 0) return;
                                             setShowExportModal(true);
                                         }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📊 {lang === 'bs' ? 'Generiši Excel listu' : 'Generate Excel list'}</button>
+                                        <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={() => {
+                                            setGroupMenuOpen(false);
+                                            if (selectedIds.size === 0) return;
+                                            const selectedWorkers = workers.filter(w => selectedIds.has(w.id));
+                                            const emails = selectedWorkers.map(w => w.email).filter(Boolean);
+                                            if (emails.length === 0) {
+                                                alert(lang === 'bs' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
+                                                return;
+                                            }
+                                            const subject = encodeURIComponent(lang === 'bs' ? 'Obavijest' : 'Notification');
+                                            window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
+                                        }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>✉️ {lang === 'bs' ? 'Pošalji email' : 'Send email'}</button>
                                         <div className="dropdown-divider" />
                                         <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={async () => {
                                             setGroupMenuOpen(false);
