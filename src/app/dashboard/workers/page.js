@@ -375,30 +375,17 @@ function WorkersPageInner() {
         loadData();
         markClean();
         isDirtyRef.current = false;
-        
-        const cameViaUrl = openedViaUrlRef.current;
-        // Clear all refs BEFORE changing any state, so the openWorker watcher
-        // never fires again after we navigate away
+        // Clear refs BEFORE state changes so the openWorker watcher never re-fires
         openWorkerHandledRef.current = null;
         openedViaUrlRef.current = false;
-        
         if (addNew) {
-            if (cameViaUrl) {
-                // Replace URL first so watcher can't re-open, then reset form
-                await router.push('/dashboard/workers');
-            }
             setFormData({ ...emptyWorker });
             setEditingWorker(null);
             editingWorkerRef.current = null;
             setCertificates([]);
             setPpeAssign([]);
         } else {
-            if (cameViaUrl) {
-                // Navigate back to the radnici list (clears ?openWorker from URL)
-                router.push('/dashboard/workers');
-            } else {
-                setShowForm(false);
-            }
+            setShowForm(false);
         }
         setSelectedIds(new Set());
         return savedId;
@@ -407,16 +394,11 @@ function WorkersPageInner() {
     const handleCancel = () => {
         markClean();
         isDirtyRef.current = false;
-        const cameViaUrl = openedViaUrlRef.current;
+        // Clear refs so the openWorker watcher can never re-open the form
         openWorkerHandledRef.current = null;
         openedViaUrlRef.current = false;
         setEditingWorker(null);
-        if (cameViaUrl) {
-            // Navigate back to radnici list — this also hides the form naturally
-            router.push('/dashboard/workers');
-        } else {
-            setShowForm(false);
-        }
+        setShowForm(false);
     };
 
     const handleBack = async () => {
@@ -496,7 +478,7 @@ function WorkersPageInner() {
         return (
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button className="btn btn-ghost" onClick={handleBack}>← {t('discard')}</button>
+                    <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
                     <h1 style={{ margin: 0 }}>
                         👷 {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
@@ -1277,10 +1259,9 @@ function WorkersPageInner() {
                     position: 'sticky', bottom: 0, background: 'var(--bg-card)', borderTop: '1px solid var(--border)', padding: '12px 0',
                     display: 'flex', alignItems: 'center', gap: 12, zIndex: 50,
                 }}>
-                    <button className="btn btn-ghost" onClick={handleCancel}>← </button>
-                    <button className="btn btn-primary" onClick={() => handleSave(false)}>💾 {t('save')}</button>
+                    <button className="btn btn-primary" onClick={() => handleSave(false)}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                     <button className="btn btn-outline" onClick={() => handleSave(true)}>💾 {t('saveAndAddNew')}</button>
-                    <button className="btn btn-ghost" onClick={handleCancel}>↩ {t('discard')}</button>
+                    <button className="btn btn-ghost" onClick={handleBack}>↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
                 </div>
             </div>
         );
