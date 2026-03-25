@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {create,  getAll, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 export default function InjuryListPage() {
@@ -78,7 +79,9 @@ export default function InjuryListPage() {
         !(inj.opisPovrede || '').toLowerCase().includes(q)) return false;
     }
     return true;
-  }).sort((a, b) => new Date(b.datum) - new Date(a.datum));
+  });
+
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
 
   const tipBadge = (tip) => {
     const map = {
@@ -190,17 +193,17 @@ export default function InjuryListPage() {
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Oznaka' : 'ID'}</th>
-                    <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
-                    <th>{lang === 'bs' ? 'Datum dog.' : 'Date'}</th>
+                    <th onClick={() => toggleSort('oznaka')} style={thStyle('oznaka')}>{lang === 'bs' ? 'Oznaka' : 'ID'}{sortIcon('oznaka')}</th>
+                    <th onClick={() => toggleSort('radnikIme')} style={thStyle('radnikIme')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('radnikIme')}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum dog.' : 'Date'}{sortIcon('datum')}</th>
                     <th>{lang === 'bs' ? 'Ime roditelja' : 'Parent name'}</th>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
                             </thead>
                 <tbody style={{ overflow: 'visible' }}>
-                  {filtered.length === 0 ? (
+                  {sorted.length === 0 ? (
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : filtered.map((r) => (
+                  ) : sorted.map((r) => (
                     <tr key={r.id} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                       <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>

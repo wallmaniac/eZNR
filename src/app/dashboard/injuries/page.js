@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -171,6 +172,8 @@ export default function InjuriesPage() {
       (inj.opisPovrede || '').toLowerCase().includes(q) ||
       (inj.lokacija || '').toLowerCase().includes(q);
   });
+
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
 
   const tipBadge = (tip) => {
     const map = {
@@ -384,19 +387,19 @@ export default function InjuriesPage() {
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
-                    <th>{t('worker')}</th>
-                    <th>{t('date')}</th>
-                    <th>{lang === 'bs' ? 'Tip' : 'Type'}</th>
-                    <th>{t('location')}</th>
+                    <th onClick={() => toggleSort('radnikIme')} style={thStyle('radnikIme')}>{t('worker')}{sortIcon('radnikIme')}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')}{sortIcon('datum')}</th>
+                    <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{lang === 'bs' ? 'Tip' : 'Type'}{sortIcon('tip')}</th>
+                    <th onClick={() => toggleSort('lokacija')} style={thStyle('lokacija')}>{t('location')}{sortIcon('lokacija')}</th>
                     <th>{t('description')}</th>
-                    <th>{t('status')}</th>
+                    <th onClick={() => toggleSort('status')} style={thStyle('status')}>{t('status')}{sortIcon('status')}</th>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
                             </thead>
                 <tbody style={{ overflow: 'visible' }}>
-                  {filtered.length === 0 ? (
+                  {sorted.length === 0 ? (
                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : filtered.map(inj => (
+                  ) : sorted.map(inj => (
                     <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                       <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === inj.id ? null : inj.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
