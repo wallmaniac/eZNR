@@ -233,6 +233,59 @@ KADA KORISTITI ALATE:
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 - Ako korisnik traži izmjenu svih povreda na radu za neku godinu → koristi alat bulk_update_injuries
 
+RJEČNIK POJMOVA (koristi kad korisnik pita "šta znači...?" ili kad nešto nije jasno):
+
+PROCJENA RIZIKA:
+- Nacrt = procjena se još priprema, nije finalizirana ni odobrena
+- Aktivna = procjena je trenutno na snazi, važeća, primjenjuje se
+- Arhivirana = zamijenjena novijom verzijom ili istekla, čuva se za historiju
+- Vjerovatnoća (V) = koliko je vjerovatno da će se opasnost dogoditi (1-5 skala: 1=zanemarivo, 5=gotovo sigurno)
+- Posljedica (P) = kolika bi bila šteta ako se opasnost dogodi (1-5 skala: 1=bez opasnosti, 5=smrtni ishod)
+- Rizik (R) = V × P, ukupna ocjena rizika (1-25)
+- Neznatan rizik (R: 1-5) = prihvatljiv, ne zahtijeva posebne mjere
+- Dopustiv rizik (R: 6-10) = prihvatljiv uz praćenje i redovne kontrole
+- Umjeren rizik (R: 11-15) = potrebno smanjenje rizika, planirati mjere
+- Znatan rizik (R: 16-20) = neprihvatljiv, hitno potrebne mjere smanjenja
+- Nedopustiv rizik (R: 21-25) = zabraniti rad dok se rizik ne smanji
+
+DOKUMENTACIJA POSLODAVCA:
+- Obavezna dokumentacija = dokumenti zakonom propisani za svakog poslodavca (akti, pravilnici, elaborati)
+- Periodični pregledi = pregledi koji se redovno ponavljaju (PP aparati, hidranti, elektro instalacije)
+- Dodatne evidencije = ostala neobavezna ali korisna dokumentacija
+- Status Aktivan = dokument je važeći i na snazi
+- Status Istekao = rok važenja dokumenta je prošao, potrebna obnova
+
+SISTEMATIZACIJA RADNIH MJESTA:
+- Sistematizacija = formalni opis svakog radnog mjesta: opis poslova, uvjeti rada, potrebna oprema, zdravstveni zahtjevi
+- Posebni uvjeti = posebni zahtjevi za radno mjesto (rad na visini, buka, hemikalije)
+- OZO = Osobna zaštitna oprema (kaciga, cipele, rukavice, naočale, prsluk)
+- Stručna sprema = potrebni nivo obrazovanja (NKV, PKV, KV, SSS, VŠS, VSS)
+- Uvjeti rada = opasnosti i štetnosti na radnom mjestu po kategorijama (fizički, kemijski, biološki, ergonomski, psihosocijalni)
+
+UVJERENJA I CERTIFIKATI:
+- ZNR uvjerenje = osposobljavanje za zaštitu na radu (obavezno za svakog radnika)
+- PP uvjerenje = osposobljavanje za zaštitu od požara
+- Vrijedi do = datum isteka uvjerenja, nakon toga radnik mora obnoviti
+- Sposobnost = rezultat ljekarskog pregleda (Sposoban, Sposoban uz ograničenja, Nesposoban)
+
+RADNA OPREMA:
+- Radna oprema = strojevi, uređaji i instalacije koji podliježu periodičnim pregledima
+- Posljednji pregled = datum zadnjeg redovnog pregleda
+- Idući pregled = datum sljedećeg obaveznog pregleda
+- Status Active = oprema u upotrebi, pregled važeći
+- Status Expired = pregled istekao, potreban novi pregled
+
+ISZNR:
+- ISZNR = Informacioni sistem zaštite na radu (državni sistem za evidenciju)
+- Stranke = tvrtke i organizacije registrirane u ISZNR sistemu
+- Ispitivači = ovlaštene osobe za provođenje pregleda opreme i objekata
+
+OBRASCI:
+- OIR-1 = Obrazac za izvještaj o povredi na radu (prijava inspektoratu)
+- RO-1, RO-2 = Obrasci za redovne preglede opreme
+- RA-1 = Ljekarska uputnica za pregled radnika
+- NR-1 = Uputnica za noćni rad
+
 ${pageDesc}
 
 STRANICE APLIKACIJE:
@@ -267,6 +320,37 @@ WHEN TO USE TOOLS:
 - If the user mentions assigning PPE (equipment, gloves, helmet, vest, boots, etc.) to a worker → use assign_ppe with worker_id from LIVE DATA. Default datum = today, default kolicina = 1 unless user specifies otherwise. This saves DIRECTLY — no form needed.
 - If the user asks about data you already have → answer directly without tools
 - If the user asks to change the year for all work injuries → use bulk_update_injuries tool
+
+DOMAIN GLOSSARY (use when user asks "what does X mean?" or needs clarification):
+
+RISK ASSESSMENT:
+- Draft (Nacrt) = assessment is still being prepared, not yet finalized
+- Active (Aktivna) = assessment currently in effect and applicable
+- Archived (Arhivirana) = replaced by newer version or expired, kept for history
+- Probability (V) = likelihood of hazard occurring (1-5 scale: 1=negligible, 5=almost certain)
+- Consequence (P) = severity of damage if hazard occurs (1-5 scale: 1=none, 5=fatal)
+- Risk (R) = V × P, overall risk score (1-25)
+- Negligible risk (1-5), Tolerable (6-10), Moderate (11-15), Significant (16-20), Intolerable (21-25)
+
+EMPLOYER DOCUMENTATION:
+- Mandatory = legally required documents for every employer
+- Periodic reviews = regularly recurring inspections (fire extinguishers, hydrants, electrical)
+- Additional records = optional but useful documentation
+- Active = document is valid and in effect
+- Expired = document validity has lapsed, needs renewal
+
+JOB SYSTEMATIZATION:
+- Sistematizacija = formal description of each workplace: duties, conditions, equipment, health requirements
+- OZO = Personal Protective Equipment (PPE)
+- Special conditions = specific workplace requirements (height work, noise, chemicals)
+
+CERTIFICATES:
+- ZNR = Occupational Safety Training certificate
+- PP = Fire Protection certificate
+- Valid until = expiry date, worker must renew after this
+
+FORMS: OIR-1 = Injury report, RO-1/RO-2 = Equipment inspection, RA-1 = Medical referral, NR-1 = Night work referral
+ISZNR = National Information System for Occupational Safety
 
 ${pageDesc}
 

@@ -5,6 +5,7 @@ import {
     getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
+import HelpTip from '@/components/HelpTip';
 import { useDialog } from '@/hooks/useDialog';
 
 /* ═══════════════════════════════════════════════
@@ -664,7 +665,7 @@ ${highRiskItems.map((ri, i) => {
                             <div><div style={labelSt}>Kvalifikacije</div><input className="form-input" value={formData.ovlOsobaKvalifikacije || ''} onChange={e => set('ovlOsobaKvalifikacije', e.target.value)} /></div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '180px 1fr', gap: 16, marginBottom: 10 }}>
-                            <div><div style={labelSt}>Status</div>
+                            <div><div style={labelSt}>Status<HelpTip text="Nacrt = procjena se još priprema, nije finalizirana. Aktivna = procjena je trenutno na snazi i važeća. Arhivirana = zamijenjena novijom verzijom ili istekla." /></div>
                                 <select className="form-select" value={formData.status || 'draft'} onChange={e => set('status', e.target.value)}>
                                     <option value="draft">Nacrt</option><option value="active">Aktivna</option><option value="archived">Arhivirana</option>
                                 </select>
@@ -736,13 +737,13 @@ ${highRiskItems.map((ri, i) => {
                                             <input className="form-input" value={riForm.opisOpasnosti || ''} onChange={e => setRi('opisOpasnosti', e.target.value)} placeholder="Kratak opis specifične opasnosti..." />
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>Vjerovatnoća (V) 1–5</div>
+                                            <div><div style={labelSt}>Vjerovatnoća (V) 1–5<HelpTip text="Koliko je vjerovatno da će se opasnost dogoditi? 1 = Zanemarivo (gotovo nemoguće), 3 = Moguće, 5 = Gotovo sigurno da će se desiti." /></div>
                                                 <select className="form-select" value={riForm.vjerovatnoca || 0} onChange={e => setRi('vjerovatnoca', +e.target.value)}>
                                                     <option value={0}>—</option>
                                                     {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
                                                 </select>
                                             </div>
-                                            <div><div style={labelSt}>Posljedica (P) 1–5</div>
+                                            <div><div style={labelSt}>Posljedica (P) 1–5<HelpTip text="Kolika bi bila šteta ako se opasnost dogodi? 1 = Zanemarivo (bez povrede), 3 = Značajno oštećenje zdravlja, 5 = Smrtni ishod." /></div>
                                                 <select className="form-select" value={riForm.posljedica || 0} onChange={e => setRi('posljedica', +e.target.value)}>
                                                     <option value={0}>—</option>
                                                     {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}

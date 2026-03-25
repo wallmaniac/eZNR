@@ -6,6 +6,7 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSearchParams } from 'next/navigation';
+import HelpTip from '@/components/HelpTip';
 
 function EmployerDocsInner() {
     const { t, lang } = useLanguage();
@@ -74,7 +75,7 @@ function EmployerDocsInner() {
                                     <input className="form-input" value={formData.naziv} onChange={(e) => updateField('naziv', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Kategorija' : 'Category'}</label>
+                                    <label className="form-label">{lang === 'bs' ? 'Kategorija' : 'Category'}<HelpTip text="Obavezna = dokumenti zakonom propisani za svakog poslodavca. Periodični = pregledi koji se ponavljaju redovno (PP aparati, hidranti, elektro). Dodatne = ostala dokumentacija korisna za firmu." /></label>
                                     <select className="form-select" value={formData.kategorija} onChange={e => updateField('kategorija', e.target.value)}>
                                         <option value="obavezna">{t('mandatoryDocs')}</option>
                                         <option value="periodicni">{t('periodicReviews')}</option>
@@ -82,7 +83,7 @@ function EmployerDocsInner() {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{t('status')}</label>
+                                    <label className="form-label">{t('status')}<HelpTip text="Aktivan = dokument je važeći i na snazi. Istekao = rok važenja dokumenta je prošao, treba obnova." /></label>
                                     <select className="form-select" value={formData.status} onChange={e => updateField('status', e.target.value)}>
                                         <option value="aktivan">{t('active')}</option>
                                         <option value="istekao">{t('expired')}</option>
