@@ -190,6 +190,17 @@ export default function PublicQuestionnairePage({ params }) {
                                 📝 {session.questionnaireName || 'Upitnik'}
                             </h1>
                             {session.assignedBy && <p style={{ color: '#94a3b8', fontSize: '0.82rem', margin: '4px 0 0' }}>👤 Dodijelio/la: <strong style={{ color: '#e2e8f0' }}>{session.assignedBy}</strong></p>}
+                            {session.senderEmail && (
+                                <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: '4px 0 0' }}>
+                                    📧 Od: <span style={{ color: '#818cf8' }}>{session.senderEmail}</span>
+                                </p>
+                            )}
+                            {session.recipientEmail && (
+                                <p style={{ color: '#94a3b8', fontSize: '0.78rem', margin: '4px 0 0' }}>
+                                    📬 Za: <span style={{ color: '#818cf8' }}>{session.recipientEmail}</span>
+                                    {session.recipientName && session.recipientName !== session.recipientEmail && ` (${session.recipientName})`}
+                                </p>
+                            )}
                             {session.deadline && (
                                 <p style={{
                                     color: '#f59e0b', fontSize: '0.85rem',

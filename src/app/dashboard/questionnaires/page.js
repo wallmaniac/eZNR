@@ -280,27 +280,49 @@ export default function QuestionnairesPage() {
     setAiGenerating(false);
   };
 
-  // Print questionnaire to new window
+  // Print / PDF questionnaire
   const handlePrintQuestionnaire = (q) => {
     setOpenMenuId(null);
-    const questions = q.surveyJson?.pages?.flatMap(p => p.elements || []) || [];
+    // Parse questions from either format
+    let questions = [];
+    try {
+      const sj = typeof q.surveyJson === 'string' ? JSON.parse(q.surveyJson) : q.surveyJson;
+      if (sj?.questions) {
+        questions = sj.questions;
+      } else if (sj?.pages) {
+        sj.pages.forEach(p => {
+          if (p.title) questions.push({ type: 'heading', title: p.title });
+          (p.elements || []).forEach(el => questions.push({ ...el, type: el.type === 'radiogroup' ? 'radio' : (el.type === 'comment' ? 'textarea' : el.type) }));
+        });
+      }
+    } catch { /* ignore */ }
     const logoHtml = companyLogo ? `<img src="${companyLogo}" style="height:60px;max-width:200px;object-fit:contain;margin-bottom:6px" />` : '';
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${q.naziv || 'Upitnik'}</title>
-      <style>body{font-family:Arial,sans-serif;padding:32px 48px;color:#000}h1{font-size:20px;margin:0 0 4px}hr{border:none;border-top:2px solid #000;margin:16px 0 24px}.q{margin-bottom:18px;page-break-inside:avoid}.qt{font-size:13px;font-weight:700;margin-bottom:6px}.opt{font-size:12px;padding:2px 0 2px 20px}.meta{font-size:11px;color:#666;margin-bottom:4px}@media print{button{display:none}}</style>
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${q.naziv || 'Anketa'}</title>
+      <style>body{font-family:Arial,sans-serif;padding:32px 48px;color:#000;max-width:800px;margin:0 auto}h1{font-size:20px;margin:0 0 4px}h3{font-size:15px;color:#333;border-bottom:2px solid #6366f1;padding-bottom:6px;margin:28px 0 14px}hr{border:none;border-top:2px solid #000;margin:16px 0 24px}.q{margin-bottom:18px;page-break-inside:avoid;padding:12px 16px;border:1px solid #e0e0e0;border-radius:8px}.qt{font-size:13px;font-weight:700;margin-bottom:6px}.opt{font-size:12px;padding:3px 0 3px 20px}.meta{font-size:11px;color:#666;margin-bottom:4px}.qimg{max-width:100%;max-height:200px;border-radius:6px;margin:8px 0;border:1px solid #ddd}@media print{button{display:none!important}.q{border:1px solid #ccc}}</style>
     </head><body>
       ${logoHtml}
       ${companyName ? `<div class="meta">${companyName}</div>` : ''}
-      <h1>${q.naziv || 'Upitnik'}</h1>
+      <h1>${q.naziv || 'Anketa'}</h1>
       <div class="meta">${officerName} &mdash; ${new Date().toLocaleDateString('hr-HR')}</div>
+      ${q.koristiPragProlaza !== false ? `<div class="meta">Prag prolaza: ${q.prolazniPrag ?? 70}%</div>` : '<div class="meta">Tip: Anketa (bez ocjenjivanja)</div>'}
       <hr />
       ${questions.map((el, i) => {
+        if (el.type === 'heading') return `<h3>${el.title || ''}</h3>`;
         const opts = el.choices || el.rateValues || [];
+        const imgHtml = el.imageUrl ? `<img class="qimg" src="${el.imageUrl}" />` : '';
         return `<div class="q">
           <div class="qt">${i + 1}. ${el.title || el.name || ''}</div>
+          ${el.description ? `<div style="font-size:11px;color:#666;margin-bottom:6px">${el.description}</div>` : ''}
+          ${imgHtml}
           ${opts.map((o, j) => `<div class="opt">${String.fromCharCode(65+j)}) ${typeof o === 'string' ? o : (o.text || o.value || '')}</div>`).join('')}
+          ${el.type === 'text' || el.type === 'textarea' ? '<div style="border-bottom:1px solid #ccc;margin-top:10px;min-height:24px"></div>' : ''}
+          ${el.type === 'rating' ? '<div style="margin-top:6px">⭐ ⭐ ⭐ ⭐ ⭐</div>' : ''}
+          ${el.type === 'boolean' || el.type === 'yesno' ? '<div class="opt">A) Da &nbsp; B) Ne</div>' : ''}
         </div>`;
       }).join('')}
-      <button onclick="window.print()" style="margin-top:24px;padding:8px 20px;font-size:14px;cursor:pointer">🖨️ Isprintaj</button>
+      <div style="display:flex;gap:12px;margin-top:24px">
+        <button onclick="window.print()" style="padding:10px 24px;font-size:14px;cursor:pointer;border:none;background:#6366f1;color:#fff;border-radius:8px;font-weight:700">🖨️ Isprintaj / Spremi PDF</button>
+      </div>
     </body></html>`;
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); }
@@ -664,7 +686,7 @@ export default function QuestionnairesPage() {
               </div>
             </div>
 
-            {/* Row 4: Automatski upis, Broj točnih */}
+            {/* Row 4: Automatski upis, Prag prolaza toggle + value */}
             <div style={{ display: 'grid', gridTemplateColumns: '200px 200px 1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={labelSt}>{lang === 'bs' ? 'Automatski upis u evidenciju' : 'Auto-record'}</div>
@@ -672,9 +694,16 @@ export default function QuestionnairesPage() {
                   <input type="checkbox" className="form-checkbox" checked={formData.automatskiUpisUEvidenciju} onChange={e => set('automatskiUpisUEvidenciju', e.target.checked)} />
                 </label>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+                <div style={labelSt}>{lang === 'bs' ? 'Koristi prag prolaza' : 'Use pass threshold'}</div>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                  <input type="checkbox" className="form-checkbox" checked={formData.koristiPragProlaza !== false} onChange={e => set('koristiPragProlaza', e.target.checked)} />
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{formData.koristiPragProlaza !== false ? (lang === 'bs' ? 'Da (test)' : 'Yes (test)') : (lang === 'bs' ? 'Ne (anketa)' : 'No (survey)')}</span>
+                </label>
+              </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Prag prolaza (%)' : 'Pass threshold (%)'}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: formData.koristiPragProlaza !== false ? 1 : 0.35, pointerEvents: formData.koristiPragProlaza !== false ? 'auto' : 'none' }}>
                   <input className="form-input" type="number" min={0} max={100}
                     value={formData.prolazniPrag ?? 70}
                     onChange={e => set('prolazniPrag', Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}

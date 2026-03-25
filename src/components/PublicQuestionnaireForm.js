@@ -66,8 +66,27 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
             questions = parsed; // plain array
         } else if (parsed?.questions) {
             questions = parsed.questions; // our native format
-        } else if (parsed?.pages?.[0]?.elements) {
-            questions = parsed.pages[0].elements; // SurveyJS format
+        } else if (parsed?.pages && Array.isArray(parsed.pages)) {
+            // SurveyJS format — handle ALL pages, not just page[0]
+            const typeMap = { radiogroup: 'radio', comment: 'textarea', text: 'text', checkbox: 'checkbox', rating: 'rating', boolean: 'boolean', dropdown: 'dropdown' };
+            parsed.pages.forEach(page => {
+                if (page.title) {
+                    questions.push({ id: 'h_' + Math.random().toString(36).substr(2,6), type: 'heading', title: page.title, description: '', required: false, choices: [] });
+                }
+                (page.elements || []).forEach(el => {
+                    questions.push({
+                        id: el.name || 'q_' + Math.random().toString(36).substr(2,6),
+                        type: typeMap[el.type] || el.type || 'text',
+                        title: el.title || '', description: el.description || '',
+                        isRequired: el.isRequired || false, required: el.isRequired || false,
+                        choices: (el.choices || []).map(c => typeof c === 'string' ? c : (c.text || c.value || '')),
+                        correctAnswer: null,
+                        ratingMax: (typeMap[el.type] || el.type) === 'rating' ? (el.rateMax || 5) : undefined,
+                        placeholder: el.placeholder || '',
+                        imageUrl: el.imageUrl || null,
+                    });
+                });
+            });
         }
     } catch {
         questions = [];
@@ -114,6 +133,12 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
             setErrors(newErrors);
             const firstErrorId = Object.keys(newErrors)[0];
             document.getElementById(`q-${firstErrorId}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
+
+        // If grading is off (prolazniPrag is null), just submit without grading
+        if (prolazniPrag === null || prolazniPrag === undefined) {
+            onSubmit?.(answers, null);
             return;
         }
 
@@ -279,6 +304,17 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                             }}>
                                 {q.description}
                             </p>
+                        )}
+
+                        {/* Question image */}
+                        {q.imageUrl && (
+                            <div style={{ margin: '0 0 12px 32px' }}>
+                                <img src={q.imageUrl} alt="" style={{
+                                    maxWidth: '100%', maxHeight: 280, borderRadius: 10,
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    objectFit: 'contain',
+                                }} />
+                            </div>
                         )}
 
                         {/* Input by type */}

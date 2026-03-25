@@ -241,6 +241,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                     {q.title || (lang === 'bs' ? 'Unesite naslov pitanja...' : 'Enter question title...')}
                                 </div>
                                 {q.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{q.description}</div>}
+                                {q.imageUrl && <img src={q.imageUrl} alt="" style={{ maxWidth: '100%', maxHeight: 80, borderRadius: 6, marginTop: 6, objectFit: 'contain', border: '1px solid var(--border-light)' }} />}
 
                                 {/* Preview of choices */}
                                 {(q.type === 'radio' || q.type === 'checkbox' || q.type === 'dropdown') && q.choices && (
@@ -302,6 +303,23 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                             onChange={e => updateQuestion(selectedId, 'required', e.target.checked)} />
                                         {lang === 'bs' ? 'Obavezno' : 'Required'}
                                     </label>
+                                </div>
+
+                                <div style={{ marginBottom: 10 }}>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
+                                        🖼️ {lang === 'bs' ? 'SLIKA (URL)' : 'IMAGE (URL)'}
+                                    </div>
+                                    <input className="form-input" value={selectedQuestion.imageUrl || ''}
+                                        onChange={e => updateQuestion(selectedId, 'imageUrl', e.target.value || null)}
+                                        placeholder={lang === 'bs' ? 'https://... ili ostavite prazno' : 'https://... or leave empty'}
+                                        style={{ fontSize: '0.82rem' }} />
+                                    {selectedQuestion.imageUrl && (
+                                        <img src={selectedQuestion.imageUrl} alt="" style={{
+                                            maxWidth: '100%', maxHeight: 120, borderRadius: 8,
+                                            border: '1px solid var(--border-light)',
+                                            objectFit: 'contain', marginTop: 6,
+                                        }} />
+                                    )}
                                 </div>
 
                                 {selectedQuestion.type === 'text' && (

@@ -9,7 +9,37 @@ import { sendBatchEmails } from '@/lib/emailService';
    Select workers/emails → Send questionnaire via EmailJS
    ═══════════════════════════════════════════════════════ */
 
-export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lang = 'bs', officerName = '', companyName = '' }) {
+// Normalize SurveyJS { pages: [{ elements }] } → { questions: [] } for consistent storage
+function normalizeSurveyJson(json) {
+    try {
+        const parsed = typeof json === 'string' ? JSON.parse(json || '{}') : (json || {});
+        if (parsed.questions && parsed.questions.length > 0) return parsed; // already native
+        if (parsed.pages && Array.isArray(parsed.pages)) {
+            const questions = [];
+            const typeMap = { radiogroup: 'radio', comment: 'textarea', text: 'text', checkbox: 'checkbox', rating: 'rating', boolean: 'boolean', dropdown: 'dropdown' };
+            parsed.pages.forEach(page => {
+                if (page.title) questions.push({ id: 'h_' + Math.random().toString(36).substr(2,6), type: 'heading', title: page.title, description: '', required: false, choices: [] });
+                (page.elements || []).forEach(el => {
+                    questions.push({
+                        id: el.name || 'q_' + Math.random().toString(36).substr(2,6),
+                        type: typeMap[el.type] || el.type || 'text',
+                        title: el.title || '', description: el.description || '',
+                        required: el.isRequired || false,
+                        choices: (el.choices || []).map(c => typeof c === 'string' ? c : (c.text || c.value || '')),
+                        correctAnswer: null,
+                        ratingMax: (typeMap[el.type] || el.type) === 'rating' ? (el.rateMax || 5) : undefined,
+                        placeholder: el.placeholder || '',
+                        imageUrl: el.imageUrl || null,
+                    });
+                });
+            });
+            return { questions };
+        }
+        return parsed;
+    } catch { return json; }
+}
+
+export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lang = 'bs', officerName = '', companyName = '', companyLogo = '' }) {
     const [workers, setWorkers] = useState([]);
     const [selectedWorkerIds, setSelectedWorkerIds] = useState([]);
     const [manualEmails, setManualEmails] = useState('');
@@ -107,10 +137,11 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                     recipientName: r.toName,
                     workerId: r.workerId || null,
                     deadline: deadline || null,
-                    surveyJson: questionnaire.surveyJson,
-                    prolazniPrag: questionnaire.prolazniPrag ?? 70,
+                    surveyJson: normalizeSurveyJson(questionnaire.surveyJson),
+                    prolazniPrag: questionnaire.koristiPragProlaza === false ? null : (questionnaire.prolazniPrag ?? 70),
                     prikaziRezultateNakonRjesavanja: questionnaire.prikaziRezultateNakonRjesavanja ?? true,
                     assignedBy: officerName || null,
+                    senderEmail: replyToEmail.trim() || null,
                     companyName: companyName || null,
                     companyLogo: companyLogo || null,
                 });
