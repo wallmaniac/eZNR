@@ -93,8 +93,13 @@ function WorkersPageInner() {
         ime: true, prezime: true, jmbg: true, oib: true, datumRodenja: true, spol: false, 
         zivotnaDob: false, orgJedinicaId: true, radnoMjestoId: true, datumZaposlenja: true, 
         stazDoDolaska: false, ukupniStaz: false, lokacija: false, ulica: false, kucniBroj: false, 
-        mjestoId: false, opcina: false, telefonTvrtki: false, mobitel: false, email: false, aktivan: true, evidencijskiBroj: false
+        mjestoId: false, opcina: false, telefonTvrtki: false, mobitel: false, email: false, aktivan: true, evidencijskiBroj: false,
+        uvjerenja: false, ljekarski: false, ozo: false
     });
+    
+    // Group actions menu state
+    const [groupMenuOpen, setGroupMenuOpen] = useState(false);
+    const groupMenuRef = useRef(null);
 
     const loadData = useCallback(() => {
         // reload list-level collections
@@ -179,6 +184,9 @@ function WorkersPageInner() {
                 setCertMenuId(null);
                 certMenuIdRef.current = null;
                 certOpenBtnRef.current = null;
+            }
+            if (groupMenuRef.current && !groupMenuRef.current.contains(e.target)) {
+                setGroupMenuOpen(false);
             }
         };
         document.addEventListener('mousedown', handleClick);
@@ -376,9 +384,11 @@ function WorkersPageInner() {
             openWorkerHandledRef.current = null;
             setCertificates([]);
             setPpeAssign([]);
+            if (searchParams?.get('openWorker')) router.push('/dashboard/workers');
         } else {
             setShowForm(false);
             openWorkerHandledRef.current = null;
+            if (searchParams?.get('openWorker')) router.push('/dashboard/workers');
         }
         setSelectedIds(new Set()); // clear selection after save
         return savedId;
@@ -389,6 +399,10 @@ function WorkersPageInner() {
         isDirtyRef.current = false;
         setShowForm(false);
         setEditingWorker(null);
+        openWorkerHandledRef.current = null;
+        if (searchParams?.get('openWorker')) {
+            router.push('/dashboard/workers');
+        }
     };
 
     const handleBack = async () => {
@@ -1308,7 +1322,9 @@ function WorkersPageInner() {
                                         {key: 'ulica', label: 'Ulica'}, {key: 'kucniBroj', label: 'Kućni broj'},
                                         {key: 'mjestoId', label: 'Mjesto'}, {key: 'opcina', label: 'Općina'},
                                         {key: 'telefonTvrtki', label: 'Tel (Firma)'}, {key: 'mobitel', label: 'Mobitel'},
-                                        {key: 'email', label: 'Email'}, {key: 'aktivan', label: 'Status (Aktivan)'}
+                                        {key: 'email', label: 'Email'}, {key: 'aktivan', label: 'Status (Aktivan)'},
+                                        {key: 'uvjerenja', label: 'Uvjerenja ZNR..'}, {key: 'ljekarski', label: 'Ljekarski pregledi'},
+                                        {key: 'ozo', label: 'Zadužena OZO'}
                                     ].map(col => (
                                         <label key={col.key} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                             <input type="checkbox" checked={exportColumns[col.key]} onChange={e => setExportColumns(p => ({...p, [col.key]: e.target.checked}))} />
@@ -1321,6 +1337,7 @@ function WorkersPageInner() {
                                 <button className="btn btn-ghost" onClick={() => setShowExportModal(false)}>{t('cancel')}</button>
                                 <button className="btn btn-primary" style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }} onClick={() => {
                                     const selectedWorkers = workers.filter(w => selectedIds.has(w.id));
+                                    const allPpeList = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
                                     const dataRows = selectedWorkers.map(w => {
                                         const row = {};
                                         if (exportColumns.ime) row['Ime'] = w.ime;
@@ -1345,6 +1362,20 @@ function WorkersPageInner() {
                                         if (exportColumns.mobitel) row['Mobitel'] = w.mobitel;
                                         if (exportColumns.email) row['Email'] = w.email;
                                         if (exportColumns.aktivan) row['Status'] = w.aktivan ? 'Aktivan' : 'Bivši radnik';
+                                        
+                                        if (exportColumns.uvjerenja) {
+                                            const wCerts = allCerts.filter(cx => cx.workerId === w.id);
+                                            row['Uvjerenja ZNR'] = wCerts.length > 0 ? wCerts.map(cx => cx.oznaka || cx.ime).join(', ') : '';
+                                        }
+                                        if (exportColumns.ljekarski) {
+                                            const wMed = allMedExamsList.filter(mx => mx.workerId === w.id);
+                                            row['Ljekarski pregledi'] = wMed.length > 0 ? wMed.map(mx => mx.tipPregleda || 'Pregled').join(', ') : '';
+                                        }
+                                        if (exportColumns.ozo) {
+                                            const wPpe = allPpeList.filter(px => px.workerId === w.id);
+                                            row['Zadužena Oprema/OZO'] = wPpe.length > 0 ? wPpe.map(px => px.naziv + (px.kolicina > 1 ? ` (x${px.kolicina})` : '')).join(', ') : '';
+                                        }
+
                                         return row;
                                     });
                                     const ws = XLSX.utils.json_to_sheet(dataRows);
@@ -1390,38 +1421,32 @@ function WorkersPageInner() {
                                         {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
                                     </span>
                                 )}
-                                <div style={{ position: 'relative' }}>
-                                <button className="btn btn-dark btn-sm" onClick={() => {
-                                    const el = document.getElementById('group-action-menu');
-                                    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-                                }}>{t('selectGroupAction')} ▼</button>
-                                <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 220 }}>
-                                    <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                        {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'radnika odabrano' : 'workers selected'}` : (lang === 'bs' ? 'Odaberite radnike' : 'Select workers first')}
+                                <div style={{ position: 'relative' }} ref={groupMenuRef}>
+                                <button className="btn btn-dark btn-sm" onClick={() => setGroupMenuOpen(!groupMenuOpen)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
+                                {groupMenuOpen && (
+                                    <div className="dropdown-menu" style={{ display: 'block', right: 0, top: 'calc(100% + 4px)', minWidth: 220 }}>
+                                        <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'radnika odabrano' : 'workers selected'}` : (lang === 'bs' ? 'Odaberite radnike' : 'Select workers first')}
+                                        </div>
+                                        <div className="dropdown-divider" />
+                                        <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={() => {
+                                            setGroupMenuOpen(false);
+                                            if (selectedIds.size === 0) return;
+                                            setShowExportModal(true);
+                                        }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📊 {lang === 'bs' ? 'Generiši Excel listu' : 'Generate Excel list'}</button>
+                                        <div className="dropdown-divider" />
+                                        <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={async () => {
+                                            setGroupMenuOpen(false);
+                                            if (selectedIds.size === 0) return;
+                                            const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
+                                            if (ok) {
+                                                removeManyWorkersCascade([...selectedIds]);
+                                                setSelectedIds(new Set());
+                                                loadData();
+                                            }
+                                        }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
                                     </div>
-                                    <div className="dropdown-divider" />
-                                    <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={() => {
-                                        document.getElementById('group-action-menu').style.display = 'none';
-                                        if (selectedIds.size === 0) return;
-                                        setShowExportModal(true);
-                                    }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📊 {lang === 'bs' ? 'Generiši Excel listu' : 'Generate Excel list'}</button>
-                                    <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={async () => {
-                                        document.getElementById('group-action-menu').style.display = 'none';
-                                        if (selectedIds.size === 0) { await alert(lang === 'bs' ? 'Odaberite radnike kvačicom.' : 'Select workers using checkboxes.'); return; }
-                                        await alert(lang === 'bs' ? `Slanje obavijesti za ${selectedIds.size} radnika (uskoro)` : `Send notifications to ${selectedIds.size} workers (coming soon)`);
-                                    }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>✉️ {lang === 'bs' ? 'Pošalji obavijesti' : 'Send notifications'}</button>
-                                    <div className="dropdown-divider" />
-                                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={async () => {
-                                        document.getElementById('group-action-menu').style.display = 'none';
-                                        if (selectedIds.size === 0) return;
-                                        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
-                                        if (ok) {
-                                            removeManyWorkersCascade([...selectedIds]);
-                                            setSelectedIds(new Set());
-                                            loadData();
-                                        }
-                                    }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
-                                </div>
+                                )}
                                 </div>
                             </div>
                         </div>
