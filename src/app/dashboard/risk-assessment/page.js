@@ -353,9 +353,9 @@ export default function RiskAssessmentPage() {
                 loadRiskItems(editingId);
                 setShowImportModal(false);
             } else {
-                window.alert('AI greška: ' + (data.error || 'Nepoznata greška') + (data.raw ? '\n\nRaw: ' + data.raw.substring(0, 200) : ''));
+                await alert('AI greška: ' + (data.error || 'Nepoznata greška') + (data.raw ? '\n\nRaw: ' + data.raw.substring(0, 200) : ''));
             }
-        } catch (err) { window.alert('Greška: ' + err.message); }
+        } catch (err) { await alert('Greška: ' + err.message); }
         setImportLoading(false);
     };
 
@@ -388,7 +388,7 @@ Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uklju
             if (data.text) {
                 set('zakljucak', data.text);
             }
-        } catch (err) { window.alert('Greška: ' + err.message); }
+        } catch (err) { await alert('Greška: ' + err.message); }
         setConclusionLoading(false);
     };
 

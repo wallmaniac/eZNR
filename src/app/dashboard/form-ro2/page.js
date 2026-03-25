@@ -63,7 +63,7 @@ export default function FormRO2Page() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.FORMS_RO2, id);
       setSelectedIds(new Set());
       loadData();

@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 /* ═══════════════════════════════════════════════
@@ -14,6 +15,7 @@ const COND_LABELS = { fizicki: 'Fizički', kemijski: 'Kemijski', bioloski: 'Biol
 
 export default function SistematizacijaPage() {
     const { t, lang } = useLanguage();
+    const { alert, confirm, DialogRenderer } = useDialog();
     const [workplaces, setWorkplaces] = useState([]);
     const [sistematizacije, setSistematizacije] = useState([]);
     const [orgUnits, setOrgUnits] = useState([]);
@@ -61,8 +63,8 @@ export default function SistematizacijaPage() {
                     create(COLLECTIONS.SISTEMATIZACIJE, { ...data.sistematizacija, radnoMjestoId: wp.id, aiGenerated: true });
                 }
                 loadData();
-            } else { window.alert('AI greška: ' + (data.error || 'Nepoznata greška')); }
-        } catch (err) { window.alert('Greška: ' + err.message); }
+            } else { await alert('AI greška: ' + (data.error || 'Nepoznata greška')); }
+        } catch (err) { await alert('Greška: ' + err.message); }
         setAiLoading(false);
         setSelectedWp(null);
     };
@@ -88,8 +90,8 @@ export default function SistematizacijaPage() {
                     create(COLLECTIONS.SISTEMATIZACIJE, { ...data.sistematizacija, radnoMjestoId: wp.id, uploadedFile: file.name, aiGenerated: false });
                 }
                 loadData();
-            } else { window.alert('Greška: ' + (data.error || 'Neuspjelo parsiranje')); }
-        } catch (err) { window.alert('Greška: ' + err.message); }
+            } else { await alert('Greška: ' + (data.error || 'Neuspjelo parsiranje')); }
+        } catch (err) { await alert('Greška: ' + err.message); }
         setUploadLoading(false);
         setSelectedWp(null);
     };
@@ -126,6 +128,7 @@ export default function SistematizacijaPage() {
 
     return (
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+            <DialogRenderer />
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <div>

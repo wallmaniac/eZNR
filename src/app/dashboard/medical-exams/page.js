@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 // ── Legal basis ────────────────────────────────────────────────────────────────
 // Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)
@@ -50,6 +51,7 @@ export default function MedicalExamsPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
+    const { showFlash, SavedFlash } = useSavedFlash();
     const bs = lang === 'bs';
 
     const [exams, setExams] = useState(() => getAll(COLLECTIONS.MEDICAL_EXAMS));
@@ -88,7 +90,7 @@ export default function MedicalExamsPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
       setSelectedIds(new Set());
       fetchExams();
@@ -181,6 +183,7 @@ export default function MedicalExamsPage() {
         setEditingId(null);
         setForm({ ...emptyForm });
         setIsDirty(false);
+        showFlash();
         sessionStorage.removeItem('eznr_draft_medexam');
         // Return to worker page if we came from there
         const returnTo = searchParams.get('returnTo');
@@ -499,6 +502,7 @@ export default function MedicalExamsPage() {
                                 📋 {bs ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                             </button>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {bs ? 'Sačuvaj' : 'Save'}</button>
+                            <SavedFlash />
                         </div>
                     </div>
                 </div>

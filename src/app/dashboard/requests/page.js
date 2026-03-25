@@ -7,6 +7,7 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 const EMPTY_ZAHTJEVNICA = {
   zahtjevnicaBroj: '',
@@ -36,6 +37,7 @@ export default function RequestsPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const { alert, confirm, DialogRenderer } = useDialog();
+  const { showFlash, SavedFlash } = useSavedFlash();
 
   const [records, setRecords] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -80,7 +82,7 @@ export default function RequestsPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.REQUESTS, id);
       setSelectedIds(new Set());
       loadData();
@@ -128,6 +130,7 @@ export default function RequestsPage() {
     }
     setShowForm(false);
     loadData();
+    showFlash();
   };
 
   // ── Item sub-form handlers ──
@@ -569,6 +572,7 @@ export default function RequestsPage() {
             <button className="btn btn-primary" onClick={handleSave}>
               💾 {lang === 'bs' ? 'Snimi zahtjevnicu' : 'Save request'}
             </button>
+            <SavedFlash />
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
               ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
             </button>

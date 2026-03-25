@@ -7,6 +7,7 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 const EMPTY_NR1 = {
   workerId: '',
@@ -56,6 +57,7 @@ export default function NightWorkPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const { alert, confirm, DialogRenderer } = useDialog();
+  const { showFlash, SavedFlash } = useSavedFlash();
 
   const [records, setRecords] = useState([]);
   const [workers, setWorkers] = useState([]);
@@ -94,7 +96,7 @@ export default function NightWorkPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (window.confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.REFERRALS_NR1, id);
       setSelectedIds(new Set());
       loadData();
@@ -145,6 +147,7 @@ export default function NightWorkPage() {
     }
     setShowForm(false);
     loadData();
+    showFlash();
   };
 
   const getWorkerName = (id) => {
@@ -572,6 +575,7 @@ export default function NightWorkPage() {
             <button className="btn btn-primary" onClick={handleSave}>
               💾 {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
             </button>
+            <SavedFlash />
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
               💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
             </button>

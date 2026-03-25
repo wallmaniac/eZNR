@@ -5,6 +5,7 @@ import { getAll, create, COLLECTIONS, formatDate, todayISO } from '@/lib/dataSto
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { logPPEAssigned } from '@/lib/activityLog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
@@ -13,6 +14,7 @@ export default function WorkerPPEPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
   const [saving, setSaving] = useState(false);
+  const { showFlash, SavedFlash } = useSavedFlash();
 
   const [assignments, setAssignments] = useState(() => getAll(COLLECTIONS.PPE_ASSIGNMENTS));
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
@@ -45,6 +47,7 @@ export default function WorkerPPEPage() {
     setShowAddModal(false);
     setAddForm({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
     setSaving(false);
+    showFlash();
   };
 
   const openModal = () => {
@@ -65,6 +68,7 @@ export default function WorkerPPEPage() {
             <button className="btn btn-primary btn-sm" onClick={openModal}>
               + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
             </button>
+            <SavedFlash />
             <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input
