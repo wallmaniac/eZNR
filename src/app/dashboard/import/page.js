@@ -120,6 +120,8 @@ function generateTemplate() {
 
 function generateExport(companyId) {
     const wb = XLSX.utils.book_new();
+    const allWp = getAll(COLLECTIONS.WORKPLACES);
+    const allOU = getAll(COLLECTIONS.ORG_UNITS);
 
     // 1. Radnici
     const wRows = [WORKER_COLS];
@@ -128,7 +130,10 @@ function generateExport(companyId) {
         wRows.push([
             w.ime || '', w.prezime || '', w.imeRoditelja || '', w.jmbg || '', w.oib || '', w.spol || '',
             w.datumRodenja || '', w.miestoRodenja || '', w.datumZaposlenja || '', w.datumOdlaska || '',
-            w.stazDoDolaska || '', w.koef || '', '', '', // radnoMjesto and orgJedinica left blank for now
+            w.stazDoDolaska || '', w.koef || '',
+            // Resolve radnoMjesto and orgJedinica names for export
+            (() => { const wp = allWp.find(x => x.id === w.radnoMjestoId); return wp?.naziv || ''; })(),
+            (() => { const ou = allOU.find(x => x.id === w.orgJedinicaId); return ou?.naziv || ''; })(),
             w.lokacija || '', w.evidencijskiBroj || '', w.telefonTvrtki || '', w.mobitel || '',
             w.email || '', w.ulica || '', w.kucniBroj || '', w.mjesto || '', w.napomena || '',
             w.aktivan ? 'DA' : 'NE', w.vanjskiSuradnik ? 'DA' : 'NE'
@@ -268,6 +273,17 @@ export default function ImportPage() {
         setImporting(true);
         const { workers: wRows, certs: cRows, ppe: pRows, equip: eRows = [], medExams: mRows = [] } = preview;
         let wCreated = 0, wSkipped = 0, cCreated = 0, cSkipped = 0, pCreated = 0, eCreated = 0, mCreated = 0;
+        let wpLinked = 0, wpTotal = 0, ouLinked = 0, ouTotal = 0;
+
+        // Resolve helpers
+        const allWorkplaces = getAll(COLLECTIONS.WORKPLACES);
+        const allOrgUnits = getAll(COLLECTIONS.ORG_UNITS);
+        const fuzzyMatch = (list, text, field = 'naziv') => {
+            if (!text) return null;
+            const t = String(text).toLowerCase().trim();
+            return list.find(item => (item[field] || '').toLowerCase().trim() === t)
+                || list.find(item => (item[field] || '').toLowerCase().trim().includes(t) || t.includes((item[field] || '').toLowerCase().trim()));
+        };
 
         // 1. Import workers
         const existingWorkers = getAll(COLLECTIONS.WORKERS);
@@ -305,8 +321,25 @@ export default function ImportPage() {
                 aktivan: String(row.aktivan || 'DA').toUpperCase() !== 'NE',
                 vanjskiSuradnik: String(row.vanjskiSuradnik || 'NE').toUpperCase() === 'DA',
                 companyId,
+                // Resolve radnoMjesto and orgJedinica text to IDs
+                radnoMjestoId: (() => {
+                    const rm = String(row.radnoMjesto || '').trim();
+                    if (!rm) return '';
+                    wpTotal++;
+                    const match = fuzzyMatch(allWorkplaces, rm);
+                    if (match) { wpLinked++; return match.id; }
+                    return '';
+                })(),
+                orgJedinicaId: (() => {
+                    const oj = String(row.orgJedinica || '').trim();
+                    if (!oj) return '';
+                    ouTotal++;
+                    const match = fuzzyMatch(allOrgUnits, oj);
+                    if (match) { ouLinked++; return match.id; }
+                    return '';
+                })(),
                 prefix: '', sufiks: '', zivotnaDob: 0, ukupniStaz: '',
-                radnoMjestoId: '', orgJedinicaId: '', posebniUvjeti: false, slika: '', dodatniPoslovi: '',
+                posebniUvjeti: false, slika: '', dodatniPoslovi: '',
                 opcina: '', opcinaRodenja: '', telefonKuce: '', mjestoId: '', miestoRodenja_: '',
             });
             if (row.jmbg) newWorkerMap[String(row.jmbg).trim()] = newW.id;
@@ -438,7 +471,7 @@ export default function ImportPage() {
             mCreated++;
         });
 
-        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped });
+        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped, wpLinked, wpTotal, ouLinked, ouTotal });
         setImporting(false);
         setStep('done');
     };
@@ -650,6 +683,16 @@ export default function ImportPage() {
                             </div>
                         ))}
                     </div>
+
+                    {/* Linking stats */}
+                    {(result.wpTotal > 0 || result.ouTotal > 0) && (
+                        <div style={{ background: 'rgba(102,126,234,0.08)', border: '1px solid rgba(102,126,234,0.3)', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: '0.85rem' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 6, color: '#667eea' }}>🔗 Povezivanje podataka</div>
+                            {result.wpTotal > 0 && <div>📍 Radna mjesta: <strong>{result.wpLinked}/{result.wpTotal}</strong> uspješno povezano{result.wpLinked < result.wpTotal && <span style={{ color: '#ff9800' }}> — {result.wpTotal - result.wpLinked} nije pronađeno u bazi</span>}</div>}
+                            {result.ouTotal > 0 && <div>🏢 Org. jedinice: <strong>{result.ouLinked}/{result.ouTotal}</strong> uspješno povezano{result.ouLinked < result.ouTotal && <span style={{ color: '#ff9800' }}> — {result.ouTotal - result.ouLinked} nije pronađeno u bazi</span>}</div>}
+                        </div>
+                    )}
+
                     <div style={{ display: 'flex', gap: 12 }}>
                         <button className="btn btn-ghost" onClick={reset}>📥 {lang === 'bs' ? 'Novi import' : 'New import'}</button>
                         <a href="/dashboard/workers" className="btn btn-primary">👷 {lang === 'bs' ? 'Idi na Radnike' : 'Go to Workers'}</a>

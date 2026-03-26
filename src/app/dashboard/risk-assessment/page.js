@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
@@ -172,6 +172,13 @@ export default function RiskAssessmentPage() {
     // Sistematizacija + response counts
     const [sistematizacije, setSistematizacije] = useState([]);
     const [responseCounts, setResponseCounts] = useState({});
+    // Equipment for context panel
+    const [equipment, setEquipment] = useState([]);
+    const [orgUnits, setOrgUnits] = useState([]);
+    // Bulk add hazards
+    const [showBulkModal, setShowBulkModal] = useState(false);
+    const [bulkWpId, setBulkWpId] = useState('');
+    const [bulkSelected, setBulkSelected] = useState([]);
 
     const loadData = useCallback(() => {
         setRecords(getAll(COLLECTIONS.RISK_ASSESSMENTS));
@@ -180,6 +187,8 @@ export default function RiskAssessmentPage() {
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
         setQuestionnaires(getAll(COLLECTIONS.QUESTIONNAIRES).filter(q => q.dodajUPrilogProcjeniRizika === 'Dodaje se u procjenu rizika'));
         setSistematizacije(getAll(COLLECTIONS.SISTEMATIZACIJE));
+        setEquipment(getAll(COLLECTIONS.EQUIPMENT));
+        setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
     }, []);
 
     // Load response counts from Firestore for each questionnaire
@@ -290,6 +299,44 @@ export default function RiskAssessmentPage() {
     };
     const setRi = (f, v) => setRiForm(prev => ({ ...prev, [f]: v }));
 
+    // ─── Sistematizacija + Equipment context for selected workplace ───
+    const selectedWpSist = useMemo(() => {
+        if (!riForm.radnoMjestoId) return null;
+        return sistematizacije.find(s => s.radnoMjestoId === riForm.radnoMjestoId) || null;
+    }, [riForm.radnoMjestoId, sistematizacije]);
+
+    const selectedWpEquipment = useMemo(() => {
+        if (!riForm.radnoMjestoId) return [];
+        const wp = workplaces.find(w => w.id === riForm.radnoMjestoId);
+        if (!wp?.orgUnitId) return [];
+        return equipment.filter(eq => eq.orgJedinicaId === wp.orgUnitId);
+    }, [riForm.radnoMjestoId, workplaces, equipment]);
+
+    // ─── Bulk Add Hazards ───
+    const handleBulkAdd = () => {
+        if (!editingId || !bulkWpId || bulkSelected.length === 0) return;
+        bulkSelected.forEach(hazId => {
+            const hz = hazards.find(h => h.id === hazId);
+            create(COLLECTIONS.RISK_ITEMS, {
+                procjenaId: editingId,
+                radnoMjestoId: bulkWpId,
+                opasnostId: hazId,
+                opisOpasnosti: hz ? `${hz.oznaka ? hz.oznaka + ' ' : ''}${hz.naziv}` : '',
+                vjerovatnoca: 1, posljedica: 1,
+                rizik: 1, nivoRizika: riskLevel(1).label,
+                postojeceMjere: '', predlozeneMjere: '',
+                odgovornaOsoba: '', rokProvedbe: '',
+                vjerovatnocaNakon: 0, posljedlicaNakon: 0,
+                rizikNakon: 0, nivoRizikaNakon: '',
+            });
+        });
+        loadRiskItems(editingId);
+        setShowBulkModal(false);
+        setBulkSelected([]);
+        setBulkWpId('');
+        showFlash();
+    };
+
     // ─── Import from Questionnaire ───
     const handleImportFromQuestionnaire = async (q) => {
         if (!editingId) return;
@@ -357,6 +404,166 @@ export default function RiskAssessmentPage() {
             }
         } catch (err) { await alert('Greška: ' + err.message); }
         setImportLoading(false);
+    };
+
+    // ─── Word (.docx) Export ───
+    const handleGenerateDocx = async () => {
+        const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType } = await import('docx');
+        const { saveAs } = await import('file-saver');
+
+        const sorted = [...riskItems].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
+        const highRiskItems = riskItems.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
+        const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+        const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+        const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+        const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+        const today = new Date().toLocaleDateString('hr-HR');
+
+        const mkCell = (text, opts = {}) => new TableCell({
+            children: [new Paragraph({ children: [new TextRun({ text: String(text || '—'), size: opts.size || 18, bold: opts.bold, color: opts.color })], alignment: opts.align || AlignmentType.LEFT })],
+            width: opts.width ? { size: opts.width, type: WidthType.PERCENTAGE } : undefined,
+            shading: opts.bg ? { type: ShadingType.SOLID, color: opts.bg } : undefined,
+        });
+
+        const headerRow = (cells) => new TableRow({
+            children: cells.map(c => mkCell(c, { bold: true, bg: 'D1C4E9', size: 18 })),
+            tableHeader: true,
+        });
+
+        // Risk items table
+        const riTableRows = [headerRow(['#', 'Radno mjesto', 'Opasnost', 'V₀', 'P₀', 'R₀', 'Nivo', 'V₁', 'P₁', 'R₁', 'Nivo nakon'])];
+        sorted.forEach((ri, i) => {
+            const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
+            const hz = hazards.find(h => h.id === ri.opasnostId);
+            const hasA = ri.rizikNakon > 0;
+            riTableRows.push(new TableRow({
+                children: [
+                    mkCell(i + 1, { align: AlignmentType.CENTER }),
+                    mkCell(wp?.naziv || '—'),
+                    mkCell(hz ? `${hz.oznaka || ''} ${hz.naziv}` : ri.opisOpasnosti || '—'),
+                    mkCell(ri.vjerovatnoca, { align: AlignmentType.CENTER }),
+                    mkCell(ri.posljedica, { align: AlignmentType.CENTER }),
+                    mkCell(ri.rizik, { align: AlignmentType.CENTER, bold: true }),
+                    mkCell(riskLevel(ri.rizik).label),
+                    mkCell(hasA ? ri.vjerovatnocaNakon : '—', { align: AlignmentType.CENTER }),
+                    mkCell(hasA ? ri.posljedlicaNakon : '—', { align: AlignmentType.CENTER }),
+                    mkCell(hasA ? ri.rizikNakon : '—', { align: AlignmentType.CENTER, bold: true }),
+                    mkCell(hasA ? riskLevel(ri.rizikNakon).label : '—'),
+                ],
+            }));
+        });
+
+        // Measures table
+        const measuresRows = [headerRow(['#', 'Opasnost', 'R₀', 'Postojeće mjere', 'Predložene mjere', 'R₁', 'Odg. osoba', 'Rok'])];
+        highRiskItems.forEach((ri, i) => {
+            const hz = hazards.find(h => h.id === ri.opasnostId);
+            measuresRows.push(new TableRow({
+                children: [
+                    mkCell(i + 1, { align: AlignmentType.CENTER }),
+                    mkCell(hz ? `${hz.oznaka || ''} ${hz.naziv}` : ri.opisOpasnosti || '—'),
+                    mkCell(ri.rizik, { align: AlignmentType.CENTER, bold: true }),
+                    mkCell(ri.postojeceMjere),
+                    mkCell(ri.predlozeneMjere, { bold: true }),
+                    mkCell(ri.rizikNakon > 0 ? ri.rizikNakon : '—', { align: AlignmentType.CENTER, bold: true }),
+                    mkCell(ri.odgovornaOsoba),
+                    mkCell(ri.rokProvedbe ? new Date(ri.rokProvedbe).toLocaleDateString('hr-HR') : '—'),
+                ],
+            }));
+        });
+
+        const doc = new Document({
+            sections: [{
+                properties: { page: { margin: { top: 1440, right: 1080, bottom: 1440, left: 1080 } } },
+                children: [
+                    // Cover
+                    new Paragraph({ text: 'Bosna i Hercegovina — Federacija BiH', alignment: AlignmentType.CENTER, spacing: { before: 2400 }, children: [new TextRun({ text: 'Bosna i Hercegovina — Federacija BiH', size: 20, color: '999999' })] }),
+                    new Paragraph({ text: '', spacing: { before: 600 } }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'AKT O PROCJENI RIZIKA', size: 56, bold: true, color: '1A237E' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [new TextRun({ text: 'na radnim mjestima i u radnim prostorijama', size: 28, color: '555555' })] }),
+                    new Paragraph({ text: '', spacing: { before: 600 } }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: formData.nazivTvrtke || '—', size: 32, bold: true, color: '1A237E' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${formData.sjediste || ''} • ${formData.djelatnost || ''}`, size: 20, color: '666666' })] }),
+                    new Paragraph({ text: '', spacing: { before: 400 } }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Datum izrade: ${formData.datumIzrade ? new Date(formData.datumIzrade).toLocaleDateString('hr-HR') : today}`, size: 22, color: '666666' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Revizija: ${formData.revizija || '1'}`, size: 22, color: '666666' })] }),
+                    ...(formData.ovlOrganizacija ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 300 }, children: [new TextRun({ text: `Izradila: ${formData.ovlOrganizacija}`, size: 22, color: '666666' })] })] : []),
+                    ...(formData.ovlOsobaIme ? [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Ovlaštena osoba: ${formData.ovlOsobaIme} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}`, size: 22, color: '666666' })] })] : []),
+
+                    // Section 1
+                    new Paragraph({ text: '', pageBreakBefore: true }),
+                    new Paragraph({ text: '1. Opšti podaci o poslodavcu', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
+                    new Table({ rows: [
+                        new TableRow({ children: [mkCell('Naziv', { bold: true, bg: 'E8EAF6', width: 30 }), mkCell(formData.nazivTvrtke, { width: 70 })] }),
+                        new TableRow({ children: [mkCell('Sjedište', { bold: true, bg: 'E8EAF6' }), mkCell(formData.sjediste)] }),
+                        new TableRow({ children: [mkCell('Djelatnost', { bold: true, bg: 'E8EAF6' }), mkCell(formData.djelatnost)] }),
+                        new TableRow({ children: [mkCell('Ukupno zaposlenih', { bold: true, bg: 'E8EAF6' }), mkCell(formData.ukupnoZaposlenih)] }),
+                        new TableRow({ children: [mkCell('Ovlaštena organizacija', { bold: true, bg: 'E8EAF6' }), mkCell(formData.ovlOrganizacija)] }),
+                        new TableRow({ children: [mkCell('Ovlaštena osoba', { bold: true, bg: 'E8EAF6' }), mkCell(`${formData.ovlOsobaIme || '—'} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}`)] }),
+                    ], width: { size: 100, type: WidthType.PERCENTAGE } }),
+
+                    // Section 2
+                    new Paragraph({ text: '2. Opis tehničko-tehnološkog procesa', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
+                    new Paragraph({ text: formData.opisProcesa || 'Nije uneseno.', spacing: { after: 200 } }),
+                    ...(formData.analizaOrganizacije ? [
+                        new Paragraph({ text: 'Analiza organizacije rada', heading: HeadingLevel.HEADING_2, spacing: { before: 200 } }),
+                        new Paragraph({ text: formData.analizaOrganizacije }),
+                    ] : []),
+
+                    // Section 3
+                    new Paragraph({ text: '3. Procjena rizika — rezultati', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
+                    new Paragraph({ children: [
+                        new TextRun({ text: `Ukupno procijenjeno: `, size: 22 }),
+                        new TextRun({ text: `${riskItems.length}`, size: 22, bold: true }),
+                        new TextRun({ text: ` stavki na `, size: 22 }),
+                        new TextRun({ text: `${[...new Set(riskItems.map(r => r.radnoMjestoId))].length}`, size: 22, bold: true }),
+                        new TextRun({ text: ` radnih mjesta.`, size: 22 }),
+                    ], spacing: { after: 200 } }),
+                    ...(sorted.length > 0 ? [new Table({ rows: riTableRows, width: { size: 100, type: WidthType.PERCENTAGE } })] : []),
+
+                    // Section 4
+                    new Paragraph({ text: '4. Ukupna ocjena rizika', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
+                    new Paragraph({ children: [
+                        new TextRun({ text: `Prosječna ocjena PRIJE mjera: `, size: 22 }),
+                        new TextRun({ text: avgBefore > 0 ? `${avgBefore.toFixed(1)} (${riskLevel(Math.round(avgBefore)).label})` : '—', size: 22, bold: true }),
+                    ] }),
+                    new Paragraph({ children: [
+                        new TextRun({ text: `Prosječna ocjena NAKON mjera: `, size: 22 }),
+                        new TextRun({ text: avgAfter > 0 ? `${avgAfter.toFixed(1)} (${riskLevel(Math.round(avgAfter)).label})` : '—', size: 22, bold: true }),
+                    ] }),
+                    ...(avgAfter > 0 && avgBefore > 0 ? [new Paragraph({ children: [
+                        new TextRun({ text: `Smanjenje rizika: `, size: 22 }),
+                        new TextRun({ text: `${((1 - avgAfter / avgBefore) * 100).toFixed(0)}%`, size: 22, bold: true, color: '4CAF50' }),
+                    ] })] : []),
+
+                    // Section 5 — Measures
+                    ...(highRiskItems.length > 0 ? [
+                        new Paragraph({ text: '5. Plan mjera za smanjenje rizika', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
+                        new Paragraph({ text: 'Stavke sa početnim rizikom R₀ ≥ 6 koje zahtijevaju dodatne mjere:', spacing: { after: 200 } }),
+                        new Table({ rows: measuresRows, width: { size: 100, type: WidthType.PERCENTAGE } }),
+                    ] : []),
+
+                    // Section 6 — Conclusion
+                    new Paragraph({ text: `${highRiskItems.length > 0 ? '6' : '5'}. Zaključak`, heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
+                    new Paragraph({ text: formData.zakljucak || 'Zaključak nije unesen.', spacing: { after: 400 } }),
+
+                    // Signatures
+                    new Paragraph({ text: '', spacing: { before: 800 } }),
+                    new Table({ rows: [new TableRow({
+                        children: [
+                            new TableCell({ children: [new Paragraph({ text: '________________________', alignment: AlignmentType.CENTER }), new Paragraph({ text: 'Poslodavac', alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Poslodavac', size: 18 })] })], borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } } }),
+                            new TableCell({ children: [new Paragraph({ text: '________________________', alignment: AlignmentType.CENTER }), new Paragraph({ text: 'Ovlaštena osoba za ZNR', alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'Ovlaštena osoba za ZNR', size: 18 })] })], borders: { top: { style: BorderStyle.NONE }, bottom: { style: BorderStyle.NONE }, left: { style: BorderStyle.NONE }, right: { style: BorderStyle.NONE } } }),
+                        ],
+                    })], width: { size: 100, type: WidthType.PERCENTAGE } }),
+
+                    // Footer
+                    new Paragraph({ text: '', spacing: { before: 400 } }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Akt o procjeni rizika — ${formData.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform`, size: 16, color: '999999' })] }),
+                ],
+            }],
+        });
+
+        const blob = await Packer.toBlob(doc);
+        saveAs(blob, `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`);
     };
 
     // ─── AI Auto-Conclusion ───
@@ -719,6 +926,10 @@ ${highRiskItems.map((ri, i) => {
                                             style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             📋 Uvezi iz upitnika
                                         </button>
+                                        <button className="btn btn-outline btn-sm" onClick={() => { setShowBulkModal(true); setBulkSelected([]); setBulkWpId(''); }}
+                                            style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                            ⚠️ Dodaj iz kataloga
+                                        </button>
                                         <button className="btn btn-outline btn-sm" onClick={handleNewRi}>+ {lang === 'bs' ? 'Dodaj stavku' : 'Add item'}</button>
                                     </div>
                                 </div>
@@ -739,6 +950,43 @@ ${highRiskItems.map((ri, i) => {
                                                 </select>
                                             </div>
                                         </div>
+
+                                        {/* ── Sistematizacija + Equipment Context Panel ── */}
+                                        {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length > 0) && (
+                                            <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', marginBottom: 4 }}>
+                                                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 8 }}>📑 Kontekst radnog mjesta</div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                    {selectedWpSist?.potrebnaOZO?.map((ozo, i) => (
+                                                        <span key={`ozo-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + ozo)}
+                                                            style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+                                                            title="Klikni da dodaš u opis">🦺 {ozo}</span>
+                                                    ))}
+                                                    {selectedWpSist?.radnaOprema?.map((op, i) => (
+                                                        <span key={`rop-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + op)}
+                                                            style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(102,126,234,0.15)', color: '#667eea', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
+                                                            title="Klikni da dodaš u opis">⚙️ {op}</span>
+                                                    ))}
+                                                    {selectedWpEquipment.map(eq => (
+                                                        <span key={eq.id} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + eq.naziv)}
+                                                            style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(96,125,139,0.15)', color: '#607d8b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
+                                                            title="Klikni da dodaš u opis">🏗️ {eq.naziv}</span>
+                                                    ))}
+                                                    {selectedWpSist?.posebniUvjeti?.map((pu, i) => (
+                                                        <span key={`pu-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(244,67,54,0.12)', color: '#f44336', fontSize: '0.7rem', fontWeight: 600 }}>⚠️ {pu}</span>
+                                                    ))}
+                                                    {selectedWpSist?.zdravstveniZahtjevi?.map((zz, i) => (
+                                                        <span key={`zz-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(233,30,99,0.12)', color: '#e91e63', fontSize: '0.7rem', fontWeight: 600 }}>🏥 {zz}</span>
+                                                    ))}
+                                                    {Object.entries(selectedWpSist?.uvjetiRada || {}).flatMap(([cat, items]) =>
+                                                        (items || []).map((item, i) => (
+                                                            <span key={`ur-${cat}-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(255,152,0,0.12)', color: '#ff9800', fontSize: '0.7rem', fontWeight: 600 }}>🔶 {item}</span>
+                                                        ))
+                                                    )}
+                                                </div>
+                                                <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 6 }}>💡 Kliknite na stavku da je dodate u opis opasnosti</div>
+                                            </div>
+                                        )}
+
                                         <div style={{ marginBottom: 12 }}><div style={labelSt}>Opis opasnosti na radnom mjestu</div>
                                             <input className="form-input" value={riForm.opisOpasnosti || ''} onChange={e => setRi('opisOpasnosti', e.target.value)} placeholder="Kratak opis specifične opasnosti..." />
                                         </div>
@@ -895,6 +1143,49 @@ ${highRiskItems.map((ri, i) => {
                                 </div>
                             </div>
                         )}
+
+                        {/* Bulk Add Hazards Modal */}
+                        {showBulkModal && (
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
+                                onClick={(e) => { if (e.target === e.currentTarget) setShowBulkModal(false); }}>
+                                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 500, maxWidth: 650, maxHeight: '80vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>⚠️ Dodaj opasnosti iz kataloga</div>
+                                    <div style={{ marginBottom: 14 }}>
+                                        <div style={{ ...labelSt, marginBottom: 6 }}>RADNO MJESTO</div>
+                                        <select className="form-select" value={bulkWpId} onChange={e => setBulkWpId(e.target.value)}>
+                                            <option value="">— Odaberi radno mjesto —</option>
+                                            {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
+                                        </select>
+                                    </div>
+                                    <div style={{ marginBottom: 14 }}>
+                                        <div style={{ ...labelSt, marginBottom: 6 }}>OPASNOSTI ({bulkSelected.length} odabrano)</div>
+                                        <div style={{ maxHeight: 300, overflow: 'auto', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
+                                            {hazards.length === 0 ? (
+                                                <div style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 16 }}>Nema opasnosti u katalogu. Kreirajte ih na stranici "Opasnosti".</div>
+                                            ) : hazards.map(h => {
+                                                const checked = bulkSelected.includes(h.id);
+                                                return (
+                                                    <label key={h.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px', borderRadius: 6, cursor: 'pointer', background: checked ? 'rgba(0,191,166,0.08)' : 'transparent', transition: 'background 0.15s' }}>
+                                                        <input type="checkbox" checked={checked} onChange={() => setBulkSelected(prev => checked ? prev.filter(id => id !== h.id) : [...prev, h.id])} />
+                                                        <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{h.oznaka ? <span style={{ color: '#667eea', marginRight: 6 }}>{h.oznaka}</span> : null}{h.naziv}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setBulkSelected(hazards.map(h => h.id))}>Odaberi sve</button>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setBulkSelected([])}>Poništi</button>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button className="btn btn-primary" onClick={handleBulkAdd} disabled={!bulkWpId || bulkSelected.length === 0}>
+                                            ✔ Dodaj {bulkSelected.length} stavk{bulkSelected.length === 1 ? 'u' : bulkSelected.length < 5 ? 'e' : 'i'}
+                                        </button>
+                                        <button className="btn btn-ghost" onClick={() => setShowBulkModal(false)}>Zatvori</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 
@@ -1003,12 +1294,16 @@ ${highRiskItems.map((ri, i) => {
                         </div>
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                             <SavedFlash />
                             <button className="btn btn-outline" onClick={handleGenerateReport}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                📄 {lang === 'bs' ? 'Preuzmi izvještaj (PDF)' : 'Download Report (PDF)'}
+                                📄 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}
+                            </button>
+                            <button className="btn btn-outline" onClick={handleGenerateDocx}
+                                style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                📗 {lang === 'bs' ? 'Preuzmi Word (.docx)' : 'Download Word (.docx)'}
                             </button>
                         </div>
                     </div></div>
