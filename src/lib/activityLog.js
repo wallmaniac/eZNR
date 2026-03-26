@@ -105,6 +105,11 @@ function addEntry(key, maxSize, entry) {
 
 // ── Log a user action ──
 export function logUserAction({ action, category, title, detail, userId, userName, companyId, severity = 'info', relatedId = null }) {
+    let resolvedCompanyId = companyId;
+    if (!resolvedCompanyId && typeof window !== 'undefined') {
+        resolvedCompanyId = localStorage.getItem('eznr_activeCompany') || '';
+    }
+    
     return addEntry(USER_LOG_KEY, MAX_USER_LOG, {
         action,
         category,
@@ -112,7 +117,7 @@ export function logUserAction({ action, category, title, detail, userId, userNam
         detail: detail || '',
         userId: userId || '',
         userName: userName || '',
-        companyId: companyId || '',
+        companyId: resolvedCompanyId,
         severity,
         relatedId,
         icon: CATEGORY_ICONS[category] || '📝',
@@ -310,7 +315,10 @@ export function logSystemAlert(title, detail, severity = 'warning') {
 export function getUserLog(limit = 50, filterCategory = null, filterCompanyId = null) {
     let logs = readLog(USER_LOG_KEY);
     if (filterCompanyId && filterCompanyId !== 'all') {
-        logs = logs.filter(l => !l.companyId || l.companyId === filterCompanyId);
+        logs = logs.filter(l => {
+            if (!l.companyId) return l.category === 'auth'; // Only allow global login events to bleed
+            return l.companyId === filterCompanyId;
+        });
     }
     if (filterCategory) {
         logs = logs.filter(l => l.category === filterCategory);
