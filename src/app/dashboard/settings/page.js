@@ -3,7 +3,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import {
   getAll, getById, update, COLLECTIONS,
 } from '@/lib/dataStore';
@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const { user, isAdmin, activeCompanyId, login } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'profile');
   const [saved, setSaved] = useState(false);
@@ -238,6 +239,27 @@ export default function SettingsPage() {
       <span style={{ fontWeight: 700, fontSize: '0.9rem', fontFamily: 'var(--font-heading)', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)' }}>{title}</span>
     </div>
   );
+
+  // ── Navigation for Activity Log ──
+  const handleLogClick = (entry) => {
+    if (!entry.relatedId) return;
+    switch (entry.category) {
+      case 'worker':
+        router.push(`/dashboard/workers?openWorker=${entry.relatedId}`);
+        break;
+      case 'certificate':
+        router.push(`/dashboard/worker-certificates/edit/${entry.relatedId}`);
+        break;
+      case 'equipment':
+        router.push(`/dashboard/equipment?openItem=${entry.relatedId}`);
+        break;
+      case 'document':
+        router.push(`/dashboard/employer-docs?highlight=${entry.relatedId}`);
+        break;
+      // other categories don't have direct deep links yet
+      default: break;
+    }
+  };
 
   return (
     <div className="animate-fadeIn">
@@ -994,13 +1016,20 @@ export default function SettingsPage() {
                     {adminLog.map(entry => {
                       const colors = getSeverityColors(entry.severity);
                       return (
-                        <div key={entry.id} style={{
+                        <div key={entry.id} 
+                          onClick={() => handleLogClick(entry)}
+                          style={{
                           display: 'flex', gap: 12, padding: '10px 12px',
                           borderBottom: '1px solid var(--border-light)',
                           borderLeft: `3px solid ${colors.dot}`,
                           background: colors.bg,
                           marginBottom: 2, borderRadius: '0 6px 6px 0',
-                        }}>
+                          cursor: entry.relatedId ? 'pointer' : 'default',
+                          transition: 'filter 0.2s'
+                        }}
+                        onMouseEnter={(e) => { if (entry.relatedId) e.currentTarget.style.filter = 'brightness(0.95)'; }}
+                        onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}
+                        >
                           <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
@@ -1025,13 +1054,20 @@ export default function SettingsPage() {
               ) : userLog.map(entry => {
                 const colors = getSeverityColors(entry.severity);
                 return (
-                  <div key={entry.id} style={{
+                  <div key={entry.id}
+                    onClick={() => handleLogClick(entry)}
+                    style={{
                     display: 'flex', gap: 12, padding: '10px 12px',
                     borderBottom: '1px solid var(--border-light)',
                     borderLeft: `3px solid ${colors.dot}`,
                     background: colors.bg,
                     marginBottom: 2, borderRadius: '0 6px 6px 0',
-                  }}>
+                    cursor: entry.relatedId ? 'pointer' : 'default',
+                    transition: 'filter 0.2s'
+                  }}
+                  onMouseEnter={(e) => { if (entry.relatedId) e.currentTarget.style.filter = 'brightness(0.95)'; }}
+                  onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}
+                  >
                     <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>

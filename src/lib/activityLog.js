@@ -393,17 +393,12 @@ export function isUserOnline(userId) {
 export function formatLogTime(isoString) {
     if (!isoString) return '';
     const date = new Date(isoString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Upravo';
-    if (diffMins < 60) return `Prije ${diffMins} min`;
-    if (diffHours < 24) return `Prije ${diffHours} h`;
-    if (diffDays < 7) return `Prije ${diffDays} d`;
-    return date.toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const hours = date.getHours().toString().padStart(2, '0');
+    const mins = date.getMinutes().toString().padStart(2, '0');
+    return `${day}.${month}.${year}. ${hours}:${mins}`;
 }
 
 // ── Page name humanizer ──
