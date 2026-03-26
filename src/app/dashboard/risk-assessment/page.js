@@ -144,6 +144,7 @@ export default function RiskAssessmentPage() {
     const [formData, setFormData] = useState({ ...EMPTY_PROCJENA });
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('opsti');
+    const [sortConfig, setSortConfig] = useState({ key: 'datumIzrade', dir: 'desc' });
 
     // Sub-views
     const [personTypes, setPersonTypes] = useState([]);
@@ -233,8 +234,19 @@ export default function RiskAssessmentPage() {
             remove(COLLECTIONS.RISK_ASSESSMENTS, id); loadData();
         }
     };
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!formData.nazivTvrtke) { alert(lang === 'bs' ? 'Naziv tvrtke je obavezan!' : 'Company name is required!'); return; }
+        
+        let docData = null;
+        let docName = `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
+        try {
+            if (typeof handleGenerateDocx === 'function') {
+                docData = await handleGenerateDocx(false);
+            }
+        } catch (e) {
+            console.error('Failed to generate DOCX for sync:', e);
+        }
+
         let savedId = editingId;
         if (editingId) update(COLLECTIONS.RISK_ASSESSMENTS, editingId, formData);
         else { const n = create(COLLECTIONS.RISK_ASSESSMENTS, formData); savedId = n.id; setEditingId(savedId); }
@@ -249,7 +261,13 @@ export default function RiskAssessmentPage() {
             const datumIst = dateObj.toISOString().split('T')[0];
 
             if (match) {
-                update(COLLECTIONS.EMPLOYER_DOCS, match.id, { datumIzdavanja: datumIzd, datumIsteka: datumIst, status: 'aktivan' });
+                update(COLLECTIONS.EMPLOYER_DOCS, match.id, { 
+                    datumIzdavanja: datumIzd, 
+                    datumIsteka: datumIst, 
+                    status: 'aktivan',
+                    napomena: '', 
+                    ...(docData ? { docData, docName, docType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' } : {})
+                });
             } else {
                 create(COLLECTIONS.EMPLOYER_DOCS, {
                     naziv: 'Akt procjene rizika zaštite na radu',
@@ -257,7 +275,8 @@ export default function RiskAssessmentPage() {
                     status: 'aktivan',
                     datumIzdavanja: datumIzd,
                     datumIsteka: datumIst,
-                    napomena: 'Automatski ažurirano iz modula Procjena rizika'
+                    napomena: '',
+                    ...(docData ? { docData, docName, docType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' } : {})
                 });
             }
         } catch (e) {
@@ -434,9 +453,8 @@ export default function RiskAssessmentPage() {
     };
 
     // ─── Word (.docx) Export ───
-    const handleGenerateDocx = async () => {
+    const handleGenerateDocx = async (saveToFile = true) => {
         const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType } = await import('docx');
-        const { saveAs } = await import('file-saver');
 
         const sorted = [...riskItems].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
         const highRiskItems = riskItems.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
@@ -590,7 +608,15 @@ export default function RiskAssessmentPage() {
         });
 
         const blob = await Packer.toBlob(doc);
-        saveAs(blob, `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`);
+        if (saveToFile) {
+            const { saveAs } = await import('file-saver');
+            saveAs(blob, `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`);
+        }
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(blob);
+        });
     };
 
     // ─── AI Auto-Conclusion ───
@@ -801,9 +827,32 @@ ${highRiskItems.map((ri, i) => {
 
     /* ━━━ LIST VIEW ━━━ */
     if (view === 'list') {
-        const filtered = search ? records.filter(r => (r.nazivTvrtke || '').toLowerCase().includes(search.toLowerCase())) : records;
+        const sortedRecords = [...records].filter(r => search ? (r.nazivTvrtke || '').toLowerCase().includes(search.toLowerCase()) : true);
+        sortedRecords.sort((a, b) => {
+            let aVal = a[sortConfig.key] || '';
+            let bVal = b[sortConfig.key] || '';
+            if (sortConfig.key === 'cnt') {
+                aVal = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === a.id).length;
+                bVal = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === b.id).length;
+            } else if (sortConfig.key === 'datumIzrade') {
+                aVal = new Date(aVal).getTime() || 0;
+                bVal = new Date(bVal).getTime() || 0;
+            } else if (typeof aVal === 'string') {
+                aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase();
+            }
+            if (aVal < bVal) return sortConfig.dir === 'asc' ? -1 : 1;
+            if (aVal > bVal) return sortConfig.dir === 'asc' ? 1 : -1;
+            return 0;
+        });
+
+        const reqSort = (k) => {
+            setSortConfig(prev => ({ key: k, dir: prev.key === k && prev.dir === 'asc' ? 'desc' : 'asc' }));
+        };
+        const getSortIcon = (k) => sortConfig.key === k ? (sortConfig.dir === 'asc' ? ' ↑' : ' ↓') : '';
+
         return (
             <div className="animate-fadeIn">
+                <style>{`.hover-row:hover { background: rgba(0,0,0,0.02); }`}</style>
                 <h1 style={{ marginBottom: 24 }}>📊 {lang === 'bs' ? 'Procjene rizika' : 'Risk Assessments'}</h1>
                 <DialogRenderer />
                 <div className="card" style={{ marginBottom: 16 }}>
@@ -815,26 +864,28 @@ ${highRiskItems.map((ri, i) => {
                         </div>
                         <button className="btn btn-outline btn-sm" onClick={() => setView('vrstaOsobe')}>👤 {lang === 'bs' ? 'Vrsta osobe' : 'Person types'}</button>
                         <button className="btn btn-outline btn-sm" onClick={() => setView('opasnosti')}>⚠️ {lang === 'bs' ? 'Opasnosti' : 'Hazards'}</button>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{filtered.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>
+                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedRecords.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>
                     </div>
                 </div>
                 <div className="card"><div className="card-body"><div className="data-table-wrapper">
-                    <table className="data-table"><thead><tr>
-                        <th>{t('actions')}</th><th>{lang === 'bs' ? 'Naziv tvrtke' : 'Company'}</th>
-                        <th>{lang === 'bs' ? 'Revizija' : 'Revision'}</th><th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
-                        <th>{lang === 'bs' ? 'Status' : 'Status'}</th><th>{lang === 'bs' ? 'Stavki' : 'Items'}</th>
+                    <table className="data-table" style={{ width: '100%' }}><thead><tr>
+                        <th style={{ width: 60 }}>{t('actions')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')}>{lang === 'bs' ? 'Naziv tvrtke' : 'Company'}{getSortIcon('nazivTvrtke')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('revizija')}>{lang === 'bs' ? 'Revizija' : 'Revision'}{getSortIcon('revizija')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')}>{lang === 'bs' ? 'Datum' : 'Date'}{getSortIcon('datumIzrade')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('status')}>{lang === 'bs' ? 'Status' : 'Status'}{getSortIcon('status')}</th>
+                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('cnt')}>{lang === 'bs' ? 'Stavki' : 'Items'}{getSortIcon('cnt')}</th>
                     </tr></thead><tbody>
-                        {filtered.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                        : filtered.map(r => {
+                        {sortedRecords.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                        : sortedRecords.map(r => {
                             const cnt = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id).length;
                             const st = r.status || 'draft';
                             return (
-                                <tr key={r.id}>
-                                    <td><div style={{ display: 'flex', gap: 4 }}>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => handleEdit(r)}>✏️</button>
-                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(r.id)}>🗑️</button>
+                                <tr key={r.id} onClick={() => handleEdit(r)} style={{ cursor: 'pointer' }} className="hover-row">
+                                    <td onClick={e => e.stopPropagation()}><div style={{ display: 'flex', gap: 4 }}>
+                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}>🗑️</button>
                                     </div></td>
-                                    <td style={{ fontWeight: 600 }}>{r.nazivTvrtke || '—'}</td>
+                                    <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{r.nazivTvrtke || '—'}</td>
                                     <td>{r.revizija || '—'}</td>
                                     <td>{formatDate(r.datumIzrade)}</td>
                                     <td><span className={`badge ${st === 'active' ? 'badge-success' : st === 'archived' ? 'badge-warning' : ''}`} style={{ fontSize: '0.72rem' }}>
