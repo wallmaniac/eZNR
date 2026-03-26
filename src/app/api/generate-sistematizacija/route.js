@@ -13,7 +13,8 @@ export async function POST(request) {
     const { workplaceName, oznaka, strucnaSprema, industry, numberOfWorkers, orgUnit, additionalInfo } = body;
 
     const systemPrompt = `Ti si stručnjak za ljudske resurse i zaštitu na radu u Bosni i Hercegovini.
-Generišeš profesionalnu sistematizaciju radnog mjesta prema FBiH propisima.
+Generišeš profesionalnu sistematizaciju radnog mjesta u skladu sa Zakonom o radu FBiH (čl. 118.)
+i Pravilnikom o unutrašnjoj organizaciji i sistematizaciji radnih mjesta.
 
 ZADATAK: Na osnovu podataka o radnom mjestu, generiši kompletnu sistematizaciju.
 
@@ -21,12 +22,19 @@ PRAVILA:
 - Odgovori ISKLJUČIVO u JSON formatu
 - Sav tekst na bosanskom jeziku
 - Budi detaljan i profesionalan
+- Polje "kategorijaRM" mora biti jedno od: "Rukovodeće", "Izvršno", "Pomoćno"
+- Polje "slozenostPoslova" mora biti jedno od: "Jednostavni", "Srednje složeni", "Složeni", "Visoko složeni"
 
 JSON FORMAT:
 {
+  "nazivPosla": "Formalni naziv radnog mjesta / pozicije",
+  "kategorijaRM": "Rukovodeće|Izvršno|Pomoćno",
+  "slozenostPoslova": "Jednostavni|Srednje složeni|Složeni|Visoko složeni",
   "opisPoslova": "Detaljan opis poslova i radnih zadataka (3-5 rečenica)",
+  "odgovornosti": "Ključne odgovornosti na radnom mjestu (2-4 rečenice)",
   "strucnaSprema": "SSS|VŠS|VSS",
   "radnoIskustvo": "npr. 2 godine u struci",
+  "probniRad": "npr. 3 mjeseca",
   "posebniUvjeti": ["uvjet 1", "uvjet 2"],
   "brojIzvrsilaca": 1,
   "uvjetiRada": {
@@ -40,6 +48,8 @@ JSON FORMAT:
   "radnaOprema": ["Viličar", "Ručni alat"],
   "zdravstveniZahtjevi": ["Redovni periodični pregled", "Pregled vida"],
   "certifikati": ["Osposobljavanje ZNR", "Zaštita od požara"],
+  "potrebneObuke": ["Osnovno osposobljavanje iz ZNR", "Zaštita od požara"],
+  "pravniOsnov": "Čl. 118. Zakona o radu FBiH",
   "napomena": "Dodatne napomene"
 }`;
 

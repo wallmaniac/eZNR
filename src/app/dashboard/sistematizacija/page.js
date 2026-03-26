@@ -176,10 +176,13 @@ export default function SistematizacijaPage() {
                                 {/* Sistematizacija Content */}
                                 {sist ? (
                                     <div>
+                                        {sist.nazivPosla && <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600, marginBottom: 4 }}>{sist.nazivPosla}</div>}
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text)', lineHeight: 1.5, marginBottom: 10, maxHeight: 60, overflow: 'hidden' }}>
                                             {sist.opisPoslova || '—'}
                                         </div>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginBottom: 8 }}>
+                                            {sist.kategorijaRM && <span style={{ padding: '2px 8px', borderRadius: 10, background: 'rgba(102,126,234,0.12)', color: '#667eea', fontSize: '0.68rem', fontWeight: 600 }}>{sist.kategorijaRM}</span>}
+                                            {sist.slozenostPoslova && <span style={{ padding: '2px 8px', borderRadius: 10, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontSize: '0.68rem', fontWeight: 600 }}>{sist.slozenostPoslova}</span>}
                                             {(sist.potrebnaOZO || []).slice(0, 3).map((ozo, i) => (
                                                 <span key={i} style={{ padding: '2px 8px', borderRadius: 10, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.68rem', fontWeight: 600 }}>🦺 {ozo}</span>
                                             ))}
@@ -189,6 +192,7 @@ export default function SistematizacijaPage() {
                                             <span>📋 {sist.certifikati?.length || 0} cert.</span>
                                             <span>⚙️ {sist.radnaOprema?.length || 0} oprema</span>
                                             <span>👥 {sist.brojIzvrsilaca || '?'} izvrš.</span>
+                                            {sist.probniRad && <span>⏱️ {sist.probniRad}</span>}
                                             {sist.aiGenerated && <span style={{ color: '#667eea' }}>🤖 AI</span>}
                                             {sist.uploadedFile && <span style={{ color: '#f59e0b' }}>📄 {sist.uploadedFile}</span>}
                                         </div>
@@ -215,7 +219,7 @@ export default function SistematizacijaPage() {
                                                 📄 {lang === 'bs' ? 'Učitaj dokument' : 'Upload document'}
                                                 <input type="file" accept=".txt,.pdf,.doc,.docx" style={{ display: 'none' }} onChange={e => handleFileUpload(wp, e)} />
                                             </label>
-                                            <button className="btn btn-outline btn-sm" onClick={() => setEditData({ radnoMjestoId: wp.id, opisPoslova: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, uvjetiRada: { fizicki: [], kemijski: [], bioloski: [], ergonomski: [], psihosocijalni: [] }, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], napomena: '' })}>
+                                            <button className="btn btn-outline btn-sm" onClick={() => setEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: 'Čl. 118. Zakona o radu FBiH', uvjetiRada: { fizicki: [], kemijski: [], bioloski: [], ergonomski: [], psihosocijalni: [] }, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
                                                 ✏️ {lang === 'bs' ? 'Ručno' : 'Manual'}
                                             </button>
                                         </div>
@@ -242,12 +246,38 @@ export default function SistematizacijaPage() {
                             📑 Sistematizacija — {workplaces.find(w => w.id === editData.radnoMjestoId)?.naziv || ''}
                         </div>
 
+                        {/* Naziv posla + Kategorija + Složenost */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
+                            <div>
+                                <div style={labelSt}>NAZIV POSLA</div>
+                                <input className="form-input" value={editData.nazivPosla || ''} onChange={e => setEditData(p => ({ ...p, nazivPosla: e.target.value }))} placeholder="npr. Stručni saradnik za ZNR" />
+                            </div>
+                            <div>
+                                <div style={labelSt}>KATEGORIJA RM</div>
+                                <select className="form-select" value={editData.kategorijaRM || ''} onChange={e => setEditData(p => ({ ...p, kategorijaRM: e.target.value }))}>
+                                    <option value="">—</option>
+                                    {['Rukovodeće', 'Izvršno', 'Pomoćno'].map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <div style={labelSt}>SLOŽENOST</div>
+                                <select className="form-select" value={editData.slozenostPoslova || ''} onChange={e => setEditData(p => ({ ...p, slozenostPoslova: e.target.value }))}>
+                                    <option value="">—</option>
+                                    {['Jednostavni', 'Srednje složeni', 'Složeni', 'Visoko složeni'].map(s => <option key={s} value={s}>{s}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
                         {/* Opis poslova */}
                         <div style={labelSt}>OPIS POSLOVA I ZADATAKA</div>
                         <textarea className="form-input" rows={3} value={editData.opisPoslova || ''} onChange={e => setEditData(p => ({ ...p, opisPoslova: e.target.value }))} style={{ resize: 'vertical', marginBottom: 12 }} />
 
-                        {/* Grid: Sprema + Iskustvo + Broj */}
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 10, marginBottom: 12 }}>
+                        {/* Odgovornosti */}
+                        <div style={labelSt}>ODGOVORNOSTI</div>
+                        <textarea className="form-input" rows={2} value={editData.odgovornosti || ''} onChange={e => setEditData(p => ({ ...p, odgovornosti: e.target.value }))} placeholder="Ključne odgovornosti na radnom mjestu" style={{ resize: 'vertical', marginBottom: 12 }} />
+
+                        {/* Grid: Sprema + Iskustvo + Broj + Probni rad */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px 1fr', gap: 10, marginBottom: 12 }}>
                             <div>
                                 <div style={labelSt}>STRUČNA SPREMA</div>
                                 <select className="form-select" value={editData.strucnaSprema || ''} onChange={e => setEditData(p => ({ ...p, strucnaSprema: e.target.value }))}>
@@ -262,6 +292,10 @@ export default function SistematizacijaPage() {
                             <div>
                                 <div style={labelSt}>IZVRŠILACA</div>
                                 <input className="form-input" type="number" min={1} value={editData.brojIzvrsilaca || 1} onChange={e => setEditData(p => ({ ...p, brojIzvrsilaca: +e.target.value }))} />
+                            </div>
+                            <div>
+                                <div style={labelSt}>PROBNI RAD</div>
+                                <input className="form-input" value={editData.probniRad || ''} onChange={e => setEditData(p => ({ ...p, probniRad: e.target.value }))} placeholder="npr. 3 mjeseca" />
                             </div>
                         </div>
 
@@ -280,7 +314,7 @@ export default function SistematizacijaPage() {
                             ))}
                         </div>
 
-                        {/* OZO + Oprema + Zdravstvo + Certifikati */}
+                        {/* OZO + Oprema + Zdravstvo + Certifikati + Obuke */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                             <div>
                                 <div style={labelSt}>POTREBNA OZO</div>
@@ -297,6 +331,14 @@ export default function SistematizacijaPage() {
                             <div>
                                 <div style={labelSt}>POTREBNI CERTIFIKATI</div>
                                 <textarea className="form-input" rows={2} value={(editData.certifikati || []).join('\n')} onChange={e => setEditData(p => ({ ...p, certifikati: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} />
+                            </div>
+                            <div>
+                                <div style={labelSt}>POTREBNE OBUKE</div>
+                                <textarea className="form-input" rows={2} value={(editData.potrebneObuke || []).join('\n')} onChange={e => setEditData(p => ({ ...p, potrebneObuke: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} />
+                            </div>
+                            <div>
+                                <div style={labelSt}>PRAVNI OSNOV</div>
+                                <input className="form-input" value={editData.pravniOsnov || ''} onChange={e => setEditData(p => ({ ...p, pravniOsnov: e.target.value }))} placeholder="Čl. 118. Zakona o radu FBiH" style={{ fontSize: '0.78rem' }} />
                             </div>
                         </div>
 
