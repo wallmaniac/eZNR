@@ -145,6 +145,14 @@ export default function RiskAssessmentPage() {
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('opsti');
     const [sortConfig, setSortConfig] = useState({ key: 'datumIzrade', dir: 'desc' });
+    const [openDropdownId, setOpenDropdownId] = useState(null);
+
+    // Click outside listener for dropdown
+    useEffect(() => {
+        const handleClickOutside = () => setOpenDropdownId(null);
+        document.addEventListener('click', handleClickOutside);
+        return () => document.removeEventListener('click', handleClickOutside);
+    }, []);
 
     // Sub-views
     const [personTypes, setPersonTypes] = useState([]);
@@ -233,6 +241,23 @@ export default function RiskAssessmentPage() {
             items.forEach(ri => remove(COLLECTIONS.RISK_ITEMS, ri.id));
             remove(COLLECTIONS.RISK_ASSESSMENTS, id); loadData();
         }
+    };
+    const handleCopy = async (r) => {
+        if (!await confirm(`Kopirati procjenu "${r.nazivTvrtke || 'Bez naziva'}"?`)) return;
+        const copyData = { ...r, status: 'draft', datumIzrade: todayISO() };
+        delete copyData.id;
+        if (copyData.nazivTvrtke) copyData.nazivTvrtke += ' (Kopija)';
+        const newDoc = create(COLLECTIONS.RISK_ASSESSMENTS, copyData);
+        
+        const originalItems = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id);
+        originalItems.forEach(ri => {
+            const copyRi = { ...ri, procjenaId: newDoc.id };
+            delete copyRi.id;
+            create(COLLECTIONS.RISK_ITEMS, copyRi);
+        });
+        
+        loadData();
+        showFlash();
     };
     const handleSave = async () => {
         if (!formData.nazivTvrtke) { alert(lang === 'bs' ? 'Naziv tvrtke je obavezan!' : 'Company name is required!'); return; }
@@ -453,14 +478,17 @@ export default function RiskAssessmentPage() {
     };
 
     // ─── Word (.docx) Export ───
-    const handleGenerateDocx = async (saveToFile = true) => {
+    const handleGenerateDocx = async (saveToFile = true, overrideData = null, overrideItems = null) => {
         const { Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun, HeadingLevel, AlignmentType, WidthType, BorderStyle, ShadingType } = await import('docx');
 
-        const sorted = [...riskItems].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
-        const highRiskItems = riskItems.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
-        const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+        const data = overrideData || formData;
+        const items = overrideItems || riskItems;
+
+        const sorted = [...items].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
+        const highRiskItems = items.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
+        const itemsWithScores = items.filter(ri => ri.rizik > 0);
         const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
-        const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+        const itemsWithAfter = items.filter(ri => ri.rizikNakon > 0);
         const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
         const today = new Date().toLocaleDateString('hr-HR');
 
@@ -526,41 +554,41 @@ export default function RiskAssessmentPage() {
                     new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'AKT O PROCJENI RIZIKA', size: 56, bold: true, color: '1A237E' })] }),
                     new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [new TextRun({ text: 'na radnim mjestima i u radnim prostorijama', size: 28, color: '555555' })] }),
                     new Paragraph({ text: '', spacing: { before: 600 } }),
-                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: formData.nazivTvrtke || '—', size: 32, bold: true, color: '1A237E' })] }),
-                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${formData.sjediste || ''} • ${formData.djelatnost || ''}`, size: 20, color: '666666' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: data.nazivTvrtke || '—', size: 32, bold: true, color: '1A237E' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `${data.sjediste || ''} • ${data.djelatnost || ''}`, size: 20, color: '666666' })] }),
                     new Paragraph({ text: '', spacing: { before: 400 } }),
-                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Datum izrade: ${formData.datumIzrade ? new Date(formData.datumIzrade).toLocaleDateString('hr-HR') : today}`, size: 22, color: '666666' })] }),
-                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Revizija: ${formData.revizija || '1'}`, size: 22, color: '666666' })] }),
-                    ...(formData.ovlOrganizacija ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 300 }, children: [new TextRun({ text: `Izradila: ${formData.ovlOrganizacija}`, size: 22, color: '666666' })] })] : []),
-                    ...(formData.ovlOsobaIme ? [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Ovlaštena osoba: ${formData.ovlOsobaIme} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}`, size: 22, color: '666666' })] })] : []),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Datum izrade: ${data.datumIzrade ? new Date(data.datumIzrade).toLocaleDateString('hr-HR') : today}`, size: 22, color: '666666' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Revizija: ${data.revizija || '1'}`, size: 22, color: '666666' })] }),
+                    ...(data.ovlOrganizacija ? [new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 300 }, children: [new TextRun({ text: `Izradila: ${data.ovlOrganizacija}`, size: 22, color: '666666' })] })] : []),
+                    ...(data.ovlOsobaIme ? [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Ovlaštena osoba: ${data.ovlOsobaIme} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}`, size: 22, color: '666666' })] })] : []),
 
                     // Section 1
                     new Paragraph({ text: '', pageBreakBefore: true }),
                     new Paragraph({ text: '1. Opšti podaci o poslodavcu', heading: HeadingLevel.HEADING_1, spacing: { after: 200 } }),
                     new Table({ rows: [
-                        new TableRow({ children: [mkCell('Naziv', { bold: true, bg: 'E8EAF6', width: 30 }), mkCell(formData.nazivTvrtke, { width: 70 })] }),
-                        new TableRow({ children: [mkCell('Sjedište', { bold: true, bg: 'E8EAF6' }), mkCell(formData.sjediste)] }),
-                        new TableRow({ children: [mkCell('Djelatnost', { bold: true, bg: 'E8EAF6' }), mkCell(formData.djelatnost)] }),
-                        new TableRow({ children: [mkCell('Ukupno zaposlenih', { bold: true, bg: 'E8EAF6' }), mkCell(formData.ukupnoZaposlenih)] }),
-                        new TableRow({ children: [mkCell('Ovlaštena organizacija', { bold: true, bg: 'E8EAF6' }), mkCell(formData.ovlOrganizacija)] }),
-                        new TableRow({ children: [mkCell('Ovlaštena osoba', { bold: true, bg: 'E8EAF6' }), mkCell(`${formData.ovlOsobaIme || '—'} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}`)] }),
+                        new TableRow({ children: [mkCell('Naziv', { bold: true, bg: 'E8EAF6', width: 30 }), mkCell(data.nazivTvrtke, { width: 70 })] }),
+                        new TableRow({ children: [mkCell('Sjedište', { bold: true, bg: 'E8EAF6' }), mkCell(data.sjediste)] }),
+                        new TableRow({ children: [mkCell('Djelatnost', { bold: true, bg: 'E8EAF6' }), mkCell(data.djelatnost)] }),
+                        new TableRow({ children: [mkCell('Ukupno zaposlenih', { bold: true, bg: 'E8EAF6' }), mkCell(data.ukupnoZaposlenih)] }),
+                        new TableRow({ children: [mkCell('Ovlaštena organizacija', { bold: true, bg: 'E8EAF6' }), mkCell(data.ovlOrganizacija)] }),
+                        new TableRow({ children: [mkCell('Ovlaštena osoba', { bold: true, bg: 'E8EAF6' }), mkCell(`${data.ovlOsobaIme || '—'} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}`)] }),
                     ], width: { size: 100, type: WidthType.PERCENTAGE } }),
 
                     // Section 2
                     new Paragraph({ text: '2. Opis tehničko-tehnološkog procesa', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
-                    new Paragraph({ text: formData.opisProcesa || 'Nije uneseno.', spacing: { after: 200 } }),
-                    ...(formData.analizaOrganizacije ? [
+                    new Paragraph({ text: data.opisProcesa || 'Nije uneseno.', spacing: { after: 200 } }),
+                    ...(data.analizaOrganizacije ? [
                         new Paragraph({ text: 'Analiza organizacije rada', heading: HeadingLevel.HEADING_2, spacing: { before: 200 } }),
-                        new Paragraph({ text: formData.analizaOrganizacije }),
+                        new Paragraph({ text: data.analizaOrganizacije }),
                     ] : []),
 
                     // Section 3
                     new Paragraph({ text: '3. Procjena rizika — rezultati', heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
                     new Paragraph({ children: [
                         new TextRun({ text: `Ukupno procijenjeno: `, size: 22 }),
-                        new TextRun({ text: `${riskItems.length}`, size: 22, bold: true }),
+                        new TextRun({ text: `${items.length}`, size: 22, bold: true }),
                         new TextRun({ text: ` stavki na `, size: 22 }),
-                        new TextRun({ text: `${[...new Set(riskItems.map(r => r.radnoMjestoId))].length}`, size: 22, bold: true }),
+                        new TextRun({ text: `${[...new Set(items.map(r => r.radnoMjestoId))].length}`, size: 22, bold: true }),
                         new TextRun({ text: ` radnih mjesta.`, size: 22 }),
                     ], spacing: { after: 200 } }),
                     ...(sorted.length > 0 ? [new Table({ rows: riTableRows, width: { size: 100, type: WidthType.PERCENTAGE } })] : []),
@@ -589,7 +617,7 @@ export default function RiskAssessmentPage() {
 
                     // Section 6 — Conclusion
                     new Paragraph({ text: `${highRiskItems.length > 0 ? '6' : '5'}. Zaključak`, heading: HeadingLevel.HEADING_1, spacing: { before: 400, after: 200 } }),
-                    new Paragraph({ text: formData.zakljucak || 'Zaključak nije unesen.', spacing: { after: 400 } }),
+                    new Paragraph({ text: data.zakljucak || 'Zaključak nije unesen.', spacing: { after: 400 } }),
 
                     // Signatures
                     new Paragraph({ text: '', spacing: { before: 800 } }),
@@ -602,7 +630,7 @@ export default function RiskAssessmentPage() {
 
                     // Footer
                     new Paragraph({ text: '', spacing: { before: 400 } }),
-                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Akt o procjeni rizika — ${formData.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform`, size: 16, color: '999999' })] }),
+                    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: `Akt o procjeni rizika — ${data.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform`, size: 16, color: '999999' })] }),
                 ],
             }],
         });
@@ -610,7 +638,7 @@ export default function RiskAssessmentPage() {
         const blob = await Packer.toBlob(doc);
         if (saveToFile) {
             const { saveAs } = await import('file-saver');
-            saveAs(blob, `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`);
+            saveAs(blob, `Procjena_rizika_${(data.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`);
         }
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -653,15 +681,17 @@ Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uklju
     };
 
     // ─── PDF Report Generator ───
-    const handleGenerateReport = () => {
-        const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
+    const handleGenerateReport = (overrideData = null, overrideItems = null, autoPrint = false) => {
+        const data = overrideData || formData;
+        const items = overrideItems || riskItems;
+        const itemsWithScores = items.filter(ri => ri.rizik > 0);
         const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
-        const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
+        const itemsWithAfter = items.filter(ri => ri.rizikNakon > 0);
         const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
         const gradeBefore = avgBefore > 0 ? riskLevel(Math.round(avgBefore)) : null;
         const gradeAfter = avgAfter > 0 ? riskLevel(Math.round(avgAfter)) : null;
-        const sorted = [...riskItems].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
-        const highRiskItems = riskItems.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
+        const sorted = [...items].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
+        const highRiskItems = items.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
         const today = new Date().toLocaleDateString('hr-HR');
 
         const rlColor = (score) => {
@@ -674,7 +704,7 @@ Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uklju
         };
         const rlLabel = (score) => riskLevel(score).label;
 
-        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Akt o procjeni rizika — ${formData.nazivTvrtke || 'Procjena'}</title>
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Akt o procjeni rizika — ${data.nazivTvrtke || 'Procjena'}</title>
 <style>
 @page { size: A4; margin: 20mm 15mm; }
 body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a1a; font-size: 11pt; line-height: 1.5; padding: 0; margin: 0; }
@@ -705,35 +735,35 @@ tr:nth-child(even) { background: #fafafa; }
     <h1>AKT O PROCJENI RIZIKA</h1>
     <div class="subtitle">na radnim mjestima i u radnim prostorijama</div>
     <div style="margin:30px 0;padding:20px;background:#f5f5f5;border-radius:8px;display:inline-block;min-width:300px">
-        <div style="font-size:16pt;font-weight:700;color:#1a237e">${formData.nazivTvrtke || '—'}</div>
-        <div style="font-size:10pt;color:#666;margin-top:4px">${formData.sjediste || ''}</div>
-        <div style="font-size:10pt;color:#666">${formData.djelatnost || ''}</div>
+        <div style="font-size:16pt;font-weight:700;color:#1a237e">${data.nazivTvrtke || '—'}</div>
+        <div style="font-size:10pt;color:#666;margin-top:4px">${data.sjediste || ''}</div>
+        <div style="font-size:10pt;color:#666">${data.djelatnost || ''}</div>
     </div>
-    <div class="meta">Datum izrade: ${formData.datumIzrade ? new Date(formData.datumIzrade).toLocaleDateString('hr-HR') : today}</div>
-    <div class="meta">Revizija: ${formData.revizija || '1'}</div>
-    ${formData.ovlOrganizacija ? `<div class="meta" style="margin-top:16px">Izradila: ${formData.ovlOrganizacija}</div>` : ''}
-    ${formData.ovlOsobaIme ? `<div class="meta">Ovlaštena osoba: ${formData.ovlOsobaIme} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}</div>` : ''}
+    <div class="meta">Datum izrade: ${data.datumIzrade ? new Date(data.datumIzrade).toLocaleDateString('hr-HR') : today}</div>
+    <div class="meta">Revizija: ${data.revizija || '1'}</div>
+    ${data.ovlOrganizacija ? `<div class="meta" style="margin-top:16px">Izradila: ${data.ovlOrganizacija}</div>` : ''}
+    ${data.ovlOsobaIme ? `<div class="meta">Ovlaštena osoba: ${data.ovlOsobaIme} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</div>` : ''}
 </div>
 
 <!-- SECTION 1: GENERAL DATA -->
 <h2>1. Opšti podaci o poslodavcu</h2>
 <div class="info-grid">
-    <dt>Naziv:</dt><dd>${formData.nazivTvrtke || '—'}</dd>
-    <dt>Sjedište:</dt><dd>${formData.sjediste || '—'}</dd>
-    <dt>Djelatnost:</dt><dd>${formData.djelatnost || '—'}</dd>
-    <dt>Ukupno zaposlenih:</dt><dd>${formData.ukupnoZaposlenih || '—'}</dd>
-    <dt>Ovlaštena organizacija:</dt><dd>${formData.ovlOrganizacija || '—'}</dd>
-    <dt>Ovlaštena osoba:</dt><dd>${formData.ovlOsobaIme || '—'} ${formData.ovlOsobaKvalifikacije ? '(' + formData.ovlOsobaKvalifikacije + ')' : ''}</dd>
+    <dt>Naziv:</dt><dd>${data.nazivTvrtke || '—'}</dd>
+    <dt>Sjedište:</dt><dd>${data.sjediste || '—'}</dd>
+    <dt>Djelatnost:</dt><dd>${data.djelatnost || '—'}</dd>
+    <dt>Ukupno zaposlenih:</dt><dd>${data.ukupnoZaposlenih || '—'}</dd>
+    <dt>Ovlaštena organizacija:</dt><dd>${data.ovlOrganizacija || '—'}</dd>
+    <dt>Ovlaštena osoba:</dt><dd>${data.ovlOsobaIme || '—'} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</dd>
 </div>
 
 <!-- SECTION 2: PROCESS -->
 <h2>2. Opis tehničko-tehnološkog procesa</h2>
-<p>${(formData.opisProcesa || 'Nije uneseno.').replace(/\n/g, '<br>')}</p>
-${formData.analizaOrganizacije ? `<h3>Analiza organizacije rada</h3><p>${formData.analizaOrganizacije.replace(/\n/g, '<br>')}</p>` : ''}
+<p>${(data.opisProcesa || 'Nije uneseno.').replace(/\n/g, '<br>')}</p>
+${data.analizaOrganizacije ? `<h3>Analiza organizacije rada</h3><p>${data.analizaOrganizacije.replace(/\n/g, '<br>')}</p>` : ''}
 
 <!-- SECTION 3: RISK MATRIX RESULTS -->
 <h2>3. Procjena rizika — rezultati</h2>
-<p>Ukupno procijenjeno: <strong>${riskItems.length}</strong> stavki na <strong>${[...new Set(riskItems.map(r => r.radnoMjestoId))].length}</strong> radnih mjesta.</p>
+<p>Ukupno procijenjeno: <strong>${items.length}</strong> stavki na <strong>${[...new Set(items.map(r => r.radnoMjestoId))].length}</strong> radnih mjesta.</p>
 <table>
 <thead><tr><th>#</th><th>Radno mjesto</th><th>Opasnost / Štetnost</th><th>V₀</th><th>P₀</th><th>R₀</th><th>Nivo</th><th>V₁</th><th>P₁</th><th>R₁</th><th>Nivo nakon</th></tr></thead>
 <tbody>
@@ -787,16 +817,17 @@ ${highRiskItems.map((ri, i) => {
 
 <!-- SECTION 6: CONCLUSION -->
 <h2>${highRiskItems.length > 0 ? '6' : '5'}. Zaključak</h2>
-<div class="conclusion">${(formData.zakljucak || 'Zaključak nije unesen.').replace(/\n/g, '<br>')}</div>
+<div class="conclusion">${(data.zakljucak || 'Zaključak nije unesen.').replace(/\n/g, '<br>')}</div>
 
 <div style="margin-top:60px;display:flex;justify-content:space-between">
     <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">Poslodavac</div></div>
     <div style="text-align:center;min-width:200px"><div style="border-top:1px solid #333;padding-top:6px;font-size:9pt">Ovlaštena osoba za ZNR</div></div>
 </div>
 
-<div class="footer">Akt o procjeni rizika — ${formData.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform</div>
+<div class="footer">Akt o procjeni rizika — ${data.nazivTvrtke || ''} — Generisano: ${today} — eZNR Platform</div>
 
 <button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">📄 Preuzmi PDF (Print)</button>
+${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 </body></html>`;
 
         const w = window.open('', '_blank');
@@ -869,7 +900,7 @@ ${highRiskItems.map((ri, i) => {
                 </div>
                 <div className="card"><div className="card-body"><div className="data-table-wrapper">
                     <table className="data-table" style={{ width: '100%' }}><thead><tr>
-                        <th style={{ width: 60 }}>{t('actions')}</th>
+                        <th style={{ width: 80 }}>{t('actions')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')}>{lang === 'bs' ? 'Naziv tvrtke' : 'Company'}{getSortIcon('nazivTvrtke')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('revizija')}>{lang === 'bs' ? 'Revizija' : 'Revision'}{getSortIcon('revizija')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')}>{lang === 'bs' ? 'Datum' : 'Date'}{getSortIcon('datumIzrade')}</th>
@@ -882,9 +913,30 @@ ${highRiskItems.map((ri, i) => {
                             const st = r.status || 'draft';
                             return (
                                 <tr key={r.id} onClick={() => handleEdit(r)} style={{ cursor: 'pointer' }} className="hover-row">
-                                    <td onClick={e => e.stopPropagation()}><div style={{ display: 'flex', gap: 4 }}>
-                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDelete(r.id); }}>🗑️</button>
-                                    </div></td>
+                                    <td onClick={e => e.stopPropagation()}>
+                                        <div style={{ position: 'relative' }}>
+                                            <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === r.id ? null : r.id); }} style={{ padding: '0 8px', fontSize: '1rem', fontWeight: 900 }}>⋮</button>
+                                            {openDropdownId === r.id && (
+                                                <div style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 180, padding: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', fontWeight: 600 }} onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleEdit(r); }}>✏️ Otvori</button>
+                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start' }} onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleCopy(r); }}>📋 Kopiraj</button>
+                                                    <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: '#3f51b5' }} onClick={(e) => { 
+                                                        e.stopPropagation(); setOpenDropdownId(null); 
+                                                        const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id);
+                                                        handleGenerateReport(r, items, true); 
+                                                    }}>🖨️ Isprintaj (PDF)</button>
+                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: '#11998e' }} onClick={async (e) => {
+                                                        e.stopPropagation(); setOpenDropdownId(null);
+                                                        const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id);
+                                                        await handleGenerateDocx(true, r, items);
+                                                    }}>📗 Preuzmi Word (.docx)</button>
+                                                    <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleDelete(r.id); }}>🗑️ Izbriši</button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{r.nazivTvrtke || '—'}</td>
                                     <td>{r.revizija || '—'}</td>
                                     <td>{formatDate(r.datumIzrade)}</td>
