@@ -309,7 +309,7 @@ export function logSystemAlert(title, detail, severity = 'warning') {
 
 export function getUserLog(limit = 50, filterCategory = null, filterCompanyId = null) {
     let logs = readLog(USER_LOG_KEY);
-    if (filterCompanyId) {
+    if (filterCompanyId && filterCompanyId !== 'all') {
         logs = logs.filter(l => !l.companyId || l.companyId === filterCompanyId);
     }
     if (filterCategory) {
@@ -321,7 +321,7 @@ export function getUserLog(limit = 50, filterCategory = null, filterCompanyId = 
 export function getAdminLog(limit = 50, filterCategory = null, filterCompanyId = null) {
     let logs = readLog(ADMIN_LOG_KEY);
     // Allow admins to see everything, but if we want to filter per-company we can
-    if (filterCompanyId) {
+    if (filterCompanyId && filterCompanyId !== 'all') {
         logs = logs.filter(l => !l.companyId || l.companyId === filterCompanyId);
     }
     if (filterCategory) {

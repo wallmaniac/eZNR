@@ -219,6 +219,11 @@ function WorkersPageInner() {
                     setOpenSections(prev => ({ ...prev, uvjerenja: true }));
                     uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 350);
+            } else if (section === 'medExams' || section === 'zdravstvo') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, medExams: true, uvjerenja: false }));
+                    medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
             }
             // Strip the param from the URL immediately so this effect never re-fires
             router.replace('/dashboard/workers', { scroll: false });

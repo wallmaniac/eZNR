@@ -26,7 +26,7 @@ export default function SettingsPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get('tab');
-  const [activeTab, setActiveTab] = useState(tabParam || 'profile');
+  const [activeTab, setActiveTab] = useState(tabParam || 'activity');
   const [saved, setSaved] = useState(false);
   const [logoError, setLogoError] = useState('');
 
@@ -184,6 +184,7 @@ export default function SettingsPage() {
 
   // ── Tabs ──
   const tabs = [
+    { key: 'activity', label: lang === 'bs' ? 'Aktivnost' : 'Activity', icon: '📋' },
     { key: 'profile', label: lang === 'bs' ? 'Profil' : 'Profile', icon: '👤' },
     { key: 'company', label: lang === 'bs' ? 'Firma' : 'Company', icon: '🏢' },
     { key: 'notifications', label: lang === 'bs' ? 'Obavijesti' : 'Notifications', icon: '🔔' },
@@ -192,10 +193,7 @@ export default function SettingsPage() {
       { key: 'system', label: lang === 'bs' ? 'Sistem' : 'System', icon: '🛡️' },
       { key: 'statistics', label: lang === 'bs' ? 'Statistika' : 'Statistics', icon: '📊' },
       { key: 'firebase', label: 'Firebase Sync', icon: '🔥' },
-      { key: 'activity', label: lang === 'bs' ? 'Aktivnost' : 'Activity', icon: '📋' },
-    ] : [
-      { key: 'activity', label: lang === 'bs' ? 'Aktivnost' : 'Activity', icon: '📋' },
-    ]),
+    ] : []),
   ];
 
   // Load sync stats when firebase tab is opened
@@ -269,9 +267,22 @@ export default function SettingsPage() {
   // ── Navigation for Activity Log ──
   const handleLogClick = (entry) => {
     if (!entry.relatedId) return;
+
+    let workerSection = '';
+    if (entry.title.includes('OZO') || entry.icon === '🦺') workerSection = '&section=ozo';
+    else if (entry.title.includes('Med. pregled') || entry.icon === '🩺' || entry.title.includes('Bolest') || entry.icon === '🏥') workerSection = '&section=medExams';
+    else if (entry.title.includes('Povreda') || entry.icon === '🩹') workerSection = '&section=povrede';
+    else if (entry.category === 'certificate' || entry.icon === '📋') workerSection = '&section=uvjerenja';
+
+    // To ensure back button returns here with the correct tab, replace URL with tab=activity if not present
+    if (!searchParams.get('tab')) {
+      window.history.replaceState(null, '', '/dashboard/settings?tab=activity');
+    }
+
     switch (entry.category) {
       case 'worker':
-        router.push(`/dashboard/workers?openWorker=${entry.relatedId}`);
+      case 'ppe': // Legacy OZO support
+        router.push(`/dashboard/workers?openWorker=${entry.relatedId}${workerSection}`);
         break;
       case 'certificate':
         router.push(`/dashboard/worker-certificates/edit/${entry.relatedId}`);
@@ -282,7 +293,6 @@ export default function SettingsPage() {
       case 'document':
         router.push(`/dashboard/employer-docs?highlight=${entry.relatedId}`);
         break;
-      // other categories don't have direct deep links yet
       default: break;
     }
   };
