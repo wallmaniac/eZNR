@@ -63,7 +63,23 @@ async function syncCollection(collectionName, firestorePath, onProgress) {
             if (!item.id) continue;
             const ref = doc(db, firestorePath, item.id);
             // Clean up undefined values (Firestore doesn't accept them)
-            const clean = JSON.parse(JSON.stringify(item));
+            let clean = JSON.parse(JSON.stringify(item));
+            
+            // Protect against Firestore 1MB document limit
+            let stringified = JSON.stringify(clean);
+            if (stringified.length > 900000) {
+                if (clean.docData) delete clean.docData;
+                if (clean.slika) delete clean.slika;
+                if (clean.fileData) delete clean.fileData;
+                if (clean.docBase64) delete clean.docBase64;
+                
+                stringified = JSON.stringify(clean);
+                if (stringified.length > 900000) {
+                    console.warn(`Doc ${item.id} in ${collectionName} still too large to sync`);
+                    continue; // Skip it completely rather than crash the whole batch
+                }
+            }
+            
             batch.set(ref, clean, { merge: true });
         }
 
