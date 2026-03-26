@@ -50,8 +50,8 @@ export default function SettingsPage() {
   // Activity log state
   const [logFilter, setLogFilter] = useState(null);
   const [logRefresh, setLogRefresh] = useState(0);
-  const userLog = useMemo(() => getUserLog(100, logFilter), [logFilter, logRefresh]);
-  const adminLog = useMemo(() => getAdminLog(100, logFilter), [logFilter, logRefresh]);
+  const userLog = useMemo(() => getUserLog(100, logFilter, activeCompanyId), [logFilter, logRefresh, activeCompanyId]);
+  const adminLog = useMemo(() => getAdminLog(100, logFilter, activeCompanyId), [logFilter, logRefresh, activeCompanyId]);
   const onlineUsers = useMemo(() => getOnlineUsers(), [logRefresh]);
 
   // Firebase sync state

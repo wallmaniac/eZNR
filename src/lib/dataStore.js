@@ -68,6 +68,7 @@ function _autoLog(action, collection, item) {
     const cfg = _AL_COLS[collection];
     if (!cfg) return;
     try {
+        const user = _getActiveUser();
         const existing = JSON.parse(localStorage.getItem(_AL_KEY) || '[]');
         const entry = {
             id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
@@ -76,6 +77,9 @@ function _autoLog(action, collection, item) {
             title: `${_AL_VERBS[action] || action} ${cfg.label(item)}`,
             detail: '', severity: action === 'delete' ? 'warning' : 'info',
             relatedId: item.id || '',
+            companyId: _getActiveCompanyId() || item.companyId || '',
+            userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : 'Sistem',
+            userId: user?.id || '',
         };
         localStorage.setItem(_AL_KEY, JSON.stringify([entry, ...existing].slice(0, _AL_MAX)));
     } catch { }
@@ -100,14 +104,19 @@ function _getActiveCompanyId() {
     return localStorage.getItem('eznr_activeCompany') || null;
 }
 
-// Helper: get user's company IDs from localStorage
-function _getUserCompanyIds() {
-    if (typeof window === 'undefined') return [];
+// Helper: get user object from localStorage
+function _getActiveUser() {
+    if (typeof window === 'undefined') return null;
     try {
         const u = localStorage.getItem('eznr_user');
-        if (u) return JSON.parse(u).companyIds || [];
-    } catch (e) { /* ignore */ }
-    return [];
+        return u ? JSON.parse(u) : null;
+    } catch { return null; }
+}
+
+// Helper: get user's company IDs from localStorage
+function _getUserCompanyIds() {
+    const u = _getActiveUser();
+    return u ? (u.companyIds || []) : [];
 }
 
 // ============================================================================
