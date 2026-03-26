@@ -118,6 +118,85 @@ function generateTemplate() {
     XLSX.writeFile(wb, 'eZNR_Import_Template.xlsx');
 }
 
+function generateExport(companyId) {
+    const wb = XLSX.utils.book_new();
+
+    // 1. Radnici
+    const wRows = [WORKER_COLS];
+    const workers = getAll(COLLECTIONS.WORKERS).filter(w => companyId === 'all' || w.companyId === companyId);
+    workers.forEach(w => {
+        wRows.push([
+            w.ime || '', w.prezime || '', w.imeRoditelja || '', w.jmbg || '', w.oib || '', w.spol || '',
+            w.datumRodenja || '', w.miestoRodenja || '', w.datumZaposlenja || '', w.datumOdlaska || '',
+            w.stazDoDolaska || '', w.koef || '', '', '', // radnoMjesto and orgJedinica left blank for now
+            w.lokacija || '', w.evidencijskiBroj || '', w.telefonTvrtki || '', w.mobitel || '',
+            w.email || '', w.ulica || '', w.kucniBroj || '', w.mjesto || '', w.napomena || '',
+            w.aktivan ? 'DA' : 'NE', w.vanjskiSuradnik ? 'DA' : 'NE'
+        ]);
+    });
+    const wsW = XLSX.utils.aoa_to_sheet(wRows);
+    wsW['!cols'] = WORKER_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsW, 'Radnici');
+
+    // 2. Uvjerenja
+    const cRows = [CERT_COLS];
+    const certs = getAll(COLLECTIONS.CERTIFICATES).filter(c => companyId === 'all' || c.companyId === companyId);
+    certs.forEach(c => {
+        const worker = workers.find(w => w.id === c.workerId);
+        cRows.push([
+            worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
+            c.naziv || '', c.oznaka || '', c.tipUvjerenja || '', c.datum || '', c.vrijediDo || '', c.sposobnost || '', c.ogranicenje || ''
+        ]);
+    });
+    const wsC = XLSX.utils.aoa_to_sheet(cRows);
+    wsC['!cols'] = CERT_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsC, 'Uvjerenja');
+
+    // 3. OZO
+    const pRows = [PPE_COLS];
+    const ppe = getAll(COLLECTIONS.PPE_ASSIGNMENTS).filter(p => companyId === 'all' || p.companyId === companyId);
+    ppe.forEach(p => {
+        const worker = workers.find(w => w.id === p.workerId);
+        pRows.push([
+            worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
+            p.naziv || '', p.datumZaduzenja || '', p.datumRazduzenja || '', p.kolicina || ''
+        ]);
+    });
+    const wsP = XLSX.utils.aoa_to_sheet(pRows);
+    wsP['!cols'] = PPE_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsP, 'OZO');
+
+    // 4. Oprema
+    const eRows = [EQUIP_COLS];
+    const equip = getAll(COLLECTIONS.EQUIPMENT).filter(e => companyId === 'all' || e.companyId === companyId);
+    equip.forEach(e => {
+        eRows.push([
+            e.naziv || '', e.vrsta || '', e.tip || '', e.tvBroj || '', e.invBroj || '',
+            e.proizvodjac || '', e.godinaProizvodnje || '', e.posljednji || '', e.iduci || '', e.status || ''
+        ]);
+    });
+    const wsE = XLSX.utils.aoa_to_sheet(eRows);
+    wsE['!cols'] = EQUIP_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsE, 'Oprema');
+
+    // 5. Ljekarski
+    const mRows = [MEDEXAM_COLS];
+    const medExams = getAll(COLLECTIONS.MEDICAL_EXAMS).filter(m => companyId === 'all' || m.companyId === companyId);
+    medExams.forEach(m => {
+        const worker = workers.find(w => w.id === m.workerId);
+        mRows.push([
+            worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
+            m.tipPregleda || '', m.datum || '', m.vrijediDo || '', m.rezultat || '', m.napomena || ''
+        ]);
+    });
+    const wsM = XLSX.utils.aoa_to_sheet(mRows);
+    wsM['!cols'] = MEDEXAM_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsM, 'Ljekarski');
+
+    let fileName = `eZNR_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+}
+
 function matchWorker(workers, ime, prezime, jmbg) {
     if (jmbg) {
         const found = workers.find(w => w.jmbg === String(jmbg).trim());
@@ -327,12 +406,12 @@ export default function ImportPage() {
     return (
         <div className="animate-fadeIn" style={{ maxWidth: 860, margin: '0 auto' }}>
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                📥 {lang === 'bs' ? 'Excel Import' : 'Excel Import'}
+                📥 / 📤 {lang === 'bs' ? 'Excel Import / Export' : 'Excel Import / Export'}
             </h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: 28, fontSize: '0.9rem' }}>
                 {lang === 'bs'
-                    ? 'Uvezi radnike, uvjerenja i OZO iz Excel fajla. Preuzmite template, popunite ga i uploadajte.'
-                    : 'Import workers, certificates and PPE from an Excel file. Download the template, fill it in and upload.'}
+                    ? 'Uvezi podatke iz Excel-a ili preuzmi (exportuj) sve podatke aktivne firme u Excel formatu.'
+                    : 'Import data from Excel or download (export) all active company data in Excel format.'}
             </p>
 
             {fileError && (
@@ -357,20 +436,25 @@ export default function ImportPage() {
             {/* ── STEP 1: Upload ── */}
             {step === 'upload' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                    {/* Template download */}
+                    {/* Template / Export download */}
                     <div className="card">
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                             <div>
-                                <div style={{ fontWeight: 700, marginBottom: 4 }}>📋 {lang === 'bs' ? 'Korak 1: Preuzmi template' : 'Step 1: Download template'}</div>
+                                <div style={{ fontWeight: 700, marginBottom: 4 }}>📋 {lang === 'bs' ? 'Korak 1: Preuzimanje Excela' : 'Step 1: Download Excel'}</div>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                     {lang === 'bs'
-                                        ? 'Preuzmite Excel predložak s 3 lista: Radnici, Uvjerenja, OZO. Popunite ga prema uputama na 4. listu.'
-                                        : 'Download the Excel template with 3 sheets: Workers, Certificates, PPE. Fill it in according to the instructions on sheet 4.'}
+                                        ? 'Preuzmite prazan predložak za unos ILI izvezite (export) postojeće podatke.'
+                                        : 'Download empty template for new data OR export existing data.'}
                                 </div>
                             </div>
-                            <button className="btn btn-outline" onClick={generateTemplate} style={{ whiteSpace: 'nowrap' }}>
-                                ⬇️ {lang === 'bs' ? 'Preuzmi template' : 'Download template'}
-                            </button>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-outline" onClick={generateTemplate} style={{ whiteSpace: 'nowrap' }}>
+                                    ⬇️ {lang === 'bs' ? 'Prazan template' : 'Empty template'}
+                                </button>
+                                <button className="btn btn-primary" onClick={() => generateExport(companyId)} style={{ whiteSpace: 'nowrap' }}>
+                                    📤 {lang === 'bs' ? 'Export podataka' : 'Export data'}
+                                </button>
+                            </div>
                         </div>
                     </div>
 
