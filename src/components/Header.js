@@ -19,7 +19,7 @@ export default function Header({ sidebarCollapsed }) {
     const [showCompanyMenu, setShowCompanyMenu] = useState(false);
     const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
     const [switchingCompany, setSwitchingCompany] = useState(false);
-    const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '' });
+    const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
     const profileRef = useRef(null);
     const notifRef = useRef(null);
     const searchRef = useRef(null);
@@ -35,6 +35,11 @@ export default function Header({ sidebarCollapsed }) {
     }, [user?.id, activeCompanyId, isAdmin]);
 
     const activeCompany = companies.find(c => c.id === activeCompanyId);
+
+    const officers = useMemo(() => {
+        if (!isAdmin) return [];
+        return getRawAll(COLLECTIONS.USERS).filter(u => u.role === 'officer' && u.aktivan !== false);
+    }, [isAdmin]);
 
     useEffect(() => {
         const handleClick = (e) => {
@@ -109,11 +114,21 @@ export default function Header({ sidebarCollapsed }) {
                 try { const p = JSON.parse(localStorage.getItem('eznr_user')); p.companyIds = updatedIds; localStorage.setItem('eznr_user', JSON.stringify(p)); } catch(e) {}
             }
         }
+        
+        // Assign to officer if selected
+        if (isAdmin && newCompanyData.assignedOfficerId) {
+            const officerUser = getRawAll(COLLECTIONS.USERS).find(u => u.id === newCompanyData.assignedOfficerId);
+            if (officerUser) {
+                const updatedOfficerIds = [...(officerUser.companyIds || []), newComp.id];
+                update(COLLECTIONS.USERS, officerUser.id, { companyIds: updatedOfficerIds });
+            }
+        }
+
         const sourceId = (user?.companyIds || [])[0];
         if (sourceId) seedCompanyData(newComp.id, sourceId);
         switchCompany(newComp.id);
         setShowNewCompanyModal(false);
-        setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '' });
+        setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
         window.location.reload();
     };
 
@@ -432,6 +447,15 @@ export default function Header({ sidebarCollapsed }) {
                                 <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Telefon' : 'Phone'}</label><input className="form-input" value={newCompanyData.telefon} onChange={e => setNewCompanyData(p => ({ ...p, telefon: e.target.value }))} /></div>
                                 <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={newCompanyData.email} onChange={e => setNewCompanyData(p => ({ ...p, email: e.target.value }))} /></div>
                             </div>
+                            {isAdmin && officers.length > 0 && (
+                                <div className="form-group" style={{ marginTop: 12 }}>
+                                    <label className="form-label">{lang === 'bs' ? 'Dodijeli stručnjaku ZNR' : 'Assign to Officer'}</label>
+                                    <select className="form-input" value={newCompanyData.assignedOfficerId} onChange={e => setNewCompanyData(p => ({ ...p, assignedOfficerId: e.target.value }))}>
+                                        <option value="">-- {lang === 'bs' ? 'Samo za mene' : 'Do not assign yet'} --</option>
+                                        {officers.map(o => <option key={o.id} value={o.id}>{o.firstName} {o.lastName} ({o.email})</option>)}
+                                    </select>
+                                </div>
+                            )}
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowNewCompanyModal(false)}>{t('cancel')}</button>

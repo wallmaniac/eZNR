@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
-  getAll, getById, update, COLLECTIONS,
+  getAll, getById, update, getRawAll, COLLECTIONS,
 } from '@/lib/dataStore';
 import {
   getNotificationSettings, saveNotificationSettings,
@@ -38,6 +38,7 @@ export default function SettingsPage() {
 
   // Company state
   const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '' });
+  const [assignedOfficers, setAssignedOfficers] = useState([]);
 
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
@@ -90,8 +91,33 @@ export default function SettingsPage() {
           logo: company.logo || '',
         });
       }
+      if (isAdmin) {
+        const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => u.role === 'officer' && (u.companyIds || []).includes(activeCompanyId));
+        setAssignedOfficers(hasAccess.map(o => o.id));
+      }
     }
-  }, [activeCompanyId]);
+  }, [activeCompanyId, isAdmin]);
+
+  const allOfficersList = useMemo(() => {
+    if (!isAdmin) return [];
+    return getRawAll(COLLECTIONS.USERS).filter(u => u.role === 'officer' && u.aktivan !== false);
+  }, [isAdmin]);
+
+  const toggleOfficerAssignment = (officerId) => {
+    const officer = getRawAll(COLLECTIONS.USERS).find(u => u.id === officerId);
+    if (!officer || !activeCompanyId) return;
+    
+    const assigned = officer.companyIds || [];
+    const isAssigned = assigned.includes(activeCompanyId);
+    const newIds = isAssigned 
+      ? assigned.filter(id => id !== activeCompanyId)
+      : [...assigned, activeCompanyId];
+      
+    update(COLLECTIONS.USERS, officer.id, { companyIds: newIds });
+    setAssignedOfficers(prev => isAssigned ? prev.filter(id => id !== officerId) : [...prev, officerId]);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   // Update tab from URL param
   useEffect(() => {
@@ -388,6 +414,39 @@ export default function SettingsPage() {
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Direktor' : 'Director'}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyData(p => ({ ...p, direktor: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyData(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
                 </div>
+
+                {isAdmin && allOfficersList.length > 0 && (
+                  <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>👮 {lang === 'bs' ? 'Dodijeljeni stručnjaci ZNR' : 'Assigned Officers'}</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                      {lang === 'bs' ? 'Odaberite koji stručnjaci imaju pristup ovoj firmi:' : 'Select which officers can access this company:'}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                      {allOfficersList.map(officer => {
+                        const isAssigned = assignedOfficers.includes(officer.id);
+                        return (
+                          <button
+                            key={officer.id}
+                            onClick={() => toggleOfficerAssignment(officer.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 6,
+                              padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
+                              border: `1px solid ${isAssigned ? 'var(--primary)' : 'var(--border)'}`,
+                              background: isAssigned ? 'rgba(0,191,166,0.1)' : 'transparent',
+                              color: isAssigned ? 'var(--primary)' : 'var(--text-muted)',
+                              fontWeight: isAssigned ? 700 : 600, fontSize: '0.8rem',
+                              transition: 'all 0.2s',
+                            }}
+                          >
+                            <span>{isAssigned ? '✅' : '➕'}</span>
+                            {officer.firstName} {officer.lastName}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Logo upload */}
                 <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
                   <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>🖼️ {lang === 'bs' ? 'Logo firme' : 'Company Logo'}</div>
