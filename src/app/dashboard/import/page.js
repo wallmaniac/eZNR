@@ -186,7 +186,7 @@ function generateExport(companyId) {
         const worker = workers.find(w => w.id === m.workerId);
         mRows.push([
             worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
-            m.tipPregleda || '', m.datum || '', m.vrijediDo || '', m.rezultat || '', m.napomena || ''
+            m.tipPregleda || '', m.datumPregleda || m.datum || '', m.vrijediDo || '', m.rezultat || '', m.napomena || ''
         ]);
     });
     const wsM = XLSX.utils.aoa_to_sheet(mRows);
@@ -420,7 +420,7 @@ export default function ImportPage() {
             // Duplicate check
             const tipPregleda = String(row.tipPregleda || '').trim();
             const datum = String(row.datum || '').trim();
-            if (existingMedExams.some(m => m.workerId === worker.id && m.tipPregleda === tipPregleda && m.datum === datum)) {
+            if (existingMedExams.some(m => m.workerId === worker.id && m.tipPregleda === tipPregleda && (m.datumPregleda || m.datum || '') === datum)) {
                 mSkipped++;
                 return;
             }
@@ -430,7 +430,7 @@ export default function ImportPage() {
                 companyId: worker.companyId || companyId,
                 radnikIme: `${worker.ime} ${worker.prezime}`,
                 tipPregleda: tipPregleda,
-                datum: datum,
+                datumPregleda: datum, // The system expects datumPregleda, but historically some imports wrote datum
                 vrijediDo: String(row.vrijediDo || '').trim(),
                 rezultat: String(row.rezultat || 'Sposoban').trim(),
                 napomena: String(row.napomena || '').trim(),
