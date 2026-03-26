@@ -16,6 +16,118 @@ const EVENT_ROUTES = {
     doc: '/dashboard/employer-docs',
     service: '/dashboard/equipment',
 };
+// ── Alerts Widget: collapsible per-category expander ─────────────────────────
+function AlertsWidget({ groups, total, lang }) {
+    const [openKey, setOpenKey] = useState(null);
+    const ref = useRef(null);
+
+    useEffect(() => {
+        if (!openKey) return;
+        const handleOutside = (e) => {
+            if (ref.current && !ref.current.contains(e.target)) {
+                setOpenKey(null);
+            }
+        };
+        document.addEventListener('mousedown', handleOutside);
+        return () => document.removeEventListener('mousedown', handleOutside);
+    }, [openKey]);
+
+    const handlePillClick = (group) => {
+        if (group.items.length === 1) {
+            // Direct navigate for single items
+            group.onItemClick(group.items[0]);
+        } else {
+            setOpenKey(prev => prev === group.key ? null : group.key);
+        }
+    };
+
+    return (
+        <div ref={ref} style={{ marginBottom: 20 }}>
+            {/* Header bar */}
+            <div className="card" style={{ border: '1px solid rgba(244,67,54,0.18)', background: 'rgba(244,67,54,0.015)' }}>
+                <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.85rem', color: 'var(--danger)', flexShrink: 0 }}>
+                        🚨 {total} {lang === 'bs' ? 'stavki zahtijeva pažnju' : 'items need attention'}
+                    </span>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+                        {groups.map(g => {
+                            const isOpen = openKey === g.key;
+                            return (
+                                <button
+                                    key={g.key}
+                                    onClick={() => handlePillClick(g)}
+                                    style={{
+                                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                                        padding: '5px 12px', borderRadius: 999,
+                                        border: `1.5px solid ${g.border}`,
+                                        background: isOpen ? g.bg : 'transparent',
+                                        color: g.color, fontWeight: 700, fontSize: '0.78rem',
+                                        cursor: 'pointer', transition: 'all 0.15s ease',
+                                        fontFamily: 'var(--font-heading)',
+                                    }}
+                                >
+                                    {g.icon} {g.label}
+                                    <span style={{
+                                        background: g.color, color: '#fff', borderRadius: 999,
+                                        padding: '1px 6px', fontSize: '0.72rem', fontWeight: 800, minWidth: 18, textAlign: 'center',
+                                    }}>{g.items.length}</span>
+                                    {g.items.length > 1 && (
+                                        <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: 1 }}>
+                                            {isOpen ? '▲' : '▼'}
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Expanded dropdown */}
+                {openKey && (() => {
+                    const g = groups.find(x => x.key === openKey);
+                    if (!g) return null;
+                    return (
+                        <div style={{
+                            borderTop: `1px solid ${g.border}`,
+                            background: g.bg,
+                            padding: '10px 18px 14px',
+                            animation: 'fadeIn 0.15s ease',
+                        }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: g.color, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                {g.icon} {g.label} — {lang === 'bs' ? 'Odaberite stavku:' : 'Select an item:'}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 6 }}>
+                                {g.items.map((item, idx) => (
+                                    <div
+                                        key={item.id || idx}
+                                        onClick={() => { g.onItemClick(item); setOpenKey(null); }}
+                                        style={{
+                                            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                            padding: '8px 12px', borderRadius: 8,
+                                            background: 'var(--bg-card)', border: `1px solid ${g.border}`,
+                                            cursor: 'pointer', fontSize: '0.82rem', color: 'var(--text)',
+                                            transition: 'all 0.12s ease',
+                                            gap: 8,
+                                        }}
+                                        onMouseEnter={e => { e.currentTarget.style.background = g.bg; e.currentTarget.style.borderColor = g.color; }}
+                                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.borderColor = g.border; }}
+                                    >
+                                        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {g.itemLabel(item)}
+                                        </span>
+                                        <span style={{ fontSize: '0.72rem', color: g.color, fontWeight: 600, flexShrink: 0 }}>
+                                            {g.itemSub(item)} →
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })()}
+            </div>
+        </div>
+    );
+}
 
 export default function DashboardPage() {
     const { t, lang } = useLanguage();
@@ -327,80 +439,59 @@ export default function DashboardPage() {
             {(() => {
                 const now = new Date();
                 const d30 = 30 * 86400000;
-                const expiringCerts = certs.filter(c => { if (!c.vrijediDo) return false; const diff = new Date(c.vrijediDo) - now; return diff >= 0 && diff <= d30; }).map(c => {
+                const expiredCertsRaw = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < now).map(c => {
                     const w = workers.find(wk => wk.id === c.workerId);
                     return { ...c, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
                 });
-                const expiredCerts = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < now).map(c => {
+                const expiringCertsRaw = certs.filter(c => { if (!c.vrijediDo) return false; const diff = new Date(c.vrijediDo) - now; return diff >= 0 && diff <= d30; }).map(c => {
                     const w = workers.find(wk => wk.id === c.workerId);
                     return { ...c, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
                 });
-                const overdueMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < now).map(m => {
+                const overdueMedRaw = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < now).map(m => {
                     const w = workers.find(wk => wk.id === m.workerId);
                     return { ...m, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
                 });
-                const equipDue = equipment.filter(e => e.iduci && new Date(e.iduci) < now);
-                const total = expiringCerts.length + expiredCerts.length + overdueMed.length + equipDue.length;
+                const equipDueRaw = equipment.filter(e => e.iduci && new Date(e.iduci) < now);
+
+                const groups = [
+                    expiredCertsRaw.length > 0 && {
+                        key: 'expCert', icon: '📜', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
+                        label: lang === 'bs' ? 'Istekla uvjerenja' : 'Expired certificates',
+                        items: expiredCertsRaw,
+                        onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
+                        itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
+                        itemSub: c => formatDate(c.vrijediDo),
+                    },
+                    expiringCertsRaw.length > 0 && {
+                        key: 'expirCert', icon: '⏰', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
+                        label: lang === 'bs' ? 'Ističe za 30 dana' : 'Expiring in 30 days',
+                        items: expiringCertsRaw,
+                        onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
+                        itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
+                        itemSub: c => formatDate(c.vrijediDo),
+                    },
+                    overdueMedRaw.length > 0 && {
+                        key: 'med', icon: '🩺', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
+                        label: lang === 'bs' ? 'Prekoračeni med. pregledi' : 'Overdue medical exams',
+                        items: overdueMedRaw,
+                        onItemClick: m => router.push('/dashboard/medical-exams'),
+                        itemLabel: m => <><strong>{m.wName || '?'}</strong>{m.tipPregleda ? ` — ${m.tipPregleda}` : ''}</>,
+                        itemSub: m => formatDate(m.vrijediDo),
+                    },
+                    equipDueRaw.length > 0 && {
+                        key: 'equip', icon: '⚙️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
+                        label: lang === 'bs' ? 'Zakasneli pregledi opreme' : 'Overdue equipment inspections',
+                        items: equipDueRaw,
+                        onItemClick: e => router.push('/dashboard/equipment'),
+                        itemLabel: e => <>{e.naziv}</>,
+                        itemSub: e => formatDate(e.iduci),
+                    },
+                ].filter(Boolean);
+
+                const total = groups.reduce((s, g) => s + g.items.length, 0);
                 if (total === 0) return null;
-                return (
-                    <div className="card" style={{ marginBottom: 20, border: '1px solid rgba(244,67,54,0.2)', background: 'rgba(244,67,54,0.02)' }}>
-                        <div className="card-body" style={{ padding: '16px 20px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--danger)' }}>
-                                🚨 {lang === 'bs' ? `Hitno — ${total} stavki zahtijeva pažnju` : `Urgent — ${total} items need attention`}
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
-                                {expiredCerts.length > 0 && (
-                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.12)' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--danger)', marginBottom: 6 }}>📜 {lang === 'bs' ? 'Istekla uvjerenja' : 'Expired certificates'} ({expiredCerts.length})</div>
-                                        {expiredCerts.slice(0, 4).map(c => (
-                                            <div key={c.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer', display: 'flex', gap: 6 }}
-                                                onClick={() => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates')}>
-                                                <span style={{ opacity: 0.6 }}>•</span>
-                                                <span><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</span>
-                                            </div>
-                                        ))}
-                                        {expiredCerts.length > 4 && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>...i još {expiredCerts.length - 4}</div>}
-                                    </div>
-                                )}
-                                {expiringCerts.length > 0 && (
-                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,152,0,0.06)', border: '1px solid rgba(255,152,0,0.12)' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--warning)', marginBottom: 6 }}>⏰ {lang === 'bs' ? 'Ističe za 30 dana' : 'Expiring in 30 days'} ({expiringCerts.length})</div>
-                                        {expiringCerts.slice(0, 4).map(c => (
-                                            <div key={c.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer', display: 'flex', gap: 6 }}
-                                                onClick={() => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates')}>
-                                                <span style={{ opacity: 0.6 }}>•</span>
-                                                <span><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka} ({formatDate(c.vrijediDo)})</span>
-                                            </div>
-                                        ))}
-                                        {expiringCerts.length > 4 && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>...i još {expiringCerts.length - 4}</div>}
-                                    </div>
-                                )}
-                                {overdueMed.length > 0 && (
-                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.12)' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--danger)', marginBottom: 6 }}>🩺 {lang === 'bs' ? 'Zakasneli med. pregledi' : 'Overdue medical exams'} ({overdueMed.length})</div>
-                                        {overdueMed.slice(0, 4).map(m => (
-                                            <div key={m.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer' }}
-                                                onClick={() => router.push('/dashboard/medical-exams')}>
-                                                <span style={{ opacity: 0.6 }}>• </span><strong>{m.wName || '?'}</strong>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                                {equipDue.length > 0 && (
-                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,152,0,0.06)', border: '1px solid rgba(255,152,0,0.12)' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--warning)', marginBottom: 6 }}>⚙️ {lang === 'bs' ? 'Zakasneli pregledi opreme' : 'Overdue equipment inspections'} ({equipDue.length})</div>
-                                        {equipDue.slice(0, 4).map(eq => (
-                                            <div key={eq.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer' }}
-                                                onClick={() => router.push('/dashboard/equipment?openItem=' + eq.id)}>
-                                                <span style={{ opacity: 0.6 }}>• </span>{eq.naziv}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                );
+
+                return <AlertsWidget groups={groups} total={total} lang={lang} />;
             })()}
 
             {/* Calendar */}
