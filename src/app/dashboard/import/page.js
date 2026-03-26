@@ -406,7 +406,7 @@ export default function ImportPage() {
     return (
         <div className="animate-fadeIn" style={{ maxWidth: 860, margin: '0 auto' }}>
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                📥 / 📤 {lang === 'bs' ? 'Excel Import / Export' : 'Excel Import / Export'}
+                📥 {lang === 'bs' ? 'Excel Import/Export' : 'Excel Import/Export'}
             </h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: 28, fontSize: '0.9rem' }}>
                 {lang === 'bs'

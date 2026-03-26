@@ -125,7 +125,7 @@ const menuItems = [
     {
         key: 'alati', icon: '🛠️',
         children: [
-            { key: 'excelImport',    icon: '📥', path: '/dashboard/import' },
+            { key: 'excelImport',    icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export' },
             { key: 'converter',      icon: '🔄', path: '/dashboard/converter' },
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
         ],
