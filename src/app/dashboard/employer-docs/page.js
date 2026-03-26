@@ -24,16 +24,24 @@ function EmployerDocsInner() {
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ naziv: '', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '' });
 
-    // Dropdown & bulk selection state
-    const [openDropdownId, setOpenDropdownId] = useState(null);
+    // Akcije dropdown state (per-row, fixed position)
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const menuButtonRef = useRef(null);
+
+    // Bulk selection state
     const [selected, setSelected] = useState(new Set());
 
     // Click outside listener for actions dropdown
     useEffect(() => {
-        const close = () => setOpenDropdownId(null);
+        const close = (e) => {
+            if (openMenuId && !e.target.closest('[data-menu]') && !e.target.closest('[data-menu-trigger]')) {
+                setOpenMenuId(null);
+            }
+        };
         document.addEventListener('click', close);
         return () => document.removeEventListener('click', close);
-    }, []);
+    }, [openMenuId]);
 
     const loadData = useCallback(() => { setDocs(getAll(COLLECTIONS.EMPLOYER_DOCS)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
@@ -50,14 +58,45 @@ function EmployerDocsInner() {
     }, [highlightId, docs]);
 
     const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '' }); setEditingId(null); setShowForm(true); };
-    const handleEdit = (item) => { setFormData({ docData: null, docName: '', docType: '', ...item }); setEditingId(item.id); setShowForm(true); };
+    const handleEdit = (item) => { setOpenMenuId(null); setFormData({ docData: null, docName: '', docType: '', ...item }); setEditingId(item.id); setShowForm(true); };
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, formData); } else { create(COLLECTIONS.EMPLOYER_DOCS, formData); }
         setShowForm(false); loadData(); showFlash();
     };
     const handleDelete = async (id) => {
+        setOpenMenuId(null);
         const delOk = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?'); if (delOk) { remove(COLLECTIONS.EMPLOYER_DOCS, id); loadData(); }
+    };
+    const handleCopy = async (doc) => {
+        setOpenMenuId(null);
+        if (!await confirm(`Kopirati dokument "${doc.naziv || 'Bez naziva'}"?`)) return;
+        const copyData = { ...doc };
+        delete copyData.id;
+        copyData.naziv = (copyData.naziv || '') + ' (Kopija)';
+        copyData.status = 'aktivan';
+        create(COLLECTIONS.EMPLOYER_DOCS, copyData);
+        loadData(); showFlash();
+    };
+    const handlePrintSingle = (doc) => {
+        setOpenMenuId(null);
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${doc.naziv}</title>
+<style>body{font-family:'Segoe UI',Arial,sans-serif;font-size:11pt;color:#1a1a1a;padding:20px}h1{font-size:18pt;color:#1a237e}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10pt}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#e8eaf6;font-weight:700;color:#283593;width:200px}@media print{button{display:none!important}}</style></head><body>
+<h1>\u{1F4CB} ${doc.naziv}</h1>
+<table>
+<tr><th>Naziv</th><td>${doc.naziv || '\u2014'}</td></tr>
+<tr><th>Kategorija</th><td>${doc.kategorija === 'obavezna' ? 'Obavezna dokumentacija' : doc.kategorija === 'periodicni' ? 'Periodi\u010Dni pregledi' : 'Dodatne evidencije'}</td></tr>
+<tr><th>Status</th><td>${doc.status === 'aktivan' ? '\u2713 Aktivan' : '\u2715 Istekao'}</td></tr>
+<tr><th>Datum izdavanja</th><td>${doc.datumIzdavanja ? new Date(doc.datumIzdavanja).toLocaleDateString('hr-HR') : '\u2014'}</td></tr>
+<tr><th>Datum isteka</th><td>${doc.datumIsteka ? new Date(doc.datumIsteka).toLocaleDateString('hr-HR') : '\u2014'}</td></tr>
+<tr><th>Napomena</th><td>${doc.napomena || '\u2014'}</td></tr>
+<tr><th>Datoteka</th><td>${doc.docName || '\u2014'}</td></tr>
+</table>
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">\u{1F5A8}\uFE0F Print</button>
+<script>setTimeout(()=>window.print(),500);</script>
+</body></html>`;
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(html); w.document.close(); }
     };
 
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
@@ -130,43 +169,45 @@ table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 9pt; 
 th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
 th { background: #e8eaf6; font-weight: 700; color: #283593; }
 tr:nth-child(even) { background: #fafafa; }
-.badge { padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 8pt; display: inline-block; }
 @media print { button { display: none !important; } }
 </style></head><body>
-<h1>📋 Dokumentacija za poslodavca</h1>
+<h1>\u{1F4CB} Dokumentacija za poslodavca</h1>
 <table>
 <thead><tr><th>#</th><th>Naziv</th><th>Status</th><th>Datum izdavanja</th><th>Datum isteka</th><th>Napomena</th></tr></thead>
 <tbody>
 ${toPrint.map((d, i) => `<tr>
-<td>${i + 1}</td><td>${d.naziv || '—'}</td>
-<td>${d.status === 'aktivan' ? '✓ Aktivan' : '✕ Istekao'}</td>
-<td>${d.datumIzdavanja ? new Date(d.datumIzdavanja).toLocaleDateString('hr-HR') : '—'}</td>
-<td>${d.datumIsteka ? new Date(d.datumIsteka).toLocaleDateString('hr-HR') : '—'}</td>
-<td>${d.napomena || '—'}</td></tr>`).join('')}
+<td>${i + 1}</td><td>${d.naziv || '\u2014'}</td>
+<td>${d.status === 'aktivan' ? '\u2713 Aktivan' : '\u2715 Istekao'}</td>
+<td>${d.datumIzdavanja ? new Date(d.datumIzdavanja).toLocaleDateString('hr-HR') : '\u2014'}</td>
+<td>${d.datumIsteka ? new Date(d.datumIsteka).toLocaleDateString('hr-HR') : '\u2014'}</td>
+<td>${d.napomena || '\u2014'}</td></tr>`).join('')}
 </tbody></table>
-<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">🖨️ Print</button>
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">\u{1F5A8}\uFE0F Print</button>
 <script>setTimeout(() => window.print(), 500);</script>
 </body></html>`;
         const w = window.open('', '_blank');
         if (w) { w.document.write(html); w.document.close(); }
     };
 
+    // ── Shared menu item style (matching trainings/workers pattern) ──
+    const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+
     const tabs = [
-        { key: 'obavezna', label: t('mandatoryDocs'), icon: '📋' },
-        { key: 'periodicni', label: t('periodicReviews'), icon: '🔄' },
-        { key: 'dodatne', label: t('additionalRecords'), icon: '📑' },
+        { key: 'obavezna', label: t('mandatoryDocs'), icon: '\u{1F4CB}' },
+        { key: 'periodicni', label: t('periodicReviews'), icon: '\u{1F504}' },
+        { key: 'dodatne', label: t('additionalRecords'), icon: '\u{1F4D1}' },
     ];
 
     return (
         <div className="animate-fadeIn">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>📋 {t('employerDocs')}</h1>
+            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>{'\u{1F4CB}'} {t('employerDocs')}</h1>
 
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Dokument' : 'Document'}</h2>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                            <h2>{editingId ? '\u270F\uFE0F' : '+'} {lang === 'bs' ? 'Dokument' : 'Document'}</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>{'\u2715'}</button>
                         </div>
                         <div className="modal-body">
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -175,7 +216,7 @@ ${toPrint.map((d, i) => `<tr>
                                     <input className="form-input" value={formData.naziv} onChange={(e) => updateField('naziv', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Kategorija' : 'Category'}<HelpTip text="Obavezna = dokumenti zakonom propisani za svakog poslodavca. Periodični = pregledi koji se ponavljaju redovno (PP aparati, hidranti, elektro). Dodatne = ostala dokumentacija korisna za firmu." /></label>
+                                    <label className="form-label">{lang === 'bs' ? 'Kategorija' : 'Category'}<HelpTip text="Obavezna = dokumenti zakonom propisani za svakog poslodavca. Periodi\u010Dni = pregledi koji se ponavljaju redovno (PP aparati, hidranti, elektro). Dodatne = ostala dokumentacija korisna za firmu." /></label>
                                     <select className="form-select" value={formData.kategorija} onChange={e => updateField('kategorija', e.target.value)}>
                                         <option value="obavezna">{t('mandatoryDocs')}</option>
                                         <option value="periodicni">{t('periodicReviews')}</option>
@@ -183,7 +224,7 @@ ${toPrint.map((d, i) => `<tr>
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{t('status')}<HelpTip text="Aktivan = dokument je važeći i na snazi. Istekao = rok važenja dokumenta je prošao, treba obnova." /></label>
+                                    <label className="form-label">{t('status')}<HelpTip text="Aktivan = dokument je va\u017Ee\u0107i i na snazi. Istekao = rok va\u017Eenja dokumenta je pro\u0161ao, treba obnova." /></label>
                                     <select className="form-select" value={formData.status} onChange={e => updateField('status', e.target.value)}>
                                         <option value="aktivan">{t('active')}</option>
                                         <option value="istekao">{t('expired')}</option>
@@ -202,7 +243,7 @@ ${toPrint.map((d, i) => `<tr>
                                     <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                                         <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileUpload} style={{ flex: 1, fontSize: '0.85rem' }} />
                                         {formData.docName && (
-                                            <button className="btn btn-outline btn-sm" onClick={() => handleDownloadFile(formData)} title={lang === 'bs' ? 'Preuzmi datoteku' : 'Download file'}>⬇️ {formData.docName}</button>
+                                            <button className="btn btn-outline btn-sm" onClick={() => handleDownloadFile(formData)} title={lang === 'bs' ? 'Preuzmi datoteku' : 'Download file'}>{'\u2B07\uFE0F'} {formData.docName}</button>
                                         )}
                                     </div>
                                 </div>
@@ -214,7 +255,7 @@ ${toPrint.map((d, i) => `<tr>
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
+                            <button className="btn btn-primary" onClick={handleSave}>{'\u{1F4BE}'} {t('save')}</button>
                         </div>
                     </div>
                 </div>
@@ -242,15 +283,15 @@ ${toPrint.map((d, i) => `<tr>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
                         <SavedFlash />
 
-                        {/* ── Bulk Actions Bar ── */}
+                        {/* ── Grupne akcije bar ── */}
                         {selected.size > 0 && (
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {selected.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                    {selected.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                                 </span>
-                                <button className="btn btn-ghost btn-sm" onClick={bulkPrint} title={lang === 'bs' ? 'Isprintaj odabrane' : 'Print selected'} style={{ fontWeight: 600 }}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-ghost btn-sm" onClick={bulkDownload} title={lang === 'bs' ? 'Preuzmi datoteke' : 'Download files'} style={{ fontWeight: 600, color: '#11998e' }}>⬇️ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
-                                <button className="btn btn-ghost btn-sm" onClick={bulkDelete} title={lang === 'bs' ? 'Obriši odabrane' : 'Delete selected'} style={{ fontWeight: 600, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary btn-sm" onClick={bulkPrint} title={lang === 'bs' ? 'Isprintaj odabrane' : 'Print selected'}>{'\u{1F5A8}\uFE0F'} {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-primary btn-sm" onClick={bulkDownload} title={lang === 'bs' ? 'Preuzmi datoteke' : 'Download files'}>{'\u{1F4D7}'} {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
+                                <button className="btn btn-danger btn-sm" onClick={bulkDelete} title={lang === 'bs' ? 'Obri\u0161i odabrane' : 'Delete selected'}>{'\u{1F5D1}\uFE0F'} {lang === 'bs' ? 'Obri\u0161i' : 'Delete'}</button>
                             </div>
                         )}
                     </div>
@@ -262,7 +303,7 @@ ${toPrint.map((d, i) => `<tr>
                                     <th style={{ width: 40, textAlign: 'center' }}>
                                         <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                     </th>
-                                    <th style={{ width: 60 }}>{t('actions')}</th>
+                                    <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
                                     <th onClick={() => toggleSort('docName')} style={thStyle('docName')}>{lang === 'bs' ? 'Datoteka' : 'File'}{sortIcon('docName')}</th>
                                     <th onClick={() => toggleSort('status')} style={thStyle('status')}>{t('status')}{sortIcon('status')}</th>
@@ -288,18 +329,44 @@ ${toPrint.map((d, i) => `<tr>
                                             <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                 <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                             </td>
-                                            {/* Actions dropdown */}
+                                            {/* Akcije button — green btn-primary, matching trainings/workers pattern */}
                                             <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === doc.id ? null : doc.id); }} style={{ padding: '0 8px', fontSize: '1rem', fontWeight: 900 }}>⋮</button>
-                                                    {openDropdownId === doc.id && (
-                                                        <div style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 160, padding: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                            <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', fontWeight: 600 }} onClick={() => { setOpenDropdownId(null); handleEdit(doc); }}>✏️ Otvori</button>
-                                                            {doc.docData && (
-                                                                <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: '#11998e' }} onClick={() => { setOpenDropdownId(null); handleDownloadFile(doc); }}>⬇️ Preuzmi</button>
-                                                            )}
-                                                            <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-                                                            <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: 'var(--danger)' }} onClick={() => { setOpenDropdownId(null); handleDelete(doc.id); }}>🗑️ Izbriši</button>
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (openMenuId === doc.id) { setOpenMenuId(null); return; }
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            menuButtonRef.current = e.currentTarget;
+                                                            const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                            const spaceAbove = rect.top - 8;
+                                                            const flipUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+                                                            setMenuPos(flipUp
+                                                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                            );
+                                                            setOpenMenuId(doc.id);
+                                                        }}>
+                                                        Akcije {'\u25BC'}
+                                                    </button>
+                                                    {openMenuId === doc.id && (
+                                                        <div data-menu style={{
+                                                            position: 'fixed',
+                                                            top: menuPos.top,
+                                                            bottom: menuPos.bottom,
+                                                            left: menuPos.left,
+                                                            zIndex: 9999,
+                                                            background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                                            borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                                                            minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
+                                                        }}>
+                                                            <button onClick={() => handleEdit(doc)} style={menuItemSt}>{'\u270F\uFE0F'} Otvori</button>
+                                                            <button onClick={() => handleCopy(doc)} style={menuItemSt}>{'\u{1F4CB}'} Kopiraj</button>
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                            <button onClick={() => handlePrintSingle(doc)} style={menuItemSt}>{'\u{1F5A8}\uFE0F'} Isprintaj</button>
+                                                            <button onClick={() => { setOpenMenuId(null); handleDownloadFile(doc); }} style={menuItemSt}>{'\u{1F4D7}'} Preuzmi</button>
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                            <button onClick={() => handleDelete(doc.id)} style={{ ...menuItemSt, color: 'var(--danger)' }}>{'\u{1F5D1}\uFE0F'} Izbri\u0161i</button>
                                                         </div>
                                                     )}
                                                 </div>
@@ -314,13 +381,13 @@ ${toPrint.map((d, i) => `<tr>
                                             </td>
                                             <td>
                                                 <span className={`badge ${doc.status === 'aktivan' ? 'badge-success' : 'badge-danger'}`}>
-                                                    {doc.status === 'aktivan' ? (lang === 'bs' ? '✓ Aktivan' : '✓ Active') : (lang === 'bs' ? '✕ Istekao' : '✕ Expired')}
+                                                    {doc.status === 'aktivan' ? (lang === 'bs' ? '\u2713 Aktivan' : '\u2713 Active') : (lang === 'bs' ? '\u2715 Istekao' : '\u2715 Expired')}
                                                 </span>
                                             </td>
                                             <td>{formatDate(doc.datumIzdavanja)}</td>
                                             <td style={{ color: isExpiring ? 'var(--warning)' : undefined, fontWeight: isExpiring ? 700 : undefined }}>
                                                 {doc.datumIsteka ? formatDate(doc.datumIsteka) : '-'}
-                                                {isExpiring && ' ⚠️'}
+                                                {isExpiring && ' \u26A0\uFE0F'}
                                             </td>
                                             <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{doc.napomena || '-'}</td>
                                         </tr>
@@ -339,7 +406,7 @@ ${toPrint.map((d, i) => `<tr>
 
 export default function EmployerDocsPage() {
     return (
-        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>U\u010Ditavanje...</div>}>
             <EmployerDocsInner />
         </Suspense>
     );
