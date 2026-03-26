@@ -238,6 +238,33 @@ export default function RiskAssessmentPage() {
         let savedId = editingId;
         if (editingId) update(COLLECTIONS.RISK_ASSESSMENTS, editingId, formData);
         else { const n = create(COLLECTIONS.RISK_ASSESSMENTS, formData); savedId = n.id; setEditingId(savedId); }
+        
+        // --- Auto-sync Employer Docs "Akt procjene rizika zaštite na radu" ---
+        try {
+            const docs = getAll(COLLECTIONS.EMPLOYER_DOCS);
+            const match = docs.find(d => d.naziv?.toLowerCase().includes('akt procjene rizika zaštite na radu') || d.naziv?.toLowerCase().includes('akt procjene rizika zastite na radu'));
+            const datumIzd = formData.datumIzrade || todayISO();
+            const dateObj = new Date(datumIzd);
+            dateObj.setFullYear(dateObj.getFullYear() + 2);
+            const datumIst = dateObj.toISOString().split('T')[0];
+
+            if (match) {
+                update(COLLECTIONS.EMPLOYER_DOCS, match.id, { datumIzdavanja: datumIzd, datumIsteka: datumIst, status: 'aktivan' });
+            } else {
+                create(COLLECTIONS.EMPLOYER_DOCS, {
+                    naziv: 'Akt procjene rizika zaštite na radu',
+                    kategorija: 'obavezna',
+                    status: 'aktivan',
+                    datumIzdavanja: datumIzd,
+                    datumIsteka: datumIst,
+                    napomena: 'Automatski ažurirano iz modula Procjena rizika'
+                });
+            }
+        } catch (e) {
+            console.error('Error auto-syncing employer docs:', e);
+        }
+        // -------------------------------------------------------------------
+
         loadData();
         showFlash();
     };

@@ -21,7 +21,7 @@ function EmployerDocsInner() {
     const [activeTab, setActiveTab] = useState('obavezna');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [formData, setFormData] = useState({ naziv: '', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '' });
+    const [formData, setFormData] = useState({ naziv: '', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '' });
 
     const loadData = useCallback(() => { setDocs(getAll(COLLECTIONS.EMPLOYER_DOCS)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
@@ -38,8 +38,8 @@ function EmployerDocsInner() {
         }
     }, [highlightId, docs]);
 
-    const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '' }); setEditingId(null); setShowForm(true); };
-    const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
+    const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '' }); setEditingId(null); setShowForm(true); };
+    const handleEdit = (item) => { setFormData({ docData: null, docName: '', docType: '', ...item }); setEditingId(item.id); setShowForm(true); };
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, formData); } else { create(COLLECTIONS.EMPLOYER_DOCS, formData); }
@@ -50,6 +50,25 @@ function EmployerDocsInner() {
     };
 
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { await alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB!' : 'File must be under 5MB!'); return; }
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            setFormData(prev => ({ ...prev, docData: ev.target.result, docName: file.name, docType: file.type }));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleDownloadFromForm = (doc) => {
+        if (!doc.docData) return;
+        const a = document.createElement('a');
+        a.href = doc.docData;
+        a.download = doc.docName || doc.naziv;
+        a.click();
+    };
 
     const filtered = docs.filter(d => d.kategorija === activeTab);
 
@@ -100,6 +119,15 @@ function EmployerDocsInner() {
                                     <input className="form-input" type="date" value={formData.datumIsteka} onChange={e => updateField('datumIsteka', e.target.value)} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">{lang === 'bs' ? 'Povezana datoteka (opcionalno)' : 'Attached file (optional)'}</label>
+                                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 16px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+                                        <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileUpload} style={{ flex: 1, fontSize: '0.85rem' }} />
+                                        {formData.docName && (
+                                            <button className="btn btn-outline btn-sm" onClick={() => handleDownloadFromForm(formData)} title={lang === 'bs' ? 'Preuzmi datoteku' : 'Download file'}>⬇️ {formData.docName}</button>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label className="form-label">{t('note')}</label>
                                     <textarea className="form-textarea" value={formData.napomena} onChange={e => updateField('napomena', e.target.value)} rows={3} />
                                 </div>
@@ -142,6 +170,7 @@ function EmployerDocsInner() {
                                 <tr>
                                     <th>{t('actions')}</th>
                                     <th>{t('name')}</th>
+                                    <th>{lang === 'bs' ? 'Datoteka' : 'File'}</th>
                                     <th>{t('status')}</th>
                                     <th>{lang === 'bs' ? 'Datum izdavanja' : 'Issue date'}</th>
                                     <th>{lang === 'bs' ? 'Datum isteka' : 'Expiry date'}</th>
@@ -150,7 +179,7 @@ function EmployerDocsInner() {
                             </thead>
                             <tbody>
                                 {filtered.length === 0 ? (
-                                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : filtered.map((doc) => {
                                     const isExpiring = doc.datumIsteka && new Date(doc.datumIsteka) < new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
                                     const isHighlighted = doc.id === highlightId;
@@ -168,6 +197,13 @@ function EmployerDocsInner() {
                                                 </div>
                                             </td>
                                             <td style={{ fontWeight: 600 }}>{doc.naziv}</td>
+                                            <td>
+                                                {doc.docData ? (
+                                                    <span style={{ textDecoration: 'underline', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }} onClick={(e) => { e.stopPropagation(); handleDownloadFromForm(doc); }} title={lang === 'bs' ? 'Preuzmi' : 'Download'}>
+                                                        {doc.docName || doc.naziv}
+                                                    </span>
+                                                ) : '-'}
+                                            </td>
                                             <td>
                                                 <span className={`badge ${doc.status === 'aktivan' ? 'badge-success' : 'badge-danger'}`}>
                                                     {doc.status === 'aktivan' ? (lang === 'bs' ? '✓ Aktivan' : '✓ Active') : (lang === 'bs' ? '✕ Istekao' : '✕ Expired')}

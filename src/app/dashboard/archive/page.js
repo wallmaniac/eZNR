@@ -33,6 +33,7 @@ const FORM_SOURCES = [
   { col: 'formsRo2',      label: 'Obrazac RO-2' },
   { col: 'referralsNr1',  label: 'Lj. uputnica (NR1)' },
   { col: 'referralsRa1',  label: 'Lj. uputnica (RA1)' },
+  { col: 'employerDocs',  label: 'Dokumentacija za poslodavca' },
 ];
 
 export default function ArchivePage() {
