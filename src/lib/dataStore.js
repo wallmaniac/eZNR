@@ -53,6 +53,13 @@ const _AL_COLS = {
     diseases: { cat: 'worker', icon: '\uD83C\uDFE5', label: d => `Bolest: ${d.radnikIme || ''}` },
     workplaces: { cat: 'company', icon: '\uD83D\uDD27', label: d => `Radno mjesto: ${d.naziv || ''}` },
     orgUnits: { cat: 'company', icon: '\uD83C\uDFE2', label: d => `Org. jedinica: ${d.naziv || ''}` },
+    medicalExams: { cat: 'worker', icon: '\uD83E\uDE7A', label: d => `Med. pregled: ${d.radnikIme || d.naziv || ''}` },
+    trainings: { cat: 'document', icon: '\uD83C\uDFAC', label: d => `Obuka: ${d.naziv || ''}` },
+    questionnaires: { cat: 'document', icon: '\uD83D\uDCDD', label: d => `Upitnik: ${d.naziv || ''}` },
+    sistematizacije: { cat: 'company', icon: '\uD83D\uDCD1', label: d => `Sistematizacija: ${d.nazivPosla || d.opisPoslova?.substring(0, 30) || ''}` },
+    calendarEvents: { cat: 'certificate', icon: '\uD83D\uDCC5', label: d => `Događaj: ${d.opis || d.tip || ''}` },
+    riskAssessments: { cat: 'document', icon: '\u26A0\uFE0F', label: d => `Procjena rizika: ${d.naziv || ''}` },
+    requests: { cat: 'document', icon: '\uD83D\uDCE9', label: d => `Zahtjev: ${d.naziv || d.tip || ''}` },
 };
 const _AL_VERBS = { create: 'Dodan(a)', update: 'A\u017euriran(a)', delete: 'Obrisan(a)' };
 

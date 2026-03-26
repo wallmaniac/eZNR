@@ -24,9 +24,9 @@ const COMPANY_SCOPED = [
     'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
     'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs',
     'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
-    'digitalArchive', 'requests', 'riskAssessments', 'isznrDocuments', 'isznrParties',
+    'digitalArchive', 'requests', 'riskAssessments', 'riskItems', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires', 'trainings',
-
+    'annualReports', 'medicalExams', 'sistematizacije', 'serviceLog',
 ];
 
 // Global collections (shared/reference data)

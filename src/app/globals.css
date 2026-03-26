@@ -1468,6 +1468,123 @@ a:hover {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
+/* EMPTY STATE — consistent look across all list pages                       */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-muted);
+}
+.empty-state-icon {
+  font-size: 3rem;
+  margin-bottom: 12px;
+  opacity: 0.7;
+}
+.empty-state-title {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--text-light);
+  margin-bottom: 4px;
+}
+.empty-state-subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* PRINT EXPORT BUTTON                                                       */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+.print-export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-light);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.print-export-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-glow);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* RESPONSIVE — Mobile/Tablet breakpoints                                    */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Tablet: ≤ 1024px */
+@media (max-width: 1024px) {
+  .modal { max-width: 90vw !important; }
+}
+
+/* Mobile: ≤ 768px */
+@media (max-width: 768px) {
+  h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.15rem; }
+
+  /* Stat cards → 2-column */
+  [style*="gridAutoFlow: 'column'"],
+  [style*="gridAutoFlow:'column'"],
+  [style*="grid-auto-flow: column"],
+  [style*="grid-auto-flow:column"] {
+    grid-auto-flow: row !important;
+    grid-auto-columns: unset !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Grid forms → single column */
+  [style*="gridTemplateColumns: '1fr 1fr'"],
+  [style*="gridTemplateColumns:'1fr 1fr'"],
+  [style*="gridTemplateColumns: '2fr 1fr 1fr'"],
+  [style*="gridTemplateColumns: '1fr 1fr 80px 1fr'"],
+  [style*="gridTemplateColumns: '1fr 1fr 100px'"],
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns: 2fr 1fr 1fr"],
+  [style*="grid-template-columns: repeat(3"],
+  [style*="grid-template-columns: repeat(4"],
+  [style*="grid-template-columns: repeat(5"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modals fill width */
+  .modal { max-width: 95vw !important; width: 95vw !important; }
+  .modal-body { padding: 16px !important; }
+  .modal-header { padding: 12px 16px !important; }
+
+  /* Cards compact */
+  .card-body { padding: 16px; }
+  .card-header { padding: 12px 16px; }
+
+  /* Tables: scroll horizontal */
+  .data-table { min-width: 600px; }
+}
+
+/* Small phone: ≤ 480px */
+@media (max-width: 480px) {
+  h1 { font-size: 1.2rem; }
+
+  /* Stat cards → full width */
+  [style*="gridAutoFlow: 'column'"],
+  [style*="grid-auto-flow: column"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .btn { padding: 8px 14px; font-size: 0.8rem; }
+  .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
 /* PRINT STYLES — hides app shell, shows only main content as a clean doc    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 @media print {

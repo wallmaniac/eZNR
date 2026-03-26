@@ -323,6 +323,86 @@ export default function DashboardPage() {
                 )}
             </div>
 
+            {/* ── Actionable Alerts Widget ── */}
+            {(() => {
+                const now = new Date();
+                const d30 = 30 * 86400000;
+                const expiringCerts = certs.filter(c => { if (!c.vrijediDo) return false; const diff = new Date(c.vrijediDo) - now; return diff >= 0 && diff <= d30; }).map(c => {
+                    const w = workers.find(wk => wk.id === c.workerId);
+                    return { ...c, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
+                });
+                const expiredCerts = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < now).map(c => {
+                    const w = workers.find(wk => wk.id === c.workerId);
+                    return { ...c, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
+                });
+                const overdueMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < now).map(m => {
+                    const w = workers.find(wk => wk.id === m.workerId);
+                    return { ...m, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
+                });
+                const equipDue = equipment.filter(e => e.iduci && new Date(e.iduci) < now);
+                const total = expiringCerts.length + expiredCerts.length + overdueMed.length + equipDue.length;
+                if (total === 0) return null;
+                return (
+                    <div className="card" style={{ marginBottom: 20, border: '1px solid rgba(244,67,54,0.2)', background: 'rgba(244,67,54,0.02)' }}>
+                        <div className="card-body" style={{ padding: '16px 20px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, fontWeight: 700, fontFamily: 'var(--font-heading)', color: 'var(--danger)' }}>
+                                🚨 {lang === 'bs' ? `Hitno — ${total} stavki zahtijeva pažnju` : `Urgent — ${total} items need attention`}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
+                                {expiredCerts.length > 0 && (
+                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.12)' }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--danger)', marginBottom: 6 }}>📜 {lang === 'bs' ? 'Istekla uvjerenja' : 'Expired certificates'} ({expiredCerts.length})</div>
+                                        {expiredCerts.slice(0, 4).map(c => (
+                                            <div key={c.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer', display: 'flex', gap: 6 }}
+                                                onClick={() => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates')}>
+                                                <span style={{ opacity: 0.6 }}>•</span>
+                                                <span><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</span>
+                                            </div>
+                                        ))}
+                                        {expiredCerts.length > 4 && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>...i još {expiredCerts.length - 4}</div>}
+                                    </div>
+                                )}
+                                {expiringCerts.length > 0 && (
+                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,152,0,0.06)', border: '1px solid rgba(255,152,0,0.12)' }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--warning)', marginBottom: 6 }}>⏰ {lang === 'bs' ? 'Ističe za 30 dana' : 'Expiring in 30 days'} ({expiringCerts.length})</div>
+                                        {expiringCerts.slice(0, 4).map(c => (
+                                            <div key={c.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer', display: 'flex', gap: 6 }}
+                                                onClick={() => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates')}>
+                                                <span style={{ opacity: 0.6 }}>•</span>
+                                                <span><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka} ({formatDate(c.vrijediDo)})</span>
+                                            </div>
+                                        ))}
+                                        {expiringCerts.length > 4 && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 4 }}>...i još {expiringCerts.length - 4}</div>}
+                                    </div>
+                                )}
+                                {overdueMed.length > 0 && (
+                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(244,67,54,0.06)', border: '1px solid rgba(244,67,54,0.12)' }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--danger)', marginBottom: 6 }}>🩺 {lang === 'bs' ? 'Zakasneli med. pregledi' : 'Overdue medical exams'} ({overdueMed.length})</div>
+                                        {overdueMed.slice(0, 4).map(m => (
+                                            <div key={m.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer' }}
+                                                onClick={() => router.push('/dashboard/medical-exams')}>
+                                                <span style={{ opacity: 0.6 }}>• </span><strong>{m.wName || '?'}</strong>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                                {equipDue.length > 0 && (
+                                    <div style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,152,0,0.06)', border: '1px solid rgba(255,152,0,0.12)' }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--warning)', marginBottom: 6 }}>⚙️ {lang === 'bs' ? 'Zakasneli pregledi opreme' : 'Overdue equipment inspections'} ({equipDue.length})</div>
+                                        {equipDue.slice(0, 4).map(eq => (
+                                            <div key={eq.id} style={{ fontSize: '0.78rem', color: 'var(--text)', padding: '2px 0', cursor: 'pointer' }}
+                                                onClick={() => router.push('/dashboard/equipment?openItem=' + eq.id)}>
+                                                <span style={{ opacity: 0.6 }}>• </span>{eq.naziv}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                );
+            })()}
+
             {/* Calendar */}
             <div className="card" style={{ marginBottom: 24 }}>
                 <div className="card-body">

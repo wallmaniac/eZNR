@@ -22,6 +22,14 @@ const PPE_COLS = [
     'radnik_ime', 'radnik_prezime', 'radnik_jmbg',
     'naziv', 'datumZaduzenja', 'datumRazduzenja', 'kolicina'
 ];
+const EQUIP_COLS = [
+    'naziv', 'vrsta', 'tip', 'tvBroj', 'invBroj',
+    'proizvodjac', 'godinaProizvodnje', 'posljednji', 'iduci', 'status'
+];
+const MEDEXAM_COLS = [
+    'radnik_ime', 'radnik_prezime', 'radnik_jmbg',
+    'tipPregleda', 'datum', 'vrijediDo', 'rezultat', 'napomena'
+];
 
 function generateTemplate() {
     const wb = XLSX.utils.book_new();
@@ -55,7 +63,24 @@ function generateTemplate() {
     wsP['!cols'] = PPE_COLS.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, wsP, 'OZO');
 
-    // Sheet 4: Upute
+    // Sheet 4: Oprema
+    const wsE = XLSX.utils.aoa_to_sheet([
+        EQUIP_COLS,
+        ['Mostna dizalica MD-200', 'Dizalice', 'Mostna', 'MD-200-2020', 'INV-001',
+         'GANZ', '2019', '2025-06-15', '2026-06-15', 'active'],
+    ]);
+    wsE['!cols'] = EQUIP_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsE, 'Oprema');
+
+    // Sheet 5: Ljekarski pregledi
+    const wsM = XLSX.utils.aoa_to_sheet([
+        MEDEXAM_COLS,
+        ['Pero', 'Perić', '0101123456789', 'Periodični', '2024-06-15', '2026-06-15', 'Sposoban', ''],
+    ]);
+    wsM['!cols'] = MEDEXAM_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsM, 'Ljekarski');
+
+    // Sheet 6: Upute
     const wsI = XLSX.utils.aoa_to_sheet([
         ['UPUTE ZA POPUNJAVANJE'],
         [],
@@ -76,6 +101,16 @@ function generateTemplate() {
         ['  - datumZaduzenja format: YYYY-MM-DD'],
         ['  - datumRazduzenja: ostavite prazno ako nije razduženo'],
         ['  - kolicina: cijeli broj (npr. 1)'],
+        [],
+        ['OPREMA sheet:'],
+        ['  - naziv: obavezno polje'],
+        ['  - status: active / expired / inactive'],
+        ['  - datumi format: YYYY-MM-DD'],
+        [],
+        ['LJEKARSKI sheet:'],
+        ['  - Povezi radnika s radnik_jmbg ILI radnik_ime + radnik_prezime'],
+        ['  - tipPregleda: Prethodni / Periodični / Izvanredni / Kontrolni'],
+        ['  - rezultat: Sposoban / Nesposoban / Uvjetno sposoban'],
     ]);
     wsI['!cols'] = [{ wch: 60 }];
     XLSX.utils.book_append_sheet(wb, wsI, 'Upute');
@@ -127,7 +162,9 @@ export default function ImportPage() {
                 const workers = parseSheet(wb, 'Radnici');
                 const certs = parseSheet(wb, 'Uvjerenja');
                 const ppe = parseSheet(wb, 'OZO');
-                setPreview({ workers, certs, ppe });
+                const equip = parseSheet(wb, 'Oprema');
+                const medExams = parseSheet(wb, 'Ljekarski');
+                setPreview({ workers, certs, ppe, equip, medExams });
                 setStep('preview');
             } catch (err) {
                 setFileError('Greška pri čitanju fajla: ' + err.message);
@@ -150,16 +187,15 @@ export default function ImportPage() {
 
     const handleImport = () => {
         setImporting(true);
-        const { workers: wRows, certs: cRows, ppe: pRows } = preview;
-        let wCreated = 0, wSkipped = 0, cCreated = 0, cSkipped = 0, pCreated = 0;
+        const { workers: wRows, certs: cRows, ppe: pRows, equip: eRows = [], medExams: mRows = [] } = preview;
+        let wCreated = 0, wSkipped = 0, cCreated = 0, cSkipped = 0, pCreated = 0, eCreated = 0, mCreated = 0;
 
         // 1. Import workers
         const existingWorkers = getAll(COLLECTIONS.WORKERS);
-        const newWorkerMap = {}; // name→id for cert/ppe linking
+        const newWorkerMap = {};
 
         wRows.forEach(row => {
             if (!row.ime || !row.prezime) { wSkipped++; return; }
-            // Skip if JMBG already exists
             if (row.jmbg && existingWorkers.find(w => w.jmbg === String(row.jmbg).trim())) {
                 const existing = existingWorkers.find(w => w.jmbg === String(row.jmbg).trim());
                 newWorkerMap[String(row.jmbg).trim()] = existing.id;
@@ -199,7 +235,6 @@ export default function ImportPage() {
             wCreated++;
         });
 
-        // Reload workers after creating them
         const allWorkers = getAll(COLLECTIONS.WORKERS);
 
         // 2. Import certificates
@@ -239,7 +274,45 @@ export default function ImportPage() {
             pCreated++;
         });
 
-        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated });
+        // 4. Import Equipment
+        eRows.forEach(row => {
+            if (!row.naziv) return;
+            create(COLLECTIONS.EQUIPMENT, {
+                companyId,
+                naziv: String(row.naziv || '').trim(),
+                vrsta: String(row.vrsta || '').trim(),
+                tip: String(row.tip || '').trim(),
+                tvBroj: String(row.tvBroj || '').trim(),
+                invBroj: String(row.invBroj || '').trim(),
+                proizvodjac: String(row.proizvodjac || '').trim(),
+                godinaProizvodnje: String(row.godinaProizvodnje || '').trim(),
+                posljednji: String(row.posljednji || '').trim(),
+                iduci: String(row.iduci || '').trim(),
+                status: String(row.status || 'active').trim(),
+                orgJedinicaId: '', zaduzenOsoba: '', datumUpisa: '', uPrimjeniOd: '',
+                izvanUpotrebeOd: '', evidencijskiBroj: '', brojMjernihMjesta: 0, serijskiBroj: '',
+            });
+            eCreated++;
+        });
+
+        // 5. Import Medical Exams
+        mRows.forEach(row => {
+            const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
+            if (!worker) return;
+            create(COLLECTIONS.MEDICAL_EXAMS, {
+                workerId: worker.id,
+                companyId: worker.companyId || companyId,
+                radnikIme: `${worker.ime} ${worker.prezime}`,
+                tipPregleda: String(row.tipPregleda || '').trim(),
+                datum: String(row.datum || '').trim(),
+                vrijediDo: String(row.vrijediDo || '').trim(),
+                rezultat: String(row.rezultat || 'Sposoban').trim(),
+                napomena: String(row.napomena || '').trim(),
+            });
+            mCreated++;
+        });
+
+        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, eCreated, mCreated });
         setImporting(false);
         setStep('done');
     };
@@ -346,16 +419,18 @@ export default function ImportPage() {
             {step === 'preview' && preview && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                     {/* Summary cards */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
                         {[
                             { label: lang === 'bs' ? 'Radnika' : 'Workers', count: preview.workers.length, icon: '👷', color: 'var(--primary)' },
                             { label: lang === 'bs' ? 'Uvjerenja' : 'Certificates', count: preview.certs.length, icon: '📜', color: '#9C27B0' },
                             { label: 'OZO / PPE', count: preview.ppe.length, icon: '🦺', color: '#FF9800' },
-                        ].map(({ label, count, icon, color }) => (
-                            <div key={label} className="card" style={{ textAlign: 'center', padding: 20 }}>
-                                <div style={{ fontSize: '2rem', marginBottom: 4 }}>{icon}</div>
-                                <div style={{ fontSize: '2rem', fontWeight: 800, color }}>{count}</div>
-                                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{label}</div>
+                            { label: lang === 'bs' ? 'Oprema' : 'Equipment', count: (preview.equip || []).length, icon: '⚙️', color: '#607D8B' },
+                            { label: lang === 'bs' ? 'Ljekarski' : 'Medical', count: (preview.medExams || []).length, icon: '🩺', color: '#E91E63' },
+                        ].filter(x => x.count > 0).map(({ label, count, icon, color }) => (
+                            <div key={label} className="card" style={{ textAlign: 'center', padding: 16 }}>
+                                <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{icon}</div>
+                                <div style={{ fontSize: '1.8rem', fontWeight: 800, color }}>{count}</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{label}</div>
                             </div>
                         ))}
                     </div>
@@ -425,17 +500,19 @@ export default function ImportPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', textAlign: 'center' }}>
                     <div style={{ fontSize: '4rem' }}>✅</div>
                     <h2>{lang === 'bs' ? 'Import završen!' : 'Import complete!'}</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, width: '100%', maxWidth: 600 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, width: '100%', maxWidth: 700 }}>
                         {[
                             { label: lang === 'bs' ? 'Radnika kreirano' : 'Workers created', val: result.wCreated, color: 'var(--primary)' },
                             { label: lang === 'bs' ? 'Radnika preskočeno' : 'Workers skipped', val: result.wSkipped, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'Uvjerenja kreirano' : 'Certs created', val: result.cCreated, color: '#9C27B0' },
                             { label: lang === 'bs' ? 'Uvjerenja preskočeno' : 'Certs skipped', val: result.cSkipped, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'OZO kreirano' : 'PPE created', val: result.pCreated, color: '#FF9800' },
-                        ].map(({ label, val, color }) => (
-                            <div key={label} className="card" style={{ padding: 16, textAlign: 'center' }}>
-                                <div style={{ fontSize: '1.8rem', fontWeight: 800, color }}>{val}</div>
-                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{label}</div>
+                            { label: lang === 'bs' ? 'Oprema kreirano' : 'Equipment created', val: result.eCreated || 0, color: '#607D8B' },
+                            { label: lang === 'bs' ? 'Ljekarski kreirano' : 'Medical created', val: result.mCreated || 0, color: '#E91E63' },
+                        ].filter(x => x.val > 0).map(({ label, val, color }) => (
+                            <div key={label} className="card" style={{ padding: 14, textAlign: 'center' }}>
+                                <div style={{ fontSize: '1.6rem', fontWeight: 800, color }}>{val}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{label}</div>
                             </div>
                         ))}
                     </div>

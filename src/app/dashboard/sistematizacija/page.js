@@ -147,8 +147,10 @@ export default function SistematizacijaPage() {
 
             {/* Search */}
             <div style={{ marginBottom: 16 }}>
-                <input className="form-input" placeholder={lang === 'bs' ? '🔍 Pretraži radna mjesta...' : '🔍 Search workplaces...'} value={searchQ} onChange={e => setSearchQ(e.target.value)}
-                    style={{ maxWidth: 360 }} />
+                <div className="search-bar" style={{ maxWidth: 360 }}>
+                    <input placeholder={lang === 'bs' ? 'Pretraži radna mjesta...' : 'Search workplaces...'} value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+                </div>
             </div>
 
             {/* Workplaces Grid */}
