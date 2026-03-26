@@ -195,6 +195,7 @@ export function undoLastDelete() {
         });
         localStorage.setItem(UNDO_KEY, JSON.stringify(stack.slice(1)));
         window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
+        window.dispatchEvent(new CustomEvent('eznr:undo'));
         return entry;
     } catch { return null; }
 }

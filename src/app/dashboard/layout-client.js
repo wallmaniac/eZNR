@@ -14,6 +14,13 @@ export default function DashboardLayout({ children }) {
     const router = useRouter();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const [undoKey, setUndoKey] = useState(0);
+
+    useEffect(() => {
+        const handleUndo = () => setUndoKey(k => k + 1);
+        window.addEventListener('eznr:undo', handleUndo);
+        return () => window.removeEventListener('eznr:undo', handleUndo);
+    }, []);
 
     useEffect(() => {
         setMounted(true);
@@ -68,7 +75,7 @@ export default function DashboardLayout({ children }) {
                 transition: 'margin-left var(--transition-normal)',
                 minHeight: 'calc(100vh - var(--header-height))',
             }}>
-                <NavigationGuardProvider>
+                <NavigationGuardProvider key={undoKey}>
                     {children}
                 </NavigationGuardProvider>
             </main>
