@@ -316,19 +316,30 @@ export default function ImportPage() {
 
         const allWorkers = getAll(COLLECTIONS.WORKERS);
 
+        const existingCerts = getAll(COLLECTIONS.CERTIFICATES);
+        
         // 2. Import certificates
         cRows.forEach(row => {
             if (!row.naziv) { cSkipped++; return; }
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
             if (!worker) { cSkipped++; return; }
+            
+            // Duplicate check
+            const datum = String(row.datum || '').trim();
+            const naziv = String(row.naziv || '').trim();
+            if (existingCerts.some(c => c.workerId === worker.id && c.naziv === naziv && c.datum === datum)) {
+                cSkipped++;
+                return;
+            }
+
             create(COLLECTIONS.CERTIFICATES, {
                 workerId: worker.id,
                 companyId: worker.companyId || companyId,
-                ime: String(row.naziv || '').trim(),
-                naziv: String(row.naziv || '').trim(),
+                ime: naziv,
+                naziv: naziv,
                 oznaka: String(row.oznaka || '').trim(),
                 tipUvjerenja: String(row.tipUvjerenja || '').trim(),
-                datum: String(row.datum || '').trim(),
+                datum: datum,
                 vrijediDo: String(row.vrijediDo || '').trim(),
                 sposobnost: String(row.sposobnost || 'Sposoban').trim(),
                 ogranicenje: String(row.ogranicenje || '').trim(),
@@ -337,31 +348,55 @@ export default function ImportPage() {
             cCreated++;
         });
 
+        const existingPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
+
         // 3. Import PPE
+        let pSkipped = 0;
         pRows.forEach(row => {
-            if (!row.naziv) return;
+            if (!row.naziv) { pSkipped++; return; }
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
-            if (!worker) return;
+            if (!worker) { pSkipped++; return; }
+
+            // Duplicate check
+            const naziv = String(row.naziv || '').trim();
+            const datumZaduzenja = String(row.datumZaduzenja || '').trim();
+            if (existingPPE.some(p => p.workerId === worker.id && p.naziv === naziv && p.datumZaduzenja === datumZaduzenja)) {
+                pSkipped++;
+                return;
+            }
+
             create(COLLECTIONS.PPE_ASSIGNMENTS, {
                 workerId: worker.id,
                 companyId: worker.companyId || companyId,
-                naziv: String(row.naziv || '').trim(),
-                datumZaduzenja: String(row.datumZaduzenja || '').trim(),
+                naziv: naziv,
+                datumZaduzenja: datumZaduzenja,
                 datumRazduzenja: String(row.datumRazduzenja || '').trim(),
                 kolicina: parseInt(row.kolicina) || 1,
             });
             pCreated++;
         });
 
+        const existingEquip = getAll(COLLECTIONS.EQUIPMENT);
+
         // 4. Import Equipment
+        let eSkipped = 0;
         eRows.forEach(row => {
-            if (!row.naziv) return;
+            if (!row.naziv) { eSkipped++; return; }
+
+            // Duplicate check
+            const naziv = String(row.naziv || '').trim();
+            const tvBroj = String(row.tvBroj || '').trim();
+            if (existingEquip.some(e => e.companyId === companyId && e.naziv === naziv && e.tvBroj === tvBroj)) {
+                eSkipped++;
+                return;
+            }
+
             create(COLLECTIONS.EQUIPMENT, {
                 companyId,
-                naziv: String(row.naziv || '').trim(),
+                naziv: naziv,
                 vrsta: String(row.vrsta || '').trim(),
                 tip: String(row.tip || '').trim(),
-                tvBroj: String(row.tvBroj || '').trim(),
+                tvBroj: tvBroj,
                 invBroj: String(row.invBroj || '').trim(),
                 proizvodjac: String(row.proizvodjac || '').trim(),
                 godinaProizvodnje: String(row.godinaProizvodnje || '').trim(),
@@ -374,16 +409,28 @@ export default function ImportPage() {
             eCreated++;
         });
 
+        const existingMedExams = getAll(COLLECTIONS.MEDICAL_EXAMS);
+
         // 5. Import Medical Exams
+        let mSkipped = 0;
         mRows.forEach(row => {
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
-            if (!worker) return;
+            if (!worker) { mSkipped++; return; }
+
+            // Duplicate check
+            const tipPregleda = String(row.tipPregleda || '').trim();
+            const datum = String(row.datum || '').trim();
+            if (existingMedExams.some(m => m.workerId === worker.id && m.tipPregleda === tipPregleda && m.datum === datum)) {
+                mSkipped++;
+                return;
+            }
+
             create(COLLECTIONS.MEDICAL_EXAMS, {
                 workerId: worker.id,
                 companyId: worker.companyId || companyId,
                 radnikIme: `${worker.ime} ${worker.prezime}`,
-                tipPregleda: String(row.tipPregleda || '').trim(),
-                datum: String(row.datum || '').trim(),
+                tipPregleda: tipPregleda,
+                datum: datum,
                 vrijediDo: String(row.vrijediDo || '').trim(),
                 rezultat: String(row.rezultat || 'Sposoban').trim(),
                 napomena: String(row.napomena || '').trim(),
@@ -391,7 +438,7 @@ export default function ImportPage() {
             mCreated++;
         });
 
-        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, eCreated, mCreated });
+        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped });
         setImporting(false);
         setStep('done');
     };
@@ -591,8 +638,11 @@ export default function ImportPage() {
                             { label: lang === 'bs' ? 'Uvjerenja kreirano' : 'Certs created', val: result.cCreated, color: '#9C27B0' },
                             { label: lang === 'bs' ? 'Uvjerenja preskočeno' : 'Certs skipped', val: result.cSkipped, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'OZO kreirano' : 'PPE created', val: result.pCreated, color: '#FF9800' },
+                            { label: lang === 'bs' ? 'OZO preskočeno' : 'PPE skipped', val: result.pSkipped, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'Oprema kreirano' : 'Equipment created', val: result.eCreated || 0, color: '#607D8B' },
+                            { label: lang === 'bs' ? 'Oprema preskočeno' : 'Equipment skipped', val: result.eSkipped || 0, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'Ljekarski kreirano' : 'Medical created', val: result.mCreated || 0, color: '#E91E63' },
+                            { label: lang === 'bs' ? 'Ljekarski preskočeno' : 'Medical skipped', val: result.mSkipped || 0, color: 'var(--text-muted)' },
                         ].filter(x => x.val > 0).map(({ label, val, color }) => (
                             <div key={label} className="card" style={{ padding: 14, textAlign: 'center' }}>
                                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color }}>{val}</div>
