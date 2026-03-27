@@ -1,14 +1,16 @@
 'use client';
 import { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
+import { getAll, create, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { logPPEAssigned } from '@/lib/activityLog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import { useDialog } from '@/hooks/useDialog';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
+  const { confirm, DialogRenderer } = useDialog();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewWorkerId, setViewWorkerId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -29,6 +31,35 @@ export default function WorkerPPEPage() {
 
   // Date-aware sort: datumZaduzenja is stored as ISO string "yyyy-mm-dd" — sorts correctly
   const { sorted: sortedRows, toggleSort, sortIcon, thStyle } = useSortedList(rows, 'workerName');
+
+  const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const [selectedIds, setSelectedIds] = useState(new Set());
+
+  const toggleAll = (e) => {
+    if (e.target.checked) setSelectedIds(new Set(sortedRows.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) return;
+    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} zaduženja?` : `Delete ${selectedIds.size} assignments?`)) {
+        for (let id of selectedIds) remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
+        setSelectedIds(new Set());
+        setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
+    }
+  };
+  
+  const handleDelete = async (id) => {
+    if (await confirm(lang === 'bs' ? 'Obrisati zaduženje?' : 'Delete assignment?')) {
+        remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
+        setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
+    }
+  };
 
   const handleSave = () => {
     if (!addForm.workerId || !addForm.naziv.trim()) return;
@@ -57,13 +88,14 @@ export default function WorkerPPEPage() {
 
   const clickableName = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' };
   const clickableNaziv = { background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 500, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' };
+  const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
   return (
     <>
+      <DialogRenderer />
       <div className="animate-fadeIn">
         <h1 style={{ marginBottom: 24 }}>🦺 {t('workerPPE')}</h1>
         <div className="card"><div className="card-body">
-          {/* Toolbar — same pattern as worker-certificates */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <button className="btn btn-primary btn-sm" onClick={openModal}>
               + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
@@ -79,19 +111,57 @@ export default function WorkerPPEPage() {
               />
               {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
             </div>
-            <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>{sortedRows.length} {t('records')}</span>
+            {selectedIds.size > 0 && (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                      {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                  </span>
+                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+              </div>
+            )}
+            {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>{sortedRows.length} {t('records')}</span>}
           </div>
 
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
+            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRows.length && sortedRows.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+            <th style={{ width: 90 }}>{t('actions')}</th>
             <th style={thStyle('workerName')} onClick={() => toggleSort('workerName')}>{t('worker')}{sortIcon('workerName')}</th>
             <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
             <th style={thStyle('datumZaduzenja')} onClick={() => toggleSort('datumZaduzenja')}>{t('assignmentDate')}{sortIcon('datumZaduzenja')}</th>
             <th style={thStyle('kolicina')} onClick={() => toggleSort('kolicina')}>{lang === 'bs' ? 'Količina' : 'Quantity'}{sortIcon('kolicina')}</th>
           </tr></thead><tbody>
               {sortedRows.length === 0
-                ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                 : sortedRows.map((r, idx) => (
-                  <tr key={r.id || idx}>
+                  <tr key={r.id || idx} style={{ transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                    <td style={{ textAlign: 'center' }}>
+                      <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                    </td>
+                    <td>
+                      <div style={{ position: 'relative' }}>
+                        <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => {
+                            e.stopPropagation();
+                            if (actionMenuId === r.id) { setActionMenuId(null); return; }
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const spaceBelow = window.innerHeight - rect.bottom - 8;
+                            const spaceAbove = rect.top - 8;
+                            const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                            setMenuPos(flipUp
+                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                            );
+                            setActionMenuId(r.id);
+                        }}>Akcije ▼</button>
+                        {actionMenuId === r.id && (
+                            <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                            <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                            </div>
+                            </>
+                        )}
+                      </div>
+                    </td>
                     <td>
                       <button style={clickableName} onClick={() => { if (r.workerId) setViewWorkerId(r.workerId); }} title={lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile'}>
                         {r.workerName}
