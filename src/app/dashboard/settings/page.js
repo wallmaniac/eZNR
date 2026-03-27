@@ -595,6 +595,19 @@ export default function SettingsPage() {
               label={lang === 'bs' ? 'Događaji ovog tjedna' : 'Events this week'}
               description={lang === 'bs' ? 'Prikaži nadolazeće kalendarske događaje' : 'Show upcoming calendar events'}
             />
+            <div style={{ marginTop: 12, padding: '16px 20px', background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12, color: 'var(--text)' }}>
+                {lang === 'bs' ? 'Prikazani događaji na kalendaru' : 'Events shown on calendar'}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <Toggle checked={notifSettings.calShowCerts ?? true} onChange={v => updateNotif('calShowCerts', v)} label={lang === 'bs' ? '📜 Uvjerenja radnika' : '📜 Worker certificates'} />
+                <Toggle checked={notifSettings.calShowEquip ?? true} onChange={v => updateNotif('calShowEquip', v)} label={lang === 'bs' ? '⚙️ Radna oprema' : '⚙️ Work equipment'} />
+                <Toggle checked={notifSettings.calShowDoc ?? true} onChange={v => updateNotif('calShowDoc', v)} label={lang === 'bs' ? '📄 Dokumenti' : '📄 Documents'} />
+                <Toggle checked={notifSettings.calShowRisk ?? true} onChange={v => updateNotif('calShowRisk', v)} label={lang === 'bs' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
+                <Toggle checked={notifSettings.calShowMed ?? true} onChange={v => updateNotif('calShowMed', v)} label={lang === 'bs' ? '🩺 Ljekarski pregledi' : '🩺 Medical exams'} />
+                <Toggle checked={notifSettings.calShowService ?? true} onChange={v => updateNotif('calShowService', v)} label={lang === 'bs' ? '🔧 Servisi' : '🔧 Services'} />
+              </div>
+            </div>
 
             {/* ── Admin-only notifications ── */}
             {isAdmin && (

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import {
     getAll, create, remove, removeWorkerCascade, COLLECTIONS, getAllForCompany, getRawAll, formatDate, getOrgUnitName, createForCompany,
 } from '@/lib/dataStore';
+import { getNotificationSettings } from '@/lib/systemMonitor';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useDialog } from '@/hooks/useDialog';
@@ -165,6 +166,7 @@ export default function DashboardPage() {
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [dayDetailDate, setDayDetailDate] = useState(null);
     const [dayDetailEvents, setDayDetailEvents] = useState([]);
+    const [notifSettings, setNotifSettings] = useState({});
     const [workerSearch, setWorkerSearch] = useState('');
     const [workerDropOpen, setWorkerDropOpen] = useState(false);
     const workerDropRef = useRef(null);
@@ -188,6 +190,7 @@ export default function DashboardPage() {
         const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
             if (workerDropRef.current && !workerDropRef.current.contains(e.target)) setWorkerDropOpen(false); };
         document.addEventListener('mousedown', handleClick);
+        setNotifSettings(getNotificationSettings() || {});
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
@@ -203,72 +206,85 @@ export default function DashboardPage() {
     const autoEvents = useMemo(() => {
         const events = [];
         // Certificates — vrijediDo
-        certs.forEach(c => {
-            if (!c.vrijediDo) return;
-            const w = workers.find(wk => wk.id === c.workerId);
-            const wName = w ? `${w.ime} ${w.prezime}` : '';
-            events.push({
-                id: `auto-cert-${c.id}`,
-                datum: c.vrijediDo,
-                tip: 'cert',
-                opis: `${c.ime || c.oznaka || 'Uvjerenje'}${wName ? ` — ${wName}` : ''}`,
-                auto: true,
-                sourceId: c.id,
-                companyId: c.companyId,
-            });
-        });
-        // Equipment — iduci (next inspection)
-        equipment.forEach(eq => {
-            if (!eq.iduci) return;
-            events.push({
-                id: `auto-equip-${eq.id}`,
-                datum: eq.iduci,
-                tip: 'equip',
-                opis: `${eq.naziv || eq.invBroj || 'Oprema'}`,
-                auto: true,
-                sourceId: eq.id,
-                companyId: eq.companyId,
-            });
-        });
-        // Employer docs — datumIsteka
-        employerDocs.forEach(d => {
-            if (!d.datumIsteka) return;
-            events.push({
-                id: `auto-doc-${d.id}`,
-                datum: d.datumIsteka,
-                tip: 'doc',
-                opis: `${d.naziv || 'Dokument'}`,
-                auto: true,
-                sourceId: d.id,
-                companyId: d.companyId,
-            });
-        });
-        // Risk Assessment Measures — rokProvedbe
-        riskAssessments.forEach(ra => {
-            if (ra.status !== 'aktivan') return;
-            const items = riskItems.filter(ri => ri.procjenaId === ra.id && ri.rokProvedbe && ri.predlozeneMjere);
-            items.forEach(ri => {
+        if (notifSettings.calShowCerts !== false) {
+            certs.forEach(c => {
+                if (!c.vrijediDo) return;
+                const w = workers.find(wk => wk.id === c.workerId);
+                const wName = w ? `${w.ime} ${w.prezime}` : '';
                 events.push({
-                    id: `auto-risk-${ri.id}`,
-                    datum: ri.rokProvedbe,
-                    tip: 'risk',
-                    opis: `Mjera: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length > 30 ? '...' : ''} (${ra.nazivTvrtke || 'Procjena'})`,
+                    id: `auto-cert-${c.id}`,
+                    datum: (c.vrijediDo || '').split('T')[0],
+                    tip: 'cert',
+                    opis: `${c.ime || c.oznaka || 'Uvjerenje'}${wName ? ` — ${wName}` : ''}`,
                     auto: true,
-                    sourceId: ri.id,
-                    companyId: ra.companyId,
+                    sourceId: c.id,
+                    companyId: c.companyId,
                 });
             });
-        });
+        }
+        // Equipment — iduci (next inspection)
+        if (notifSettings.calShowEquip !== false) {
+            equipment.forEach(eq => {
+                if (!eq.iduci) return;
+                events.push({
+                    id: `auto-equip-${eq.id}`,
+                    datum: (eq.iduci || '').split('T')[0],
+                    tip: 'equip',
+                    opis: `${eq.naziv || eq.invBroj || 'Oprema'}`,
+                    auto: true,
+                    sourceId: eq.id,
+                    companyId: eq.companyId,
+                });
+            });
+        }
+        // Employer docs — datumIsteka
+        if (notifSettings.calShowDoc !== false) {
+            employerDocs.forEach(d => {
+                if (!d.datumIsteka) return;
+                events.push({
+                    id: `auto-doc-${d.id}`,
+                    datum: (d.datumIsteka || '').split('T')[0],
+                    tip: 'doc',
+                    opis: `${d.naziv || 'Dokument'}`,
+                    auto: true,
+                    sourceId: d.id,
+                    companyId: d.companyId,
+                });
+            });
+        }
+        // Risk Assessment Measures — rokProvedbe
+        if (notifSettings.calShowRisk !== false) {
+            riskAssessments.forEach(ra => {
+                if (ra.status !== 'aktivan') return;
+                const items = riskItems.filter(ri => ri.procjenaId === ra.id && ri.rokProvedbe && ri.predlozeneMjere);
+                items.forEach(ri => {
+                    events.push({
+                        id: `auto-risk-${ri.id}`,
+                        datum: (ri.rokProvedbe || '').split('T')[0],
+                        tip: 'risk',
+                        opis: `Mjera: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length > 30 ? '...' : ''} (${ra.nazivTvrtke || 'Procjena'})`,
+                        auto: true,
+                        sourceId: ri.id,
+                        companyId: ra.companyId,
+                    });
+                });
+            });
+        }
         return events;
-    }, [certs, equipment, employerDocs, workers, riskAssessments, riskItems]);
+    }, [certs, equipment, employerDocs, workers, riskAssessments, riskItems, notifSettings]);
 
     const companies = useMemo(() => getRawAll(COLLECTIONS.COMPANIES), [activeCompanyId]);
     const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
 
     const allCalendarEvents = useMemo(() => {
-        const merged = [...calEvents, ...autoEvents];
+        const userEvents = calEvents.filter(ev => {
+            if (ev.tip === 'service' && notifSettings.calShowService === false) return false;
+            if (ev.tip === 'med' && notifSettings.calShowMed === false) return false;
+            return true;
+        });
+        const merged = [...userEvents, ...autoEvents].map(e => ({ ...e, datum: (e.datum || '').split('T')[0] }));
         return merged.map(ev => ({ ...ev, companyName: getCompName(ev.companyId) }));
-    }, [calEvents, autoEvents, companies]);
+    }, [calEvents, autoEvents, companies, notifSettings]);
 
     const getDayEvents = (day) => {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
@@ -526,7 +542,7 @@ export default function DashboardPage() {
                     },
                     equipDueRaw.length > 0 && {
                         key: 'equip', icon: '⚙️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                        label: lang === 'bs' ? 'Zakasneli pregledi opreme' : 'Overdue equipment inspections',
+                        label: lang === 'bs' ? 'Zakašnjeli pregledi opreme' : 'Overdue equipment inspections',
                         items: equipDueRaw,
                         onItemClick: e => router.push('/dashboard/equipment'),
                         itemLabel: e => <>{e.naziv}</>,
@@ -560,9 +576,26 @@ export default function DashboardPage() {
             <div className="card" style={{ marginBottom: 24 }}>
                 <div className="card-body">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                        <button className="btn btn-ghost btn-sm" onClick={prevMonth}>◀ {t('previous')}</button>
-                        <h2 style={{ margin: 0, textTransform: 'capitalize' }}>📅 {monthName}</h2>
-                        <button className="btn btn-ghost btn-sm" onClick={nextMonth}>{t('next')} ▶</button>
+                            <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
+                                ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
+                            </button>
+                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <h2 style={{ margin: 0, textTransform: 'capitalize' }}>📅 {monthName}</h2>
+                                <input type="month" 
+                                    className="month-picker-overlay"
+                                    value={`${year}-${String(month + 1).padStart(2, '0')}`} 
+                                    onChange={e => {
+                                        if (e.target.value) {
+                                            const [y, m] = e.target.value.split('-');
+                                            setCurrentDate(new Date(parseInt(y), parseInt(m) - 1, 1));
+                                        }
+                                    }}
+                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                                />
+                            </div>
+                            <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
+                                {lang === 'bs' ? 'Sljedeći' : 'Next'} ▶
+                            </button>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>

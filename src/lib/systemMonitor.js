@@ -43,6 +43,14 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
     workersNoPPE: true,
     calendarWeek: true,
 
+    // Calendar Settings
+    calShowCerts: true,
+    calShowEquip: true,
+    calShowDoc: true,
+    calShowRisk: true,
+    calShowMed: true,
+    calShowService: true,
+
     // Admin-only notification settings
     adminDbSize: true,
     adminDbWarnThreshold: 10000,
