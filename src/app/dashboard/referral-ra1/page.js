@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -826,3 +826,4 @@ export default function ReferralRA1Page() {
     </div>
   );
 }
+

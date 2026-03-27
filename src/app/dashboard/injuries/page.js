@@ -399,7 +399,7 @@ export default function InjuriesPage() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                             );
                             setActionMenuId(inj.id);
-                          }}>Akcije â–¼</button>
+                          }}>Akcije ▼</button>
                           {actionMenuId === inj.id && (
                             <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -413,12 +413,12 @@ export default function InjuriesPage() {
                         </div>
                       </td>
                       <td style={{ fontWeight: 600 }}>
-                        <button onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }} style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} title={inj.radnikId ? (lang === 'bs' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}>{inj.radnikIme || 'â€”'}</button>
+                        <button onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }} style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} title={inj.radnikId ? (lang === 'bs' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}>{inj.radnikIme || '—'}</button>
                       </td>
-                      <td>{inj.datum ? new Date(inj.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : 'â€”'}</td>
+                      <td>{inj.datum ? new Date(inj.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : '—'}</td>
                       <td>{tipBadge(inj.tip)}</td>
-                      <td>{inj.lokacija || 'â€”'}</td>
-                      <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.opisPovrede || 'â€”'}</td>
+                      <td>{inj.lokacija || '—'}</td>
+                      <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.opisPovrede || '—'}</td>
                       <td>{statusBadge(inj.status)}</td>
                     </tr>
                     );

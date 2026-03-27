@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -1576,3 +1576,4 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
     return null;
 }
+

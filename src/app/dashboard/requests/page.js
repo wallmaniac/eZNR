@@ -331,7 +331,7 @@ export default function RequestsPage() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                             );
                             setActionMenuId(r.id);
-                          }}>Akcije â–¼</button>
+                          }}>Akcije ▼</button>
                           {actionMenuId === r.id && (
                             <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -346,7 +346,7 @@ export default function RequestsPage() {
                           )}
                         </div>
                       </td>
-                      <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || 'â€”'}</td>
+                      <td style={{ fontWeight: 600 }}>{r.zahtjevnicaBroj || '—'}</td>
                       <td>{formatDate(r.datum)}</td>
                       <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{getOrgName(r.orgJedinicaId)}</td>

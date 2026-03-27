@@ -212,7 +212,7 @@ export default function FormRO2Page() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                             );
                             setActionMenuId(r.id);
-                          }}>Akcije â–¼</button>
+                          }}>Akcije ▼</button>
                           {actionMenuId === r.id && (
                             <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -229,8 +229,8 @@ export default function FormRO2Page() {
                       </td>
                       <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit', background: 'none', color: 'var(--text)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
-                      <td>{r.clanak3Tocke || 'â€”'}</td>
-                      <td>{r.radniStazNaRadnomMjestu || 'â€”'}</td>
+                      <td>{r.clanak3Tocke || '—'}</td>
+                      <td>{r.radniStazNaRadnomMjestu || '—'}</td>
                       <td>
                         <span style={{
                           padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600,

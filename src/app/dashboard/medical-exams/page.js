@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import {  useState, useCallback, useMemo, useEffect  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -483,3 +483,4 @@ export default function MedicalExamsPage() {
         </div>
     );
 }
+

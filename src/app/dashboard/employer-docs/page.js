@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -411,3 +411,4 @@ export default function EmployerDocsPage() {
         </Suspense>
     );
 }
+
