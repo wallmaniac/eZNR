@@ -152,9 +152,10 @@ function WorkerCertificatesInner() {
                     </td>
                     <td>
                       <button
-                        onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
-                        style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' }}
-                        title={lang === 'bs' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates'}
+                        onClick={() => handleEdit(r.id)}
+                        disabled={isNavigating}
+                        style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
+                        title={lang === 'bs' ? 'Uredi uvjerenje' : 'Edit certificate'}
                       >{r.naziv || r.ime || '—'}</button>
                     </td>
                     <td><span className="badge badge-info">{r.oznaka}</span></td>
