@@ -3,11 +3,13 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { useSortedList } from '@/hooks/useSortedList';
 
 export default function EKEquipmentPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
   const equipment = useMemo(() => getAll(COLLECTIONS.EQUIPMENT), []);
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(equipment, 'naziv');
 
   return (
     <div className="animate-fadeIn">
@@ -15,13 +17,18 @@ export default function EKEquipmentPage() {
       <div className="card"><div className="card-body">
         <div style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{equipment.length} {t('records')}</div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-          <th>Red. br.</th><th>{t('name')}</th><th>{t('manufacturer')}</th><th>{t('serialNumber')}</th><th>{t('nextExam')}</th><th>{t('status')}</th>
+          <th>Red. br.</th>
+          <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
+          <th style={thStyle('proizvodjac')} onClick={() => toggleSort('proizvodjac')}>{t('manufacturer')}{sortIcon('proizvodjac')}</th>
+          <th style={thStyle('tvBroj')} onClick={() => toggleSort('tvBroj')}>{t('serialNumber')}{sortIcon('tvBroj')}</th>
+          <th style={thStyle('sljedeciPregled')} onClick={() => toggleSort('sljedeciPregled')}>{t('nextExam')}{sortIcon('sljedeciPregled')}</th>
+          <th>{t('status')}</th>
         </tr></thead><tbody>
-            {equipment.length === 0 ? (
+            {sorted.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                 {lang === 'bs' ? '✅ Nema radne opreme u evidenciji' : '✅ No equipment in records'}
               </td></tr>
-            ) : equipment.map((e, idx) => {
+            ) : sorted.map((e, idx) => {
               const isOverdue = e.sljedeciPregled && new Date(e.sljedeciPregled) < new Date();
               return (
                 <tr key={e.id}
