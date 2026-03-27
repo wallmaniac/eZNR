@@ -156,8 +156,8 @@ export default function FormRO2Page() {
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                   {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                 </span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>ðŸ–¨ï¸ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>ðŸ—‘ï¸ {lang === 'bs' ? 'ObriÅ¡i' : 'Delete'}</button>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
             {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
@@ -183,8 +183,8 @@ export default function FormRO2Page() {
                     <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th>{lang === 'bs' ? 'ÄŒl.3 toÄke' : 'Art.3 point'}</th>
-                    <th>{lang === 'bs' ? 'Radni staÅ¾' : 'Experience'}</th>
+                    <th>{lang === 'bs' ? 'Čl.3 točke' : 'Art.3 point'}</th>
+                    <th>{lang === 'bs' ? 'Radni staž' : 'Experience'}</th>
                     <th>{lang === 'bs' ? 'Promjena RM' : 'Changed pos.'}</th>
                   </tr>
                 </thead>
@@ -217,11 +217,11 @@ export default function FormRO2Page() {
                             <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                             <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                              <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>âœï¸ Otvori</button>
-                              {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>ðŸ“Ž Preuzmi prilog</button>}
-                              <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} style={menuItemSt}>ðŸ“‹ Kopiraj</button>
+                              <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
+                              {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>📎 Preuzmi prilog</button>}
+                              <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} style={menuItemSt}>📋 Kopiraj</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>ðŸ—‘ï¸ IzbriÅ¡i</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
                             </div>
                             </>
                           )}

@@ -52,7 +52,7 @@ export default function FormOIR1Page() {
   const [workers, setWorkers] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
-  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_OIR1 });
@@ -200,6 +200,11 @@ export default function FormOIR1Page() {
     fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)',
     textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14,
   };
+  const menuItemSt = {
+    display: 'block', width: '100%', textAlign: 'left', padding: '7px 14px',
+    background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem',
+    color: 'var(--text)', fontFamily: 'var(--font-body)', transition: 'background 0.12s',
+  };
 
   // ── List view ──
   if (!showForm) {
@@ -211,13 +216,10 @@ export default function FormOIR1Page() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={handleNew}>
               + {lang === 'bs' ? 'Novi obrazac' : 'New form'}
             </button>
-            <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-              {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
-            </span>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
               <input
                 placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
@@ -227,6 +229,17 @@ export default function FormOIR1Page() {
               />
               {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
             </div>
+            {/* Grupne akcije bar */}
+            {selectedIds.size > 0 && (
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                </span>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+              </div>
+            )}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
           </div>
         </div>
 
@@ -236,13 +249,13 @@ export default function FormOIR1Page() {
               <table className="data-table">
                 <thead>
                 <tr>
+                  <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                   <th onClick={() => toggleSort('datumDogadjaja')} style={thStyle('datumDogadjaja')}>{lang === 'bs' ? 'Datum događaja' : 'Event date'}{sortIcon('datumDogadjaja')}</th>
                   <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang === 'bs' ? 'Lokacija' : 'Location'}{sortIcon('dogadjajNastaoU')}</th>
                   <th onClick={() => toggleSort('_injured')} style={thStyle('_injured')}>{lang === 'bs' ? 'Ozlijeđeni' : 'Injured'}{sortIcon('_injured')}</th>
                   <th onClick={() => toggleSort('podnositelj')} style={thStyle('podnositelj')}>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}{sortIcon('podnositelj')}</th>
                   <th onClick={() => toggleSort('datumPrijave')} style={thStyle('datumPrijave')}>{lang === 'bs' ? 'Datum prijave' : 'Submit date'}{sortIcon('datumPrijave')}</th>
-                  <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                 </tr>
                 </thead>
                 <tbody>
@@ -250,23 +263,29 @@ export default function FormOIR1Page() {
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : enrichedSorted.map((r, idx) => (
                     <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)}>
-                                            <td style={{ position: 'relative' }}>
-                        <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                      <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
+                      <td style={{ position: 'relative' }}>
+                        <button className="btn btn-primary btn-sm" onClick={e => {
+                          e.stopPropagation();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const spaceBelow = window.innerHeight - rect.bottom;
+                          const spaceAbove = rect.top;
+                          const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                          setMenuPos(flipUp
+                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                          );
+                          setActionMenuId(prev => prev === r.id ? null : r.id);
+                        }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
                         {actionMenuId === r.id && (
                           <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
-                            <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}>
-                              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📝</span> {lang === 'bs' ? 'Otvori' : 'Open'}
-                            </button>
-                            {r.docData && (
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); downloadDoc(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📎</span> {lang === 'bs' ? 'Preuzmi prilog' : 'Download file'}</button>
-                            )}
-                            <div className="dropdown-divider" />
-                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id); }}>
-                              <span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
-                            </button>
-                          </div>
+                            <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                              <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
+                              {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>📎 Preuzmi prilog</button>}
+                              <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Obriši</button>
+                            </div>
                           </>
                         )}
                       </td>
@@ -275,7 +294,6 @@ export default function FormOIR1Page() {
                       <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getInjuredSummary(r)}</td>
                       <td>{r.podnositelj || '—'}</td>
                       <td>{formatDate(r.datumPrijave)}</td>
-                      <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                     </tr>
                   ))}
                 </tbody>

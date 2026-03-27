@@ -39,17 +39,31 @@ function EquipmentPageInner() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showOutOfUse, setShowOutOfUse] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
-    const actionRef = useRef(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
+    const [selectedIds, setSelectedIds] = useState(new Set());
     const openItemHandledRef = useRef(false);
     const serviceDocRef = useRef(null);
 
     const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EQUIPMENT)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
-    useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+
+    const toggleAll = (e) => {
+        if (e.target.checked) setSelectedIds(new Set(filtered.map(x => x.id)));
+        else setSelectedIds(new Set());
+    };
+    const toggleOne = (id) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        setSelectedIds(next);
+    };
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+            for (let id of selectedIds) await remove(COLLECTIONS.EQUIPMENT, id);
+            setSelectedIds(new Set());
+            loadData();
+        }
+    };
 
     // Load service logs when editing an item
     const loadServiceLogs = useCallback((equipmentId) => {
@@ -185,6 +199,12 @@ function EquipmentPageInner() {
         kalibracija: lang === 'bs' ? '📏 Kalibracija' : '📏 Calibration',
         zamjena: lang === 'bs' ? '🔄 Zamjena dijela' : '🔄 Part replacement',
     }[tip] || tip);
+
+    const menuItemSt = {
+        display: 'block', width: '100%', textAlign: 'left', padding: '7px 14px',
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem',
+        color: 'var(--text)', fontFamily: 'var(--font-body)', transition: 'background 0.12s',
+    };
 
     return (
         <div className="animate-fadeIn">
@@ -464,7 +484,7 @@ function EquipmentPageInner() {
             {/* ── Equipment List ── */}
             <div className="card">
                 <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
                         <SavedFlash />
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
@@ -476,11 +496,21 @@ function EquipmentPageInner() {
                             <input type="checkbox" checked={showOutOfUse} onChange={e => setShowOutOfUse(e.target.checked)} />
                             {lang === 'bs' ? 'Radna oprema izvan upotrebe' : 'Out of use equipment'}
                         </label>
+                        {selectedIds.size > 0 && (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                                </span>
+                                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                        )}
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('vrsta')} style={thStyle('vrsta')}>{lang === 'bs' ? 'Vrsta' : 'Type'}{sortIcon('vrsta')}</th>
                                     <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
@@ -494,23 +524,37 @@ function EquipmentPageInner() {
                             </thead>
                             <tbody>
                                 {sortedEquipment.length === 0 ? (
-                                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                    <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sortedEquipment.map((eq) => {
                                     const isExpired = eq.iduci && new Date(eq.iduci) < new Date();
                                     const logCount = getAll(COLLECTIONS.SERVICE_LOG).filter(l => l.equipmentId === eq.id).length;
                                     return (
                                         <tr key={eq.id} onClick={() => handleEdit(eq, 'podaci')} style={{ cursor: 'pointer' }}>
-                                            <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }} ref={actionMenuId === eq.id ? actionRef : null}>
-                                                <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === eq.id ? null : eq.id)}>
+                                            <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(eq.id)} onChange={() => toggleOne(eq.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
+                                            <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
+                                                <button className="btn btn-primary btn-sm" onClick={e => {
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                                    const spaceAbove = rect.top;
+                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                    setMenuPos(flipUp
+                                                        ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                        : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                    );
+                                                    setActionMenuId(actionMenuId === eq.id ? null : eq.id);
+                                                }}>
                                                     {t('actions')} ▼
                                                 </button>
                                                 {actionMenuId === eq.id && (
-                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0 }}>
-                                                        <button className="dropdown-item" onClick={() => handleEdit(eq, 'podaci')}>📂 {t('open')}</button>
-                                                        <button className="dropdown-item" onClick={() => handleEdit(eq, 'servis')}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
-                                                        <div className="dropdown-divider" />
-                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(eq.id)}>🗑️ {t('delete')}</button>
+                                                    <>
+                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
+                                                    <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                        <button onClick={() => handleEdit(eq, 'podaci')} style={menuItemSt}>📂 {t('open')}</button>
+                                                        <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(eq.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
                                                     </div>
+                                                    </>
                                                 )}
                                             </td>
                                             <td>{eq.vrsta}</td>

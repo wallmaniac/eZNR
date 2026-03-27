@@ -162,25 +162,21 @@ export default function AddressBookPage() {
               {sorted.length === 0 ? (
                 <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
               ) : sorted.map(w => (
-                <tr key={w.id} style={{ background: selected.has(w.id) ? 'var(--bg-table-row-hover)' : undefined }}>
-                  <td>
+                <tr key={w.id}
+                  onClick={() => setViewWorkerId(w.id)}
+                  style={{ cursor: 'pointer', background: selected.has(w.id) ? 'var(--bg-table-row-hover)' : undefined, transition: 'background 0.12s' }}
+                  onMouseEnter={e => { if (!selected.has(w.id)) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
+                  onMouseLeave={e => { if (!selected.has(w.id)) e.currentTarget.style.background = ''; }}
+                >
+                  <td onClick={e => e.stopPropagation()}>
                     <input type="checkbox" checked={selected.has(w.id)} onChange={() => toggleOne(w.id)} />
                   </td>
-                  {/* Clickable name opens WorkerProfileModal */}
-                  <td>
-                    <button
-                      onClick={() => setViewWorkerId(w.id)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, color: 'var(--primary)', fontFamily: 'inherit', fontSize: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }}
-                      title={lang === 'bs' ? 'Otvori profil radnika' : 'Open worker profile'}
-                    >
-                      {w.ime}
-                    </button>
-                  </td>
+                  <td style={{ fontWeight: 600 }}>{w.ime}</td>
                   <td style={{ fontWeight: 600 }}>{w.prezime}</td>
                   <td style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{getOrgUnitName(w.orgJedinicaId) || '-'}</td>
                   <td>{w.mobitel || '-'}</td>
                   {/* Copyable email */}
-                  <td>
+                  <td onClick={e => e.stopPropagation()}>
                     {w.email ? (
                       <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <span style={{ color: 'var(--text)', fontSize: 'inherit' }}>{w.email}</span>

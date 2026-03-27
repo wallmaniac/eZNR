@@ -28,7 +28,8 @@ export default function WorkplacesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showActive, setShowActive] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
-    const actionRef = useRef(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     // Workers panel state
     const [workersPanel, setWorkersPanel] = useState(null); // workplace object
@@ -40,11 +41,27 @@ export default function WorkplacesPage() {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
-    useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+
+    const toggleAll = () => {
+        const allIds = new Set(sortedWP.map(w => w.id));
+        setSelectedIds(prev => prev.size === sortedWP.length ? new Set() : allIds);
+    };
+    const toggleOne = (id) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnih mjesta?` : `Delete ${selectedIds.size} workplaces?`);
+        if (ok) {
+            for (const id of selectedIds) remove(COLLECTIONS.WORKPLACES, id);
+            setSelectedIds(new Set());
+            loadData();
+        }
+    };
 
     const filtered = items.filter(w =>
         !searchTerm || w.naziv.toLowerCase().includes(searchTerm.toLowerCase()) || (w.oznaka || '').toLowerCase().includes(searchTerm.toLowerCase())
@@ -78,6 +95,51 @@ export default function WorkplacesPage() {
     const openWorkersPanel = (wp) => { setWorkersPanel(wp); setActionMenuId(null); };
 
     const panelWorkers = workersPanel ? getWorkersForWP(workersPanel) : [];
+
+    const menuItemSt = {
+        display: 'block', width: '100%', textAlign: 'left', padding: '7px 14px',
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem',
+        color: 'var(--text)', fontFamily: 'var(--font-body)', transition: 'background 0.12s',
+    };
+
+    // Generiši dokumente — generates a print-friendly summary for selected workplaces
+    const handleGenerateDocuments = () => {
+        const selected = sortedWP.filter(w => selectedIds.has(w.id));
+        if (selected.length === 0) return;
+        const allPPE = getAll(COLLECTIONS.PPE_ITEMS) || [];
+        const allOrgUnits = getAll(COLLECTIONS.ORG_UNITS);
+        const win = window.open('', '_blank');
+        const html = selected.map(wp => {
+            const wpWorkers = getWorkersForWP(wp);
+            const ouName = allOrgUnits.find(o => o.id === wp.orgUnitId)?.naziv || '-';
+            const ppeForWP = allPPE.filter(p => p.workplaceId === wp.id || p.radnoMjestoId === wp.id);
+            return `<div style="page-break-after:always;font-family:Arial,sans-serif;padding:30px">
+                <h1 style="border-bottom:2px solid #333;padding-bottom:8px">${wp.naziv}</h1>
+                <table style="width:100%;margin-bottom:20px;font-size:14px">
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700;width:200px">Oznaka:</td><td>${wp.oznaka || '-'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Stru\u010dna sprema:</td><td>${wp.strucnaSprema || '-'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Grupa RM:</td><td>${wp.grupaRM || '-'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Org. jedinica:</td><td>${ouName}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Rad na ra\u010dunalu:</td><td>${wp.radNaRacunalu ? 'Da' : 'Ne'}</td></tr>
+                    <tr><td style="padding:4px 12px 4px 0;font-weight:700">Posebni uvjeti rada:</td><td>${wp.posebniUvjetiRada ? 'Da' : 'Ne'}</td></tr>
+                </table>
+                <h3>Zaposlenici (${wpWorkers.length})</h3>
+                ${wpWorkers.length === 0 ? '<p style="color:#888">Nema zaposlenika na ovom radnom mjestu.</p>' : 
+                    `<table style="width:100%;border-collapse:collapse;font-size:13px">
+                        <tr style="background:#f0f0f0"><th style="text-align:left;padding:6px;border:1px solid #ddd">R.br.</th><th style="text-align:left;padding:6px;border:1px solid #ddd">Ime i prezime</th><th style="text-align:left;padding:6px;border:1px solid #ddd">Ev. broj</th><th style="text-align:left;padding:6px;border:1px solid #ddd">Org. jedinica</th></tr>
+                        ${wpWorkers.map((wk, i) => {
+                            const wkOu = allOrgUnits.find(o => o.id === wk.orgJedinicaId)?.naziv || '-';
+                            return `<tr><td style="padding:4px 6px;border:1px solid #ddd">${i+1}</td><td style="padding:4px 6px;border:1px solid #ddd">${wk.ime} ${wk.prezime}</td><td style="padding:4px 6px;border:1px solid #ddd">${wk.evidencijskiBroj || '-'}</td><td style="padding:4px 6px;border:1px solid #ddd">${wkOu}</td></tr>`;
+                        }).join('')}
+                    </table>`}
+                ${ppeForWP.length > 0 ? `<h3 style="margin-top:20px">Za\u0161titna oprema</h3>
+                    <ul>${ppeForWP.map(p => `<li>${p.naziv || p.name || '-'}</li>`).join('')}</ul>` : ''}
+            </div>`;
+        }).join('');
+        win.document.write(`<html><head><title>Radna mjesta - dokumenti</title></head><body>${html}</body></html>`);
+        win.document.close();
+        win.print();
+    };
 
     return (
         <div className="animate-fadeIn">
@@ -224,7 +286,7 @@ export default function WorkplacesPage() {
 
             <div className="card">
                 <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
@@ -235,30 +297,28 @@ export default function WorkplacesPage() {
                             <input type="checkbox" checked={showActive} onChange={e => setShowActive(e.target.checked)} />
                             {lang === 'bs' ? 'Prikaži aktivne' : 'Show active'}
                         </label>
-                        <div style={{ marginLeft: 'auto', position: 'relative' }}>
-                            <button className="btn btn-dark btn-sm" onClick={() => {
-                                const el = document.getElementById('group-action-menu');
-                                if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-                            }}>{t('selectGroupAction')} ▼</button>
-                            <div id="group-action-menu" className="dropdown-menu" style={{ display: 'none', right: 0, top: 'calc(100% + 4px)', minWidth: 200 }}>
-                                <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Generisanje dokumenata' : 'Group action: Generate documents'); }}>📄 {t('generateDocuments')}</button>
-                                <button className="dropdown-item" onClick={async () => { await alert(lang === 'bs' ? 'Grupna akcija: Slanje obavijesti' : 'Group action: Send notifications'); }}>✉️ {t('sendNotifications')}</button>
-                                <div className="dropdown-divider" />
-                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(t('confirmDelete')); if (ok) await alert(lang === 'bs' ? 'Grupno brisanje' : 'Group delete'); }}>🗑️ {t('delete')}</button>
+                        {selectedIds.size > 0 && (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                                </span>
+                                <button className="btn btn-primary btn-sm" onClick={handleGenerateDocuments}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
+                                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedWP.length && sortedWP.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th style={tsWP('naziv')} onClick={() => tWP('naziv')}>{t('name')}{siWP('naziv')}</th>
                                     <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{lang === 'bs' ? 'Stručna sprema' : 'Education'}{siWP('strucnaSprema')}</th>
                                     <th style={tsWP('grupaRM')} onClick={() => tWP('grupaRM')}>{lang === 'bs' ? 'Grupa RM' : 'WP Group'}{siWP('grupaRM')}</th>
                                     <th>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
-                                    <th><input type="checkbox" /></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -267,40 +327,41 @@ export default function WorkplacesPage() {
                                 ) : sortedWP.map((w) => {
                                     const count = getWorkersInWorkplace(w.id).length;
                                     return (
-                                        <tr key={w.id}>
-                                            <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
-                                                <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
+                                        <tr key={w.id} onClick={() => handleEdit(w)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}
+                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                            onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                            <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(w.id)} onChange={() => toggleOne(w.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
+                                            <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
+                                                <button className="btn btn-primary btn-sm" onClick={e => {
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const spaceBelow = window.innerHeight - rect.bottom;
+                                                    const spaceAbove = rect.top;
+                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                    setMenuPos(flipUp
+                                                        ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                        : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                    );
+                                                    setActionMenuId(actionMenuId === w.id ? null : w.id);
+                                                }}>
                                                     {t('actions')} ▼
                                                 </button>
                                                 {actionMenuId === w.id && (
-                                                    <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0 }}>
-                                                        <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
-                                                        <button className="dropdown-item" onClick={() => openWorkersPanel(w)}>👥 {lang === 'bs' ? 'Pregled radnika' : 'View workers'}</button>
-                                                        <div className="dropdown-divider" />
-                                                        <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
+                                                    <>
+                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
+                                                    <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                        <button onClick={() => handleEdit(w)} style={menuItemSt}>📂 {t('open')}</button>
+                                                        <button onClick={() => openWorkersPanel(w)} style={menuItemSt}>👥 {lang === 'bs' ? 'Pregled radnika' : 'View workers'}</button>
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(w.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
                                                     </div>
+                                                    </>
                                                 )}
                                             </td>
-                                            {/* Clickable name */}
-                                            <td style={{ fontWeight: 600 }}>
-                                                <button
-                                                    onClick={() => openWorkersPanel(w)}
-                                                    style={{
-                                                        background: 'none', border: 'none', cursor: 'pointer',
-                                                        color: 'var(--text)', fontWeight: 600, fontSize: 'inherit',
-                                                        textAlign: 'left', padding: 0, fontFamily: 'inherit',
-                                                        textDecoration: 'underline', textDecorationStyle: 'dotted',
-                                                        textDecorationColor: 'var(--text-muted)',
-                                                    }}
-                                                    title={lang === 'bs' ? 'Klikni za pregled radnika' : 'Click to view workers'}
-                                                >
-                                                    {w.naziv}
-                                                </button>
-                                            </td>
+                                            <td style={{ fontWeight: 600 }}>{w.naziv}</td>
                                             <td>{w.strucnaSprema || '-'}</td>
                                             <td>{w.grupaRM || '-'}</td>
                                             {/* Clickable badge */}
-                                            <td>
+                                            <td onClick={e => e.stopPropagation()}>
                                                 <button onClick={() => openWorkersPanel(w)} style={{ background: 'none', border: 'none', cursor: count > 0 ? 'pointer' : 'default', padding: 0 }}>
                                                     <span className={`badge ${count > 0 ? 'badge-primary' : 'badge-info'}`}
                                                         style={{ cursor: count > 0 ? 'pointer' : 'default', transition: 'transform 0.15s' }}
@@ -311,7 +372,6 @@ export default function WorkplacesPage() {
                                                     </span>
                                                 </button>
                                             </td>
-                                            <td><input type="checkbox" /></td>
                                         </tr>
                                     );
                                 })}

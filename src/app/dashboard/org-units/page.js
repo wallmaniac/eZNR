@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -19,7 +19,7 @@ const emptyOU = {
 
 export default function OrgUnitsPage() {
     const { t, lang } = useLanguage();
-  const { alert, confirm, DialogRenderer } = useDialog();
+    const { alert, confirm, DialogRenderer } = useDialog();
     const router = useRouter();
     const [units, setUnits] = useState([]);
     const [workers, setWorkers] = useState([]);
@@ -28,10 +28,11 @@ export default function OrgUnitsPage() {
     const [formData, setFormData] = useState({ ...emptyOU });
     const [searchTerm, setSearchTerm] = useState('');
     const [actionMenuId, setActionMenuId] = useState(null);
-    const actionRef = useRef(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     // Workers panel state
-    const [workersPanel, setWorkersPanel] = useState(null); // { id, naziv }
+    const [workersPanel, setWorkersPanel] = useState(null);
     const [viewWorkerId, setViewWorkerId] = useState(null);
 
     const loadData = useCallback(() => {
@@ -40,12 +41,6 @@ export default function OrgUnitsPage() {
     }, []);
 
     useEffect(() => { loadData(); }, [loadData]);
-
-    useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
-        document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
 
     // ── Tree hierarchy sort ────────────────────────────────────────────────────
     const [sortField, setSortField] = useState('naziv');
@@ -75,6 +70,28 @@ export default function OrgUnitsPage() {
         });
     };
     const treeUnits = buildTree(units, null, 0);
+
+    // Selection helpers
+    const toggleAll = () => {
+        const allIds = new Set(treeUnits.map(u => u.id));
+        setSelectedIds(prev => prev.size === treeUnits.length ? new Set() : allIds);
+    };
+    const toggleOne = (id) => {
+        setSelectedIds(prev => {
+            const next = new Set(prev);
+            next.has(id) ? next.delete(id) : next.add(id);
+            return next;
+        });
+    };
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} org. jedinica?` : `Delete ${selectedIds.size} org. units?`);
+        if (ok) {
+            for (const id of selectedIds) remove(COLLECTIONS.ORG_UNITS, id);
+            setSelectedIds(new Set());
+            loadData();
+        }
+    };
 
     const getParentName = (id) => {
         const parent = units.find(u => u.id === id);
@@ -109,7 +126,8 @@ export default function OrgUnitsPage() {
             await alert(lang === 'bs' ? 'Ne možete obrisati org. jedinicu koja ima zaposlenike.' : 'Cannot delete org. unit with employees.');
             return;
         }
-        if (confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?')) {
+        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?');
+        if (ok) {
             remove(COLLECTIONS.ORG_UNITS, id);
             setActionMenuId(null);
             loadData();
@@ -140,6 +158,12 @@ export default function OrgUnitsPage() {
     };
 
     const panelWorkers = workersPanel ? getWorkersForUnit(workersPanel.id) : [];
+
+    const menuItemSt = {
+        display: 'block', width: '100%', textAlign: 'left', padding: '7px 14px',
+        background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem',
+        color: 'var(--text)', fontFamily: 'var(--font-body)', transition: 'background 0.12s',
+    };
 
     return (
         <div className="animate-fadeIn">
@@ -297,7 +321,7 @@ export default function OrgUnitsPage() {
             {/* List */}
             <div className="card">
                 <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={() => handleNew()}>+ {t('add')}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
                             <input
@@ -308,12 +332,22 @@ export default function OrgUnitsPage() {
                             />
                             <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
                         </div>
+                        {selectedIds.size > 0 && (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                                </span>
+                                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                        )}
                     </div>
 
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === treeUnits.length && treeUnits.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
                                     <th style={thStyle('skraceniNaziv')} onClick={() => toggleSort('skraceniNaziv')}>{lang === 'bs' ? 'Skraćeni' : 'Short'}{sortIcon('skraceniNaziv')}</th>
@@ -324,53 +358,57 @@ export default function OrgUnitsPage() {
                             </thead>
                             <tbody>
                                 {treeUnits.length === 0 ? (
-                                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : (
                                     treeUnits.map((u) => {
                                         const count = getWorkersInOrgUnit(u.id).length;
                                         return (
-                                            <tr key={u.id}>
-                                                <td style={{ position: 'relative' }} ref={actionMenuId === u.id ? actionRef : null}>
-                                                    <button className="btn btn-primary btn-sm"
-                                                        onClick={() => setActionMenuId(actionMenuId === u.id ? null : u.id)}>
+                                            <tr key={u.id} onClick={() => handleEdit(u)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                                <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                                                    <input type="checkbox" checked={selectedIds.has(u.id)} onChange={() => toggleOne(u.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} />
+                                                </td>
+                                                <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
+                                                    <button className="btn btn-primary btn-sm" onClick={e => {
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        const spaceBelow = window.innerHeight - rect.bottom;
+                                                        const spaceAbove = rect.top;
+                                                        const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                        setMenuPos(flipUp
+                                                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                        );
+                                                        setActionMenuId(actionMenuId === u.id ? null : u.id);
+                                                    }}>
                                                         {t('actions')} ▼
                                                     </button>
                                                     {actionMenuId === u.id && (
-                                                        <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 220 }}>
-                                                            <button className="dropdown-item" onClick={() => handleEdit(u)}>📂 {t('open')}</button>
-                                                            <button className="dropdown-item" onClick={() => openWorkersPanel(u)}>👥 {lang === 'bs' ? 'Pregled zaposlenih' : 'View employees'}</button>
-                                                            <button className="dropdown-item" onClick={() => handleNew(u.id)}>➕ {lang === 'bs' ? 'Dodaj podorganizaciju' : 'Add sub-unit'}</button>
-                                                            <div className="dropdown-divider" />
-                                                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(u.id)}>🗑️ {t('delete')}</button>
+                                                        <>
+                                                        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
+                                                        <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                            <button onClick={() => handleEdit(u)} style={menuItemSt}>📂 {t('open')}</button>
+                                                            <button onClick={() => openWorkersPanel(u)} style={menuItemSt}>👥 {lang === 'bs' ? 'Pregled zaposlenih' : 'View employees'}</button>
+                                                            <button onClick={() => handleNew(u.id)} style={menuItemSt}>➕ {lang === 'bs' ? 'Dodaj podorganizaciju' : 'Add sub-unit'}</button>
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                            <button onClick={() => { setActionMenuId(null); handleDelete(u.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
                                                         </div>
+                                                        </>
                                                     )}
                                                 </td>
-                                                {/* Clickable name */}
                                                 <td style={{ fontWeight: 600, paddingLeft: u.parentId ? 24 : 0 }}>
-                                                    <button
-                                                        onClick={() => openWorkersPanel(u)}
-                                                        style={{
-                                                            background: 'none', border: 'none', cursor: 'pointer',
-                                                            color: 'var(--text)', fontWeight: 600, fontSize: 'inherit',
-                                                            textAlign: 'left', padding: 0, fontFamily: 'inherit',
-                                                            textDecoration: 'underline', textDecorationStyle: 'dotted',
-                                                            textDecorationColor: 'var(--text-muted)',
-                                                        }}
-                                                        title={lang === 'bs' ? 'Klikni za pregled radnika' : 'Click to view workers'}
-                                                    >
-                                                        {u._depth > 0 ? (
-                                                <span style={{ color: 'var(--text-muted)', marginRight: 4 }}>
-                                                    {'│  '.repeat(u._depth - 1)}{'└ '}
-                                                </span>
-                                            ) : null}
-                                            <span style={{ fontWeight: u._depth === 0 ? 700 : 500 }}>{u.naziv}</span>
-                                                    </button>
+                                                    {u._depth > 0 ? (
+                                                        <span style={{ color: 'var(--text-muted)', marginRight: 4 }}>
+                                                            {'│  '.repeat(u._depth - 1)}{'└ '}
+                                                        </span>
+                                                    ) : null}
+                                                    <span style={{ fontWeight: u._depth === 0 ? 700 : 500 }}>{u.naziv}</span>
                                                 </td>
                                                 <td>{u.skraceniNaziv}</td>
                                                 <td>{getParentName(u.parentId)}</td>
                                                 <td>{u.mjesto}</td>
                                                 {/* Clickable badge */}
-                                                <td>
+                                                <td onClick={e => e.stopPropagation()}>
                                                     <button
                                                         onClick={() => openWorkersPanel(u)}
                                                         style={{
@@ -399,7 +437,8 @@ export default function OrgUnitsPage() {
                         </table>
                     </div>
                 </div>
-            </div><DialogRenderer />
-</div>
-);
+            </div>
+            <DialogRenderer />
+        </div>
+    );
 }
