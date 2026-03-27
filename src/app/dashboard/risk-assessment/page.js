@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
@@ -145,14 +145,21 @@ export default function RiskAssessmentPage() {
     const [search, setSearch] = useState('');
     const [activeTab, setActiveTab] = useState('opsti');
     const [sortConfig, setSortConfig] = useState({ key: 'datumIzrade', dir: 'desc' });
-    const [openDropdownId, setOpenDropdownId] = useState(null);
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const menuButtonRef = useRef(null);
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     // Click outside listener for dropdown
     useEffect(() => {
-        const handleClickOutside = () => setOpenDropdownId(null);
-        document.addEventListener('click', handleClickOutside);
-        return () => document.removeEventListener('click', handleClickOutside);
-    }, []);
+        const close = (e) => {
+            if (openMenuId && !e.target.closest('[data-menu]') && !e.target.closest('[data-menu-trigger]')) {
+                setOpenMenuId(null);
+            }
+        };
+        document.addEventListener('click', close);
+        return () => document.removeEventListener('click', close);
+    }, [openMenuId]);
 
     // Sub-views
     const [personTypes, setPersonTypes] = useState([]);
@@ -880,6 +887,26 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
             setSortConfig(prev => ({ key: k, dir: prev.key === k && prev.dir === 'asc' ? 'desc' : 'asc' }));
         };
         const getSortIcon = (k) => sortConfig.key === k ? (sortConfig.dir === 'asc' ? ' ↑' : ' ↓') : '';
+        const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+
+        const allSelected = sortedRecords.length > 0 && sortedRecords.every(r => selectedIds.has(r.id));
+        const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(sortedRecords.map(r => r.id))); };
+        const toggleSelect = (id) => { setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }); };
+
+        const bulkDelete = async () => {
+            if (selectedIds.size === 0) return;
+            const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} procjena?` : `Delete ${selectedIds.size} assessments?`);
+            if (!ok) return;
+            selectedIds.forEach(id => remove(COLLECTIONS.RISK_ASSESSMENTS, id));
+            setSelectedIds(new Set()); loadData();
+        };
+        const bulkPrint = () => {
+            const toPrint = sortedRecords.filter(r => selectedIds.has(r.id));
+            toPrint.forEach(r => {
+                const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id);
+                handleGenerateReport(r, items, true);
+            });
+        };
 
         return (
             <div className="animate-fadeIn">
@@ -895,44 +922,79 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         </div>
                         <button className="btn btn-outline btn-sm" onClick={() => setView('vrstaOsobe')}>👤 {lang === 'bs' ? 'Vrsta osobe' : 'Person types'}</button>
                         <button className="btn btn-outline btn-sm" onClick={() => setView('opasnosti')}>⚠️ {lang === 'bs' ? 'Opasnosti' : 'Hazards'}</button>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedRecords.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>
+
+                        {/* ── Grupne akcije bar ── */}
+                        {selectedIds.size > 0 && (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                                </span>
+                                <button className="btn btn-primary btn-sm" onClick={bulkPrint}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger btn-sm" onClick={bulkDelete}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                        )}
+                        {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedRecords.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
                     </div>
                 </div>
                 <div className="card"><div className="card-body"><div className="data-table-wrapper">
                     <table className="data-table" style={{ width: '100%' }}><thead><tr>
-                        <th style={{ width: 80 }}>{t('actions')}</th>
+                        <th style={{ width: 40, textAlign: 'center' }}>
+                            <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                        </th>
+                        <th style={{ width: 90 }}>{t('actions')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')}>{lang === 'bs' ? 'Naziv tvrtke' : 'Company'}{getSortIcon('nazivTvrtke')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('revizija')}>{lang === 'bs' ? 'Revizija' : 'Revision'}{getSortIcon('revizija')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')}>{lang === 'bs' ? 'Datum' : 'Date'}{getSortIcon('datumIzrade')}</th>
                         <th style={{ cursor: 'pointer' }} onClick={() => reqSort('status')}>{lang === 'bs' ? 'Status' : 'Status'}{getSortIcon('status')}</th>
                         <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('cnt')}>{lang === 'bs' ? 'Stavki' : 'Items'}{getSortIcon('cnt')}</th>
                     </tr></thead><tbody>
-                        {sortedRecords.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                        {sortedRecords.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                         : sortedRecords.map(r => {
                             const cnt = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id).length;
                             const st = r.status || 'draft';
+                            const isChecked = selectedIds.has(r.id);
                             return (
                                 <tr key={r.id} onClick={() => handleEdit(r)} style={{ cursor: 'pointer' }} className="hover-row">
+                                    <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                        <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                                    </td>
                                     <td onClick={e => e.stopPropagation()}>
                                         <div style={{ position: 'relative' }}>
-                                            <button className="btn btn-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setOpenDropdownId(openDropdownId === r.id ? null : r.id); }} style={{ padding: '0 8px', fontSize: '1rem', fontWeight: 900 }}>⋮</button>
-                                            {openDropdownId === r.id && (
-                                                <div style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 100, minWidth: 180, padding: 6, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', fontWeight: 600 }} onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleEdit(r); }}>✏️ Otvori</button>
-                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start' }} onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleCopy(r); }}>📋 Kopiraj</button>
-                                                    <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: '#3f51b5' }} onClick={(e) => { 
-                                                        e.stopPropagation(); setOpenDropdownId(null); 
-                                                        const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id);
-                                                        handleGenerateReport(r, items, true); 
-                                                    }}>🖨️ Isprintaj (PDF)</button>
-                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: '#11998e' }} onClick={async (e) => {
-                                                        e.stopPropagation(); setOpenDropdownId(null);
-                                                        const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id);
-                                                        await handleGenerateDocx(true, r, items);
-                                                    }}>📗 Preuzmi Word (.docx)</button>
-                                                    <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
-                                                    <button className="btn btn-ghost btn-sm" style={{ justifyContent: 'flex-start', color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setOpenDropdownId(null); handleDelete(r.id); }}>🗑️ Izbriši</button>
+                                            <button className="btn btn-primary btn-sm" data-menu-trigger
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (openMenuId === r.id) { setOpenMenuId(null); return; }
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    menuButtonRef.current = e.currentTarget;
+                                                    const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                    const spaceAbove = rect.top - 8;
+                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                    setMenuPos(flipUp
+                                                        ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                        : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                    );
+                                                    setOpenMenuId(r.id);
+                                                }}>
+                                                Akcije ▼
+                                            </button>
+                                            {openMenuId === r.id && (
+                                                <div data-menu style={{
+                                                    position: 'fixed',
+                                                    top: menuPos.top,
+                                                    bottom: menuPos.bottom,
+                                                    left: menuPos.left,
+                                                    zIndex: 9999,
+                                                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                                    borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                                                    minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto',
+                                                }}>
+                                                    <button onClick={() => { setOpenMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleCopy(r); }} style={menuItemSt}>📋 Kopiraj</button>
+                                                    <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                    <button onClick={() => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); handleGenerateReport(r, items, true); }} style={menuItemSt}>🖨️ Isprintaj (PDF)</button>
+                                                    <button onClick={async () => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); await handleGenerateDocx(true, r, items); }} style={menuItemSt}>📗 Preuzmi Word (.docx)</button>
+                                                    <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                    <button onClick={() => { setOpenMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
                                                 </div>
                                             )}
                                         </div>

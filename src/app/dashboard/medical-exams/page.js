@@ -64,8 +64,8 @@ export default function MedicalExamsPage() {
     const [filterTab, setFilterTab] = useState('all');
     const [searchQ, setSearchQ] = useState('');
     const [actionMenuId, setActionMenuId] = useState(null);
-  const [showGroupMenu, setShowGroupMenu] = useState(false);
-  const [selectedIds, setSelectedIds] = useState(new Set());
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     const [isDirty, setIsDirty] = useState(false);
     const searchParams = useSearchParams();
@@ -258,38 +258,17 @@ export default function MedicalExamsPage() {
                     </span>
                 )}
                 
+            {/* ── Grupne akcije bar ── */}
             {selectedIds.size > 0 && (
-              <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-              </span>
-            )}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {selectedIds.size > 0 && (
-                <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                  {selectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                 </span>
-              )}
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {exams.length} {lang === 'bs' ? 'zapisa' : 'records'}
-              </span>
-              <div style={{ position: 'relative' }}>
-                <button className="btn btn-dark" onClick={() => setShowGroupMenu(v => !v)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
-                {showGroupMenu && (
-                  <>
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setShowGroupMenu(false); }} />
-                  <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', minWidth: 230, zIndex: 9999, display: 'block' }}>
-                    <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'odabrano' : 'selected'}` : (lang === 'bs' ? 'Odaberite stavke' : 'Select items first')}
-                    </div>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); window.print(); }}>🖨️ {lang === 'bs' ? 'Ispiši odabrane' : 'Print selected'}</button>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); handleDeleteSelected(); }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
-                  </div>
-                  </>
-                )}
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
               </div>
-            </div>
+            )}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
             </div>
 
             {/* ── Filter tabs ── */}
@@ -317,11 +296,12 @@ export default function MedicalExamsPage() {
             {/* ── Table ── */}
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
-                    <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
-                        <table className="data-table" style={{ overflow: 'visible' }}>
+                    <div className="data-table-wrapper">
+                        <table className="data-table" style={{ width: '100%' }}>
                             <thead>
                                 <tr>
-                                    <th>{bs ? 'Akcije' : 'Actions'}</th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 90 }}>{bs ? 'Akcije' : 'Actions'}</th>
                                     <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{bs ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                                     <th onClick={() => toggleSort('tipPregleda')} style={thStyle('tipPregleda')}>{bs ? 'Vrsta pregleda' : 'Exam Type'}{sortIcon('tipPregleda')}</th>
                                     <th onClick={() => toggleSort('datumPregleda')} style={thStyle('datumPregleda')}>{bs ? 'Datum' : 'Date'}{sortIcon('datumPregleda')}</th>
@@ -329,67 +309,60 @@ export default function MedicalExamsPage() {
                                     <th>{bs ? 'Status' : 'Status'}</th>
                                     <th onClick={() => toggleSort('rezultat')} style={thStyle('rezultat')}>{bs ? 'Rezultat' : 'Result'}{sortIcon('rezultat')}</th>
                                     <th onClick={() => toggleSort('zdravstvenaUstanova')} style={thStyle('zdravstvenaUstanova')}>{bs ? 'Ustanova' : 'Institution'}{sortIcon('zdravstvenaUstanova')}</th>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === exams.length && exams.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                 </tr>
                             </thead>
-                            <tbody style={{ overflow: 'visible' }}>
+                            <tbody>
                                 {sorted.length === 0 && (
-                                    <tr>
-                                        <td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
-                                            {bs ? 'Nema unesenih ljekarskih pregleda' : 'No medical exams recorded'}
-                                        </td>
-                                    </tr>
+                                    <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>{bs ? 'Nema unesenih ljekarskih pregleda' : 'No medical exams recorded'}</td></tr>
                                 )}
                                 {sorted.map(exam => {
                                     const badge = getStatusBadge(exam);
                                     const days = getDays(exam.vrijediDo);
-                                    const rowBg = days !== null && days < 0
-                                        ? 'rgba(239,68,68,0.04)'
-                                        : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
+                                    const rowBg = days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
+                                    const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
                                     return (
-                                        <tr key={exam.id} style={{ background: rowBg }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = rowBg}>
-                                            <td style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === exam.id ? null : exam.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                                                {actionMenuId === exam.id && (
-                                                  <>
-                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                                                    <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
-                                                      <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(exam); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📝</span> {lang === 'bs' ? 'Otvori' : 'Open'}
-                            </button>
-                                                      <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(exam); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
-                            </button>
-                                                      <div className="dropdown-divider" />
-                                                      <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(exam); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
-                            </button>
-                                                    </div>
-                                                  </>
-                                                )}
+                                        <tr key={exam.id} style={{ background: rowBg, cursor: 'pointer' }} onClick={() => handleEdit(exam)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = rowBg}>
+                                            <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                                <input type="checkbox" checked={selectedIds.has(exam.id)} onChange={() => toggleOne(exam.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                             </td>
-                                            <td>
-                                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
-                                                    onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }}>
-                                                    {exam._workerName}
-                                                </button>
+                                            <td onClick={e => e.stopPropagation()}>
+                                                <div style={{ position: 'relative' }}>
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (actionMenuId === exam.id) { setActionMenuId(null); return; }
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                        const spaceAbove = rect.top - 8;
+                                                        const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                        setMenuPos(flipUp
+                                                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                        );
+                                                        setActionMenuId(exam.id);
+                                                    }}>Akcije ▼</button>
+                                                    {actionMenuId === exam.id && (
+                                                      <>
+                                                        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                        <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                            <button onClick={() => { setActionMenuId(null); handleEdit(exam); }} style={menuItemSt}>✏️ Otvori</button>
+                                                            <button onClick={() => { setActionMenuId(null); handleDuplicate(exam); }} style={menuItemSt}>📋 Kopiraj</button>
+                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                            <button onClick={() => { setActionMenuId(null); handleDelete(exam); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                                                        </div>
+                                                      </>
+                                                    )}
+                                                </div>
                                             </td>
+                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }}>{exam._workerName}</button></td>
                                             <td style={{ fontSize: '0.82rem' }}>{examTypeLabel(exam.tipPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem' }}>{formatDate(exam.datumPregleda)}</td>
-                                            <td style={{ fontSize: '0.85rem', fontWeight: days !== null && days < 0 ? 700 : 400, color: days !== null && days < 0 ? 'var(--danger)' : days !== null && days <= 90 ? 'var(--warning)' : 'inherit' }}>
-                                                {exam.vrijediDo ? formatDate(exam.vrijediDo) : '—'}
-                                            </td>
-                                            <td>
-                                                <span className={`badge${badge.bg === 'var(--danger)' ? ' badge-danger' : badge.bg === 'var(--success)' ? ' badge-success' : badge.col === 'var(--warning)' ? ' badge-warning' : ''}`}
-                                                    style={{ background: badge.bg, color: badge.color, fontSize: '0.7rem' }}>
-                                                    {badge.label}
-                                                </span>
-                                            </td>
-                                            <td style={{ fontWeight: 600, color: resultColor(exam.rezultat), fontSize: '0.85rem' }}>
-                                                {resultLabel(exam.rezultat)}
-                                            </td>
+                                            <td style={{ fontSize: '0.85rem', fontWeight: days !== null && days < 0 ? 700 : 400, color: days !== null && days < 0 ? 'var(--danger)' : days !== null && days <= 90 ? 'var(--warning)' : 'inherit' }}>{exam.vrijediDo ? formatDate(exam.vrijediDo) : '—'}</td>
+                                            <td><span className={`badge${badge.bg === 'var(--danger)' ? ' badge-danger' : badge.bg === 'var(--success)' ? ' badge-success' : badge.col === 'var(--warning)' ? ' badge-warning' : ''}`} style={{ background: badge.bg, color: badge.color, fontSize: '0.7rem' }}>{badge.label}</span></td>
+                                            <td style={{ fontWeight: 600, color: resultColor(exam.rezultat), fontSize: '0.85rem' }}>{resultLabel(exam.rezultat)}</td>
                                             <td style={{ fontSize: '0.8rem', maxWidth: 180 }}>
                                                 <div style={{ fontWeight: 600 }}>{exam.zdravstvenaUstanova || '—'}</div>
                                                 {exam.doktorIme && <div style={{ color: 'var(--text-muted)', fontSize: '0.73rem' }}>Dr. {exam.doktorIme}</div>}
                                             </td>
-                                            <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(exam.id)} onChange={() => toggleOne(exam.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                                         </tr>
                                     );
                                 })}

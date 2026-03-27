@@ -31,7 +31,7 @@ export default function FormRO2Page() {
   const [orgUnits, setOrgUnits] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [actionMenuId, setActionMenuId] = useState(null);
-  const [showGroupMenu, setShowGroupMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ ...EMPTY_RO2 });
@@ -150,38 +150,17 @@ export default function FormRO2Page() {
               + {lang === 'bs' ? 'Nova uputnica RO-2' : 'New RO-2 referral'}
             </button>
             
+            {/* Grupne akcije bar */}
             {selectedIds.size > 0 && (
-              <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-              </span>
-            )}
-            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
-              {selectedIds.size > 0 && (
-                <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                 </span>
-              )}
-              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                {records.length} {lang === 'bs' ? 'zapisa' : 'records'}
-              </span>
-              <div style={{ position: 'relative' }}>
-                <button className="btn btn-dark" onClick={() => setShowGroupMenu(v => !v)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
-                {showGroupMenu && (
-                  <>
-                  <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setShowGroupMenu(false); }} />
-                  <div className="dropdown-menu" style={{ position: 'absolute', right: 0, top: 'calc(100% + 4px)', minWidth: 230, zIndex: 9999, display: 'block' }}>
-                    <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'odabrano' : 'selected'}` : (lang === 'bs' ? 'Odaberite stavke' : 'Select items first')}
-                    </div>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); window.print(); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🖨️</span> {lang === 'bs' ? 'Ispiši odabrane' : 'Print selected'}</button>
-                    <div className="dropdown-divider" />
-                    <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={() => { setShowGroupMenu(false); handleDeleteSelected(); }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
-                  </div>
-                  </>
-                )}
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>ðŸ–¨ï¸ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>ðŸ—‘ï¸ {lang === 'bs' ? 'ObriÅ¡i' : 'Delete'}</button>
               </div>
-            </div>
+            )}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
           </div>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
               <input
@@ -196,48 +175,62 @@ export default function FormRO2Page() {
 
         <div className="card">
           <div className="card-body">
-            <div className="data-table-wrapper" style={{ overflow: 'visible', position: 'relative' }}>
-              <table className="data-table" style={{ overflow: 'visible' }}>
+            <div className="data-table-wrapper">
+              <table className="data-table" style={{ width: '100%' }}>
                 <thead>
                   <tr>
-                    <th>{t('actions')}</th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                    <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th>{lang === 'bs' ? 'Čl.3 točke' : 'Art.3 point'}</th>
-                    <th>{lang === 'bs' ? 'Radni staž' : 'Experience'}</th>
+                    <th>{lang === 'bs' ? 'ÄŒl.3 toÄke' : 'Art.3 point'}</th>
+                    <th>{lang === 'bs' ? 'Radni staÅ¾' : 'Experience'}</th>
                     <th>{lang === 'bs' ? 'Promjena RM' : 'Changed pos.'}</th>
-                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                   </tr>
                 </thead>
-                <tbody style={{ overflow: 'visible' }}>
+                <tbody>
                   {sorted.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : sorted.map((r, idx) => (
+                  ) : sorted.map((r, idx) => {
+                    const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+                    return (
                     <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
-                      <td style={{ position: 'relative' }}>
-                        <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); setActionMenuId(prev => prev === r.id ? null : r.id); }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
-                        {actionMenuId === r.id && (
-                          <>
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, minWidth: 180, zIndex: 9999, display: 'block' }}>
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📝</span> {lang === 'bs' ? 'Otvori' : 'Open'}
-                            </button>
-                            {r.docData && (
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); downloadDoc(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📎</span> {lang === 'bs' ? 'Preuzmi prilog' : 'Download file'}</button>
-                            )}
-                              <button className="dropdown-item" onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(r); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>📋</span> {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}
-                            </button>
-                              <div className="dropdown-divider" />
-                              <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(r.id); }}><span style={{ fontSize: '1.2rem', paddingBottom: '3px' }}>🗑️</span> {lang === 'bs' ? 'Obriši' : 'Delete'}
-                            </button>
-                            </div>
-                          </>
-                        )}
+                      <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                        <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                       </td>
-                      <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit' , background: 'none', color: 'var(--text)'}} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
+                      <td onClick={e => e.stopPropagation()}>
+                        <div style={{ position: 'relative' }}>
+                          <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => {
+                            e.stopPropagation();
+                            if (actionMenuId === r.id) { setActionMenuId(null); return; }
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            const spaceBelow = window.innerHeight - rect.bottom - 8;
+                            const spaceAbove = rect.top - 8;
+                            const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                            setMenuPos(flipUp
+                              ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                              : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                            );
+                            setActionMenuId(r.id);
+                          }}>Akcije â–¼</button>
+                          {actionMenuId === r.id && (
+                            <>
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                            <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                              <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>âœï¸ Otvori</button>
+                              {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>ðŸ“Ž Preuzmi prilog</button>}
+                              <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} style={menuItemSt}>ðŸ“‹ Kopiraj</button>
+                              <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>ðŸ—‘ï¸ IzbriÅ¡i</button>
+                            </div>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                      <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit', background: 'none', color: 'var(--text)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                       <td>{formatDate(r.datum)}</td>
-                      <td>{r.clanak3Tocke || '—'}</td>
-                      <td>{r.radniStazNaRadnomMjestu || '—'}</td>
+                      <td>{r.clanak3Tocke || 'â€”'}</td>
+                      <td>{r.radniStazNaRadnomMjestu || 'â€”'}</td>
                       <td>
                         <span style={{
                           padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', fontWeight: 600,
@@ -245,9 +238,9 @@ export default function FormRO2Page() {
                           color: r.nijeMijenjaoRadnoMjesto ? 'var(--success)' : 'var(--danger)',
                         }}>{r.nijeMijenjaoRadnoMjesto ? 'Ne' : 'Da'}</span>
                       </td>
-                      <td style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} onClick={e => e.stopPropagation()} /></td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
