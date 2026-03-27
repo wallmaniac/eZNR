@@ -159,6 +159,8 @@ export default function DashboardPage() {
     const [calEvents, setCalEvents] = useState([]);
     const [certTypes, setCertTypes] = useState([]);
     const [ppeTypes, setPpeTypes] = useState([]);
+    const [riskAssessments, setRiskAssessments] = useState([]);
+    const [riskItems, setRiskItems] = useState([]);
     const [deleteEventTarget, setDeleteEventTarget] = useState(null); // event to confirm-delete
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [dayDetailDate, setDayDetailDate] = useState(null);
@@ -178,6 +180,8 @@ export default function DashboardPage() {
         setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
         setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+        setRiskAssessments(getAllForCompany(COLLECTIONS.RISK_ASSESSMENTS, activeCompanyId, uids));
+        setRiskItems(getAll(COLLECTIONS.RISK_ITEMS));
     }, [activeCompanyId, user?.companyIds]);
 
     useEffect(() => {
@@ -239,8 +243,24 @@ export default function DashboardPage() {
                 companyId: d.companyId,
             });
         });
+        // Risk Assessment Measures — rokProvedbe
+        riskAssessments.forEach(ra => {
+            if (ra.status !== 'aktivan') return;
+            const items = riskItems.filter(ri => ri.procjenaId === ra.id && ri.rokProvedbe && ri.predlozeneMjere);
+            items.forEach(ri => {
+                events.push({
+                    id: `auto-risk-${ri.id}`,
+                    datum: ri.rokProvedbe,
+                    tip: 'risk',
+                    opis: `Mjera: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length > 30 ? '...' : ''} (${ra.nazivTvrtke || 'Procjena'})`,
+                    auto: true,
+                    sourceId: ri.id,
+                    companyId: ra.companyId,
+                });
+            });
+        });
         return events;
-    }, [certs, equipment, employerDocs, workers]);
+    }, [certs, equipment, employerDocs, workers, riskAssessments, riskItems]);
 
     const companies = useMemo(() => getRawAll(COLLECTIONS.COMPANIES), [activeCompanyId]);
     const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
@@ -377,6 +397,12 @@ export default function DashboardPage() {
             return;
         }
 
+        // ── Risk measure events → open risk assessment ──
+        if (ev.tip === 'risk') {
+            router.push('/dashboard/risk-assessment');
+            return;
+        }
+
         if (ev.tip === 'med') { router.push('/dashboard/medical-exams'); return; }
         const path = EVENT_ROUTES[ev.tip] || '/dashboard';
         router.push(path);
@@ -453,6 +479,26 @@ export default function DashboardPage() {
                 });
                 const equipDueRaw = equipment.filter(e => e.iduci && new Date(e.iduci) < now);
 
+                const activeAssessments = riskAssessments.filter(ra => ra.status === 'aktivan');
+                const riskMeasuresDueRaw = riskItems.filter(ri =>
+                    ri.rokProvedbe &&
+                    ri.predlozeneMjere &&
+                    new Date(ri.rokProvedbe) < now &&
+                    activeAssessments.some(ra => ra.id === ri.procjenaId)
+                ).map(ri => {
+                    const ra = activeAssessments.find(a => a.id === ri.procjenaId);
+                    return { ...ri, raName: ra?.nazivTvrtke || 'Procjena' };
+                });
+
+                const riskMeasuresSoonRaw = riskItems.filter(ri => {
+                    if (!ri.rokProvedbe || !ri.predlozeneMjere) return false;
+                    const diff = new Date(ri.rokProvedbe) - now;
+                    return diff >= 0 && diff <= d30 && activeAssessments.some(ra => ra.id === ri.procjenaId);
+                }).map(ri => {
+                    const ra = activeAssessments.find(a => a.id === ri.procjenaId);
+                    return { ...ri, raName: ra?.nazivTvrtke || 'Procjena' };
+                });
+
                 const groups = [
                     expiredCertsRaw.length > 0 && {
                         key: 'expCert', icon: '📜', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
@@ -485,6 +531,22 @@ export default function DashboardPage() {
                         onItemClick: e => router.push('/dashboard/equipment'),
                         itemLabel: e => <>{e.naziv}</>,
                         itemSub: e => formatDate(e.iduci),
+                    },
+                    riskMeasuresDueRaw.length > 0 && {
+                        key: 'riskDue', icon: '🛡️', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
+                        label: lang === 'bs' ? 'Istekli rokovi mjera (Procjena)' : 'Overdue risk measures',
+                        items: riskMeasuresDueRaw,
+                        onItemClick: r => router.push('/dashboard/risk-assessment'),
+                        itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
+                        itemSub: r => formatDate(r.rokProvedbe),
+                    },
+                    riskMeasuresSoonRaw.length > 0 && {
+                        key: 'riskSoon', icon: '🛡️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
+                        label: lang === 'bs' ? 'Mjere ističu za 30 dana' : 'Measures expiring in 30 days',
+                        items: riskMeasuresSoonRaw,
+                        onItemClick: r => router.push('/dashboard/risk-assessment'),
+                        itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
+                        itemSub: r => formatDate(r.rokProvedbe),
                     },
                 ].filter(Boolean);
 
@@ -560,10 +622,10 @@ export default function DashboardPage() {
                                         const statusIcon = ev.auto ? (isExpired ? ' ⚠️' : isSoon ? ' ⏰' : '') : '';
                                         const bgColor = ev.auto && isExpired
                                             ? (ev.tip === 'cert' ? 'rgba(244,67,54,0.12)' : ev.tip === 'equip' ? '#FBE9E7' : 'rgba(244,67,54,0.12)')
-                                            : (ev.tip === 'cert' ? 'rgba(33,150,243,0.12)' : ev.tip === 'ppe' ? 'rgba(255,152,0,0.12)' : ev.tip === 'equip' ? 'rgba(76,175,80,0.12)' : '#F3E5F5');
+                                            : (ev.tip === 'cert' ? 'rgba(33,150,243,0.12)' : ev.tip === 'ppe' ? 'rgba(255,152,0,0.12)' : ev.tip === 'equip' ? 'rgba(76,175,80,0.12)' : ev.tip === 'risk' ? 'rgba(156,39,176,0.12)' : '#F3E5F5');
                                         const fgColor = ev.auto && isExpired
                                             ? 'var(--danger)'
-                                            : (ev.tip === 'cert' ? 'var(--info)' : ev.tip === 'ppe' ? 'var(--warning)' : ev.tip === 'equip' ? 'var(--success)' : '#6A1B9A');
+                                            : (ev.tip === 'cert' ? 'var(--info)' : ev.tip === 'ppe' ? 'var(--warning)' : ev.tip === 'equip' ? 'var(--success)' : ev.tip === 'risk' ? '#9C27B0' : '#6A1B9A');
                                         return (
                                             <div key={ev.id || idx}
                                                 style={{
@@ -581,7 +643,7 @@ export default function DashboardPage() {
                                                     style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                                     onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
                                                     onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}>
-                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
+                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ev.tip === 'risk' ? '🛡️' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
                                                     {ev.companyName && <span style={{ fontSize: '0.55rem', opacity: 0.7, marginLeft: 4, fontWeight: 700 }}>({ev.companyName})</span>}
                                                 </span>
                                                 {!ev.auto && (
@@ -611,6 +673,7 @@ export default function DashboardPage() {
                         <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang === 'bs' ? '🔧 Servis' : '🔧 Service'} />
                         <Legend color="var(--warning)" bg="rgba(255,152,0,0.12)" label="🦺 ZS" />
                         <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang === 'bs' ? '⚙️ Oprema' : '⚙️ Equipment'} />
+                        <Legend color="#9C27B0" bg="rgba(156,39,176,0.12)" label={lang === 'bs' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
                         <Legend color="#6A1B9A" bg="#F3E5F5" label={lang === 'bs' ? '📄 Dokumenti' : '📄 Documents'} />
                         <Legend color="var(--danger)" bg="rgba(244,67,54,0.12)" label={lang === 'bs' ? '⚠️ Isteklo' : '⚠️ Expired'} />
                         <Legend color="var(--warning)" bg="#FFF8E1" label={lang === 'bs' ? '⏰ Uskoro' : '⏰ Soon'} />
@@ -631,8 +694,8 @@ export default function DashboardPage() {
                                 {dayDetailEvents.length} {lang === 'bs' ? 'događaj(a)' : 'event(s)'}
                             </div>
                             {dayDetailEvents.map((ev, idx) => {
-                                const tipIcon = ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : '📌';
-                                const tipLabel = ev.tip === 'cert' ? (lang === 'bs' ? 'Uvjerenje' : 'Certificate') : ev.tip === 'ppe' ? 'OZO' : ev.tip === 'equip' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : ev.tip === 'doc' ? (lang === 'bs' ? 'Dokument' : 'Document') : ev.tip === 'service' ? 'Servis' : (lang === 'bs' ? 'Događaj' : 'Event');
+                                const tipIcon = ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ev.tip === 'risk' ? '🛡️' : '📌';
+                                const tipLabel = ev.tip === 'cert' ? (lang === 'bs' ? 'Uvjerenje' : 'Certificate') : ev.tip === 'ppe' ? 'OZO' : ev.tip === 'equip' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : ev.tip === 'doc' ? (lang === 'bs' ? 'Dokument' : 'Document') : ev.tip === 'service' ? 'Servis' : ev.tip === 'risk' ? (lang === 'bs' ? 'Mjera rizika' : 'Risk Measure') : (lang === 'bs' ? 'Događaj' : 'Event');
                                 const isExpired = ev.datum && new Date(ev.datum) < new Date();
                                 return (
                                     <div key={ev.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, marginBottom: 6, background: isExpired ? 'rgba(198,40,40,0.06)' : 'rgba(0,191,166,0.04)', border: '1px solid ' + (isExpired ? 'rgba(198,40,40,0.15)' : 'var(--border-light)'), cursor: 'pointer', transition: 'all 0.15s' }}
