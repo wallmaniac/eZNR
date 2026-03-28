@@ -170,6 +170,8 @@ export default function DashboardPage() {
     const [workerSearch, setWorkerSearch] = useState('');
     const [workerDropOpen, setWorkerDropOpen] = useState(false);
     const workerDropRef = useRef(null);
+    const [showMonthPicker, setShowMonthPicker] = useState(false);
+    const [pickerYear, setPickerYear] = useState(() => new Date().getFullYear());
     const monthPickerRef = useRef(null);
 
     useEffect(() => {
@@ -188,8 +190,11 @@ export default function DashboardPage() {
     }, [activeCompanyId, user?.companyIds]);
 
     useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
-            if (workerDropRef.current && !workerDropRef.current.contains(e.target)) setWorkerDropOpen(false); };
+        const handleClick = (e) => {
+            if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
+            if (workerDropRef.current && !workerDropRef.current.contains(e.target)) setWorkerDropOpen(false);
+            if (monthPickerRef.current && !monthPickerRef.current.contains(e.target)) setShowMonthPicker(false);
+        };
         document.addEventListener('mousedown', handleClick);
         setNotifSettings(getNotificationSettings() || {});
         return () => document.removeEventListener('mousedown', handleClick);
@@ -577,30 +582,120 @@ export default function DashboardPage() {
             <div className="card" style={{ marginBottom: 24 }}>
                 <div className="card-body">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                            <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
-                                ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
-                            </button>
-                            <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <h2 
-                                    onClick={() => monthPickerRef.current?.showPicker()} 
-                                    style={{ margin: 0, textTransform: 'capitalize', cursor: 'pointer' }}
-                                >📅 {monthName}</h2>
-                                <input type="month" 
-                                    ref={monthPickerRef}
-                                    className="month-picker-overlay"
-                                    value={`${year}-${String(month + 1).padStart(2, '0')}`} 
-                                    onChange={e => {
-                                        if (e.target.value) {
-                                            const [y, m] = e.target.value.split('-');
-                                            setCurrentDate(new Date(parseInt(y), parseInt(m) - 1, 1));
-                                        }
-                                    }}
-                                    style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none' }} 
-                                />
-                            </div>
-                            <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
-                                {lang === 'bs' ? 'Sljedeći' : 'Next'} ▶
-                            </button>
+                        <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
+                            ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
+                        </button>
+
+                        {/* ── Custom Month/Year Picker ── */}
+                        <div ref={monthPickerRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <h2
+                                onClick={() => { setPickerYear(year); setShowMonthPicker(p => !p); }}
+                                style={{
+                                    margin: 0, textTransform: 'capitalize', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                    padding: '4px 12px', borderRadius: 'var(--radius-md)',
+                                    transition: 'background 0.15s',
+                                    background: showMonthPicker ? 'rgba(0,191,166,0.1)' : 'transparent',
+                                    userSelect: 'none',
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.08)'}
+                                onMouseLeave={e => e.currentTarget.style.background = showMonthPicker ? 'rgba(0,191,166,0.1)' : 'transparent'}
+                            >
+                                📅 {monthName}
+                                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginLeft: 2 }}>{showMonthPicker ? '▲' : '▼'}</span>
+                            </h2>
+
+                            {showMonthPicker && (() => {
+                                const MONTH_LABELS = lang === 'bs'
+                                    ? ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
+                                    : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                const now = new Date();
+                                return (
+                                    <div style={{
+                                        position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
+                                        zIndex: 9999,
+                                        background: 'var(--bg-card)',
+                                        border: '1px solid var(--border)',
+                                        borderRadius: 'var(--radius-lg)',
+                                        boxShadow: '0 16px 48px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.12)',
+                                        padding: '16px',
+                                        minWidth: 260,
+                                        backdropFilter: 'blur(12px)',
+                                        animation: 'fadeIn 0.15s ease',
+                                    }}>
+                                        {/* Year navigator */}
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                                            <button
+                                                onClick={() => setPickerYear(y => y - 1)}
+                                                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                            >‹</button>
+                                            <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', letterSpacing: '0.02em' }}>{pickerYear}</span>
+                                            <button
+                                                onClick={() => setPickerYear(y => y + 1)}
+                                                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}
+                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                            >›</button>
+                                        </div>
+
+                                        {/* Month grid */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginBottom: 14 }}>
+                                            {MONTH_LABELS.map((lbl, idx) => {
+                                                const isActive = pickerYear === year && idx === month;
+                                                const isToday = pickerYear === now.getFullYear() && idx === now.getMonth();
+                                                return (
+                                                    <button
+                                                        key={idx}
+                                                        onClick={() => {
+                                                            setCurrentDate(new Date(pickerYear, idx, 1));
+                                                            setShowMonthPicker(false);
+                                                        }}
+                                                        style={{
+                                                            padding: '7px 4px',
+                                                            borderRadius: 8,
+                                                            border: isToday && !isActive ? '1.5px solid var(--primary)' : '1.5px solid transparent',
+                                                            background: isActive
+                                                                ? 'var(--primary)'
+                                                                : 'var(--bg-input)',
+                                                            color: isActive ? '#fff' : isToday ? 'var(--primary)' : 'var(--text)',
+                                                            fontWeight: isActive || isToday ? 700 : 500,
+                                                            fontSize: '0.8rem',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.12s',
+                                                            boxShadow: isActive ? '0 2px 8px rgba(0,191,166,0.35)' : 'none',
+                                                        }}
+                                                        onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(0,191,166,0.12)'; }}
+                                                        onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-input)'; }}
+                                                    >{lbl}</button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Footer shortcuts */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border-light)', paddingTop: 10 }}>
+                                            <button
+                                                onClick={() => { setCurrentDate(new Date(year, -1, 1)); setShowMonthPicker(false); }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 6, transition: 'color 0.12s' }}
+                                                onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
+                                                onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                                            >{lang === 'bs' ? 'Poništi' : 'Clear'}</button>
+                                            <button
+                                                onClick={() => { setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1)); setShowMonthPicker(false); }}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, padding: '2px 6px', borderRadius: 6, transition: 'opacity 0.12s' }}
+                                                onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
+                                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                                            >{lang === 'bs' ? 'Ovaj mjesec' : 'This month'}</button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+
+                        <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
+                            {lang === 'bs' ? 'Sljedeći' : 'Next'} ▶
+                        </button>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1, borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>

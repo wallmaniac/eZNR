@@ -130,7 +130,19 @@ export function NavigationGuardProvider({ children }) {
                         boxShadow: 'var(--shadow-xl)',
                         border: '1px solid var(--border)',
                         animation: 'fadeIn 0.15s ease-out',
+                        position: 'relative',
                     }}>
+                        {/* × close button — stays on page */}
+                        <button
+                            onClick={handleStay}
+                            style={{
+                                position: 'absolute', top: 14, right: 14,
+                                background: 'none', border: 'none', fontSize: '1.1rem',
+                                cursor: 'pointer', color: 'var(--text-muted)',
+                                lineHeight: 1, padding: '4px 6px', borderRadius: 6,
+                            }}
+                            title="Ostani na stranici"
+                        >✕</button>
                         <div style={{ fontSize: '2rem', marginBottom: 12, textAlign: 'center' }}>⚠️</div>
                         <h2 style={{ margin: '0 0 8px', textAlign: 'center', fontSize: '1.2rem' }}>
                             Nesačuvane promjene

@@ -538,7 +538,8 @@ export default function QuestionnairesPage() {
             onClick={(e) => { if (e.target === e.currentTarget) setShowAiModal(false); }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 400, maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                🤖 {lang === 'bs' ? 'AI Generator upitnika za procjenu rizika' : 'AI Risk Assessment Questionnaire Generator'}
+                <span>🤖 {lang === 'bs' ? 'AI Generator upitnika za procjenu rizika' : 'AI Risk Assessment Questionnaire Generator'}</span>
+                <button className="btn btn-ghost btn-icon" onClick={() => setShowAiModal(false)} style={{ marginLeft: 'auto' }}>✕</button>
               </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
                 AI će generisati upitnik specifičan za odabrano radno mjesto, pokrivajući opasnosti, zaštitnu opremu, osposobljavanje, radnu opremu i zdravstvene preglede.

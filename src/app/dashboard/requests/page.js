@@ -200,10 +200,13 @@ export default function RequestsPage() {
       }}>
         <div className="card" style={{ width: 600, maxWidth: '95vw', maxHeight: '90vh', overflow: 'auto' }}>
           <div className="card-body">
-            <div style={sectionTitle}>
-              {editingItemIdx !== null
-                ? (lang === 'bs' ? 'Uredi stavku zahtjevnice' : 'Edit request item')
-                : (lang === 'bs' ? 'Nova stavka zahtjevnice' : 'New request item')}
+            <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>
+                {editingItemIdx !== null
+                  ? (lang === 'bs' ? 'Uredi stavku zahtjevnice' : 'Edit request item')
+                  : (lang === 'bs' ? 'Nova stavka zahtjevnice' : 'New request item')}
+              </span>
+              <button className="btn btn-ghost btn-icon" onClick={() => setShowItemForm(false)} style={{ marginLeft: 8 }}>✕</button>
             </div>
 
             <div style={{ marginBottom: 12 }}>

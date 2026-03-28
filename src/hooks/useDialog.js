@@ -108,8 +108,22 @@ export function useDialog() {
                     background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)',
                     padding: '28px 32px', maxWidth: isChoose ? 460 : 420, width: '90%',
                     boxShadow: 'var(--shadow-xl)', border: '1px solid var(--border)',
-                    animation: 'slideUp 0.15s ease-out',
+                    animation: 'slideUp 0.15s ease-out', position: 'relative',
                 }}>
+                    {/* × close button */}
+                    <button
+                        onClick={() => close(isConfirm ? false : isPrompt ? null : undefined)}
+                        style={{
+                            position: 'absolute', top: 14, right: 14,
+                            background: 'none', border: 'none', fontSize: '1.1rem',
+                            cursor: 'pointer', color: 'var(--text-muted)',
+                            lineHeight: 1, padding: '4px 6px', borderRadius: 6,
+                            transition: 'color 0.15s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = 'var(--text)'}
+                        onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
+                        title="Zatvori"
+                    >✕</button>
                     {/* Icon + Title */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
                         <span style={{ fontSize: '1.6rem' }}>{icon}</span>
