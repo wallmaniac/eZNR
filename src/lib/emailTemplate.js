@@ -1,7 +1,9 @@
 // ============================================================================
 // EMAIL TEMPLATE — builds the full styled HTML email
-// Uses pure HTML/CSS — no external images (avoids broken image & spam triggers)
+// Uses email-header.png hosted at https://eznr.vercel.app/email-header.png
 // ============================================================================
+
+const BASE_URL = 'https://eznr.vercel.app';
 
 /**
  * Build the full HTML email body for questionnaire/training dispatch.
@@ -17,7 +19,7 @@ export function buildHtmlEmail({
 }) {
     const itemLabel = isTraining ? 'obuku / prezentaciju' : 'upitnik';
     const itemLabelCap = isTraining ? 'Obuka / Prezentacija' : 'Upitnik';
-    const ctaLabel = isTraining ? 'Pristupi obuci →' : 'Ispuni upitnik →';
+    const ctaLabel = isTraining ? 'Pristupi obuci &rarr;' : 'Ispuni upitnik &rarr;';
     const titleIcon = isTraining ? '🎬' : '📝';
     const deadlineStr = deadline
         ? new Date(deadline).toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' })
@@ -27,8 +29,8 @@ export function buildHtmlEmail({
     return `<!DOCTYPE html>
 <html lang="bs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${isTraining ? 'Obuka' : 'Upitnik'} — ${questionnaireName}</title>
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
@@ -38,28 +40,13 @@ export function buildHtmlEmail({
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-          <!-- Header banner — pure CSS, no image needed -->
+          <!-- Header banner image -->
           <tr>
-            <td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%);">
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="padding:32px 40px;">
-                    <!-- Logo wordmark -->
-                    <table cellpadding="0" cellspacing="0">
-                      <tr>
-                        <td style="background:rgba(255,255,255,0.15);border-radius:10px;padding:8px 16px;">
-                          <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">eZNR</span>
-                          <span style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:500;margin-left:8px;vertical-align:middle;">Digitalna platforma za zaštitu na radu</span>
-                        </td>
-                      </tr>
-                    </table>
-                    <!-- Tag line -->
-                    <p style="margin:18px 0 0;font-size:13px;color:rgba(255,255,255,0.8);font-weight:500;letter-spacing:0.3px;">
-                      ${isTraining ? '🎬 Nova obuka je dodijeljena' : '📝 Novi upitnik je dodijeljen'}
-                    </p>
-                  </td>
-                </tr>
-              </table>
+            <td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;">
+              <img src="${BASE_URL}/email-header.png"
+                   alt="eZNR — Digitalna platforma za zaštitu na radu"
+                   width="600"
+                   style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;" />
             </td>
           </tr>
 
@@ -74,13 +61,13 @@ export function buildHtmlEmail({
               </h1>
 
               <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.75;">
-                Poštovani/a <strong style="color:#1e293b;">${toName}</strong>,<br/><br/>
+                Poštovani/a <strong style="color:#1e293b;">${toName}</strong>,<br><br>
                 pozivamo Vas da popunite ${itemLabel} koji Vam je dodijelio
                 <strong style="color:#4f46e5;">${senderDisplay}</strong>.
                 Kliknite na dugme ispod kako biste pristupili ${itemLabel}u.
               </p>
 
-              <!-- CTA button -->
+              <!-- CTA -->
               <div style="text-align:center;margin:32px 0;">
                 <a href="${fillLink}"
                    style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);
@@ -127,7 +114,7 @@ export function buildHtmlEmail({
                 Poslao: <strong style="color:#4f46e5;">${senderDisplay}</strong>
               </p>
               <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
-                Ovaj email je automatski generiran putem platforme eZNR.<br/>
+                Ovaj email je automatski generiran putem platforme eZNR.<br>
                 Za pitanja kontaktirajte osobu koja Vam je poslala ${itemLabel}.
               </p>
             </td>
