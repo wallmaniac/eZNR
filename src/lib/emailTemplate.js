@@ -1,6 +1,6 @@
 // ============================================================================
 // EMAIL TEMPLATE — builds the full styled HTML email
-// Matches the original EmailJS template design exactly
+// Uses pure HTML/CSS — no external images (avoids broken image & spam triggers)
 // ============================================================================
 
 /**
@@ -38,13 +38,28 @@ export function buildHtmlEmail({
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-          <!-- Header banner -->
+          <!-- Header banner — pure CSS, no image needed -->
           <tr>
-            <td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;">
-              <img src="https://eznr.vercel.app/email-header.png"
-                   alt="eZNR — Digitalna platforma za zaštitu na radu"
-                   width="600"
-                   style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;" />
+            <td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 60%,#a855f7 100%);">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding:32px 40px;">
+                    <!-- Logo wordmark -->
+                    <table cellpadding="0" cellspacing="0">
+                      <tr>
+                        <td style="background:rgba(255,255,255,0.15);border-radius:10px;padding:8px 16px;">
+                          <span style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:-0.5px;">eZNR</span>
+                          <span style="font-size:11px;color:rgba(255,255,255,0.75);font-weight:500;margin-left:8px;vertical-align:middle;">Digitalna platforma za zaštitu na radu</span>
+                        </td>
+                      </tr>
+                    </table>
+                    <!-- Tag line -->
+                    <p style="margin:18px 0 0;font-size:13px;color:rgba(255,255,255,0.8);font-weight:500;letter-spacing:0.3px;">
+                      ${isTraining ? '🎬 Nova obuka je dodijeljena' : '📝 Novi upitnik je dodijeljen'}
+                    </p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
 
@@ -70,8 +85,7 @@ export function buildHtmlEmail({
                 <a href="${fillLink}"
                    style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);
                           color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;
-                          padding:16px 44px;border-radius:12px;letter-spacing:0.2px;
-                          box-shadow:0 4px 24px rgba(79,70,229,0.38);">
+                          padding:16px 44px;border-radius:12px;letter-spacing:0.2px;">
                   ${ctaLabel}
                 </a>
               </div>
