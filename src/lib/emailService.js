@@ -1,142 +1,151 @@
 'use client';
 
 // ============================================================================
-// EMAIL SERVICE — mailto: based dispatcher
-// Opens the user's default email client (Outlook, Gmail, Thunderbird, etc.)
-// with a pre-filled message. No external dependencies, no limits.
+// EMAIL SERVICE — Server-side SMTP dispatcher
+// Calls /api/send-email which uses Nodemailer to send styled HTML emails.
+// SMTP credentials are loaded from localStorage (eznr_smtp_config).
 // ============================================================================
 
-/**
- * Build a nicely formatted plain-text email body matching the old HTML template.
- */
-function buildEmailBody({ toName, questionnaireName, fillLink, deadline, senderName, companyName, isTraining = false }) {
-    const itemLabel = isTraining ? 'obuku / prezentaciju' : 'upitnik';
-    const itemLabelCap = isTraining ? 'Obuka / Prezentacija' : 'Upitnik';
-    const deadlineStr = deadline
-        ? new Date(deadline).toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' })
-        : 'Nema roka';
+const SMTP_KEY = 'eznr_smtp_config';
 
-    return [
-        `Pozvani ste na ispunjavanje`,
-        `📝 ${questionnaireName}`,
-        ``,
-        `Poštovani/a ${toName},`,
-        ``,
-        `pozivamo Vas da popunite ${itemLabel} koji Vam je dodijelio ${senderName}${companyName ? ` (${companyName})` : ''}.`,
-        ``,
-        `Pristupite putem sljedećeg linka:`,
-        ``,
-        `▶ ${fillLink}`,
-        ``,
-        `────────────────────────────────`,
-        `${itemLabelCap}: ${questionnaireName}`,
-        `Rok za ispunjavanje: ${deadlineStr}`,
-        `Poslao/la: ${senderName}${companyName ? ` | ${companyName}` : ''}`,
-        `────────────────────────────────`,
-        ``,
-        `Ukoliko link ne radi, kopirajte ga ručno u preglednik:`,
-        `${fillLink}`,
-        ``,
-        `---`,
-        `Ovaj email je generiran putem platforme eZNR — Digitalna platforma za zaštitu na radu.`,
-        `Za pitanja kontaktirajte osobu koja Vam je poslala ${itemLabel}.`,
-    ].join('\n');
+/**
+ * Load SMTP config from localStorage.
+ * Returns null if not configured.
+ */
+export function getSmtpConfig() {
+    if (typeof window === 'undefined') return null;
+    try {
+        const raw = localStorage.getItem(SMTP_KEY);
+        return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
 }
 
 /**
- * Open a single mailto: link in the user's default email client.
- * Returns immediately (non-blocking).
+ * Save SMTP config to localStorage.
  */
-export function openMailtoLink({ toEmail, toName, questionnaireName, link, deadline, senderName, companyName, replyTo, isTraining = false }) {
-    const subject = encodeURIComponent(`${isTraining ? '🎬 Obuka' : '📝 Upitnik'}: ${questionnaireName}`);
-    const body = encodeURIComponent(buildEmailBody({
-        toName: toName || toEmail,
-        questionnaireName,
-        fillLink: link,
-        deadline,
-        senderName: senderName || 'eZNR Admin',
-        companyName: companyName || '',
-        isTraining,
-    }));
-
-    const replyToPart = replyTo ? `&reply-to=${encodeURIComponent(replyTo)}` : '';
-    const mailtoUrl = `mailto:${encodeURIComponent(toEmail)}?subject=${subject}&body=${body}${replyToPart}`;
-
-    // Use window.open to avoid navigation blocking on some browsers
-    window.location.href = mailtoUrl;
+export function saveSmtpConfig(config) {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(SMTP_KEY, JSON.stringify(config));
 }
 
 /**
- * Check if email sending is "configured" — always true for mailto approach
+ * Clear saved SMTP config.
+ */
+export function clearSmtpConfig() {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(SMTP_KEY);
+}
+
+/**
+ * Check if SMTP is configured with the minimum required fields.
  */
 export function isEmailConfigured() {
-    return true;
+    const cfg = getSmtpConfig();
+    return !!(cfg?.host && cfg?.user && cfg?.pass);
 }
 
 /**
- * Send multiple emails via mailto: — opens email client for each recipient.
- * Since mailto: is synchronous (just opens the client), we simulate progress
- * by processing recipients one at a time with a short delay between each.
- *
- * For UX: if there are many recipients, user will get a prompt explaining
- * that their email client will open once per recipient.
+ * Send a single email via /api/send-email
+ */
+export async function sendEmail({
+    toEmail,
+    toName,
+    questionnaireName,
+    link,
+    deadline,
+    senderName,
+    companyName,
+    replyTo,
+    isTraining = false,
+    smtpConfig,
+}) {
+    const cfg = smtpConfig || getSmtpConfig();
+    if (!cfg?.host || !cfg?.user || !cfg?.pass) {
+        return {
+            success: false,
+            error: 'SMTP nije konfiguriran. Idite na Postavke → Email / SMTP i unesite podatke.',
+        };
+    }
+
+    try {
+        const res = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                toEmail,
+                toName,
+                questionnaireName,
+                fillLink: link,
+                deadline,
+                senderName,
+                companyName,
+                replyTo,
+                isTraining,
+                smtpConfig: cfg,
+            }),
+        });
+
+        const data = await res.json();
+        return data.success ? { success: true } : { success: false, error: data.error || 'Greška pri slanju.' };
+    } catch (err) {
+        return { success: false, error: err?.message || 'Mreži greška pri kontaktiranju servera.' };
+    }
+}
+
+/**
+ * Send emails to multiple recipients (batch).
+ * Each recipient gets their own unique personalized link.
  *
  * @param {Array<{toEmail, toName}>} recipients
- * @param {Object} questionnaireInfo - { questionnaireName, tokens, deadline, senderName, companyName, replyTo, isTraining }
+ * @param {Object} info - { questionnaireName, tokens, deadline, senderName, companyName, replyTo, isTraining }
  * @param {Function} onProgress - callback(sent, total, currentEmail)
- * @returns {Promise<{sent: number, failed: number, errors: Array, openedLinks: Array}>}
+ * @returns {Promise<{sent, failed, errors}>}
  */
-export async function sendBatchEmails(recipients, questionnaireInfo, onProgress) {
-    const { questionnaireName, tokens, deadline, senderName, companyName, replyTo, isTraining } = questionnaireInfo;
+export async function sendBatchEmails(recipients, info, onProgress) {
+    const { questionnaireName, tokens, deadline, senderName, companyName, replyTo, isTraining } = info;
+    const smtpConfig = getSmtpConfig();
 
     let sent = 0;
     let failed = 0;
     const errors = [];
-    const openedLinks = [];
 
     for (let i = 0; i < recipients.length; i++) {
         const r = recipients[i];
         onProgress?.(i, recipients.length, r.toEmail);
 
-        try {
-            const link = tokens[i];
-            if (!link || link.endsWith('error')) {
-                failed++;
-                errors.push({ email: r.toEmail, error: 'Sesija nije kreirana' });
-                continue;
-            }
-
-            const subject = encodeURIComponent(`${isTraining ? '🎬 Obuka' : '📝 Upitnik'}: ${questionnaireName}`);
-            const body = encodeURIComponent(buildEmailBody({
-                toName: r.toName || r.toEmail,
-                questionnaireName,
-                fillLink: link,
-                deadline,
-                senderName: senderName || 'eZNR Admin',
-                companyName: companyName || '',
-                isTraining: !!isTraining,
-            }));
-
-            const replyToPart = replyTo ? `&reply-to=${encodeURIComponent(replyTo)}` : '';
-            const mailtoUrl = `mailto:${encodeURIComponent(r.toEmail)}?subject=${subject}&body=${body}${replyToPart}`;
-
-            openedLinks.push({ email: r.toEmail, mailto: mailtoUrl, link });
-
-            // Open the email client
-            window.open(mailtoUrl, '_blank');
-
-            sent++;
-
-            // Give the OS time to open the mailto handler before the next one
-            if (i < recipients.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 1200));
-            }
-        } catch (err) {
+        const link = tokens[i];
+        if (!link || link.endsWith('error')) {
             failed++;
-            errors.push({ email: r.toEmail, error: err?.message || 'Greška pri otvaranju email klijenta' });
+            errors.push({ email: r.toEmail, error: 'Sesija nije kreirana' });
+            continue;
+        }
+
+        const result = await sendEmail({
+            toEmail: r.toEmail,
+            toName: r.toName,
+            questionnaireName,
+            link,
+            deadline,
+            senderName,
+            companyName,
+            replyTo,
+            isTraining: !!isTraining,
+            smtpConfig,
+        });
+
+        if (result.success) {
+            sent++;
+        } else {
+            failed++;
+            errors.push({ email: r.toEmail, error: result.error });
+        }
+
+        // Small delay between sends to avoid smtp rate limiting
+        if (i < recipients.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 300));
         }
     }
 
     onProgress?.(recipients.length, recipients.length, 'Završeno');
-    return { sent, failed, errors, openedLinks };
+    return { sent, failed, errors };
 }

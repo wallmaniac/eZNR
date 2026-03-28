@@ -18,6 +18,7 @@ import {
   getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
+import { getSmtpConfig, saveSmtpConfig, clearSmtpConfig, sendEmail } from '@/lib/emailService';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -61,6 +62,12 @@ export default function SettingsPage() {
   const [syncProgress, setSyncProgress] = useState('');
   const [syncResults, setSyncResults] = useState(null);
   const [syncStats, setSyncStats] = useState(null);
+
+  // SMTP state
+  const [smtpConfig, setSmtpConfig] = useState(() => getSmtpConfig() || { host: '', port: '587', secure: false, user: '', pass: '' });
+  const [smtpTestEmail, setSmtpTestEmail] = useState('');
+  const [smtpTestStatus, setSmtpTestStatus] = useState(null); // null | 'sending' | 'ok' | 'error'
+  const [smtpTestError, setSmtpTestError] = useState('');
 
   // Load profile data
   useEffect(() => {
@@ -189,6 +196,7 @@ export default function SettingsPage() {
     { key: 'activity', label: lang === 'bs' ? 'Aktivnost' : 'Activity', icon: '📋' },
     { key: 'profile', label: lang === 'bs' ? 'Profil' : 'Profile', icon: '👤' },
     { key: 'company', label: lang === 'bs' ? 'Firma' : 'Company', icon: '🏢' },
+    { key: 'email', label: lang === 'bs' ? 'Email / SMTP' : 'Email / SMTP', icon: '✉️' },
     { key: 'notifications', label: lang === 'bs' ? 'Obavijesti' : 'Notifications', icon: '🔔' },
     { key: 'display', label: lang === 'bs' ? 'Prikaz' : 'Display', icon: '🎨' },
     ...(isAdmin ? [
@@ -197,6 +205,39 @@ export default function SettingsPage() {
       { key: 'firebase', label: 'Firebase Sync', icon: '🔥' },
     ] : []),
   ];
+
+  const handleSmtpSave = () => {
+    saveSmtpConfig(smtpConfig);
+    showSaved();
+  };
+
+  const handleSmtpTest = async () => {
+    const testTo = smtpTestEmail.trim() || smtpConfig.user;
+    if (!testTo || !smtpConfig.host || !smtpConfig.user || !smtpConfig.pass) {
+      setSmtpTestStatus('error');
+      setSmtpTestError('Unesite sve SMTP podatke i email za test.');
+      return;
+    }
+    setSmtpTestStatus('sending');
+    setSmtpTestError('');
+    const result = await sendEmail({
+      toEmail: testTo,
+      toName: 'Test',
+      questionnaireName: 'Test email — eZNR',
+      link: 'https://eznr.vercel.app',
+      deadline: null,
+      senderName: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin',
+      companyName: '',
+      isTraining: false,
+      smtpConfig,
+    });
+    if (result.success) {
+      setSmtpTestStatus('ok');
+    } else {
+      setSmtpTestStatus('error');
+      setSmtpTestError(result.error || 'Greška pri slanju.');
+    }
+  };
 
   const validTabs = tabs.map(t => t.key);
   const currentTab = validTabs.includes(activeTab) ? activeTab : validTabs[0];
@@ -1172,6 +1213,125 @@ export default function SettingsPage() {
                   {lang === 'bs' ? 'Log je prazan.' : 'Log is empty.'}
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════ */}
+      {/* TAB: EMAIL / SMTP                                 */}
+      {/* ══════════════════════════════════════════════════ */}
+      {currentTab === 'email' && (
+        <div className="card">
+          <div className="card-body">
+            <h3 style={{ marginBottom: 6 }}>✉️ {lang === 'bs' ? 'Email / SMTP postavke' : 'Email / SMTP Settings'}</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 24 }}>
+              {lang === 'bs'
+                ? 'Unesite podatke vašeg SMTP servera. Emailovi će biti slani direktno s vašeg email naloga s punim HTML dizajnom.'
+                : 'Enter your SMTP server details. Emails will be sent directly from your email account with full HTML design.'}
+            </p>
+
+            {/* Quick presets */}
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontWeight: 600, fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                ⚡ {lang === 'bs' ? 'Brzi odabir' : 'Quick presets'}
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {[
+                  { label: '📧 Office 365', host: 'smtp.office365.com', port: '587', secure: false },
+                  { label: '📧 Outlook.com', host: 'smtp-mail.outlook.com', port: '587', secure: false },
+                  { label: '📧 Gmail', host: 'smtp.gmail.com', port: '587', secure: false },
+                  { label: '📧 Yahoo', host: 'smtp.mail.yahoo.com', port: '587', secure: false },
+                ].map(p => (
+                  <button key={p.label}
+                    onClick={() => setSmtpConfig(prev => ({ ...prev, host: p.host, port: p.port, secure: p.secure }))}
+                    style={{
+                      padding: '7px 14px', borderRadius: 8, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600,
+                      border: smtpConfig.host === p.host ? '2px solid var(--primary)' : '1px solid var(--border)',
+                      background: smtpConfig.host === p.host ? 'rgba(99,102,241,0.1)' : 'var(--bg-input)',
+                      color: smtpConfig.host === p.host ? 'var(--primary)' : 'var(--text)',
+                      transition: 'all 0.15s',
+                    }}>
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* SMTP fields */}
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">SMTP Host *</label>
+                <input className="form-input" value={smtpConfig.host}
+                  onChange={e => setSmtpConfig(p => ({ ...p, host: e.target.value }))}
+                  placeholder="smtp.office365.com" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Port *</label>
+                <input className="form-input" value={smtpConfig.port} type="number"
+                  onChange={e => setSmtpConfig(p => ({ ...p, port: e.target.value }))}
+                  placeholder="587" />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">{lang === 'bs' ? 'Email (korisničko ime)' : 'Email (username)'} *</label>
+                <input className="form-input" type="email" value={smtpConfig.user}
+                  onChange={e => setSmtpConfig(p => ({ ...p, user: e.target.value }))}
+                  placeholder="vas.email@firma.ba" />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">{lang === 'bs' ? 'Lozinka / App Password' : 'Password / App Password'} *</label>
+                <input className="form-input" type="password" value={smtpConfig.pass}
+                  onChange={e => setSmtpConfig(p => ({ ...p, pass: e.target.value }))}
+                  placeholder="••••••••••••" />
+              </div>
+            </div>
+
+            {/* SSL toggle */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, padding: '12px 16px', borderRadius: 10, background: 'var(--bg-input)' }}>
+              <input type="checkbox" id="smtp-ssl" checked={smtpConfig.secure}
+                onChange={e => setSmtpConfig(p => ({ ...p, secure: e.target.checked }))}
+                style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
+              <label htmlFor="smtp-ssl" style={{ cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                SSL/TLS {lang === 'bs' ? '(port 465 — isključiti za port 587)' : '(port 465 — disable for port 587)'}
+              </label>
+            </div>
+
+            {/* Gmail note */}
+            {smtpConfig.host === 'smtp.gmail.com' && (
+              <div style={{ padding: '12px 16px', borderRadius: 10, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', marginBottom: 20, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                ⚠️ <strong>Gmail:</strong> {lang === 'bs'
+                  ? 'Trebate generirati App Password. Idite na Google Account → Sigurnost → 2-koračna provjera → App lozinke.'
+                  : 'You need to generate an App Password. Go to Google Account → Security → 2-Step Verification → App passwords.'}
+              </div>
+            )}
+
+            {/* Test email */}
+            <div style={{ padding: '16px 20px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-input)', marginBottom: 20 }}>
+              <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 10 }}>🧪 {lang === 'bs' ? 'Testiraj konfiguraciju' : 'Test configuration'}</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input className="form-input" type="email" style={{ flex: 1, maxWidth: 300 }}
+                  value={smtpTestEmail}
+                  onChange={e => setSmtpTestEmail(e.target.value)}
+                  placeholder={lang === 'bs' ? 'Email za testni email (ili vaš email)' : 'Email to receive test (or your email)'} />
+                <button className="btn btn-primary" onClick={handleSmtpTest}
+                  disabled={smtpTestStatus === 'sending' || !smtpConfig.host || !smtpConfig.user || !smtpConfig.pass}>
+                  {smtpTestStatus === 'sending' ? '⏳ Slanje...' : '📤 Pošalji test'}
+                </button>
+                {smtpTestStatus === 'ok' && <span style={{ color: 'var(--success)', fontWeight: 700, fontSize: '0.88rem' }}>✅ {lang === 'bs' ? 'Uspješno!' : 'Success!'}</span>}
+                {smtpTestStatus === 'error' && <span style={{ color: 'var(--danger)', fontWeight: 600, fontSize: '0.82rem' }}>❌ {smtpTestError}</span>}
+              </div>
+            </div>
+
+            {/* Save / Clear */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button className="btn btn-primary" onClick={handleSmtpSave}>💾 {lang === 'bs' ? 'Spremi SMTP postavke' : 'Save SMTP Settings'}</button>
+              <button className="btn" style={{ background: 'var(--bg-input)', color: 'var(--danger)', border: '1px solid var(--border)' }}
+                onClick={() => { clearSmtpConfig(); setSmtpConfig({ host: '', port: '587', secure: false, user: '', pass: '' }); showSaved(); }}>
+                🗑️ {lang === 'bs' ? 'Obriši postavke' : 'Clear settings'}
+              </button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>
         </div>
