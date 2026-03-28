@@ -1406,10 +1406,55 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 return <tr key={ri.id}>
                                     <td><span style={{ padding: '3px 10px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizik}</span></td>
                                     <td>{rlA ? <span style={{ padding: '3px 10px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizikNakon}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                                    <td style={{ fontSize: '0.82rem' }}>{hp ? `${hp.oznaka || ''} ${hp.naziv}` : ri.opisOpasnosti || '—'}</td>
-                                    <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
-                                    <td style={{ fontSize: '0.82rem' }}>{ri.postojeceMjere || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                                    <td style={{ fontSize: '0.82rem', fontWeight: 600 }}>{ri.predlozeneMjere || <span style={{ color: 'var(--danger)' }}>⚠ Nije definirano</span>}</td>
+                                    {/* OPASNOST — editable opisOpasnosti; catalog badge shown above if linked */}
+                                    <td style={{ fontSize: '0.82rem', minWidth: 160 }}>
+                                        {hp && (
+                                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                📋 {hp.oznaka ? `${hp.oznaka} ` : ''}{hp.naziv}
+                                            </div>
+                                        )}
+                                        <input
+                                            className="form-input"
+                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%' }}
+                                            value={ri.opisOpasnosti || ''}
+                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'opisOpasnosti', e.target.value)}
+                                            placeholder="Opis opasnosti..."
+                                        />
+                                    </td>
+                                    {/* RADNO MJESTO — select dropdown */}
+                                    <td style={{ fontSize: '0.82rem', minWidth: 140 }}>
+                                        <select
+                                            className="form-select"
+                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%' }}
+                                            value={ri.radnoMjestoId || ''}
+                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'radnoMjestoId', e.target.value)}
+                                        >
+                                            <option value="">— Odaberi —</option>
+                                            {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
+                                        </select>
+                                    </td>
+                                    {/* POSTOJEĆE MJERE — textarea */}
+                                    <td style={{ fontSize: '0.82rem', minWidth: 160 }}>
+                                        <textarea
+                                            className="form-input"
+                                            rows={2}
+                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', resize: 'vertical', minHeight: 48 }}
+                                            value={ri.postojeceMjere || ''}
+                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'postojeceMjere', e.target.value)}
+                                            placeholder="Unesite postojeće mjere..."
+                                        />
+                                    </td>
+                                    {/* PREDLOŽENE MJERE — textarea */}
+                                    <td style={{ fontSize: '0.82rem', minWidth: 160 }}>
+                                        <textarea
+                                            className="form-input"
+                                            rows={2}
+                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', resize: 'vertical', minHeight: 48, borderColor: ri.predlozeneMjere ? undefined : 'rgba(244,67,54,0.4)' }}
+                                            value={ri.predlozeneMjere || ''}
+                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'predlozeneMjere', e.target.value)}
+                                            placeholder="⚠ Definirajte mjere..."
+                                        />
+                                    </td>
                                     <td style={{ fontSize: '0.82rem' }}>
                                         <input
                                             className="form-input"
