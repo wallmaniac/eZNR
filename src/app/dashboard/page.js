@@ -170,6 +170,7 @@ export default function DashboardPage() {
     const [workerSearch, setWorkerSearch] = useState('');
     const [workerDropOpen, setWorkerDropOpen] = useState(false);
     const workerDropRef = useRef(null);
+    const monthPickerRef = useRef(null);
 
     useEffect(() => {
         const uids = user?.companyIds || [];
@@ -580,8 +581,12 @@ export default function DashboardPage() {
                                 ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
                             </button>
                             <div style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <h2 style={{ margin: 0, textTransform: 'capitalize' }}>📅 {monthName}</h2>
+                                <h2 
+                                    onClick={() => monthPickerRef.current?.showPicker()} 
+                                    style={{ margin: 0, textTransform: 'capitalize', cursor: 'pointer' }}
+                                >📅 {monthName}</h2>
                                 <input type="month" 
+                                    ref={monthPickerRef}
                                     className="month-picker-overlay"
                                     value={`${year}-${String(month + 1).padStart(2, '0')}`} 
                                     onChange={e => {
@@ -590,7 +595,7 @@ export default function DashboardPage() {
                                             setCurrentDate(new Date(parseInt(y), parseInt(m) - 1, 1));
                                         }
                                     }}
-                                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }} 
+                                    style={{ position: 'absolute', top: 0, left: 0, width: 0, height: 0, opacity: 0, pointerEvents: 'none' }} 
                                 />
                             </div>
                             <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>

@@ -732,11 +732,11 @@ export default function QuestionnairesPage() {
             {/* Row 5: Email Subject, Email Body */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Email Subject' : 'Email Subject'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'Naslov emaila' : 'Email Subject'}</div>
                 <input className="form-input" value={formData.emailSubject} onChange={e => set('emailSubject', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Email Body' : 'Email Body'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'Sadržaj emaila' : 'Email Body'}</div>
                 <textarea className="form-input" rows={2} value={formData.emailBody} onChange={e => set('emailBody', e.target.value)} />
               </div>
             </div>

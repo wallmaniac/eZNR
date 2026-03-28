@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -191,6 +191,7 @@ export default function RiskAssessmentPage() {
     // Equipment for context panel
     const [equipment, setEquipment] = useState([]);
     const [orgUnits, setOrgUnits] = useState([]);
+    const [workers, setWorkers] = useState([]);
     // Bulk add hazards
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [bulkWpId, setBulkWpId] = useState('');
@@ -205,6 +206,7 @@ export default function RiskAssessmentPage() {
         setSistematizacije(getAll(COLLECTIONS.SISTEMATIZACIJE));
         setEquipment(getAll(COLLECTIONS.EQUIPMENT));
         setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
+        setWorkers(getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false));
     }, []);
 
     // Load response counts from Firestore for each questionnaire
@@ -321,6 +323,12 @@ export default function RiskAssessmentPage() {
     };
 
     // ─── Risk Items CRUD ───
+    const handleInlineRiUpdate = (id, field, value) => {
+        update(COLLECTIONS.RISK_ITEMS, id, { [field]: value });
+        setRiskItems(prev => prev.map(ri => ri.id === id ? { ...ri, [field]: value } : ri));
+        showFlash();
+    };
+
     const handleNewRi = () => {
         setRiForm({ ...EMPTY_RISK_ITEM, procjenaId: editingId }); setRiEditId(null); setShowRiForm(true);
     };
@@ -1384,6 +1392,9 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {/* ── TAB: Mjere ── */}
                 {activeTab === 'mjere' && (
                     <div className="card"><div className="card-body">
+                        <datalist id="workers-list">
+                            {workers.map(w => <option key={w.id} value={`${w.ime} ${w.prezime}`} />)}
+                        </datalist>
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
                         {highRisk.length === 0 ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki sa rizikom ≥ 6. Sve je u prihvatljivom okviru.' : 'No items with risk ≥ 6.'}</div>
                         : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
@@ -1399,8 +1410,25 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
                                     <td style={{ fontSize: '0.82rem' }}>{ri.postojeceMjere || <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
                                     <td style={{ fontSize: '0.82rem', fontWeight: 600 }}>{ri.predlozeneMjere || <span style={{ color: 'var(--danger)' }}>⚠ Nije definirano</span>}</td>
-                                    <td style={{ fontSize: '0.82rem' }}>{ri.odgovornaOsoba || '—'}</td>
-                                    <td style={{ fontSize: '0.82rem' }}>{ri.rokProvedbe ? formatDate(ri.rokProvedbe) : '—'}</td>
+                                    <td style={{ fontSize: '0.82rem' }}>
+                                        <input
+                                            className="form-input"
+                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 120 }}
+                                            list="workers-list"
+                                            value={ri.odgovornaOsoba || ''}
+                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'odgovornaOsoba', e.target.value)}
+                                            placeholder="Odaberi ili upiši..."
+                                        />
+                                    </td>
+                                    <td style={{ fontSize: '0.82rem' }}>
+                                        <input
+                                            className="form-input"
+                                            type="date"
+                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 110 }}
+                                            value={ri.rokProvedbe || ''}
+                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'rokProvedbe', e.target.value)}
+                                        />
+                                    </td>
                                 </tr>;
                             })}
                         </tbody></table></div>}

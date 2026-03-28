@@ -124,6 +124,8 @@ export default function SettingsPage() {
     if (tabParam) setActiveTab(tabParam);
   }, [tabParam]);
 
+  // NOTE: validTabs and currentTab are derived after the tabs array is defined below
+
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
   const handleSaveProfile = () => {
@@ -196,6 +198,9 @@ export default function SettingsPage() {
     ] : []),
   ];
 
+  const validTabs = tabs.map(t => t.key);
+  const currentTab = validTabs.includes(activeTab) ? activeTab : validTabs[0];
+
   // Load sync stats when firebase tab is opened
   const handleFirebaseTabOpen = () => {
     setActiveTab('firebase');
@@ -231,12 +236,13 @@ export default function SettingsPage() {
         onClick={() => onChange(!checked)}
         style={{
           width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer',
-          background: checked ? 'var(--primary)' : '#ccc',
+          background: checked ? 'var(--primary)' : 'var(--bg-input)',
           position: 'relative', transition: 'background 0.3s', flexShrink: 0,
+          border: `1px solid ${checked ? 'var(--primary)' : 'var(--border)'}`
         }}
       >
         <span style={{
-          position: 'absolute', top: 3, left: checked ? 25 : 3,
+          position: 'absolute', top: 2, left: checked ? 24 : 2,
           width: 20, height: 20, borderRadius: '50%', background: 'var(--neutral)',
           transition: 'left 0.3s', boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
         }} />
@@ -307,12 +313,12 @@ export default function SettingsPage() {
       <div style={{ display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap' }}>
         {tabs.map(tb => (
           <button key={tb.key} onClick={() => tb.key === 'firebase' ? handleFirebaseTabOpen() : setActiveTab(tb.key)} style={{
-            padding: '10px 18px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-            fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.82rem',
-            background: activeTab === tb.key ? (tb.key === 'firebase' ? '#FF6D00' : 'var(--dark)') : 'var(--bg-input)',
-            color: activeTab === tb.key ? 'white' : 'var(--text)',
-            boxShadow: activeTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
-            transition: 'all 0.2s',
+            padding: '10px 20px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
+            fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6,
+            background: currentTab === tb.key ? (tb.key === 'firebase' ? '#FF6D00' : 'var(--dark)') : 'var(--bg-input)',
+            color: currentTab === tb.key ? 'white' : 'var(--text)',
+            boxShadow: currentTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
+            transition: 'background 0.2s', whiteSpace: 'nowrap',
           }}>
             {tb.icon} {tb.label}
           </button>
@@ -322,7 +328,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 1: PROFILE                                    */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'profile' && (
+      {currentTab === 'profile' && (
         <div className="card">
           <div className="card-body">
             <h3 style={{ marginBottom: 20 }}>👤 {lang === 'bs' ? 'Korisnički profil' : 'User Profile'}</h3>
@@ -402,7 +408,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 2: COMPANY                                    */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'company' && (
+      {currentTab === 'company' && (
         <div className="card">
           <div className="card-body">
             <h3 style={{ marginBottom: 20 }}>🏢 {lang === 'bs' ? 'Podaci o firmi' : 'Company Data'}</h3>
@@ -510,7 +516,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 3: NOTIFICATIONS                              */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'notifications' && (
+      {currentTab === 'notifications' && (
         <div className="card">
           <div className="card-body">
             <h3 style={{ marginBottom: 8 }}>🔔 {lang === 'bs' ? 'Postavke obavijesti' : 'Notification Preferences'}</h3>
@@ -657,7 +663,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 4: DISPLAY                                    */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'display' && (
+      {currentTab === 'display' && (
         <div className="card">
           <div className="card-body">
             <h3 style={{ marginBottom: 20 }}>🎨 {lang === 'bs' ? 'Postavke prikaza' : 'Display Settings'}</h3>
@@ -736,7 +742,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 5: SYSTEM (Admin only)                       */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'system' && isAdmin && (
+      {currentTab === 'system' && isAdmin && (
         <div className="card">
           <div className="card-body">
             <h3 style={{ marginBottom: 20 }}>🛡️ {lang === 'bs' ? 'Postavke sistema' : 'System Settings'}</h3>
@@ -811,7 +817,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 6: STATISTICS (Admin only)                   */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'statistics' && isAdmin && stats && (
+      {currentTab === 'statistics' && isAdmin && stats && (
         <div>
           <div className="card" style={{ marginBottom: 20 }}>
             <div className="card-body">
@@ -903,7 +909,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB: FIREBASE SYNC (Admin only)                  */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'firebase' && isAdmin && (
+      {currentTab === 'firebase' && isAdmin && (
         <div className="card">
           <div className="card-body">
             {/* Header */}
@@ -1024,7 +1030,7 @@ export default function SettingsPage() {
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 7: ACTIVITY LOG (all users)                   */}
       {/* ══════════════════════════════════════════════════ */}
-      {activeTab === 'activity' && (
+      {currentTab === 'activity' && (
         <div>
           {/* ── Admin: Online users ── */}
           {isAdmin && onlineUsers.length > 0 && (
