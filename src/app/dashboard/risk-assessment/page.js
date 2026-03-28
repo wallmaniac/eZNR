@@ -196,6 +196,8 @@ export default function RiskAssessmentPage() {
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [bulkWpId, setBulkWpId] = useState('');
     const [bulkSelected, setBulkSelected] = useState([]);
+    // Mjere inline cell edit modal
+    const [mjeraEdit, setMjeraEdit] = useState(null); // { riId, field, label, value, type }
 
     const loadData = useCallback(() => {
         setRecords(getAll(COLLECTIONS.RISK_ASSESSMENTS));
@@ -1390,95 +1392,179 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 )}
 
                 {/* ── TAB: Mjere ── */}
-                {activeTab === 'mjere' && (
-                    <div className="card"><div className="card-body">
-                        <datalist id="workers-list">
-                            {workers.map(w => <option key={w.id} value={`${w.ime} ${w.prezime}`} />)}
-                        </datalist>
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
-                        {highRisk.length === 0 ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki sa rizikom ≥ 6. Sve je u prihvatljivom okviru.' : 'No items with risk ≥ 6.'}</div>
-                        : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                            <th>R₀</th><th>R₁</th><th>Opasnost</th><th>Radno mjesto</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>Odgovorna osoba</th><th>Rok</th>
-                        </tr></thead><tbody>
-                            {highRisk.sort((a, b) => b.rizik - a.rizik).map(ri => {
-                                const rl = riskLevel(ri.rizik); const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
-                                const hp = hazards.find(h => h.id === ri.opasnostId); const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
-                                return <tr key={ri.id}>
-                                    <td><span style={{ padding: '3px 10px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizik}</span></td>
-                                    <td>{rlA ? <span style={{ padding: '3px 10px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizikNakon}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
-                                    {/* OPASNOST — editable opisOpasnosti; catalog badge shown above if linked */}
-                                    <td style={{ fontSize: '0.82rem', minWidth: 160 }}>
-                                        {hp && (
-                                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                📋 {hp.oznaka ? `${hp.oznaka} ` : ''}{hp.naziv}
+                {activeTab === 'mjere' && (() => {
+                    // ── Cell-click edit modal ──
+                    const editCellStyle = {
+                        cursor: 'pointer', borderRadius: 6, padding: '4px 6px',
+                        transition: 'background 0.15s',
+                    };
+                    const MjeraCell = ({ ri, field, label, type = 'textarea', display }) => (
+                        <div
+                            title={`Klikni za uređivanje: ${label}`}
+                            onClick={() => setMjeraEdit({ riId: ri.id, field, label, value: ri[field] || '', type })}
+                            style={{
+                                ...editCellStyle,
+                                minHeight: 32,
+                                position: 'relative',
+                            }}
+                            className="mjera-cell"
+                        >
+                            {display || (
+                                ri[field]
+                                    ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{ri[field]}</span>
+                                    : <span style={{ color: field === 'predlozeneMjere' ? 'rgba(244,67,54,0.7)' : 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.78rem' }}>
+                                        {field === 'predlozeneMjere' ? '⚠ Nije definirano' : '—'}
+                                      </span>
+                            )}
+                            <span className="mjera-cell-edit-hint" style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.65rem', opacity: 0, color: 'var(--primary)', transition: 'opacity 0.15s', pointerEvents: 'none' }}>✏️</span>
+                        </div>
+                    );
+                    return (
+                        <div className="card"><div className="card-body">
+                            <style>{`.mjera-cell:hover { background: var(--bg-input) !important; } .mjera-cell:hover .mjera-cell-edit-hint { opacity: 1 !important; }`}</style>
+                            <datalist id="workers-list">
+                                {workers.map(w => <option key={w.id} value={`${w.ime} ${w.prezime}`} />)}
+                            </datalist>
+
+                            {/* ── Edit Modal ── */}
+                            {mjeraEdit && (() => {
+                                const ri = riskItems.find(r => r.id === mjeraEdit.riId);
+                                return (
+                                    <div
+                                        onClick={(e) => { if (e.target === e.currentTarget) setMjeraEdit(null); }}
+                                        style={{
+                                            position: 'fixed', inset: 0, zIndex: 1100,
+                                            background: 'rgba(0,0,0,0.55)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            backdropFilter: 'blur(2px)',
+                                        }}
+                                    >
+                                        <div style={{
+                                            background: 'var(--bg-card)', borderRadius: 16,
+                                            padding: 28, width: '90%', maxWidth: 560,
+                                            boxShadow: '0 24px 60px rgba(0,0,0,0.4)',
+                                            border: '1px solid var(--border)',
+                                        }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>✏️ {mjeraEdit.label}</div>
+                                                <button onClick={() => setMjeraEdit(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', cursor: 'pointer', color: 'var(--text-muted)' }}>×</button>
                                             </div>
-                                        )}
-                                        <input
-                                            className="form-input"
-                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%' }}
-                                            value={ri.opisOpasnosti || ''}
-                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'opisOpasnosti', e.target.value)}
-                                            placeholder="Opis opasnosti..."
-                                        />
-                                    </td>
-                                    {/* RADNO MJESTO — select dropdown */}
-                                    <td style={{ fontSize: '0.82rem', minWidth: 140 }}>
-                                        <select
-                                            className="form-select"
-                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%' }}
-                                            value={ri.radnoMjestoId || ''}
-                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'radnoMjestoId', e.target.value)}
-                                        >
-                                            <option value="">— Odaberi —</option>
-                                            {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
-                                        </select>
-                                    </td>
-                                    {/* POSTOJEĆE MJERE — textarea */}
-                                    <td style={{ fontSize: '0.82rem', minWidth: 160 }}>
-                                        <textarea
-                                            className="form-input"
-                                            rows={2}
-                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', resize: 'vertical', minHeight: 48 }}
-                                            value={ri.postojeceMjere || ''}
-                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'postojeceMjere', e.target.value)}
-                                            placeholder="Unesite postojeće mjere..."
-                                        />
-                                    </td>
-                                    {/* PREDLOŽENE MJERE — textarea */}
-                                    <td style={{ fontSize: '0.82rem', minWidth: 160 }}>
-                                        <textarea
-                                            className="form-input"
-                                            rows={2}
-                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', resize: 'vertical', minHeight: 48, borderColor: ri.predlozeneMjere ? undefined : 'rgba(244,67,54,0.4)' }}
-                                            value={ri.predlozeneMjere || ''}
-                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'predlozeneMjere', e.target.value)}
-                                            placeholder="⚠ Definirajte mjere..."
-                                        />
-                                    </td>
-                                    <td style={{ fontSize: '0.82rem' }}>
-                                        <input
-                                            className="form-input"
-                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 120 }}
-                                            list="workers-list"
-                                            value={ri.odgovornaOsoba || ''}
-                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'odgovornaOsoba', e.target.value)}
-                                            placeholder="Odaberi ili upiši..."
-                                        />
-                                    </td>
-                                    <td style={{ fontSize: '0.82rem' }}>
-                                        <input
-                                            className="form-input"
-                                            type="date"
-                                            style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 110 }}
-                                            value={ri.rokProvedbe || ''}
-                                            onChange={(e) => handleInlineRiUpdate(ri.id, 'rokProvedbe', e.target.value)}
-                                        />
-                                    </td>
-                                </tr>;
-                            })}
-                        </tbody></table></div>}
-                    </div></div>
-                )}
+                                            {mjeraEdit.type === 'select' ? (
+                                                <select
+                                                    className="form-select"
+                                                    autoFocus
+                                                    style={{ width: '100%', marginBottom: 20 }}
+                                                    value={mjeraEdit.value}
+                                                    onChange={e => setMjeraEdit(prev => ({ ...prev, value: e.target.value }))}
+                                                >
+                                                    <option value="">— Odaberi radno mjesto —</option>
+                                                    {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
+                                                </select>
+                                            ) : (
+                                                <textarea
+                                                    className="form-input"
+                                                    autoFocus
+                                                    rows={mjeraEdit.type === 'long' ? 8 : 4}
+                                                    style={{ width: '100%', marginBottom: 20, resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6 }}
+                                                    value={mjeraEdit.value}
+                                                    onChange={e => setMjeraEdit(prev => ({ ...prev, value: e.target.value }))}
+                                                    placeholder={`Unesite ${mjeraEdit.label.toLowerCase()}...`}
+                                                />
+                                            )}
+                                            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                                                <button className="btn" onClick={() => setMjeraEdit(null)}
+                                                    style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                                                >Odustani</button>
+                                                <button className="btn btn-primary" onClick={() => {
+                                                    handleInlineRiUpdate(mjeraEdit.riId, mjeraEdit.field, mjeraEdit.value);
+                                                    setMjeraEdit(null);
+                                                }}>💾 Spremi</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+
+                            <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
+                            {highRisk.length === 0
+                                ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki sa rizikom ≥ 6. Sve je u prihvatljivom okviru.' : 'No items with risk ≥ 6.'}</div>
+                                : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
+                                    <th style={{ width: 48 }}>R₀</th>
+                                    <th style={{ width: 48 }}>R₁</th>
+                                    <th>Opasnost</th>
+                                    <th>Radno mjesto</th>
+                                    <th>Postojeće mjere</th>
+                                    <th>Predložene mjere</th>
+                                    <th>Odgovorna osoba</th>
+                                    <th>Rok</th>
+                                </tr></thead><tbody>
+                                    {highRisk.sort((a, b) => b.rizik - a.rizik).map(ri => {
+                                        const rl = riskLevel(ri.rizik);
+                                        const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
+                                        const hp = hazards.find(h => h.id === ri.opasnostId);
+                                        const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
+                                        return <tr key={ri.id}>
+                                            {/* R₀ */}
+                                            <td><span style={{ padding: '3px 10px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizik}</span></td>
+                                            {/* R₁ */}
+                                            <td>{rlA ? <span style={{ padding: '3px 10px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 800, fontSize: '0.78rem' }}>{ri.rizikNakon}</span> : <span style={{ color: 'var(--text-muted)' }}>—</span>}</td>
+                                            {/* OPASNOST — click to edit */}
+                                            <td style={{ fontSize: '0.82rem', maxWidth: 220 }}>
+                                                <MjeraCell ri={ri} field="opisOpasnosti" label="Opasnost" type="textarea"
+                                                    display={<>
+                                                        {hp && <div style={{ fontSize: '0.65rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 2 }}>📋 {hp.oznaka ? `${hp.oznaka} ` : ''}{hp.naziv}</div>}
+                                                        {ri.opisOpasnosti
+                                                            ? <span>{ri.opisOpasnosti}</span>
+                                                            : (hp ? null : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.78rem' }}>—</span>)
+                                                        }
+                                                    </>}
+                                                />
+                                            </td>
+                                            {/* RADNO MJESTO — click to edit */}
+                                            <td style={{ fontSize: '0.82rem', maxWidth: 160 }}>
+                                                <MjeraCell ri={ri} field="radnoMjestoId" label="Radno mjesto" type="select"
+                                                    display={wp
+                                                        ? <span>{wp.naziv}</span>
+                                                        : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.78rem' }}>—</span>
+                                                    }
+                                                />
+                                            </td>
+                                            {/* POSTOJEĆE MJERE — click to edit */}
+                                            <td style={{ fontSize: '0.82rem', maxWidth: 200 }}>
+                                                <MjeraCell ri={ri} field="postojeceMjere" label="Postojeće mjere" type="long" />
+                                            </td>
+                                            {/* PREDLOŽENE MJERE — click to edit */}
+                                            <td style={{ fontSize: '0.82rem', maxWidth: 200 }}>
+                                                <MjeraCell ri={ri} field="predlozeneMjere" label="Predložene mjere" type="long" />
+                                            </td>
+                                            {/* ODGOVORNA OSOBA — stays inline */}
+                                            <td style={{ fontSize: '0.82rem' }}>
+                                                <input
+                                                    className="form-input"
+                                                    style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 130 }}
+                                                    list="workers-list"
+                                                    value={ri.odgovornaOsoba || ''}
+                                                    onChange={(e) => handleInlineRiUpdate(ri.id, 'odgovornaOsoba', e.target.value)}
+                                                    placeholder="Odaberi ili upiši..."
+                                                />
+                                            </td>
+                                            {/* ROK — stays inline */}
+                                            <td style={{ fontSize: '0.82rem' }}>
+                                                <input
+                                                    className="form-input"
+                                                    type="date"
+                                                    style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 110 }}
+                                                    value={ri.rokProvedbe || ''}
+                                                    onChange={(e) => handleInlineRiUpdate(ri.id, 'rokProvedbe', e.target.value)}
+                                                />
+                                            </td>
+                                        </tr>;
+                                    })}
+                                </tbody></table></div>
+                            }
+                        </div></div>
+                    );
+                })()}
 
                 {/* ── TAB: Zaključak ── */}
                 {activeTab === 'zakljucak' && (() => {
