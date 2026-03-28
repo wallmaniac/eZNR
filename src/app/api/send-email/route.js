@@ -1,10 +1,13 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { buildHtmlEmail } from '@/lib/emailTemplate';
 
 // ============================================================================
 // API ROUTE: POST /api/send-email
-// Accepts SMTP config + recipient info, sends styled HTML email via Nodemailer
+// Uses Resend to send styled HTML emails. Zero client configuration needed.
 // ============================================================================
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev';
 
 export async function POST(request) {
     try {
@@ -17,20 +20,21 @@ export async function POST(request) {
             deadline,
             senderName,
             companyName,
-            replyTo,
             isTraining,
-            smtpConfig,
         } = body;
 
-        // Validate required fields
-        if (!toEmail || !fillLink || !smtpConfig?.host || !smtpConfig?.user || !smtpConfig?.pass) {
+        if (!toEmail || !fillLink) {
             return Response.json({
                 success: false,
-                error: 'Nedostaju obavezna polja: email primatelja, link ili SMTP konfiguracija.',
+                error: 'Nedostaju obavezna polja: email primatelja ili link.',
             }, { status: 400 });
         }
 
-        // Build HTML
+        const itemLabel = isTraining ? 'obuku' : 'upitnik';
+        const displayName = companyName
+            ? `${senderName || 'eZNR'} (${companyName}) via eZNR`
+            : `${senderName || 'eZNR'} via eZNR`;
+
         const html = buildHtmlEmail({
             toName: toName || toEmail,
             questionnaireName,
@@ -41,54 +45,34 @@ export async function POST(request) {
             isTraining: !!isTraining,
         });
 
-        // Build plain text fallback
-        const text = [
-            `${isTraining ? 'Obuka' : 'Upitnik'}: ${questionnaireName}`,
-            ``,
-            `Poštovani/a ${toName || toEmail},`,
-            ``,
-            `pozivamo Vas da popunite ${isTraining ? 'obuku' : 'upitnik'} koji Vam je dodijelio ${senderName || 'eZNR Admin'}${companyName ? ` (${companyName})` : ''}.`,
-            ``,
-            `Link: ${fillLink}`,
-            ``,
-            `---`,
-            `Ovaj email je generiran putem platforme eZNR.`,
-        ].join('\n');
-
-        // Create transporter
-        const port = Number(smtpConfig.port) || 587;
-        const secure = smtpConfig.secure === true || port === 465;
-
-        const transporter = nodemailer.createTransport({
-            host: smtpConfig.host,
-            port,
-            secure,
-            auth: {
-                user: smtpConfig.user,
-                pass: smtpConfig.pass,
-            },
-            tls: {
-                // Allow self-signed certs for corporate mail servers
-                rejectUnauthorized: false,
-            },
-        });
-
-        // Compose message
-        const mailOptions = {
-            from: `"${senderName || 'eZNR'}" <${smtpConfig.user}>`,
-            to: toEmail,
+        const { error } = await resend.emails.send({
+            from: `${displayName} <${FROM_EMAIL}>`,
+            to: [toEmail],
             subject: `${isTraining ? '🎬 Obuka' : '📝 Upitnik'}: ${questionnaireName}`,
             html,
-            text,
-            ...(replyTo ? { replyTo } : {}),
-        };
+            text: [
+                `${isTraining ? 'Obuka' : 'Upitnik'}: ${questionnaireName}`,
+                '',
+                `Poštovani/a ${toName || toEmail},`,
+                '',
+                `pozivamo Vas da popunite ${itemLabel} koji Vam je dodijelio ${senderName || 'eZNR Admin'}${companyName ? ` (${companyName})` : ''}.`,
+                '',
+                `Link: ${fillLink}`,
+                '',
+                '---',
+                'Ovaj email je generiran putem platforme eZNR.',
+            ].join('\n'),
+        });
 
-        await transporter.sendMail(mailOptions);
+        if (error) {
+            console.error('[send-email] Resend error:', error);
+            return Response.json({ success: false, error: error.message }, { status: 500 });
+        }
 
         return Response.json({ success: true });
 
     } catch (err) {
-        console.error('[send-email] Error:', err);
+        console.error('[send-email] Unexpected error:', err);
         return Response.json({
             success: false,
             error: err?.message || 'Nepoznata greška pri slanju emaila.',

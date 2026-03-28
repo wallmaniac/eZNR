@@ -1,51 +1,20 @@
 'use client';
 
 // ============================================================================
-// EMAIL SERVICE — Server-side SMTP dispatcher
-// Calls /api/send-email which uses Nodemailer to send styled HTML emails.
-// SMTP credentials are loaded from localStorage (eznr_smtp_config).
+// EMAIL SERVICE — Resend dispatcher
+// Calls /api/send-email which uses Resend to send styled HTML emails.
+// No client configuration required — zero setup for end users.
 // ============================================================================
 
-const SMTP_KEY = 'eznr_smtp_config';
-
 /**
- * Load SMTP config from localStorage.
- * Returns null if not configured.
- */
-export function getSmtpConfig() {
-    if (typeof window === 'undefined') return null;
-    try {
-        const raw = localStorage.getItem(SMTP_KEY);
-        return raw ? JSON.parse(raw) : null;
-    } catch { return null; }
-}
-
-/**
- * Save SMTP config to localStorage.
- */
-export function saveSmtpConfig(config) {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(SMTP_KEY, JSON.stringify(config));
-}
-
-/**
- * Clear saved SMTP config.
- */
-export function clearSmtpConfig() {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(SMTP_KEY);
-}
-
-/**
- * Check if SMTP is configured with the minimum required fields.
+ * Email is always configured — Resend API key is set server-side.
  */
 export function isEmailConfigured() {
-    const cfg = getSmtpConfig();
-    return !!(cfg?.host && cfg?.user && cfg?.pass);
+    return true;
 }
 
 /**
- * Send a single email via /api/send-email
+ * Send a single email via /api/send-email (Resend)
  */
 export async function sendEmail({
     toEmail,
@@ -55,18 +24,8 @@ export async function sendEmail({
     deadline,
     senderName,
     companyName,
-    replyTo,
     isTraining = false,
-    smtpConfig,
 }) {
-    const cfg = smtpConfig || getSmtpConfig();
-    if (!cfg?.host || !cfg?.user || !cfg?.pass) {
-        return {
-            success: false,
-            error: 'SMTP nije konfiguriran. Idite na Postavke → Email / SMTP i unesite podatke.',
-        };
-    }
-
     try {
         const res = await fetch('/api/send-email', {
             method: 'POST',
@@ -79,16 +38,14 @@ export async function sendEmail({
                 deadline,
                 senderName,
                 companyName,
-                replyTo,
                 isTraining,
-                smtpConfig: cfg,
             }),
         });
 
         const data = await res.json();
         return data.success ? { success: true } : { success: false, error: data.error || 'Greška pri slanju.' };
     } catch (err) {
-        return { success: false, error: err?.message || 'Mreži greška pri kontaktiranju servera.' };
+        return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }
 }
 
@@ -97,13 +54,12 @@ export async function sendEmail({
  * Each recipient gets their own unique personalized link.
  *
  * @param {Array<{toEmail, toName}>} recipients
- * @param {Object} info - { questionnaireName, tokens, deadline, senderName, companyName, replyTo, isTraining }
+ * @param {Object} info - { questionnaireName, tokens, deadline, senderName, companyName, isTraining }
  * @param {Function} onProgress - callback(sent, total, currentEmail)
  * @returns {Promise<{sent, failed, errors}>}
  */
 export async function sendBatchEmails(recipients, info, onProgress) {
-    const { questionnaireName, tokens, deadline, senderName, companyName, replyTo, isTraining } = info;
-    const smtpConfig = getSmtpConfig();
+    const { questionnaireName, tokens, deadline, senderName, companyName, isTraining } = info;
 
     let sent = 0;
     let failed = 0;
@@ -128,9 +84,7 @@ export async function sendBatchEmails(recipients, info, onProgress) {
             deadline,
             senderName,
             companyName,
-            replyTo,
             isTraining: !!isTraining,
-            smtpConfig,
         });
 
         if (result.success) {
@@ -140,9 +94,9 @@ export async function sendBatchEmails(recipients, info, onProgress) {
             errors.push({ email: r.toEmail, error: result.error });
         }
 
-        // Small delay between sends to avoid smtp rate limiting
+        // Small delay between sends to respect rate limits
         if (i < recipients.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 300));
+            await new Promise(resolve => setTimeout(resolve, 200));
         }
     }
 
