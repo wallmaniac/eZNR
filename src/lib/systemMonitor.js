@@ -87,6 +87,20 @@ export const DEFAULT_APP_SETTINGS = {
 };
 
 // ============================================================================
+// ONE-TIME MIGRATIONS (run silently on load)
+// ============================================================================
+
+/** Remove legacy SMTP config — Resend replaced Nodemailer in v1.0.1 */
+if (typeof window !== 'undefined') {
+    try {
+        if (localStorage.getItem('smtpConfig')) {
+            localStorage.removeItem('smtpConfig');
+            console.log('[eZNR] Cleaned up legacy smtpConfig');
+        }
+    } catch { /* ignore */ }
+}
+
+// ============================================================================
 // SETTINGS PERSISTENCE (localStorage)
 // ============================================================================
 
