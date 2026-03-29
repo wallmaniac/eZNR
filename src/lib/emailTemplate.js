@@ -1,6 +1,6 @@
 // ============================================================================
 // EMAIL TEMPLATE — builds the full styled HTML email
-// Uses email-header.png hosted at https://eznr.vercel.app/email-header.png
+// Logo image hosted at https://zastitanaradu.ba/email-header.png
 // ============================================================================
 
 const BASE_URL = 'https://zastitanaradu.ba';
@@ -40,18 +40,13 @@ export function buildHtmlEmail({
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
 
-          <!-- Header banner — HTML/CSS (no image dependency) -->
+          <!-- Header logo image -->
           <tr>
-            <td style="border-radius:16px 16px 0 0;background:linear-gradient(135deg,#071525 0%,#0d2540 55%,#0a1e35 100%);padding:26px 36px;">
-              <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
-                <tr>
-                  <td style="vertical-align:middle;padding-right:14px;font-size:46px;line-height:1;">🦺</td>
-                  <td style="vertical-align:middle;">
-                    <p style="margin:0 0 3px;font-size:38px;font-weight:900;color:#22d3ee;letter-spacing:-1px;line-height:1;font-family:'Segoe UI',Arial,sans-serif;">eZNR</p>
-                    <p style="margin:0;font-size:9px;font-weight:700;color:#4ade80;letter-spacing:2.5px;text-transform:uppercase;line-height:1.4;font-family:'Segoe UI',Arial,sans-serif;">DIGITALNA PLATFORMA ZA ZA&#x160;TITU NA RADU</p>
-                  </td>
-                </tr>
-              </table>
+            <td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;">
+              <img src="${BASE_URL}/email-header.png"
+                   alt="eZNR — Digitalna platforma za zaštitu na radu"
+                   width="600"
+                   style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;" />
             </td>
           </tr>
 
