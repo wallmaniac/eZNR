@@ -103,3 +103,40 @@ export async function sendBatchEmails(recipients, info, onProgress) {
     onProgress?.(recipients.length, recipients.length, 'Završeno');
     return { sent, failed, errors };
 }
+
+/**
+ * Send a reminder email via /api/send-email with isReminder=true
+ */
+export async function sendReminderEmail({
+    toEmail,
+    toName,
+    questionnaireName,
+    link,
+    deadline,
+    senderName,
+    companyName,
+    isTraining = false,
+}) {
+    try {
+        const res = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                toEmail,
+                toName,
+                questionnaireName,
+                fillLink: link,
+                deadline,
+                senderName,
+                companyName,
+                isTraining,
+                isReminder: true,
+            }),
+        });
+
+        const data = await res.json();
+        return data.success ? { success: true } : { success: false, error: data.error || 'Greška pri slanju.' };
+    } catch (err) {
+        return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
+    }
+}

@@ -9,6 +9,8 @@ import { useDialog } from '@/hooks/useDialog';
 import QuestionnaireBuilder from '@/components/SurveyCreator';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
 import QuestionnaireResults from '@/components/QuestionnaireResults';
+import ReminderModal from '@/components/ReminderModal';
+import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 
 /* ═══════════════════════════════════════════════
    Upitnici — Questionnaire System
@@ -95,6 +97,11 @@ export default function QuestionnairesPage() {
   const [dispatchModalOpen, setDispatchModalOpen] = useState(false);
   const [dispatchQuestionnaire, setDispatchQuestionnaire] = useState(null);
   const [resultsQuestionnaire, setResultsQuestionnaire] = useState(null);
+  // Reminder
+  const [reminderModalOpen, setReminderModalOpen] = useState(false);
+  const [reminderQuestionnaire, setReminderQuestionnaire] = useState(null);
+  // Completion stats { [questId]: { total, completed } }
+  const [completionStats, setCompletionStats] = useState({});
   // AI Questionnaire Generation
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiWorkplaces, setAiWorkplaces] = useState([]);
@@ -102,8 +109,25 @@ export default function QuestionnairesPage() {
   const [aiGenerating, setAiGenerating] = useState(false);
 
   const loadData = useCallback(() => {
-    setRecords(getAll(COLLECTIONS.QUESTIONNAIRES));
+    const recs = getAll(COLLECTIONS.QUESTIONNAIRES);
+    setRecords(recs);
     setAiWorkplaces(getAll(COLLECTIONS.WORKPLACES));
+    // Load completion stats from Firestore (async, non-blocking)
+    recs.forEach(q => {
+      getSessionsForQuestionnaire(q.id)
+        .then(sessions => {
+          if (sessions && sessions.length > 0) {
+            setCompletionStats(prev => ({
+              ...prev,
+              [q.id]: {
+                total: sessions.length,
+                completed: sessions.filter(s => s.status === 'completed').length,
+              }
+            }));
+          }
+        })
+        .catch(() => { /* ignore */ });
+    });
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -383,6 +407,7 @@ export default function QuestionnairesPage() {
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
                     <th>{lang === 'bs' ? 'Povezan na' : 'Connected to'}</th>
+                    <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
                     <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</th>
                     <th>{lang === 'bs' ? 'Predložak' : 'Template'}</th>
                     <th>{lang === 'bs' ? 'Jezik' : 'Language'}</th>
@@ -390,7 +415,7 @@ export default function QuestionnairesPage() {
                 </thead>
                 <tbody>
                   {filtered.length === 0 ? (
-                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : filtered.map(r => (
                     <tr key={r.id}>
                       <td>
@@ -444,6 +469,9 @@ export default function QuestionnairesPage() {
                               <button onClick={() => { setOpenMenuId(null); setDispatchQuestionnaire(r); setDispatchModalOpen(true); }} style={menuItemStyle}>
                                 📧 {lang === 'bs' ? 'Pošalji' : 'Send'}
                               </button>
+                              <button onClick={() => { setOpenMenuId(null); setReminderQuestionnaire(r); setReminderModalOpen(true); }} style={menuItemStyle}>
+                                📩 {lang === 'bs' ? 'Pošalji podsjetnik' : 'Send Reminder'}
+                              </button>
                               <button onClick={() => { setOpenMenuId(null); setResultsQuestionnaire(r); setView('results'); }} style={menuItemStyle}>
                                 📊 {lang === 'bs' ? 'Rezultati' : 'Results'}
                               </button>
@@ -467,6 +495,22 @@ export default function QuestionnairesPage() {
                         </span>
                       </td>
                       <td>{r.zaVrstu || '—'}</td>
+                      <td>
+                        {completionStats[r.id] ? (() => {
+                          const cs = completionStats[r.id];
+                          const pct = cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
+                          return (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
+                                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
+                              </div>
+                              <span style={{ fontSize: '0.78rem', fontWeight: 600, color: pct === 100 ? '#22c55e' : 'var(--text-muted)' }}>
+                                {cs.completed}/{cs.total}
+                              </span>
+                            </div>
+                          );
+                        })() : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>}
+                      </td>
                       <td>{r.prikaziNaPortalu ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No')}</td>
                       <td>
                         {r.predlozak && <span style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>✔</span>}
@@ -578,6 +622,16 @@ export default function QuestionnairesPage() {
           officerName={officerName}
           companyName={companyName}
           companyLogo={companyLogo}
+        />
+
+        {/* Reminder Modal */}
+        <ReminderModal
+          isOpen={reminderModalOpen}
+          onClose={() => { setReminderModalOpen(false); setReminderQuestionnaire(null); }}
+          questionnaire={reminderQuestionnaire}
+          lang={lang}
+          officerName={officerName}
+          companyName={companyName}
         />
       </div>
     );
@@ -739,6 +793,19 @@ export default function QuestionnairesPage() {
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Sadržaj emaila' : 'Email Body'}</div>
                 <textarea className="form-input" rows={2} value={formData.emailBody} onChange={e => set('emailBody', e.target.value)} />
+              </div>
+            </div>
+
+            {/* Row 5.5: Rok isteka */}
+            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, marginBottom: 14 }}>
+              <div>
+                <div style={labelSt}>{lang === 'bs' ? 'Rok isteka (opcionalno)' : 'Expiry date (optional)'}</div>
+                <input className="form-input" type="date" value={formData.rokIsteka || ''} onChange={e => set('rokIsteka', e.target.value)} />
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  {lang === 'bs' ? 'Poslanim upitnicima ističe rok na ovaj datum.' : 'Sent questionnaires expire on this date.'}
+                </span>
               </div>
             </div>
 

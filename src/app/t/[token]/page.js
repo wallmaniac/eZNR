@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, use } from 'react';
 import { getTrainingSession, markTrainingSessionOpened, saveTrainingResponse } from '@/lib/firebaseSync';
+import { generateTrainingCertificate } from '@/lib/trainingCertificate';
 
 /* ═══════════════════════════════════════════════════════
    Public Training Page — /t/[token]
@@ -466,6 +467,24 @@ export default function PublicTrainingPage({ params }) {
                     {!showResults && (
                         <div style={{ textAlign: 'center', padding: '32px 0', color: '#94a3b8', fontSize: '0.95rem' }}>
                             Vaši odgovori su uspješno primljeni. Rezultati će biti dostavljeni vašem poslodavcu.
+                        </div>
+                    )}
+
+                    {/* Certificate download (only if passed) */}
+                    {grade.passed && (
+                        <div style={{ textAlign: 'center', marginTop: 24 }}>
+                            <button onClick={() => generateTrainingCertificate({
+                                workerName: session.recipientName || session.recipientEmail || '',
+                                trainingName: session.trainingName || 'Obuka',
+                                date: session.completedAt || new Date().toISOString(),
+                                score: grade.percentage,
+                                companyName: companyName || '',
+                                companyLogo: companyLogo || '',
+                                officerName: assignedBy || '',
+                            })}
+                                style={{ padding: '12px 28px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#6366f1,#8b5cf6)', color: '#fff', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 16px rgba(99,102,241,0.3)' }}>
+                                📄 Preuzmi certifikat
+                            </button>
                         </div>
                     )}
 

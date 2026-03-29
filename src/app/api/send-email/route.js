@@ -1,9 +1,10 @@
 import { Resend } from 'resend';
-import { buildHtmlEmail } from '@/lib/emailTemplate';
+import { buildHtmlEmail, buildReminderEmail } from '@/lib/emailTemplate';
 
 // ============================================================================
 // API ROUTE: POST /api/send-email
 // Uses Resend to send styled HTML emails. Zero client configuration needed.
+// Supports: dispatch (default) and reminder (isReminder=true) modes.
 // ============================================================================
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -21,6 +22,7 @@ export async function POST(request) {
             senderName,
             companyName,
             isTraining,
+            isReminder,
         } = body;
 
         if (!toEmail || !fillLink) {
@@ -35,7 +37,7 @@ export async function POST(request) {
             ? `${senderName || 'eZNR'} (${companyName}) via eZNR`
             : `${senderName || 'eZNR'} via eZNR`;
 
-        const html = buildHtmlEmail({
+        const templateArgs = {
             toName: toName || toEmail,
             questionnaireName,
             fillLink,
@@ -43,19 +45,29 @@ export async function POST(request) {
             senderName: senderName || 'eZNR Admin',
             companyName: companyName || '',
             isTraining: !!isTraining,
-        });
+        };
+
+        const html = isReminder
+            ? buildReminderEmail(templateArgs)
+            : buildHtmlEmail(templateArgs);
+
+        const subjectPrefix = isReminder
+            ? '\u23F0 Podsjetnik'
+            : (isTraining ? '\uD83C\uDFAC Obuka' : '\uD83D\uDCDD Upitnik');
 
         const { error } = await resend.emails.send({
             from: `${displayName} <${FROM_EMAIL}>`,
             to: [toEmail],
-            subject: `${isTraining ? '🎬 Obuka' : '📝 Upitnik'}: ${questionnaireName}`,
+            subject: `${subjectPrefix}: ${questionnaireName}`,
             html,
             text: [
-                `${isTraining ? 'Obuka' : 'Upitnik'}: ${questionnaireName}`,
+                `${isReminder ? 'PODSJETNIK \u2014 ' : ''}${isTraining ? 'Obuka' : 'Upitnik'}: ${questionnaireName}`,
                 '',
-                `Poštovani/a ${toName || toEmail},`,
+                `Po\u0161tovani/a ${toName || toEmail},`,
                 '',
-                `pozivamo Vas da popunite ${itemLabel} koji Vam je dodijelio ${senderName || 'eZNR Admin'}${companyName ? ` (${companyName})` : ''}.`,
+                isReminder
+                    ? `podsje\u0107amo Vas da jo\u0161 uvijek niste popunili ${itemLabel} koji Vam je dodijelio ${senderName || 'eZNR Admin'}${companyName ? ` (${companyName})` : ''}.`
+                    : `pozivamo Vas da popunite ${itemLabel} koji Vam je dodijelio ${senderName || 'eZNR Admin'}${companyName ? ` (${companyName})` : ''}.`,
                 '',
                 `Link: ${fillLink}`,
                 '',
@@ -75,7 +87,7 @@ export async function POST(request) {
         console.error('[send-email] Unexpected error:', err);
         return Response.json({
             success: false,
-            error: err?.message || 'Nepoznata greška pri slanju emaila.',
+            error: err?.message || 'Nepoznata gre\u0161ka pri slanju emaila.',
         }, { status: 500 });
     }
 }
