@@ -68,7 +68,7 @@ export const translations = {
     requests: 'Zahtjevnice',
     riskAssessment: 'Procjena rizika',
     sistematizacija: 'Sistematizacija radnih mjesta',
-    questionnaires: 'Upitnici',
+    questionnaires: 'Upitnici/Ankete',
     trainings: 'Obuke i prezentacije',
 
 
@@ -429,7 +429,7 @@ export const translations = {
     requests: 'Requests',
     riskAssessment: 'Risk Assessment',
     sistematizacija: 'Job Systematization',
-    questionnaires: 'Questionnaires',
+    questionnaires: 'Questionnaires/Surveys',
     trainings: 'Training Modules',
 
 

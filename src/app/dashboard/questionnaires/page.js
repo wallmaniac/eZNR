@@ -13,7 +13,7 @@ import ReminderModal from '@/components/ReminderModal';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 
 /* ═══════════════════════════════════════════════
-   Upitnici — Questionnaire System
+   Upitnici/Ankete — Questionnaire System
    Matching: https://app.zastitanaradu.hr/merkant/Upitnik
    ═══════════════════════════════════════════════ */
 

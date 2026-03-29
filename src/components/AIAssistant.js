@@ -24,7 +24,7 @@ const APP_KNOWLEDGE = {
         { path: '/dashboard/archive', label_bs: 'Digitalna arhiva', label_en: 'Digital Archive', desc_en: 'Store and manage all company documents digitally', desc_bs: 'Čuvanje i upravljanje svim dokumentima firme digitalno' },
         { path: '/dashboard/requests', label_bs: 'Zahtjevnice', label_en: 'Requests', desc_en: 'Manage procurement and material requests', desc_bs: 'Upravljanje zahtjevnicama za nabavku i materijal' },
         { path: '/dashboard/risk-assessment', label_bs: 'Procjena rizika', label_en: 'Risk Assessment', desc_en: 'Perform and document workplace risk assessments', desc_bs: 'Provođenje i dokumentovanje procjene rizika na radnom mjestu' },
-        { path: '/dashboard/questionnaires', label_bs: 'Upitnici', label_en: 'Questionnaires', desc_en: 'Create and manage safety questionnaires for workers', desc_bs: 'Kreiranje i upravljanje sigurnosnim upitnicima za radnike' },
+        { path: '/dashboard/questionnaires', label_bs: 'Upitnici/Ankete', label_en: 'Questionnaires/Surveys', desc_en: 'Create and manage safety questionnaires for workers', desc_bs: 'Kreiranje i upravljanje sigurnosnim upitnicima za radnike' },
         { path: '/dashboard/countries', label_bs: 'Države', label_en: 'Countries', desc_en: 'Reference list of countries', desc_bs: 'Referentna lista država' },
         { path: '/dashboard/counties', label_bs: 'Županije/Kantoni', label_en: 'Counties/Cantons', desc_en: 'Reference list of counties and cantons in BiH', desc_bs: 'Referentna lista županija i kantona u BiH' },
         { path: '/dashboard/places', label_bs: 'Mjesta', label_en: 'Places', desc_en: 'Reference list of cities and places', desc_bs: 'Referentna lista gradova i mjesta' },
