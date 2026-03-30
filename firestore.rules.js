@@ -22,50 +22,81 @@
 /*
 
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── Questionnaire sessions ─────────────────────────────
-    // Workers access via token link (no auth), officers create sessions
-    match /questionnaire_sessions/{docId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if request.auth != null;
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // ─── Questionnaire responses ────────────────────────────
-    // Workers submit responses without auth, officers read results
-    match /questionnaire_responses/{docId} {
-      allow read: if true;
-      allow write: if true;
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    // ─── Training sessions ──────────────────────────────────
-    match /training_sessions/{docId} {
-      allow read: if true;
-      allow create: if true;
-      allow update: if true;
-      allow delete: if request.auth != null;
+    function belongsToCompany(companyId) {
+      return isSignedIn() && (
+        isAdmin() || 
+        companyId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyIds
+      );
     }
 
-    // ─── Training responses ─────────────────────────────────
-    match /training_responses/{docId} {
-      allow read: if true;
-      allow write: if true;
+    // 1) Users Collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+      allow update: if request.auth.uid == userId || isAdmin();
     }
 
-    // ─── Company-scoped data ────────────────────────────────
-    // All data under /companies/{companyId}/... requires auth
-    match /companies/{companyId}/{collection}/{docId} {
-      allow read, write: if request.auth != null;
+    // 2) Companies Collection
+    match /companies/{companyId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
     }
 
-    // ─── Global reference data ──────────────────────────────
-    // Countries, counties, places, doctors, etc.
-    match /{collection}/{docId} {
-      allow read, write: if request.auth != null;
+    // 3) Global Catalog Data
+    match /countries/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /counties/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /places/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /examTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /certTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /equipmentTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /ppeTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /fileTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /isznrDocTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /doctors/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+
+    // 4) COMPANY-SCOPED DATA
+    match /companies/{companyId}/{collection}/{documentId} {
+      allow read, write: if isSignedIn() && belongsToCompany(companyId);
     }
+
+    // 5) Ankete - Sesije
+    match /questionnaire_sessions/{sessionId} {
+      // Radnik pristupa javnim token linkom (bez Auth prijave) pa mora biti true. update treba pri otvaranju linka
+      allow read, update: if true;
+      // Admin formira novu anketu i jedini on je može obrisati
+      allow create, delete: if isSignedIn();
+    }
+
+    // 6) Ankete - Odgovori
+    match /questionnaire_responses/{responseId} {
+      allow read, delete: if isSignedIn();
+      allow create, update: if true; // Radnik uspješno polaže formu
+    }
+
+    // 7) Treninzi - Sesije
+    match /training_sessions/{sessionId} {
+      allow read, update: if true;
+      allow create, delete: if isSignedIn();
+    }
+
+    // 8) Treninzi - Odgovori
+    match /training_responses/{responseId} {
+      allow read, delete: if isSignedIn();
+      allow create, update: if true;
+    }
+
   }
 }
 

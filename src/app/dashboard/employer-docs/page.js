@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -45,6 +45,14 @@ function EmployerDocsInner() {
 
     const loadData = useCallback(() => { setDocs(getAll(COLLECTIONS.EMPLOYER_DOCS)); }, []);
     useEffect(() => { loadData(); }, [loadData]);
+
+    useEffect(() => {
+        const openId = searchParams?.get('openId');
+        if (openId && docs.length > 0 && !showForm) {
+            const rec = docs.find(d => d.id === openId);
+            if (rec) handleEdit(rec);
+        }
+    }, [searchParams, docs]);
 
     // Scroll to highlighted doc from calendar event click
     useEffect(() => {

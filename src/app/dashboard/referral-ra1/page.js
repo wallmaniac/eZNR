@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -173,6 +173,14 @@ export default function ReferralRA1Page() {
   };
 
   useEffect(() => { loadData(); }, [loadData]);
+  
+  useEffect(() => {
+    const openId = searchParams?.get('openId');
+    if (openId && referrals.length > 0 && !showForm) {
+      const rec = referrals.find(r => r.id === openId);
+      if (rec) handleEdit(rec);
+    }
+  }, [searchParams, referrals]);
   const filteredRecords = search
     ? referrals.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
     : referrals;

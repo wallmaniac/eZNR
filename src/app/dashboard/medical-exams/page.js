@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import {  useState, useCallback, useMemo, useEffect  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -122,7 +122,13 @@ export default function MedicalExamsPage() {
             }));
             setShowForm(true);
         }
-    }, [searchParams]);
+        // 3. Open existing form
+        const openId = searchParams.get('openId');
+        if (openId && exams.length > 0 && !showForm) {
+            const rec = exams.find(r => r.id === openId);
+            if (rec) handleEdit(rec);
+        }
+    }, [searchParams, exams]);
 
     const reload = useCallback(() => setExams(getAll(COLLECTIONS.MEDICAL_EXAMS)), []);
 

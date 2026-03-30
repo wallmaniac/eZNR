@@ -1,7 +1,7 @@
 'use client';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
@@ -24,6 +24,7 @@ const EMPTY_RO2 = {
 export default function FormRO2Page() {
   const { t, lang } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { alert, confirm, DialogRenderer } = useDialog();
 
   const [records, setRecords] = useState([]);
@@ -71,6 +72,14 @@ export default function FormRO2Page() {
   };
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    const openId = searchParams?.get('openId');
+    if (openId && records.length > 0 && !showForm) {
+      const rec = records.find(r => r.id === openId);
+      if (rec) handleEdit(rec);
+    }
+  }, [searchParams, records]);
   const filteredRecords = search
     ? records.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
     : records;

@@ -61,6 +61,15 @@ export default function ArchivePage() {
                 const fName = r.docName || r.attachedFileName || r.fileName || r.datotekaIme;
                 const fData = r.docData || r.attachedFileData || r.fileData || r.datotekaSadrzaj;
                 if (fName && fData) {
+                    // Decide if we can deep-link into the specific document editor/view
+                    let finalLink = link;
+                    if (col === 'certificates') {
+                        finalLink = `${link}/edit/${r.id}`;
+                    } else if (col === 'requests' || col.startsWith('forms') || col.startsWith('referrals') || col === 'employerDocs') {
+                        // For generic single-page modules, try appending open parameter just in case
+                        finalLink = `${link}?openId=${r.id}`;
+                    }
+                    
                     docs.push({
                         id: `form-${col}-${r.id}`,
                         name: fName,
@@ -71,7 +80,7 @@ export default function ArchivePage() {
                         uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
                         _readonly: true,
                         _sourceLabel: label,
-                        _sourceLink: link,
+                        _sourceLink: finalLink,
                     });
                 }
             });

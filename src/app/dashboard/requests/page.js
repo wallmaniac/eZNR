@@ -1,7 +1,7 @@
 'use client';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
@@ -36,6 +36,7 @@ const EMPTY_STAVKA = {
 export default function RequestsPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
 
@@ -90,6 +91,14 @@ export default function RequestsPage() {
   };
 
   useEffect(() => { loadData(); }, [loadData]);
+  
+  useEffect(() => {
+    const openId = searchParams?.get('openId');
+    if (openId && records.length > 0 && !showForm) {
+      const rec = records.find(r => r.id === openId);
+      if (rec) handleEdit(rec);
+    }
+  }, [searchParams, records]);
   const filteredRecords = search
     ? records.filter(r => r.zahtjevnicaBroj?.toLowerCase().includes(search.toLowerCase()) || r.napomena?.toLowerCase().includes(search.toLowerCase()))
     : records;
