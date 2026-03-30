@@ -369,27 +369,16 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {!isRegister && (
-                <div style={{
-                  padding: '10px 14px', borderRadius: 8, marginTop: 8,
-                  background: 'rgba(76,175,80,0.12)', border: '1px solid rgba(76,175,80,0.3)',
-                  fontSize: '0.78rem', color: '#2E7D32',
-                }}>
-                  <strong>Demo:</strong> admin / admin123 {lang === 'bs' ? 'ili' : 'or'} officer / officer123
-                </div>
-              )}
+              {/* Demo credentials removed for production */}
             </form>
 
-            <div style={styles.switchMode}>
-              <span style={{ color: 'var(--text-light)', fontSize: '0.9rem' }}>
-                {isRegister ? t('alreadyHaveAccount') : t('newUser')}
+            {/* Registration disabled in production — users must be created by an Admin */}
+            <div style={{...styles.switchMode, opacity: 0.6}}>
+              <span style={{ color: 'var(--text-light)', fontSize: '0.85rem', textAlign: 'center' }}>
+                {lang === 'bs' 
+                  ? 'Za pristup aplikaciji potreban je odobren korisnički račun.' 
+                  : 'An approved user account is required to access the application.'}
               </span>
-              <button
-                onClick={() => setIsRegister(!isRegister)}
-                style={styles.switchBtn}
-              >
-                {isRegister ? t('loginHere') : t('registerHere')}
-              </button>
             </div>
           </div>
 
