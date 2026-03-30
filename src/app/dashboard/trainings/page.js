@@ -441,6 +441,8 @@ export default function TrainingsPage() {
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ Nova obuka</button>
+                        <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>🖨️ {lang === 'bs' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                        <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOP', '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }}>🔥 {lang === 'bs' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
                             <input placeholder="Pretraži obuke..." value={search} onChange={e => setSearch(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />

@@ -86,7 +86,13 @@ function WorkerCertificatesInner() {
             <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates/create')}>
               + {lang === 'bs' ? 'Dodaj uvjerenje' : 'Add certificate'}
             </button>
-            <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
+            <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>
+              🖨️ {lang === 'bs' ? 'Zapisnik ZOS' : 'Print ZOS'}
+            </button>
+            <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOP', '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }}>
+              🔥 {lang === 'bs' ? 'Zapisnik ZOP' : 'Print ZOP'}
+            </button>
+            <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input
                 placeholder={lang === 'bs' ? 'Pretraži po imenu, oznaci, tipu...' : 'Search by name, code, type...'}

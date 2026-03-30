@@ -102,6 +102,48 @@ function WorkersPageInner() {
     const [groupMenuOpen, setGroupMenuOpen] = useState(false);
     const groupMenuRef = useRef(null);
 
+    const zosUploadRef = useRef(null);
+    const zopUploadRef = useRef(null);
+    const [uploadingDocForWorker, setUploadingDocForWorker] = useState(null);
+
+    const processZosZopUpload = async (e, type) => {
+        const file = e.target.files?.[0];
+        if (!file || !uploadingDocForWorker) return;
+        
+        try {
+            const data = await new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = ev => res(ev.target.result);
+                reader.onerror = rej;
+                reader.readAsDataURL(file);
+            });
+            const w = workers.find(wk => wk.id === uploadingDocForWorker);
+            const userAdmin = 'Admin';
+            create(COLLECTIONS.CERTIFICATES, {
+                workerId: uploadingDocForWorker,
+                ime: type === 'ZOS' ? 'Zapisnik ZOS' : 'Zapisnik ZOP',
+                tipUvjerenjaIme: type === 'ZOS' ? 'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način' : 'Zapisnik o ocjeni osposobljenosti iz oblasti zaštite od požara',
+                oznaka: `${type}-${Date.now().toString(36).toUpperCase()}`,
+                datum: new Date().toISOString().split('T')[0],
+                vrijediDo: '',
+                sposobnost: 'Sposoban',
+                strucnjakZNR: userAdmin,
+                upisao: userAdmin,
+                fileData: data,
+                fileName: file.name
+            });
+            loadData();
+            alert(lang === 'bs' ? `Zapisnik uspješno dodan za radnika ${w?.ime} ${w?.prezime}!` : `Document successfully added for ${w?.ime} ${w?.prezime}!`);
+        } catch (err) {
+            alert(lang === 'bs' ? 'Greška pri učitavanju datoteke.' : 'Error reading file.');
+        } finally {
+            setUploadingDocForWorker(null);
+            if (zosUploadRef.current) zosUploadRef.current.value = '';
+            if (zopUploadRef.current) zopUploadRef.current.value = '';
+            setActionMenuId(null);
+        }
+    };
+
     const loadData = useCallback(() => {
         // reload list-level collections
         if (typeof window !== 'undefined') { setAllCerts(getAll(COLLECTIONS.CERTIFICATES)); setAllMedExamsList(getAll(COLLECTIONS.MEDICAL_EXAMS)); }
@@ -1277,6 +1319,9 @@ function WorkersPageInner() {
     return (
         <>
             <div className="animate-fadeIn">
+                <input ref={zosUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOS')} />
+                <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
+
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     👷 {t('workers')}
                 </h1>
@@ -1513,6 +1558,9 @@ function WorkersPageInner() {
                                                                     <button className="dropdown-item" onClick={() => router.push('/dashboard/night-work')}>NR-1</button>
                                                                     <button className="dropdown-item" onClick={() => router.push('/dashboard/diseases')}>PB</button>
                                                                     <button className="dropdown-item" onClick={() => router.push('/dashboard/injuries')}>{lang === 'bs' ? 'Ozljeda na radu' : 'Work injury'}</button>
+                                                                    <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }}></div>
+                                                                    <button className="dropdown-item" onClick={() => { setUploadingDocForWorker(w.id); zosUploadRef.current?.click(); }}>📥 Zapisnik ZOS (Upload)</button>
+                                                                    <button className="dropdown-item" onClick={() => { setUploadingDocForWorker(w.id); zopUploadRef.current?.click(); }}>📥 Zapisnik ZOP (Upload)</button>
                                                                 </div>
                                                             </div>
                                                             <div className="dropdown-submenu">

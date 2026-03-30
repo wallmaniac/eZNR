@@ -35,6 +35,7 @@ const FORM_SOURCES = [
   { col: 'referralsNr1',  label: 'Lj. uputnica (NR1)', link: '/dashboard/medical-exams' },
   { col: 'referralsRa1',  label: 'Lj. uputnica (RA1)', link: '/dashboard/referral-ra1' },
   { col: 'employerDocs',  label: 'Dokumentacija za poslodavca', link: '/dashboard/employer-docs' },
+  { col: 'certificates',  label: 'Uvjerenje radnika', link: '/dashboard/worker-certificates' },
 ];
 
 export default function ArchivePage() {
