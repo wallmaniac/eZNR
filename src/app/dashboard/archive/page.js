@@ -55,21 +55,23 @@ export default function ArchivePage() {
         setFiles(getAll(COLLECTIONS.DIGITAL_ARCHIVE));
         // Aggregate form attachments
         const docs = [];
-        FORM_SOURCES.forEach(({ col, label }) => {
+        FORM_SOURCES.forEach(({ col, label, link }) => {
             const recs = getAll(col);
             recs.forEach(r => {
-                if (r.docName && r.docData) {
+                const fName = r.docName || r.attachedFileName || r.fileName || r.datotekaIme;
+                const fData = r.docData || r.attachedFileData || r.fileData || r.datotekaSadrzaj;
+                if (fName && fData) {
                     docs.push({
                         id: `form-${col}-${r.id}`,
-                        name: r.docName,
-                        data: r.docData,
-                        category: 'Obrasci',
-                        description: label,
-                        size: null,
+                        name: fName,
+                        data: fData,
+                        category: label.includes('Uvjerenje') ? 'Certifikati' : 'Obrasci',
+                        description: r.ime ? `${r.ime}` : label,
+                        size: r.attachedFileSize || null,
                         uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
                         _readonly: true,
                         _sourceLabel: label,
-                        _sourceLink: FORM_SOURCES.find(s => s.col === col)?.link,
+                        _sourceLink: link,
                     });
                 }
             });

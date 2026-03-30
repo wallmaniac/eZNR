@@ -112,20 +112,7 @@ function EditCertPageInner() {
             ime: formData.tipUvjerenjaIme || formData.ime,
             sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
         });
-        // Auto-save attached file to Digitalna arhiva
-        if (formData.attachedFileData && formData.attachedFileName) {
-            create(COLLECTIONS.DIGITAL_ARCHIVE, {
-                name: formData.attachedFileName,
-                size: formData.attachedFileSize || 0,
-                type: formData.attachedFileType || '',
-                category: 'Certifikati',
-                description: `${formData.tipUvjerenjaIme || formData.ime || 'Uvjerenje'} — ${worker?.ime || ''} ${worker?.prezime || ''}`.trim(),
-                data: formData.attachedFileData,
-                uploadedAt: new Date().toISOString(),
-                certId,
-                workerId: formData.workerId,
-            });
-        }
+        // We no longer manually push to DIGITAL_ARCHIVE because archive/page.js dynamically reads from CERTIFICATES
         await dlgAlert(lang === 'bs' ? 'Uvjerenje sačuvano!' : 'Certificate saved!');
         if (returnTo) { router.push(returnTo); } else { router.back(); }
     };
