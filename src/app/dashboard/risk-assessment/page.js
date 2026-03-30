@@ -182,6 +182,11 @@ export default function RiskAssessmentPage() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiOpisLoading, setAiOpisLoading] = useState(false);
     const [aiDocument, setAiDocument] = useState(null);
+    // AI Document Analyzer
+    const [showDocAiModal, setShowDocAiModal] = useState(false);
+    const [docAiFiles, setDocAiFiles] = useState([]);
+    const [docAiLoading, setDocAiLoading] = useState(false);
+    const [docAiResult, setDocAiResult] = useState(null);
     // Import from questionnaire
     const [showImportModal, setShowImportModal] = useState(false);
     const [questionnaires, setQuestionnaires] = useState([]);
@@ -443,6 +448,92 @@ export default function RiskAssessmentPage() {
         setAiLoading(false);
     };
     const setRi = (f, v) => setRiForm(prev => ({ ...prev, [f]: v }));
+
+    // ─── AI Document Analyzer ───
+    const handleDocAiAnalyze = async () => {
+        if (!docAiFiles || docAiFiles.length === 0) {
+            alert('Molimo odaberite barem jedan dokument za analizu.');
+            return;
+        }
+        setDocAiLoading(true);
+        try {
+            const documents = [];
+            for (const file of docAiFiles) {
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                documents.push({ data: base64, mimeType: file.type, name: file.name });
+            }
+
+            const res = await fetch('/api/analyze-risk-docs', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    documents,
+                    companyName: formData.nazivTvrtke
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.analysis) {
+                setDocAiResult(data.analysis);
+            } else {
+                alert('AI greška: ' + (data.error || 'Nepoznata greška'));
+            }
+        } catch (err) {
+            alert('Greška pri analizi: ' + err.message);
+        }
+        setDocAiLoading(false);
+    };
+
+    const applyDocAiResults = () => {
+        if (!docAiResult) return;
+        setFormData(prev => ({
+            ...prev,
+            opisProcesa: docAiResult.opisProcesa || prev.opisProcesa,
+            analizaOrganizacije: docAiResult.analizaOrganizacije || prev.analizaOrganizacije
+        }));
+        
+        // Predložena oprema (create unlinked array or just hint)
+        // Ako želimo automatski integrirati, možda je bolje to ostaviti kao alert ili appendovati u opis procesa
+        if (docAiResult.oprema && docAiResult.oprema.length > 0) {
+            const opremaText = '\\n\\nStrojevi/Oprema izvučena iz dokumenata:\\n- ' + docAiResult.oprema.join('\\n- ');
+            setFormData(prev => ({ ...prev, opisProcesa: (prev.opisProcesa || '') + opremaText }));
+        }
+
+        // Predložene opasnosti -> dodajemo kao draft Risk Items
+        if (docAiResult.opasnosti && docAiResult.opasnosti.length > 0) {
+            let addCount = 0;
+            docAiResult.opasnosti.forEach(op => {
+                if (!op) return;
+                create(COLLECTIONS.RISK_ITEMS, {
+                    procjenaId: editingId,
+                    radnoMjestoId: '', // nepoznato s kojeg je radnog mjesta
+                    opasnostId: '', // unknown from catalog
+                    opisOpasnosti: op,
+                    vjerovatnoca: 3, posljedica: 3,
+                    rizik: 9, nivoRizika: riskLevel(9).label,
+                    postojeceMjere: '', predlozeneMjere: '',
+                    vjerovatnocaNakon: 0, posljedlicaNakon: 0,
+                    rizikNakon: 0, nivoRizikaNakon: '',
+                    odgovornaOsoba: '', rokProvedbe: '',
+                    status: 'draft', aiGenerated: true,
+                });
+                addCount++;
+            });
+            loadRiskItems(editingId);
+            showFlash();
+            alert(`AI podaci preuzeti! Dodano ${addCount} predloženih opasnosti u stavke procjene.`);
+        } else {
+            showFlash();
+            alert('AI podaci (Opis i Organizacija) preuzeti!');
+        }
+        
+        setShowDocAiModal(false);
+        setDocAiResult(null);
+        setDocAiFiles([]);
+    };
 
     // ─── Sistematizacija + Equipment context for selected workplace ───
     const selectedWpSist = useMemo(() => {
@@ -1154,10 +1245,16 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     <div className="card"><div className="card-body">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                             <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
-                            <button className="btn btn-outline btn-sm" onClick={handleAiOpis} disabled={aiOpisLoading}
-                                style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                {aiOpisLoading ? '⏳...' : '🤖 AI Generiši opis'}
-                            </button>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                                <button className="btn btn-outline btn-sm" onClick={() => setShowDocAiModal(true)}
+                                    style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                    🤖 AI Analiza dokumenata
+                                </button>
+                                <button className="btn btn-outline btn-sm" onClick={handleAiOpis} disabled={aiOpisLoading}
+                                    style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                    {aiOpisLoading ? '⏳...' : '🤖 AI Generiši opis'}
+                                </button>
+                            </div>
                         </div>
                         <textarea className="form-input" rows={6} value={formData.opisProcesa || ''} onChange={e => set('opisProcesa', e.target.value)}
                             placeholder="Opišite tehničko-tehnološki i radni proces, sredstva rada, opremu..." style={{ resize: 'vertical', marginBottom: 20 }} />
@@ -1168,6 +1265,86 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                             <SavedFlash />
                         </div>
+                        
+                        {/* ── Document AI Modal ── */}
+                        {showDocAiModal && (
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
+                                onClick={(e) => { if (e.target === e.currentTarget && !docAiLoading) setShowDocAiModal(false); }}>
+                                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 600, maxWidth: 800, maxHeight: '90vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>🤖 AI Analiza dokumenata</div>
+                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.5 }}>
+                                        Učitajte zapisnike, mjerne protokole, tehničke listove ili drugu dokumentaciju. AI će ih pročitati i pokušati automatski formulisati Opis procesa, Organizaciju rada, te prepoznati opasnosti.
+                                    </div>
+                                    
+                                    {!docAiResult ? (
+                                        <>
+                                            <div style={{ border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', padding: 30, textAlign: 'center', background: 'var(--bg-input)', cursor: 'pointer', marginBottom: 20 }}
+                                                 onClick={() => document.getElementById('docAiUpload').click()}>
+                                                <input type="file" id="docAiUpload" multiple accept=".pdf,.doc,.docx,.txt" style={{ display: 'none' }}
+                                                    onChange={e => setDocAiFiles(Array.from(e.target.files))} />
+                                                <div style={{ fontSize: '2rem', marginBottom: 10 }}>📎</div>
+                                                <div style={{ fontWeight: 600, color: 'var(--text)' }}>
+                                                    {docAiFiles.length > 0 ? `${docAiFiles.length} dokument(a) spremno` : 'Klikni ili povuci fajlove ovdje (PDF, Word)'}
+                                                </div>
+                                                {docAiFiles.length > 0 && (
+                                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 8 }}>
+                                                        {docAiFiles.map(f => f.name).join(', ')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                                                <button className="btn btn-ghost" onClick={() => setShowDocAiModal(false)} disabled={docAiLoading}>Odustani</button>
+                                                <button className="btn btn-primary" onClick={handleDocAiAnalyze} disabled={docAiFiles.length === 0 || docAiLoading}
+                                                    style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', border: 'none' }}>
+                                                    {docAiLoading ? '⏳ AI čita...' : '⚡ Analiziraj dokumente'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div style={{ padding: 16, background: 'rgba(76,175,80,0.1)', border: '1px solid #4caf50', borderRadius: 'var(--radius-md)', marginBottom: 20 }}>
+                                                <div style={{ fontWeight: 700, color: '#4caf50', marginBottom: 12 }}>✅ Analiza završena! Pregledajte rezultate:</div>
+                                                
+                                                <div style={{ ...labelSt, marginTop: 10 }}>Generisani opis procesa</div>
+                                                <textarea className="form-input" rows={4} value={docAiResult.opisProcesa || ''} 
+                                                    onChange={e => setDocAiResult(prev => ({...prev, opisProcesa: e.target.value}))} 
+                                                    style={{ width: '100%', marginBottom: 12, fontSize: '0.85rem' }} />
+                                                    
+                                                <div style={{ ...labelSt }}>Analiza organizacije</div>
+                                                <textarea className="form-input" rows={2} value={docAiResult.analizaOrganizacije || ''} 
+                                                    onChange={e => setDocAiResult(prev => ({...prev, analizaOrganizacije: e.target.value}))} 
+                                                    style={{ width: '100%', marginBottom: 12, fontSize: '0.85rem' }} />
+                                                
+                                                {docAiResult.oprema && docAiResult.oprema.length > 0 && (
+                                                    <div style={{ marginBottom: 12 }}>
+                                                        <div style={{ ...labelSt }}>Predloženi strojevi/alati (Bit će dodani u opis)</div>
+                                                        <div style={{ fontSize: '0.8rem', background: 'var(--bg-input)', padding: 8, borderRadius: 6 }}>
+                                                            {docAiResult.oprema.join(', ')}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                
+                                                {docAiResult.opasnosti && docAiResult.opasnosti.length > 0 && (
+                                                    <div style={{ marginBottom: 12 }}>
+                                                        <div style={{ ...labelSt }}>Predložene opasnosti ({docAiResult.opasnosti.length} - Bit će dodane u predloške)</div>
+                                                        <div style={{ maxHeight: 100, overflow: 'auto', fontSize: '0.8rem', background: 'var(--bg-input)', padding: 8, borderRadius: 6 }}>
+                                                            {docAiResult.opasnosti.map((op, i) => <div key={i}>⚠️ {op}</div>)}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                                                <button className="btn btn-ghost" onClick={() => { setDocAiResult(null); setDocAiFiles([]); }}>❌ Poništi</button>
+                                                <button className="btn btn-primary" onClick={applyDocAiResults}
+                                                    style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', border: 'none' }}>
+                                                    ✔ Potvrdi i integriraj u procjenu
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        )}
                     </div></div>
                 )}
 
