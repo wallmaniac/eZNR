@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, remove, update, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import Link from 'next/link';
 
 const FILE_ICONS = {
     pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗',
@@ -27,13 +28,13 @@ const CATEGORIES = ['Sve', 'Obrasci', 'Ugovori', 'Certifikati', 'Pravilnici', 'I
 
 // Form collections that contribute read-only attachments classified as Obrasci
 const FORM_SOURCES = [
-  { col: 'requests',      label: 'Zahtjevnica' },
-  { col: 'formsOir1',     label: 'Obrazac OIR-1' },
-  { col: 'formsRo1',      label: 'Obrazac RO-1' },
-  { col: 'formsRo2',      label: 'Obrazac RO-2' },
-  { col: 'referralsNr1',  label: 'Lj. uputnica (NR1)' },
-  { col: 'referralsRa1',  label: 'Lj. uputnica (RA1)' },
-  { col: 'employerDocs',  label: 'Dokumentacija za poslodavca' },
+  { col: 'requests',      label: 'Zahtjevnica', link: '/dashboard/requests' },
+  { col: 'formsOir1',     label: 'Obrazac OIR-1', link: '/dashboard/form-oir1' },
+  { col: 'formsRo1',      label: 'Obrazac RO-1', link: '/dashboard/form-ro1' },
+  { col: 'formsRo2',      label: 'Obrazac RO-2', link: '/dashboard/form-ro2' },
+  { col: 'referralsNr1',  label: 'Lj. uputnica (NR1)', link: '/dashboard/medical-exams' },
+  { col: 'referralsRa1',  label: 'Lj. uputnica (RA1)', link: '/dashboard/referral-ra1' },
+  { col: 'employerDocs',  label: 'Dokumentacija za poslodavca', link: '/dashboard/employer-docs' },
 ];
 
 export default function ArchivePage() {
@@ -67,6 +68,7 @@ export default function ArchivePage() {
                         uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
                         _readonly: true,
                         _sourceLabel: label,
+                        _sourceLink: FORM_SOURCES.find(s => s.col === col)?.link,
                     });
                 }
             });
@@ -251,7 +253,7 @@ export default function ArchivePage() {
                                                 </div>
                                                 {file._readonly ? (
                                                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                                                        📋 {file._sourceLabel}
+                                                        📋 <Link href={file._sourceLink || '#'} style={{ color: 'inherit', textDecoration: 'underline', textUnderlineOffset: 2, transition: 'color 0.15s' }} onMouseEnter={e => e.currentTarget.style.color = 'var(--primary)'} onMouseLeave={e => e.currentTarget.style.color = 'inherit'}>{file._sourceLabel}</Link>
                                                     </div>
                                                 ) : (
                                                     <input
