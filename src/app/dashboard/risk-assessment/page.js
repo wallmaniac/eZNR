@@ -180,6 +180,8 @@ export default function RiskAssessmentPage() {
     const [showRiForm, setShowRiForm] = useState(false);
     const [workplaces, setWorkplaces] = useState([]);
     const [aiLoading, setAiLoading] = useState(false);
+    const [aiOpisLoading, setAiOpisLoading] = useState(false);
+    const [aiDocument, setAiDocument] = useState(null);
     // Import from questionnaire
     const [showImportModal, setShowImportModal] = useState(false);
     const [questionnaires, setQuestionnaires] = useState([]);
@@ -355,11 +357,64 @@ export default function RiskAssessmentPage() {
         setShowRiForm(false); setRiEditId(null); loadRiskItems(editingId);
         showFlash();
     };
+    const handleAiOpis = async () => {
+        if (!formData.nazivTvrtke) {
+            alert(lang === 'bs' ? 'Molimo prvo unesite naziv firme u Opštim podacima.' : 'Please enter company name first.');
+            return;
+        }
+        setAiOpisLoading(true);
+        try {
+            const wps = riskItems.map(ri => workplaces.find(w => w.id === ri.radnoMjestoId)?.naziv).filter(Boolean);
+            const uniqueWps = [...new Set(wps)];
+
+            const res = await fetch('/api/generate-opis-procesa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nazivTvrtke: formData.nazivTvrtke,
+                    djelatnost: formData.djelatnost,
+                    workplaces: uniqueWps
+                })
+            });
+            const data = await res.json();
+            if (data.success && data.result) {
+                setFormData(prev => ({
+                    ...prev,
+                    opisProcesa: data.result.opisProcesa || prev.opisProcesa,
+                    analizaOrganizacije: data.result.analizaOrganizacije || prev.analizaOrganizacije
+                }));
+                showFlash();
+            } else {
+                alert('AI greška: ' + (data.error || 'Nepoznata greška'));
+            }
+        } catch (err) {
+            alert('Greška: ' + err.message);
+        }
+        setAiOpisLoading(false);
+    };
+
     // ─── AI Measures Suggestion ───
     const handleAiSuggest = async () => {
         if (!riForm.vjerovatnoca || !riForm.posljedica) { alert('Prvo unesite V i P!'); return; }
         setAiLoading(true);
         try {
+            let docData = null;
+            let docMimeType = null;
+            if (aiDocument) {
+                try {
+                    const base64 = await new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        reader.onload = () => resolve(reader.result.split(',')[1]);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(aiDocument);
+                    });
+                    docData = base64;
+                    docMimeType = aiDocument.type;
+                } catch (e) {
+                    console.error('File read error', e);
+                }
+            }
+
             const hz = hazards.find(h => h.id === riForm.opasnostId);
             const wp = workplaces.find(w => w.id === riForm.radnoMjestoId);
             const res = await fetch('/api/risk-measures', {
@@ -369,6 +424,8 @@ export default function RiskAssessmentPage() {
                     workplaceName: wp?.naziv || '', opisOpasnosti: riForm.opisOpasnosti || '',
                     vjerovatnoca: riForm.vjerovatnoca, posljedica: riForm.posljedica,
                     postojeceMjere: riForm.postojeceMjere || '',
+                    documentData: docData,
+                    documentMimeType: docMimeType
                 }),
             });
             const data = await res.json();
@@ -1095,7 +1152,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {/* ── TAB: Opis procesa ── */}
                 {activeTab === 'opis' && (
                     <div className="card"><div className="card-body">
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                            <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
+                            <button className="btn btn-outline btn-sm" onClick={handleAiOpis} disabled={aiOpisLoading}
+                                style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                {aiOpisLoading ? '⏳...' : '🤖 AI Generiši opis'}
+                            </button>
+                        </div>
                         <textarea className="form-input" rows={6} value={formData.opisProcesa || ''} onChange={e => set('opisProcesa', e.target.value)}
                             placeholder="Opišite tehničko-tehnološki i radni proces, sredstva rada, opremu..." style={{ resize: 'vertical', marginBottom: 20 }} />
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>ANALIZA ORGANIZACIJE RADA</div>
@@ -1215,11 +1278,17 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                            <input type="file" accept=".pdf,.doc,.docx" id="aiDocInput" style={{ display: 'none' }} onChange={e => setAiDocument(e.target.files[0] || null)} />
+                                            <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('aiDocInput').click()} disabled={aiLoading}
+                                                style={{ borderColor: aiDocument ? '#11998e' : 'var(--border)', color: aiDocument ? '#11998e' : 'var(--text)', background: aiDocument ? 'rgba(17,153,142,0.1)' : 'transparent', fontWeight: 600 }}>
+                                                📎 {aiDocument ? aiDocument.name : 'Priloži dokument (PDF/Word)'}
+                                            </button>
                                             <button className="btn btn-outline btn-sm" onClick={handleAiSuggest} disabled={aiLoading}
                                                 style={{ background: aiLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                                 {aiLoading ? '⏳ AI analizira...' : '🤖 AI Predloži mjere'}
                                             </button>
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AI će predložiti mjere i novu ocjenu nakon mjera</span>
+                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AI u obzir uzima i priloženi dokument</span>
+                                            {aiDocument && <button className="btn btn-ghost btn-sm" onClick={() => { setAiDocument(null); document.getElementById('aiDocInput').value = ''; }} style={{ color: 'var(--danger)', padding: '0 4px', fontSize: '1rem' }} title="Ukloni dokument">✖</button>}
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
                                             <div><div style={labelSt}>Postojeće mjere</div><textarea className="form-input" rows={2} value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
@@ -1416,7 +1485,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         {field === 'predlozeneMjere' ? '⚠ Nije definirano' : '—'}
                                       </span>
                             )}
-                            <span className="mjera-cell-edit-hint" style={{ position: 'absolute', top: 4, right: 4, fontSize: '0.65rem', opacity: 0, color: 'var(--primary)', transition: 'opacity 0.15s', pointerEvents: 'none' }}>✏️</span>
+                            <span className="mjera-cell-edit-hint" style={{ position: 'absolute', top: -4, right: -4, fontSize: '0.7rem', opacity: 0, background: 'var(--bg-card)', border: '1px solid var(--primary)', padding: '2px 4px', borderRadius: 6, boxShadow: '0 2px 6px rgba(0,0,0,0.15)', transition: 'all 0.15s', pointerEvents: 'none', zIndex: 10 }}>✏️</span>
                         </div>
                     );
                     return (

@@ -13,7 +13,7 @@ export async function POST(request) {
     try { body = await request.json(); }
     catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }); }
 
-    const { hazardName, hazardCode, workplaceName, opisOpasnosti, vjerovatnoca, posljedica, postojeceMjere } = body;
+    const { hazardName, hazardCode, workplaceName, opisOpasnosti, vjerovatnoca, posljedica, postojeceMjere, documentData, documentMimeType } = body;
 
     const systemPrompt = `Ti si stručnjak za zaštitu na radu (ZNR) u Bosni i Hercegovini i EU.
 Na osnovu dostavljenih podataka o opasnosti na radnom mjestu, predloži konkretne mjere zaštite.
@@ -42,11 +42,20 @@ TRENUTNA POSLJEDICA (P): ${posljedica}/5
 TRENUTNI RIZIK (R): ${vjerovatnoca * posljedica}/25
 ${postojeceMjere ? `POSTOJEĆE MJERE: ${postojeceMjere}` : ''}
 
-Predloži mjere i novu ocjenu V i P nakon primjene mjera.`;
+Predloži mjere i novu ocjenu V i P nakon primjene mjera.
+${documentData ? 'OPASKO: Priložen je i dokument (npr. izvještaj o ispitivanju). Strogo uzmi u obzir opaske iz dokumenta prilikom predlaganja mjera (ako su relevantne).' : ''}`;
+
+    const parts = [];
+    if (documentData && documentMimeType) {
+        parts.push({
+            inlineData: { data: documentData, mimeType: documentMimeType }
+        });
+    }
+    parts.push({ text: userMsg });
 
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+        contents: [{ role: 'user', parts }],
         generationConfig: { temperature: 0.3, maxOutputTokens: 1024, topP: 0.9, responseMimeType: 'application/json' },
     };
 

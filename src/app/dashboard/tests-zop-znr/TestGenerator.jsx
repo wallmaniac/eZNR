@@ -19,6 +19,61 @@ export default function TestGenerator() {
     const [testType, setTestType] = useState('ZOP');
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setUploading(true);
+        try {
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result.split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+            
+            const systemPrompt = `Ti si asistent za ekstrakciju ispitnih pitanja.
+Iz priloženog dokumenta izvuci sva pitanja sa višestrukim izborom (Multiple Choice Questions) i njihove ponuđene odgovore.
+Odgovori ISKLJUČIVO u JSON formatu na sljedeći način:
+[
+  {
+    "text": "Tekst pitanja?",
+    "options": [
+      { "label": "a", "text": "Prvi odgovor" },
+      { "label": "b", "text": "Drugi odgovor" }
+    ]
+  }
+]
+Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je dodijeli.`;
+
+            const res = await fetch('/api/generate-from-document', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    systemPrompt,
+                    userPrompt: "Izdvoji pitanja u traženi JSON format.",
+                    base64Document: base64,
+                    mimeType: file.type
+                })
+            });
+            const data = await res.json();
+            if (data.success && Array.isArray(data.result)) {
+                // Determine starting ID based on current questions length
+                const startId = questions.length;
+                const extracted = data.result.map((q, i) => ({ ...q, id: i + 1 + startId }));
+                setQuestions(prev => [...prev, ...extracted]);
+                alert(bs ? "Uspješno uvezeno " + extracted.length + " pitanja." : "Successfully imported " + extracted.length + " questions.");
+            } else {
+                alert('AI Greška: Ne mogu pročitati pitanja ' + (data.error || ''));
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Greška pri parsiranju fajla: ' + err.message);
+        }
+        setUploading(false);
+        e.target.value = null; // reset
+    };
 
     // Editing state
     const [editingId, setEditingId] = useState(null);
@@ -247,6 +302,10 @@ export default function TestGenerator() {
                 <div style={{ display: 'flex', gap: 10 }}>
                     <button className="btn btn-outline btn-sm" onClick={handleShuffleQuestions}>
                         🔀 {bs ? 'Izmiješaj pitanja' : 'Shuffle Questions'}
+                    </button>
+                    <input type="file" accept=".pdf,.doc,.docx" id="testUploadInput" style={{ display: 'none' }} onChange={handleFileUpload} />
+                    <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('testUploadInput').click()} disabled={uploading || loading} style={{ background: uploading ? 'var(--bg-input)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                        {uploading ? '⏳...' : '📎 Učitaj postojeći test'}
                     </button>
                     <button className="btn btn-outline btn-sm" onClick={handleAddQuestion}>
                         ➕ {bs ? 'Dodaj pitanje' : 'Add Question'}
