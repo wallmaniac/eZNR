@@ -2,10 +2,10 @@
 import { useState, useRef, useEffect } from 'react';
 
 /**
- * HelpTip — hover ℹ️ icon that shows a tooltip with explanation text.
+ * HelpTip — hover [i] icon that shows a tooltip with explanation text.
  * Usage: <HelpTip text="Explanation of this field" />
  */
-export default function HelpTip({ text, icon = 'ℹ️', style = {} }) {
+export default function HelpTip({ text, style = {} }) {
     const [show, setShow] = useState(false);
     const [pos, setPos] = useState({ vertical: 'bottom', horizontal: 'center' });
     const tipRef = useRef(null);
@@ -17,11 +17,9 @@ export default function HelpTip({ text, icon = 'ℹ️', style = {} }) {
             const wrapRect = wrapRef.current.getBoundingClientRect();
             let v = 'bottom', h = 'center';
 
-            // Vertical: flip if no room below
             if (tipRect.bottom > window.innerHeight - 12) v = 'top';
             else if (wrapRect.top - tipRect.height < 12) v = 'bottom';
 
-            // Horizontal: shift if overflowing left/right
             if (tipRect.left < 12) h = 'left';
             else if (tipRect.right > window.innerWidth - 12) h = 'right';
 
@@ -45,17 +43,44 @@ export default function HelpTip({ text, icon = 'ℹ️', style = {} }) {
                 position: 'relative',
                 display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'center',
                 cursor: 'help',
-                marginLeft: 5,
-                fontSize: '0.7rem',
-                opacity: 0.65,
-                transition: 'opacity 0.2s',
+                flexShrink: 0,
                 ...style,
             }}
-            onMouseOver={(e) => { e.currentTarget.style.opacity = '1'; }}
-            onMouseOut={(e) => { e.currentTarget.style.opacity = '0.65'; }}
         >
-            <span style={{ userSelect: 'none' }}>{icon}</span>
+            {/* Custom styled circle badge — consistent across all backgrounds */}
+            <span
+                style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 15,
+                    height: 15,
+                    borderRadius: '50%',
+                    background: 'rgba(0,191,166,0.18)',
+                    border: '1.5px solid rgba(0,191,166,0.6)',
+                    color: 'var(--primary, #00bfa6)',
+                    fontSize: '0.65rem',
+                    fontWeight: 800,
+                    lineHeight: 1,
+                    userSelect: 'none',
+                    transition: 'background 0.18s, border-color 0.18s',
+                    flexShrink: 0,
+                }}
+                onMouseOver={e => {
+                    e.currentTarget.style.background = 'rgba(0,191,166,0.32)';
+                    e.currentTarget.style.borderColor = 'var(--primary, #00bfa6)';
+                }}
+                onMouseOut={e => {
+                    e.currentTarget.style.background = 'rgba(0,191,166,0.18)';
+                    e.currentTarget.style.borderColor = 'rgba(0,191,166,0.6)';
+                }}
+            >
+                i
+            </span>
+
+            {/* Tooltip popup */}
             {show && (
                 <span
                     ref={tipRef}
@@ -63,7 +88,6 @@ export default function HelpTip({ text, icon = 'ℹ️', style = {} }) {
                         position: 'absolute',
                         [pos.vertical === 'top' ? 'bottom' : 'top']: 'calc(100% + 8px)',
                         ...getHorizontalStyle(),
-                        /* ── Solid opaque background ── */
                         background: '#1a1f2e',
                         color: '#e2e8f0',
                         border: '1px solid #3b4560',
