@@ -206,6 +206,25 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                     </div>
                 </div>
 
+                {/* ── Quick Actions ── */}
+                <div style={{ display: 'flex', gap: 10, padding: '12px 24px', background: 'var(--bg-input)', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', marginRight: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        ⚡ {lang === 'bs' ? 'Brze akcije:' : 'Quick Actions:'}
+                    </div>
+                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
+                        onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}`); }}>
+                        👨‍⚕️ {lang === 'bs' ? 'Novi ljekarski pregled' : 'New exam'}
+                    </button>
+                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
+                        onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}`); }}>
+                        📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}
+                    </button>
+                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'var(--bg-card)' }}
+                        onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}`); }}>
+                        🚑 {lang === 'bs' ? 'Prijavi povredu' : 'Report injury'}
+                    </button>
+                </div>
+
                 {/* ── Body ── */}
                 <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
 

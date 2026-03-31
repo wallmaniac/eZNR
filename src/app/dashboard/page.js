@@ -476,10 +476,10 @@ export default function DashboardPage() {
             <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)', gap: 10, marginBottom: 24 }}>
                 <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} />
                 <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} />
-                <StatCard icon="⏰" label={lang === 'bs' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates')} />
+                <StatCard icon="⏰" label={lang === 'bs' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} />
                 <StatCard icon="⚙️" label={t('workEquipment')} value={stats.activeEquip} color="#607D8B" onClick={() => handleStatClick('/dashboard/equipment')} />
                 {stats.totalExpired > 0 && (
-                    <StatCard icon="🚨" label={lang === 'bs' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates')} isAlert />
+                    <StatCard icon="🚨" label={lang === 'bs' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert />
                 )}
             </div>
 

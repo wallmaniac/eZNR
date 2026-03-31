@@ -380,8 +380,8 @@ export default function WorkplacesPage() {
                     </div>
 
                     <div style={{ marginTop: 16, display: 'flex', gap: 16, fontSize: '0.85rem' }}>
-                        <a href="#" style={{ color: 'var(--primary)' }}>{lang === 'bs' ? 'Popis zahtjevane zaštitne opreme' : 'Required PPE list'}</a>
-                        <a href="#" style={{ color: 'var(--primary)' }}>{lang === 'bs' ? 'Popis zahtjevane zaštitne opreme po radnom mjestu' : 'Required PPE by workplace'}</a>
+                        <button onClick={() => router.push('/dashboard/ppe')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0, fontFamily: 'var(--font-body)', fontSize: '0.85rem', textDecoration: 'underline' }}>{lang === 'bs' ? '→ Zaštitna oprema (OZO)' : '→ PPE / Protective equipment'}</button>
+                        <button onClick={() => router.push('/dashboard/worker-ppe')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0, fontFamily: 'var(--font-body)', fontSize: '0.85rem', textDecoration: 'underline' }}>{lang === 'bs' ? '→ OZO dodijeljena radnicima' : '→ PPE per worker'}</button>
                     </div>
 
                     <div className="pagination" style={{ marginTop: 12 }}>

@@ -422,7 +422,17 @@ export default function MedicalExamsPage() {
                                     )}
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Broj uputnice (RA-1)' : 'Referral No. (RA-1)'}</label>
+                                    <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <span>{bs ? 'Broj uputnice (RA-1)' : 'Referral No. (RA-1)'}</span>
+                                        <button 
+                                            type="button" 
+                                            title={bs ? 'Idi na modul Uputnice RA-1' : 'Go to RA-1 Referrals module'}
+                                            onClick={() => router.push('/dashboard/referral-ra1')} 
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, padding: 0, textDecoration: 'underline' }}
+                                        >
+                                            ↗ {bs ? 'Modul RA-1' : 'RA-1 Module'}
+                                        </button>
+                                    </label>
                                     <input className="form-input" placeholder="RA1-2026-001" value={form.uputnicaBroj} onChange={e => setField('uputnicaBroj', e.target.value)} />
                                 </div>
                             </div>

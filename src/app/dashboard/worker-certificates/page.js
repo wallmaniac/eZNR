@@ -170,25 +170,43 @@ function WorkerCertificatesInner() {
                       {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
                     </td>
                     <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (lang === 'bs' ? 'Isteklo' : 'Expired') : (lang === 'bs' ? 'Važeće' : 'Valid')}</span></td>
-                    <td style={{ textAlign: 'center' }}>
-                      <button
-                        onClick={() => handleEdit(r.id)}
-                        disabled={isNavigating}
-                        title={lang === 'bs' ? 'Uredi uvjerenje' : 'Edit certificate'}
-                        style={{
-                          background: 'none', border: '1px solid var(--border)', borderRadius: 6,
-                          cursor: isNavigating ? 'wait' : 'pointer', padding: '4px 8px',
-                          fontSize: '1rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
-                          transition: 'all 0.15s', minWidth: 34,
-                          borderColor: isNavigating ? 'var(--primary)' : undefined,
-                        }}
-                        onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'rgba(var(--primary-rgb,33,150,243),0.07)'; } }}
-                        onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; } }}
-                      >
-                        {isNavigating
-                          ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite', verticalAlign: 'middle' }} />
-                          : '📄'}
-                      </button>
+                    <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
+                      <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                        <button
+                          onClick={() => handleEdit(r.id)}
+                          disabled={isNavigating}
+                          title={lang === 'bs' ? 'Uredi uvjerenje' : 'Edit certificate'}
+                          style={{
+                            background: 'none', border: '1px solid var(--border)', borderRadius: 6,
+                            cursor: isNavigating ? 'wait' : 'pointer', padding: '4px 8px',
+                            fontSize: '1rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
+                            transition: 'all 0.15s', minWidth: 34,
+                            borderColor: isNavigating ? 'var(--primary)' : undefined,
+                          }}
+                          onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'rgba(var(--primary-rgb,33,150,243),0.07)'; } }}
+                          onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; } }}
+                        >
+                          {isNavigating
+                            ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite', verticalAlign: 'middle' }} />
+                            : '📄'}
+                        </button>
+                        {r.isExpired && (
+                          <button
+                            onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}`)}
+                            title={lang === 'bs' ? 'Obnovi uvjerenje (nova serija)' : 'Renew certificate (new entry)'}
+                            style={{
+                              background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 6,
+                              cursor: 'pointer', padding: '4px 8px',
+                              fontSize: '1rem', color: 'var(--primary)',
+                              transition: 'all 0.15s', minWidth: 34,
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.2)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.1)'; }}
+                          >
+                            📋
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

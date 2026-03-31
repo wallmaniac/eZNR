@@ -164,7 +164,7 @@ function EditCertPageInner() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                                 <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Tip uvjerenja' : 'Certificate type'} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
                                 <button className="btn btn-ghost btn-sm"
-                                style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
                                     onClick={() => setShowNewTypeForm(true)} title={lang === 'bs' ? 'Dodaj novi tip' : 'Add new type'}>+</button>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
@@ -238,7 +238,7 @@ function EditCertPageInner() {
                         <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={ispitivacRef}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                                 <div style={labelStyle}>{lang === 'bs' ? 'Ispitivač' : 'Examiner'}</div>
-                                <button className="btn btn-ghost btn-sm" style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                                <button className="btn btn-ghost btn-sm" style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
                                     onClick={() => router.push('/dashboard/examiners')} title={lang === 'bs' ? 'Upravljaj ispitivačima' : 'Manage examiners'}>+</button>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}

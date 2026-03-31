@@ -328,6 +328,16 @@ export default function InjuriesPage() {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                {formData.radnikId && (
+                  <button
+                    className="btn btn-outline btn-sm"
+                    style={{ marginRight: 'auto' }}
+                    onClick={() => { setShowForm(false); router.push(`/dashboard/medical-exams?openNew=1&workerId=${formData.radnikId}`); }}
+                    title={lang === 'bs' ? 'Otvori formu za novi ljekarski pregled za ovog radnika' : 'Open new medical exam form for this worker'}
+                  >
+                    👨‍⚕️ {lang === 'bs' ? 'Pregled za radnika' : 'Exam for worker'}
+                  </button>
+                )}
                 <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
               </div>
             </div>

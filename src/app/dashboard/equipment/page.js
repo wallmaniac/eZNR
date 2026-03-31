@@ -96,6 +96,7 @@ function EquipmentPageInner() {
 
     const equipmentTypes = getAll(COLLECTIONS.EQUIPMENT_TYPES);
     const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+    const workers = getAll(COLLECTIONS.WORKERS);
 
     const enrichedItems = filtered.map(eq => ({ ...eq, orgName: getOrgUnitName(eq.orgJedinicaId) }));
     const { sorted: sortedEquipment, toggleSort, sortIcon, thStyle } = useSortedList(enrichedItems, 'naziv');
@@ -287,7 +288,12 @@ function EquipmentPageInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Zadužena osoba' : 'Responsible person'}</label>
-                                        <input className="form-input" value={formData.zaduzenOsoba} onChange={e => updateField('zaduzenOsoba', e.target.value)} />
+                                        <input className="form-input" list="workerNames" value={formData.zaduzenOsoba || ''} onChange={e => updateField('zaduzenOsoba', e.target.value)} placeholder={lang === 'bs' ? 'Ime i prezime...' : 'Name...'} />
+                                        <datalist id="workerNames">
+                                            {workers.filter(w => w.aktivan !== false).map(w => (
+                                                <option key={w.id} value={`${w.ime} ${w.prezime}`} />
+                                            ))}
+                                        </datalist>
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum upisa' : 'Entry date'}</label>
@@ -566,11 +572,19 @@ function EquipmentPageInner() {
                                             <td style={{ color: isExpired ? 'var(--danger)' : undefined, fontWeight: isExpired ? 700 : undefined }}>
                                                 {formatDate(eq.iduci)} {isExpired && '⚠️'}
                                             </td>
-                                            <td>
-                                                {logCount > 0 && (
-                                                    <span style={{ background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 700 }}>
+                                            <td onClick={e => e.stopPropagation()}>
+                                                {logCount > 0 ? (
+                                                    <button
+                                                        onClick={() => handleEdit(eq, 'servis')}
+                                                        style={{ background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'background 0.15s' }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.28)'}
+                                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,191,166,0.12)'}
+                                                        title={lang === 'bs' ? 'Otvori servisne zapisnike' : 'Open service log'}
+                                                    >
                                                         🔧 {logCount}
-                                                    </span>
+                                                    </button>
+                                                ) : (
+                                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>
                                                 )}
                                             </td>
                                         </tr>
