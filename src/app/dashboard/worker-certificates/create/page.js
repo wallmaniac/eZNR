@@ -438,7 +438,7 @@ export function UvjerenjeFormPage() {
                                 <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Tip uvjerenja' : 'Certificate type'} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
                                 <button
                                     className="btn btn-ghost btn-sm"
-                                    style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)' }}
+                                    style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={() => setShowNewTypeForm(true)}
                                     title={lang === 'bs' ? 'Dodaj novi tip' : 'Add new type'}
                                 >+</button>
@@ -554,7 +554,7 @@ export function UvjerenjeFormPage() {
                                 <div style={labelStyle}>{lang === 'bs' ? 'Ispitivač' : 'Examiner'}</div>
                                 <button
                                     className="btn btn-ghost btn-sm"
-                                    style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)' }}
+                                    style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                                     onClick={e => { e.preventDefault(); setShowNewExaminerForm(true); setShowIspitivacDropdown(false); }}
                                     title={lang === 'bs' ? 'Dodaj novog ispitivača' : 'Add new examiner'}
                                 >+</button>
