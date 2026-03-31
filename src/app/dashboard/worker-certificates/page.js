@@ -192,7 +192,7 @@ function WorkerCertificatesInner() {
                         </button>
                         {r.isExpired && (
                           <button
-                            onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}`)}
+                            onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}
                             title={lang === 'bs' ? 'Obnovi uvjerenje (nova serija)' : 'Renew certificate (new entry)'}
                             style={{
                               background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 6,

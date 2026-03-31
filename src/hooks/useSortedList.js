@@ -17,8 +17,12 @@ export function useSortedList(data, defaultField = null, defaultDir = 'asc') {
         if (!sortField || !data) return data || [];
         const ISO_DATE = /^\d{4}-\d{2}-\d{2}/; // YYYY-MM-DD…
         return [...data].sort((a, b) => {
-            const av = (a[sortField] ?? '').toString().toLowerCase();
-            const bv = (b[sortField] ?? '').toString().toLowerCase();
+            const av = (a[sortField] ?? '').toString().trim().toLowerCase();
+            const bv = (b[sortField] ?? '').toString().trim().toLowerCase();
+            if (!av && bv) return 1; // Put empty values at the bottom
+            if (av && !bv) return -1;
+            if (!av && !bv) return 0;
+            
             let cmp;
             // Date-aware compare (must check BEFORE parseFloat — "2026-03-15" parses to 2026)
             if (ISO_DATE.test(av) && ISO_DATE.test(bv)) {

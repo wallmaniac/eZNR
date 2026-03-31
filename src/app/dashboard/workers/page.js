@@ -1549,6 +1549,11 @@ function WorkersPageInner() {
                                                     {actionMenuId === w.id && (
                                                         <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 200 }}>
                                                             <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
+                                                            <div className="dropdown-divider" />
+                                                            <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}</button>
+                                                            <button className="dropdown-item" onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {lang === 'bs' ? 'Novi pregled' : 'New exam'}</button>
+                                                            <button className="dropdown-item" onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {lang === 'bs' ? 'Nova povreda' : 'New injury'}</button>
+                                                            <div className="dropdown-divider" />
                                                             <div className="dropdown-submenu">
                                                                 <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>📄 {t('enterForm')} ▶</button>
                                                                 <div className="dropdown-menu">

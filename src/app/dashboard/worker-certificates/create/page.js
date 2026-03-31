@@ -182,7 +182,7 @@ export function UvjerenjeFormPage() {
 
 
     const preselectedWorkerId = searchParams?.get('workerId');
-    const isSingleWorkerMode = !!preselectedWorkerId;
+    const [isSingleWorkerMode, setIsSingleWorkerMode] = useState(!!preselectedWorkerId);
 
     // Close dropdowns on outside click
     useEffect(() => {
@@ -342,7 +342,24 @@ export function UvjerenjeFormPage() {
                 </div>
             )}
 
-            {/* Worker selection — hidden when a single worker is pre-selected */}
+            {/* Single worker locked mode info */}
+            {preselectedWorkerId && isSingleWorkerMode && (
+                <div style={{ background: 'var(--bg-card)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                    <div>
+                        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--primary)' }}>{lang === 'bs' ? 'Odabran alat za jednog radnika' : 'Single worker mode active'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Novo uvjerenje će biti izdato samo radniku:' : 'Certificate will only be issued to:'} <b>{getWorkerName(preselectedWorkerId) || ''}</b></div>
+                    </div>
+                    <button 
+                        onClick={() => setIsSingleWorkerMode(false)}
+                        className="btn btn-outline btn-sm"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
+                    >
+                        {lang === 'bs' ? 'Prikaži listu radnika' : 'Show workers list'}
+                    </button>
+                </div>
+            )}
+
+            {/* Worker selection — hidden when a single worker is pre-selected and locked */}
             {!isSingleWorkerMode && (
                 <div className="card" style={{ marginBottom: 20 }}>
                     <div className="card-body">

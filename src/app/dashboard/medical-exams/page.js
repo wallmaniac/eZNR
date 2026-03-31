@@ -191,11 +191,9 @@ export default function MedicalExamsPage() {
         setIsDirty(false);
         showFlash();
         sessionStorage.removeItem('eznr_draft_medexam');
-        // Return to worker page if we came from there
         const returnTo = searchParams.get('returnTo');
-        const wId = searchParams.get('workerId');
-        if (returnTo === 'worker' && wId) {
-            router.push('/dashboard/workers?openWorker=' + encodeURIComponent(wId));
+        if (returnTo) {
+            router.push(returnTo);
         }
     };
 
@@ -426,8 +424,8 @@ export default function MedicalExamsPage() {
                                         <span>{bs ? 'Broj uputnice (RA-1)' : 'Referral No. (RA-1)'}</span>
                                         <button 
                                             type="button" 
-                                            title={bs ? 'Idi na modul Uputnice RA-1' : 'Go to RA-1 Referrals module'}
-                                            onClick={() => router.push('/dashboard/referral-ra1')} 
+                                            title={bs ? 'Idi na kreiranje nove Uputnice RA-1' : 'Create new RA-1 Referral'}
+                                            onClick={() => router.push('/dashboard/referral-ra1?openNew=1')} 
                                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, padding: 0, textDecoration: 'underline' }}
                                         >
                                             ↗ {bs ? 'Modul RA-1' : 'RA-1 Module'}

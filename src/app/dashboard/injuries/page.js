@@ -73,19 +73,27 @@ export default function InjuriesPage() {
     }
   };
 
-  // ── Zia agent: auto-open injury form with pre-filled worker ──────────────
+  // ── Auto-open injury form with pre-filled worker ──────────────
   useEffect(() => {
-    if (searchParams?.get('zia_new') !== '1') return;
+    const isNew = searchParams?.get('openNew') === '1' || searchParams?.get('zia_new') === '1';
+    if (!isNew) return;
     const radnikIme = searchParams.get('radnikIme') || '';
     const radnikId = searchParams.get('radnikId') || '';
     const datum = searchParams.get('datum') || new Date().toISOString().split('T')[0];
     const tip = searchParams.get('tip') || 'laka';
     setFormData({ ...EMPTY_FORM, radnikId, radnikIme, datum, tip });
-    setWorkerSearch(radnikIme);
+    if (radnikIme) setWorkerSearch(radnikIme);
+    else if (radnikId) {
+      const w = workers.find(x => x.id === radnikId);
+      if (w) {
+        setFormData(f => ({ ...f, radnikIme: `${w.ime} ${w.prezime}` }));
+        setWorkerSearch(`${w.ime} ${w.prezime}`);
+      }
+    }
     setEditingId(null);
     setShowForm(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, workers]);
 
   // ── Open edit form from query param (injury-list click-through) ──
   useEffect(() => {
@@ -139,6 +147,13 @@ export default function InjuriesPage() {
     setShowForm(true);
   };
 
+  const openCopy = (inj) => {
+    setEditingId(null);
+    setFormData({ ...inj, radnikId: '', radnikIme: '', datum: new Date().toISOString().split('T')[0] });
+    setWorkerSearch('');
+    setShowForm(true);
+  };
+
   const handleSave = async () => {
     if (!formData.radnikId && !formData.radnikIme) {
       await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Please select a worker!');
@@ -157,6 +172,10 @@ export default function InjuriesPage() {
     markClean();
     setShowForm(false);
     showFlash();
+    const returnTo = searchParams?.get('returnTo');
+    if (returnTo) {
+      router.push(returnTo);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -196,11 +215,34 @@ export default function InjuriesPage() {
     return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{s.label}</span>;
   };
 
+  // Stats
+  const total = injuries.length;
+  const teske = injuries.filter(i => i.tip === 'teska').length;
+  const smrtne = injuries.filter(i => i.tip === 'smrtna').length;
+  const otvorene = injuries.filter(i => i.status !== 'zatvorena').length;
+
   return (
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🩹 {t('injuryReport')}</h1>
+        <h1 style={{ marginBottom: 24 }}>🩹 {lang === 'bs' ? 'Povrede na radu' : 'Work Injuries'}</h1>
+
+        {/* Stats row */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+          {[
+            { label: lang === 'bs' ? 'Ukupno' : 'Total', value: total, color: 'var(--primary)' },
+            { label: lang === 'bs' ? 'Teške' : 'Severe', value: teske, color: '#EF4444' },
+            { label: lang === 'bs' ? 'Smrtne' : 'Fatal', value: smrtne, color: '#7C3AED' },
+            { label: lang === 'bs' ? 'Otvorene' : 'Open', value: otvorene, color: '#F59E0B' },
+          ].map((s, i) => (
+            <div key={i} className="card" style={{ textAlign: 'center' }}>
+              <div className="card-body" style={{ padding: '16px 12px' }}>
+                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: s.color, fontFamily: 'var(--font-heading)' }}>{s.value}</div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
 
         {/* Modal */}
         {showForm && (
@@ -415,9 +457,10 @@ export default function InjuriesPage() {
                             <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                             <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                              <button onClick={() => { setActionMenuId(null); openEdit(inj); }} style={menuItemSt}>✏️ Otvori</button>
+                              <button onClick={() => { setActionMenuId(null); openEdit(inj); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                              <button onClick={() => { setActionMenuId(null); openCopy(inj); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                              <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Izbriši' : 'Delete'}</button>
                             </div>
                             </>
                           )}
