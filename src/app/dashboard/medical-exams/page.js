@@ -177,6 +177,14 @@ export default function MedicalExamsPage() {
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, '_workerName');
 
     // ── CRUD ───────────────────────────────────────────────────────────────────
+    const handleClose = () => {
+        setShowForm(false);
+        setEditingId(null);
+        setForm({ ...emptyForm });
+        const returnTo = searchParams.get('returnTo');
+        if (returnTo) router.push(returnTo);
+    };
+
     const handleSave = async () => {
         if (!form.workerId) { await alert(bs ? 'Odaberite radnika!' : 'Select a worker!'); return; }
         if (!form.datumPregleda) { await alert(bs ? 'Unesite datum pregleda!' : 'Enter exam date!'); return; }
@@ -385,13 +393,13 @@ export default function MedicalExamsPage() {
 
             {/* ── Form modal ── */}
             {showForm && (
-                <div className="modal-overlay" onClick={() => { setShowForm(false); setEditingId(null); }}>
+                <div className="modal-overlay" onClick={handleClose}>
                     <div className="modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
                             <h2 style={{ color: 'white', margin: 0 }}>
                                 👨‍⚕️ {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
                             </h2>
-                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowForm(false); setEditingId(null); }}>✕</button>
+                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={handleClose}>✕</button>
                         </div>
 
                         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

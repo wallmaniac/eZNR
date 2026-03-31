@@ -140,6 +140,14 @@ export default function InjuriesPage() {
     setShowForm(true);
   };
 
+  const handleClose = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setFormData({ ...EMPTY_FORM });
+    const returnTo = searchParams?.get('returnTo');
+    if (returnTo) router.push(returnTo);
+  };
+
   const openEdit = (inj) => {
     setEditingId(inj.id);
     setFormData({ ...inj });
@@ -246,11 +254,11 @@ export default function InjuriesPage() {
 
         {/* Modal */}
         {showForm && (
-          <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal-overlay" onClick={handleClose}>
             <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>🩹 {editingId ? (lang === 'bs' ? 'Uredi prijavu' : 'Edit report') : t('injuryReport')}</h2>
-                <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                <h2>🩹 {editingId ? (lang === 'bs' ? 'Uredi prijavu' : 'Edit report') : (lang === 'bs' ? 'Prijava povrede na radu' : 'Injury Report')}</h2>
+                <button className="btn btn-ghost btn-icon" onClick={handleClose}>✕</button>
               </div>
               <div className="modal-body">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>

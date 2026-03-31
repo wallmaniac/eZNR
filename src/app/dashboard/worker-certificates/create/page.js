@@ -296,6 +296,11 @@ export function UvjerenjeFormPage() {
         setNewExaminerData({ ime: '', zvanje: '', telefon: '', ovlaštenaTvrtkaId: '' });
     };
 
+    const getWorkerName = (id) => {
+        const w = workers.find(x => x.id === id);
+        return w ? `${w.ime} ${w.prezime}` : '';
+    };
+
     const getWorkplaceName = (id) => {
         const wp = workplaces.find(w => w.id === id);
         return wp ? wp.naziv : '—';
