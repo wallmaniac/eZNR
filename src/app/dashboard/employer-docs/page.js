@@ -272,7 +272,7 @@ ${toPrint.map((d, i) => `<tr>
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
                 {tabs.map(tb => (
-                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} style={{
+                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} title={`Prikaži dokumente iz kategorije: ${tb.label}`} style={{
                         padding: '12px 24px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
                         fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.85rem',
                         background: activeTab === tb.key ? 'var(--dark)' : 'var(--bg-input)',
@@ -288,7 +288,7 @@ ${toPrint.map((d, i) => `<tr>
             <div className="card">
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+                        <button className="btn btn-primary btn-sm" title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {t('add')}</button>
                         <SavedFlash />
 
                         {/* ── Grupne akcije bar ── */}
@@ -340,7 +340,7 @@ ${toPrint.map((d, i) => `<tr>
                                             {/* Akcije button — green btn-primary, matching trainings/workers pattern */}
                                             <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm" data-menu-trigger
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger title="Prikaži padajući izbornik akcija za dokument"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (openMenuId === doc.id) { setOpenMenuId(null); return; }

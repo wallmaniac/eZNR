@@ -14,7 +14,7 @@ import { useDialog } from '@/hooks/useDialog';
    ═══════════════════════════════════════════════ */
 
 const EMPTY_PROCJENA = {
-    nazivTvrtke: '', sjediste: '', djelatnost: '', ukupnoZaposlenih: '',
+    nazivProcjene: '', nazivTvrtke: '', radnoMjestoId: '', sjediste: '', djelatnost: '', ukupnoZaposlenih: '',
     ovlOrganizacija: '', ovlOsobaIme: '', ovlOsobaKvalifikacije: '',
     revizija: '', datumIzrade: todayISO(),
     opisProcesa: '', analizaOrganizacije: '',
@@ -245,7 +245,16 @@ export default function RiskAssessmentPage() {
 
     // ─── Procjene CRUD ───
     const handleNew = () => {
-        setFormData({ ...EMPTY_PROCJENA, datumIzrade: todayISO() });
+        let defaultCompany = '';
+        try {
+            const activeId = localStorage.getItem('eznr_activeCompany');
+            if (activeId && activeId !== 'all') {
+                const comp = getAll(COLLECTIONS.COMPANIES).find(c => c.id === activeId);
+                if (comp) defaultCompany = comp.naziv;
+            }
+        } catch(e){}
+        
+        setFormData({ ...EMPTY_PROCJENA, nazivTvrtke: defaultCompany, datumIzrade: todayISO() });
         setEditingId(null); setRiskItems([]); setActiveTab('opsti'); setView('form');
     };
     const handleEdit = (item) => {
@@ -279,6 +288,7 @@ export default function RiskAssessmentPage() {
     };
     const handleSave = async () => {
         if (!formData.nazivTvrtke) { alert(lang === 'bs' ? 'Naziv tvrtke je obavezan!' : 'Company name is required!'); return; }
+        if (!formData.nazivProcjene) { alert(lang === 'bs' ? 'Naziv procjene je obavezan!' : 'Assessment name is required!'); return; }
         
         let docData = null;
         let docName = `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
@@ -1023,11 +1033,14 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
     /* ━━━ LIST VIEW ━━━ */
     if (view === 'list') {
-        const sortedRecords = [...records].filter(r => search ? (r.nazivTvrtke || '').toLowerCase().includes(search.toLowerCase()) : true);
+        const sortedRecords = [...records].filter(r => search ? ((r.nazivTvrtke || '').toLowerCase().includes(search.toLowerCase()) || (r.nazivProcjene || '').toLowerCase().includes(search.toLowerCase())) : true);
         sortedRecords.sort((a, b) => {
             let aVal = a[sortConfig.key] || '';
             let bVal = b[sortConfig.key] || '';
-            if (sortConfig.key === 'cnt') {
+            if (sortConfig.key === 'radnoMjestoId') {
+                aVal = workplaces.find(w => w.id === aVal)?.naziv || '';
+                bVal = workplaces.find(w => w.id === bVal)?.naziv || '';
+            } else if (sortConfig.key === 'cnt') {
                 aVal = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === a.id).length;
                 bVal = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === b.id).length;
             } else if (sortConfig.key === 'datumIzrade') {
@@ -1073,13 +1086,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 <DialogRenderer />
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova procjena' : 'New'}</button>
+                        <button className="btn btn-primary btn-sm" title="Započnite kreiranje nove procjene rizika od nule" onClick={handleNew}>+ {lang === 'bs' ? 'Nova procjena' : 'New'}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
-                            <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
+                            <input title="Pretražite procjene po nazivu tvrtke ili nazivu procjene" placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
-                        <button className="btn btn-outline btn-sm" onClick={() => setView('vrstaOsobe')}>👤 {lang === 'bs' ? 'Vrsta osobe' : 'Person types'}</button>
-                        <button className="btn btn-outline btn-sm" onClick={() => setView('opasnosti')}>⚠️ {lang === 'bs' ? 'Opasnosti' : 'Hazards'}</button>
+                        <button className="btn btn-outline btn-sm" title="Uredite šifarnik opcija za vrstu osoba (Zaposlenik, Učenik na praksi...)" onClick={() => setView('vrstaOsobe')}>👤 {lang === 'bs' ? 'Vrsta osobe' : 'Person types'}</button>
+                        <button className="btn btn-outline btn-sm" title="Uredite glavni katalog/šifarnik mogućih opasnosti i štetnosti" onClick={() => setView('opasnosti')}>⚠️ {lang === 'bs' ? 'Opasnosti' : 'Hazards'}</button>
 
                         {/* ── Grupne akcije bar ── */}
                         {selectedIds.size > 0 && (
@@ -1087,8 +1100,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                                 </span>
-                                <button className="btn btn-primary btn-sm" onClick={bulkPrint}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-danger btn-sm" onClick={bulkDelete}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary btn-sm" title="Otvorite prozor za pregled i preuzimanje označenih procjena" onClick={bulkPrint}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger btn-sm" title="Trajno obrišite označene procjene u potpunosti" onClick={bulkDelete}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                             </div>
                         )}
                         {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedRecords.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
@@ -1100,13 +1113,15 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                         </th>
                         <th style={{ width: 90 }}>{t('actions')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')}>{lang === 'bs' ? 'Naziv tvrtke' : 'Company'}{getSortIcon('nazivTvrtke')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('revizija')}>{lang === 'bs' ? 'Revizija' : 'Revision'}{getSortIcon('revizija')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')}>{lang === 'bs' ? 'Datum' : 'Date'}{getSortIcon('datumIzrade')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('status')}>{lang === 'bs' ? 'Status' : 'Status'}{getSortIcon('status')}</th>
-                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('cnt')}>{lang === 'bs' ? 'Stavki' : 'Items'}{getSortIcon('cnt')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivProcjene')} title="Naziv dokumenta / procjene">{lang === 'bs' ? 'Naziv procjene' : 'Assessment'}{getSortIcon('nazivProcjene')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')} title="Naziv tvrtke za koju radite procjenu">{lang === 'bs' ? 'Naziv tvrtke' : 'Company'}{getSortIcon('nazivTvrtke')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('radnoMjestoId')} title="Povezano radno mjesto">{lang === 'bs' ? 'Radno mjesto' : 'Workplace'}{getSortIcon('radnoMjestoId')}</th>
+                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('revizija')} title="Broj revizije">{lang === 'bs' ? 'Rev.' : 'Rev.'}{getSortIcon('revizija')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')} title="Datum kad je procjena napravljena">{lang === 'bs' ? 'Datum' : 'Date'}{getSortIcon('datumIzrade')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('status')} title="Status dokumenta (Nacrt, Aktivna, Arhivirana)">{lang === 'bs' ? 'Status' : 'Status'}{getSortIcon('status')}</th>
+                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('cnt')} title="Ukupan broj prepoznatih rizika/opasnosti">{lang === 'bs' ? 'Rizika' : 'Risks'}{getSortIcon('cnt')}</th>
                     </tr></thead><tbody>
-                        {sortedRecords.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                        {sortedRecords.length === 0 ? <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                         : sortedRecords.map(r => {
                             const cnt = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id).length;
                             const st = r.status || 'draft';
@@ -1118,7 +1133,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     </td>
                                     <td onClick={e => e.stopPropagation()}>
                                         <div style={{ position: 'relative' }}>
-                                            <button className="btn btn-primary btn-sm" data-menu-trigger
+                                            <button className="btn btn-primary btn-sm" data-menu-trigger title="Prikaži padajući izbornik akcija za dokument"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     if (openMenuId === r.id) { setOpenMenuId(null); return; }
@@ -1157,8 +1172,10 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             )}
                                         </div>
                                     </td>
-                                    <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{r.nazivTvrtke || '—'}</td>
-                                    <td>{r.revizija || '—'}</td>
+                                    <td style={{ fontWeight: 600, color: 'var(--text)' }}>{r.nazivProcjene || '—'}</td>
+                                    <td style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '0.85rem' }}>{r.nazivTvrtke || '—'}</td>
+                                    <td style={{ fontWeight: 500, fontSize: '0.82rem', color: 'var(--text-muted)' }}>{r.radnoMjestoId ? workplaces.find(w => w.id === r.radnoMjestoId)?.naziv || '—' : '—'}</td>
+                                    <td style={{ textAlign: 'center' }}>{r.revizija || '—'}</td>
                                     <td>{formatDate(r.datumIzrade)}</td>
                                     <td><span className={`badge ${st === 'active' ? 'badge-success' : st === 'archived' ? 'badge-warning' : ''}`} style={{ fontSize: '0.72rem' }}>
                                         {st === 'active' ? 'Aktivna' : st === 'archived' ? 'Arhivirana' : 'Nacrt'}
@@ -1196,7 +1213,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {/* Tabs */}
                 <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
                     {tabs.map(tb => (
-                        <button key={tb.key} onClick={() => setActiveTab(tb.key)} style={{
+                        <button key={tb.key} title={`Prikaži stranicu: ${lang === 'bs' ? tb.label : tb.en}`} onClick={() => setActiveTab(tb.key)} style={{
                             padding: '8px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)',
                             cursor: 'pointer', fontWeight: 600, fontSize: '0.82rem',
                             background: activeTab === tb.key ? 'var(--primary)' : 'var(--bg-card)',
@@ -1209,10 +1226,26 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {activeTab === 'opsti' && (
                     <div className="card"><div className="card-body">
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>PODACI O POSLODAVCU</div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <div><div style={labelSt}>Naziv tvrtke *</div><input className="form-input" value={formData.nazivTvrtke} onChange={e => set('nazivTvrtke', e.target.value)} /></div>
-                            <div><div style={labelSt}>Sjedište / Adresa</div><input className="form-input" value={formData.sjediste || ''} onChange={e => set('sjediste', e.target.value)} /></div>
-                            <div><div style={labelSt}>Djelatnost</div><input className="form-input" value={formData.djelatnost || ''} onChange={e => set('djelatnost', e.target.value)} /></div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 16 }}>
+                            <div>
+                                <div style={labelSt}>Naziv procjene *</div>
+                                <input className="form-input" title="Glavni naslov ovog dokumenta, npr. 'Procjena za sektor proizvodnje'" placeholder="Npr. Akt o procjeni rizika..." value={formData.nazivProcjene || ''} onChange={e => set('nazivProcjene', e.target.value)} />
+                            </div>
+                            <div>
+                                <div style={labelSt}>Naziv tvrtke *</div>
+                                <input className="form-input" title="Automatski preuzeto iz odabrane tvrtke, ali možete izmijeniti po potrebi" value={formData.nazivTvrtke || ''} onChange={e => set('nazivTvrtke', e.target.value)} />
+                            </div>
+                            <div>
+                                <div style={labelSt}>Radno mjesto</div>
+                                <select className="form-input" title="Opcionalno povežite ovu procjenu sa specifičnim radnim mjestom iz sistematizacije" value={formData.radnoMjestoId || ''} onChange={e => set('radnoMjestoId', e.target.value)}>
+                                    <option value="">-- Cijela tvrtka ili nije povezano --</option>
+                                    {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+                            <div><div style={labelSt}>Sjedište / Adresa</div><input className="form-input" title="Adresa poslodavca" value={formData.sjediste || ''} onChange={e => set('sjediste', e.target.value)} /></div>
+                            <div><div style={labelSt}>Djelatnost</div><input className="form-input" title="Glavna djelatnost poslodavca" value={formData.djelatnost || ''} onChange={e => set('djelatnost', e.target.value)} /></div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 16, marginBottom: 20 }}>
                             <div><div style={labelSt}>Br. zaposlenih</div><input className="form-input" type="number" min="0" value={formData.ukupnoZaposlenih || ''} onChange={e => set('ukupnoZaposlenih', e.target.value)} /></div>
@@ -1233,8 +1266,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
-                            <button className="btn btn-ghost" onClick={() => setView('list')}>↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={() => setView('list')}>↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
                             <SavedFlash />
                         </div>
                     </div></div>
@@ -1246,11 +1279,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                             <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
                             <div style={{ display: 'flex', gap: 8 }}>
-                                <button className="btn btn-outline btn-sm" onClick={() => setShowDocAiModal(true)}
+                                <button className="btn btn-outline btn-sm" onClick={() => setShowDocAiModal(true)} title="Automatski izvuci podatke o procesu, organizaciji i opasnostima iz priloženih word/pdf dokumenata (zapisnici, protokoli)"
                                     style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                     🤖 AI Analiza dokumenata
                                 </button>
-                                <button className="btn btn-outline btn-sm" onClick={handleAiOpis} disabled={aiOpisLoading}
+                                <button className="btn btn-outline btn-sm" onClick={handleAiOpis} disabled={aiOpisLoading} title="Dopustite vještačkoj inteligenciji da sastavi stručan tekst opisa radnog procesa na osnovu osnovnih podataka"
                                     style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                     {aiOpisLoading ? '⏳...' : '🤖 AI Generiši opis'}
                                 </button>
@@ -1262,7 +1295,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <textarea className="form-input" rows={4} value={formData.analizaOrganizacije || ''} onChange={e => set('analizaOrganizacije', e.target.value)}
                             placeholder="Opišite organizaciju rada, smjene, posebne uvjete..." style={{ resize: 'vertical' }} />
                         <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                             <SavedFlash />
                         </div>
                         
@@ -1364,15 +1397,15 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                                     <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>STAVKE PROCJENE ({riskItems.length})</div>
                                     <div style={{ display: 'flex', gap: 8 }}>
-                                        <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)}
+                                        <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)} title="Uvezite prepoznate opasnosti i nedostatke iz odgovora radnika na online upitnike"
                                             style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             📋 Uvezi iz upitnika
                                         </button>
-                                        <button className="btn btn-outline btn-sm" onClick={() => { setShowBulkModal(true); setBulkSelected([]); setBulkWpId(''); }}
+                                        <button className="btn btn-outline btn-sm" onClick={() => { setShowBulkModal(true); setBulkSelected([]); setBulkWpId(''); }} title="Brzo dodajte više gotovih rizika odjednom iz glavnog centralnog kataloga opasnosti"
                                             style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             ⚠️ Dodaj iz kataloga
                                         </button>
-                                        <button className="btn btn-outline btn-sm" onClick={handleNewRi}>+ {lang === 'bs' ? 'Dodaj stavku' : 'Add item'}</button>
+                                        <button className="btn btn-outline btn-sm" title="Ručno popunite formu i napravite procjenu za jedan pojedinačni rizik" onClick={handleNewRi}>+ {lang === 'bs' ? 'Dodaj stavku' : 'Add item'}</button>
                                     </div>
                                 </div>
 
