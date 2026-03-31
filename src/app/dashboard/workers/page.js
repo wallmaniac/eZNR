@@ -617,8 +617,8 @@ function WorkersPageInner() {
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 20 }}>
                             <Field label={t('parentName')} value={formData.imeRoditelja} onChange={v => updateField('imeRoditelja', v)} />
-                            <Field label="JMBG" value={formData.jmbg} onChange={v => updateField('jmbg', v)} placeholder="13 cifara" />
-                            <Field label={t('oib')} value={formData.oib} onChange={v => updateField('oib', v)} />
+                            <Field label="JMBG" value={formData.jmbg} onChange={v => updateField('jmbg', v)} placeholder="13 cifara" tooltip="Jedinstveni matični broj. Ako je radnik stranac i uplaćuje porez preko OIB-a, ostavite JMBG praznim." />
+                            <Field label={t('oib')} value={formData.oib} onChange={v => updateField('oib', v)} tooltip="Osobni identifikacijski broj (npr. HR). Koristi se kao alternativa za strane radnike." />
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     {t('age')}
@@ -1131,7 +1131,7 @@ function WorkersPageInner() {
                             <div className="modal-body">
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Oznaka' : 'Code'} *</label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Oznaka' : 'Code'} * <InfoTip text="Interni broj ili evidencijski kod certifikata u registru poslodavca (npr. ZNR-001)" /></label>
                                         <input className="form-input" value={certFormData.oznaka} onChange={e => setCertFormData({ ...certFormData, oznaka: e.target.value })} placeholder="ZNR-001" />
                                     </div>
                                     <div className="form-group">
@@ -1149,7 +1149,7 @@ function WorkersPageInner() {
                                         <input className="form-input" type="date" value={certFormData.datum} onChange={e => setCertFormData({ ...certFormData, datum: e.target.value })} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Vrijedi do' : 'Valid until'}</label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'} <InfoTip text="Aplikacija će promijeniti status u crveno kada ovaj datum istekne ili postane blizu isteka." /></label>
                                         <input className="form-input" type="date" value={certFormData.vrijediDo} onChange={e => setCertFormData({ ...certFormData, vrijediDo: e.target.value })} />
                                     </div>
                                     <div className="form-group">
@@ -1185,7 +1185,7 @@ function WorkersPageInner() {
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Vrsta pregleda' : 'Exam Type'}</label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Vrsta pregleda' : 'Exam Type'} <InfoTip text="Dali se radnik prvi put u firmi zapošljava (Prethodni) ili obnavlja sposobnost jer je prošla godina (Periodični)"/></label>
                                         <select className="form-select" value={medExamForm.tipPregleda} onChange={e => setMedExamForm(p => ({ ...p, tipPregleda: e.target.value }))}>
                                             <option value="prethodni">{lang === 'bs' ? 'Prethodni pregled' : 'Pre-employment'}</option>
                                             <option value="periodicni">{lang === 'bs' ? 'Periodicni pregled' : 'Periodic Exam'}</option>
@@ -1208,7 +1208,7 @@ function WorkersPageInner() {
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Rezultat' : 'Result'}</label>
+                                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Rezultat' : 'Result'} <InfoTip text="Mora se tačno poklapati sa nalazom i mišljenjem doktora medicine rada." /></label>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         {[{ v: 'Sposoban', c: 'var(--success)' }, { v: 'Uvjetno Sposoban', c: 'var(--warning)' }, { v: 'Nesposoban', c: 'var(--danger)' }].map(r => (
                                             <button key={r.v} type="button" onClick={() => setMedExamForm(p => ({ ...p, rezultat: r.v }))}
@@ -1691,11 +1691,12 @@ function WorkersPageInner() {
 
 // ── REUSABLE COMPONENTS ──
 
-function Field({ label, value, onChange, type = 'text', required, placeholder, ...props }) {
+function Field({ label, value, onChange, type = 'text', required, placeholder, tooltip, ...props }) {
     return (
         <div className="form-group">
-            <label className="form-label" style={required ? { fontWeight: 700 } : {}}>
+            <label className="form-label" style={{ ...(required ? { fontWeight: 700 } : {}), display: 'flex', alignItems: 'center', gap: 6 }}>
                 {label} {required && <span style={{ color: 'var(--danger)' }}>*</span>}
+                {tooltip && <InfoTip text={tooltip} />}
             </label>
             <input
                 className="form-input"
@@ -1710,11 +1711,12 @@ function Field({ label, value, onChange, type = 'text', required, placeholder, .
     );
 }
 
-function SelectField({ label, value, onChange, options, placeholder, required }) {
+function SelectField({ label, value, onChange, options, placeholder, required, tooltip }) {
     return (
         <div className="form-group">
-            <label className="form-label" style={required ? { fontWeight: 700 } : {}}>
+            <label className="form-label" style={{ ...(required ? { fontWeight: 700 } : {}), display: 'flex', alignItems: 'center', gap: 6 }}>
                 {label} {required && <span style={{ color: 'var(--danger)' }}>*</span>}
+                {tooltip && <InfoTip text={tooltip} />}
             </label>
             <select className="form-select" value={value || ''} onChange={(e) => onChange(e.target.value)}
                 style={required && !value ? { borderColor: '#FF9800' } : {}}>

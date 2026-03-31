@@ -8,6 +8,7 @@ import {
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
+import HelpTip from '@/components/HelpTip';
 
 const DEFAULT_CERT_TYPES = [
     'Koordinatora ZNR tijekom građenja',
@@ -161,7 +162,7 @@ function EditCertPageInner() {
                         {/* Tip uvjerenja */}
                         <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={tipRef}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                <div style={labelStyle}>{lang === 'bs' ? 'Tip uvjerenja' : 'Certificate type'} *</div>
+                                <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Tip uvjerenja' : 'Certificate type'} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
                                 <button className="btn btn-ghost btn-sm"
                                     style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1rem', lineHeight: 1, border: '1px solid var(--border)' }}
                                     onClick={() => setShowNewTypeForm(true)} title={lang === 'bs' ? 'Dodaj novi tip' : 'Add new type'}>+</button>
@@ -223,11 +224,11 @@ function EditCertPageInner() {
                     {/* Row 2: Datum | Vrijedi do */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Datum' : 'Date'} <HelpTip text="Datum donošenja zapisnika/ljekarskog nalaza" /></div>
                             <input className="form-input" type="date" value={formData.datum || ''} onChange={e => set('datum', e.target.value)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'}</div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'} <HelpTip text="Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu." /></div>
                             <input className="form-input" type="date" value={formData.vrijediDo || ''} onChange={e => set('vrijediDo', e.target.value)} />
                         </div>
                     </div>

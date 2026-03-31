@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import HelpTip from '@/components/HelpTip';
 
 /* ═══════════════════════════════════════════════
    Sistematizacija radnih mjesta
@@ -302,7 +303,7 @@ export default function SistematizacijaPage() {
                         </div>
 
                         {/* Posebni uvjeti */}
-                        <div style={labelSt}>POSEBNI UVJETI</div>
+                        <div style={{...labelSt, display: 'flex', alignItems: 'center', gap: 6}}>POSEBNI UVJETI <HelpTip text="Označite specifične uvjete rada zbog kojih ovo mjesto ima poseban tretman pri zaštiti na radu (npr. Rad na visini preko 3m, Rad sa otrovima, Podzemni radovi...)" /></div>
                         <input className="form-input" value={(editData.posebniUvjeti || []).join(', ')} onChange={e => setEditData(p => ({ ...p, posebniUvjeti: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))} placeholder="Razdvojite zarezom" style={{ marginBottom: 12 }} />
 
                         {/* Uvjeti rada */}
@@ -319,15 +320,15 @@ export default function SistematizacijaPage() {
                         {/* OZO + Oprema + Zdravstvo + Certifikati + Obuke */}
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
                             <div>
-                                <div style={labelSt}>POTREBNA OZO</div>
+                                <div style={{...labelSt, display: 'flex', alignItems: 'center', gap: 6}}>POTREBNA OZO <HelpTip text="Najbitnija lična/osobna zaštitna oprema (Osobna Zaštitna Oprema) koju radnik obavezno zadužuje na ovom radnom mjestu (npr. Sigurnosni šljem, Cipele S3, Vizir...)" /></div>
                                 <textarea className="form-input" rows={2} value={(editData.potrebnaOZO || []).join('\n')} onChange={e => setEditData(p => ({ ...p, potrebnaOZO: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} />
                             </div>
                             <div>
-                                <div style={labelSt}>RADNA OPREMA</div>
+                                <div style={{...labelSt, display: 'flex', alignItems: 'center', gap: 6}}>RADNA OPREMA <HelpTip text="Sva velika/kritična oprema koju mašinista ili vozač koristi, zbog koje radnik polaže certifikate (npr. Bager, Viljuškar, Cirkular, Dizalica...)" /></div>
                                 <textarea className="form-input" rows={2} value={(editData.radnaOprema || []).join('\n')} onChange={e => setEditData(p => ({ ...p, radnaOprema: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} />
                             </div>
                             <div>
-                                <div style={labelSt}>ZDRAVSTVENI ZAHTJEVI</div>
+                                <div style={{...labelSt, display: 'flex', alignItems: 'center', gap: 6}}>ZDRAVSTVENI ZAHTJEVI <HelpTip text="Medicinska ograničenja (npr. Očuvan vid, Sluh bez pomagala, Psihička stabilnost...). Doktor ukazuje na ove zahtjeve na Ljekarskom uvjerenju." /></div>
                                 <textarea className="form-input" rows={2} value={(editData.zdravstveniZahtjevi || []).join('\n')} onChange={e => setEditData(p => ({ ...p, zdravstveniZahtjevi: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} />
                             </div>
                             <div>

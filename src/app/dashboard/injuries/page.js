@@ -8,6 +8,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import HelpTip from '@/components/HelpTip';
 
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
@@ -257,7 +258,7 @@ export default function InjuriesPage() {
                     <input className="form-input" type="time" value={formData.vrijemePovrede} onChange={e => set('vrijemePovrede', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Tip povrede' : 'Injury type'}</label>
+                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Tip povrede' : 'Injury type'} <HelpTip text="Odaberite klasifikaciju obavezno u apsolutnom slaganju sa zvaničnim ljekarskim nalazom hitne pomoći/doma zdravlja." /></label>
                     <select className="form-select" value={formData.tip} onChange={e => set('tip', e.target.value)}>
                       <option value="laka">{lang === 'bs' ? 'Laka' : 'Minor'}</option>
                       <option value="teska">{lang === 'bs' ? 'Teška' : 'Severe'}</option>
@@ -281,7 +282,7 @@ export default function InjuriesPage() {
                     <input className="form-input" value={formData.povredjeniDio} onChange={e => set('povredjeniDio', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Uzrok povrede' : 'Cause of injury'}</label>
+                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Uzrok povrede' : 'Cause of injury'} <HelpTip text="Zbog čega je došlo do incidenta? Npr. 'Nepažnja radnika', 'Nekorištenje zaštitnog šljema', 'Kvar mašine'." /></label>
                     <input className="form-input" value={formData.uzrokPovrede} onChange={e => set('uzrokPovrede', e.target.value)} />
                   </div>
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -305,7 +306,7 @@ export default function InjuriesPage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                       <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <input type="checkbox" id="kolektivna" checked={formData.kolektivna} onChange={e => set('kolektivna', e.target.checked)} style={{ width: 16, height: 16 }} />
-                        <label htmlFor="kolektivna" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Kolektivna povreda' : 'Collective injury'}</label>
+                        <label htmlFor="kolektivna" style={{ cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Kolektivna povreda' : 'Collective injury'} <HelpTip text="Označiti isključivo ukoliko su u istom događaju povrijeđena minimalno 2 radnika." /></label>
                       </div>
                       {formData.kolektivna && (
                         <div className="form-group">
