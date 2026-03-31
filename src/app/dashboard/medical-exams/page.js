@@ -176,13 +176,14 @@ export default function MedicalExamsPage() {
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, '_workerName');
 
-    // ── CRUD ───────────────────────────────────────────────────────────────────
     const handleClose = () => {
         setShowForm(false);
         setEditingId(null);
         setForm({ ...emptyForm });
         const returnTo = searchParams.get('returnTo');
-        if (returnTo) router.push(returnTo);
+        if (returnTo) {
+            router.back();
+        }
     };
 
     const handleSave = async () => {
@@ -201,7 +202,7 @@ export default function MedicalExamsPage() {
         sessionStorage.removeItem('eznr_draft_medexam');
         const returnTo = searchParams.get('returnTo');
         if (returnTo) {
-            router.push(returnTo);
+            router.back();
         }
     };
 

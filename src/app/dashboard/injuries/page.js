@@ -145,7 +145,9 @@ export default function InjuriesPage() {
     setEditingId(null);
     setFormData({ ...EMPTY_FORM });
     const returnTo = searchParams?.get('returnTo');
-    if (returnTo) router.push(returnTo);
+    if (returnTo) {
+      router.back();
+    }
   };
 
   const openEdit = (inj) => {
@@ -182,7 +184,7 @@ export default function InjuriesPage() {
     showFlash();
     const returnTo = searchParams?.get('returnTo');
     if (returnTo) {
-      router.push(returnTo);
+      router.back();
     }
   };
 

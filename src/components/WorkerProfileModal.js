@@ -212,15 +212,15 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                         ⚡ {lang === 'bs' ? 'Brze akcije:' : 'Quick Actions:'}
                     </div>
                     <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
-                        onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers?openWorker=' + workerId)}`); }}>
+                        onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
                         👨‍⚕️ {lang === 'bs' ? 'Novi ljekarski pregled' : 'New exam'}
                     </button>
                     <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
-                        onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers?openWorker=' + workerId)}`); }}>
+                        onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
                         📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}
                     </button>
                     <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'var(--bg-card)' }}
-                        onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers?openWorker=' + workerId)}`); }}>
+                        onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
                         🚑 {lang === 'bs' ? 'Prijavi povredu' : 'Report injury'}
                     </button>
                 </div>

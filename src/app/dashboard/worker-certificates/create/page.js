@@ -277,8 +277,7 @@ export function UvjerenjeFormPage() {
         markClean();
         const returnTo = searchParams?.get('returnTo');
         if (returnTo) {
-            // Came from worker creation — go straight back, no popup
-            router.push(returnTo);
+            router.back();
         } else {
             await alert(lang === 'bs'
                 ? `Uspješno sačuvano ${count} uvjerenje(a)!`
@@ -319,10 +318,7 @@ export function UvjerenjeFormPage() {
     return (
         <div className="animate-fadeIn">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={() => {
-                    const returnTo = searchParams?.get('returnTo');
-                    if (returnTo) router.push(returnTo); else router.back();
-                }}>←</button>
+                <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
                 <h1 style={{ margin: 0 }}>📜 {lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
             </div>
             <DialogRenderer />
@@ -771,7 +767,14 @@ export function UvjerenjeFormPage() {
                         <button className="btn btn-primary" onClick={handleSave}>
                             💾 {lang === 'bs' ? 'Snimi' : 'Save'}
                         </button>
-                        <button className="btn btn-ghost" onClick={() => { const rt = searchParams?.get('returnTo'); if (rt) router.push(rt); else router.back(); }}>
+                        <button className="btn btn-ghost" onClick={() => { 
+                            const returnTo = searchParams?.get('returnTo'); 
+                            if (returnTo) {
+                                router.back();
+                            } else {
+                                router.back(); 
+                            }
+                        }}>
                             ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
                         </button>
                         {(formData.tipUvjerenjaIme || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && selectedWorkerIds.size === 1 && (() => {
