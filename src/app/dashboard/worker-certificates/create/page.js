@@ -348,18 +348,21 @@ export function UvjerenjeFormPage() {
             )}
 
             {/* Single worker locked mode info */}
-            {preselectedWorkerId && isSingleWorkerMode && (
+            {preselectedWorkerId && (
                 <div style={{ background: 'var(--bg-card)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                     <div>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--primary)' }}>{lang === 'bs' ? 'Odabran alat za jednog radnika' : 'Single worker mode active'}</div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Novo uvjerenje će biti izdato samo radniku:' : 'Certificate will only be issued to:'} <b>{getWorkerName(preselectedWorkerId) || ''}</b></div>
                     </div>
                     <button 
-                        onClick={() => setIsSingleWorkerMode(false)}
+                        onClick={() => setIsSingleWorkerMode(!isSingleWorkerMode)}
                         className="btn btn-outline btn-sm"
                         style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                     >
-                        {lang === 'bs' ? 'Prikaži listu radnika' : 'Show workers list'}
+                        {isSingleWorkerMode 
+                            ? (lang === 'bs' ? '▼ Prikaži listu radnika' : '▼ Show workers list') 
+                            : (lang === 'bs' ? '▲ Sakrij listu radnika' : '▲ Hide workers list')
+                        }
                     </button>
                 </div>
             )}
