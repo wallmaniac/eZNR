@@ -87,7 +87,7 @@ const menuItems = [
             },
             {
                 key: 'grpISZNR', icon: '🏛️',
-                label_bs: 'ISZNR dokumenti', label_en: 'ISZNR Documents',
+                label_bs: 'Interni akti ZNR', label_en: 'Internal OSH Acts',
                 children: [
                     { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
                     { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
@@ -97,6 +97,31 @@ const menuItems = [
                     { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
                 ],
             },
+        ],
+    },
+
+    // ── 🚗 VOZNI PARK — fleet management ─────────────────────────────────────
+    {
+        key: 'grpFleet', icon: '🚗',
+        children: [
+            { key: 'fleetVehicles',   icon: '🚗', path: '/dashboard/fleet', label_bs: 'Vozni park', label_en: 'Fleet' },
+        ],
+    },
+
+    // ── 🧯 ZAŠTITA OD POŽARA — fire protection ──────────────────────────────
+    {
+        key: 'grpFireProtection', icon: '🧯',
+        children: [
+            { key: 'fireExtinguishers', icon: '🧯', path: '/dashboard/fire-protection', label_bs: 'Protupožarna oprema', label_en: 'Fire Equipment' },
+        ],
+    },
+
+    // ── 🚨 EVAKUACIJA — evacuation planning ─────────────────────────────────
+    {
+        key: 'grpEvacuation', icon: '🚨',
+        children: [
+            { key: 'evacuationPlans',  icon: '🗺️', path: '/dashboard/evacuation', label_bs: 'Planovi evakuacije', label_en: 'Evacuation Plans' },
+            { key: 'evacuationDrills', icon: '🏃', path: '/dashboard/evacuation-drills', label_bs: 'Vježbe evakuacije', label_en: 'Evacuation Drills' },
         ],
     },
 

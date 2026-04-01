@@ -50,6 +50,9 @@ export const translations = {
     grpTraining: 'Osposobljavanje',
     grpDocuments: 'Dokumenti',
     grpCodebooks: 'Šifarnici',
+    grpFleet: 'Vozni park',
+    grpFireProtection: 'Zaštita od požara',
+    grpEvacuation: 'Evakuacija',
 
     // Basic Data submenu
     orgUnits: 'Organizacijske jedinice',
@@ -411,6 +414,9 @@ export const translations = {
     grpTraining: 'Training',
     grpDocuments: 'Documents',
     grpCodebooks: 'Codebooks',
+    grpFleet: 'Fleet',
+    grpFireProtection: 'Fire Protection',
+    grpEvacuation: 'Evacuation',
 
     // Basic Data submenu
     orgUnits: 'Organizational Units',

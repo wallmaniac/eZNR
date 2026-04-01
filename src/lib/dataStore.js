@@ -96,6 +96,7 @@ const COMPANY_SCOPED = [
     'digitalArchive', 'requests', 'riskAssessments', 'riskItems', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
     'trainings', 'annualReports', 'medicalExams', 'sistematizacije',
+    'vehicles', 'fireExtinguishers', 'hydrants', 'evacuationPlans', 'evacuationDrills',
 ];
 
 // Helper: get active company from localStorage (avoids needing React context)
@@ -347,6 +348,12 @@ export const COLLECTIONS = {
     USERS: 'users',
     COMPANIES: 'companies',
     SISTEMATIZACIJE: 'sistematizacije',
+    // ── Enterprise modules ──
+    VEHICLES: 'vehicles',
+    FIRE_EXTINGUISHERS: 'fireExtinguishers',
+    HYDRANTS: 'hydrants',
+    EVACUATION_PLANS: 'evacuationPlans',
+    EVACUATION_DRILLS: 'evacuationDrills',
 };
 
 // ── getAll — automatically filters by active company for scoped collections ──
