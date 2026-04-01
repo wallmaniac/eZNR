@@ -453,12 +453,12 @@ function FleetInner() {
                                         <th style={{ width: 90 }}>{t('actions')}</th>
                                         <th onClick={() => toggleSort('registracija')} style={thStyle('registracija')}>{bs ? 'Registracija' : 'Registration'}{sortIcon('registracija')}</th>
                                         <th onClick={() => toggleSort('marka')} style={thStyle('marka')}>{bs ? 'Marka/Model' : 'Brand/Model'}{sortIcon('marka')}</th>
-                                        <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{bs ? 'Tip' : 'Type'}{sortIcon('tip')}</th>
+                                        <th onClick={() => toggleSort('tip')} style={{ ...thStyle('tip'), textAlign: 'center' }}>{bs ? 'Tip' : 'Type'}{sortIcon('tip')}</th>
                                         <th onClick={() => toggleSort('vozacIme')} style={thStyle('vozacIme')}>{bs ? 'Vozač' : 'Driver'}{sortIcon('vozacIme')}</th>
-                                        <th onClick={() => toggleSort('registracijaIstice')} style={thStyle('registracijaIstice')}>{bs ? 'Reg. ističe' : 'Reg. Expires'}{sortIcon('registracijaIstice')}</th>
-                                        <th onClick={() => toggleSort('tehnickiIstice')} style={thStyle('tehnickiIstice')}>{bs ? 'Tehnički' : 'Inspection'}{sortIcon('tehnickiIstice')}</th>
-                                        <th onClick={() => toggleSort('osiguranjeIstice')} style={thStyle('osiguranjeIstice')}>{bs ? 'Osiguranje' : 'Insurance'}{sortIcon('osiguranjeIstice')}</th>
-                                        <th>{bs ? 'Status' : 'Status'}</th>
+                                        <th onClick={() => toggleSort('registracijaIstice')} style={{ ...thStyle('registracijaIstice'), textAlign: 'center' }}>{bs ? 'Reg. ističe' : 'Reg. Expires'}{sortIcon('registracijaIstice')}</th>
+                                        <th onClick={() => toggleSort('tehnickiIstice')} style={{ ...thStyle('tehnickiIstice'), textAlign: 'center' }}>{bs ? 'Tehnički' : 'Inspection'}{sortIcon('tehnickiIstice')}</th>
+                                        <th onClick={() => toggleSort('osiguranjeIstice')} style={{ ...thStyle('osiguranjeIstice'), textAlign: 'center' }}>{bs ? 'Osiguranje' : 'Insurance'}{sortIcon('osiguranjeIstice')}</th>
+                                        <th style={{ textAlign: 'center' }}>{bs ? 'Status' : 'Status'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -492,7 +492,6 @@ function FleetInner() {
                                                                 <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEdit(v); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...v }; delete copy.id; copy.registracija = ''; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.VEHICLES, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { aktivan: 'servis', servis: 'neaktivan', neaktivan: 'aktivan' }; update(COLLECTIONS.VEHICLES, v.id, { status: cycle[v.status] || 'aktivan' }); loadData(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🔄 {bs ? `Status → ${STATUS_MAP[({ aktivan: 'servis', servis: 'neaktivan', neaktivan: 'aktivan' })[v.status]]?.bs || 'Aktivno'}` : `Status → ${STATUS_MAP[({ aktivan: 'servis', servis: 'neaktivan', neaktivan: 'aktivan' })[v.status]]?.en || 'Active'}`}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDelete(v.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>
@@ -502,17 +501,24 @@ function FleetInner() {
                                                 </td>
                                                 <td style={{ fontWeight: 700, letterSpacing: 0.5 }}>{v.registracija || '—'}</td>
                                                 <td>{v.marka} {v.model}</td>
-                                                <td><span className="badge badge-info">{bs ? TYPE_MAP[v.tip]?.bs : TYPE_MAP[v.tip]?.en || v.tip}</span></td>
+                                                <td style={{ textAlign: 'center' }}><span className="badge badge-info" style={{ display: 'inline-block', textAlign: 'center', minWidth: 80 }}>{bs ? TYPE_MAP[v.tip]?.bs : TYPE_MAP[v.tip]?.en || v.tip}</span></td>
                                                 <td>
                                                     <button onClick={e => { e.stopPropagation(); if (v.vozacId) setViewWorkerId(v.vozacId); }}
                                                         style={{ background: 'none', border: 'none', cursor: v.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: v.vozacId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
                                                         {v.vozacIme || '—'}
                                                     </button>
                                                 </td>
-                                                <td>{formatDate(v.registracijaIstice)} {getExpiryBadge(v.registracijaIstice)}</td>
-                                                <td>{formatDate(v.tehnickiIstice)} {getExpiryBadge(v.tehnickiIstice)}</td>
-                                                <td>{formatDate(v.osiguranjeIstice)} {getExpiryBadge(v.osiguranjeIstice)}</td>
-                                                <td><span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color }}>{bs ? st.bs : st.en}</span></td>
+                                                <td style={{ textAlign: 'center' }}><div>{formatDate(v.registracijaIstice)}</div><div style={{ marginTop: 2 }}>{getExpiryBadge(v.registracijaIstice)}</div></td>
+                                                <td style={{ textAlign: 'center' }}><div>{formatDate(v.tehnickiIstice)}</div><div style={{ marginTop: 2 }}>{getExpiryBadge(v.tehnickiIstice)}</div></td>
+                                                <td style={{ textAlign: 'center' }}><div>{formatDate(v.osiguranjeIstice)}</div><div style={{ marginTop: 2 }}>{getExpiryBadge(v.osiguranjeIstice)}</div></td>
+                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                                    <button onClick={() => { const cycle = { aktivan: 'servis', servis: 'neaktivan', neaktivan: 'aktivan' }; update(COLLECTIONS.VEHICLES, v.id, { status: cycle[v.status] || 'aktivan' }); loadData(); }}
+                                                        style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.color}33`, cursor: 'pointer', transition: 'all 0.15s', minWidth: 80 }}
+                                                        onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                                        title={bs ? 'Klikni za promjenu statusa' : 'Click to change status'}
+                                                    >{bs ? st.bs : st.en}</button>
+                                                </td>
                                             </tr>
                                         );
                                     })}

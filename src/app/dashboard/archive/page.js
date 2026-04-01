@@ -85,6 +85,71 @@ export default function ArchivePage() {
                 }
             });
         });
+
+        // Aggregate fleet vehicle documents (nested inside vehicle records)
+        const vehicles = getAll('vehicles');
+        vehicles.forEach(v => {
+            const vDocs = v.dokumenti || [];
+            vDocs.forEach(d => {
+                if (d.naziv && d.docData) {
+                    docs.push({
+                        id: `fleet-doc-${v.id}-${d.id}`,
+                        name: d.naziv,
+                        data: d.docData,
+                        category: d.kategorija === 'Osiguranje' ? 'Ugovori' : d.kategorija === 'Tehnički pregled' ? 'Certifikati' : 'Ostalo',
+                        description: `${v.registracija || 'Vozilo'} — ${d.kategorija || 'Ostalo'}`,
+                        size: d.velicina ? parseFloat(d.velicina) * 1024 : null,
+                        uploadedAt: d.datumUpisa || null,
+                        _readonly: true,
+                        _sourceLabel: 'Vozni park',
+                        _sourceLink: `/dashboard/fleet?openId=${v.id}&tab=arhiva`,
+                    });
+                }
+            });
+        });
+
+        // Aggregate fleet-documents module docs
+        const fleetDocs = getAll('fleetDocuments');
+        fleetDocs.forEach(fd => {
+            const fName = fd.docName || fd.attachedFileName || fd.fileName || fd.datotekaIme;
+            const fData = fd.docData || fd.attachedFileData || fd.fileData || fd.datotekaSadrzaj;
+            if (fName && fData) {
+                docs.push({
+                    id: `fleet-fdoc-${fd.id}`,
+                    name: fName,
+                    data: fData,
+                    category: 'Ostalo',
+                    description: fd.naziv || fd.ime || 'Flota dokument',
+                    size: fd.attachedFileSize || null,
+                    uploadedAt: fd.datum || fd.datumUpisa || null,
+                    _readonly: true,
+                    _sourceLabel: 'Flota dokumenti',
+                    _sourceLink: `/dashboard/fleet-documents?openId=${fd.id}`,
+                });
+            }
+        });
+
+        // Aggregate fleet-orders travel orders
+        const fleetOrders = getAll('fleetOrders');
+        fleetOrders.forEach(fo => {
+            const fName = fo.docName || fo.attachedFileName || fo.fileName || fo.datotekaIme;
+            const fData = fo.docData || fo.attachedFileData || fo.fileData || fo.datotekaSadrzaj;
+            if (fName && fData) {
+                docs.push({
+                    id: `fleet-order-${fo.id}`,
+                    name: fName,
+                    data: fData,
+                    category: 'Obrasci',
+                    description: fo.opis || fo.naziv || 'Putni nalog',
+                    size: fo.attachedFileSize || null,
+                    uploadedAt: fo.datum || fo.datumUpisa || null,
+                    _readonly: true,
+                    _sourceLabel: 'Putni nalozi',
+                    _sourceLink: `/dashboard/fleet-orders?openId=${fo.id}`,
+                });
+            }
+        });
+
         setFormDocs(docs);
     }, []);
 
