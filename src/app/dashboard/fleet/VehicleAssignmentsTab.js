@@ -142,46 +142,54 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
             </div>
 
             {showForm && (
-                <div style={{ background: 'var(--bg-card-alt)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '20px' }}>
-                    <h4 style={{ margin: '0 0 16px 0', fontSize: '1rem' }}>{bs ? 'Dodijeli vozilo vozaču' : 'Assign to Driver'}</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                        <div className="form-group" style={{ position: 'relative' }}>
-                            <label className="form-label">{bs ? 'Vozač' : 'Driver'}</label>
-                            <input className="form-input" placeholder={bs ? '🔍 Pretraži...' : 'Search...'} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId:'', workerIme:''})) }} onFocus={() => setShowW(true)} />
-                            {showW && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-                                    {fw.length === 0 ? <div style={{ padding: 8 }}>Nema</div> : fw.slice(0, 10).map(w => (
-                                        <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} onClick={() => { setForm(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setSearch(`${w.ime} ${w.prezime}`); setShowW(false); }}>
-                                            {w.ime} {w.prezime}
+                <div className="modal-overlay" style={{ zIndex: 12000 }} onClick={() => setShowForm(false)}>
+                    <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>{editingId ? (bs ? 'Uredi zaduženje' : 'Edit Assignment') : (bs ? 'Novo zaduženje' : 'New Assignment')}</h2>
+                            <button type="button" className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ padding: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                                <div className="form-group" ref={workerRef} style={{ position: 'relative' }}>
+                                    <label className="form-label">{bs ? 'Dodijeli vozilo vozaču' : 'Assign to'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" placeholder={bs ? '🔍 Pretraži zaposlene...' : '🔍 Search workers...'} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId: '', workerIme: ''})); }} onFocus={() => setShowW(true)} />
+                                    {showW && (
+                                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
+                                            {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : filteredWorkers.slice(0, 10).map(w => (
+                                                <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} onClick={() => { setForm(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setSearch(`${w.ime} ${w.prezime}`); setShowW(false); }}>
+                                                    {w.ime} {w.prezime}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Datum zaduženja' : 'Date Given'}</label>
-                            <input className="form-input" type="date" value={form.datumZaduzenja} onChange={e => setForm(f => ({...f, datumZaduzenja: e.target.value}))} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Početna kilometraža' : 'Starting Mileage'}</label>
-                            <input className="form-input" type="number" value={form.pocetnaKilometraza} onChange={e => setForm(f => ({...f, pocetnaKilometraza: e.target.value}))} />
-                        </div>
-                        {editingId && (
-                            <>
-                                <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datum razduženja' : 'Date Returned'}</label>
-                                    <input className="form-input" type="date" value={form.datumRazduzenja} onChange={e => setForm(f => ({...f, datumRazduzenja: e.target.value}))} />
+                                    )}
+                                    {form.workerId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {form.workerIme}</div>}
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Završna kilometraža' : 'Ending Mileage'}</label>
-                                    <input className="form-input" type="number" value={form.zavrsnaKilometraza} onChange={e => setForm(f => ({...f, zavrsnaKilometraza: e.target.value}))} />
+                                    <label className="form-label">{bs ? 'Datum zaduženja' : 'Assigned Date'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" type="date" value={form.datumZaduzenja} onChange={e => setForm(f => ({...f, datumZaduzenja: e.target.value}))} />
                                 </div>
-                            </>
-                        )}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleAssign}>💾 {t('save')}</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Početna kilometraža' : 'Starting Mileage'}</label>
+                                    <input className="form-input" type="number" value={form.pocetnaKilometraza} onChange={e => setForm(f => ({...f, pocetnaKilometraza: e.target.value}))} />
+                                </div>
+                                {editingId && (
+                                    <>
+                                        <div className="form-group">
+                                            <label className="form-label">{bs ? 'Datum razduženja' : 'Date Returned'}</label>
+                                            <input className="form-input" type="date" value={form.datumRazduzenja} onChange={e => setForm(f => ({...f, datumRazduzenja: e.target.value}))} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{bs ? 'Završna kilometraža' : 'Ending Mileage'}</label>
+                                            <input className="form-input" type="number" value={form.zavrsnaKilometraza} onChange={e => setForm(f => ({...f, zavrsnaKilometraza: e.target.value}))} />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px', background: 'var(--bg-card)' }}>
+                            <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                            <button type="button" className="btn btn-primary" onClick={handleAssign}>💾 {t('save')}</button>
+                        </div>
                     </div>
                 </div>
             )}

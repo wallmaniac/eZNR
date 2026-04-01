@@ -178,43 +178,56 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
             </div>
 
             {showForm && (
-                <div style={{ background: 'var(--bg-card-alt)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '20px' }}>
-                    <h4 style={{ margin: '0 0 16px 0', fontSize: '1rem' }}>{bs ? 'Unos dokumenta' : 'Document Entry'}</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Datoteka' : 'File'}</label>
-                            <input type="file" className="form-input" onChange={handleFileChange} />
-                            {editingId && !selectedFile && <div style={{ fontSize: '0.78rem', marginTop: 4, color: 'var(--text-muted)' }}>Ostavite prazno ako ne mijenjate datoteku.</div>}
+                <div className="modal-overlay" style={{ zIndex: 12000 }} onClick={() => setShowForm(false)}>
+                    <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>{editingId ? (bs ? 'Uredi dokument' : 'Edit Document') : (bs ? 'Novi dokument' : 'New Document')}</h2>
+                            <button type="button" className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Naziv dokumenta' : 'Document Name'} <span style={{color: 'var(--danger)'}}>*</span></label>
-                            <input className="form-input" value={form.naziv} onChange={e => setForm(f => ({...f, naziv: e.target.value}))} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Kategorija' : 'Category'}</label>
-                            <select className="form-select" value={form.kategorija} onChange={e => setForm(f => ({...f, kategorija: e.target.value}))}>
-                                <option value="Osiguranje">Osiguranje / Insurance</option>
-                                <option value="Saobraćajna / Prometna">Saobraćajna / Registration</option>
-                                <option value="Tehnički pregled">Tehnički pregled / Technical</option>
-                                <option value="Zeleni karton">Zeleni karton / Green Card</option>
-                                <option value="Ostalo">Ostalo / Other</option>
-                            </select>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                            <div className="form-group">
-                                <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
-                                <input className="form-input" type="date" value={form.datumIzdavanja} onChange={e => setForm(f => ({...f, datumIzdavanja: e.target.value}))} />
+                        <div className="modal-body" style={{ padding: '24px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Naziv dokumenta' : 'Document Name'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" value={form.naziv} onChange={e => setForm(f => ({...f, naziv: e.target.value}))} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Povezano sa' : 'Linked To'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <select className="form-select" value={form.linkedTo} onChange={e => setForm(f => ({...f, linkedTo: e.target.value}))}>
+                                        <option value="Servis">Servis / Maintenance</option>
+                                        <option value="Registracija">Registracija / Registration</option>
+                                        <option value="Kasko">Kasko / Insurance</option>
+                                        <option value="Saobraćajna">Saobraćajna / Traffic Reg</option>
+                                        <option value="Tehnički">Tehnički Pregled / Inspection</option>
+                                        <option value="Ostalo">Ostalo / Other</option>
+                                    </select>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">{bs ? 'Datum Izdavanja' : 'Issue Date'}</label>
+                                        <input className="form-input" type="date" value={form.datumIzdavanja} onChange={e => setForm(f => ({...f, datumIzdavanja: e.target.value}))} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{bs ? 'Vrijedi Do' : 'Valid Until'}</label>
+                                        <input className="form-input" type="date" value={form.vrijediDo} onChange={e => setForm(f => ({...f, vrijediDo: e.target.value}))} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Dodatna napomena' : 'Additional Notes'}</label>
+                                    <textarea className="form-input" rows={2} value={form.opis} onChange={e => setForm(f => ({...f, opis: e.target.value}))} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Prilog (PDF/Slika)' : 'Attachment'}</label>
+                                    <input className="form-input" type="file" accept="image/*,.pdf" onChange={e => setSelectedFile(e.target.files[0])} />
+                                    <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                        {editingId && form.prilog ? (bs ? 'Trenutno postoji prilog. Novi unos će ga prepisati.' : 'Attachment exists. Uploading new will overwrite.') : (bs ? 'Opcionalno' : 'Optional')}
+                                    </div>
+                                </div>
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">{bs ? 'Datum isteka' : 'Expiry Date'}</label>
-                                <input className="form-input" type="date" value={form.datumIsteka} onChange={e => setForm(f => ({...f, datumIsteka: e.target.value}))} />
-                            </div>
                         </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleSave}>💾 {bs ? 'Spremi dokument' : 'Save Document'}</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px', background: 'var(--bg-card)' }}>
+                            <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                            <button type="button" className="btn btn-primary" onClick={handleSave}>💾 {bs ? 'Spremi dokument' : 'Save Document'}</button>
+                        </div>
                     </div>
                 </div>
             )}

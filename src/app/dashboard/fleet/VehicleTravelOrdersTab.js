@@ -173,6 +173,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                     {!showForm && (
                         <button className="btn btn-primary btn-sm" onClick={() => { 
                             setEditingId(null); 
+                            setSearch('');
                             setShowForm(true); 
                             setForm({ 
                                 brojNaloga: `PN-${new Date().getFullYear()}-`, 
@@ -189,61 +190,65 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                     )}
                 </div>
             </div>
-
-            {showForm && (
-                <div style={{ background: 'var(--bg-card-alt)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '20px' }}>
-                    <h4 style={{ margin: '0 0 16px 0', fontSize: '1rem' }}>{bs ? 'Kreiraj PN nalog' : 'Create PN Order'}</h4>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Broj naloga' : 'Order Number'}</label>
-                            <input className="form-input" value={form.brojNaloga} onChange={e => setForm(f => ({...f, brojNaloga: e.target.value}))} />
+                {showForm && (
+                <div className="modal-overlay" style={{ zIndex: 12000 }} onClick={() => setShowForm(false)}>
+                    <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>{editingId ? (bs ? 'Uredi nalog' : 'Edit Order') : (bs ? 'Novi putni nalog' : 'New Travel Order')}</h2>
+                            <button type="button" className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Tip obrasca' : 'Form Type'}</label>
-                            <select className="form-select" value={form.tipObrasca} onChange={e => setForm(f => ({...f, tipObrasca: e.target.value}))}>
-                                <option value="PN-4">PN-4 (Putničko vozilo)</option>
-                                <option value="PN-3">PN-3 (Teretno vozilo)</option>
-                                <option value="PN-2">PN-2 (Gradski prevoz)</option>
-                                <option value="PN-1">PN-1 (Autobus)</option>
-                            </select>
-                        </div>
-
-                        <div className="form-group" style={{ position: 'relative' }}>
-                            <label className="form-label">{bs ? 'Zaduženi vozač' : 'Assigned Driver'}</label>
-                            <input className="form-input" placeholder={bs ? '🔍 Pretraži...' : 'Search...'} value={search || form.workerIme} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId:'', workerIme: e.target.value})) }} onFocus={() => setShowW(true)} />
-                            {showW && (
-                                <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto' }}>
-                                    {fw.length === 0 ? <div style={{ padding: 8 }}>Nema</div> : fw.slice(0, 10).map(w => (
-                                        <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} onClick={() => { setForm(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setSearch(''); setShowW(false); }}>
-                                            {w.ime} {w.prezime}
-                                        </div>
-                                    ))}
+                        <div className="modal-body" style={{ padding: '24px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">{bs ? 'Broj naloga' : 'Order Number'}</label>
+                                        <input className="form-input" value={form.brojNaloga} onChange={e => setForm(f => ({...f, brojNaloga: e.target.value}))} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{bs ? 'Tip obrasca' : 'Form Type'}</label>
+                                        <select className="form-select" value={form.tipObrasca} onChange={e => setForm(f => ({...f, tipObrasca: e.target.value}))}>
+                                            <option value="PN-4">PN-4 (Putničko)</option>
+                                            <option value="PN-3">PN-3 (Teretno)</option>
+                                        </select>
+                                    </div>
                                 </div>
-                            )}
+                                <div className="form-group" ref={workerRef} style={{ position: 'relative' }}>
+                                    <label className="form-label">{bs ? 'Vozač' : 'Driver'} <span style={{color:'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" placeholder={bs ? '🔍 Pretraži zaposlene...' : '🔍 Search workers...'} value={search} onChange={e => { setSearch(e.target.value); setShowW(true); setForm(f => ({...f, workerId: '', workerIme: ''})); }} onFocus={() => setShowW(true)} />
+                                    {showW && (
+                                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)', borderRadius: 'var(--radius-sm)' }}>
+                                            {filteredWorkers.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : filteredWorkers.slice(0, 10).map(w => (
+                                                <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} onClick={() => { setForm(f => ({...f, workerId: w.id, workerIme: `${w.ime} ${w.prezime}`})); setSearch(`${w.ime} ${w.prezime}`); setShowW(false); }}>
+                                                    {w.ime} {w.prezime}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {form.workerId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {form.workerIme}</div>}
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Relacija' : 'Route'}</label>
+                                    <input className="form-input" value={form.relacija} onChange={e => setForm(f => ({...f, relacija: e.target.value}))} placeholder="npr. Sarajevo - Zenica" />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">{bs ? 'Mjesto izdavanja' : 'Issued At'}</label>
+                                        <input className="form-input" value={form.mjestoIzdavanja} onChange={e => setForm(f => ({...f, mjestoIzdavanja: e.target.value}))} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
+                                        <input className="form-input" type="date" value={form.datumIzdavanja} onChange={e => setForm(f => ({...f, datumIzdavanja: e.target.value}))} />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Relacija kretanja' : 'Route'}</label>
-                            <input className="form-input" placeholder="Sarajevo - Mostar - Sarajevo" value={form.relacija} onChange={e => setForm(f => ({...f, relacija: e.target.value}))} />
+                        <div className="modal-footer" style={{ borderTop: '1px solid var(--border-light)', padding: '16px 24px', background: 'var(--bg-card)' }}>
+                            <button type="button" className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                            <button type="button" className="btn btn-primary" onClick={handleSave}>💾 {bs ? 'Spremi nalog' : 'Save Order'}</button>
                         </div>
-
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Mjesto izdavanja' : 'Place of Issue'}</label>
-                            <input className="form-input" placeholder="Sarajevo" value={form.mjestoIzdavanja} onChange={e => setForm(f => ({...f, mjestoIzdavanja: e.target.value}))} />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">{bs ? 'Datum izdavanja' : 'Date of Issue'}</label>
-                            <input className="form-input" type="date" value={form.datumIzdavanja} onChange={e => setForm(f => ({...f, datumIzdavanja: e.target.value}))} />
-                        </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleSave}>💾 {bs ? 'Spremi nalog' : 'Save Order'}</button>
-                        <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                     </div>
                 </div>
             )}
-
             <div className="data-table-wrapper" style={{ marginTop: 8 }}>
                 <table className="data-table">
                     <thead>
