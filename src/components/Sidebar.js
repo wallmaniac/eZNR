@@ -104,7 +104,10 @@ const menuItems = [
     {
         key: 'grpFleet', icon: '🚗',
         children: [
-            { key: 'fleetVehicles',   icon: '🚗', path: '/dashboard/fleet', label_bs: 'Vozni park', label_en: 'Fleet' },
+            { key: 'fleetVehicles', icon: '🚗', path: '/dashboard/fleet', label_bs: 'Popis vozila', label_en: 'Vehicle List' },
+            { key: 'fleetAssignments', icon: '🔄', path: '/dashboard/fleet-assignments', label_bs: 'Zaduženja', label_en: 'Assignments' },
+            { key: 'fleetDocuments', icon: '📁', path: '/dashboard/fleet-documents', label_bs: 'Dokumentacija', label_en: 'Documents' },
+            { key: 'fleetOrders', icon: '📝', path: '/dashboard/fleet-orders', label_bs: 'Putni nalozi', label_en: 'Travel Orders' },
         ],
     },
 

@@ -68,6 +68,8 @@
 
 /* ===== DARK MODE ===== */
 [data-theme="dark"] {
+  color-scheme: dark;
+  
   /* Brand colors stay the same — they pop on dark backgrounds */
   --primary: #00CDB5;
   --primary-light: #33d9c4;

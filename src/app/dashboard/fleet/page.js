@@ -1,5 +1,6 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -38,9 +39,10 @@ const TYPE_MAP = {
     prikolica: { bs: 'Prikolica', en: 'Trailer' },
 };
 
-export default function FleetPage() {
+function FleetInner() {
     const { t, lang } = useLanguage();
     const bs = lang === 'bs';
+    const searchParams = useSearchParams();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
@@ -78,6 +80,21 @@ export default function FleetPage() {
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
+
+    useEffect(() => {
+        const openId = searchParams?.get('openId');
+        const openTab = searchParams?.get('tab');
+        if (openId && vehicles.length > 0 && !showForm) {
+            const rec = vehicles.find(v => v.id === openId);
+            if (rec) {
+                setEditingId(rec.id);
+                setActiveTab(openTab || 'osnovno');
+                setFormData({ dokumenti: [], ...rec });
+                setWorkerSearch(rec.vozacIme || '');
+                setShowForm(true);
+            }
+        }
+    }, [searchParams, vehicles]);
 
     const set = (k, v) => { setFormData(f => ({ ...f, [k]: v })); markDirty(); };
 
@@ -505,5 +522,13 @@ export default function FleetPage() {
             </div>
             {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} onSaved={() => setViewWorkerId(null)} />}
         </>
+    );
+}
+
+export default function FleetPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje / Loading...</div>}>
+            <FleetInner />
+        </Suspense>
     );
 }
