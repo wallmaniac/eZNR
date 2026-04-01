@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -8,13 +8,8 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
     const bs = lang === 'bs';
     const { confirm, prompt } = useDialog();
 
-    // The vehicle
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
-    
-    // Filter assignments for this vehicle
     const history = assignments.filter(a => a.vehicleId === vehicleId).sort((a,b) => new Date(b.datumZaduzenja) - new Date(a.datumZaduzenja));
-    
-    // Check if there's an active assignment (no datumRazduzenja)
     const activeAssig = history.find(a => !a.datumRazduzenja);
 
     const [showForm, setShowForm] = useState(false);
@@ -43,6 +38,9 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
     // worker dropdown
     const [search, setSearch] = useState('');
     const [showW, setShowW] = useState(false);
+    const workerRef = useRef(null);
+
+    const filteredWorkers = workers.filter(w => (search ? `${w.ime} ${w.prezime}`.toLowerCase().includes(search.toLowerCase()) : true));
 
     const handleAssign = async () => {
         if (!form.workerId) {
@@ -60,7 +58,6 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                 zavrsnaKilometraza: form.zavrsnaKilometraza || ''
             });
 
-            // If it's the active assignment, update vehicle driver
             if (!form.datumRazduzenja) {
                 update(COLLECTIONS.VEHICLES, vehicleId, { vozacId: form.workerId, vozacIme: form.workerIme });
             }
@@ -89,7 +86,6 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
         if (k === null) return;
 
         update(COLLECTIONS.VEHICLE_ASSIGNMENTS, assigId, { datumRazduzenja: d, zavrsnaKilometraza: k });
-        // remove driver from vehicle
         update(COLLECTIONS.VEHICLES, vehicleId, { vozacId: '', vozacIme: '' });
         reloadData();
     };
@@ -115,8 +111,6 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
         setShowForm(true);
     };
 
-    const fw = workers.filter(w => (search ? `${w.ime} ${w.prezime}`.toLowerCase().includes(search.toLowerCase()) : true));
-
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -133,7 +127,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                             <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                         </div>
                     )}
-                    {!activeAssig && !showForm && (
+                    {!activeAssig && (
                         <button className="btn btn-primary btn-sm" onClick={() => { setEditingId(null); setShowForm(true); setForm({ workerId: '', workerIme: '', datumZaduzenja: new Date().toISOString().split('T')[0], pocetnaKilometraza: '', datumRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(''); }}>
                             + {bs ? 'Novo zaduženje' : 'New Assignment'}
                         </button>
@@ -211,7 +205,10 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                         {history.length === 0 ? (
                             <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{bs ? 'Nema zaduženja' : 'No history found'}</td></tr>
                         ) : history.map((h, i) => (
-                            <tr key={h.id} style={{ opacity: (!h.datumRazduzenja || i===0) ? 1 : 0.75 }}>
+                            <tr key={h.id} style={{ opacity: (!h.datumRazduzenja || i===0) ? 1 : 0.75, cursor: 'pointer' }}
+                                onClick={() => handleEdit(h)}
+                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                onMouseLeave={e => e.currentTarget.style.background = ''}>
                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                     <input type="checkbox" checked={selectedIds.has(h.id)} onChange={() => toggleOne(h.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                 </td>
