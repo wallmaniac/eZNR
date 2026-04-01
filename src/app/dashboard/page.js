@@ -141,6 +141,7 @@ export default function DashboardPage() {
     const [certs, setCerts] = useState([]);
     const [ppeAssignments, setPpeAssignments] = useState([]);
     const [equipment, setEquipment] = useState([]);
+    const [fleetVehicles, setFleetVehicles] = useState([]);
     const [employerDocs, setEmployerDocs] = useState([]);
     const [medicalExams, setMedicalExams] = useState([]);
     const [actionMenuId, setActionMenuId] = useState(null);
@@ -180,6 +181,7 @@ export default function DashboardPage() {
         setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
         setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
         setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
+        setFleetVehicles(getAllForCompany(COLLECTIONS.VEHICLES, activeCompanyId, uids));
         setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
         setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
         setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
@@ -243,6 +245,23 @@ export default function DashboardPage() {
                 });
             });
         }
+        // Fleet — registracijaIstice, tehnickiIstice, osiguranjeIstice
+        if (notifSettings.calShowFleet !== false) {
+            fleetVehicles.forEach(v => {
+                if (v.registracijaIstice) events.push({
+                    id: `auto-fleet-reg-${v.id}`, datum: (v.registracijaIstice || '').split('T')[0],
+                    tip: 'fleet', opis: `Registracija: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
+                });
+                if (v.tehnickiIstice) events.push({
+                    id: `auto-fleet-teh-${v.id}`, datum: (v.tehnickiIstice || '').split('T')[0],
+                    tip: 'fleet', opis: `Tehnički pregl: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
+                });
+                if (v.osiguranjeIstice) events.push({
+                    id: `auto-fleet-osig-${v.id}`, datum: (v.osiguranjeIstice || '').split('T')[0],
+                    tip: 'fleet', opis: `Osiguranje: ${v.registracija}`, auto: true, sourceId: v.id, companyId: v.companyId,
+                });
+            });
+        }
         // Employer docs — datumIsteka
         if (notifSettings.calShowDoc !== false) {
             employerDocs.forEach(d => {
@@ -277,7 +296,7 @@ export default function DashboardPage() {
             });
         }
         return events;
-    }, [certs, equipment, employerDocs, workers, riskAssessments, riskItems, notifSettings]);
+    }, [certs, equipment, fleetVehicles, employerDocs, workers, riskAssessments, riskItems, notifSettings]);
 
     const companies = useMemo(() => getRawAll(COLLECTIONS.COMPANIES), [activeCompanyId]);
     const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
@@ -369,6 +388,12 @@ export default function DashboardPage() {
                 }
             }
             router.push('/dashboard/worker-certificates?sort=expiry');
+            return;
+        }
+
+        // ── Fleet events → open fleet page ──
+        if (ev.tip === 'fleet') {
+            router.push('/dashboard/fleet?q=' + (ev.sourceId || ''));
             return;
         }
 
@@ -754,11 +779,11 @@ export default function DashboardPage() {
                                         const isSoon = diff >= 0 && diff <= 30;
                                         const statusIcon = ev.auto ? (isExpired ? ' ⚠️' : isSoon ? ' ⏰' : '') : '';
                                         const bgColor = ev.auto && isExpired
-                                            ? (ev.tip === 'cert' ? 'rgba(244,67,54,0.12)' : ev.tip === 'equip' ? '#FBE9E7' : 'rgba(244,67,54,0.12)')
-                                            : (ev.tip === 'cert' ? 'rgba(33,150,243,0.12)' : ev.tip === 'ppe' ? 'rgba(255,152,0,0.12)' : ev.tip === 'equip' ? 'rgba(76,175,80,0.12)' : ev.tip === 'risk' ? 'rgba(156,39,176,0.12)' : '#F3E5F5');
+                                            ? (ev.tip === 'cert' ? 'rgba(244,67,54,0.12)' : ev.tip === 'equip' ? '#FBE9E7' : ev.tip === 'fleet' ? '#FBE9E7' : 'rgba(244,67,54,0.12)')
+                                            : (ev.tip === 'cert' ? 'rgba(33,150,243,0.12)' : ev.tip === 'ppe' ? 'rgba(255,152,0,0.12)' : ev.tip === 'equip' ? 'rgba(76,175,80,0.12)' : ev.tip === 'fleet' ? 'rgba(156,39,176,0.12)' : ev.tip === 'risk' ? 'rgba(156,39,176,0.12)' : '#F3E5F5');
                                         const fgColor = ev.auto && isExpired
                                             ? 'var(--danger)'
-                                            : (ev.tip === 'cert' ? 'var(--info)' : ev.tip === 'ppe' ? 'var(--warning)' : ev.tip === 'equip' ? 'var(--success)' : ev.tip === 'risk' ? '#9C27B0' : '#6A1B9A');
+                                            : (ev.tip === 'cert' ? 'var(--info)' : ev.tip === 'ppe' ? 'var(--warning)' : ev.tip === 'equip' ? 'var(--success)' : ev.tip === 'fleet' ? '#9C27B0' : ev.tip === 'risk' ? '#9C27B0' : '#6A1B9A');
                                         return (
                                             <div key={ev.id || idx}
                                                 style={{
@@ -776,7 +801,7 @@ export default function DashboardPage() {
                                                     style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                                     onMouseEnter={(e) => { e.currentTarget.style.textDecoration = 'underline'; }}
                                                     onMouseLeave={(e) => { e.currentTarget.style.textDecoration = 'none'; }}>
-                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ev.tip === 'risk' ? '🛡️' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
+                                                    {ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'fleet' ? '🚗' : ev.tip === 'service' ? '🔧' : ev.tip === 'risk' ? '🛡️' : ''} {ev.opis || `(${ev.count})`}{statusIcon}
                                                     {ev.companyName && <span style={{ fontSize: '0.55rem', opacity: 0.7, marginLeft: 4, fontWeight: 700 }}>({ev.companyName})</span>}
                                                 </span>
                                                 {!ev.auto && (

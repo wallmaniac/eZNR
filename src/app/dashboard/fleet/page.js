@@ -10,6 +10,7 @@ import WorkerProfileModal from '@/components/WorkerProfileModal';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
 import VehicleTravelOrdersTab from './VehicleTravelOrdersTab';
+import { getNotificationSettings } from '@/lib/systemMonitor';
 
 const EMPTY = {
     registracija: '', marka: '', model: '', godinaProizvodnje: '',
@@ -94,13 +95,15 @@ export default function FleetPage() {
     };
 
     // Expiry helpers
+    const notifSettings = getNotificationSettings();
+    const alertDays = notifSettings.fleetExpiryDays || 30;
     const today = new Date().toISOString().split('T')[0];
-    const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];
+    const alertDate = new Date(Date.now() + alertDays * 86400000).toISOString().split('T')[0];
 
     const getExpiryBadge = (dateStr) => {
         if (!dateStr) return null;
         if (dateStr < today) return <span className="badge badge-danger">{bs ? 'Isteklo' : 'Expired'}</span>;
-        if (dateStr <= in30) return <span className="badge badge-warning">{bs ? 'Uskoro' : 'Soon'}</span>;
+        if (dateStr <= alertDate) return <span className="badge badge-warning">{bs ? 'Uskoro' : 'Soon'}</span>;
         return <span className="badge badge-success">{bs ? 'Vrijedi' : 'Valid'}</span>;
     };
 
@@ -108,8 +111,8 @@ export default function FleetPage() {
     const stats = {
         total: vehicles.length,
         active: vehicles.filter(v => v.status === 'aktivan').length,
-        regExpired: vehicles.filter(v => v.registracijaIstice && v.registracijaIstice < today).length,
-        serviceSoon: vehicles.filter(v => v.tehnickiIstice && v.tehnickiIstice <= in30 && v.tehnickiIstice >= today).length,
+        regExpired: vehicles.filter(v => v.registracijaIstice && v.registracijaIstice <= alertDate).length,
+        serviceSoon: vehicles.filter(v => v.tehnickiIstice && v.tehnickiIstice <= alertDate).length,
     };
 
     // Filter & sort
@@ -192,7 +195,7 @@ export default function FleetPage() {
                     {[
                         { label: bs ? 'Ukupno vozila' : 'Total Vehicles', val: stats.total, icon: '🚗', color: 'var(--primary)' },
                         { label: bs ? 'Aktivna' : 'Active', val: stats.active, icon: '✅', color: '#22C55E' },
-                        { label: bs ? 'Istekla registracija' : 'Expired Registration', val: stats.regExpired, icon: '🔴', color: '#EF4444' },
+                        { label: bs ? 'Registracija uskoro' : 'Reg. Expiring Soon', val: stats.regExpired, icon: '🔴', color: '#EF4444' },
                         { label: bs ? 'Tehnički uskoro' : 'Inspection Soon', val: stats.serviceSoon, icon: '⚠️', color: '#F59E0B' },
                     ].map((s, i) => (
                         <div key={i} className="card" style={{ padding: '16px 20px' }}>

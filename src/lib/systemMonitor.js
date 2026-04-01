@@ -42,6 +42,8 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
     workersNoCerts: true,
     workersNoPPE: true,
     calendarWeek: true,
+    fleetExpiryEnabled: true,
+    fleetExpiryDays: 30,
 
     // Calendar Settings
     calShowCerts: true,
@@ -50,6 +52,7 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
     calShowRisk: true,
     calShowMed: true,
     calShowService: true,
+    calShowFleet: true,
 
     // Admin-only notification settings
     adminDbSize: true,
@@ -448,6 +451,55 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
                 message: 'Planirajte preglede za ' + medWarn + ' radnika.',
                 actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
             }, {}));
+        }
+    }
+
+    // ── Fleet expiry ──
+    if (settings.fleetExpiryEnabled) {
+        const allVehicles = filterByCompany(getAll(COLLECTIONS.VEHICLES));
+        let expired = 0, urgentCount = 0, warningCount = 0;
+
+        allVehicles.forEach(v => {
+            const checkDates = [v.registracijaIstice, v.tehnickiIstice, v.osiguranjeIstice, v.vatrogasniAparatDatum, v.prvaPomocIstice].filter(Boolean);
+            let vehicleExpired = false;
+            let vehicleUrgent = false;
+            let vehicleWarning = false;
+
+            for (const d of checkDates) {
+                const days = Math.floor((new Date(d) - today) / 86400000);
+                if (days < 0) vehicleExpired = true;
+                else if (days <= 7) vehicleUrgent = true;
+                else if (days <= settings.fleetExpiryDays) vehicleWarning = true;
+            }
+
+            if (vehicleExpired) expired++;
+            else if (vehicleUrgent) urgentCount++;
+            else if (vehicleWarning) warningCount++;
+        });
+
+        if (expired > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_fleet_expired', severity: 'urgent', category: 'fleet', icon: '🚨',
+                title: `${expired} vozila zahtijeva hitnu akciju!`,
+                message: `Registracija, tehnički pregled ili osiguranje je isteklo za ${expired} vozila.`,
+                actionLabel: 'Vozni park', actionUrl: '/dashboard/fleet',
+            }, allVehicles[0]));
+        }
+        if (urgentCount > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_fleet_urgent', severity: 'urgent', category: 'fleet', icon: '🚙',
+                title: `${urgentCount} vozila ističe za 7 dana!`,
+                message: `Registracija, pregled ili osiguranje ističe uskoro.`,
+                actionLabel: 'Vozni park', actionUrl: '/dashboard/fleet',
+            }, allVehicles[0]));
+        }
+        if (warningCount > 0) {
+            notifications.push(addCompanyBadge({
+                id: 'user_fleet_warning', severity: 'warning', category: 'fleet', icon: '🚗',
+                title: `${warningCount} vozila ističe u narednih ${settings.fleetExpiryDays} dana`,
+                message: `Planirajte registraciju i tehnički za ${warningCount} vozila.`,
+                actionLabel: 'Vozni park', actionUrl: '/dashboard/fleet',
+            }, allVehicles[0]));
         }
     }
 

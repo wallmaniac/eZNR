@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -617,8 +617,27 @@ export default function SettingsPage() {
                 <Toggle checked={notifSettings.calShowRisk ?? true} onChange={v => updateNotif('calShowRisk', v)} label={lang === 'bs' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
                 <Toggle checked={notifSettings.calShowMed ?? true} onChange={v => updateNotif('calShowMed', v)} label={lang === 'bs' ? '🩺 Ljekarski pregledi' : '🩺 Medical exams'} />
                 <Toggle checked={notifSettings.calShowService ?? true} onChange={v => updateNotif('calShowService', v)} label={lang === 'bs' ? '🔧 Servisi' : '🔧 Services'} />
+                <Toggle checked={notifSettings.calShowFleet ?? true} onChange={v => updateNotif('calShowFleet', v)} label={lang === 'bs' ? '🚗 Vozila (Reg/Tehnički)' : '🚗 Vehicles (Reg/Tech)'} />
               </div>
             </div>
+
+            {/* ── Vozni Park (Fleet) ── */}
+            <SectionHeader icon="🚗" title={lang === 'bs' ? 'Vozni park' : 'Vehicle Fleet'} />
+            <Toggle
+              checked={notifSettings.fleetExpiryEnabled ?? true}
+              onChange={v => updateNotif('fleetExpiryEnabled', v)}
+              label={lang === 'bs' ? 'Obavijest o isteku registracije i tehničkog' : 'Registration and tech inspection alerts'}
+              description={lang === 'bs' ? 'Upozori me kada vozilima ističe registracija, osiguranje ili pregled' : 'Warn me when vehicle registration or inspection expires'}
+            />
+            {(notifSettings.fleetExpiryEnabled ?? true) && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Upozori me' : 'Warn me'}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.fleetExpiryDays || 30} onChange={e => updateNotif('fleetExpiryDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'dana prije isteka' : 'days before expiry'}</span>
+              </div>
+            )}
 
             {/* ── Admin-only notifications ── */}
             {isAdmin && (
