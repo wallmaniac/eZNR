@@ -618,6 +618,13 @@ export const SEED_DATA = {
         { id: 'ct7', naziv: 'Evakuacijski voditelj', oznaka: 'EV', trajanjeMjeseci: 36 },
     ],
 
+    [COLLECTIONS.VEHICLES]: [
+        { id: 'v1', registracija: 'A12-B-345', marka: 'Volkswagen', model: 'Golf 8', tip: 'osobno', godinaProizvodnje: 2021, vin: 'WVWZZZCDZ12345678', boja: 'Bijela', datumRegistracije: '2023-05-10', registracijaIstice: '2025-05-10', datumTehnickogPregleda: '2023-05-09', tehnickiIstice: '2025-05-09', osiguranjeIstice: '2025-05-10', vatrogasniAparatDatum: '2026-05-10', prvaPomocIstice: '2028-01-01', vozacId: 'w3', vozacIme: 'Mirza Selimović', orgJedinicaId: 'ou1', status: 'aktivan', napomena: '' },
+        { id: 'v2', registracija: 'K98-T-112', marka: 'Mercedes-Benz', model: 'Sprinter', tip: 'teretno', godinaProizvodnje: 2019, vin: 'WDB90612345678901', boja: 'Žuta', datumRegistracije: '2023-11-20', registracijaIstice: '2024-11-20', datumTehnickogPregleda: '2023-11-19', tehnickiIstice: '2024-11-19', osiguranjeIstice: '2024-11-20', vatrogasniAparatDatum: '2025-11-20', prvaPomocIstice: '2026-01-01', vozacId: 'w5', vozacIme: 'Nermin Kovačević', orgJedinicaId: 'ou5', status: 'servis', napomena: 'Zamjena guma' },
+    ],
+    [COLLECTIONS.VEHICLE_ASSIGNMENTS]: [],
+    [COLLECTIONS.TRAVEL_ORDERS]: [],
+
     [COLLECTIONS.PPE_TYPES]: [
         { id: 'pt1', naziv: 'Zaštitna kaciga' },
         { id: 'pt2', naziv: 'Zaštitne naočale' },
@@ -1032,7 +1039,7 @@ export function seedDefaultData() {
 
 export function seedFleetData() {
     if (typeof window === 'undefined') return;
-    const FLEET_SEED_KEY = STORE_PREFIX + '__seeded_fleet_v1';
+    const FLEET_SEED_KEY = STORE_PREFIX + '__seeded_fleet_v2';
     if (localStorage.getItem(FLEET_SEED_KEY)) return;
 
     const v = getStore(COLLECTIONS.VEHICLES);
