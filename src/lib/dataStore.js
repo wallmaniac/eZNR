@@ -96,7 +96,7 @@ const COMPANY_SCOPED = [
     'digitalArchive', 'requests', 'riskAssessments', 'riskItems', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
     'trainings', 'annualReports', 'medicalExams', 'sistematizacije',
-    'vehicles', 'fireExtinguishers', 'hydrants', 'evacuationPlans', 'evacuationDrills',
+    'vehicles', 'vehicleAssignments', 'travelOrders', 'fireExtinguishers', 'hydrants', 'evacuationPlans', 'evacuationDrills',
 ];
 
 // Helper: get active company from localStorage (avoids needing React context)
@@ -350,6 +350,8 @@ export const COLLECTIONS = {
     SISTEMATIZACIJE: 'sistematizacije',
     // ── Enterprise modules ──
     VEHICLES: 'vehicles',
+    VEHICLE_ASSIGNMENTS: 'vehicleAssignments',
+    TRAVEL_ORDERS: 'travelOrders',
     FIRE_EXTINGUISHERS: 'fireExtinguishers',
     HYDRANTS: 'hydrants',
     EVACUATION_PLANS: 'evacuationPlans',
@@ -1028,7 +1030,23 @@ export function seedDefaultData() {
     localStorage.setItem(SEED_KEY, '1');
 }
 
+export function seedFleetData() {
+    if (typeof window === 'undefined') return;
+    const FLEET_SEED_KEY = STORE_PREFIX + '__seeded_fleet_v1';
+    if (localStorage.getItem(FLEET_SEED_KEY)) return;
+
+    const v = getStore(COLLECTIONS.VEHICLES);
+    if (v.length === 0 && SEED_DATA[COLLECTIONS.VEHICLES]) {
+        setStore(COLLECTIONS.VEHICLES, SEED_DATA[COLLECTIONS.VEHICLES]);
+        setStore(COLLECTIONS.VEHICLE_ASSIGNMENTS, []);
+        setStore(COLLECTIONS.TRAVEL_ORDERS, []);
+    }
+
+    localStorage.setItem(FLEET_SEED_KEY, '1');
+}
+
 // Auto-seed on module load
 seedDefaultData();
+seedFleetData();
 
 export { formatDate, todayISO, genId, COMPANY_SCOPED };

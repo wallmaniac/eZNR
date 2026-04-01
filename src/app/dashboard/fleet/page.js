@@ -7,6 +7,9 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import VehicleAssignmentsTab from './VehicleAssignmentsTab';
+import VehicleDocumentsTab from './VehicleDocumentsTab';
+import VehicleTravelOrdersTab from './VehicleTravelOrdersTab';
 
 const EMPTY = {
     registracija: '', marka: '', model: '', godinaProizvodnje: '',
@@ -42,12 +45,14 @@ export default function FleetPage() {
     const { markDirty, markClean } = useUnsavedChanges();
 
     const [vehicles, setVehicles] = useState([]);
+    const [assignments, setAssignments] = useState([]);
     const [workers, setWorkers] = useState([]);
     const [orgUnits, setOrgUnits] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showForm, setShowForm] = useState(false);
+    const [activeTab, setActiveTab] = useState('osnovno');
     const [editingId, setEditingId] = useState(null);
-    const [formData, setFormData] = useState({ ...EMPTY });
+    const [formData, setFormData] = useState({ ...EMPTY, dokumenti: [] });
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
 
@@ -58,6 +63,7 @@ export default function FleetPage() {
 
     const loadData = useCallback(() => {
         setVehicles(getAll(COLLECTIONS.VEHICLES));
+        setAssignments(getAll(COLLECTIONS.VEHICLE_ASSIGNMENTS));
         setWorkers(getAll(COLLECTIONS.WORKERS));
         setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
     }, []);
@@ -123,11 +129,11 @@ export default function FleetPage() {
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
 
     const openNew = () => {
-        setEditingId(null); setFormData({ ...EMPTY }); setWorkerSearch(''); setShowForm(true);
+        setEditingId(null); setActiveTab('osnovno'); setFormData({ ...EMPTY, dokumenti: [] }); setWorkerSearch(''); setShowForm(true);
     };
 
     const openEdit = (v) => {
-        setEditingId(v.id); setFormData({ ...v }); setWorkerSearch(v.vozacIme || ''); setShowForm(true);
+        setEditingId(v.id); setActiveTab('osnovno'); setFormData({ dokumenti: [], ...v }); setWorkerSearch(v.vozacIme || ''); setShowForm(true);
     };
 
     const handleSave = async () => {
@@ -204,15 +210,49 @@ export default function FleetPage() {
                 {/* Form Modal */}
                 {showForm && (
                     <div className="modal-overlay" onClick={() => setShowForm(false)}>
-                        <div className="modal" style={{ maxWidth: 750 }} onClick={e => e.stopPropagation()}>
-                            <div className="modal-header">
-                                <h2>{editingId ? '✏️' : '+'} {bs ? 'Vozilo' : 'Vehicle'}</h2>
+                        <div className="modal" style={{ maxWidth: 850, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px' }}>
+                                <h2>{editingId ? '✏️' : '+'} {bs ? 'Vozilo: ' : 'Vehicle: '} {formData.registracija || ''}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                             </div>
-                            <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                    {/* Registration */}
-                                    <div className="form-group">
+
+                            {/* TABS */}
+                            <div style={{ display: 'flex', gap: 24, padding: '0 32px', borderBottom: '1px solid var(--border)' }}>
+                                <button 
+                                    className={`tab-btn ${activeTab === 'osnovno' ? 'active' : ''}`}
+                                    onClick={() => setActiveTab('osnovno')}
+                                >
+                                    📄 {bs ? 'Osnovni podaci' : 'Basic Info'}
+                                </button>
+                                {editingId && (
+                                    <>
+                                        <button 
+                                            className={`tab-btn ${activeTab === 'istorija' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('istorija')}
+                                        >
+                                            🔄 {bs ? 'Zaduženja' : 'Assignments'}
+                                        </button>
+                                        <button 
+                                            className={`tab-btn ${activeTab === 'arhiva' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('arhiva')}
+                                        >
+                                            📁 {bs ? 'Arhiva dokumenata' : 'Documents'}
+                                        </button>
+                                        <button 
+                                            className={`tab-btn ${activeTab === 'nalozi' ? 'active' : ''}`}
+                                            onClick={() => setActiveTab('nalozi')}
+                                        >
+                                            📝 {bs ? 'Putni nalozi' : 'Travel Orders'}
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+
+                            <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', padding: '24px 32px' }}>
+                                {activeTab === 'osnovno' && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                        {/* Registration */}
+                                        <div className="form-group">
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Registracija' : 'Registration'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <input className="form-input" value={formData.registracija} onChange={e => set('registracija', e.target.value)} placeholder="A12-B-345" />
                                     </div>
@@ -327,15 +367,44 @@ export default function FleetPage() {
                                         </select>
                                     </div>
 
-                                    <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                        <label className="form-label">{t('note')}</label>
-                                        <textarea className="form-input" rows={2} value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
+                                        <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                            <label className="form-label">{t('note')}</label>
+                                            <textarea className="form-input" rows={2} value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
+                                        </div>
                                     </div>
-                                </div>
+                                )}
+
+                                {activeTab === 'istorija' && (
+                                    <VehicleAssignmentsTab 
+                                        vehicleId={editingId} 
+                                        vehicles={vehicles} 
+                                        assignments={assignments} 
+                                        workers={workers} 
+                                        reloadData={loadData} 
+                                    />
+                                )}
+
+                                {activeTab === 'arhiva' && (
+                                    <VehicleDocumentsTab 
+                                        vehicleId={editingId} 
+                                        vehicles={vehicles} 
+                                        reloadData={loadData} 
+                                    />
+                                )}
+
+                                {activeTab === 'nalozi' && (
+                                    <VehicleTravelOrdersTab
+                                        vehicleId={editingId} 
+                                        vehicles={vehicles}
+                                        workers={workers}
+                                        reloadData={loadData} 
+                                    />
+                                )}
+
                             </div>
-                            <div className="modal-footer">
+                            <div className="modal-footer" style={{ padding: '20px 32px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
                                 <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
-                                <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
+                                {activeTab === 'osnovno' && <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>}
                             </div>
                         </div>
                     </div>
