@@ -25,6 +25,14 @@ function FleetDocumentsInner() {
     const [showVSearch, setShowVSearch] = useState(false);
     const vRef = useRef(null);
 
+    // Action menu
+    const [actionMenuId, setActionMenuId] = useState(null);
+    const [menuPos, setMenuPos] = useState({});
+    const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+
+    // Bulk selection
+    const [selectedIds, setSelectedIds] = useState(new Set());
+
     const loadData = useCallback(() => {
         setVehicles(getAll(COLLECTIONS.VEHICLES));
     }, []);
@@ -62,8 +70,19 @@ function FleetDocumentsInner() {
         router.push(`/dashboard/fleet?openId=${vehicleId}&tab=arhiva`);
     };
 
-    const handleDownload = (e, doc) => {
+    const openMenu = (id, e) => {
         e.stopPropagation();
+        if (actionMenuId === id) { setActionMenuId(null); return; }
+        const rect = e.currentTarget.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const flipUp = spaceBelow < 220;
+        setMenuPos(flipUp
+            ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
+            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow) });
+        setActionMenuId(id);
+    };
+
+    const handleDownload = (doc) => {
         if (!doc.docData) return;
         const a = document.createElement('a');
         a.href = doc.docData;
@@ -71,16 +90,75 @@ function FleetDocumentsInner() {
         a.click();
     };
 
-    const handleDelete = async (e, doc) => {
-        e.stopPropagation();
+    const handlePrint = (doc) => {
+        if (!doc.docData) return;
+        const pw = window.open('', '_blank');
+        if (doc.docData.startsWith('data:image/')) { pw.document.write(`<html><body style="margin:0;display:flex;justify-content:center"><img src="${doc.docData}" style="max-width:100%"/></body></html>`); pw.document.close(); setTimeout(() => pw.print(), 500); }
+        else if (doc.docData.startsWith('data:application/pdf')) { pw.document.write(`<html><body style="margin:0"><embed width="100%" height="100%" src="${doc.docData}" type="application/pdf"/></body></html>`); pw.document.close(); }
+        else { handleDownload(doc); pw.close(); }
+    };
+
+    const handleCopy = (doc) => {
+        const v = vehicles.find(x => x.id === doc.vehicleId);
+        if (!v) return;
+        const newDoc = {
+            id: genId(),
+            naziv: (doc.naziv || 'Dokument') + ' (Kopija)',
+            kategorija: doc.kategorija || 'Ostalo',
+            datumIzdavanja: doc.datumIzdavanja || '',
+            datumIsteka: doc.datumIsteka || '',
+            velicina: doc.velicina || '',
+            datumUpisa: new Date().toISOString(),
+            docData: doc.docData || null,
+        };
+        const updatedDocs = [...(v.dokumenti || []), newDoc];
+        update(COLLECTIONS.VEHICLES, v.id, { dokumenti: updatedDocs });
+        setActionMenuId(null);
+        loadData();
+        showFlash();
+    };
+
+    const handleDelete = async (doc) => {
         if (await confirm(bs ? 'Obrisati ovaj dokument?' : 'Delete this document?')) {
             const v = vehicles.find(x => x.id === doc.vehicleId);
             if (v && v.dokumenti) {
                 const newDocs = v.dokumenti.filter(d => d.id !== doc.id);
                 update(COLLECTIONS.VEHICLES, doc.vehicleId, { dokumenti: newDocs });
+                setActionMenuId(null);
                 loadData();
             }
         }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        if (await confirm(bs ? `Obrisati ${selectedIds.size} dokumenata?` : `Delete ${selectedIds.size} documents?`)) {
+            const vehicleUpdates = {};
+            for (const doc of docs) {
+                if (selectedIds.has(doc.id)) {
+                    if (!vehicleUpdates[doc.vehicleId]) {
+                        const v = vehicles.find(x => x.id === doc.vehicleId);
+                        vehicleUpdates[doc.vehicleId] = [...(v?.dokumenti || [])];
+                    }
+                    vehicleUpdates[doc.vehicleId] = vehicleUpdates[doc.vehicleId].filter(d => d.id !== doc.id);
+                }
+            }
+            for (const [vid, updatedDocs] of Object.entries(vehicleUpdates)) {
+                update(COLLECTIONS.VEHICLES, vid, { dokumenti: updatedDocs });
+            }
+            setSelectedIds(new Set());
+            loadData();
+        }
+    };
+
+    const toggleAll = (e) => {
+        if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id)));
+        else setSelectedIds(new Set());
+    };
+    const toggleOne = (id) => {
+        const n = new Set(selectedIds);
+        if (n.has(id)) n.delete(id); else n.add(id);
+        setSelectedIds(n);
     };
 
     const handleFileChange = (e) => {
@@ -98,7 +176,6 @@ function FleetDocumentsInner() {
         const v = vehicles.find(x => x.id === formData.vehicleId);
         if (!v) return;
 
-        // If a file is selected we process it using standard logic, or just push metadata.
         const newDoc = {
             id: genId(),
             naziv: formData.naziv || (selectedFile ? selectedFile.name : 'Dokument'),
@@ -224,19 +301,24 @@ function FleetDocumentsInner() {
                         }}>+ {bs ? 'Novi dokument' : 'New Document'}</button>
                         <SavedFlash />
                         <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži dokumente...' : '🔍 Search documents...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'dokumenata' : 'documents'}</span>
+                        {selectedIds.size > 0 ? (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'dokumenata' : 'documents'}</span>}
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{bs ? 'Vozilo' : 'Vehicle'}{sortIcon('vehicleReg')}</th>
                                     <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{bs ? 'Naziv dokumenta' : 'Document Name'}{sortIcon('naziv')}</th>
                                     <th onClick={() => toggleSort('kategorija')} style={thStyle('kategorija')}>{bs ? 'Kategorija' : 'Category'}{sortIcon('kategorija')}</th>
                                     <th onClick={() => toggleSort('datumIzdavanja')} style={thStyle('datumIzdavanja')}>{bs ? 'Datum Izdavanja' : 'Date Issued'}{sortIcon('datumIzdavanja')}</th>
                                     <th onClick={() => toggleSort('datumIsteka')} style={thStyle('datumIsteka')}>{bs ? 'Datum Isteka' : 'Expiry Date'}{sortIcon('datumIsteka')}</th>
-                                    <th>{bs ? 'Datoteka' : 'File'}</th>
-                                    <th style={{ width: 80, textAlign: 'center' }}>{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -246,19 +328,30 @@ function FleetDocumentsInner() {
                                     <tr key={d.id} onClick={() => openInFleet(d.vehicleId)} style={{ cursor: 'pointer' }}
                                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                                         onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                        <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                            <input type="checkbox" checked={selectedIds.has(d.id)} onChange={() => toggleOne(d.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                                        </td>
+                                        <td onClick={e => e.stopPropagation()}>
+                                            <div style={{ position: 'relative' }}>
+                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                {actionMenuId === d.id && (<>
+                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                    <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                        <button onClick={() => { setActionMenuId(null); openInFleet(d.vehicleId); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                        {d.docData && <button onClick={() => { setActionMenuId(null); handleDownload(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📑 {bs ? 'Preuzmi dokument' : 'Download'}</button>}
+                                                        {d.docData && <button onClick={() => { setActionMenuId(null); handlePrint(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj' : 'Print'}</button>}
+                                                        <button onClick={() => { setActionMenuId(null); handleCopy(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(d); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                    </div>
+                                                </>)}
+                                            </div>
+                                        </td>
                                         <td style={{ fontWeight: 600 }}>{d.vehicleReg}</td>
                                         <td>{d.naziv}</td>
                                         <td>{d.kategorija}</td>
                                         <td>{formatDate(d.datumIzdavanja) || '—'}</td>
                                         <td>{formatDate(d.datumIsteka) || '—'}</td>
-                                        <td>
-                                            {d.docData ? (
-                                                 <button onClick={(e) => handleDownload(e, d)} style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontWeight: 600, padding: 0 }}>📑 {bs ? 'Preuzmi' : 'Download'}</button>
-                                            ) : '—'}
-                                        </td>
-                                        <td style={{ textAlign: 'center', display: 'flex', gap: 6, justifyContent: 'center' }}>
-                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: 4 }} onClick={(e) => handleDelete(e, d)} title={bs ? 'Briši' : 'Delete'}>🗑️</button>
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>

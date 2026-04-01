@@ -29,6 +29,14 @@ function FleetAssignmentsInner() {
     const vRef = useRef(null);
     const wRef = useRef(null);
 
+    // Action menu
+    const [actionMenuId, setActionMenuId] = useState(null);
+    const [menuPos, setMenuPos] = useState({});
+    const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+
+    // Bulk selection
+    const [selectedIds, setSelectedIds] = useState(new Set());
+
     const loadData = useCallback(() => {
         setAssignments(getAll(COLLECTIONS.VEHICLE_ASSIGNMENTS));
         setVehicles(getAll(COLLECTIONS.VEHICLES));
@@ -70,12 +78,58 @@ function FleetAssignmentsInner() {
         router.push(`/dashboard/fleet?openId=${vehicleId}&tab=istorija`);
     };
 
-    const handleDelete = async (e, id) => {
+    const openMenu = (id, e) => {
         e.stopPropagation();
+        if (actionMenuId === id) { setActionMenuId(null); return; }
+        const rect = e.currentTarget.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom - 8;
+        const flipUp = spaceBelow < 200;
+        setMenuPos(flipUp
+            ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
+            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow) });
+        setActionMenuId(id);
+    };
+
+    const handleDelete = async (id) => {
         if (await confirm(bs ? 'Obrisati ovo zaduženje?' : 'Delete this assignment?')) {
             remove(COLLECTIONS.VEHICLE_ASSIGNMENTS, id);
+            setActionMenuId(null);
             loadData();
         }
+    };
+
+    const handleCopy = (a) => {
+        create(COLLECTIONS.VEHICLE_ASSIGNMENTS, {
+            vehicleId: a.vehicleId,
+            workerId: a.workerId,
+            workerIme: a.workerIme || a.workerName,
+            datumZaduzenja: new Date().toISOString().split('T')[0],
+            pocetnaKilometraza: '',
+            datumRazduzenja: '',
+            zavrsnaKilometraza: ''
+        });
+        setActionMenuId(null);
+        loadData();
+        showFlash();
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        if (await confirm(bs ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`)) {
+            for (let id of selectedIds) remove(COLLECTIONS.VEHICLE_ASSIGNMENTS, id);
+            setSelectedIds(new Set());
+            loadData();
+        }
+    };
+
+    const toggleAll = (e) => {
+        if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id)));
+        else setSelectedIds(new Set());
+    };
+    const toggleOne = (id) => {
+        const n = new Set(selectedIds);
+        if (n.has(id)) n.delete(id); else n.add(id);
+        setSelectedIds(n);
     };
 
     const handleSave = async () => {
@@ -186,37 +240,57 @@ function FleetAssignmentsInner() {
                         }}>+ {bs ? 'Novo zaduženje' : 'New Assignment'}</button>
                         <SavedFlash />
                         <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži zaduženja...' : '🔍 Search assignments...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'zabilješki' : 'records'}</span>
+                        {selectedIds.size > 0 ? (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'zabilješki' : 'records'}</span>}
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{bs ? 'Vozilo' : 'Vehicle'}{sortIcon('vehicleReg')}</th>
                                     <th onClick={() => toggleSort('workerName')} style={thStyle('workerName')}>{bs ? 'Vozač' : 'Driver'}{sortIcon('workerName')}</th>
                                     <th onClick={() => toggleSort('datumZaduzenja')} style={thStyle('datumZaduzenja')}>{bs ? 'Datum Zaduženja' : 'Date Assigned'}{sortIcon('datumZaduzenja')}</th>
                                     <th onClick={() => toggleSort('pocetnaKilometraza')} style={thStyle('pocetnaKilometraza')}>{bs ? 'Km Zaduženja' : 'Km Assigned'}{sortIcon('pocetnaKilometraza')}</th>
                                     <th onClick={() => toggleSort('datumRazduzenja')} style={thStyle('datumRazduzenja')}>{bs ? 'Datum Razduženja' : 'Date Returned'}{sortIcon('datumRazduzenja')}</th>
                                     <th onClick={() => toggleSort('zavrsnaKilometraza')} style={thStyle('zavrsnaKilometraza')}>{bs ? 'Km Razduženja' : 'Km Returned'}{sortIcon('zavrsnaKilometraza')}</th>
-                                    <th style={{ width: 80, textAlign: 'center' }}>{t('actions')}</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {sorted.length === 0 ? (
-                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sorted.map(a => (
                                     <tr key={a.id} onClick={() => openInFleet(a.vehicleId)} style={{ cursor: 'pointer' }}
                                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                                         onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                        <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                            <input type="checkbox" checked={selectedIds.has(a.id)} onChange={() => toggleOne(a.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                                        </td>
+                                        <td onClick={e => e.stopPropagation()}>
+                                            <div style={{ position: 'relative' }}>
+                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(a.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                {actionMenuId === a.id && (<>
+                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                    <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                        <button onClick={() => { setActionMenuId(null); openInFleet(a.vehicleId); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleCopy(a); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(a.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                    </div>
+                                                </>)}
+                                            </div>
+                                        </td>
                                         <td style={{ fontWeight: 600 }}>{a.vehicleReg}</td>
                                         <td>{a.workerName}</td>
                                         <td>{formatDate(a.datumZaduzenja)}</td>
                                         <td>{a.pocetnaKilometraza || '—'}</td>
                                         <td>{formatDate(a.datumRazduzenja) || <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{bs ? 'Zaduženo' : 'Assigned'}</span>}</td>
                                         <td>{a.zavrsnaKilometraza || '—'}</td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: 4 }} onClick={(e) => handleDelete(e, a.id)} title={bs ? 'Briši zapis' : 'Delete log'}>🗑️</button>
-                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
