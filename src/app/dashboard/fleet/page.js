@@ -213,7 +213,7 @@ export default function FleetPage() {
                 {/* Form Modal */}
                 {showForm && (
                     <div className="modal-overlay" onClick={() => setShowForm(false)}>
-                        <div className="modal" style={{ maxWidth: 850, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal" style={{ width: '100%', maxWidth: 850, minHeight: 650, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px' }}>
                                 <h2>{editingId ? '✏️' : '+'} {bs ? 'Vozilo: ' : 'Vehicle: '} {formData.registracija || ''}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
@@ -251,7 +251,7 @@ export default function FleetPage() {
                                 )}
                             </div>
 
-                            <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto', padding: '24px 32px' }}>
+                            <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
                                 {activeTab === 'osnovno' && (
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                         {/* Registration */}

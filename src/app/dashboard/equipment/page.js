@@ -214,7 +214,7 @@ function EquipmentPageInner() {
             {/* ── Equipment Edit Modal ── */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
-                    <div className="modal" style={{ maxWidth: 860 }} onClick={(e) => e.stopPropagation()}>
+                    <div className="modal" style={{ width: '100%', maxWidth: 860, minHeight: 650, display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'} {formData.naziv && `— ${formData.naziv}`}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
@@ -244,7 +244,7 @@ function EquipmentPageInner() {
                             ))}
                         </div>
 
-                        <div className="modal-body">
+                        <div className="modal-body" style={{ flex: 1, overflowY: 'auto' }}>
                             {/* ── TAB: Podaci ── */}
                             {activeTab === 'podaci' && (
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -409,7 +409,7 @@ function EquipmentPageInner() {
                             )}
                         </div>
 
-                        <div className="modal-footer">
+                        <div className="modal-footer" style={{ marginTop: 'auto' }}>
                             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                         </div>
