@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -43,6 +43,7 @@ function FleetInner() {
     const { t, lang } = useLanguage();
     const bs = lang === 'bs';
     const searchParams = useSearchParams();
+    const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
@@ -58,6 +59,8 @@ function FleetInner() {
     const [formData, setFormData] = useState({ ...EMPTY, dokumenti: [] });
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [statusDropdownId, setStatusDropdownId] = useState(null);
+    const [statusMenuPos, setStatusMenuPos] = useState({ top: 0, left: 0 });
 
     // Worker search dropdown
     const [workerSearch, setWorkerSearch] = useState('');
@@ -81,6 +84,9 @@ function FleetInner() {
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
+    // Track return-to path for navigation back to originating page
+    const returnTo = searchParams?.get('returnTo');
+
     useEffect(() => {
         const openId = searchParams?.get('openId');
         const openTab = searchParams?.get('tab');
@@ -95,6 +101,17 @@ function FleetInner() {
             }
         }
     }, [searchParams, vehicles]);
+
+    const closeForm = () => {
+        setShowForm(false);
+        // If opened from another page, navigate back there
+        if (returnTo) {
+            router.push(returnTo);
+        } else {
+            // Clear openId from URL without full navigation
+            window.history.replaceState(null, '', '/dashboard/fleet');
+        }
+    };
 
     const set = (k, v) => { setFormData(f => ({ ...f, [k]: v })); markDirty(); };
 
@@ -163,7 +180,7 @@ function FleetInner() {
         }
         if (editingId) { update(COLLECTIONS.VEHICLES, editingId, formData); }
         else { create(COLLECTIONS.VEHICLES, formData); }
-        loadData(); markClean(); setShowForm(false); showFlash();
+        loadData(); markClean(); showFlash(); closeForm();
     };
 
     const handleDelete = async (id) => {
@@ -229,11 +246,11 @@ function FleetInner() {
 
                 {/* Form Modal */}
                 {showForm && (
-                    <div className="modal-overlay" onClick={() => setShowForm(false)}>
+                    <div className="modal-overlay" onClick={closeForm}>
                         <div className="modal" style={{ width: '100%', maxWidth: 850, minHeight: 650, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px' }}>
                                 <h2>{editingId ? '✏️' : '+'} {bs ? 'Vozilo: ' : 'Vehicle: '} {formData.registracija || ''}</h2>
-                                <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                                <button className="btn btn-ghost btn-icon" onClick={closeForm}>✕</button>
                             </div>
 
                             {/* TABS */}
@@ -423,7 +440,7 @@ function FleetInner() {
 
                             </div>
                             <div className="modal-footer" style={{ padding: '20px 32px', background: 'var(--bg-card)', borderTop: '1px solid var(--border-light)' }}>
-                                <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                                <button className="btn btn-ghost" onClick={closeForm}>{t('cancel')}</button>
                                 {activeTab === 'osnovno' && <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>}
                             </div>
                         </div>
@@ -511,13 +528,38 @@ function FleetInner() {
                                                 <td style={{ textAlign: 'center' }}><div>{formatDate(v.registracijaIstice)}</div><div style={{ marginTop: 2 }}>{getExpiryBadge(v.registracijaIstice)}</div></td>
                                                 <td style={{ textAlign: 'center' }}><div>{formatDate(v.tehnickiIstice)}</div><div style={{ marginTop: 2 }}>{getExpiryBadge(v.tehnickiIstice)}</div></td>
                                                 <td style={{ textAlign: 'center' }}><div>{formatDate(v.osiguranjeIstice)}</div><div style={{ marginTop: 2 }}>{getExpiryBadge(v.osiguranjeIstice)}</div></td>
-                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-                                                    <button onClick={() => { const cycle = { aktivan: 'servis', servis: 'neaktivan', neaktivan: 'aktivan' }; update(COLLECTIONS.VEHICLES, v.id, { status: cycle[v.status] || 'aktivan' }); loadData(); }}
+                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center', position: 'relative' }}>
+                                                    <button onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        if (statusDropdownId === v.id) { setStatusDropdownId(null); return; }
+                                                        const rect = e.currentTarget.getBoundingClientRect();
+                                                        const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                        const flipUp = spaceBelow < 140;
+                                                        setStatusMenuPos(flipUp
+                                                            ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 20 }
+                                                            : { top: rect.bottom + 4, left: rect.left - 20 });
+                                                        setStatusDropdownId(v.id);
+                                                    }}
                                                         style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.color}33`, cursor: 'pointer', transition: 'all 0.15s', minWidth: 80 }}
                                                         onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
                                                         title={bs ? 'Klikni za promjenu statusa' : 'Click to change status'}
-                                                    >{bs ? st.bs : st.en}</button>
+                                                    >{bs ? st.bs : st.en} ▾</button>
+                                                    {statusDropdownId === v.id && (<>
+                                                        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setStatusDropdownId(null); }} />
+                                                        <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, padding: '4px 0' }}>
+                                                            {Object.entries(STATUS_MAP).map(([key, s]) => (
+                                                                <button key={key} onClick={(e) => { e.stopPropagation(); update(COLLECTIONS.VEHICLES, v.id, { status: key }); setStatusDropdownId(null); loadData(); }}
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: v.status === key ? s.bg : 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.82rem', fontWeight: v.status === key ? 700 : 500, color: v.status === key ? s.color : 'var(--text)', textAlign: 'left', transition: 'background 0.12s' }}
+                                                                    onMouseEnter={e => e.currentTarget.style.background = s.bg}
+                                                                    onMouseLeave={e => e.currentTarget.style.background = v.status === key ? s.bg : 'none'}>
+                                                                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                                                                    {bs ? s.bs : s.en}
+                                                                    {v.status === key && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </>)}
                                                 </td>
                                             </tr>
                                         );

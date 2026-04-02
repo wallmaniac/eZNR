@@ -6,6 +6,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 function FleetAssignmentsInner() {
     const { t, lang } = useLanguage();
@@ -18,6 +19,7 @@ function FleetAssignmentsInner() {
     const [vehicles, setVehicles] = useState([]);
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewWorkerId, setViewWorkerId] = useState(null);
 
     // Modal state
     const [showForm, setShowForm] = useState(false);
@@ -75,7 +77,7 @@ function FleetAssignmentsInner() {
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datumZaduzenja', 'desc');
 
     const openInFleet = (vehicleId) => {
-        router.push(`/dashboard/fleet?openId=${vehicleId}&tab=istorija`);
+        router.push(`/dashboard/fleet?openId=${vehicleId}&tab=istorija&returnTo=${encodeURIComponent('/dashboard/fleet-assignments')}`);
     };
 
     const openMenu = (id, e) => {
@@ -286,7 +288,12 @@ function FleetAssignmentsInner() {
                                             </div>
                                         </td>
                                         <td style={{ fontWeight: 600 }}>{a.vehicleReg}</td>
-                                        <td>{a.workerName}</td>
+                                        <td onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => { const w = workers.find(x => x.id === a.workerId); if (w) setViewWorkerId(w.id); }}
+                                                style={{ background: 'none', border: 'none', cursor: a.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: a.workerId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                {a.workerName}
+                                            </button>
+                                        </td>
                                         <td>{formatDate(a.datumZaduzenja)}</td>
                                         <td>{a.pocetnaKilometraza || '—'}</td>
                                         <td>{formatDate(a.datumRazduzenja) || <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{bs ? 'Zaduženo' : 'Assigned'}</span>}</td>
@@ -298,6 +305,7 @@ function FleetAssignmentsInner() {
                     </div>
                 </div>
             </div>
+            {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} onSaved={() => setViewWorkerId(null)} />}
         </div>
     );
 }

@@ -6,6 +6,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import WorkerProfileModal from '@/components/WorkerProfileModal';
 
 function FleetOrdersInner() {
     const { t, lang } = useLanguage();
@@ -18,6 +19,7 @@ function FleetOrdersInner() {
     const [vehicles, setVehicles] = useState([]);
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [viewWorkerId, setViewWorkerId] = useState(null);
 
     // Modal state
     const [showForm, setShowForm] = useState(false);
@@ -82,7 +84,7 @@ function FleetOrdersInner() {
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datumPolaska', 'desc');
 
     const openInFleet = (vehicleId) => {
-        router.push(`/dashboard/fleet?openId=${vehicleId}&tab=nalozi`);
+        router.push(`/dashboard/fleet?openId=${vehicleId}&tab=nalozi&returnTo=${encodeURIComponent('/dashboard/fleet-orders')}`);
     };
 
     const openMenu = (id, e) => {
@@ -316,7 +318,12 @@ function FleetOrdersInner() {
                                         </td>
                                         <td style={{ fontWeight: 600 }}>{o.brojNaloga || '—'}</td>
                                         <td style={{ fontWeight: 600 }}>{o.vehicleReg}</td>
-                                        <td>{o.workerName}</td>
+                                        <td onClick={e => e.stopPropagation()}>
+                                            <button onClick={() => { if (o.vozacId) setViewWorkerId(o.vozacId); }}
+                                                style={{ background: 'none', border: 'none', cursor: o.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: o.vozacId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                {o.workerName}
+                                            </button>
+                                        </td>
                                         <td>{o.relacija || '—'}</td>
                                         <td>{formatDate(o.datumPolaska)}</td>
                                         <td>{formatDate(o.datumPovratka) || '—'}</td>
@@ -327,6 +334,7 @@ function FleetOrdersInner() {
                     </div>
                 </div>
             </div>
+            {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} onSaved={() => setViewWorkerId(null)} />}
         </div>
     );
 }

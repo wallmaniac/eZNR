@@ -67,7 +67,7 @@ function FleetDocumentsInner() {
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datumIzdavanja', 'desc');
 
     const openInFleet = (vehicleId) => {
-        router.push(`/dashboard/fleet?openId=${vehicleId}&tab=arhiva`);
+        router.push(`/dashboard/fleet?openId=${vehicleId}&tab=arhiva&returnTo=${encodeURIComponent('/dashboard/fleet-documents')}`);
     };
 
     const openMenu = (id, e) => {
