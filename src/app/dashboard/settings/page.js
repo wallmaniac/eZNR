@@ -18,8 +18,6 @@ import {
   getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
-import { db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
 
 
 export default function SettingsPage() {
@@ -180,13 +178,19 @@ export default function SettingsPage() {
     // 1) Always keep localStorage in sync (used by in-app notification system)
     saveNotificationSettings(notifSettings);
 
-    // 2) Persist to Firestore so the notify-expiry cron job can read real settings
+    // 2) Persist to Firestore via server API (Admin SDK bypasses auth rules)
+    //    The client SDK cannot write directly — app uses localStorage auth, not Firebase Auth
     const cId = activeCompanyId;
     if (cId) {
       try {
-        await setDoc(doc(db, 'notif_settings', cId), notifSettings, { merge: true });
+        const res = await fetch('/api/notif-settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ companyId: cId, settings: notifSettings }),
+        });
+        if (!res.ok) console.error('[eZNR] notif-settings API error:', await res.text());
       } catch (err) {
-        console.error('[eZNR] Failed to save notif_settings to Firestore:', err);
+        console.error('[eZNR] Failed to sync notif_settings to Firestore:', err);
       }
     }
 
