@@ -18,6 +18,8 @@ import {
   getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
+import { db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 
 
 export default function SettingsPage() {
@@ -174,8 +176,20 @@ export default function SettingsPage() {
     showSaved();
   };
 
-  const handleSaveNotifSettings = () => {
+  const handleSaveNotifSettings = async () => {
+    // 1) Always keep localStorage in sync (used by in-app notification system)
     saveNotificationSettings(notifSettings);
+
+    // 2) Persist to Firestore so the notify-expiry cron job can read real settings
+    const cId = activeCompanyId;
+    if (cId) {
+      try {
+        await setDoc(doc(db, 'notif_settings', cId), notifSettings, { merge: true });
+      } catch (err) {
+        console.error('[eZNR] Failed to save notif_settings to Firestore:', err);
+      }
+    }
+
     showSaved();
   };
 
