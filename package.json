@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
     "@hello-pangea/dnd": "^18.0.1",
     "cheerio": "^1.2.0",
     "docx": "^9.6.1",

@@ -408,6 +408,7 @@ export default function QuestionnairesPage() {
                     <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
                     <th>{lang === 'bs' ? 'Povezan na' : 'Connected to'}</th>
                     <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
+                    <th>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}</th>
                     <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</th>
                     <th>{lang === 'bs' ? 'Predložak' : 'Template'}</th>
                     <th>{lang === 'bs' ? 'Jezik' : 'Language'}</th>
@@ -509,6 +510,16 @@ export default function QuestionnairesPage() {
                               </span>
                             </div>
                           );
+                        })() : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>}
+                      </td>
+                      <td>
+                        {r.rokIsteka ? (() => {
+                          const days = Math.ceil((new Date(r.rokIsteka) - new Date()) / (1000*60*60*24));
+                          const col = days < 0 ? 'var(--danger)' : days <= 30 ? 'var(--danger)' : days <= 90 ? 'var(--warning)' : 'var(--success)';
+                          const label = days < 0
+                            ? (lang === 'bs' ? `Isteklo ${Math.abs(days)}d` : `Expired ${Math.abs(days)}d ago`)
+                            : (lang === 'bs' ? `Za ${days}d` : `In ${days}d`);
+                          return <span style={{ fontSize: '0.78rem', fontWeight: 600, color: col }}>{label}</span>;
                         })() : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>}
                       </td>
                       <td>{r.prikaziNaPortalu ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No')}</td>
