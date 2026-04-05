@@ -11,78 +11,73 @@ service cloud.firestore {
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
     }
 
-    // Check whether the signed-in user belongs to the given company
     function belongsToCompany(companyId) {
-      return isSignedIn() && companyId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyIds;
+      return isSignedIn() && (
+        isAdmin() || 
+        companyId in get(/databases/$(database)/documents/users/$(request.auth.uid)).data.companyIds
+      );
     }
 
-    // ── 1) Users ────────────────────────────────────────────────────────────
+    // 1) Users Collection
     match /users/{userId} {
       allow read: if isSignedIn();
       allow write: if isAdmin();
       allow update: if request.auth.uid == userId || isAdmin();
     }
 
-    // ── 2) Companies ──────────────────────────────────────────────────────── 
-    // Only members of a company (or admins) can read its document.
-    // Previously "read: if isSignedIn()" exposed all company names/data to any user.
+    // 2) Companies Collection
     match /companies/{companyId} {
-      allow read: if isAdmin() || belongsToCompany(companyId);
+      allow read: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // ── 3) Global read-only catalogs ─────────────────────────────────────────
-    match /countries/{document}        { allow read: if isSignedIn(); allow write: if false; }
-    match /counties/{document}         { allow read: if isSignedIn(); allow write: if false; }
-    match /places/{document}           { allow read: if isSignedIn(); allow write: if false; }
-    match /examTypes/{document}        { allow read: if isSignedIn(); allow write: if false; }
-    match /certTypes/{document}        { allow read: if isSignedIn(); allow write: if false; }
-    match /equipmentTypes/{document}   { allow read: if isSignedIn(); allow write: if false; }
-    match /ppeTypes/{document}         { allow read: if isSignedIn(); allow write: if false; }
-    match /fileTypes/{document}        { allow read: if isSignedIn(); allow write: if false; }
-    match /isznrDocTypes/{document}    { allow read: if isSignedIn(); allow write: if false; }
+    // 3) Global Catalog Data
+    match /countries/{document}      { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /counties/{document}       { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /places/{document}         { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /examTypes/{document}      { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /certTypes/{document}      { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /equipmentTypes/{document} { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /ppeTypes/{document}       { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /fileTypes/{document}      { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /isznrDocTypes/{document}  { allow read: if isSignedIn(); allow write: if isAdmin(); }
+    match /doctors/{document}        { allow read: if isSignedIn(); allow write: if isAdmin(); }
 
-    // ── 4) Notification settings ──────────────────────────────────────────────
-    // Documents are keyed by companyId (the document ID IS the company ID).
-    // Only members and admins can read/write their company's settings.
-    // Server-side (Admin SDK) always bypasses these rules.
+    // 4) COMPANY-SCOPED DATA
+    match /companies/{companyId}/{collection}/{documentId} {
+      allow read, write: if isSignedIn() && belongsToCompany(companyId);
+    }
+
+    // 4b) Notification Settings — root collection, document ID = companyId
+    // Written by Postavke page, read by server-side admin SDK (notify-expiry).
     match /notif_settings/{companyId} {
-      allow read, write: if isAdmin() || belongsToCompany(companyId);
+      allow read, write: if belongsToCompany(companyId);
     }
 
-    // ── 5) Questionnaire sessions — public read/update, admin create ──────────
+    // 5) Ankete - Sesije
     match /questionnaire_sessions/{sessionId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if true;   // workers mark sessions opened/completed
+      // Radnik pristupa javnim token linkom (bez Auth prijave) pa mora biti true. update treba pri otvaranju linka
+      allow read, update: if true;
+      // Admin formira novu anketu i jedini on je može obrisati
+      allow create, delete: if isSignedIn();
     }
 
-    // ── 6) Questionnaire responses — public write, admin read ────────────────
+    // 6) Ankete - Odgovori
     match /questionnaire_responses/{responseId} {
-      allow read: if isSignedIn();
-      allow write: if true;    // public form submission
+      allow read, delete: if isSignedIn();
+      allow create, update: if true; // Radnik uspješno polaže formu
     }
 
-    // ── 7) Training sessions — same pattern as questionnaire sessions ─────────
+    // 7) Treninzi - Sesije
     match /training_sessions/{sessionId} {
-      allow read: if true;
-      allow create: if isSignedIn();
-      allow update: if true;
+      allow read, update: if true;
+      allow create, delete: if isSignedIn();
     }
 
-    // ── 8) Training responses — public write, admin read ─────────────────────
+    // 8) Treninzi - Odgovori
     match /training_responses/{responseId} {
-      allow read: if isSignedIn();
-      allow write: if true;
-    }
-
-    // ── 9) Company-scoped data (catch-all) ────────────────────────────────────
-    // All other root-level collections (workers, certificates, PPE, etc.) must
-    // have a companyId field. This prevents cross-company data access.
-    match /{collection}/{documentId} {
-      allow read:   if isSignedIn() && belongsToCompany(resource.data.companyId);
-      allow update, delete: if isSignedIn() && belongsToCompany(resource.data.companyId);
-      allow create: if isSignedIn() && belongsToCompany(request.resource.data.companyId);
+      allow read, delete: if isSignedIn();
+      allow create, update: if true;
     }
 
   }
