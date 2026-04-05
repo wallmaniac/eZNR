@@ -54,6 +54,24 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
     calShowService: true,
     calShowFleet: true,
 
+    // ── Automated Email Notification Settings ──
+    // Who receives the daily expiry summary email
+    emailNotifEnabled: false,           // Master toggle — off by default until officer sets it up
+    emailNotifToCompany: true,          // Send to company email field
+    emailNotifToOfficer: true,          // Send to the logged-in officer's email
+    emailNotifLang: 'bs',              // 'bs' = Bosnian (primary), 'en' = English, 'bilingual' = both
+    // Per-category toggles for email
+    emailNotifCerts: true,
+    emailNotifEquip: true,
+    emailNotifDocs: true,
+    emailNotifFleet: true,
+    emailNotifMedical: true,
+    // Days threshold to include in email (items expiring within N days)
+    emailNotifDays: 30,
+    // TODO: Add 'hr' (Croatian), 'sl' (Slovenian), 'sr' (Serbian) language options
+    //       when those app versions are launched. Update emailNotifLang select options
+    //       in settings/page.js and the email template builder in notify-expiry/route.js.
+
     // Admin-only notification settings
     adminDbSize: true,
     adminDbWarnThreshold: 10000,

@@ -673,6 +673,76 @@ export default function SettingsPage() {
               </>
             )}
 
+            {/* ── Automated Email Notifications ── */}
+            <SectionHeader icon="📧" title={lang === 'bs' ? 'Automatski Email (Dnevni Pregled)' : 'Automated Email (Daily Digest)'} />
+            <div style={{ padding: '14px 18px', marginBottom: 8, borderRadius: 10, background: 'rgba(79,70,229,0.06)', border: '1px solid rgba(79,70,229,0.2)' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                {lang === 'bs'
+                  ? '📬 Svaki dan u 07:00 sistem automatski šalje email sa pregledom svih stavki koje uskoro ističu. Vi birate kome ide email i šta uključiti.'
+                  : '📬 Every day at 07:00 the system sends an automatic email with a summary of all soon-to-expire items. Choose who receives it and what to include.'}
+              </div>
+            </div>
+            <Toggle
+              checked={notifSettings.emailNotifEnabled ?? false}
+              onChange={v => updateNotif('emailNotifEnabled', v)}
+              label={lang === 'bs' ? 'Aktiviraj automatski email dnevnik' : 'Enable automatic daily email digest'}
+              description={lang === 'bs' ? 'Svaki dan u 07:00 šalje se email sa isticanjima' : 'Sends an expiry summary email every day at 07:00'}
+            />
+            {(notifSettings.emailNotifEnabled ?? false) && (<>
+              {/* Recipients */}
+              <div style={{ padding: '14px 0 6px 0', borderBottom: '1px solid var(--border-light)' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📬 {lang === 'bs' ? 'Primatelji' : 'Recipients'}</div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 500 }}>
+                    <input type="checkbox" id="notif-to-company" checked={notifSettings.emailNotifToCompany ?? true} onChange={e => updateNotif('emailNotifToCompany', e.target.checked)} style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
+                    🏢 {lang === 'bs' ? 'Email firme' : 'Company email'}
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>(email polje firme)</span>
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 500 }}>
+                    <input type="checkbox" id="notif-to-officer" checked={notifSettings.emailNotifToOfficer ?? true} onChange={e => updateNotif('emailNotifToOfficer', e.target.checked)} style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
+                    👤 {lang === 'bs' ? 'Moj email (stručnjak ZNR)' : 'My email (safety officer)'}
+                  </label>
+                </div>
+              </div>
+
+              {/* Language */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', flexShrink: 0 }}>🌐 {lang === 'bs' ? 'Jezik emaila' : 'Email language'}</div>
+                <select
+                  className="form-select"
+                  style={{ width: 200 }}
+                  value={notifSettings.emailNotifLang ?? 'bs'}
+                  onChange={e => updateNotif('emailNotifLang', e.target.value)}
+                >
+                  <option value="bs">🇧🇦 Bosanski</option>
+                  <option value="bilingual">🇧🇦🇬🇧 Bosanski + English</option>
+                  <option value="en">🇬🇧 English only</option>
+                  {/* TODO: Add Croatian 🇭🇷, Slovenian 🇸🇮, Serbian 🇷🇸 when those app versions launch */}
+                </select>
+              </div>
+
+              {/* Days threshold */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', flexShrink: 0 }}>{lang === 'bs' ? 'Uključi stavke koje ističu u narednih' : 'Include items expiring within'}</span>
+                <select className="form-select" style={{ width: 80 }} value={notifSettings.emailNotifDays ?? 30} onChange={e => updateNotif('emailNotifDays', Number(e.target.value))}>
+                  <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
+                </select>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'dana' : 'days'}</span>
+              </div>
+
+              {/* Per-category toggles */}
+              <div style={{ padding: '12px 0 4px' }}>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📋 {lang === 'bs' ? 'Uključi kategorije u email' : 'Include categories in email'}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
+                  <Toggle checked={notifSettings.emailNotifCerts ?? true} onChange={v => updateNotif('emailNotifCerts', v)} label={lang === 'bs' ? '📜 Uvjerenja radnika' : '📜 Worker certificates'} />
+                  <Toggle checked={notifSettings.emailNotifEquip ?? true} onChange={v => updateNotif('emailNotifEquip', v)} label={lang === 'bs' ? '⚙️ Radna oprema' : '⚙️ Equipment inspections'} />
+                  <Toggle checked={notifSettings.emailNotifDocs ?? true} onChange={v => updateNotif('emailNotifDocs', v)} label={lang === 'bs' ? '📄 Dokumenti poslodavca' : '📄 Employer documents'} />
+                  <Toggle checked={notifSettings.emailNotifFleet ?? true} onChange={v => updateNotif('emailNotifFleet', v)} label={lang === 'bs' ? '🚗 Vozni park' : '🚗 Fleet / Vehicles'} />
+                  <Toggle checked={notifSettings.emailNotifMedical ?? true} onChange={v => updateNotif('emailNotifMedical', v)} label={lang === 'bs' ? '🩺 Ljekarski pregledi' : '🩺 Medical exams'} />
+                </div>
+              </div>
+            </>)}
+
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
               <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
               <button className="btn" style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }} onClick={() => { clearDismissedNotifications(); showSaved(); }}>

@@ -6,6 +6,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import { uploadFleetDocument, deleteFleetDocument } from '@/lib/storageService';
 
 function FleetDocumentsInner() {
     const { t, lang } = useLanguage();
@@ -29,6 +30,9 @@ function FleetDocumentsInner() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({});
     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
+
+    // Upload progress
+    const [uploadProgress, setUploadProgress] = useState(null);
 
     // Bulk selection
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -83,19 +87,24 @@ function FleetDocumentsInner() {
     };
 
     const handleDownload = (doc) => {
-        if (!doc.docData) return;
-        const a = document.createElement('a');
-        a.href = doc.docData;
-        a.download = doc.docName || doc.naziv;
-        a.click();
+        const url = doc.fileUrl || doc.docData;
+        if (!url) return;
+        if (doc.fileUrl) {
+            // Firebase Storage URL — open directly, browser handles download
+            window.open(doc.fileUrl, '_blank');
+        } else {
+            // Legacy base64 fallback
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = doc.docName || doc.naziv;
+            a.click();
+        }
     };
 
     const handlePrint = (doc) => {
-        if (!doc.docData) return;
-        const pw = window.open('', '_blank');
-        if (doc.docData.startsWith('data:image/')) { pw.document.write(`<html><body style="margin:0;display:flex;justify-content:center"><img src="${doc.docData}" style="max-width:100%"/></body></html>`); pw.document.close(); setTimeout(() => pw.print(), 500); }
-        else if (doc.docData.startsWith('data:application/pdf')) { pw.document.write(`<html><body style="margin:0"><embed width="100%" height="100%" src="${doc.docData}" type="application/pdf"/></body></html>`); pw.document.close(); }
-        else { handleDownload(doc); pw.close(); }
+        const url = doc.fileUrl || doc.docData;
+        if (!url) return;
+        window.open(url, '_blank');
     };
 
     const handleCopy = (doc) => {
@@ -122,6 +131,8 @@ function FleetDocumentsInner() {
         if (await confirm(bs ? 'Obrisati ovaj dokument?' : 'Delete this document?')) {
             const v = vehicles.find(x => x.id === doc.vehicleId);
             if (v && v.dokumenti) {
+                // Delete from Firebase Storage if it was uploaded there
+                if (doc.storagePath) await deleteFleetDocument(doc.storagePath);
                 const newDocs = v.dokumenti.filter(d => d.id !== doc.id);
                 update(COLLECTIONS.VEHICLES, doc.vehicleId, { dokumenti: newDocs });
                 setActionMenuId(null);
@@ -187,24 +198,30 @@ function FleetDocumentsInner() {
         };
 
         if (selectedFile) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                newDoc.docData = e.target.result;
-                const updatedDocs = [...(v.dokumenti || []), newDoc];
-                update(COLLECTIONS.VEHICLES, v.id, { dokumenti: updatedDocs });
-                setShowForm(false);
-                setSelectedFile(null);
-                loadData();
-                showFlash();
-            };
-            reader.readAsDataURL(selectedFile);
-        } else {
-            const updatedDocs = [...(v.dokumenti || []), newDoc];
-            update(COLLECTIONS.VEHICLES, v.id, { dokumenti: updatedDocs });
-            setShowForm(false);
-            loadData();
-            showFlash();
+            try {
+                setUploadProgress(0);
+                const { url, storagePath } = await uploadFleetDocument(
+                    selectedFile,
+                    formData.vehicleId,
+                    (pct) => setUploadProgress(pct)
+                );
+                newDoc.fileUrl = url;
+                newDoc.storagePath = storagePath;
+                newDoc.docName = selectedFile.name;
+            } catch (err) {
+                setUploadProgress(null);
+                await alert(bs ? `Greška pri uploadu: ${err.message}` : `Upload error: ${err.message}`);
+                return;
+            }
+            setUploadProgress(null);
         }
+
+        const updatedDocs = [...(v.dokumenti || []), newDoc];
+        update(COLLECTIONS.VEHICLES, v.id, { dokumenti: updatedDocs });
+        setShowForm(false);
+        setSelectedFile(null);
+        loadData();
+        showFlash();
     };
 
     const fv = vehicles.filter(v => !vehicleSearch || `${v.registracija} ${v.marka}`.toLowerCase().includes(vehicleSearch.toLowerCase()));
@@ -254,6 +271,14 @@ function FleetDocumentsInner() {
                                 <div className="form-group">
                                     <label className="form-label">{bs ? 'Datoteka' : 'File'} <span style={{color: 'var(--danger)'}}>*</span></label>
                                     <input type="file" className="form-input" onChange={handleFileChange} />
+                                    {uploadProgress !== null && (
+                                        <div style={{ marginTop: 8 }}>
+                                            <div style={{ height: 6, borderRadius: 4, background: 'var(--border)', overflow: 'hidden' }}>
+                                                <div style={{ height: '100%', width: `${uploadProgress}%`, background: 'var(--primary)', transition: 'width 0.2s', borderRadius: 4 }} />
+                                            </div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>{bs ? 'Učitavanje' : 'Uploading'} {uploadProgress}%...</div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 <div className="form-group">
@@ -285,8 +310,10 @@ function FleetDocumentsInner() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
+                            <button className="btn btn-ghost" onClick={() => setShowForm(false)} disabled={uploadProgress !== null}>{t('cancel')}</button>
+                            <button className="btn btn-primary" onClick={handleSave} disabled={uploadProgress !== null}>
+                                {uploadProgress !== null ? `${bs ? 'Učitavanje' : 'Uploading'} ${uploadProgress}%...` : `💾 ${t('save')}`}
+                            </button>
                         </div>
                     </div>
                 </div>
