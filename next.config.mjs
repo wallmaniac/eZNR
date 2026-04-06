@@ -14,6 +14,13 @@ const nextConfig = {
     NEXT_PUBLIC_EMAILJS_TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
     NEXT_PUBLIC_EMAILJS_PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
   },
+  // ── Vercel: ensure mupdf WASM binary is bundled with the pdf-parse API route ──
+  // Without this, Vercel's file tracer misses the .wasm file and PDF→Word fails in prod.
+  experimental: {
+    outputFileTracingIncludes: {
+      '/api/pdf-parse': ['./node_modules/mupdf/dist/*.wasm'],
+    },
+  },
 };
 
 export default nextConfig;
