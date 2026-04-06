@@ -679,17 +679,7 @@ export default function ConverterPage() {
     if (!loaded?.data) return;
     setProcessing('pdf2word');
     try {
-      const form = new FormData();
-      form.append('file', new Blob([dataUriToBuffer(loaded.data)], { type: 'application/pdf' }), loaded.name);
-      
-      const resp = await fetch('/api/pdf-to-word', { method: 'POST', body: form });
-      if (!resp.ok) {
-        let msg = `Greška: ${resp.status}`;
-        try { const err = await resp.json(); msg = err.error || msg; } catch (e) { /* ignore */ }
-        throw new Error(msg);
-      }
-      
-      const blob = await resp.blob();
+      const blob = await convertPdfToDocxMuPDF(loaded.data);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
