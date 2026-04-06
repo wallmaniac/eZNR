@@ -675,71 +675,11 @@ export default function ConverterPage() {
     a.click();
   };
 
-  async function convertPdfToDocxImages(arrayBuffer) {
-    const pdfjsLib = await import('pdfjs-dist');
-    pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.5.207/build/pdf.worker.mjs`;
-    
-    const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-    const { Document, Packer, Paragraph, ImageRun } = await import('docx');
-    
-    // A4 text area at 96 DPI with 0.5-inch margins = ~7.27in * 96 = ~698px wide.
-    // 602px was used originally.
-    const TARGET_WIDTH_PX = 602; 
-    const RENDER_SCALE = 3; 
-    
-    const sectionChildren = [];
-    
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      const page = await pdf.getPage(pageNum);
-      const viewport = page.getViewport({ scale: RENDER_SCALE });
-      
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(viewport.width);
-      canvas.height = Math.round(viewport.height);
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      
-      const dataUrl = canvas.toDataURL('image/png');
-      const base64 = dataUrl.split(',')[1];
-      const pngBytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-      
-      const aspectRatio = canvas.height / canvas.width;
-      const displayW = TARGET_WIDTH_PX;
-      const displayH = Math.round(displayW * aspectRatio);
-      
-      if (pageNum > 1) {
-        sectionChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
-      }
-      
-      sectionChildren.push(new Paragraph({
-        children: [
-          new ImageRun({
-            data: pngBytes,
-            transformation: { width: displayW, height: displayH },
-            type: 'png',
-          }),
-        ],
-        spacing: { before: 0, after: 0 },
-      }));
-    }
-    
-    const doc = new Document({
-      sections: [{
-        properties: { page: { margin: { top: 720, right: 720, bottom: 720, left: 720 } } },
-        children: sectionChildren
-      }]
-    });
-    return Packer.toBlob(doc);
-  }
-
   const handleConvertPdfToWord = async () => {
     if (!loaded?.data) return;
     setProcessing('pdf2word');
     try {
-      const arrayBuffer = dataUriToBuffer(loaded.data);
-      const blob = await convertPdfToDocxImages(arrayBuffer);
+      const blob = await convertPdfToDocxMuPDF(loaded.data);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
