@@ -371,16 +371,19 @@ export default function ConverterPage() {
 
   // Same form collections as the Digital Archive page (archive/page.js)
   const FORM_SOURCES = [
-    { col: 'requests',     label: 'Zahtjevnica' },
-    { col: 'formsOir1',    label: 'Obrazac OIR-1' },
-    { col: 'formsRo1',     label: 'Obrazac RO-1' },
-    { col: 'formsRo2',     label: 'Obrazac RO-2' },
-    { col: 'referralsNr1', label: 'Lj. uputnica (NR1)' },
-    { col: 'referralsRa1', label: 'Lj. uputnica (RA1)' },
+    { col: 'requests',      label: 'Zahtjevnica' },
+    { col: 'formsOir1',     label: 'Obrazac OIR-1' },
+    { col: 'formsRo1',      label: 'Obrazac RO-1' },
+    { col: 'formsRo2',      label: 'Obrazac RO-2' },
+    { col: 'referralsNr1',  label: 'Lj. uputnica (NR1)' },
+    { col: 'referralsRa1',  label: 'Lj. uputnica (RA1)' },
+    { col: 'employerDocs',  label: 'Dokumentacija za poslodavca' },
+    { col: 'certificates',  label: 'Uvjerenje radnika' },
   ];
 
   const readArchive = () => {
     if (typeof window === 'undefined') return [];
+    
     // 1. All digitalArchive items (with or without binary data)
     const da = getRawAll(COLLECTIONS.DIGITAL_ARCHIVE).map(f => ({
       ...f,
@@ -388,30 +391,105 @@ export default function ConverterPage() {
       hasData: !!(f.data?.startsWith?.('data:')),
     }));
     const seen = new Set(da.map(f => f.id));
+    
+    const docs = [];
+
     // 2. Form/referral generated docs — exactly mirroring archive/page.js FORM_SOURCES
-    const formDocs = [];
     FORM_SOURCES.forEach(({ col, label }) => {
       try {
-        const recs = JSON.parse(localStorage.getItem('eznr_' + col) || '[]');
+        const recs = getRawAll(col);
         recs.forEach(r => {
-          if (!r.docName || !r.docData) return;
-          const uid = `form-${col}-${r.id}`;
-          if (seen.has(uid)) return;
-          seen.add(uid);
-          formDocs.push({
-            id: uid,
-            name: r.docName,
-            data: r.docData,
-            hasData: true,
-            category: 'Obrasci',
-            description: label,
-            _sourceLabel: label,
-          });
+          const fName = r.docName || r.attachedFileName || r.fileName || r.datotekaIme;
+          const fData = r.docData || r.attachedFileData || r.fileData || r.datotekaSadrzaj;
+          if (fName && fData) {
+            const uid = `form-${col}-${r.id}`;
+            if (seen.has(uid)) return;
+            seen.add(uid);
+            docs.push({
+              id: uid,
+              name: fName,
+              data: fData,
+              hasData: true,
+              category: label.includes('Uvjerenje') ? 'Certifikati' : 'Obrasci',
+              description: r.ime ? `${r.ime}` : label,
+              _sourceLabel: label,
+            });
+          }
         });
       } catch { /* ignore */ }
     });
 
-    return [...da, ...formDocs];
+    // 3. Aggregate fleet vehicle documents (nested inside vehicle records)
+    try {
+      const vehicles = getRawAll('vehicles');
+      vehicles.forEach(v => {
+        const vDocs = v.dokumenti || [];
+        vDocs.forEach(d => {
+          if (d.naziv && d.docData) {
+            const uid = `fleet-doc-${v.id}-${d.id}`;
+            if (seen.has(uid)) return;
+            seen.add(uid);
+            docs.push({
+              id: uid,
+              name: d.naziv,
+              data: d.docData,
+              hasData: true,
+              category: d.kategorija === 'Osiguranje' ? 'Ugovori' : d.kategorija === 'Tehnički pregled' ? 'Certifikati' : 'Ostalo',
+              description: `${v.registracija || 'Vozilo'} — ${d.kategorija || 'Ostalo'}`,
+              _sourceLabel: 'Vozni park',
+            });
+          }
+        });
+      });
+    } catch { /* ignore */ }
+
+    // 4. Aggregate fleet-documents module docs
+    try {
+      const fleetDocs = getRawAll('fleetDocuments');
+      fleetDocs.forEach(fd => {
+        const fName = fd.docName || fd.attachedFileName || fd.fileName || fd.datotekaIme;
+        const fData = fd.docData || fd.attachedFileData || fd.fileData || fd.datotekaSadrzaj;
+        if (fName && fData) {
+          const uid = `fleet-fdoc-${fd.id}`;
+          if (seen.has(uid)) return;
+          seen.add(uid);
+          docs.push({
+            id: uid,
+            name: fName,
+            data: fData,
+            hasData: true,
+            category: 'Ostalo',
+            description: fd.naziv || fd.ime || 'Flota dokument',
+            _sourceLabel: 'Flota dokumenti',
+          });
+        }
+      });
+    } catch { /* ignore */ }
+
+    // 5. Aggregate fleet-orders travel orders
+    try {
+      const fleetOrders = getRawAll('fleetOrders');
+      fleetOrders.forEach(fo => {
+        const fName = fo.docName || fo.attachedFileName || fo.fileName || fo.datotekaIme;
+        const fData = fo.docData || fo.attachedFileData || fo.fileData || fo.datotekaSadrzaj;
+        if (fName && fData) {
+          const uid = `fleet-order-${fo.id}`;
+          if (seen.has(uid)) return;
+          seen.add(uid);
+          docs.push({
+            id: uid,
+            name: fName,
+            data: fData,
+            hasData: true,
+            category: 'Obrasci',
+            description: fo.opis || fo.naziv || 'Putni nalog',
+            _sourceLabel: 'Putni nalozi',
+          });
+        }
+      });
+    } catch { /* ignore */ }
+
+    return [...da, ...docs];
   };
 
   const [archiveFiles, setArchiveFiles] = useState([]); // populated by useEffect below
