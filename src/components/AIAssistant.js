@@ -565,46 +565,7 @@ export default function AIAssistant() {
         }
     }, [isOpen, isMinimized]);
 
-    // ── Proactive AI Check on Mount ─────────────────────────────────────────────
-    useEffect(() => {
-        // Small delay to let data load from localStorage to avoid blank scans
-        const timer = setTimeout(() => {
-            try {
-                const appSettingsString = localStorage.getItem('eznr_app_settings');
-                const appSettings = appSettingsString ? JSON.parse(appSettingsString) : {};
-                const proactiveEnabled = appSettings.proactiveZia !== false; // true by default
 
-                if (!proactiveEnabled) return;
-
-                const todayStr = new Date().toISOString().split('T')[0];
-                const lastProactive = localStorage.getItem('zia_last_proactive_date');
-
-                if (lastProactive === todayStr) return; // Already greeted today
-
-                // Verify we actually have some data by checking certificates or equipment
-                const certs = JSON.parse(localStorage.getItem('eznr_certificates') || '[]');
-                if (certs.length === 0) return; // Wait until they really log in and sync down
-
-                // Mark as greeted today
-                localStorage.setItem('zia_last_proactive_date', todayStr);
-
-                // Auto-open Zia and trigger proactive request
-                setIsOpen(true);
-                setIsMinimized(false);
-                setPulseAnimation(false);
-                setShowSuggestions(false);
-
-                const hiddenPrompt = lang === 'bs'
-                    ? "Skeniraj žive podatke koji su ti proslijeđeni. Sastavi kratan, proaktivan i prijateljski jutarnji izvještaj za korisnika. Naglasi STVARI KOJE ISTIČU. Budi kratka i direktna. Prvo kaži Dobro jutro/Dobar dan i prijavi statistiku isteka."
-                    : "Scan the live data provided. Compile a short, proactive, and friendly morning report. Highlight items (certificates, equipment) expiring soon. Keep it brief and direct. Say Good Morning.";
-
-                sendMessageInternal(hiddenPrompt, undefined, false, []);
-            } catch (e) {
-                console.error('[eZNR] Proactive Zia err:', e);
-            }
-        }, 4000);
-        return () => clearTimeout(timer);
-    }, [lang, pathname, sendMessageInternal]);
 
     const handleOpen = useCallback(() => {
         setIsOpen(true);
@@ -886,6 +847,47 @@ export default function AIAssistant() {
             setIsLoading(false);
         }
     }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
+
+    // ── Proactive AI Check on Mount ─────────────────────────────────────────────
+    useEffect(() => {
+        // Small delay to let data load from localStorage to avoid blank scans
+        const timer = setTimeout(() => {
+            try {
+                const appSettingsString = localStorage.getItem('eznr_app_settings');
+                const appSettings = appSettingsString ? JSON.parse(appSettingsString) : {};
+                const proactiveEnabled = appSettings.proactiveZia !== false; // true by default
+
+                if (!proactiveEnabled) return;
+
+                const todayStr = new Date().toISOString().split('T')[0];
+                const lastProactive = localStorage.getItem('zia_last_proactive_date');
+
+                if (lastProactive === todayStr) return; // Already greeted today
+
+                // Verify we actually have some data by checking certificates or equipment
+                const certs = JSON.parse(localStorage.getItem('eznr_certificates') || '[]');
+                if (certs.length === 0) return; // Wait until they really log in and sync down
+
+                // Mark as greeted today
+                localStorage.setItem('zia_last_proactive_date', todayStr);
+
+                // Auto-open Zia and trigger proactive request
+                setIsOpen(true);
+                setIsMinimized(false);
+                setPulseAnimation(false);
+                setShowSuggestions(false);
+
+                const hiddenPrompt = lang === 'bs'
+                    ? "Skeniraj žive podatke koji su ti proslijeđeni. Sastavi kratan, proaktivan i prijateljski jutarnji izvještaj za korisnika. Naglasi STVARI KOJE ISTIČU. Budi kratka i direktna. Prvo kaži Dobro jutro/Dobar dan i prijavi statistiku isteka."
+                    : "Scan the live data provided. Compile a short, proactive, and friendly morning report. Highlight items (certificates, equipment) expiring soon. Keep it brief and direct. Say Good Morning.";
+
+                sendMessageInternal(hiddenPrompt, undefined, false, []);
+            } catch (e) {
+                console.error('[eZNR] Proactive Zia err:', e);
+            }
+        }, 4000);
+        return () => clearTimeout(timer);
+    }, [lang, pathname, sendMessageInternal]);
 
     const sendMessage = useCallback(async (text) => {
         if ((!text.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) return;
