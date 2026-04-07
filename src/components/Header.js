@@ -300,6 +300,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
                     display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
+                    overflow: 'visible',
                 }}>
                     {/* Search row (flex 1) */}
                     <div ref={searchRef} style={{ position: 'relative', flex: 1 }}>
@@ -341,8 +342,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
 
-                    {/* Profile Dropdown (flexShrink 0) */}
-                    <div ref={profileRef} style={{ position: 'static', flexShrink: 0 }}>
+                    {/* Profile Dropdown - position:relative so dropdown anchors to button */}
+                    <div ref={profileRef} style={{ position: 'relative', flexShrink: 0 }}>
                         <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px', borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer' }}>
                             <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>
@@ -351,7 +352,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>▼</span>
                         </button>
                         {showProfile && (
-                            <div className="dropdown-menu" style={{ position: 'fixed', top: 104, right: 10, zIndex: 400, width: 260, borderRadius: 12, overflow: 'hidden' }}>
+                            <div className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, left: 'auto', zIndex: 400, width: 260, borderRadius: 12, overflow: 'hidden' }}>
                                 <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--border-light)', background: 'rgba(0,0,0,0.02)' }}>
                                     <div style={{ fontWeight: 800, fontSize: '0.9rem' }}>{user?.firstName} {user?.lastName}</div>
                                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{activeCompany?.naziv || ''}</div>

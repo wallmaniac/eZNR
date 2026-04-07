@@ -240,7 +240,7 @@ export default function LoginPage() {
           <button
             type="submit"
             className="btn btn-primary btn-lg"
-            style={{ width: '100%', justifyContent: 'center', marginTop: 4 }}
+            style={{ width: '100%', justifyContent: 'center', marginTop: 4, minHeight: 52, fontSize: '1rem' }}
             disabled={isLoading}
           >
             {isLoading ? <span style={styles.spinner} /> : (isRegister ? t('registerButton') : t('loginButton'))}

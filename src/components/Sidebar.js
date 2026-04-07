@@ -208,14 +208,19 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
         : undefined;
 
     return (
-        <aside style={{
+        <aside
+            onTouchStart={isMobile ? (e) => e.stopPropagation() : undefined}
+            onTouchMove={isMobile ? (e) => e.stopPropagation() : undefined}
+            style={{
             ...sidebarStyles.sidebar,
-            width: isMobile ? '100vw' : (collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'),
+            width: isMobile ? '280px' : (collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'),
             transform: mobileTransform,
             transition: isMobile ? 'transform 0.25s ease' : 'width var(--transition-normal)',
             zIndex: isMobile ? 200 : 100,
             boxShadow: isMobile && mobileOpen ? '4px 0 32px rgba(0,0,0,0.4)' : undefined,
             borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.05)',
+            overflowY: 'auto',
+            overflowX: 'hidden',
         }}>
             {/* Logo */}
             <div style={{...sidebarStyles.logoArea, position: 'relative'}}>
