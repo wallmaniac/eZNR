@@ -158,24 +158,16 @@ export default function LoginPage() {
 
       {/* ── Single centered card ── */}
       <div style={styles.card}>
-        {/* Branding header */}
-        <div style={styles.brandHeader}>
+        {/* Full logo banner — same as email header */}
+        <div style={styles.logoHeader}>
           <Image
-            src="/logo-icon.png"
-            alt="eZNR"
-            width={56}
-            height={56}
-            style={{ borderRadius: 16, boxShadow: '0 4px 20px rgba(0,191,166,0.35)' }}
+            src="/email-header.png"
+            alt="eZNR – Digitalna platforma zaštite na radu"
+            width={840}
+            height={240}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
             priority
           />
-          <div>
-            <h1 style={styles.brandTitle}>eZNR</h1>
-            <p style={styles.brandTagline}>
-              {lang === 'bs'
-                ? 'Digitalna platforma zaštite na radu'
-                : 'Digital occupational safety platform'}
-            </p>
-          </div>
         </div>
 
         {/* Form */}
@@ -313,7 +305,7 @@ const styles = {
   langIcon: { fontSize: '1rem' },
   card: {
     position: 'relative', zIndex: 1,
-    width: '100%', maxWidth: 420,
+    width: '100%', maxWidth: 460,
     background: 'rgba(255,255,255,0.04)',
     backdropFilter: 'blur(24px)',
     borderRadius: 24,
@@ -321,9 +313,10 @@ const styles = {
     boxShadow: '0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,191,166,0.1)',
     overflow: 'hidden',
   },
-  brandHeader: {
-    display: 'flex', alignItems: 'center', gap: 16,
-    padding: '32px 32px 24px',
+  logoHeader: {
+    overflow: 'hidden',
+    borderRadius: '24px 24px 0 0',
+    lineHeight: 0,
     borderBottom: '1px solid rgba(255,255,255,0.07)',
   },
   brandTitle: {
