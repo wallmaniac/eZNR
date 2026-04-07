@@ -215,10 +215,10 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             transition: isMobile ? 'transform 0.25s ease' : 'width var(--transition-normal)',
             zIndex: isMobile ? 200 : 100,
             boxShadow: isMobile && mobileOpen ? '4px 0 32px rgba(0,0,0,0.4)' : undefined,
-            borderRight: isMobile ? 'none' : sidebarStyles.sidebar.borderRight,
+            borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.05)',
         }}>
             {/* Logo */}
-            <div style={{...sidebarStyles.logoArea, position: 'relative' }}>
+            <div style={{...sidebarStyles.logoArea, position: 'relative'}}>
                 {!collapsed && (
                     <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
                         <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
@@ -233,17 +233,12 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
                     </Link>
                 )}
-                
-                {isMobile && (
-                    <button onClick={onMobileClose} style={{ position: 'absolute', top: 16, right: 16, width: 32, height: 32, background: 'rgba(255,255,255,0.05)', borderRadius: '50%', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontSize: '1rem' }}>
-                        ✕
-                    </button>
-                )}
-                {!isMobile && (
-                    <button onClick={onToggle} style={sidebarStyles.collapseBtn}>
-                        {collapsed ? '▶' : '◀'}
-                    </button>
-                )}
+                <button onClick={isMobile ? onMobileClose : onToggle} style={{
+                    ...sidebarStyles.collapseBtn,
+                    ...(isMobile ? { position: 'absolute', top: 15, right: 15, width: 32, height: 32, fontSize: '0.9rem' } : {})
+                }}>
+                    {isMobile ? '✕' : (collapsed ? '▶' : '◀')}
+                </button>
             </div>
 
             {/* Menu */}
@@ -377,21 +372,23 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
 
             {/* User area */}
             {!collapsed && (
-                <div style={{ ...sidebarStyles.userArea, paddingBottom: isMobile ? 32 : 16 }}>
-                    <div style={{ ...sidebarStyles.userInfo, marginBottom: isMobile ? 0 : 12 }}>
-                        <div style={sidebarStyles.userAvatar}>
-                            {user?.firstName?.[0] || 'K'}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={sidebarStyles.userName}>
-                                {user?.firstName} {user?.lastName}
+                <div style={sidebarStyles.userArea}>
+                    <div style={{ ...sidebarStyles.userInfo, marginBottom: isMobile ? 0 : 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+                            <div style={sidebarStyles.userAvatar}>
+                                {user?.firstName?.[0] || 'K'}
                             </div>
-                            <div style={sidebarStyles.userCompany}>
-                                {user?.companyName}
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={sidebarStyles.userName}>
+                                    {user?.firstName} {user?.lastName}
+                                </div>
+                                <div style={sidebarStyles.userCompany}>
+                                    {user?.companyName}
+                                </div>
                             </div>
                         </div>
                         {isMobile && (
-                            <button onClick={handleLogout} title={t('logout')} style={{ border: '1px solid rgba(244,67,54,0.2)', background: 'rgba(244,67,54,0.1)', color: '#ef9a9a', padding: '6px 10px', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', flexShrink: 0, fontSize: '0.75rem', fontWeight: 600 }}>
+                            <button onClick={handleLogout} style={{ ...sidebarStyles.logoutBtn, marginTop: 4 }}>
                                 🚪 {t('logout')}
                             </button>
                         )}
