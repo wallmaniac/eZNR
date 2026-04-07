@@ -819,7 +819,7 @@ export default function SettingsPage() {
                 checked={appSettings.proactiveZia !== false} 
                 onChange={v => updateApp('proactiveZia', v)} 
                 label={lang === 'bs' ? 'Proaktivna asistentica' : 'Proactive assistant'} 
-                description={lang === 'bs' ? 'Dozvoli Zii da analizira stanje i automatski progovori o istocima prilikom otvaranja aplikacije.' : 'Allow Zia to analyze the state and automatically speak about expiring items when opening the app.'} 
+                description={lang === 'bs' ? 'Dozvoli Zii da analizira stanje i automatski progovori o istecima prilikom otvaranja aplikacije.' : 'Allow Zia to analyze the state and automatically speak about expiring items when opening the app.'} 
               />
             </div>
 
