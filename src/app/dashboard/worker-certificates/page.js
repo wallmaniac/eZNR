@@ -329,14 +329,16 @@ function WorkerCertificatesInner() {
                           } : {}),
                           ...(isSelected ? { background: 'rgba(0,191,166,0.05)' } : {}),
                         }}>
-                        {/* Checkbox cell */}
-                        <td style={{ textAlign: 'center', padding: '14px 8px' }} onClick={e => { e.stopPropagation(); toggleOne(r.id); }}>
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleOne(r.id)}
-                            style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--primary)' }}
-                          />
+                        {/* Checkbox cell — label wrapper avoids double-fire */}
+                        <td style={{ padding: 0 }}>
+                          <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', width: '100%', height: '100%', minHeight: 50, padding: '0 8px' }}>
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={e => { e.stopPropagation(); toggleOne(r.id); }}
+                              style={{ cursor: 'pointer', width: 18, height: 18, accentColor: 'var(--primary)', flexShrink: 0 }}
+                            />
+                          </label>
                         </td>
                         <td style={{ fontWeight: 600 }}>
                           <button

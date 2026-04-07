@@ -527,10 +527,11 @@ export default function AIAssistant() {
     const [isLoading, setIsLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(true);
     const [hasNewMessage, setHasNewMessage] = useState(false);
-    const [pulseAnimation, setPulseAnimation] = useState(true);
+    const [pulseAnimation, setPulseAnimation] = useState(false); // no pulse
     const [retryCountdown, setRetryCountdown] = useState(0);
-    const [attachments, setAttachments] = useState([]);   // file attachments
-    const [isDragging, setIsDragging] = useState(false);  // drag-drop active
+    const [attachments, setAttachments] = useState([]);
+    const [isDragging, setIsDragging] = useState(false);
+    const [urgentCount, setUrgentCount] = useState(0); // badge on FAB
 
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
@@ -540,11 +541,18 @@ export default function AIAssistant() {
     const pendingRetryRef = useRef(null); // stores { text, history } for auto-retry
     const retryAttemptRef = useRef(0);    // counts how many auto-retries done
 
-    // Stop pulse after 8 seconds
+    // ── Compute badge count from live data (no auto-open) ──────────────────
     useEffect(() => {
-        const timer = setTimeout(() => setPulseAnimation(false), 8000);
-        return () => clearTimeout(timer);
-    }, []);
+        try {
+            const get = (k) => { try { return JSON.parse(localStorage.getItem('eznr_' + k) || '[]'); } catch { return []; } };
+            const today = new Date();
+            const certs = get('certificates');
+            const equip = get('equipment');
+            const expired = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today).length;
+            const overdueEq = equip.filter(e => e.iduci && new Date(e.iduci) < today).length;
+            setUrgentCount(expired + overdueEq);
+        } catch { /* ignore */ }
+    }, [pathname]);
 
     // Cleanup retry timer on unmount
     useEffect(() => {
@@ -573,13 +581,45 @@ export default function AIAssistant() {
         setHasNewMessage(false);
         setPulseAnimation(false);
 
-        // Show welcome message on first open
+        // On first open: show data-driven summary instead of generic welcome
         if (messages.length === 0) {
-            const welcome = lang === 'bs'
-                ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nNisam samo chatbot — mogu aktivno pomagati:\n• 🧭 Navigirati do željene stranice umjesto vas\n• 📧 Pokrenuti slanje upitnika radnicima\n• ⚠️ Analizirati istekla uvjerenja i opremu\n• 📊 Dati pregled stanja zaštite na radu\n\nŠta trebate uraditi?`
-                : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nI'm not just a chatbot — I can actively help:\n• 🧭 Navigate to any page for you\n• 📧 Trigger questionnaire dispatch to workers\n• ⚠️ Analyse expiring certificates and equipment\n• 📊 Give you a safety status overview\n\nWhat do you need to get done?`;
-            const welcomeMsg = { role: 'assistant', content: welcome, timestamp: new Date() };
-            setMessages([welcomeMsg]);
+            try {
+                const get = (k) => { try { return JSON.parse(localStorage.getItem('eznr_' + k) || '[]'); } catch { return []; } };
+                const today = new Date();
+                const in30 = new Date(); in30.setDate(in30.getDate() + 30);
+                const certs = get('certificates');
+                const equip = get('equipment');
+                const injuries = get('injuries');
+                const diseases = get('diseases');
+                const expired = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today).length;
+                const soonCerts = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30).length;
+                const overdueEq = equip.filter(e => e.iduci && new Date(e.iduci) < today).length;
+                const sickLeave = [...injuries, ...diseases].filter(i => i.bolovanje && i.status !== 'zatvorena').length;
+
+                const total = expired + soonCerts + overdueEq + sickLeave;
+
+                let welcome;
+                if (total === 0) {
+                    welcome = lang === 'bs'
+                        ? `Zdravo! Ja sam **Zia** ✨\n\nSve izgleda uredno — nema ničeg hitnog.\n\nMogu navigirati do stranica, analizirati podatke ili pokrenuti slanje upitnika. Šta trebate?`
+                        : `Hello! I'm **Zia** ✨\n\nEverything looks good — nothing urgent right now.\n\nI can navigate pages, analyse data, or trigger questionnaire dispatch. What do you need?`;
+                } else {
+                    const items = [];
+                    if (expired > 0) items.push(lang === 'bs' ? `🔴 **${expired}** istekla uvjerenja` : `🔴 **${expired}** expired certificates`);
+                    if (soonCerts > 0) items.push(lang === 'bs' ? `⏰ **${soonCerts}** uvjerenja ističe u 30 dana` : `⏰ **${soonCerts}** certificates expiring in 30 days`);
+                    if (overdueEq > 0) items.push(lang === 'bs' ? `⚠️ **${overdueEq}** pregleda opreme u zakašnjenju` : `⚠️ **${overdueEq}** equipment inspections overdue`);
+                    if (sickLeave > 0) items.push(lang === 'bs' ? `🏥 **${sickLeave}** radnika na bolovanju` : `🏥 **${sickLeave}** workers on sick leave`);
+                    welcome = lang === 'bs'
+                        ? `Zdravo! Ja sam **Zia** ✨\n\nImate **${total}** stvari koje zahtijevaju pažnju:\n• ${items.join('\n• ')}\n\nŠta želite uraditi?`
+                        : `Hello! I'm **Zia** ✨\n\nYou have **${total}** items needing attention:\n• ${items.join('\n• ')}\n\nWhat would you like to do?`;
+                }
+                setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
+            } catch {
+                const welcome = lang === 'bs'
+                    ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nŠta trebate uraditi?`
+                    : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nWhat do you need to get done?`;
+                setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
+            }
         }
     }, [lang, messages.length]);
 
@@ -848,46 +888,8 @@ export default function AIAssistant() {
         }
     }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
 
-    // ── Proactive AI Check on Mount ─────────────────────────────────────────────
-    useEffect(() => {
-        // Small delay to let data load from localStorage to avoid blank scans
-        const timer = setTimeout(() => {
-            try {
-                const appSettingsString = localStorage.getItem('eznr_app_settings');
-                const appSettings = appSettingsString ? JSON.parse(appSettingsString) : {};
-                const proactiveEnabled = appSettings.proactiveZia !== false; // true by default
-
-                if (!proactiveEnabled) return;
-
-                const todayStr = new Date().toISOString().split('T')[0];
-                const lastProactive = localStorage.getItem('zia_last_proactive_date');
-
-                if (lastProactive === todayStr) return; // Already greeted today
-
-                // Verify we actually have some data by checking certificates or equipment
-                const certs = JSON.parse(localStorage.getItem('eznr_certificates') || '[]');
-                if (certs.length === 0) return; // Wait until they really log in and sync down
-
-                // Mark as greeted today
-                localStorage.setItem('zia_last_proactive_date', todayStr);
-
-                // Auto-open Zia and trigger proactive request
-                setIsOpen(true);
-                setIsMinimized(false);
-                setPulseAnimation(false);
-                setShowSuggestions(false);
-
-                const hiddenPrompt = lang === 'bs'
-                    ? "Skeniraj žive podatke koji su ti proslijeđeni. Sastavi kratan, proaktivan i prijateljski jutarnji izvještaj za korisnika. Naglasi STVARI KOJE ISTIČU. Budi kratka i direktna. Prvo kaži Dobro jutro/Dobar dan i prijavi statistiku isteka."
-                    : "Scan the live data provided. Compile a short, proactive, and friendly morning report. Highlight items (certificates, equipment) expiring soon. Keep it brief and direct. Say Good Morning.";
-
-                sendMessageInternal(hiddenPrompt, undefined, false, []);
-            } catch (e) {
-                console.error('[eZNR] Proactive Zia err:', e);
-            }
-        }, 4000);
-        return () => clearTimeout(timer);
-    }, [lang, pathname, sendMessageInternal]);
+    // ── Proactive logic REMOVED — badge count instead ─────────────────────────
+    // (urgentCount computed in separate useEffect above)
 
     const sendMessage = useCallback(async (text) => {
         if ((!text.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) return;
@@ -995,16 +997,29 @@ export default function AIAssistant() {
                 onClick={isOpen ? handleClose : handleOpen}
                 style={{
                     ...fabStyles.fab,
-                    ...(isOpen ? { width: 36, height: 36, bottom: 20, right: 20, boxShadow: '0 2px 10px rgba(0,0,0,0.2)' } : {}),
+                    ...(isOpen ? { width: 32, height: 32, bottom: 16, right: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : {}),
                     animation: !isOpen && pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
                 }}
                 title={isOpen
                     ? (lang === 'bs' ? 'Zatvori AI asistenta Zia' : 'Close AI assistant Zia')
                     : (lang === 'bs' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia')}
             >
-                <span style={{ ...fabStyles.fabIcon, fontSize: isOpen ? '0.9rem' : '1.5rem' }}>{isOpen ? '✕' : '✨'}</span>
-                {!isOpen && hasNewMessage && <span style={fabStyles.fabBadge} />}
+                <span style={{ ...fabStyles.fabIcon, fontSize: isOpen ? '0.8rem' : '1.3rem' }}>{isOpen ? '✕' : '✨'}</span>
                 {!isOpen && <span style={fabStyles.fabLabel}>Zia</span>}
+                {/* Numeric urgent badge */}
+                {!isOpen && urgentCount > 0 && (
+                    <span style={{
+                        position: 'absolute', top: -5, right: -5,
+                        minWidth: 18, height: 18, borderRadius: 9,
+                        background: '#EF4444', border: '2px solid white',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '0.6rem', color: 'white', fontWeight: 800,
+                        padding: '0 3px', lineHeight: 1,
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                    }}>
+                        {urgentCount > 99 ? '99+' : urgentCount}
+                    </span>
+                )}
             </button>
 
             {/* ── Chat Window ── */}
@@ -1012,6 +1027,7 @@ export default function AIAssistant() {
                 <div id="ai-assistant-window" style={{
                     ...chatStyles.window,
                     height: isMinimized ? 'auto' : 580,
+                    bottom: 72, // offset so it doesn't cover the FAB
                 }}>
                     {/* Header */}
                     <div style={chatStyles.header}>
@@ -1215,29 +1231,29 @@ export default function AIAssistant() {
 const fabStyles = {
     fab: {
         position: 'fixed',
-        bottom: 28,
-        right: 28,
+        bottom: 16,
+        right: 16,
         zIndex: 1001,
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 64,
-        height: 64,
+        width: 48,
+        height: 48,
         borderRadius: '50%',
         background: 'linear-gradient(135deg, #00BFA6, #009985)',
         border: 'none',
         cursor: 'pointer',
-        boxShadow: '0 4px 20px rgba(0,191,166,0.4)',
+        boxShadow: '0 4px 16px rgba(0,191,166,0.45)',
         transition: 'transform 0.2s, box-shadow 0.2s',
         gap: 1,
     },
     fabIcon: {
-        fontSize: '1.5rem',
+        fontSize: '1.3rem',
         lineHeight: 1,
     },
     fabLabel: {
-        fontSize: '0.6rem',
+        fontSize: '0.55rem',
         fontWeight: 700,
         color: 'white',
         fontFamily: 'var(--font-heading)',
@@ -1245,8 +1261,8 @@ const fabStyles = {
     },
     fabBadge: {
         position: 'absolute',
-        top: 10,
-        right: 10,
+        top: -4,
+        right: -4,
         width: 12,
         height: 12,
         borderRadius: '50%',

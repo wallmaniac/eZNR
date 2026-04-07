@@ -332,13 +332,15 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                 {/* ══ RIGHT ISLAND: Lang + Theme | Notifs + Profile ══ */}
                 <div style={island}>
-                    {/* Language */}
-                    <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
-                        style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 5, minWidth: 50 })}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                        🌐 {lang === 'bs' ? 'EN' : 'BS'}
-                    </button>
+                    {/* Language — desktop only */}
+                    {!isMobile && (
+                        <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
+                            style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 5, minWidth: 50 })}
+                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                            🌐 {lang === 'bs' ? 'EN' : 'BS'}
+                        </button>
+                    )}
 
                     {/* Light/Dark pill toggle */}
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
@@ -422,11 +424,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
                                 {user?.firstName?.[0] || 'K'}
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{user?.firstName} {user?.lastName}</span>
-                                <span style={{ fontSize: '0.56rem', fontWeight: 700, padding: '1px 5px', borderRadius: 6, background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.5 }}>{roleBadge.label}</span>
-                            </div>
-                            <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>▼</span>
+                            {/* Name + role — desktop only */}
+                            {!isMobile && (
+                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.25 }}>{user?.firstName} {user?.lastName}</span>
+                                    <span style={{ fontSize: '0.56rem', fontWeight: 700, padding: '1px 5px', borderRadius: 6, background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.5 }}>{roleBadge.label}</span>
+                                </div>
+                            )}
+                            {!isMobile && <span style={{ fontSize: '0.58rem', color: 'var(--text-muted)' }}>▼</span>}
                         </button>
 
                         {showProfile && (
