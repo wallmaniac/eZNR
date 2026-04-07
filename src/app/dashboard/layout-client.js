@@ -8,7 +8,6 @@ import AIAssistant from '@/components/AIAssistant';
 import { initializeData } from '@/lib/dataStore';
 import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import UndoBar from '@/components/UndoBar';
-import MobileLayout from '@/components/mobile/MobileLayout';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading } = useAuth();
@@ -106,38 +105,40 @@ export default function DashboardLayout({ children }) {
             ? 'var(--sidebar-collapsed-width)'
             : 'var(--sidebar-width)';
 
-    if (isMobile) {
-        return (
-            <MobileLayout>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                <NavigationGuardProvider key={undoKey}>
-                    {children}
-                </NavigationGuardProvider>
-                <UndoBar />
-                <AIAssistant />
-            </MobileLayout>
-        );
-    }
-
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+            {/* Mobile overlay backdrop */}
+            {isMobile && mobileOpen && (
+                <div
+                    onClick={() => setMobileOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.55)',
+                        zIndex: 98,
+                        backdropFilter: 'blur(2px)',
+                    }}
+                />
+            )}
+
             <Sidebar
-                collapsed={sidebarCollapsed}
-                onToggle={handleDesktopToggle}
-                isMobile={false}
-                mobileOpen={false}
-                onMobileClose={() => {}}
+                collapsed={isMobile ? false : sidebarCollapsed}
+                onToggle={isMobile ? handleMobileToggle : handleDesktopToggle}
+                isMobile={isMobile}
+                mobileOpen={mobileOpen}
+                onMobileClose={() => setMobileOpen(false)}
             />
             <Header
-                sidebarCollapsed={sidebarCollapsed}
-                isMobile={false}
-                onMobileMenuToggle={handleDesktopToggle}
+                sidebarCollapsed={isMobile ? false : sidebarCollapsed}
+                isMobile={isMobile}
+                onMobileMenuToggle={handleMobileToggle}
             />
             <main style={{
                 marginLeft: mainMarginLeft,
                 marginTop: 'var(--header-height)',
-                padding: 24,
+                padding: isMobile ? 12 : 24,
                 paddingBottom: 96,
                 transition: 'margin-left var(--transition-normal)',
                 minHeight: 'calc(100vh - var(--header-height))',
