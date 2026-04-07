@@ -150,6 +150,7 @@ export function getAppSettings() {
 export function saveAppSettings(settings) {
     if (typeof window === 'undefined') return;
     localStorage.setItem('eznr_app_settings', JSON.stringify(settings));
+    window.dispatchEvent(new Event('appSettingsUpdated'));
 }
 
 // ============================================================================

@@ -166,38 +166,34 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             {/* ══ MOBILE: Permanent bar (always visible, 52px) ══ */}
             {isMobile && (
                 <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 200,
-                    display: 'flex', alignItems: 'center', gap: 8, padding: '0 10px',
+                    position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 300,
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px',
                     background: 'var(--bg-header, var(--bg-page))',
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
                 }}>
                     {/* Hamburger */}
                     <button id="mobile-menu-hamburger" onClick={onMobileMenuToggle} title="Menu" style={{
-                        width: 38, height: 38, borderRadius: 10, border: '1px solid var(--border)',
+                        width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border)',
                         background: 'var(--bg-card)', cursor: 'pointer', flexShrink: 0,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '1.1rem', color: 'var(--text-muted)',
                     }}>☰</button>
 
-                    {/* Back / Forward */}
-                    <button title="Nazad" onClick={() => router.back()} style={{ ...iBtn(), width: 30, height: 30 }}>←</button>
-                    <button title="Naprijed" onClick={() => router.forward()} style={{ ...iBtn(), width: 30, height: 30 }}>→</button>
-
-                    {/* Company chip */}
+                    {/* Company chip (smaller) */}
                     <div ref={companyRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowProfile(false); setShowNotifs(false); }}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '4px 10px 4px 6px', borderRadius: 100, border: 'none',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                padding: '4px 6px 4px 4px', borderRadius: 100, border: 'none',
                                 background: activeCompanyId === 'all'
                                     ? 'linear-gradient(135deg, #455A64, #263238)'
                                     : 'linear-gradient(135deg, var(--primary), #009985)',
-                                cursor: 'pointer', width: '100%', maxWidth: 180,
+                                cursor: 'pointer', width: '100%',
                             }}>
-                            <span style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.75rem', flexShrink: 0 }}>🏢</span>
-                            <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                {activeCompanyId === 'all' ? (lang === 'bs' ? 'Sve firme' : 'All') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || '—')}
+                            <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', flexShrink: 0 }}>🏢</span>
+                            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
+                                {activeCompanyId === 'all' ? (lang === 'bs' ? 'Sve' : 'All') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || '—')}
                             </div>
                         </button>
                         {showCompanyMenu && (
@@ -224,10 +220,66 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
 
-                    {/* Expand/collapse toggle */}
-                    <button onClick={() => setMobileExpanded(v => !v)} title={mobileExpanded ? 'Sakrij kontrole' : 'Prikaži kontrole'}
-                        style={{ ...iBtn(), width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', flexShrink: 0, fontSize: '0.75rem' }}>
-                        {mobileExpanded ? '▲' : '▼'}
+                    {/* Lang toggle */}
+                    <button onClick={toggleLang}
+                        style={{ ...iBtn({ fontSize: '0.75rem', fontWeight: 700, width: 'auto', minWidth: 28, padding: '0 4px' }) }}>
+                        {lang === 'bs' ? 'EN' : 'BS'}
+                    </button>
+
+                    {/* Theme toggle */}
+                    <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
+                        style={{ position: 'relative', width: 44, height: 22, borderRadius: 12, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', transition: 'background 0.4s' }}>
+                        <span style={{ position: 'absolute', top: 1, left: isDark ? 23 : 1, width: 16, height: 16, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>
+                            {isDark ? '🌙' : '☀️'}
+                        </span>
+                    </button>
+
+                    {/* Notifications */}
+                    <div ref={notifRef} style={{ position: 'relative' }}>
+                        <button onClick={() => { setShowNotifs(v => !v); setShowProfile(false); }}
+                            style={{ ...iBtn({ position: 'relative', width: 34, height: 34 }) }}>
+                            🔔
+                            {notifications.length > 0 && (
+                                <span style={{ position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.45rem', color: 'white', fontWeight: 700, border: '1.5px solid var(--bg-card)' }}>
+                                    {notifications.length}
+                                </span>
+                            )}
+                        </button>
+                        {showNotifs && (
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: -30, left: 'auto', minWidth: 320, maxWidth: '90vw', maxHeight: 400, overflowY: 'auto', zIndex: 300 }}>
+                                <div style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.82rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
+                                    <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
+                                    {isAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>v{APP_VERSION}</span>}
+                                </div>
+                                {notifications.length === 0 ? (
+                                    <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.84rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
+                                ) : notifications.map((n, idx) => {
+                                    const sc = { critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: 'var(--danger)' }, urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: 'var(--warning)' }, warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: 'var(--warning)' }, info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: 'var(--success)' } };
+                                    const c = sc[n.severity] || sc.info;
+                                    return (
+                                        <div key={n.id || idx} style={{ padding: '9px 12px', borderBottom: '1px solid var(--border-light)', background: c.bg, borderLeft: `3px solid ${c.border}` }}>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <span style={{ fontSize: '1rem' }}>{n.icon}</span>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.8rem', color: c.titleColor }}>{n.text}</div>
+                                                    {n.detail && <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: 2 }}>{n.detail}</div>}
+                                                    <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
+                                                        {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.68rem', padding: '2px 7px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
+                                                        {n.id && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.62rem', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Expand/collapse search panel toggle */}
+                    <button onClick={() => setMobileExpanded(v => !v)} title={mobileExpanded ? 'Sakrij' : 'Prikaži'}
+                        style={{ ...iBtn(), width: 34, height: 34, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', flexShrink: 0, fontSize: '0.75rem' }}>
+                        {mobileExpanded ? '▲' : '🔍'}
                     </button>
                 </div>
             )}
@@ -235,156 +287,80 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             {/* ══ MOBILE: Retractable controls panel ══ */}
             {isMobile && (
                 <div style={{
-                    position: 'fixed', top: 52, left: 0, right: 0, zIndex: 199,
-                    overflow: 'hidden',
-                    maxHeight: mobileExpanded ? 160 : 0,
-                    transition: 'max-height 0.32s cubic-bezier(0.4,0,0.2,1)',
+                    position: 'fixed', top: 52, left: 0, right: 0, zIndex: 290,
+                    transform: mobileExpanded ? 'translateY(0)' : 'translateY(-120%)',
+                    opacity: mobileExpanded ? 1 : 0,
+                    pointerEvents: mobileExpanded ? 'auto' : 'none',
+                    transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
                     background: 'var(--bg-header, var(--bg-page))',
                     backdropFilter: 'blur(20px)',
-                    borderBottom: mobileExpanded ? '1px solid var(--border-light)' : 'none',
+                    borderBottom: '1px solid var(--border-light)',
+                    display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
                 }}>
-                    {/* Search row */}
-                    <div style={{ padding: '8px 10px 4px' }}>
-                        <div ref={searchRef} style={{ position: 'relative' }}>
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 8,
-                                background: 'var(--bg-card)',
-                                border: `1.5px solid ${searchFocused ? 'var(--primary)' : 'var(--border)'}`,
-                                borderRadius: 100, padding: '0 14px', height: 40,
-                                boxShadow: searchFocused ? '0 0 0 4px var(--primary-glow)' : '0 2px 8px rgba(0,0,0,0.06)',
-                                transition: 'border-color 0.2s, box-shadow 0.2s',
-                            }}>
-                                <span style={{ fontSize: '0.85rem', opacity: 0.4, flexShrink: 0 }}>🔍</span>
-                                <input
-                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.88rem', color: 'var(--text)', fontFamily: 'var(--font-body)', flex: 1, minWidth: 0 }}
-                                    placeholder={t('searchPlaceholder')}
-                                    value={searchTerm}
-                                    onChange={e => setSearchTerm(e.target.value)}
-                                    onFocus={() => setSearchFocused(true)}
-                                />
-                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem', flexShrink: 0 }}>✕</button>}
+                    {/* Search row (flex 1) */}
+                    <div ref={searchRef} style={{ position: 'relative', flex: 1 }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: 8,
+                            background: 'var(--bg-card)',
+                            border: `1.5px solid ${searchFocused ? 'var(--primary)' : 'var(--border)'}`,
+                            borderRadius: 100, padding: '0 14px', height: 40,
+                            boxShadow: searchFocused ? '0 0 0 4px var(--primary-glow)' : '0 2px 8px rgba(0,0,0,0.06)',
+                            transition: 'border-color 0.2s, box-shadow 0.2s',
+                        }}>
+                            <span style={{ fontSize: '0.85rem', opacity: 0.4, flexShrink: 0 }}>🔍</span>
+                            <input
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.88rem', color: 'var(--text)', fontFamily: 'var(--font-body)', flex: 1, minWidth: 0 }}
+                                placeholder={t('searchPlaceholder')}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                onFocus={() => setSearchFocused(true)}
+                            />
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.85rem', flexShrink: 0 }}>✕</button>}
+                        </div>
+                        {searchFocused && searchTerm.length >= 2 && (
+                            <div className="search-dropdown" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(11,42,60,0.18)', border: '1px solid var(--border)', zIndex: 300, overflow: 'hidden' }}>
+                                {searchResults.length === 0 ? (
+                                    <div style={{ padding: '14px 18px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>
+                                ) : searchResults.map((r, idx) => (
+                                    <button key={idx} onClick={() => handleSearchNav(r)}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                        <span style={{ fontSize: '1.1rem' }}>{r.icon}</span>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 600, fontSize: '0.84rem', color: 'var(--text)' }}>{r.label}</div>
+                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{r.sub}</div>
+                                        </div>
+                                    </button>
+                                ))}
                             </div>
-                            {searchFocused && searchTerm.length >= 2 && (
-                                <div className="search-dropdown" style={{ position: 'absolute', top: 'calc(100% + 6px)', left: 0, right: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(11,42,60,0.18)', border: '1px solid var(--border)', zIndex: 300, overflow: 'hidden' }}>
-                                    {searchResults.length === 0 ? (
-                                        <div style={{ padding: '14px 18px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>
-                                    ) : searchResults.map((r, idx) => (
-                                        <button key={idx} onClick={() => handleSearchNav(r)}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
-                                            <span style={{ fontSize: '1.1rem' }}>{r.icon}</span>
-                                            <div style={{ flex: 1, minWidth: 0 }}>
-                                                <div style={{ fontWeight: 600, fontSize: '0.84rem', color: 'var(--text)' }}>{r.label}</div>
-                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{r.sub}</div>
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        )}
                     </div>
 
-                    {/* Controls row: Lang + Theme + Notifs + Profile */}
-                    <div style={{ display: 'flex', alignItems: 'center', padding: '4px 10px 6px', gap: 4, flexWrap: 'wrap' }}>
-                        {/* Language */}
-                        <button onClick={toggleLang}
-                            style={{ ...iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, width: 'auto', minWidth: 48 }) }}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                            🌐 {lang === 'bs' ? 'EN' : 'BS'}
+                    {/* Profile Dropdown (flexShrink 0) */}
+                    <div ref={profileRef} style={{ position: 'relative', flexShrink: 0 }}>
+                        <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); }}
+                            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px', borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer' }}>
+                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>
+                                {user?.firstName?.[0] || 'K'}
+                            </div>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>▼</span>
                         </button>
-
-                        {/* Theme toggle */}
-                        <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
-                            style={{ position: 'relative', width: 48, height: 24, borderRadius: 12, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', transition: 'background 0.4s' }}>
-                            <span style={{ position: 'absolute', top: 2, left: isDark ? 20 : 2, width: 16, height: 16, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>
-                                {isDark ? '🌙' : '☀️'}
-                            </span>
-                        </button>
-
-                        <div style={{ flex: 1 }} />
-
-                        {/* Notifications */}
-                        <div ref={notifRef} style={{ position: 'relative' }}>
-                            <button onClick={() => { setShowNotifs(v => !v); setShowProfile(false); }}
-                                style={{ ...iBtn({ position: 'relative' }) }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.07)'; e.currentTarget.style.color = '#ef4444'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                                🔔
-                                {notifications.length > 0 && (
-                                    <span style={{ position: 'absolute', top: 3, right: 3, width: 15, height: 15, borderRadius: '50%', background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: 'white', fontWeight: 700, border: '1.5px solid var(--bg-card)' }}>
-                                        {notifications.length}
-                                    </span>
-                                )}
-                            </button>
-                            {showNotifs && (
-                                <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: 0, left: 'auto', minWidth: 320, maxHeight: 400, overflowY: 'auto', zIndex: 300 }}>
-                                    <div style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.82rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
-                                        <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
-                                        {isAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>v{APP_VERSION}</span>}
-                                    </div>
-                                    {notifications.length === 0 ? (
-                                        <div style={{ padding: 16, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.84rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
-                                    ) : notifications.map((n, idx) => {
-                                        const sc = { critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: 'var(--danger)' }, urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: 'var(--warning)' }, warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: 'var(--warning)' }, info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: 'var(--success)' } };
-                                        const c = sc[n.severity] || sc.info;
-                                        return (
-                                            <div key={n.id || idx} style={{ padding: '9px 12px', borderBottom: '1px solid var(--border-light)', background: c.bg, borderLeft: `3px solid ${c.border}` }}>
-                                                <div style={{ display: 'flex', gap: 8 }}>
-                                                    <span style={{ fontSize: '1rem' }}>{n.icon}</span>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ fontWeight: 700, fontSize: '0.8rem', color: c.titleColor }}>{n.text}</div>
-                                                        {n.detail && <div style={{ fontSize: '0.72rem', color: 'var(--text-light)', marginTop: 2 }}>{n.detail}</div>}
-                                                        <div style={{ display: 'flex', gap: 6, marginTop: 4 }}>
-                                                            {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.68rem', padding: '2px 7px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
-                                                            {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.62rem', padding: '2px 5px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
+                        {showProfile && (
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: 0, zIndex: 300, minWidth: 220 }}>
+                                <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-light)' }}>
+                                    <div style={{ fontWeight: 700, fontSize: '0.84rem' }}>{user?.firstName} {user?.lastName}</div>
+                                    <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || ''}</div>
+                                    <span style={{ display: 'inline-block', marginTop: 3, fontSize: '0.63rem', fontWeight: 700, padding: '2px 7px', borderRadius: 8, background: roleBadge.bg, color: roleBadge.color }}>{roleBadge.label}</span>
                                 </div>
-                            )}
-                        </div>
-
-                        {sep}
-
-                        {/* Profile */}
-                        <div ref={profileRef} style={{ position: 'relative' }}>
-                            <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); }}
-                                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '3px 8px 3px 3px', borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                                <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
-                                    {user?.firstName?.[0] || 'K'}
-                                </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
-                                    <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text)', lineHeight: 1.2 }}>{user?.firstName} {user?.lastName}</span>
-                                    <span style={{ fontSize: '0.54rem', fontWeight: 700, padding: '1px 5px', borderRadius: 6, background: roleBadge.bg, color: roleBadge.color, lineHeight: 1.5 }}>{roleBadge.label}</span>
-                                </div>
-                                <span style={{ fontSize: '0.55rem', color: 'var(--text-muted)' }}>▼</span>
-                            </button>
-                            {showProfile && (
-                                <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: 0, zIndex: 300 }}>
-                                    <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-light)' }}>
-                                        <div style={{ fontWeight: 700, fontSize: '0.84rem' }}>{user?.firstName} {user?.lastName}</div>
-                                        <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || ''}</div>
-                                        <span style={{ display: 'inline-block', marginTop: 3, fontSize: '0.63rem', fontWeight: 700, padding: '2px 7px', borderRadius: 8, background: roleBadge.bg, color: roleBadge.color }}>{roleBadge.label}</span>
-                                    </div>
-                                    <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=profile')}>👤 {t('profile')}</button>
-                                    <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=company')}>🏢 {t('company')}</button>
-                                    <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=app')}>⚙️ {t('settings')}</button>
-                                    {isAdmin && (<><div className="dropdown-divider" /><button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {lang === 'bs' ? 'Administracija' : 'Admin Panel'}</button></>)}
-                                    <div className="dropdown-divider" />
-                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 {t('logout')}</button>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Pull handle to collapse */}
-                    <div onClick={() => setMobileExpanded(false)} style={{ textAlign: 'center', paddingBottom: 6, cursor: 'pointer', userSelect: 'none' }}>
-                        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto', opacity: 0.6 }} />
+                                <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=profile')}>👤 {t('profile')}</button>
+                                <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=company')}>🏢 {t('company')}</button>
+                                <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=app')}>⚙️ {t('settings')}</button>
+                                {isAdmin && (<><div className="dropdown-divider" /><button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {lang === 'bs' ? 'Administracija' : 'Admin Panel'}</button></>)}
+                                <div className="dropdown-divider" />
+                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 {t('logout')}</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

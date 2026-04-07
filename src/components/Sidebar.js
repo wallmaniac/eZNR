@@ -232,8 +232,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
                     </Link>
                 )}
-                <button onClick={onToggle} style={sidebarStyles.collapseBtn}>
-                    {collapsed ? '▶' : '◀'}
+                <button onClick={isMobile ? onMobileClose : onToggle} style={sidebarStyles.collapseBtn}>
+                    {isMobile ? '✕' : (collapsed ? '▶' : '◀')}
                 </button>
             </div>
 
@@ -369,11 +369,11 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             {/* User area */}
             {!collapsed && (
                 <div style={sidebarStyles.userArea}>
-                    <div style={sidebarStyles.userInfo}>
+                    <div style={{ ...sidebarStyles.userInfo, marginBottom: isMobile ? 0 : 12 }}>
                         <div style={sidebarStyles.userAvatar}>
                             {user?.firstName?.[0] || 'K'}
                         </div>
-                        <div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={sidebarStyles.userName}>
                                 {user?.firstName} {user?.lastName}
                             </div>
@@ -381,10 +381,17 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 {user?.companyName}
                             </div>
                         </div>
+                        {isMobile && (
+                            <button onClick={handleLogout} title={t('logout')} style={{ border: 'none', background: 'rgba(244,67,54,0.15)', color: '#ef5350', width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                                🚪
+                            </button>
+                        )}
                     </div>
-                    <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
-                        🚪 {t('logout')}
-                    </button>
+                    {!isMobile && (
+                        <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
+                            🚪 {t('logout')}
+                        </button>
+                    )}
                 </div>
             )}
         </aside>

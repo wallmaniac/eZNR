@@ -543,15 +543,27 @@ export default function AIAssistant() {
 
     // ── Compute badge count from live data (no auto-open) ──────────────────
     useEffect(() => {
-        try {
-            const get = (k) => { try { return JSON.parse(localStorage.getItem('eznr_' + k) || '[]'); } catch { return []; } };
-            const today = new Date();
-            const certs = get('certificates');
-            const equip = get('equipment');
-            const expired = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today).length;
-            const overdueEq = equip.filter(e => e.iduci && new Date(e.iduci) < today).length;
-            setUrgentCount(expired + overdueEq);
-        } catch { /* ignore */ }
+        const updateBadge = () => {
+            try {
+                const sysSettings = JSON.parse(localStorage.getItem('eznr_app_settings') || '{}');
+                if (sysSettings.proactiveZia === false) {
+                    setUrgentCount(0);
+                    return;
+                }
+
+                const get = (k) => { try { return JSON.parse(localStorage.getItem('eznr_' + k) || '[]'); } catch { return []; } };
+                const today = new Date();
+                const certs = get('certificates');
+                const equip = get('equipment');
+                const expired = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today).length;
+                const overdueEq = equip.filter(e => e.iduci && new Date(e.iduci) < today).length;
+                setUrgentCount(expired + overdueEq);
+            } catch { /* ignore */ }
+        };
+
+        updateBadge();
+        window.addEventListener('appSettingsUpdated', updateBadge);
+        return () => window.removeEventListener('appSettingsUpdated', updateBadge);
     }, [pathname]);
 
     // Cleanup retry timer on unmount
