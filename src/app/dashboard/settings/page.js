@@ -811,6 +811,18 @@ export default function SettingsPage() {
             <Toggle checked={appSettings.notificationSound} onChange={v => updateApp('notificationSound', v)} label={lang === 'bs' ? 'Zvuk obavijesti' : 'Notification sound'} description={lang === 'bs' ? 'Pusti zvuk kada stigne nova obavijest' : 'Play sound for new notifications'} />
             <Toggle checked={appSettings.sidebarOpen} onChange={v => updateApp('sidebarOpen', v)} label={lang === 'bs' ? 'Bočna traka uvijek otvorena' : 'Sidebar always open'} description={lang === 'bs' ? 'Zadrži bočnu traku otvorenom pri pokretanju' : 'Keep sidebar expanded on startup'} />
 
+            <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg-input)', borderRadius: 12, border: '1px solid var(--primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                <span style={{ fontSize: '1.2rem', backgroundImage: 'linear-gradient(135deg, #E040FB, #7C4DFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 800 }}>Zia AI</span>
+              </div>
+              <Toggle 
+                checked={appSettings.proactiveZia !== false} 
+                onChange={v => updateApp('proactiveZia', v)} 
+                label={lang === 'bs' ? 'Proaktivna asistentica' : 'Proactive assistant'} 
+                description={lang === 'bs' ? 'Dozvoli Zii da analizira stanje i automatski progovori o istocima prilikom otvaranja aplikacije.' : 'Allow Zia to analyze the state and automatically speak about expiring items when opening the app.'} 
+              />
+            </div>
+
             <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
 
             {/* Dark mode toggle */}

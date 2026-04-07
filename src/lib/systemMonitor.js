@@ -95,6 +95,7 @@ export const DEFAULT_APP_SETTINGS = {
     animations: true,
     notificationSound: false,
     sidebarOpen: true,
+    proactiveZia: true,
 
     // System (admin only)
     allowRegistration: true,
