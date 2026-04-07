@@ -163,7 +163,7 @@ const menuItems = [
 ];
 
 
-export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
+export default function Sidebar({ collapsed, onToggle }) {
     const { t, lang } = useLanguage();
     const { user, logout, isAdmin } = useAuth();
     const router = useRouter();
@@ -218,7 +218,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.05)',
         }}>
             {/* Logo */}
-            <div style={{...sidebarStyles.logoArea, position: 'relative'}}>
+            <div style={sidebarStyles.logoArea}>
                 {!collapsed && (
                     <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
                         <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
@@ -233,11 +233,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
                     </Link>
                 )}
-                <button onClick={isMobile ? onMobileClose : onToggle} style={{
-                    ...sidebarStyles.collapseBtn,
-                    ...(isMobile ? { position: 'absolute', top: 15, right: 15, width: 32, height: 32, fontSize: '0.9rem' } : {})
-                }}>
-                    {isMobile ? '✕' : (collapsed ? '▶' : '◀')}
+                <button onClick={onToggle} style={sidebarStyles.collapseBtn}>
+                    {collapsed ? '▶' : '◀'}
                 </button>
             </div>
 
@@ -279,18 +276,18 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 <Link
                                     href={item.path}
                                     prefetch={true}
-                                    onClick={handleNavClick}
+
                                     style={{
                                         ...sidebarStyles.menuItem,
                                         ...(active ? sidebarStyles.menuItemActive : {}),
-                                        justifyContent: (!isMobile && collapsed) ? 'center' : 'flex-start',
-                                        padding: (!isMobile && collapsed) ? '12px' : '10px 16px',
+                                        justifyContent: collapsed ? 'center' : 'flex-start',
+                                        padding: collapsed ? '12px' : '10px 16px',
                                         textDecoration: 'none',
                                     }}
-                                    title={(!isMobile && collapsed) ? t(item.key) : undefined}
+                                    title={collapsed ? t(item.key) : undefined}
                                 >
                                     <span style={sidebarStyles.menuIcon}>{item.icon}</span>
-                                    {(isMobile || !collapsed) && (
+                                    {!collapsed && (
                                         <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
                                     )}
                                 </Link>
@@ -329,7 +326,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                                                     key={gc.key}
                                                                     href={gc.path}
                                                                     prefetch={true}
-                                                                    onClick={handleNavClick}
+                                
                                                                     style={{
                                                                         ...sidebarStyles.submenuItem,
                                                                         ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
@@ -351,7 +348,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                                 key={child.key}
                                                 href={child.path}
                                                 prefetch={true}
-                                                onClick={handleNavClick}
+            
                                                 style={{
                                                     ...sidebarStyles.submenuItem,
                                                     ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
@@ -373,7 +370,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             {/* User area */}
             {!collapsed && (
                 <div style={sidebarStyles.userArea}>
-                    <div style={{ ...sidebarStyles.userInfo, marginBottom: isMobile ? 0 : 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ ...sidebarStyles.userInfo, marginBottom: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
                             <div style={sidebarStyles.userAvatar}>
                                 {user?.firstName?.[0] || 'K'}
@@ -387,17 +384,10 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 </div>
                             </div>
                         </div>
-                        {isMobile && (
-                            <button onClick={handleLogout} style={{ ...sidebarStyles.logoutBtn, marginTop: 4 }}>
-                                🚪 {t('logout')}
-                            </button>
-                        )}
                     </div>
-                    {!isMobile && (
-                        <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
-                            🚪 {t('logout')}
-                        </button>
-                    )}
+                    <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
+                        🚪 {t('logout')}
+                    </button>
                 </div>
             )}
         </aside>
