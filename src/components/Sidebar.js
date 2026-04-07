@@ -163,7 +163,7 @@ const menuItems = [
 ];
 
 
-export default function Sidebar({ collapsed, onToggle }) {
+export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
     const { t, lang } = useLanguage();
     const { user, logout, isAdmin } = useAuth();
     const router = useRouter();
@@ -197,10 +197,24 @@ export default function Sidebar({ collapsed, onToggle }) {
         router.push('/');
     };
 
+    // Auto-close mobile sidebar on navigation
+    const handleNavClick = () => {
+        if (isMobile && onMobileClose) onMobileClose();
+    };
+
+    // Mobile: slide in/out as overlay
+    const mobileTransform = isMobile
+        ? mobileOpen ? 'translateX(0)' : 'translateX(-100%)'
+        : undefined;
+
     return (
         <aside style={{
             ...sidebarStyles.sidebar,
-            width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+            width: isMobile ? 'var(--sidebar-width)' : (collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'),
+            transform: mobileTransform,
+            transition: isMobile ? 'transform 0.25s ease' : 'width var(--transition-normal)',
+            zIndex: isMobile ? 200 : 100,
+            boxShadow: isMobile && mobileOpen ? '4px 0 32px rgba(0,0,0,0.4)' : undefined,
         }}>
             {/* Logo */}
             <div style={sidebarStyles.logoArea}>
@@ -261,17 +275,18 @@ export default function Sidebar({ collapsed, onToggle }) {
                                 <Link
                                     href={item.path}
                                     prefetch={true}
+                                    onClick={handleNavClick}
                                     style={{
                                         ...sidebarStyles.menuItem,
                                         ...(active ? sidebarStyles.menuItemActive : {}),
-                                        justifyContent: collapsed ? 'center' : 'flex-start',
-                                        padding: collapsed ? '12px' : '10px 16px',
+                                        justifyContent: (!isMobile && collapsed) ? 'center' : 'flex-start',
+                                        padding: (!isMobile && collapsed) ? '12px' : '10px 16px',
                                         textDecoration: 'none',
                                     }}
-                                    title={collapsed ? t(item.key) : undefined}
+                                    title={(!isMobile && collapsed) ? t(item.key) : undefined}
                                 >
                                     <span style={sidebarStyles.menuIcon}>{item.icon}</span>
-                                    {!collapsed && (
+                                    {(isMobile || !collapsed) && (
                                         <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
                                     )}
                                 </Link>
@@ -310,6 +325,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                                                                     key={gc.key}
                                                                     href={gc.path}
                                                                     prefetch={true}
+                                                                    onClick={handleNavClick}
                                                                     style={{
                                                                         ...sidebarStyles.submenuItem,
                                                                         ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
@@ -331,6 +347,7 @@ export default function Sidebar({ collapsed, onToggle }) {
                                                 key={child.key}
                                                 href={child.path}
                                                 prefetch={true}
+                                                onClick={handleNavClick}
                                                 style={{
                                                     ...sidebarStyles.submenuItem,
                                                     ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),

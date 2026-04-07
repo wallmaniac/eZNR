@@ -7,7 +7,7 @@ import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompani
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 import { useTheme } from '@/contexts/ThemeContext';
 
-export default function Header({ sidebarCollapsed }) {
+export default function Header({ sidebarCollapsed, isMobile = false, onMobileMenuToggle }) {
     const { t, lang, toggleLang } = useLanguage();
     const { user, logout, isAdmin, activeCompanyId, switchCompany } = useAuth();
     const { isDark, toggleTheme } = useTheme();
@@ -167,14 +167,37 @@ export default function Header({ sidebarCollapsed }) {
             <header style={{
                 position: 'fixed', top: 0, right: 0, zIndex: 90,
                 height: 'var(--header-height)',
-                left: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+                left: isMobile ? 0 : (sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'),
                 transition: 'left var(--transition-normal)',
                 display: 'flex', alignItems: 'center',
-                gap: 10, padding: '0 16px',
+                gap: isMobile ? 6 : 10, padding: isMobile ? '0 10px' : '0 16px',
                 background: 'var(--bg-header, var(--bg-page))',
                 backdropFilter: 'blur(20px)',
                 borderBottom: '1px solid var(--border-light)',
             }}>
+
+                {/* ══ MOBILE: Hamburger ══ */}
+                {isMobile && (
+                    <button
+                        id="mobile-menu-hamburger"
+                        onClick={onMobileMenuToggle}
+                        title="Menu"
+                        style={{
+                            width: 40, height: 40, borderRadius: 10,
+                            border: '1px solid var(--border)',
+                            background: 'var(--bg-card)',
+                            cursor: 'pointer', flexShrink: 0,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '1.2rem', color: 'var(--text-muted)',
+                            transition: 'all 0.15s',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border)'; }}
+                    >
+                        ☰
+                    </button>
+                )}
 
                 {/* ══ LEFT ISLAND: Navigation + Company ══ */}
                 <div style={{ ...island, boxShadow: '0 2px 14px rgba(0,191,166,0.12), 0 1px 3px rgba(0,0,0,0.07)' }}>
@@ -254,7 +277,7 @@ export default function Header({ sidebarCollapsed }) {
                 </div>
 
                 {/* ══ CENTER ISLAND: Search ══ */}
-                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: 440 }}>
+                <div ref={searchRef} style={{ position: 'relative', flex: 1, maxWidth: isMobile ? '100%' : 440 }}>
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
                         background: 'var(--bg-card)',

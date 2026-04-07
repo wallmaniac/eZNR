@@ -1526,17 +1526,77 @@ a:hover {
 /* RESPONSIVE — Mobile/Tablet breakpoints                                    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Tablet: ≤ 1024px */
-@media (max-width: 1024px) {
-  .modal { max-width: 90vw !important; }
+/* ── Scrollable table wrapper ──────────────────────────────────────────────
+   Wrap every data-table in a div.data-table-wrapper in your pages.          */
+.data-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
 }
 
-/* Mobile: ≤ 768px */
-@media (max-width: 768px) {
-  h1 { font-size: 1.4rem; }
-  h2 { font-size: 1.15rem; }
+/* ── Tablet: ≤ 1024px ────────────────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .modal { max-width: 90vw !important; }
 
-  /* Stat cards → 2-column */
+  /* Slightly tighter padding */
+  main { padding: 16px !important; padding-bottom: 80px !important; }
+}
+
+/* ── Mobile: < 768px ─────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+
+  /* --- Typography ---------------------------------------------------------- */
+  h1 { font-size: 1.3rem !important; }
+  h2 { font-size: 1.1rem !important; }
+  h3 { font-size: 1rem !important; }
+
+  /* --- Layout: main content full width (sidebar is overlay) --------------- */
+  main {
+    margin-left: 0 !important;
+    padding: 12px !important;
+    padding-bottom: 88px !important;
+  }
+
+  /* --- Tables -------------------------------------------------------------- */
+  .data-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 -4px; /* bleed slightly so shadow visible */
+  }
+  .data-table {
+    min-width: 520px;
+    font-size: 0.8rem;
+  }
+  .data-table th,
+  .data-table td {
+    padding: 10px 10px !important;
+    white-space: nowrap;
+  }
+
+  /* --- Cards --------------------------------------------------------------- */
+  .card-body { padding: 12px !important; }
+  .card-header { padding: 10px 14px !important; }
+  .card-header h2, .card-header h3 { font-size: 1rem !important; }
+
+  /* --- Grid forms → single column ----------------------------------------- */
+  [style*="gridTemplateColumns: '1fr 1fr'"],
+  [style*="gridTemplateColumns:'1fr 1fr'"],
+  [style*="gridTemplateColumns: '2fr 1fr 1fr'"],
+  [style*="gridTemplateColumns: '1fr 1fr 80px 1fr'"],
+  [style*="gridTemplateColumns: '1fr 1fr 100px'"],
+  [style*="gridTemplateColumns: '3fr 1fr'"],
+  [style*="gridTemplateColumns: '1fr 1fr 1fr'"],
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="grid-template-columns: 2fr 1fr 1fr"],
+  [style*="grid-template-columns: repeat(2"],
+  [style*="grid-template-columns: repeat(3"],
+  [style*="grid-template-columns: repeat(4"],
+  [style*="grid-template-columns: repeat(5"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* --- Stats grid → 2 columns --------------------------------------------- */
   [style*="gridAutoFlow: 'column'"],
   [style*="gridAutoFlow:'column'"],
   [style*="grid-auto-flow: column"],
@@ -1546,45 +1606,101 @@ a:hover {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  /* Grid forms → single column */
-  [style*="gridTemplateColumns: '1fr 1fr'"],
-  [style*="gridTemplateColumns:'1fr 1fr'"],
-  [style*="gridTemplateColumns: '2fr 1fr 1fr'"],
-  [style*="gridTemplateColumns: '1fr 1fr 80px 1fr'"],
-  [style*="gridTemplateColumns: '1fr 1fr 100px'"],
-  [style*="grid-template-columns: 1fr 1fr"],
-  [style*="grid-template-columns: 2fr 1fr 1fr"],
-  [style*="grid-template-columns: repeat(3"],
-  [style*="grid-template-columns: repeat(4"],
-  [style*="grid-template-columns: repeat(5"] {
-    grid-template-columns: 1fr !important;
+  /* --- Modals → full width, smaller header --------------------------------- */
+  .modal {
+    max-width: 98vw !important;
+    width: 98vw !important;
+    margin: 0 auto !important;
+    border-radius: var(--radius-lg) !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+  }
+  .modal-body { padding: 14px !important; }
+  .modal-header { padding: 10px 14px !important; }
+  .modal-footer { padding: 10px 14px !important; gap: 8px !important; }
+
+  /* --- Toolbar rows → wrap ------------------------------------------------- */
+  .toolbar-row,
+  [style*="display: flex"][style*="gap"] {
+    flex-wrap: wrap;
   }
 
-  /* Modals fill width */
-  .modal { max-width: 95vw !important; width: 95vw !important; }
-  .modal-body { padding: 16px !important; }
-  .modal-header { padding: 12px 16px !important; }
+  /* --- Buttons smaller on mobile ------------------------------------------- */
+  .btn { padding: 8px 14px; font-size: 0.82rem; }
+  .btn-sm { padding: 5px 10px !important; font-size: 0.78rem !important; }
 
-  /* Cards compact */
-  .card-body { padding: 16px; }
-  .card-header { padding: 12px 16px; }
+  /* --- Search bar ---------------------------------------------------------- */
+  .search-bar { min-width: 0 !important; flex: 1 !important; }
 
-  /* Tables: scroll horizontal */
-  .data-table { min-width: 600px; }
+  /* --- Tabs wrap ----------------------------------------------------------- */
+  .tabs { flex-wrap: wrap; gap: 0; }
+  .tab { padding: 8px 12px; font-size: 0.8rem; }
+
+  /* --- Badge + chip size --------------------------------------------------- */
+  .badge { font-size: 0.7rem !important; padding: 2px 6px !important; }
+
+  /* --- Dropdown menus → full width ----------------------------------------- */
+  .dropdown-menu {
+    min-width: 260px !important;
+    max-width: calc(100vw - 20px) !important;
+    left: 0 !important;
+    right: auto !important;
+  }
+
+  /* --- Stat label wrap ----------------------------------------------------- */
+  .stat-label { font-size: 0.7rem !important; white-space: normal !important; }
+  .stat-value { font-size: 1.4rem !important; }
+
+  /* --- Page header row ----------------------------------------------------- */
+  .page-header-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* --- Floating Zia button -------------------------------------------------- */
+  #ai-assistant-bubble {
+    bottom: 16px !important;
+    right: 12px !important;
+  }
+  #ai-assistant-window {
+    right: 8px !important;
+    left: 8px !important;
+    bottom: 70px !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
 }
 
-/* Small phone: ≤ 480px */
+/* ── Small phone: ≤ 480px ─────────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  h1 { font-size: 1.2rem; }
+  h1 { font-size: 1.15rem !important; }
 
-  /* Stat cards → full width */
+  main { padding: 8px !important; padding-bottom: 80px !important; }
+
+  /* Stats → single column */
   [style*="gridAutoFlow: 'column'"],
   [style*="grid-auto-flow: column"] {
     grid-template-columns: 1fr !important;
   }
 
-  .btn { padding: 8px 14px; font-size: 0.8rem; }
-  .btn-sm { padding: 4px 10px; font-size: 0.75rem; }
+  .stats-grid { grid-template-columns: 1fr !important; }
+
+  /* Even tighter spacing */
+  .card-body { padding: 10px !important; }
+  .data-table { min-width: 460px; font-size: 0.75rem; }
+  .data-table th, .data-table td { padding: 8px 8px !important; }
+
+  /* Modals nearly full screen */
+  .modal {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    border-radius: 0 !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+  }
+
+  .btn { padding: 7px 12px; font-size: 0.78rem; }
+  .btn-sm { padding: 4px 8px !important; font-size: 0.72rem !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */

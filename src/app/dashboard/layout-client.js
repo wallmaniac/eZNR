@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
@@ -15,6 +15,37 @@ export default function DashboardLayout({ children }) {
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [undoKey, setUndoKey] = useState(0);
+    const [isMobile, setIsMobile] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false); // mobile sidebar open/closed
+
+    // Detect mobile
+    useEffect(() => {
+        const check = () => {
+            const mobile = window.innerWidth < 768;
+            setIsMobile(mobile);
+            if (mobile) {
+                setSidebarCollapsed(true); // always start collapsed on mobile
+                setMobileOpen(false);
+            }
+        };
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
+    // Tablet auto-collapse
+    useEffect(() => {
+        const checkTablet = () => {
+            if (window.innerWidth >= 768 && window.innerWidth <= 1024) {
+                setSidebarCollapsed(true);
+            } else if (window.innerWidth > 1024) {
+                setSidebarCollapsed(false);
+            }
+        };
+        checkTablet();
+        window.addEventListener('resize', checkTablet);
+        return () => window.removeEventListener('resize', checkTablet);
+    }, []);
 
     useEffect(() => {
         const handleUndo = () => setUndoKey(k => k + 1);
@@ -31,6 +62,14 @@ export default function DashboardLayout({ children }) {
             }
         }
     }, [loading, isAuthenticated, router]);
+
+    const handleMobileToggle = useCallback(() => {
+        setMobileOpen(prev => !prev);
+    }, []);
+
+    const handleDesktopToggle = useCallback(() => {
+        setSidebarCollapsed(prev => !prev);
+    }, []);
 
     if (!mounted || loading) {
         return (
@@ -59,19 +98,48 @@ export default function DashboardLayout({ children }) {
         );
     }
 
+    // Calculate main margin
+    const mainMarginLeft = isMobile
+        ? 0
+        : sidebarCollapsed
+            ? 'var(--sidebar-collapsed-width)'
+            : 'var(--sidebar-width)';
+
     return (
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+
+            {/* Mobile overlay backdrop */}
+            {isMobile && mobileOpen && (
+                <div
+                    onClick={() => setMobileOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.55)',
+                        zIndex: 98,
+                        backdropFilter: 'blur(2px)',
+                    }}
+                />
+            )}
+
             <Sidebar
-                collapsed={sidebarCollapsed}
-                onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+                collapsed={isMobile ? false : sidebarCollapsed}
+                onToggle={isMobile ? handleMobileToggle : handleDesktopToggle}
+                isMobile={isMobile}
+                mobileOpen={mobileOpen}
+                onMobileClose={() => setMobileOpen(false)}
             />
-            <Header sidebarCollapsed={sidebarCollapsed} />
+            <Header
+                sidebarCollapsed={isMobile ? false : sidebarCollapsed}
+                isMobile={isMobile}
+                onMobileMenuToggle={handleMobileToggle}
+            />
             <main style={{
-                marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+                marginLeft: mainMarginLeft,
                 marginTop: 'var(--header-height)',
-                padding: 24,
-                paddingBottom: 96, // clearance for Zia FAB (72px bubble + 24px from bottom edge)
+                padding: isMobile ? 12 : 24,
+                paddingBottom: 96,
                 transition: 'margin-left var(--transition-normal)',
                 minHeight: 'calc(100vh - var(--header-height))',
             }}>
