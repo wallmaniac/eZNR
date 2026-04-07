@@ -167,21 +167,25 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             {isMobile && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, height: 52, zIndex: 300,
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '0 8px',
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px',
                     background: 'var(--bg-header, var(--bg-page))',
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
+                    overflowX: 'auto', // Prevent complete breakage if screen is too small
                 }}>
                     {/* Hamburger */}
                     <button id="mobile-menu-hamburger" onClick={onMobileMenuToggle} title="Menu" style={{
-                        width: 36, height: 36, borderRadius: 10, border: '1px solid var(--border)',
-                        background: 'var(--bg-card)', cursor: 'pointer', flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '1.1rem', color: 'var(--text-muted)',
+                        width: 32, height: 32, border: 'none', background: 'transparent',
+                        cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', 
+                        justifyContent: 'center', fontSize: '1.2rem', color: 'var(--text-muted)',
                     }}>☰</button>
 
-                    {/* Company chip (smaller) */}
-                    <div ref={companyRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
+                    {/* Back / Forward */}
+                    <button title={lang === 'bs' ? 'Nazad' : 'Back'} onClick={handleBack} style={{...iBtn({width: 30, height: 30}), fontSize: '1.1rem'}}>←</button>
+                    <button title={lang === 'bs' ? 'Naprijed' : 'Forward'} onClick={() => router.forward()} style={{...iBtn({width: 30, height: 30}), fontSize: '1.1rem'}}>→</button>
+
+                    {/* Company chip (strict max width) */}
+                    <div ref={companyRef} style={{ position: 'relative', flex: 1, minWidth: 0, maxWidth: 130 }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowProfile(false); setShowNotifs(false); }}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
@@ -191,13 +195,13 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     : 'linear-gradient(135deg, var(--primary), #009985)',
                                 cursor: 'pointer', width: '100%',
                             }}>
-                            <span style={{ width: 18, height: 18, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.65rem', flexShrink: 0 }}>🏢</span>
-                            <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
+                            <span style={{ width: 16, height: 16, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', flexShrink: 0 }}>🏢</span>
+                            <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
                                 {activeCompanyId === 'all' ? (lang === 'bs' ? 'Sve' : 'All') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || '—')}
                             </div>
                         </button>
                         {showCompanyMenu && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 260, zIndex: 300 }}>
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, right: 'auto', minWidth: 260, maxWidth: 'calc(100vw - 16px)', zIndex: 300 }}>
                                 <div style={{ padding: '8px 14px', fontWeight: 700, fontSize: '0.78rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                                     🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
                                 </div>
@@ -222,14 +226,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* Lang toggle */}
                     <button onClick={toggleLang}
-                        style={{ ...iBtn({ fontSize: '0.75rem', fontWeight: 700, width: 'auto', minWidth: 28, padding: '0 4px' }) }}>
+                        style={{ ...iBtn({ fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 24, padding: '0 2px' }) }}>
                         {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
 
                     {/* Theme toggle */}
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
-                        style={{ position: 'relative', width: 44, height: 22, borderRadius: 12, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', transition: 'background 0.4s' }}>
-                        <span style={{ position: 'absolute', top: 1, left: isDark ? 23 : 1, width: 16, height: 16, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>
+                        style={{ position: 'relative', width: 38, height: 20, borderRadius: 10, border: isDark ? '1px solid rgba(100,160,220,0.3)' : '1px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', transition: 'background 0.4s' }}>
+                        <span style={{ position: 'absolute', top: 1, left: isDark ? 19 : 1, width: 16, height: 16, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', boxShadow: '0 1px 3px rgba(0,0,0,0.3)', transition: 'left 0.3s cubic-bezier(0.4,0,0.2,1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem' }}>
                             {isDark ? '🌙' : '☀️'}
                         </span>
                     </button>
@@ -237,16 +241,16 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     {/* Notifications */}
                     <div ref={notifRef} style={{ position: 'relative' }}>
                         <button onClick={() => { setShowNotifs(v => !v); setShowProfile(false); }}
-                            style={{ ...iBtn({ position: 'relative', width: 34, height: 34 }) }}>
+                            style={{ ...iBtn({ position: 'relative', width: 32, height: 32 }) }}>
                             🔔
                             {notifications.length > 0 && (
-                                <span style={{ position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.45rem', color: 'white', fontWeight: 700, border: '1.5px solid var(--bg-card)' }}>
+                                <span style={{ position: 'absolute', top: 2, right: 2, width: 14, height: 14, borderRadius: '50%', background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.45rem', color: 'white', fontWeight: 700, border: '1px solid var(--bg-card)' }}>
                                     {notifications.length}
                                 </span>
                             )}
                         </button>
                         {showNotifs && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: -30, left: 'auto', minWidth: 320, maxWidth: '90vw', maxHeight: 400, overflowY: 'auto', zIndex: 300 }}>
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: -4, left: 'auto', minWidth: 320, maxWidth: 'calc(100vw - 16px)', maxHeight: 400, overflowY: 'auto', zIndex: 300, transformOrigin: 'top right' }}>
                                 <div style={{ padding: '10px 14px', fontWeight: 700, fontSize: '0.82rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between' }}>
                                     <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
                                     {isAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>v{APP_VERSION}</span>}
@@ -275,30 +279,20 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             </div>
                         )}
                     </div>
-
-                    {/* Expand/collapse search panel toggle */}
-                    <button onClick={() => setMobileExpanded(v => !v)} title={mobileExpanded ? 'Sakrij' : 'Prikaži'}
-                        style={{ ...iBtn(), width: 34, height: 34, borderRadius: 10, border: '1px solid var(--border)', background: 'var(--bg-card)', flexShrink: 0, fontSize: '0.75rem' }}>
-                        {mobileExpanded ? '▲' : '🔍'}
-                    </button>
                 </div>
             )}
 
-            {/* ══ MOBILE: Retractable controls panel ══ */}
+            {/* ══ MOBILE: Search & Profile Panel (Always visible below header) ══ */}
             {isMobile && (
                 <div style={{
                     position: 'fixed', top: 52, left: 0, right: 0, zIndex: 290,
-                    transform: mobileExpanded ? 'translateY(0)' : 'translateY(-120%)',
-                    opacity: mobileExpanded ? 1 : 0,
-                    pointerEvents: mobileExpanded ? 'auto' : 'none',
-                    transition: 'all 0.3s cubic-bezier(0.4,0,0.2,1)',
                     background: 'var(--bg-header, var(--bg-page))',
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
                     display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px',
                 }}>
                     {/* Search row (flex 1) */}
-                    <div ref={searchRef} style={{ position: 'relative', flex: 1 }}>
+                    <div ref={searchRef} style={{ position: 'relative', flex: 1, minWidth: 0 }}>
                         <div style={{
                             display: 'flex', alignItems: 'center', gap: 8,
                             background: 'var(--bg-card)',
@@ -309,7 +303,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         }}>
                             <span style={{ fontSize: '0.85rem', opacity: 0.4, flexShrink: 0 }}>🔍</span>
                             <input
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.88rem', color: 'var(--text)', fontFamily: 'var(--font-body)', flex: 1, minWidth: 0 }}
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '0.88rem', color: 'var(--text)', fontFamily: 'var(--font-body)', flex: 1, minWidth: 0, width: '100%' }}
                                 placeholder={t('searchPlaceholder')}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
@@ -339,15 +333,15 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* Profile Dropdown (flexShrink 0) */}
                     <div ref={profileRef} style={{ position: 'relative', flexShrink: 0 }}>
-                        <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); }}
+                        <button onClick={() => { setShowProfile(v => !v); setShowNotifs(false); setSearchFocused(false); }}
                             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 6px', borderRadius: 100, border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>
+                            <div style={{ width: 34, height: 34, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), var(--secondary))', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '0.85rem', flexShrink: 0 }}>
                                 {user?.firstName?.[0] || 'K'}
                             </div>
                             <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>▼</span>
                         </button>
                         {showProfile && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: 0, zIndex: 300, minWidth: 220 }}>
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 6px)', right: -8, left: 'auto', zIndex: 300, minWidth: 240, maxWidth: 'calc(100vw - 16px)', transformOrigin: 'top right' }}>
                                 <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--border-light)' }}>
                                     <div style={{ fontWeight: 700, fontSize: '0.84rem' }}>{user?.firstName} {user?.lastName}</div>
                                     <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || ''}</div>
