@@ -75,7 +75,9 @@ export default function MobileSearchOverlay({ isOpen, onClose }) {
 
     return (
         <div style={{
-            position: 'fixed', inset: 0, zIndex: 500,
+            position: 'fixed', top: 0, left: 0, right: 0,
+            bottom: 56, // keep bottom nav visible
+            zIndex: 450,
             background: 'var(--bg-page)',
             display: 'flex', flexDirection: 'column',
             animation: 'fadeIn 0.2s ease-out',

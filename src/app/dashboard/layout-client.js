@@ -70,6 +70,37 @@ export default function DashboardLayout({ children }) {
         }
     }, [loading, isAuthenticated, router]);
 
+    // ── Mobile hardware back button trap ──
+    // Prevents browser back from going to login page. Instead, closes any open
+    // overlays or navigates within the app.
+    useEffect(() => {
+        if (!isMobile || !mounted) return;
+
+        // Push a dummy history entry so the first "back" doesn't leave the page
+        window.history.pushState({ eznr: true }, '');
+
+        const handlePopState = (e) => {
+            // Close drawer if open
+            if (mobileOpen) {
+                setMobileOpen(false);
+                window.history.pushState({ eznr: true }, '');
+                return;
+            }
+
+            // If we're not on the main dashboard, go back within the app
+            if (window.location.pathname !== '/dashboard') {
+                window.history.pushState({ eznr: true }, '');
+                router.back();
+            } else {
+                // On the main dashboard — re-push so back doesn't leave the app
+                window.history.pushState({ eznr: true }, '');
+            }
+        };
+
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [isMobile, mounted, mobileOpen, router]);
+
     const handleMobileToggle = useCallback(() => {
         setMobileOpen(prev => !prev);
     }, []);

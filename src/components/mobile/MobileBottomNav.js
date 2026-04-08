@@ -30,10 +30,12 @@ export default function MobileBottomNav({ onMenuOpen }) {
 
     const handleTap = (tab) => {
         if (tab.action === 'search') {
-            setSearchOpen(true);
+            setSearchOpen(prev => !prev); // toggle search
         } else if (tab.action === 'menu') {
+            setSearchOpen(false); // close search when opening menu
             onMenuOpen?.();
         } else {
+            setSearchOpen(false); // close search on navigation
             router.push(tab.path);
         }
     };
@@ -54,7 +56,7 @@ export default function MobileBottomNav({ onMenuOpen }) {
                 backdropFilter: 'blur(20px)',
             }}>
                 {tabs.map(tab => {
-                    const active = isActive(tab.path);
+                    const active = tab.action === 'search' ? searchOpen : isActive(tab.path);
                     return (
                         <button
                             key={tab.key}

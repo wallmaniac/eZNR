@@ -543,11 +543,11 @@ export default function AIAssistant() {
         try {
             const saved = JSON.parse(localStorage.getItem('eznr_zia_position'));
             if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
-                // Allow sitting partially off-screen (up to half button = 24px)
+                // Allow sitting mostly off-screen (up to 36px out = only ~12px visible)
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                const x = Math.max(-24, Math.min(saved.x, vw - 28));
-                const y = Math.max(-24, Math.min(saved.y, vh - 28));
+                const x = Math.max(-36, Math.min(saved.x, vw - 16));
+                const y = Math.max(-36, Math.min(saved.y, vh - 16));
                 setFabPos({ x, y });
             }
         } catch { /* use default */ }
@@ -571,10 +571,10 @@ export default function AIAssistant() {
             const cur = prev || { x: window.innerWidth - 64, y: window.innerHeight - 130 };
             const vw = window.innerWidth;
             const vh = window.innerHeight;
-            // Allow half the button (24px) to go off any edge
+            // Allow most of the button to go off any edge (36px out = ~12px visible)
             return {
-                x: Math.max(-24, Math.min(cur.x + dx, vw - 28)),
-                y: Math.max(-24, Math.min(cur.y + dy, vh - 28)),
+                x: Math.max(-36, Math.min(cur.x + dx, vw - 16)),
+                y: Math.max(-36, Math.min(cur.y + dy, vh - 16)),
             };
         });
     }, []);
@@ -590,7 +590,7 @@ export default function AIAssistant() {
                 const vw = window.innerWidth;
                 // Snap to nearest horizontal edge — allow partial off-screen (-8px)
                 const snapped = {
-                    x: prev.x < vw / 2 ? -8 : vw - 44,
+                    x: prev.x < vw / 2 ? -16 : vw - 36,
                     y: prev.y,
                 };
                 try { localStorage.setItem('eznr_zia_position', JSON.stringify(snapped)); } catch {}

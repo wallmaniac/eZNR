@@ -354,20 +354,39 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
         // eslint-disable-next-line react-hooks/rules-of-hooks
         const scrollRef = useRef(null);
 
-        // Prevent scroll events from leaking out of the scrollable area
+        // Swipe-down-to-close tracking
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const swipeRef = useRef({ startY: 0, active: false });
+
+        const handleDrawerTouchStart = (e) => {
+            const scrollEl = scrollRef.current;
+            // Only allow swipe-to-close if scroll is at top (or touch is above the scroll area)
+            const atTop = !scrollEl || scrollEl.scrollTop <= 0;
+            const touchInScroll = scrollEl && scrollEl.contains(e.target);
+            if (atTop || !touchInScroll) {
+                swipeRef.current = { startY: e.touches[0].clientY, active: true };
+            } else {
+                swipeRef.current.active = false;
+            }
+        };
+
         const handleDrawerTouchMove = (e) => {
             const el = scrollRef.current;
-            if (!el) return;
-            // If at top and trying to scroll up, or at bottom and trying to scroll down,
-            // prevent the event from propagating (which would close the drawer)
-            const { scrollTop, scrollHeight, clientHeight } = el;
-            const isAtTop = scrollTop <= 0;
-            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
-            // Only block if the touch is inside the scroll container
-            if (el.contains(e.target)) {
-                // Let the scroll happen naturally inside the container
+            // Prevent background page scroll
+            if (el && el.contains(e.target)) {
                 e.stopPropagation();
             }
+        };
+
+        const handleDrawerTouchEnd = (e) => {
+            if (!swipeRef.current.active) return;
+            const endY = e.changedTouches[0].clientY;
+            const dist = endY - swipeRef.current.startY;
+            // If swiped down more than 80px → close
+            if (dist > 80) {
+                onMobileClose();
+            }
+            swipeRef.current.active = false;
         };
 
         return (
@@ -387,7 +406,9 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                 )}
                 {/* Drawer panel — bottom: 56px so bottom nav is always visible */}
                 <div
+                    onTouchStart={handleDrawerTouchStart}
                     onTouchMove={handleDrawerTouchMove}
+                    onTouchEnd={handleDrawerTouchEnd}
                     style={{
                         position: 'fixed',
                         bottom: 56, left: 0, right: 0,
