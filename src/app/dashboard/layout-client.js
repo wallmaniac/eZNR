@@ -9,6 +9,7 @@ import { initializeData } from '@/lib/dataStore';
 import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import UndoBar from '@/components/UndoBar';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
+import OfflineIndicator from '@/components/mobile/OfflineIndicator';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading } = useAuth();
@@ -179,6 +180,9 @@ export default function DashboardLayout({ children }) {
             {isMobile && (
                 <MobileBottomNav onMenuOpen={handleMobileToggle} />
             )}
+
+            {/* Mobile offline indicator */}
+            {isMobile && <OfflineIndicator />}
 
             <UndoBar />
             <AIAssistant />

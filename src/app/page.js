@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { initializeData, findUserByUsername } from '@/lib/dataStore';
+import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential } from '@/lib/webAuthn';
 
 export default function LoginPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -35,9 +36,19 @@ export default function LoginPage() {
     rememberMe: false,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showBiometricOffer, setShowBiometricOffer] = useState(false);
+  const [pendingLoginData, setPendingLoginData] = useState(null);
+  const [hasBiometric, setHasBiometric] = useState(false);
 
   // Initialize data so user records are available
   useEffect(() => { initializeData(); }, []);
+
+  // Check if biometric login is available
+  useEffect(() => {
+    if (isWebAuthnAvailable() && hasStoredCredential()) {
+      setHasBiometric(true);
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -147,6 +158,46 @@ export default function LoginPage() {
       });
     }
     setIsLoading(false);
+    // If WebAuthn is available and no credential yet, offer to enroll
+    if (isWebAuthnAvailable() && !hasStoredCredential()) {
+      const userData = JSON.parse(localStorage.getItem('eznr_user'));
+      if (userData) {
+        setPendingLoginData(userData);
+        setShowBiometricOffer(true);
+        return; // Don't navigate yet — show offer first
+      }
+    }
+    router.push('/dashboard');
+  };
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    try {
+      const userData = await authenticateCredential();
+      if (userData) {
+        login(userData);
+        router.push('/dashboard');
+      } else {
+        setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
+      }
+    } catch (e) {
+      setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
+    }
+    setIsLoading(false);
+  };
+
+  const handleAcceptBiometric = async () => {
+    try {
+      await registerCredential(pendingLoginData.id, pendingLoginData.username, pendingLoginData);
+    } catch (e) {
+      console.warn('WebAuthn registration failed:', e);
+    }
+    setShowBiometricOffer(false);
+    router.push('/dashboard');
+  };
+
+  const handleDeclineBiometric = () => {
+    setShowBiometricOffer(false);
     router.push('/dashboard');
   };
 
@@ -252,6 +303,68 @@ export default function LoginPage() {
           >
             {isLoading ? <span style={styles.spinner} /> : (isRegister ? t('registerButton') : t('loginButton'))}
           </button>
+
+          {/* Biometric login button */}
+          {!isRegister && hasBiometric && (
+            <button
+              type="button"
+              onClick={handleBiometricLogin}
+              className="btn btn-lg"
+              disabled={isLoading}
+              style={{
+                width: '100%', justifyContent: 'center', marginTop: 8, minHeight: 48,
+                background: 'rgba(0,191,166,0.12)', border: '1.5px solid rgba(0,191,166,0.3)',
+                color: '#00BFA6', fontSize: '0.92rem', fontWeight: 700,
+                display: 'flex', alignItems: 'center', gap: 10, borderRadius: 12,
+                cursor: 'pointer', fontFamily: 'var(--font-heading)',
+              }}
+            >
+              🔐 {lang === 'bs' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
+            </button>
+          )}
+
+          {/* Biometric enrollment offer modal */}
+          {showBiometricOffer && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 9999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+            }}>
+              <div style={{
+                background: 'var(--bg-card, #1a2332)', border: '1px solid rgba(0,191,166,0.2)',
+                borderRadius: 20, padding: '28px 24px', maxWidth: 340, width: '90%',
+                textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+              }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔐</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: 8, fontFamily: 'var(--font-heading)' }}>
+                  {lang === 'bs' ? 'Omogući brzu prijavu?' : 'Enable quick login?'}
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 1.5 }}>
+                  {lang === 'bs'
+                    ? 'Koristite otisak prsta ili prepoznavanje lica za brzu prijavu sljedeći put.'
+                    : 'Use fingerprint or face recognition for quick login next time.'}
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={handleDeclineBiometric}
+                    style={{
+                      flex: 1, padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                      fontSize: '0.85rem', fontWeight: 600, fontFamily: 'var(--font-heading)',
+                    }}>
+                    {lang === 'bs' ? 'Ne sada' : 'Not now'}
+                  </button>
+                  <button onClick={handleAcceptBiometric}
+                    className="btn btn-primary"
+                    style={{
+                      flex: 1, padding: '12px', borderRadius: 12,
+                      fontSize: '0.85rem', fontWeight: 700, justifyContent: 'center',
+                    }}>
+                    ✅ {lang === 'bs' ? 'Omogući' : 'Enable'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {loginError && (
             <div style={{

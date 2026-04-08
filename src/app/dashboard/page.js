@@ -9,6 +9,9 @@ import { getNotificationSettings } from '@/lib/systemMonitor';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useDialog } from '@/hooks/useDialog';
+import PullToRefresh from '@/components/mobile/PullToRefresh';
+import CollapsibleWidget from '@/components/mobile/CollapsibleWidget';
+import LongPressMenu, { useLongPress } from '@/components/mobile/LongPressMenu';
 
 const EVENT_ROUTES = {
     cert: '/dashboard/worker-certificates',
@@ -495,9 +498,60 @@ export default function DashboardPage() {
         }
     };
 
-    return (
+    // ── Mobile detection ──
+    const [isMobile, setIsMobile] = useState(false);
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
+
+    // ── Long-press menu state ──
+    const [lpMenu, setLpMenu] = useState({ open: false, pos: null, worker: null });
+    const longPressHandlers = useLongPress((pos) => {
+        // Will be set per-row via data attribute
+    }, 500);
+
+    const handleWorkerLongPress = (worker, pos) => {
+        setLpMenu({ open: true, pos, worker });
+    };
+
+    // ── Pull-to-refresh handler ──
+    const reloadAllData = async () => {
+        const uids = user?.companyIds || [];
+        setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
+        setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
+        setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
+        setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
+        setFleetVehicles(getAllForCompany(COLLECTIONS.VEHICLES, activeCompanyId, uids));
+        setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
+        setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
+        setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
+        setNotifSettings(getNotificationSettings() || {});
+        if (typeof window !== 'undefined' && window.eznrToast) {
+            window.eznrToast(lang === 'bs' ? 'Podaci osvježeni' : 'Data refreshed', 'success', 2000);
+        }
+    };
+
+    const dashboardContent = (
         <div className="animate-fadeIn">
+            {/* Long-press context menu (mobile only) */}
+            <LongPressMenu
+                isOpen={lpMenu.open}
+                position={lpMenu.pos}
+                onClose={() => setLpMenu({ open: false, pos: null, worker: null })}
+                items={lpMenu.worker ? [
+                    { icon: '👤', label: lang === 'bs' ? 'Otvori profil' : 'Open profile', onClick: () => handleWorkerAction('open', lpMenu.worker) },
+                    { icon: '📜', label: lang === 'bs' ? 'Uvjerenja' : 'Certificates', onClick: () => handleWorkerAction('certs', lpMenu.worker) },
+                    { icon: '🦺', label: lang === 'bs' ? 'OZO oprema' : 'PPE', onClick: () => handleWorkerAction('ppe', lpMenu.worker) },
+                    { icon: '🏥', label: lang === 'bs' ? 'Ljekarski' : 'Medical', onClick: () => router.push('/dashboard/medical-exams') },
+                    { icon: '🗑️', label: lang === 'bs' ? 'Obriši' : 'Delete', onClick: () => handleWorkerAction('delete', lpMenu.worker), danger: true },
+                ] : []}
+            />
+
             {/* Stats Cards — now clickable */}
+            <CollapsibleWidget id="stats" title={lang === 'bs' ? 'Pregled' : 'Overview'} icon="📊" isMobile={isMobile}>
             <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)', gap: 10, marginBottom: 24 }}>
                 <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} />
                 <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} />
@@ -507,8 +561,10 @@ export default function DashboardPage() {
                     <StatCard icon="🚨" label={lang === 'bs' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert />
                 )}
             </div>
+            </CollapsibleWidget>
 
             {/* ── Actionable Alerts Widget ── */}
+            <CollapsibleWidget id="alerts" title={lang === 'bs' ? 'Upozorenja' : 'Alerts'} icon="🚨" isMobile={isMobile}>
             {(() => {
                 const now = new Date();
                 const d30 = 30 * 86400000;
@@ -602,8 +658,10 @@ export default function DashboardPage() {
 
                 return <AlertsWidget groups={groups} total={total} lang={lang} />;
             })()}
+            </CollapsibleWidget>
 
             {/* Calendar */}
+            <CollapsibleWidget id="calendar" title={lang === 'bs' ? 'Kalendar' : 'Calendar'} icon="📅" isMobile={isMobile}>
             <div className="card" style={{ marginBottom: 24 }}>
                 <div className="card-body">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -1254,7 +1312,10 @@ export default function DashboardPage() {
                 </div>
             )}
 
+            </CollapsibleWidget>
+
             {/* Quick Tabs */}
+            <CollapsibleWidget id="workers" title={lang === 'bs' ? 'Radnici & Podaci' : 'Workers & Data'} icon="👷" isMobile={isMobile}>
             <div className="card">
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 0, borderBottom: '3px solid var(--primary)', marginBottom: 20, overflowX: 'auto' }}>
@@ -1303,8 +1364,26 @@ export default function DashboardPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {(activeTab === 'new' ? activeWorkers : terminatedWorkers).map((w, idx) => (
-                                        <tr key={w.id}>
+                                    {(activeTab === 'new' ? activeWorkers : terminatedWorkers).map((w, idx) => {
+                                        let lpTimer = null;
+                                        let lpMoved = false;
+                                        let lpPos = { x: 0, y: 0 };
+                                        return (
+                                        <tr key={w.id}
+                                            onTouchStart={isMobile ? (e) => {
+                                                lpMoved = false;
+                                                lpPos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                                                lpTimer = setTimeout(() => {
+                                                    if (!lpMoved) handleWorkerLongPress(w, lpPos);
+                                                }, 500);
+                                            } : undefined}
+                                            onTouchMove={isMobile ? (e) => {
+                                                const dx = Math.abs(e.touches[0].clientX - lpPos.x);
+                                                const dy = Math.abs(e.touches[0].clientY - lpPos.y);
+                                                if (dx > 10 || dy > 10) { lpMoved = true; clearTimeout(lpTimer); }
+                                            } : undefined}
+                                            onTouchEnd={isMobile ? () => clearTimeout(lpTimer) : undefined}
+                                        >
                                             <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
                                                 <button className="btn btn-primary btn-sm"
                                                     onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
@@ -1334,7 +1413,8 @@ export default function DashboardPage() {
                                             <td>{formatDate(w.datumZaposlenja)}</td>
                                             <td>{getOrgUnitName(w.orgJedinicaId)}</td>
                                         </tr>
-                                    ))}
+                                        );
+                                    })}
                                     {(activeTab === 'new' ? activeWorkers : terminatedWorkers).length === 0 && (
                                         <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                     )}
@@ -1461,6 +1541,7 @@ export default function DashboardPage() {
                     )}
                 </div>
             </div>
+            </CollapsibleWidget>
 
             {viewWorkerId && (
                 <WorkerProfileModal
@@ -1472,6 +1553,13 @@ export default function DashboardPage() {
             <DialogRenderer />
         </div>
     );
+
+    // Wrap in PullToRefresh on mobile
+    return isMobile ? (
+        <PullToRefresh onRefresh={reloadAllData}>
+            {dashboardContent}
+        </PullToRefresh>
+    ) : dashboardContent;
 }
 
 function StatCard({ icon, label, value, color, onClick, isAlert }) {
