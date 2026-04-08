@@ -1650,20 +1650,56 @@ a:hover {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  /* --- Modals → nearly full screen, scrollable ----------------------------- */
+  /* --- Modals → Full-screen native-like sheets on mobile ----------------------------- */
+  .modal-overlay {
+    padding: 0 !important; /* Remove padding entirely */
+    align-items: flex-end !important; /* Slide in from bottom */
+  }
+
+  .modal-overlay::before,
+  .modal-overlay::after {
+    display: none !important;
+  }
+
   .modal {
-    max-width: 98vw !important;
-    width: 98vw !important;
-    margin: 0 auto !important;
-    border-radius: var(--radius-lg) !important;
-    max-height: calc(100vh - 60px) !important; /* give space for bottom bar */
-    height: auto !important;
-    overflow-y: auto !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
+    max-height: 95dvh !important;
+    height: 95dvh !important; /* Force near full height, anchored to bottom */
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important; /* Container prevents scroll, body handles it */
     overscroll-behavior: contain !important;
   }
-  .modal-body { padding: 14px !important; }
-  .modal-header { padding: 10px 14px !important; }
-  .modal-footer { padding: 10px 14px !important; gap: 8px !important; }
+  
+  .modal-header { 
+    padding: 16px 20px !important; 
+    flex-shrink: 0 !important;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: inherit;
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .modal-body { 
+    padding: 16px 20px 80px !important; /* Bottom padding for mobile nav clearance */
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex: 1 1 auto !important;
+  }
+  
+  .modal-footer { 
+    padding: 16px 20px !important; 
+    flex-shrink: 0 !important; 
+    background: inherit;
+    border-top: 1px solid var(--border-light);
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+  }
 
   /* Worker profile modal / any full-page modal overlay */
   [style*="position: fixed"][style*="inset: 0"],

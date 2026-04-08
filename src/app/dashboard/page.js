@@ -882,6 +882,9 @@ export default function DashboardPage() {
                                 </div>
                             );
                         })}
+                        {Array.from({ length: (startPad + daysInMonth) % 7 === 0 ? 0 : 7 - ((startPad + daysInMonth) % 7) }).map((_, i) => (
+                            <div key={`endpad-${i}`} className="cal-cell-pad" style={{ padding: 8, minHeight: 80, minWidth: 0 }} />
+                        ))}
                     </div>
 
                     <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem', flexWrap: 'wrap' }}>

@@ -197,8 +197,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         </button>
                         {showCompanyMenu && (
                             <div className="dropdown-menu" style={{ position: 'fixed', top: 54, left: '5%', width: '90%', zIndex: 400, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16 }}>
-                                <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center' }}>
-                                    🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}
+                                <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}</span>
+                                    <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                 </div>
                                 <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
                                     style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
@@ -234,7 +235,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <div className="dropdown-menu" style={{ position: 'fixed', top: 54, right: 8, left: 8, width: 'auto', maxWidth: 'calc(100vw - 16px)', zIndex: 400, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14 }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.9rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
-                                    {isAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>v{APP_VERSION}</span>}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        {isAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>v{APP_VERSION}</span>}
+                                        <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+                                    </div>
                                 </div>
                                 {notifications.length === 0 ? (
                                     <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
@@ -301,7 +305,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         </button>
                         {showCompanyMenu && (
                             <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 280, zIndex: 200 }}>
-                                <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}</div>
+                                <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span>🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}</span>
+                                    <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>✕</button>
+                                </div>
                                 <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
                                     <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang === 'bs' ? 'Sve firme' : 'All companies'}</div></div>
                                 </button>
@@ -386,7 +393,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, left: 'auto', minWidth: 380, maxHeight: 500, overflowY: 'auto' }}>
                                 <div style={{ padding: '12px 16px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
-                                    {isAdmin && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>v{APP_VERSION}</span>}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                        {isAdmin && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>v{APP_VERSION}</span>}
+                                        <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>
+                                    </div>
                                 </div>
                                 {notifications.length === 0 ? (
                                     <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>✅ {lang === 'bs' ? 'Sve je u redu!' : 'All good!'}</div>
@@ -433,8 +443,13 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {showProfile && (
                             <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0 }}>
                                 <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-light)' }}>
-                                    <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{user?.firstName} {user?.lastName}</div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || ''}</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div>
+                                            <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>{user?.firstName} {user?.lastName}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{activeCompany?.naziv || ''}</div>
+                                        </div>
+                                        <button onClick={() => setShowProfile(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>
+                                    </div>
                                     <span style={{ display: 'inline-block', marginTop: 4, fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 8, background: roleBadge.bg, color: roleBadge.color }}>{roleBadge.label}</span>
                                 </div>
                                 <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=profile')}>👤 {t('profile')}</button>

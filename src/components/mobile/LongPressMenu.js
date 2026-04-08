@@ -63,6 +63,15 @@ export default function LongPressMenu({ isOpen, position, items = [], onClose })
                     transform: 'scale(1)',
                 }}
             >
+                <div style={{
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                    padding: '10px 16px',
+                    borderBottom: '1px solid var(--border-light)',
+                    background: 'var(--bg-table-header)'
+                }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>Meni</span>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+                </div>
                 {items.map((item, idx) => (
                     <button
                         key={idx}

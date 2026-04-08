@@ -15,15 +15,14 @@ export default function GlobalSwipeNav() {
 
     const handleTouchStart = useCallback((e) => {
         if (window.innerWidth > 768) return;
-
-        const tableWrapper = e.target.closest('.data-table-wrapper');
-        if (!tableWrapper) return;
+        // Don't swipe if touching inside a modal or a horizontally scrollable element that is actually scrolling
+        if (e.target.closest('.modal')) return;
 
         touchRef.current = {
             startX: e.touches[0].clientX,
             startY: e.touches[0].clientY,
             active: true,
-            target: tableWrapper,
+            target: e.target,
         };
     }, []);
 
@@ -32,19 +31,17 @@ export default function GlobalSwipeNav() {
         const { startX, startY, target } = touchRef.current;
         touchRef.current.active = false;
 
+        if (!e.changedTouches || !e.changedTouches[0]) return;
         const endX = e.changedTouches[0].clientX;
         const endY = e.changedTouches[0].clientY;
         const dx = endX - startX;
         const dy = endY - startY;
 
-        // Only trigger on mostly horizontal swipes > 45px
-        if (Math.abs(dx) < 45 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+        // Trigger on swipes > 35px horizontal, allowing up to 1.5x vertical drift
+        if (Math.abs(dx) < 35 || Math.abs(dy) > Math.abs(dx) * 1.5) return;
 
-        // Find the pagination container near the table
-        const card = target.closest('.card') || target.parentElement;
-        if (!card) return;
-
-        const paginationBtns = card.querySelectorAll('.pagination-btn');
+        // Find pagination buttons globally (usually just one table per mobile view)
+        const paginationBtns = document.querySelectorAll('.pagination-btn');
         if (!paginationBtns.length) return;
 
         if (dx < 0) {
