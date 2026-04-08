@@ -70,36 +70,34 @@ export default function DashboardLayout({ children }) {
         }
     }, [loading, isAuthenticated, router]);
 
-    // ── Mobile hardware back button trap ──
-    // Prevents browser back from going to login page. Instead, closes any open
-    // overlays or navigates within the app.
+    // ── Mobile hardware back button: close drawer on back press ──
+    // The login page already redirects authenticated users to /dashboard,
+    // so we only need to intercept back to close overlays (drawer).
     useEffect(() => {
         if (!isMobile || !mounted) return;
 
-        // Push a dummy history entry so the first "back" doesn't leave the page
-        window.history.pushState({ eznr: true }, '');
+        // When the drawer opens, push a history entry so back can close it
+        if (mobileOpen) {
+            window.history.pushState({ eznrDrawer: true }, '');
+        }
+    }, [isMobile, mounted, mobileOpen]);
+
+    useEffect(() => {
+        if (!isMobile || !mounted) return;
 
         const handlePopState = (e) => {
-            // Close drawer if open
+            // If the drawer is open, close it instead of navigating back
             if (mobileOpen) {
                 setMobileOpen(false);
-                window.history.pushState({ eznr: true }, '');
                 return;
             }
-
-            // If we're not on the main dashboard, go back within the app
-            if (window.location.pathname !== '/dashboard') {
-                window.history.pushState({ eznr: true }, '');
-                router.back();
-            } else {
-                // On the main dashboard — re-push so back doesn't leave the app
-                window.history.pushState({ eznr: true }, '');
-            }
+            // Otherwise let the browser handle back normally
+            // (Next.js router manages the history stack)
         };
 
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, [isMobile, mounted, mobileOpen, router]);
+    }, [isMobile, mounted, mobileOpen]);
 
     const handleMobileToggle = useCallback(() => {
         setMobileOpen(prev => !prev);

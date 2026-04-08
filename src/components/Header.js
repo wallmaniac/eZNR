@@ -175,7 +175,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     {/* Back / Forward */}
                     <button onClick={handleBack} title={lang === 'bs' ? 'Nazad' : 'Back'}
                         style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
-                    <button onClick={() => router.forward()} title={lang === 'bs' ? 'Naprijed' : 'Forward'}
+                    <button onClick={() => router.forward?.() || window.history.forward()} title={lang === 'bs' ? 'Naprijed' : 'Forward'}
                         style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip (center, fills space) */}
@@ -281,7 +281,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     <button title={lang === 'bs' ? 'Nazad' : 'Back'} onClick={handleBack} style={iBtn()}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>←</button>
-                    <button title={lang === 'bs' ? 'Naprijed' : 'Forward'} onClick={() => router.forward()} style={iBtn()}
+                    <button title={lang === 'bs' ? 'Naprijed' : 'Forward'} onClick={() => router.forward?.() || window.history.forward()} style={iBtn()}
                         onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                         onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>→</button>
                     {sep}

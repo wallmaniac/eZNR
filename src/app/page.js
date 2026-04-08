@@ -8,8 +8,15 @@ import { initializeData, findUserByUsername } from '@/lib/dataStore';
 
 export default function LoginPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const router = useRouter();
+
+  // If already logged in, redirect to dashboard (prevents "back" looking like a logout)
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router]);
   const [isRegister, setIsRegister] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [formData, setFormData] = useState({
