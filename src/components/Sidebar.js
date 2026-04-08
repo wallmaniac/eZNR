@@ -197,33 +197,277 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
         router.push('/');
     };
 
-    // Auto-close mobile sidebar on navigation
+    // Auto-close mobile drawer on navigation
     const handleNavClick = () => {
         if (isMobile && onMobileClose) onMobileClose();
     };
 
-    // Mobile: slide in/out as overlay
-    const mobileTransform = isMobile
-        ? mobileOpen ? 'translateX(0)' : 'translateX(-100%)'
-        : undefined;
+    // ── Shared menu rendering (used by both sidebar and drawer) ──
+    const renderMenu = (isDrawerMode = false) => (
+        <nav style={{ ...sidebarStyles.nav, ...(isDrawerMode ? { padding: '8px 12px' } : {}) }}>
+            {allMenuItems.map((item) => {
+                const hasChildren = item.children && item.children.length > 0;
+                const isOpen = openMenus[item.key];
+                const active = item.path && isActive(item.path);
+                const childActive = hasChildren && item.children.some((c) => {
+                    if (c.children) return c.children.some(gc => isActive(gc.path));
+                    return isActive(c.path);
+                });
 
+                return (
+                    <div key={item.key}>
+                        {hasChildren ? (
+                            <button
+                                onClick={() => toggleMenu(item.key)}
+                                style={{
+                                    ...sidebarStyles.menuItem,
+                                    ...(childActive ? sidebarStyles.menuItemActive : {}),
+                                    justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
+                                    padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
+                                }}
+                                title={(!isDrawerMode && collapsed) ? t(item.key) : undefined}
+                            >
+                                <span style={sidebarStyles.menuIcon}>{item.icon}</span>
+                                {(isDrawerMode || !collapsed) && (
+                                    <>
+                                        <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                        <span style={{
+                                            ...sidebarStyles.arrow,
+                                            transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                                        }}>
+                                            ›
+                                        </span>
+                                    </>
+                                )}
+                            </button>
+                        ) : (
+                            <Link
+                                href={item.path}
+                                prefetch={true}
+                                onClick={handleNavClick}
+                                style={{
+                                    ...sidebarStyles.menuItem,
+                                    ...(active ? sidebarStyles.menuItemActive : {}),
+                                    justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
+                                    padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
+                                    textDecoration: 'none',
+                                }}
+                                title={(!isDrawerMode && collapsed) ? t(item.key) : undefined}
+                            >
+                                <span style={sidebarStyles.menuIcon}>{item.icon}</span>
+                                {(isDrawerMode || !collapsed) && (
+                                    <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                )}
+                            </Link>
+                        )}
+
+                        {/* Submenu */}
+                        {hasChildren && isOpen && (isDrawerMode || !collapsed) && (
+                            <div style={sidebarStyles.submenu}>
+                                {item.children.map((child) => {
+                                    // Nested group (e.g. Obrasci i uputnice)
+                                    if (child.children) {
+                                        const childGroupOpen = openMenus[child.key];
+                                        const childGroupActive = child.children.some(gc => isActive(gc.path));
+                                        const childLabel = lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
+                                        return (
+                                            <div key={child.key}>
+                                                <button
+                                                    onClick={() => toggleMenu(child.key)}
+                                                    style={{
+                                                        ...sidebarStyles.submenuItem,
+                                                        width: '100%',
+                                                        justifyContent: 'space-between',
+                                                        ...(childGroupActive ? sidebarStyles.submenuItemActive : {}),
+                                                    }}
+                                                >
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                        <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
+                                                        <span>{childLabel}</span>
+                                                    </span>
+                                                    <span style={{ fontSize: '0.7rem', opacity: 0.5, transition: 'transform 0.2s', transform: childGroupOpen ? 'rotate(90deg)' : 'none' }}>›</span>
+                                                </button>
+                                                {childGroupOpen && (
+                                                    <div style={{ ...sidebarStyles.submenu, marginLeft: 12 }}>
+                                                        {child.children.map(gc => (
+                                                            <Link
+                                                                key={gc.key}
+                                                                href={gc.path}
+                                                                prefetch={true}
+                                                                onClick={handleNavClick}
+                                                                style={{
+                                                                    ...sidebarStyles.submenuItem,
+                                                                    ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
+                                                                    textDecoration: 'none',
+                                                                }}
+                                                            >
+                                                                <span style={{ fontSize: '0.85rem' }}>{gc.icon}</span>
+                                                                <span>{t(gc.key)}</span>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    }
+                                    // Normal child link
+                                    return (
+                                        <Link
+                                            key={child.key}
+                                            href={child.path}
+                                            prefetch={true}
+                                            onClick={handleNavClick}
+                                            style={{
+                                                ...sidebarStyles.submenuItem,
+                                                ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
+                                                textDecoration: 'none',
+                                            }}
+                                        >
+                                            <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
+                                            <span>{lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </nav>
+    );
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MOBILE: Bottom-sheet drawer (slides up from bottom)
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (isMobile) {
+        return (
+            <>
+                {/* Backdrop overlay */}
+                {mobileOpen && (
+                    <div
+                        onClick={onMobileClose}
+                        style={{
+                            position: 'fixed', inset: 0, zIndex: 499,
+                            background: 'rgba(0,0,0,0.55)',
+                            backdropFilter: 'blur(2px)',
+                            animation: 'fadeIn 0.2s ease',
+                        }}
+                    />
+                )}
+                {/* Drawer panel */}
+                <div
+                    onTouchStart={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                    style={{
+                        position: 'fixed',
+                        bottom: 0, left: 0, right: 0,
+                        height: '88vh',
+                        zIndex: 500,
+                        background: 'var(--bg-sidebar)',
+                        borderTopLeftRadius: 20,
+                        borderTopRightRadius: 20,
+                        transform: mobileOpen ? 'translateY(0)' : 'translateY(100%)',
+                        transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        boxShadow: mobileOpen ? '0 -8px 48px rgba(0,0,0,0.5)' : 'none',
+                        willChange: 'transform',
+                    }}
+                >
+                    {/* Drag handle + close */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '12px 16px 8px',
+                        flexShrink: 0,
+                    }}>
+                        {/* Drag handle bar */}
+                        <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                            <div style={{
+                                width: 40, height: 4, borderRadius: 2,
+                                background: 'rgba(255,255,255,0.2)',
+                            }} />
+                        </div>
+                        {/* Close button */}
+                        <button
+                            onClick={onMobileClose}
+                            style={{
+                                position: 'absolute', top: 12, right: 12,
+                                width: 36, height: 36, borderRadius: 10,
+                                background: 'rgba(255,255,255,0.08)',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                color: 'rgba(255,255,255,0.6)',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '1rem',
+                            }}
+                        >✕</button>
+                    </div>
+
+                    {/* Logo bar */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '4px 16px 12px',
+                        borderBottom: '1px solid rgba(255,255,255,0.08)',
+                        flexShrink: 0,
+                    }}>
+                        <Link href="/dashboard" onClick={handleNavClick} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+                            <Image src="/logo-icon.png" alt="eZNR" width={40} height={40} style={{ borderRadius: 8 }} />
+                            <div>
+                                <div style={sidebarStyles.logoTitle}>eZNR</div>
+                                <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
+                            </div>
+                        </Link>
+                    </div>
+
+                    {/* Scrollable menu body */}
+                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+                        {renderMenu(true)}
+                    </div>
+
+                    {/* User footer */}
+                    <div style={{
+                        flexShrink: 0,
+                        padding: '12px 16px',
+                        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+                        borderTop: '1px solid rgba(255,255,255,0.08)',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                    }}>
+                        <div style={sidebarStyles.userAvatar}>
+                            {user?.firstName?.[0] || 'K'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
+                            <div style={sidebarStyles.userCompany}>{user?.companyName}</div>
+                        </div>
+                        <button onClick={handleLogout} style={{
+                            padding: '8px 16px',
+                            background: 'rgba(244,67,54,0.15)',
+                            border: '1px solid rgba(244,67,54,0.3)',
+                            borderRadius: 8,
+                            color: '#ef9a9a',
+                            cursor: 'pointer',
+                            fontSize: '0.78rem',
+                            fontWeight: 600,
+                            fontFamily: 'var(--font-body)',
+                            whiteSpace: 'nowrap',
+                        }}>🚪 {t('logout')}</button>
+                    </div>
+                </div>
+            </>
+        );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DESKTOP / TABLET: Traditional left sidebar
+    // ═══════════════════════════════════════════════════════════════════════════
     return (
-        <aside
-            onTouchStart={isMobile ? (e) => e.stopPropagation() : undefined}
-            onTouchMove={isMobile ? (e) => e.stopPropagation() : undefined}
-            style={{
+        <aside style={{
             ...sidebarStyles.sidebar,
-            width: isMobile ? '280px' : (collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)'),
-            transform: mobileTransform,
-            transition: isMobile ? 'transform 0.25s ease' : 'width var(--transition-normal)',
-            zIndex: isMobile ? 200 : 100,
-            boxShadow: isMobile && mobileOpen ? '4px 0 32px rgba(0,0,0,0.4)' : undefined,
-            borderRight: isMobile ? 'none' : '1px solid rgba(255,255,255,0.05)',
-            overflowY: 'auto',
-            overflowX: 'hidden',
+            width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+            borderRight: '1px solid rgba(255,255,255,0.05)',
         }}>
             {/* Logo */}
-            <div style={{...sidebarStyles.logoArea, position: 'relative'}}>
+            <div style={{ ...sidebarStyles.logoArea, position: 'relative' }}>
                 {!collapsed && (
                     <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
                         <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
@@ -238,171 +482,31 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
                     </Link>
                 )}
-                <button onClick={isMobile ? onMobileClose : onToggle} style={{
-                    ...sidebarStyles.collapseBtn,
-                    ...(isMobile ? { position: 'absolute', top: 15, right: 15, width: 32, height: 32, fontSize: '0.9rem' } : {})
-                }}>
-                    {isMobile ? '✕' : (collapsed ? '▶' : '◀')}
+                <button onClick={onToggle} style={sidebarStyles.collapseBtn}>
+                    {collapsed ? '▶' : '◀'}
                 </button>
             </div>
 
             {/* Menu */}
-            <nav style={sidebarStyles.nav}>
-                {allMenuItems.map((item) => {
-                    const hasChildren = item.children && item.children.length > 0;
-                    const isOpen = openMenus[item.key];
-                    const active = item.path && isActive(item.path);
-                    const childActive = hasChildren && item.children.some((c) => isActive(c.path));
-
-                    return (
-                        <div key={item.key}>
-                            {hasChildren ? (
-                                <button
-                                    onClick={() => toggleMenu(item.key)}
-                                    style={{
-                                        ...sidebarStyles.menuItem,
-                                        ...(childActive ? sidebarStyles.menuItemActive : {}),
-                                        justifyContent: collapsed ? 'center' : 'flex-start',
-                                        padding: collapsed ? '12px' : '10px 16px',
-                                    }}
-                                    title={collapsed ? t(item.key) : undefined}
-                                >
-                                    <span style={sidebarStyles.menuIcon}>{item.icon}</span>
-                                    {!collapsed && (
-                                        <>
-                                            <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
-                                            <span style={{
-                                                ...sidebarStyles.arrow,
-                                                transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                                            }}>
-                                                ›
-                                            </span>
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <Link
-                                    href={item.path}
-                                    prefetch={true}
-                                    onClick={handleNavClick}
-                                    style={{
-                                        ...sidebarStyles.menuItem,
-                                        ...(active ? sidebarStyles.menuItemActive : {}),
-                                        justifyContent: (!isMobile && collapsed) ? 'center' : 'flex-start',
-                                        padding: (!isMobile && collapsed) ? '12px' : '10px 16px',
-                                        textDecoration: 'none',
-                                    }}
-                                    title={(!isMobile && collapsed) ? t(item.key) : undefined}
-                                >
-                                    <span style={sidebarStyles.menuIcon}>{item.icon}</span>
-                                    {(isMobile || !collapsed) && (
-                                        <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
-                                    )}
-                                </Link>
-                            )}
-
-                            {/* Submenu */}
-                            {hasChildren && isOpen && !collapsed && (
-                                <div style={sidebarStyles.submenu}>
-                                    {item.children.map((child) => {
-                                        // Nested group (e.g. Obrasci i uputnice)
-                                        if (child.children) {
-                                            const childGroupOpen = openMenus[child.key];
-                                            const childGroupActive = child.children.some(gc => isActive(gc.path));
-                                            const childLabel = lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
-                                            return (
-                                                <div key={child.key}>
-                                                    <button
-                                                        onClick={() => toggleMenu(child.key)}
-                                                        style={{
-                                                            ...sidebarStyles.submenuItem,
-                                                            width: '100%',
-                                                            justifyContent: 'space-between',
-                                                            ...(childGroupActive ? sidebarStyles.submenuItemActive : {}),
-                                                        }}
-                                                    >
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                            <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
-                                                            <span>{childLabel}</span>
-                                                        </span>
-                                                        <span style={{ fontSize: '0.7rem', opacity: 0.5, transition: 'transform 0.2s', transform: childGroupOpen ? 'rotate(90deg)' : 'none' }}>›</span>
-                                                    </button>
-                                                    {childGroupOpen && (
-                                                        <div style={{ ...sidebarStyles.submenu, marginLeft: 12 }}>
-                                                            {child.children.map(gc => (
-                                                                <Link
-                                                                    key={gc.key}
-                                                                    href={gc.path}
-                                                                    prefetch={true}
-                                                                    onClick={handleNavClick}
-                                                                    style={{
-                                                                        ...sidebarStyles.submenuItem,
-                                                                        ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
-                                                                        textDecoration: 'none',
-                                                                    }}
-                                                                >
-                                                                    <span style={{ fontSize: '0.85rem' }}>{gc.icon}</span>
-                                                                    <span>{t(gc.key)}</span>
-                                                                </Link>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        }
-                                        // Normal child link
-                                        return (
-                                            <Link
-                                                key={child.key}
-                                                href={child.path}
-                                                prefetch={true}
-                                                onClick={handleNavClick}
-                                                style={{
-                                                    ...sidebarStyles.submenuItem,
-                                                    ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
-                                                    textDecoration: 'none',
-                                                }}
-                                            >
-                                                <span style={{ fontSize: '0.85rem' }}>{child.icon}</span>
-                                                <span>{lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
-                                            </Link>
-                                        );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </nav>
+            {renderMenu(false)}
 
             {/* User area */}
             {!collapsed && (
                 <div style={sidebarStyles.userArea}>
-                    <div style={{ ...sidebarStyles.userInfo, marginBottom: isMobile ? 0 : 12, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ ...sidebarStyles.userInfo, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
                             <div style={sidebarStyles.userAvatar}>
                                 {user?.firstName?.[0] || 'K'}
                             </div>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={sidebarStyles.userName}>
-                                    {user?.firstName} {user?.lastName}
-                                </div>
-                                <div style={sidebarStyles.userCompany}>
-                                    {user?.companyName}
-                                </div>
+                                <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
+                                <div style={sidebarStyles.userCompany}>{user?.companyName}</div>
                             </div>
                         </div>
-                        {isMobile && (
-                            <button onClick={handleLogout} style={{ ...sidebarStyles.logoutBtn, marginTop: 4 }}>
-                                🚪 {t('logout')}
-                            </button>
-                        )}
                     </div>
-                    {!isMobile && (
-                        <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
-                            🚪 {t('logout')}
-                        </button>
-                    )}
+                    <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
+                        🚪 {t('logout')}
+                    </button>
                 </div>
             )}
         </aside>

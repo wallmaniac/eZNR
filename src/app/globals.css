@@ -1541,6 +1541,9 @@ a:hover {
 
   /* Slightly tighter padding */
   main { padding: 16px !important; padding-bottom: 80px !important; }
+
+  /* Stats: 3 columns on tablet */
+  .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
 }
 
 /* ── Mobile: < 768px ─────────────────────────────────────────────────────── */
@@ -1551,11 +1554,12 @@ a:hover {
   h2 { font-size: 1.1rem !important; }
   h3 { font-size: 1rem !important; }
 
-  /* --- Layout: main content full width (sidebar is overlay) --------------- */
+  /* --- Layout: main content full width, account for 48px header + 56px bottom nav */
   main {
     margin-left: 0 !important;
     padding: 12px !important;
-    padding-bottom: 88px !important;
+    padding-bottom: calc(56px + 64px) !important; /* bottom nav + extra space */
+    margin-top: 48px !important;
   }
 
   /* --- Tables -------------------------------------------------------------- */
@@ -1639,12 +1643,10 @@ a:hover {
   /* --- Badge + chip size --------------------------------------------------- */
   .badge { font-size: 0.7rem !important; padding: 2px 6px !important; }
 
-  /* --- Dropdown menus → full width ----------------------------------------- */
+  /* --- Dropdown menus → proper z-index and sizing -------------------------- */
   .dropdown-menu {
     min-width: 260px !important;
     max-width: calc(100vw - 20px) !important;
-    left: 0 !important;
-    right: auto !important;
   }
 
   /* --- Stat label wrap ----------------------------------------------------- */
@@ -1657,17 +1659,12 @@ a:hover {
     gap: 8px !important;
   }
 
-  /* --- Floating Zia button -------------------------------------------------- */
-  #ai-assistant-bubble {
-    bottom: 16px !important;
-    right: 12px !important;
+  /* --- Zia assistant on mobile --------------------------------------------- */
+  #ai-assistant-fab {
+    z-index: 450 !important; /* above bottom nav */
   }
   #ai-assistant-window {
-    right: 8px !important;
-    left: 8px !important;
-    bottom: 70px !important;
-    width: auto !important;
-    max-width: 100% !important;
+    z-index: 500 !important;
   }
 }
 

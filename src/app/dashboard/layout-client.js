@@ -8,6 +8,7 @@ import AIAssistant from '@/components/AIAssistant';
 import { initializeData } from '@/lib/dataStore';
 import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import UndoBar from '@/components/UndoBar';
+import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading } = useAuth();
@@ -16,16 +17,22 @@ export default function DashboardLayout({ children }) {
     const [mounted, setMounted] = useState(false);
     const [undoKey, setUndoKey] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
-    const [mobileOpen, setMobileOpen] = useState(false); // mobile sidebar open/closed
+    const [isTablet, setIsTablet] = useState(false);
+    const [mobileOpen, setMobileOpen] = useState(false); // mobile drawer open/closed
 
-    // Detect mobile
+    // Detect mobile + tablet
     useEffect(() => {
         const check = () => {
-            const mobile = window.innerWidth < 768;
+            const w = window.innerWidth;
+            const mobile = w < 768;
+            const tablet = w >= 768 && w <= 1024;
             setIsMobile(mobile);
+            setIsTablet(tablet);
             if (mobile) {
-                setSidebarCollapsed(true); // always start collapsed on mobile
+                setSidebarCollapsed(true);
                 setMobileOpen(false);
+            } else if (tablet) {
+                setSidebarCollapsed(true); // auto-collapse on tablet
             }
         };
         check();
@@ -109,20 +116,7 @@ export default function DashboardLayout({ children }) {
         <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
-            {/* Mobile overlay backdrop */}
-            {isMobile && mobileOpen && (
-                <div
-                    onClick={() => setMobileOpen(false)}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        background: 'rgba(0,0,0,0.55)',
-                        zIndex: 98,
-                        backdropFilter: 'blur(2px)',
-                    }}
-                />
-            )}
-
+            {/* Sidebar — on mobile it renders its own backdrop internally */}
             <Sidebar
                 collapsed={isMobile ? false : sidebarCollapsed}
                 onToggle={isMobile ? handleMobileToggle : handleDesktopToggle}
@@ -130,16 +124,20 @@ export default function DashboardLayout({ children }) {
                 mobileOpen={mobileOpen}
                 onMobileClose={() => setMobileOpen(false)}
             />
+
+            {/* Header */}
             <Header
                 sidebarCollapsed={isMobile ? false : sidebarCollapsed}
                 isMobile={isMobile}
                 onMobileMenuToggle={handleMobileToggle}
             />
+
+            {/* Main content — extra bottom padding on mobile for bottom nav */}
             <main style={{
                 marginLeft: mainMarginLeft,
                 marginTop: 'var(--header-height)',
                 padding: isMobile ? 12 : 24,
-                paddingBottom: 96,
+                paddingBottom: isMobile ? 120 : 96,
                 transition: 'margin-left var(--transition-normal)',
                 minHeight: 'calc(100vh - var(--header-height))',
             }}>
@@ -147,6 +145,12 @@ export default function DashboardLayout({ children }) {
                     {children}
                 </NavigationGuardProvider>
             </main>
+
+            {/* Mobile bottom navigation */}
+            {isMobile && (
+                <MobileBottomNav onMenuOpen={handleMobileToggle} />
+            )}
+
             <UndoBar />
             <AIAssistant />
         </div>

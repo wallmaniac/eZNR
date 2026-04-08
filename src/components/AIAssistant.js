@@ -533,6 +533,120 @@ export default function AIAssistant() {
     const [isDragging, setIsDragging] = useState(false);
     const [urgentCount, setUrgentCount] = useState(0); // badge on FAB
 
+    // ── Draggable FAB state ─────────────────────────────────────────────────
+    const [fabPos, setFabPos] = useState(null); // { x, y } or null = default
+    const dragRef = useRef({ dragging: false, startX: 0, startY: 0, totalDist: 0 });
+    const fabRef = useRef(null);
+
+    // Load saved position
+    useEffect(() => {
+        try {
+            const saved = JSON.parse(localStorage.getItem('eznr_zia_position'));
+            if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
+                // Validate within viewport
+                const vw = window.innerWidth;
+                const vh = window.innerHeight;
+                const x = Math.max(4, Math.min(saved.x, vw - 56));
+                const y = Math.max(4, Math.min(saved.y, vh - 56));
+                setFabPos({ x, y });
+            }
+        } catch { /* use default */ }
+    }, []);
+
+    // Drag handlers
+    const handleDragStart = useCallback((clientX, clientY) => {
+        dragRef.current = { dragging: true, startX: clientX, startY: clientY, totalDist: 0 };
+    }, []);
+
+    const handleDragMove = useCallback((clientX, clientY) => {
+        const d = dragRef.current;
+        if (!d.dragging) return;
+        const dx = clientX - d.startX;
+        const dy = clientY - d.startY;
+        d.totalDist += Math.abs(dx) + Math.abs(dy);
+        d.startX = clientX;
+        d.startY = clientY;
+
+        setFabPos(prev => {
+            const cur = prev || { x: window.innerWidth - 64, y: window.innerHeight - 64 };
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            return {
+                x: Math.max(4, Math.min(cur.x + dx, vw - 56)),
+                y: Math.max(4, Math.min(cur.y + dy, vh - 56)),
+            };
+        });
+    }, []);
+
+    const handleDragEnd = useCallback(() => {
+        const d = dragRef.current;
+        d.dragging = false;
+
+        // Only snap + persist if it was a real drag (not a click)
+        if (d.totalDist > 8) {
+            setFabPos(prev => {
+                if (!prev) return prev;
+                const vw = window.innerWidth;
+                // Snap to nearest horizontal edge
+                const snapped = {
+                    x: prev.x < vw / 2 ? 12 : vw - 60,
+                    y: prev.y,
+                };
+                try { localStorage.setItem('eznr_zia_position', JSON.stringify(snapped)); } catch {}
+                return snapped;
+            });
+        }
+    }, []);
+
+    // Mouse drag
+    const onFabMouseDown = useCallback((e) => {
+        e.preventDefault();
+        handleDragStart(e.clientX, e.clientY);
+
+        const onMove = (ev) => handleDragMove(ev.clientX, ev.clientY);
+        const onUp = () => {
+            handleDragEnd();
+            window.removeEventListener('mousemove', onMove);
+            window.removeEventListener('mouseup', onUp);
+            // If total dist < threshold, treat as click
+            if (dragRef.current.totalDist <= 8) {
+                if (isOpen) handleClose(); else handleOpen();
+            }
+        };
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+    }, [handleDragStart, handleDragMove, handleDragEnd, isOpen]);
+
+    // Touch drag
+    const onFabTouchStart = useCallback((e) => {
+        const t = e.touches[0];
+        handleDragStart(t.clientX, t.clientY);
+    }, [handleDragStart]);
+
+    const onFabTouchMove = useCallback((e) => {
+        e.preventDefault(); // prevent scroll while dragging
+        const t = e.touches[0];
+        handleDragMove(t.clientX, t.clientY);
+    }, [handleDragMove]);
+
+    const onFabTouchEnd = useCallback(() => {
+        handleDragEnd();
+        if (dragRef.current.totalDist <= 8) {
+            if (isOpen) handleClose(); else handleOpen();
+        }
+    }, [handleDragEnd, isOpen]);
+
+    // Computed FAB styles
+    const fabPosition = fabPos
+        ? { position: 'fixed', left: fabPos.x, top: fabPos.y, bottom: 'auto', right: 'auto' }
+        : { position: 'fixed', bottom: 16, right: 16 };
+
+    // Is FAB on the left side of the screen?
+    const isFabLeft = fabPos ? fabPos.x < window.innerWidth / 2 : false;
+
+    // Is the screen mobile-sized?
+    const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 768;
+
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -1003,18 +1117,29 @@ export default function AIAssistant() {
 
     return (
         <>
-            {/* ── Floating Action Button ── */}
+            {/* ── Floating Action Button (Draggable) ── */}
             <button
+                ref={fabRef}
                 id="ai-assistant-fab"
-                onClick={isOpen ? handleClose : handleOpen}
+                onMouseDown={isOpen ? undefined : onFabMouseDown}
+                onTouchStart={isOpen ? undefined : onFabTouchStart}
+                onTouchMove={isOpen ? undefined : onFabTouchMove}
+                onTouchEnd={isOpen ? undefined : onFabTouchEnd}
+                onClick={isOpen ? handleClose : undefined}
                 style={{
                     ...fabStyles.fab,
-                    ...(isOpen ? { width: 32, height: 32, bottom: 16, right: 16, boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : {}),
+                    ...fabPosition,
+                    ...(isOpen ? { width: 32, height: 32,
+                        ...(isMobileScreen ? { bottom: 72, right: 16, left: 'auto', top: 'auto' } : { bottom: 16, right: 16, left: 'auto', top: 'auto' }),
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : {}),
                     animation: !isOpen && pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
+                    transition: dragRef.current.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    touchAction: 'none',
+                    cursor: 'grab',
                 }}
                 title={isOpen
                     ? (lang === 'bs' ? 'Zatvori AI asistenta Zia' : 'Close AI assistant Zia')
-                    : (lang === 'bs' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia')}
+                    : (lang === 'bs' ? 'Otvori AI asistenta Zia (povuci da pomjeriš)' : 'Open AI assistant Zia (drag to move)')}
             >
                 <span style={{ ...fabStyles.fabIcon, fontSize: isOpen ? '0.8rem' : '1.3rem' }}>{isOpen ? '✕' : '✨'}</span>
                 {!isOpen && <span style={fabStyles.fabLabel}>Zia</span>}
@@ -1038,8 +1163,18 @@ export default function AIAssistant() {
             {isOpen && (
                 <div id="ai-assistant-window" style={{
                     ...chatStyles.window,
-                    height: isMinimized ? 'auto' : 580,
-                    bottom: 72, // offset so it doesn't cover the FAB
+                    // Mobile: full-screen overlay
+                    ...(isMobileScreen ? {
+                        position: 'fixed', top: 52, left: 0, right: 0, bottom: 60,
+                        width: 'auto', height: 'auto',
+                        borderRadius: 0,
+                    } : {
+                        height: isMinimized ? 'auto' : 580,
+                        // Position relative to FAB or default
+                        ...(isFabLeft
+                            ? { left: 28, right: 'auto', bottom: 72 }
+                            : { right: 28, bottom: 72 }),
+                    }),
                 }}>
                     {/* Header */}
                     <div style={chatStyles.header}>
