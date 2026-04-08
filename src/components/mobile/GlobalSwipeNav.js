@@ -37,8 +37,8 @@ export default function GlobalSwipeNav() {
         const dx = endX - startX;
         const dy = endY - startY;
 
-        // Only trigger on mostly horizontal swipes > 80px
-        if (Math.abs(dx) < 80 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
+        // Only trigger on mostly horizontal swipes > 45px
+        if (Math.abs(dx) < 45 || Math.abs(dy) > Math.abs(dx) * 0.7) return;
 
         // Find the pagination container near the table
         const card = target.closest('.card') || target.parentElement;

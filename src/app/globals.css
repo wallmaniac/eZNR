@@ -751,6 +751,9 @@ a:hover {
 
 .data-table tbody tr {
   transition: background var(--transition-fast);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .data-table tbody tr:hover {
@@ -919,8 +922,17 @@ a:hover {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 40px 20px;
   animation: fadeIn var(--transition-fast) ease-out;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Fix flexbox overflow issue where tall children get clipped at the top when centered */
+.modal-overlay::before,
+.modal-overlay::after {
+  content: '';
+  margin: auto;
 }
 
 .modal {
@@ -931,6 +943,7 @@ a:hover {
   max-width: 600px;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   animation: slideUp var(--transition-normal) ease-out;
 }
 
@@ -1606,14 +1619,24 @@ a:hover {
   [style*="gridTemplateColumns: '2fr 1fr 1fr'"],
   [style*="gridTemplateColumns: '1fr 1fr 80px 1fr'"],
   [style*="gridTemplateColumns: '1fr 1fr 100px'"],
+  [style*="gridTemplateColumns: '120px 1fr 1fr 1fr'"],
+  [style*="grid-template-columns: 120px 1fr 1fr 1fr"],
   [style*="gridTemplateColumns: '3fr 1fr'"],
   [style*="gridTemplateColumns: '1fr 1fr 1fr'"],
+  [style*="gridTemplateColumns: '1fr 1fr auto'"],
+  [style*="grid-template-columns: 1fr 1fr auto"],
   [style*="grid-template-columns: 1fr 1fr"],
   [style*="grid-template-columns: 2fr 1fr 1fr"],
   [style*="grid-template-columns: repeat(2"],
   [style*="grid-template-columns: repeat(3"],
   [style*="grid-template-columns: repeat(4"],
-  [style*="grid-template-columns: repeat(5"] {
+  [style*="grid-template-columns: repeat(5"],
+  [style*="grid-template-columns: repeat(6"],
+  [style*="gridTemplateColumns: 'repeat(2"],
+  [style*="gridTemplateColumns: 'repeat(3"],
+  [style*="gridTemplateColumns: 'repeat(4"],
+  [style*="gridTemplateColumns: 'repeat(5"],
+  [style*="gridTemplateColumns: 'repeat(6"] {
     grid-template-columns: 1fr !important;
   }
 
@@ -1633,8 +1656,10 @@ a:hover {
     width: 98vw !important;
     margin: 0 auto !important;
     border-radius: var(--radius-lg) !important;
-    max-height: 90vh !important;
+    max-height: calc(100vh - 60px) !important; /* give space for bottom bar */
+    height: auto !important;
     overflow-y: auto !important;
+    overscroll-behavior: contain !important;
   }
   .modal-body { padding: 14px !important; }
   .modal-header { padding: 10px 14px !important; }
@@ -1645,6 +1670,7 @@ a:hover {
   [style*="position: fixed"][style*="top: 0"][style*="left: 0"][style*="right: 0"][style*="bottom: 0"] {
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
   }
 
   /* --- Toolbar & action rows → wrap properly ------------------------------ */

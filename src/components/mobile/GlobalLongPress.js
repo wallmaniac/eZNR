@@ -62,14 +62,23 @@ export default function GlobalLongPress() {
     }, []);
 
     useEffect(() => {
+        const handleContextMenu = (e) => {
+            if (window.innerWidth > 768) return;
+            if (e.target.closest('.data-table tbody tr')) {
+                e.preventDefault();
+            }
+        };
+
         document.addEventListener('touchstart', handleTouchStart, { passive: true });
         document.addEventListener('touchmove', handleTouchMove, { passive: true });
         document.addEventListener('touchend', handleTouchEnd, { passive: false });
+        document.addEventListener('contextmenu', handleContextMenu);
 
         return () => {
             document.removeEventListener('touchstart', handleTouchStart);
             document.removeEventListener('touchmove', handleTouchMove);
             document.removeEventListener('touchend', handleTouchEnd);
+            document.removeEventListener('contextmenu', handleContextMenu);
             if (timerRef.current) clearTimeout(timerRef.current);
         };
     }, [handleTouchStart, handleTouchMove, handleTouchEnd]);

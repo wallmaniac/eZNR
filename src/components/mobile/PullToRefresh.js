@@ -19,6 +19,9 @@ export default function PullToRefresh({ onRefresh, threshold = 70, children }) {
         if (!el) return;
 
         const handleTouchStart = (e) => {
+            // Do not activate inside modals or dropdowns
+            if (e.target.closest('.modal, .modal-overlay, .dropdown-menu, .drawer')) return;
+
             // Only activate if page is scrolled to top
             const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
             if (scrollY > 5) return;
@@ -54,6 +57,8 @@ export default function PullToRefresh({ onRefresh, threshold = 70, children }) {
                 setRefreshing(true);
                 setPullDistance(threshold * 0.6);
                 try {
+                    // Artificial delay to show the spinner
+                    await new Promise(r => setTimeout(r, 600));
                     await onRefresh();
                 } catch (err) { console.error('Pull-to-refresh error:', err); }
                 setRefreshing(false);
@@ -64,14 +69,25 @@ export default function PullToRefresh({ onRefresh, threshold = 70, children }) {
             pullDistRef.current = 0;
         };
 
+        const handleTouchCancel = (e) => {
+            // Browser took over the gesture (e.g., native scroll/swipe). Reset state immediately.
+            touchRef.current.active = false;
+            setPulling(false);
+            setPullDistance(0);
+            pullDistRef.current = 0;
+            setRefreshing(false);
+        };
+
         el.addEventListener('touchstart', handleTouchStart, { passive: true });
         el.addEventListener('touchmove', handleTouchMove, { passive: false }); // passive:false to allow preventDefault
         el.addEventListener('touchend', handleTouchEnd, { passive: true });
+        el.addEventListener('touchcancel', handleTouchCancel, { passive: true });
 
         return () => {
             el.removeEventListener('touchstart', handleTouchStart);
             el.removeEventListener('touchmove', handleTouchMove);
             el.removeEventListener('touchend', handleTouchEnd);
+            el.removeEventListener('touchcancel', handleTouchCancel);
         };
     }, [refreshing, threshold, onRefresh]);
 
