@@ -543,11 +543,11 @@ export default function AIAssistant() {
         try {
             const saved = JSON.parse(localStorage.getItem('eznr_zia_position'));
             if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
-                // Validate within viewport
+                // Allow sitting partially off-screen (up to half button = 24px)
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                const x = Math.max(4, Math.min(saved.x, vw - 56));
-                const y = Math.max(4, Math.min(saved.y, vh - 56));
+                const x = Math.max(-24, Math.min(saved.x, vw - 28));
+                const y = Math.max(-24, Math.min(saved.y, vh - 28));
                 setFabPos({ x, y });
             }
         } catch { /* use default */ }
@@ -568,12 +568,13 @@ export default function AIAssistant() {
         d.startY = clientY;
 
         setFabPos(prev => {
-            const cur = prev || { x: window.innerWidth - 64, y: window.innerHeight - 64 };
+            const cur = prev || { x: window.innerWidth - 64, y: window.innerHeight - 130 };
             const vw = window.innerWidth;
             const vh = window.innerHeight;
+            // Allow half the button (24px) to go off any edge
             return {
-                x: Math.max(4, Math.min(cur.x + dx, vw - 56)),
-                y: Math.max(4, Math.min(cur.y + dy, vh - 56)),
+                x: Math.max(-24, Math.min(cur.x + dx, vw - 28)),
+                y: Math.max(-24, Math.min(cur.y + dy, vh - 28)),
             };
         });
     }, []);
@@ -587,9 +588,9 @@ export default function AIAssistant() {
             setFabPos(prev => {
                 if (!prev) return prev;
                 const vw = window.innerWidth;
-                // Snap to nearest horizontal edge
+                // Snap to nearest horizontal edge — allow partial off-screen (-8px)
                 const snapped = {
-                    x: prev.x < vw / 2 ? 12 : vw - 60,
+                    x: prev.x < vw / 2 ? -8 : vw - 44,
                     y: prev.y,
                 };
                 try { localStorage.setItem('eznr_zia_position', JSON.stringify(snapped)); } catch {}
@@ -637,9 +638,10 @@ export default function AIAssistant() {
     }, [handleDragEnd, isOpen]);
 
     // Computed FAB styles
+    // Default position: above the bottom nav (80px from bottom)
     const fabPosition = fabPos
         ? { position: 'fixed', left: fabPos.x, top: fabPos.y, bottom: 'auto', right: 'auto' }
-        : { position: 'fixed', bottom: 16, right: 16 };
+        : { position: 'fixed', bottom: 80, right: 16 };
 
     // Is FAB on the left side of the screen?
     const isFabLeft = fabPos ? fabPos.x < window.innerWidth / 2 : false;

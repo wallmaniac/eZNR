@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
@@ -337,36 +337,66 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     );
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // MOBILE: Bottom-sheet drawer (slides up from bottom)
+    // MOBILE: Bottom-sheet drawer (slides up from bottom, sits above bottom nav)
     // ═══════════════════════════════════════════════════════════════════════════
     if (isMobile) {
+        // Lock background scroll when drawer is open
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        useEffect(() => {
+            if (mobileOpen) {
+                const prev = document.body.style.overflow;
+                document.body.style.overflow = 'hidden';
+                return () => { document.body.style.overflow = prev; };
+            }
+        }, [mobileOpen]);
+
+        // Ref for the scrollable menu body
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const scrollRef = useRef(null);
+
+        // Prevent scroll events from leaking out of the scrollable area
+        const handleDrawerTouchMove = (e) => {
+            const el = scrollRef.current;
+            if (!el) return;
+            // If at top and trying to scroll up, or at bottom and trying to scroll down,
+            // prevent the event from propagating (which would close the drawer)
+            const { scrollTop, scrollHeight, clientHeight } = el;
+            const isAtTop = scrollTop <= 0;
+            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+            // Only block if the touch is inside the scroll container
+            if (el.contains(e.target)) {
+                // Let the scroll happen naturally inside the container
+                e.stopPropagation();
+            }
+        };
+
         return (
             <>
-                {/* Backdrop overlay */}
+                {/* Backdrop overlay — only covers area above bottom nav */}
                 {mobileOpen && (
                     <div
                         onClick={onMobileClose}
                         style={{
-                            position: 'fixed', inset: 0, zIndex: 499,
+                            position: 'fixed', top: 0, left: 0, right: 0,
+                            bottom: 56, // stop above bottom nav
+                            zIndex: 499,
                             background: 'rgba(0,0,0,0.55)',
                             backdropFilter: 'blur(2px)',
-                            animation: 'fadeIn 0.2s ease',
                         }}
                     />
                 )}
-                {/* Drawer panel */}
+                {/* Drawer panel — bottom: 56px so bottom nav is always visible */}
                 <div
-                    onTouchStart={(e) => e.stopPropagation()}
-                    onTouchMove={(e) => e.stopPropagation()}
+                    onTouchMove={handleDrawerTouchMove}
                     style={{
                         position: 'fixed',
-                        bottom: 0, left: 0, right: 0,
-                        height: '88vh',
+                        bottom: 56, left: 0, right: 0,
+                        top: 48, // below the mobile header
                         zIndex: 500,
                         background: 'var(--bg-sidebar)',
                         borderTopLeftRadius: 20,
                         borderTopRightRadius: 20,
-                        transform: mobileOpen ? 'translateY(0)' : 'translateY(100%)',
+                        transform: mobileOpen ? 'translateY(0)' : 'translateY(120%)',
                         transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                         display: 'flex',
                         flexDirection: 'column',
@@ -377,7 +407,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                     {/* Drag handle + close */}
                     <div style={{
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '12px 16px 8px',
+                        padding: '10px 16px 6px',
                         flexShrink: 0,
                     }}>
                         {/* Drag handle bar */}
@@ -391,14 +421,14 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         <button
                             onClick={onMobileClose}
                             style={{
-                                position: 'absolute', top: 12, right: 12,
-                                width: 36, height: 36, borderRadius: 10,
+                                position: 'absolute', top: 8, right: 12,
+                                width: 34, height: 34, borderRadius: 10,
                                 background: 'rgba(255,255,255,0.08)',
                                 border: '1px solid rgba(255,255,255,0.12)',
                                 color: 'rgba(255,255,255,0.6)',
                                 cursor: 'pointer',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '1rem',
+                                fontSize: '0.95rem',
                             }}
                         >✕</button>
                     </div>
@@ -406,12 +436,12 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                     {/* Logo bar */}
                     <div style={{
                         display: 'flex', alignItems: 'center', gap: 10,
-                        padding: '4px 16px 12px',
+                        padding: '4px 16px 10px',
                         borderBottom: '1px solid rgba(255,255,255,0.08)',
                         flexShrink: 0,
                     }}>
                         <Link href="/dashboard" onClick={handleNavClick} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                            <Image src="/logo-icon.png" alt="eZNR" width={40} height={40} style={{ borderRadius: 8 }} />
+                            <Image src="/logo-icon.png" alt="eZNR" width={36} height={36} style={{ borderRadius: 8 }} />
                             <div>
                                 <div style={sidebarStyles.logoTitle}>eZNR</div>
                                 <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
@@ -419,16 +449,24 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         </Link>
                     </div>
 
-                    {/* Scrollable menu body */}
-                    <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+                    {/* Scrollable menu body — overscrollBehavior: contain prevents scroll chaining */}
+                    <div
+                        ref={scrollRef}
+                        style={{
+                            flex: 1,
+                            overflowY: 'auto',
+                            overflowX: 'hidden',
+                            WebkitOverflowScrolling: 'touch',
+                            overscrollBehavior: 'contain',
+                        }}
+                    >
                         {renderMenu(true)}
                     </div>
 
                     {/* User footer */}
                     <div style={{
                         flexShrink: 0,
-                        padding: '12px 16px',
-                        paddingBottom: 'calc(12px + env(safe-area-inset-bottom, 0px))',
+                        padding: '10px 16px',
                         borderTop: '1px solid rgba(255,255,255,0.08)',
                         display: 'flex', alignItems: 'center', gap: 12,
                     }}>
