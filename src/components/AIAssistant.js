@@ -1119,47 +1119,43 @@ export default function AIAssistant() {
 
     return (
         <>
-            {/* ── Floating Action Button (Draggable) ── */}
-            <button
-                ref={fabRef}
-                id="ai-assistant-fab"
-                onMouseDown={isOpen ? undefined : onFabMouseDown}
-                onTouchStart={isOpen ? undefined : onFabTouchStart}
-                onTouchMove={isOpen ? undefined : onFabTouchMove}
-                onTouchEnd={isOpen ? undefined : onFabTouchEnd}
-                onClick={isOpen ? handleClose : undefined}
-                style={{
-                    ...fabStyles.fab,
-                    ...fabPosition,
-                    ...(isOpen ? { width: 32, height: 32,
-                        ...(isMobileScreen ? { bottom: 72, right: 16, left: 'auto', top: 'auto' } : { bottom: 16, right: 16, left: 'auto', top: 'auto' }),
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)' } : {}),
-                    animation: !isOpen && pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
-                    transition: dragRef.current.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    touchAction: 'none',
-                    cursor: 'grab',
-                }}
-                title={isOpen
-                    ? (lang === 'bs' ? 'Zatvori AI asistenta Zia' : 'Close AI assistant Zia')
-                    : (lang === 'bs' ? 'Otvori AI asistenta Zia (povuci da pomjeriš)' : 'Open AI assistant Zia (drag to move)')}
-            >
-                <span style={{ ...fabStyles.fabIcon, fontSize: isOpen ? '0.8rem' : '1.3rem' }}>{isOpen ? '✕' : '✨'}</span>
-                {!isOpen && <span style={fabStyles.fabLabel}>Zia</span>}
-                {/* Numeric urgent badge */}
-                {!isOpen && urgentCount > 0 && (
-                    <span style={{
-                        position: 'absolute', top: -5, right: -5,
-                        minWidth: 18, height: 18, borderRadius: 9,
-                        background: '#EF4444', border: '2px solid white',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '0.6rem', color: 'white', fontWeight: 800,
-                        padding: '0 3px', lineHeight: 1,
-                        boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
-                    }}>
-                        {urgentCount > 99 ? '99+' : urgentCount}
-                    </span>
-                )}
-            </button>
+            {/* ── Floating Action Button (Draggable) — hidden when chat is open ── */}
+            {!isOpen && (
+                <button
+                    ref={fabRef}
+                    id="ai-assistant-fab"
+                    onMouseDown={onFabMouseDown}
+                    onTouchStart={onFabTouchStart}
+                    onTouchMove={onFabTouchMove}
+                    onTouchEnd={onFabTouchEnd}
+                    style={{
+                        ...fabStyles.fab,
+                        ...fabPosition,
+                        animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
+                        transition: dragRef.current.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        touchAction: 'none',
+                        cursor: 'grab',
+                    }}
+                    title={lang === 'bs' ? 'Otvori AI asistenta Zia (povuci da pomjeriš)' : 'Open AI assistant Zia (drag to move)'}
+                >
+                    <span style={{ ...fabStyles.fabIcon, fontSize: '1.3rem' }}>✨</span>
+                    <span style={fabStyles.fabLabel}>Zia</span>
+                    {/* Numeric urgent badge */}
+                    {urgentCount > 0 && (
+                        <span style={{
+                            position: 'absolute', top: -5, right: -5,
+                            minWidth: 18, height: 18, borderRadius: 9,
+                            background: '#EF4444', border: '2px solid white',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '0.6rem', color: 'white', fontWeight: 800,
+                            padding: '0 3px', lineHeight: 1,
+                            boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                        }}>
+                            {urgentCount > 99 ? '99+' : urgentCount}
+                        </span>
+                    )}
+                </button>
+            )}
 
             {/* ── Chat Window ── */}
             {isOpen && (
@@ -1358,6 +1354,36 @@ export default function AIAssistant() {
                         </>
                     )}
                 </div>
+            )}
+
+            {/* ── Close bubble anchored at bottom-right of chat window ── */}
+            {isOpen && (
+                <button
+                    onClick={handleClose}
+                    style={{
+                        position: 'fixed',
+                        zIndex: 1002,
+                        ...(isMobileScreen
+                            ? { bottom: 64, right: 12 }
+                            : isFabLeft
+                                ? { bottom: 76, left: 382 }
+                                : { bottom: 76, right: 12 }),
+                        width: 44, height: 44, borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00BFA6, #009985)',
+                        border: '2px solid rgba(255,255,255,0.25)',
+                        cursor: 'pointer',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', gap: 0,
+                        boxShadow: '0 3px 12px rgba(0,191,166,0.4)',
+                        transition: 'transform 0.15s',
+                    }}
+                    title={lang === 'bs' ? 'Zatvori Zia' : 'Close Zia'}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+                >
+                    <span style={{ fontSize: '0.7rem', lineHeight: 1, color: 'white' }}>✕</span>
+                    <span style={{ fontSize: '0.48rem', fontWeight: 700, color: 'white', fontFamily: 'var(--font-heading)', letterSpacing: 0.3 }}>Zia</span>
+                </button>
             )}
 
             {/* ── CSS Animations ── */}
