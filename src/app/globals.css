@@ -1674,17 +1674,58 @@ a:hover {
   /* --- Badge + chip size --------------------------------------------------- */
   .badge { font-size: 0.7rem !important; padding: 2px 6px !important; }
 
-  /* --- Dropdown menus → proper z-index and sizing -------------------------- */
+  /* --- Dropdown menus → fixed bottom sheet on mobile to prevent clipping --- */
   .dropdown-menu {
-    min-width: 200px !important;
-    max-width: calc(100vw - 20px) !important;
+    position: fixed !important;
+    bottom: 60px !important;
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    width: auto !important;
+    max-height: 60vh !important;
+    overflow-y: auto !important;
     z-index: 9999 !important;
+    border-radius: var(--radius-lg) !important;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.4) !important;
+    animation: slideUp 0.2s ease-out !important;
+  }
+
+  /* Submenus render inline on mobile (no hover fly-out) */
+  .dropdown-submenu > .dropdown-menu {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: block !important;
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding-left: 16px !important;
+    max-height: none !important;
+  }
+
+  /* --- Search bar: always visible and full width --------------------------- */
+  .search-bar {
+    min-width: 0 !important;
+    flex: 1 1 100% !important;
+    order: -1 !important;
+    max-width: 100% !important;
   }
 
   /* --- Action menus (3-dot / ⋮) → always visible, proper z-index ----------- */
   [style*="position: absolute"][style*="right: 0"],
   [style*="position: absolute"][style*="right: 8"] {
     z-index: 50 !important;
+  }
+
+  /* --- Toolbar rows wrap properly on mobile -------------------------------- */
+  [style*="display: flex"][style*="flexWrap: 'wrap'"],
+  [style*="display: flex"][style*="flex-wrap: wrap"] {
+    gap: 8px !important;
   }
 
   /* --- Stat cards ---------------------------------------------------------- */

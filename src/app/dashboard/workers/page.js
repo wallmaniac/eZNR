@@ -367,6 +367,9 @@ function WorkersPageInner() {
         setCertificates([]);
         setPpeAssign([]);
         setShowForm(true);
+        if (typeof window !== 'undefined') {
+            window.history.pushState({ workerForm: true }, '');
+        }
     };
 
     const handleEdit = (worker) => {
@@ -394,6 +397,10 @@ function WorkersPageInner() {
         }
         setActionMenuId(null);
         setShowForm(true);
+        // Push browser history entry so mobile back button closes form
+        if (typeof window !== 'undefined') {
+            window.history.pushState({ workerForm: true }, '');
+        }
     };
 
     const handleDelete = async (id) => {
@@ -402,6 +409,9 @@ function WorkersPageInner() {
             removeWorkerCascade(id);
             setActionMenuId(null);
             loadData();
+            if (typeof window !== 'undefined' && window.eznrToast) {
+                window.eznrToast(lang === 'bs' ? 'Radnik obrisan' : 'Worker deleted', 'info');
+            }
         }
     };
 
@@ -422,6 +432,10 @@ function WorkersPageInner() {
         loadData();
         markClean();
         isDirtyRef.current = false;
+        // Toast feedback
+        if (typeof window !== 'undefined' && window.eznrToast) {
+            window.eznrToast(lang === 'bs' ? `Radnik ${formData.ime} ${formData.prezime} spremljen ✅` : `Worker ${formData.ime} ${formData.prezime} saved ✅`, 'success');
+        }
         // Clear refs BEFORE state changes so the openWorker watcher never re-fires
         openWorkerHandledRef.current = null;
         openedViaUrlRef.current = false;
@@ -438,14 +452,17 @@ function WorkersPageInner() {
         return savedId;
     };
 
-    const handleCancel = () => {
+    const handleCancel = (skipHistoryBack = false) => {
         markClean();
         isDirtyRef.current = false;
-        // Clear refs so the openWorker watcher can never re-open the form
         openWorkerHandledRef.current = null;
         openedViaUrlRef.current = false;
         setEditingWorker(null);
         setShowForm(false);
+        // If closing via in-app button, pop the history entry we pushed
+        if (!skipHistoryBack && typeof window !== 'undefined') {
+            window.history.back();
+        }
     };
 
     const handleBack = async () => {
@@ -457,8 +474,19 @@ function WorkersPageInner() {
             );
             if (!choice) return;
         }
-        handleCancel();
+        handleCancel(); // this calls history.back()
     };
+
+    // Listen for browser back button to close the worker form
+    useEffect(() => {
+        const onPopState = () => {
+            if (showForm) {
+                handleCancel(true); // skipHistoryBack — browser already went back
+            }
+        };
+        window.addEventListener('popstate', onPopState);
+        return () => window.removeEventListener('popstate', onPopState);
+    }, [showForm]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updateField = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -1460,28 +1488,16 @@ function WorkersPageInner() {
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}
                             </label>
-                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                                 {selectedIds.size > 0 && (
-                                    <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-                                    </span>
-                                )}
-                                <div style={{ position: 'relative' }} ref={groupMenuRef}>
-                                <button className="btn btn-dark btn-sm" onClick={() => setGroupMenuOpen(!groupMenuOpen)}>{lang === 'bs' ? 'Grupne akcije' : 'Group actions'} ▼</button>
-                                {groupMenuOpen && (
-                                    <div className="dropdown-menu" style={{ display: 'block', right: 0, top: 'calc(100% + 4px)', minWidth: 220 }}>
-                                        <div style={{ padding: '6px 14px 4px', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                            {selectedIds.size > 0 ? `${selectedIds.size} ${lang === 'bs' ? 'radnika odabrano' : 'workers selected'}` : (lang === 'bs' ? 'Odaberite radnike' : 'Select workers first')}
-                                        </div>
-                                        <div className="dropdown-divider" />
-                                        <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={() => {
-                                            setGroupMenuOpen(false);
-                                            if (selectedIds.size === 0) return;
-                                            setShowExportModal(true);
-                                        }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>📊 {lang === 'bs' ? 'Generiši Excel listu' : 'Generate Excel list'}</button>
-                                        <button className="dropdown-item" disabled={selectedIds.size === 0} onClick={() => {
-                                            setGroupMenuOpen(false);
-                                            if (selectedIds.size === 0) return;
+                                    <>
+                                        <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                            {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                        </span>
+                                        <button className="btn btn-sm" style={{ background: '#107c41', color: 'white', border: 'none' }} onClick={() => setShowExportModal(true)}>
+                                            📊 Excel
+                                        </button>
+                                        <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none' }} onClick={() => {
                                             const selectedWorkers = workers.filter(w => selectedIds.has(w.id));
                                             const emails = selectedWorkers.map(w => w.email).filter(Boolean);
                                             if (emails.length === 0) {
@@ -1490,21 +1506,24 @@ function WorkersPageInner() {
                                             }
                                             const subject = encodeURIComponent(lang === 'bs' ? 'Obavijest' : 'Notification');
                                             window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
-                                        }} style={{ opacity: selectedIds.size === 0 ? 0.5 : 1 }}>✉️ {lang === 'bs' ? 'Pošalji email' : 'Send email'}</button>
-                                        <div className="dropdown-divider" />
-                                        <button className="dropdown-item" disabled={selectedIds.size === 0} style={{ color: selectedIds.size > 0 ? 'var(--danger)' : 'var(--text-muted)', opacity: selectedIds.size === 0 ? 0.5 : 1 }} onClick={async () => {
-                                            setGroupMenuOpen(false);
-                                            if (selectedIds.size === 0) return;
+                                        }}>
+                                            ✉️ Email
+                                        </button>
+                                        <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none' }} onClick={async () => {
                                             const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
                                             if (ok) {
                                                 removeManyWorkersCascade([...selectedIds]);
                                                 setSelectedIds(new Set());
                                                 loadData();
                                             }
-                                        }}>🗑️ {lang === 'bs' ? `Obriši odabrane (${selectedIds.size})` : `Delete selected (${selectedIds.size})`}</button>
-                                    </div>
+                                        }}>
+                                            🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                        </button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())} title={lang === 'bs' ? 'Poništi odabir' : 'Clear selection'}>
+                                            ✕
+                                        </button>
+                                    </>
                                 )}
-                                </div>
                             </div>
                         </div>
 
@@ -1513,13 +1532,6 @@ function WorkersPageInner() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 100 }}>{t('actions')}</th>
-                                        <th style={tsW('ime')} onClick={() => tW('ime')}>{t('workerName')}{siW('ime')}</th>
-                                        <th style={tsW('prezime')} onClick={() => tW('prezime')}>{t('workerSurname')}{siW('prezime')}</th>
-                                        <th>{t('oib')}</th>
-                                        <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
-                                        <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
-                                        <th style={{ width: 140, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Status ZNR/MBR' : 'Status'}</th>
                                         <th style={{ width: 40, textAlign: 'center' }} title={allPageSelected ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all') : (lang === 'bs' ? 'Odaberi sve na stranici' : 'Select all on page')}>
                                             <input
                                                 type="checkbox"
@@ -1529,14 +1541,29 @@ function WorkersPageInner() {
                                                 style={{ cursor: 'pointer', width: 16, height: 16 }}
                                             />
                                         </th>
+                                        <th style={{ width: 100 }}>{t('actions')}</th>
+                                        <th style={tsW('ime')} onClick={() => tW('ime')}>{t('workerName')}{siW('ime')}</th>
+                                        <th style={tsW('prezime')} onClick={() => tW('prezime')}>{t('workerSurname')}{siW('prezime')}</th>
+                                        <th>{t('oib')}</th>
+                                        <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
+                                        <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
+                                        <th style={{ width: 140, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Status ZNR/MBR' : 'Status'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {pagedWorkers.length === 0 ? (
-                                        <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                        <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                     ) : (
                                         pagedWorkers.map((w) => (
-                                            <tr key={w.id}>
+                                            <tr key={w.id} style={{ background: selectedIds.has(w.id) ? 'rgba(0,191,166,0.06)' : undefined }}>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.has(w.id)}
+                                                        onChange={() => toggleOne(w.id)}
+                                                        style={{ cursor: 'pointer', width: 16, height: 16 }}
+                                                    />
+                                                </td>
                                                 <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
@@ -1640,14 +1667,6 @@ function WorkersPageInner() {
                                                         
                                                         return <span className={`badge ${badgeCls}`} style={{ width: '100px', display: 'inline-flex', justifyContent: 'center' }}>{badgeTxt}</span>;
                                                     })()}
-                                                </td>
-                                                <td style={{ textAlign: 'center' }}>
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={selectedIds.has(w.id)}
-                                                        onChange={() => toggleOne(w.id)}
-                                                        style={{ cursor: 'pointer', width: 16, height: 16 }}
-                                                    />
                                                 </td>
                                             </tr>
                                         ))

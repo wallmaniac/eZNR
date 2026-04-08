@@ -1,13 +1,9 @@
 'use client';
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 /**
  * PullToRefresh — wraps content with a native-feeling pull-down-to-refresh gesture.
- * Only active when scrollTop <= 0. Shows circular spinner that scales with pull distance.
- *
- * @param {Function} onRefresh  — async callback to reload data
- * @param {number}   threshold  — px to pull before triggering (default 70)
- * @param {ReactNode} children
+ * Only active when page scroll is at top. Shows circular spinner that scales with pull distance.
  */
 export default function PullToRefresh({ onRefresh, threshold = 70, children }) {
     const [pulling, setPulling] = useState(false);
@@ -15,59 +11,75 @@ export default function PullToRefresh({ onRefresh, threshold = 70, children }) {
     const [refreshing, setRefreshing] = useState(false);
     const touchRef = useRef({ startY: 0, active: false });
     const containerRef = useRef(null);
+    const pullDistRef = useRef(0); // mirror for non-stale access in touchEnd
 
-    const onTouchStart = useCallback((e) => {
-        // Only activate if scroll is at top
+    // Use native event listeners for { passive: false } so we can preventDefault
+    useEffect(() => {
         const el = containerRef.current;
-        if (el && el.scrollTop > 0) return;
-        if (refreshing) return;
-        touchRef.current = { startY: e.touches[0].clientY, active: true };
-    }, [refreshing]);
+        if (!el) return;
 
-    const onTouchMove = useCallback((e) => {
-        if (!touchRef.current.active || refreshing) return;
-        const dy = e.touches[0].clientY - touchRef.current.startY;
-        if (dy > 0) {
-            // Dampen the pull (logarithmic feel)
-            const dampened = Math.min(dy * 0.5, threshold * 1.8);
-            setPullDistance(dampened);
-            setPulling(true);
-            if (dy > 10) e.preventDefault(); // prevent scroll
-        } else {
+        const handleTouchStart = (e) => {
+            // Only activate if page is scrolled to top
+            const scrollY = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+            if (scrollY > 5) return;
+            if (refreshing) return;
+            touchRef.current = { startY: e.touches[0].clientY, active: true };
+        };
+
+        const handleTouchMove = (e) => {
+            if (!touchRef.current.active || refreshing) return;
+            const dy = e.touches[0].clientY - touchRef.current.startY;
+            if (dy > 0) {
+                const dampened = Math.min(dy * 0.45, threshold * 1.6);
+                setPullDistance(dampened);
+                pullDistRef.current = dampened;
+                setPulling(true);
+                if (dy > 10) {
+                    e.preventDefault(); // prevent native scroll while pulling
+                }
+            } else {
+                touchRef.current.active = false;
+                setPulling(false);
+                setPullDistance(0);
+                pullDistRef.current = 0;
+            }
+        };
+
+        const handleTouchEnd = async () => {
+            if (!touchRef.current.active) return;
             touchRef.current.active = false;
+
+            const dist = pullDistRef.current;
+            if (dist >= threshold && onRefresh) {
+                setRefreshing(true);
+                setPullDistance(threshold * 0.6);
+                try {
+                    await onRefresh();
+                } catch (err) { console.error('Pull-to-refresh error:', err); }
+                setRefreshing(false);
+            }
+
             setPulling(false);
             setPullDistance(0);
-        }
-    }, [refreshing, threshold]);
+            pullDistRef.current = 0;
+        };
 
-    const onTouchEnd = useCallback(async () => {
-        if (!touchRef.current.active) return;
-        touchRef.current.active = false;
+        el.addEventListener('touchstart', handleTouchStart, { passive: true });
+        el.addEventListener('touchmove', handleTouchMove, { passive: false }); // passive:false to allow preventDefault
+        el.addEventListener('touchend', handleTouchEnd, { passive: true });
 
-        if (pullDistance >= threshold && onRefresh) {
-            setRefreshing(true);
-            setPullDistance(threshold * 0.6); // snap to spinner position
-            try {
-                await onRefresh();
-            } catch (e) { console.error('Pull-to-refresh error:', e); }
-            setRefreshing(false);
-        }
-
-        setPulling(false);
-        setPullDistance(0);
-    }, [pullDistance, threshold, onRefresh]);
+        return () => {
+            el.removeEventListener('touchstart', handleTouchStart);
+            el.removeEventListener('touchmove', handleTouchMove);
+            el.removeEventListener('touchend', handleTouchEnd);
+        };
+    }, [refreshing, threshold, onRefresh]);
 
     const progress = Math.min(pullDistance / threshold, 1);
     const rotation = refreshing ? undefined : pullDistance * 4;
 
     return (
-        <div
-            ref={containerRef}
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-            style={{ position: 'relative' }}
-        >
+        <div ref={containerRef} style={{ position: 'relative' }}>
             {/* Pull indicator */}
             {(pulling || refreshing) && (
                 <div style={{

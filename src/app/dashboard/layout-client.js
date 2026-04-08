@@ -10,6 +10,8 @@ import { NavigationGuardProvider } from '@/contexts/NavigationGuardContext';
 import UndoBar from '@/components/UndoBar';
 import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 import OfflineIndicator from '@/components/mobile/OfflineIndicator';
+import GlobalLongPress from '@/components/mobile/GlobalLongPress';
+import GlobalSwipeNav from '@/components/mobile/GlobalSwipeNav';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading } = useAuth();
@@ -183,6 +185,12 @@ export default function DashboardLayout({ children }) {
 
             {/* Mobile offline indicator */}
             {isMobile && <OfflineIndicator />}
+
+            {/* Global long-press on table rows (mobile only) */}
+            {isMobile && <GlobalLongPress />}
+
+            {/* Global swipe left/right on tables to navigate pages (mobile only) */}
+            {isMobile && <GlobalSwipeNav />}
 
             <UndoBar />
             <AIAssistant />

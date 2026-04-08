@@ -14,10 +14,10 @@ export default function LoginPage() {
 
   // If already logged in, redirect to dashboard (prevents "back" looking like a logout)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !showBiometricOffer) {
       router.replace('/dashboard');
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router, showBiometricOffer]);
   const [isRegister, setIsRegister] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [formData, setFormData] = useState({
