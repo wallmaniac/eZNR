@@ -12,12 +12,6 @@ export default function LoginPage() {
   const { login, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  // If already logged in, redirect to dashboard (prevents "back" looking like a logout)
-  useEffect(() => {
-    if (isAuthenticated && !showBiometricOffer) {
-      router.replace('/dashboard');
-    }
-  }, [isAuthenticated, router, showBiometricOffer]);
   const [isRegister, setIsRegister] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [formData, setFormData] = useState({
@@ -39,6 +33,13 @@ export default function LoginPage() {
   const [showBiometricOffer, setShowBiometricOffer] = useState(false);
   const [pendingLoginData, setPendingLoginData] = useState(null);
   const [hasBiometric, setHasBiometric] = useState(false);
+
+  // If already logged in, redirect to dashboard (prevents "back" looking like a logout)
+  useEffect(() => {
+    if (isAuthenticated && !showBiometricOffer) {
+      router.replace('/dashboard');
+    }
+  }, [isAuthenticated, router, showBiometricOffer]);
 
   // Initialize data so user records are available
   useEffect(() => { initializeData(); }, []);
