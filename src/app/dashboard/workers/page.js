@@ -1574,42 +1574,57 @@ function WorkersPageInner() {
                                                         </button>
                                                     </div>
                                                     {actionMenuId === w.id && (
-                                                        <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 200 }}>
-                                                            <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
-                                                            <div className="dropdown-divider" />
-                                                            <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}</button>
-                                                            <button className="dropdown-item" onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {lang === 'bs' ? 'Novi pregled' : 'New exam'}</button>
-                                                            <button className="dropdown-item" onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {lang === 'bs' ? 'Nova povreda' : 'New injury'}</button>
-                                                            <div className="dropdown-divider" />
-                                                            <div className="dropdown-submenu">
-                                                                <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>📄 {t('enterForm')} ▶</button>
-                                                                <div className="dropdown-menu">
-                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro1')}>RO-1</button>
-                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro2')}>RO-2</button>
-                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/referral-ra1')}>RA-1</button>
-                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/night-work')}>NR-1</button>
-                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/diseases')}>PB</button>
-                                                                    <button className="dropdown-item" onClick={() => router.push('/dashboard/injuries')}>{lang === 'bs' ? 'Ozljeda na radu' : 'Work injury'}</button>
-                                                                    <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }}></div>
-                                                                    <button className="dropdown-item" onClick={() => { setUploadingDocForWorker(w.id); zosUploadRef.current?.click(); }}>📥 Zapisnik ZOS (Upload)</button>
-                                                                    <button className="dropdown-item" onClick={() => { setUploadingDocForWorker(w.id); zopUploadRef.current?.click(); }}>📥 Zapisnik ZOP (Upload)</button>
+                                                        <>
+                                                            {/* Invisible full-screen backdrop so touching outside closes on mobile */}
+                                                            <div
+                                                                onClick={() => setActionMenuId(null)}
+                                                                onTouchStart={() => setActionMenuId(null)}
+                                                                style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+                                                            />
+                                                            <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 200, zIndex: 999 }}>
+                                                                {/* Close button — visible on all sizes, critical on mobile */}
+                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
+                                                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                                                                        {w.ime} {w.prezime}
+                                                                    </span>
+                                                                    <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                                                 </div>
-                                                            </div>
-                                                            <div className="dropdown-submenu">
-                                                                <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>🖨️ {t('print')} ▶</button>
-                                                                <div className="dropdown-menu">
-                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-1</button>
-                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-2</button>
-                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-ZS</button>
-                                                                    <button className="dropdown-item" onClick={() => window.print()}>EK-PP</button>
-                                                                    <button className="dropdown-item" onClick={() => window.print()}>OZO - {lang === 'bs' ? 'Potpis' : 'Signature'}</button>
+                                                                <button className="dropdown-item" onClick={() => handleEdit(w)}>📂 {t('open')}</button>
+                                                                <div className="dropdown-divider" />
+                                                                <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}</button>
+                                                                <button className="dropdown-item" onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {lang === 'bs' ? 'Novi pregled' : 'New exam'}</button>
+                                                                <button className="dropdown-item" onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {lang === 'bs' ? 'Nova povreda' : 'New injury'}</button>
+                                                                <div className="dropdown-divider" />
+                                                                <div className="dropdown-submenu">
+                                                                    <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>📄 {t('enterForm')} ▶</button>
+                                                                    <div className="dropdown-menu">
+                                                                        <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro1')}>RO-1</button>
+                                                                        <button className="dropdown-item" onClick={() => router.push('/dashboard/form-ro2')}>RO-2</button>
+                                                                        <button className="dropdown-item" onClick={() => router.push('/dashboard/referral-ra1')}>RA-1</button>
+                                                                        <button className="dropdown-item" onClick={() => router.push('/dashboard/night-work')}>NR-1</button>
+                                                                        <button className="dropdown-item" onClick={() => router.push('/dashboard/diseases')}>PB</button>
+                                                                        <button className="dropdown-item" onClick={() => router.push('/dashboard/injuries')}>{lang === 'bs' ? 'Ozljeda na radu' : 'Work injury'}</button>
+                                                                        <div style={{ borderTop: '1px solid var(--border)', margin: '4px 0' }}></div>
+                                                                        <button className="dropdown-item" onClick={() => { setUploadingDocForWorker(w.id); zosUploadRef.current?.click(); }}>📥 Zapisnik ZOS (Upload)</button>
+                                                                        <button className="dropdown-item" onClick={() => { setUploadingDocForWorker(w.id); zopUploadRef.current?.click(); }}>📥 Zapisnik ZOP (Upload)</button>
+                                                                    </div>
                                                                 </div>
+                                                                <div className="dropdown-submenu">
+                                                                    <button className="dropdown-item" onClick={e => { e.stopPropagation(); }}>🖨️ {t('print')} ▶</button>
+                                                                    <div className="dropdown-menu">
+                                                                        <button className="dropdown-item" onClick={() => window.print()}>EK-1</button>
+                                                                        <button className="dropdown-item" onClick={() => window.print()}>EK-2</button>
+                                                                        <button className="dropdown-item" onClick={() => window.print()}>EK-ZS</button>
+                                                                        <button className="dropdown-item" onClick={() => window.print()}>EK-PP</button>
+                                                                        <button className="dropdown-item" onClick={() => window.print()}>OZO - {lang === 'bs' ? 'Potpis' : 'Signature'}</button>
+                                                                    </div>
+                                                                </div>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/archive'); }}>📁 {t('files')}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); }}>⬇️ {t('downloadFiles')}</button>
+                                                                <div className="dropdown-divider" />
+                                                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                             </div>
-                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/archive'); }}>📁 {t('files')}</button>
-                                                            <button className="dropdown-item" onClick={() => { setActionMenuId(null); }}>⬇️ {t('downloadFiles')}</button>
-                                                            <div className="dropdown-divider" />
-                                                            <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
-                                                        </div>
+                                                        </>
                                                     )}
                                                 </td>
                                                 <td style={{ fontWeight: 600 }}>

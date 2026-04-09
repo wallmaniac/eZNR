@@ -15,8 +15,12 @@ export default function GlobalSwipeNav() {
 
     const handleTouchStart = useCallback((e) => {
         if (window.innerWidth > 768) return;
-        // Don't swipe if touching inside a modal or a horizontally scrollable element that is actually scrolling
+        // Don't track touches inside modals
         if (e.target.closest('.modal')) return;
+        // Don't track inside .data-table-wrapper — it has overflow-x:auto and
+        // the browser will scroll the table, not fire a clean touchend for us.
+        // Swipes on the pagination bar / card header WILL still work.
+        if (e.target.closest('.data-table-wrapper')) return;
 
         touchRef.current = {
             startX: e.touches[0].clientX,
