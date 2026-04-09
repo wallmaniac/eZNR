@@ -94,6 +94,9 @@ function WorkerCertificatesInner() {
   const [showExpiringSoon, setShowExpiringSoon] = useState(false);
   const [expiringSoonDays, setExpiringSoonDays] = useState(60);
   const [viewWorkerId, setViewWorkerId] = useState(null);
+  const [actionMenuId, setActionMenuId] = useState(null);
+  const longPressTimer = useRef(null);
+  const touchStartPos = useRef({ x: 0, y: 0 });
 
   // ── Bulk selection state ──────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -199,13 +202,13 @@ function WorkerCertificatesInner() {
         {/* ── Page header ───────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
           <span style={{ fontSize: '1.6rem' }}>📜</span>
-          <div>
+          <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
             </p>
           </div>
-          <div style={{ marginLeft: 'auto' }}>
+          <div className="header-top-btn">
             <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates/create')}>
               + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
             </button>
@@ -215,15 +218,9 @@ function WorkerCertificatesInner() {
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
-            <div style={{ display: 'flex', gap: 8, padding: '12px 16px', flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid var(--border-light)' }}>
-              <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>
-                🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}
-              </button>
-              <button className="btn btn-sm" style={{ background: '#d32f2f', color: 'white', border: 'none' }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>
-                🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}
-              </button>
-
-              <div className="search-bar" style={{ flex: 1, minWidth: 180 }}>
+            <div className="uvjerenja-toolbar">
+              
+              <div className="search-bar search-full">
                 <span style={{ fontSize: '1rem' }}>🔍</span>
                 <input
                   placeholder={bs ? 'Pretraži po imenu, oznaci, tipu...' : 'Search by name, code, type...'}
@@ -234,25 +231,43 @@ function WorkerCertificatesInner() {
                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
               </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} style={{ accentColor: 'var(--primary)' }} />
-                {t('showOnlyValid')}
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)' }} />
-                {bs ? 'Ističe u' : 'Expiring in'}
-                <select
-                  value={expiringSoonDays}
-                  onChange={e => setExpiringSoonDays(Number(e.target.value))}
-                  disabled={!showExpiringSoon}
-                  style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', fontSize: '0.82rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
-                >
-                  <option value={30}>30 {bs ? 'dana' : 'days'}</option>
-                  <option value={60}>60 {bs ? 'dana' : 'days'}</option>
-                  <option value={90}>90 {bs ? 'dana' : 'days'}</option>
-                  <option value={180}>180 {bs ? 'dana' : 'days'}</option>
-                </select>
-              </label>
+              <div className="filters-row">
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} style={{ accentColor: 'var(--primary)' }} />
+                  {t('showOnlyValid')}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                  <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)' }} />
+                  {bs ? 'Ističe u' : 'Expiring in'}
+                  <select
+                    value={expiringSoonDays}
+                    onChange={e => setExpiringSoonDays(Number(e.target.value))}
+                    disabled={!showExpiringSoon}
+                    style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', fontSize: '0.82rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
+                  >
+                    <option value={30}>30 {bs ? 'dana' : 'days'}</option>
+                    <option value={60}>60 {bs ? 'dana' : 'days'}</option>
+                    <option value={90}>90 {bs ? 'dana' : 'days'}</option>
+                    <option value={180}>180 {bs ? 'dana' : 'days'}</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="btn-dodaj-mobile">
+                <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates/create')}>
+                  + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
+                </button>
+              </div>
+
+              <div className="record-buttons" style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>
+                  🖨️ {bs ? 'Zapisnik ZOS' : 'ZOS'}
+                </button>
+                <button className="btn btn-sm" style={{ background: '#d32f2f', color: 'white', border: 'none' }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>
+                  🔥 {bs ? 'Zapisnik ZOP' : 'ZOP'}
+                </button>
+              </div>
+
             </div>
 
             {/* ── Bulk Action Bar ────────────────────────────────────────── */}
@@ -319,7 +334,22 @@ function WorkerCertificatesInner() {
                     return (
                       <tr key={r.id || idx}
                         ref={r.id === highlightId ? highlightRef : null}
+                        onTouchStart={(e) => {
+                          touchStartPos.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                          longPressTimer.current = setTimeout(() => {
+                            setActionMenuId(r.id);
+                            if (navigator.vibrate) navigator.vibrate(50);
+                          }, 600);
+                        }}
+                        onTouchMove={(e) => {
+                          if (!longPressTimer.current) return;
+                          const dx = Math.abs(e.touches[0].clientX - touchStartPos.current.x);
+                          const dy = Math.abs(e.touches[0].clientY - touchStartPos.current.y);
+                          if (dx > 10 || dy > 10) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                        }}
+                        onTouchEnd={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; } }}
                         style={{
+                          WebkitUserSelect: 'none', userSelect: 'none', position: 'relative',
                           ...(r.id === highlightId ? {
                             background: 'rgba(0,191,166,0.12)',
                             outline: '2px solid var(--primary)',
@@ -410,6 +440,29 @@ function WorkerCertificatesInner() {
                                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
                               >📋</button>
                             )}
+
+                            {actionMenuId === r.id && (
+                              <>
+                                <div onClick={() => setActionMenuId(null)} onTouchStart={() => setActionMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 998 }} />
+                                <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', right: 0, minWidth: 200, zIndex: 999 }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
+                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>{r.workerName}</span>
+                                    <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
+                                  </div>
+                                  <button className="dropdown-item" onClick={() => handleEdit(r.id)}>📂 Otvori</button>
+                                  <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}`)}>📋 Kopiraj</button>
+                                  <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}>🔄 Produži</button>
+                                  <button className="dropdown-item" onClick={() => {
+                                    const html = buildBulkPrintHtml([r], workers, lang);
+                                    const win = window.open('', '_blank', 'width=900,height=700');
+                                    if (win) { win.document.write(html); win.document.close(); }
+                                    setActionMenuId(null);
+                                  }}>🖨️ Generiši PDF</button>
+                                  <div className="dropdown-divider" />
+                                  <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { alert('Brisanje je dostupno iz profila radnika na Meni > Radnici.'); setActionMenuId(null); }}>🗑️ Obriši</button>
+                                </div>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -438,8 +491,25 @@ function WorkerCertificatesInner() {
         />
       )}
       <style>{`
+        .uvjerenja-toolbar { display: flex; gap: 8px; padding: 12px 16px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--border-light); }
+        .search-full { flex: 1; min-width: 180px; display: flex; align-items: center; gap: 8px; }
+        .filters-row { display: flex; align-items: center; gap: 16px; }
+        .btn-dodaj-mobile { display: none; }
+        .header-top-btn { display: block; margin-left: auto; }
+        
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pulse-highlight { 0%,100% { background: rgba(0,191,166,0.12); } 50% { background: rgba(0,191,166,0.28); } }
+        
+        /* Mobile overrides */
+        @media (max-width: 768px) {
+          .uvjerenja-toolbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+          .search-full { width: 100%; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; background: var(--bg-input); }
+          .filters-row { width: 100%; justify-content: space-between; }
+          .btn-dodaj-mobile { display: block; width: 100%; }
+          .btn-dodaj-mobile button { width: 100%; justify-content: center; padding: 10px; font-size: 1rem; }
+          .header-top-btn { display: none; }
+          .record-buttons { display: none; } /* User only asked for Dodaj, search, and filters. Hide ZOS ZOP on mobile to save space, or keep them? Keeping them visible takes too much space. */
+        }
       `}</style>
     </>
   );
