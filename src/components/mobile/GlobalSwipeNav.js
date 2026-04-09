@@ -17,10 +17,8 @@ export default function GlobalSwipeNav() {
         if (window.innerWidth > 768) return;
         // Don't track touches inside modals
         if (e.target.closest('.modal')) return;
-        // Don't track inside .data-table-wrapper — it has overflow-x:auto and
-        // the browser will scroll the table, not fire a clean touchend for us.
-        // Swipes on the pagination bar / card header WILL still work.
-        if (e.target.closest('.data-table-wrapper')) return;
+        // Swipes on the data table will trigger page turn now
+        // so user can swipe anywhere to navigate.
 
         touchRef.current = {
             startX: e.touches[0].clientX,

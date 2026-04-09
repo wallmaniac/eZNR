@@ -781,12 +781,12 @@ export default function DashboardPage() {
                         </button>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1, borderRadius: 'var(--radius-lg)', overflow: 'hidden', borderBottom: '1px solid var(--border)' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)' }}>
                         {dayNames.map(d => (
                             <div key={d} style={{ padding: '8px 4px', textAlign: 'center', fontWeight: 700, fontSize: '0.75rem', color: 'var(--text-muted)', background: 'var(--bg-table-header)', textTransform: 'uppercase' }}>{d}</div>
                         ))}
                         {Array.from({ length: startPad }).map((_, i) => (
-                            <div key={`pad-${i}`} className="cal-cell-pad" style={{ padding: 8, minHeight: 80, minWidth: 0 }} />
+                            <div key={`pad-${i}`} className="cal-cell cal-cell-pad" style={{ padding: 8, minHeight: 80, minWidth: 0 }} />
                         ))}
                         {Array.from({ length: daysInMonth }).map((_, i) => {
                             const day = i + 1;
@@ -883,7 +883,7 @@ export default function DashboardPage() {
                             );
                         })}
                         {Array.from({ length: (startPad + daysInMonth) % 7 === 0 ? 0 : 7 - ((startPad + daysInMonth) % 7) }).map((_, i) => (
-                            <div key={`endpad-${i}`} className="cal-cell-pad" style={{ padding: 8, minHeight: 80, minWidth: 0 }} />
+                            <div key={`endpad-${i}`} className="cal-cell cal-cell-pad" style={{ padding: 8, minHeight: 80, minWidth: 0 }} />
                         ))}
                     </div>
 
