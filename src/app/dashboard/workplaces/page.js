@@ -13,8 +13,19 @@ import { useSortedList } from '@/hooks/useSortedList';
 const emptyWP = {
     naziv: '', oznaka: '', strucnaSprema: '', grupaRM: '',
     radNaRacunalu: false, posebniUvjetiRada: false, orgUnitId: '',
+    radnoVrijemeOd: '08:00', radnoVrijemeDo: '16:00',
     opis: '',
 };
+
+function isNightShift(odStr, doStr) {
+    if (!odStr || !doStr) return false;
+    const start = parseInt((odStr || '').replace(':', ''));
+    const end = parseInt((doStr || '').replace(':', ''));
+    if (isNaN(start) || isNaN(end)) return false;
+    if (start > end) return true; // Spans midnight
+    if (start < 600 || end >= 2200) return true; // Touches 00:00-06:00 or >= 22:00
+    return false;
+}
 
 export default function WorkplacesPage() {
     const { t, lang } = useLanguage();
@@ -260,7 +271,25 @@ export default function WorkplacesPage() {
                                         {getAll(COLLECTIONS.ORG_UNITS).map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                                     </select>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 24 }}>
+                                <div className="form-group" style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) minmax(120px, 1fr) 2fr', gap: 16 }}>
+                                    <div>
+                                        <label className="form-label">{lang === 'bs' ? 'Radno vrijeme od' : 'Work from'}</label>
+                                        <input className="form-input" type="time" value={formData.radnoVrijemeOd || ''} onChange={e => updateField('radnoVrijemeOd', e.target.value)} />
+                                    </div>
+                                    <div>
+                                        <label className="form-label">{lang === 'bs' ? 'Radno vrijeme do' : 'Work to'}</label>
+                                        <input className="form-input" type="time" value={formData.radnoVrijemeDo || ''} onChange={e => updateField('radnoVrijemeDo', e.target.value)} />
+                                    </div>
+                                    <div style={{ alignSelf: 'flex-end', paddingBottom: 6 }}>
+                                        {isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo) && (
+                                            <div style={{ background: 'rgba(239,83,80,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 600 }}>
+                                                🌙 Nocni rad (čl. 40 FBiH)
+                                                <div style={{ fontSize: '0.7rem', fontWeight: 400, marginTop: 2 }}>Zakon FBiH čl. 40: Obvezni ljekarski najmanje 1x u 2 godine.</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 12 }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                                         <input type="checkbox" checked={formData.radNaRacunalu} onChange={e => updateField('radNaRacunalu', e.target.checked)} />
                                         {lang === 'bs' ? 'Rad na računalu' : 'Computer work'}
@@ -317,6 +346,7 @@ export default function WorkplacesPage() {
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th style={tsWP('naziv')} onClick={() => tWP('naziv')}>{t('name')}{siWP('naziv')}</th>
                                     <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{lang === 'bs' ? 'Stručna sprema' : 'Education'}{siWP('strucnaSprema')}</th>
+                                    <th>{lang === 'bs' ? 'Radno vrijeme' : 'Shift'}</th>
                                     <th style={tsWP('grupaRM')} onClick={() => tWP('grupaRM')}>{lang === 'bs' ? 'Grupa RM' : 'WP Group'}{siWP('grupaRM')}</th>
                                     <th>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
                                 </tr>
@@ -359,6 +389,10 @@ export default function WorkplacesPage() {
                                             </td>
                                             <td style={{ fontWeight: 600 }}>{w.naziv}</td>
                                             <td>{w.strucnaSprema || '-'}</td>
+                                            <td>
+                                                <div style={{ fontSize: '0.85rem' }}>{w.radnoVrijemeOd || '08:00'} - {w.radnoVrijemeDo || '16:00'}</div>
+                                                {isNightShift(w.radnoVrijemeOd, w.radnoVrijemeDo) && <span style={{ fontSize: '0.65rem', background: 'rgba(239,83,80,0.15)', color: 'var(--danger)', padding: '2px 6px', borderRadius: 4, fontWeight: 700 }}>🌙 LJEKARSKI (NOĆNI RAD)</span>}
+                                            </td>
                                             <td>{w.grupaRM || '-'}</td>
                                             {/* Clickable badge */}
                                             <td onClick={e => e.stopPropagation()}>

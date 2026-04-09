@@ -18,7 +18,12 @@ import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
    ═══════════════════════════════════════════════ */
 
 const ZA_VRSTU_OPTIONS = [
+  'Anketa za radno mjesto',
+  'Anketa za mentalno opterećenje',
+  'Anketa za ručno prenošenje tereta',
+  'Anketa za ergonomiju radnog mjesta',
   'Djelatnik', 'DokumentTip', 'Posao', 'Tenant',
+  'Ostalo'
 ];
 
 const DODAJ_PROCJENA_OPTIONS = [
@@ -107,6 +112,9 @@ export default function QuestionnairesPage() {
   const [aiWorkplaces, setAiWorkplaces] = useState([]);
   const [selectedWpId, setSelectedWpId] = useState('');
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [aiVrstaAnkete, setAiVrstaAnkete] = useState('Anketa za radno mjesto');
+  const [aiCustomVrsta, setAiCustomVrsta] = useState('');
+  const [aiJezik, setAiJezik] = useState('Bosanski');
 
   const loadData = useCallback(() => {
     const recs = getAll(COLLECTIONS.QUESTIONNAIRES);
@@ -279,18 +287,21 @@ export default function QuestionnairesPage() {
             zdravstveniZahtjevi: sist.zdravstveniZahtjevi,
             certifikati: sist.certifikati,
           } : null,
+          vrstaAnkete: aiVrstaAnkete === 'Ostalo' ? aiCustomVrsta : aiVrstaAnkete,
+          jezik: aiJezik,
         }),
       });
       const data = await res.json();
       if (data.success && data.surveyJson) {
         const newQ = create(COLLECTIONS.QUESTIONNAIRES, {
           ...EMPTY_UPITNIK,
-          naziv: `Procjena rizika — ${wp.naziv}`,
-          oznaka: 'PR-AI',
-          zaVrstu: 'Posao',
+          naziv: `${aiVrstaAnkete === 'Ostalo' ? aiCustomVrsta : aiVrstaAnkete} — ${wp.naziv}`,
+          oznaka: 'AI-ANKETA',
+          zaVrstu: aiVrstaAnkete === 'Ostalo' ? aiCustomVrsta : aiVrstaAnkete,
           dodajUPrilogProcjeniRizika: 'Dodaje se u procjenu rizika',
           surveyJson: data.surveyJson,
           radnoMjestoId: wp.id,
+          jezik: aiJezik,
           aiGenerated: true,
         });
         setShowAiModal(false);
@@ -406,7 +417,7 @@ export default function QuestionnairesPage() {
                   <tr>
                     <th>{t('actions')}</th>
                     <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
-                    <th>{lang === 'bs' ? 'Povezan na' : 'Connected to'}</th>
+                    <th>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</th>
                     <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
                     <th>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}</th>
                     <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</th>
@@ -558,7 +569,7 @@ export default function QuestionnairesPage() {
                   <tr>
                     <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
                     <th>{lang === 'bs' ? 'Oznaka' : 'Code'}</th>
-                    <th>{lang === 'bs' ? 'Za vrstu' : 'For type'}</th>
+                    <th>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</th>
                     <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Portal'}</th>
                     <th>{t('actions')}</th>
                   </tr>
@@ -600,10 +611,29 @@ export default function QuestionnairesPage() {
                 AI će generisati upitnik specifičan za odabrano radno mjesto, pokrivajući opasnosti, zaštitnu opremu, osposobljavanje, radnu opremu i zdravstvene preglede.
               </div>
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>Odaberite radno mjesto</div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang === 'bs' ? 'Odaberite radno mjesto' : 'Select workplace'}</div>
                 <select className="form-select" value={selectedWpId} onChange={e => setSelectedWpId(e.target.value)} style={{ width: '100%' }}>
-                  <option value="">— Odaberite radno mjesto —</option>
+                  <option value="">— {lang === 'bs' ? 'Odaberite radno mjesto' : 'Select workplace'} —</option>
                   {aiWorkplaces.map(wp => <option key={wp.id} value={wp.id}>{wp.naziv}</option>)}
+                </select>
+              </div>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</div>
+                <select className="form-select" value={aiVrstaAnkete} onChange={e => setAiVrstaAnkete(e.target.value)} style={{ width: '100%' }}>
+                  {ZA_VRSTU_OPTIONS.filter(o => !['Djelatnik', 'DokumentTip', 'Posao', 'Tenant'].includes(o)).map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+                {aiVrstaAnkete === 'Ostalo' && (
+                  <input className="form-input" style={{ width: '100%', marginTop: 8 }} placeholder={lang === 'bs' ? 'Upišite vrstu ankete...' : 'Type survey type...'} value={aiCustomVrsta} onChange={e => setAiCustomVrsta(e.target.value)} />
+                )}
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang === 'bs' ? 'Jezik ankete' : 'Survey language'}</div>
+                <select className="form-select" value={aiJezik} onChange={e => setAiJezik(e.target.value)} style={{ width: '100%' }}>
+                  <option value="Bosanski">Bosanski</option>
+                  <option value="Hrvatski">Hrvatski</option>
+                  <option value="Srpski">Srpski</option>
+                  <option value="Engleski">English</option>
+                  <option value="Njemački">Deutsch</option>
                 </select>
               </div>
               {aiWorkplaces.length === 0 && (
@@ -706,11 +736,18 @@ export default function QuestionnairesPage() {
             {/* Row 2: Za vrstu, Prikaži na portalu, Dodaj u prilog procjeni rizika */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Za vrstu' : 'For type'}</div>
-                <select className="form-select" value={formData.zaVrstu} onChange={e => set('zaVrstu', e.target.value)}>
+                <div style={labelSt}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</div>
+                <select className="form-select" value={ZA_VRSTU_OPTIONS.includes(formData.zaVrstu) ? formData.zaVrstu : (formData.zaVrstu ? 'Ostalo' : '')} onChange={e => {
+                  const val = e.target.value;
+                  if (val !== 'Ostalo') set('zaVrstu', val);
+                  else set('zaVrstu', ''); // clear input for custom
+                }}>
                   <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
                   {ZA_VRSTU_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
+                {(!ZA_VRSTU_OPTIONS.includes(formData.zaVrstu) && formData.zaVrstu !== '') || formData.zaVrstu === 'Ostalo' ? (
+                  <input className="form-input" style={{ marginTop: 8 }} placeholder={lang === 'bs' ? 'Unesite vrstu ankete' : 'Custom type'} value={formData.zaVrstu} onChange={e => set('zaVrstu', e.target.value)} />
+                ) : null}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={labelSt}>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</div>

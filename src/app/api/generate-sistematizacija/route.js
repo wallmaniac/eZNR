@@ -10,7 +10,7 @@ export async function POST(request) {
     let body;
     try { body = await request.json(); } catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }); }
 
-    const { workplaceName, oznaka, strucnaSprema, industry, numberOfWorkers, orgUnit, additionalInfo } = body;
+    const { workplaceName, oznaka, strucnaSprema, industry, numberOfWorkers, orgUnit, additionalInfo, radnoVrijemeOd, radnoVrijemeDo } = body;
 
     const systemPrompt = `Ti si stručnjak za ljudske resurse i zaštitu na radu u Bosni i Hercegovini.
 Generišeš profesionalnu sistematizaciju radnog mjesta u skladu sa Zakonom o radu FBiH (čl. 118.)
@@ -53,15 +53,24 @@ JSON FORMAT:
   "napomena": "Dodatne napomene"
 }`;
 
+    let nightShiftLogic = '';
+    const start = parseInt((radnoVrijemeOd || '').replace(':', ''));
+    const end = parseInt((radnoVrijemeDo || '').replace(':', ''));
+    if (!isNaN(start) && !isNaN(end) && (start > end || start < 600 || end >= 2200)) {
+        nightShiftLogic = 'OVO JE NOĆNI RAD (Zakon o radu FBiH čl. 40). OBAVEZNO u uvjete rada i zdravstvene zahtjeve uključi obavezni ljekarski pregled jednom u 2 godine te rizik vezan za noćni rad.';
+    }
+
     const userMsg = `RADNO MJESTO: ${workplaceName || 'Nepoznato'}
 OZNAKA: ${oznaka || ''}
 STRUČNA SPREMA: ${strucnaSprema || 'Nije navedeno'}
 DJELATNOST: ${industry || 'Nije navedeno'}
 BROJ IZVRŠILACA: ${numberOfWorkers || 'Nije navedeno'}
 ORG. JEDINICA: ${orgUnit || ''}
+RADNO VRIJEME: ${radnoVrijemeOd || 'nije navedeno'} do ${radnoVrijemeDo || 'nije navedeno'}
+${nightShiftLogic}
 ${additionalInfo ? `DODATNE INFORMACIJE: ${additionalInfo}` : ''}
 
-Generiši kompletnu sistematizaciju za ovo radno mjesto.`;
+Generiši kompletnu sistematizaciju i procjenu za ovo radno mjesto.`;
 
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },

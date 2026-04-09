@@ -13,16 +13,16 @@ export async function POST(request) {
     try { body = await request.json(); }
     catch { return NextResponse.json({ error: 'invalid_json' }, { status: 400 }); }
 
-    const { workplaceName, workplaceDescription, hazards, existingPPE, existingEquipment, sistematizacija } = body;
+    const { workplaceName, workplaceDescription, hazards, existingPPE, existingEquipment, sistematizacija, vrstaAnkete, jezik } = body;
 
     const systemPrompt = `Ti si stručnjak za zaštitu na radu (ZNR) u Bosni i Hercegovini.
-Generišeš profesionalne upitnike za procjenu rizika na radnom mjestu.
+Generišeš profesionalne upitnike za temu: "${vrstaAnkete || 'Procjena rizika na radnom mjestu'}".
 
-ZADATAK: Na osnovu podataka o radnom mjestu, kreiraj upitnik koji pokriva SVE aspekte potrebne za izradu procjene rizika po FBiH Pravilniku.
+ZADATAK: Na osnovu podataka, kreiraj upitnik fokusiran na: ${vrstaAnkete || 'sve aspekte procjene rizika'}.
 
 PRAVILA:
 - Odgovori ISKLJUČIVO u JSON formatu (SurveyJS format)
-- Pitanja moraju biti na bosanskom jeziku
+- Pitanja, opcije i naslovi MORAJU biti na ovom jeziku: ${jezik || 'Bosanski'}
 - Upitnik mora sadržavati sljedeće sekcije (svaka kao zasebna stranica):
   1. "Opšti podaci" - podaci o radniku i radnom mjestu
   2. "Opasnosti i štetnosti" - fizičke, kemijske, biološke, ergonomske, psihosocijalne
@@ -76,12 +76,14 @@ KORISTI OVE PODATKE za generisanje preciznijih pitanja! Pitanja o OZO moraju ukl
 
     const userMsg = `RADNO MJESTO: ${workplaceName || 'Nepoznato'}
 OPIS: ${workplaceDescription || 'Nema opisa'}
+VRSTA ANKETE: ${vrstaAnkete || 'Procjena rizika'}
+JEZIK ANKETE: ${jezik || 'Bosanski'}
 ${hazards?.length ? `POZNATE OPASNOSTI: ${hazards.join(', ')}` : ''}
 ${existingPPE?.length ? `POSTOJEĆA OZO: ${existingPPE.join(', ')}` : ''}
 ${existingEquipment?.length ? `RADNA OPREMA: ${existingEquipment.join(', ')}` : ''}
 ${sistBlock}
 
-Generiši upitnik za ovo radno mjesto.`;
+Generiši upitnik fokusiran na '${vrstaAnkete || 'Procjena rizika'}' za ovo radno mjesto, preveden na '${jezik || 'Bosanski'}'.`;
 
     const geminiBody = {
         system_instruction: { parts: [{ text: systemPrompt }] },

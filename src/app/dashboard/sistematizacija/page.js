@@ -52,6 +52,8 @@ export default function SistematizacijaPage() {
                     industry: '', // TODO: can pull from company data
                     numberOfWorkers: '',
                     orgUnit: ou?.naziv || '',
+                    radnoVrijemeOd: wp.radnoVrijemeOd || '',
+                    radnoVrijemeDo: wp.radnoVrijemeDo || '',
                     additionalInfo: wp.opis || '',
                 }),
             });
