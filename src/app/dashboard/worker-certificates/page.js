@@ -506,7 +506,7 @@ function WorkerCertificatesInner() {
           .search-full { width: 100%; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; background: var(--bg-input); }
           .filters-row { width: 100%; justify-content: space-between; }
           .btn-dodaj-mobile { display: block; width: 100%; }
-          .btn-dodaj-mobile button { width: 100%; justify-content: center; padding: 10px; font-size: 1rem; }
+          .btn-dodaj-mobile button { width: 100%; justify-content: center; padding: 15px; font-size: 1.1rem; font-weight: 700; }
           .header-top-btn { display: none; }
           .record-buttons { display: none; } /* User only asked for Dodaj, search, and filters. Hide ZOS ZOP on mobile to save space, or keep them? Keeping them visible takes too much space. */
         }

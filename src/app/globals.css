@@ -1972,3 +1972,13 @@ a:hover {
   color: var(--primary);
   border-bottom: 2px solid var(--primary);
 }
+
+/* ===== GLOBAL PRIMARY BUTTON THICKNESS (1.5x UX FIX) ===== */
+.btn-primary {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+.btn-primary.btn-sm, .btn-sm.btn-primary {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
