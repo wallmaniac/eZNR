@@ -27,6 +27,7 @@ export default function OrgUnitsPage() {
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyOU });
     const [searchTerm, setSearchTerm] = useState('');
+    const [showRespMenu, setShowRespMenu] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -297,9 +298,21 @@ export default function OrgUnitsPage() {
                                     <label className="form-label">{lang === 'bs' ? 'Mjesto troška' : 'Cost center'}</label>
                                     <input className="form-input" value={formData.mjestroTroska} onChange={e => updateField('mjestroTroska', e.target.value)} />
                                 </div>
-                                <div className="form-group">
+                                <div className="form-group" style={{ position: 'relative' }}>
                                     <label className="form-label">{lang === 'bs' ? 'Odgovorna osoba' : 'Responsible person'}</label>
-                                    <input className="form-input" value={formData.odgovornaOsoba} onChange={e => updateField('odgovornaOsoba', e.target.value)} />
+                                    <input className="form-input" value={formData.odgovornaOsoba} onChange={e => { updateField('odgovornaOsoba', e.target.value); setShowRespMenu(true); }} onFocus={() => setShowRespMenu(true)} onBlur={() => setTimeout(() => setShowRespMenu(false), 200)} placeholder={lang === 'bs' ? 'Upiši ime za pretragu...' : 'Search by name...'} />
+                                    {showRespMenu && (
+                                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 180, overflowY: 'auto', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+                                            {workers.filter(w => `${w.ime} ${w.prezime}`.toLowerCase().includes((formData.odgovornaOsoba || '').toLowerCase())).map(w => (
+                                                <div key={w.id} style={{ padding: '8px 12px', cursor: 'pointer', fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)' }} onMouseDown={() => { updateField('odgovornaOsoba', `${w.ime} ${w.prezime}`); setShowRespMenu(false); }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                                                    {w.ime} {w.prezime} <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginLeft: 6 }}>({getAll(COLLECTIONS.WORKPLACES).find(x => x.id === w.radnoMjestoId)?.naziv || ''})</span>
+                                                </div>
+                                            ))}
+                                            {workers.filter(w => `${w.ime} ${w.prezime}`.toLowerCase().includes((formData.odgovornaOsoba || '').toLowerCase())).length === 0 && (
+                                                <div style={{ padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{lang === 'bs' ? 'Odabrani liječnik' : 'Selected doctor'}</label>
@@ -353,6 +366,7 @@ export default function OrgUnitsPage() {
                                     <th style={thStyle('skraceniNaziv')} onClick={() => toggleSort('skraceniNaziv')}>{lang === 'bs' ? 'Skraćeni' : 'Short'}{sortIcon('skraceniNaziv')}</th>
                                     <th>{lang === 'bs' ? 'Nadređena' : 'Parent'}</th>
                                     <th style={thStyle('mjesto')} onClick={() => toggleSort('mjesto')}>{t('place')}{sortIcon('mjesto')}</th>
+                                    <th style={thStyle('odgovornaOsoba')} onClick={() => toggleSort('odgovornaOsoba')}>{lang === 'bs' ? 'Odgovorna osoba' : 'Resp. Person'}{sortIcon('odgovornaOsoba')}</th>
                                     <th>{lang === 'bs' ? 'Radnici' : 'Workers'}</th>
                                 </tr>
                             </thead>
@@ -407,6 +421,17 @@ export default function OrgUnitsPage() {
                                                 <td>{u.skraceniNaziv}</td>
                                                 <td>{getParentName(u.parentId)}</td>
                                                 <td>{u.mjesto}</td>
+                                                <td onClick={e => e.stopPropagation()}>
+                                                    {u.odgovornaOsoba ? (
+                                                        <span style={{ cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted' }} onClick={() => {
+                                                            const w = workers.find(x => `${x.ime} ${x.prezime}` === u.odgovornaOsoba);
+                                                            if (w) setViewWorkerId(w.id);
+                                                            else alert(lang === 'bs' ? 'Radnik nije pronađen u bazi.' : 'Worker not found in database.');
+                                                        }} title={lang === 'bs' ? 'Klikni za pregled profila' : 'View profile'}>
+                                                            {u.odgovornaOsoba}
+                                                        </span>
+                                                    ) : '-'}
+                                                </td>
                                                 {/* Clickable badge */}
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <button

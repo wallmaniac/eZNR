@@ -245,8 +245,11 @@ export default function SistematizacijaPage() {
                 <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
                     onClick={e => { if (e.target === e.currentTarget) setEditData(null); }}>
                     <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, width: '90%', maxWidth: 700, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16 }}>
-                            📑 Sistematizacija — {workplaces.find(w => w.id === editData.radnoMjestoId)?.naziv || ''}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                                📑 Sistematizacija — {workplaces.find(w => w.id === editData.radnoMjestoId)?.naziv || ''}
+                            </div>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setEditData(null)} style={{ fontSize: '1.2rem', padding: 4 }}>✕</button>
                         </div>
 
                         {/* Naziv posla + Kategorija + Složenost */}
