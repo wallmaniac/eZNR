@@ -183,11 +183,11 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowNotifs(false); }}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
-                                padding: '4px 8px', borderRadius: 10, border: 'none',
+                                padding: '0 8px', borderRadius: 8, border: 'none',
                                 background: activeCompanyId === 'all'
                                     ? 'linear-gradient(135deg, #455A64, #263238)'
                                     : 'linear-gradient(135deg, var(--primary), #009985)',
-                                cursor: 'pointer', flex: 1, minHeight: 40,
+                                cursor: 'pointer', flex: 1, height: 32,
                             }}>
                             <span style={{ fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
@@ -221,23 +221,23 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     </div>
 
                     <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
-                        style={{ ...iBtn({ padding: '0 6px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 36 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
+                        style={{ ...iBtn({ padding: '0 6px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 36, height: 32 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
                         {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
-                        style={{ position: 'relative', width: 38, height: 22, borderRadius: 11, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, margin: '0 2px', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)' }}>
-                        <span style={{ position: 'absolute', top: 1, left: isDark ? 17 : 1, width: 17, height: 17, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>
+                        style={{ position: 'relative', width: 46, height: 32, borderRadius: 8, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', display: 'flex', alignItems: 'center' }}>
+                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 24 : 3, width: 20, height: 20, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', transition: 'left 0.2s ease' }}>
                             {isDark ? '🌙' : '☀️'}
                         </span>
                     </button>
 
-                    {/* Notifications bell */}
-                    <div ref={notifRef} style={{ position: 'relative', flexShrink: 0 }}>
-                        <button onClick={(e) => { e.stopPropagation(); setShowNotifs(v => !v); setShowCompanyMenu(false); }}
-                            style={{ ...iBtn({ position: 'relative', width: 38, height: 38 }), border: showNotifs ? '1.5px solid var(--primary)' : '1px solid var(--border)', borderRadius: 8, background: showNotifs ? 'rgba(0,191,166,0.1)' : 'var(--bg-input)', transition: 'all 0.15s ease' }}>
+                    {/* Notifications bell — onMouseDown stops the document mousedown listener from closing it before click fires */}
+                    <div ref={notifRef} onMouseDown={e => e.stopPropagation()} style={{ position: 'relative', flexShrink: 0 }}>
+                        <button onClick={() => { setShowNotifs(v => !v); setShowCompanyMenu(false); }}
+                            style={{ ...iBtn({ position: 'relative', width: 38, height: 32 }), border: showNotifs ? '1.5px solid var(--primary)' : '1px solid var(--border)', borderRadius: 8, background: showNotifs ? 'rgba(0,191,166,0.1)' : 'var(--bg-input)', transition: 'all 0.15s ease' }}>
                             🔔
                             {notifications.length > 0 && (
-                                <span style={{ position: 'absolute', top: 1, right: 1, minWidth: 16, height: 16, borderRadius: 8, background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: 'white', fontWeight: 800, border: '1.5px solid var(--bg-card)', padding: '0 3px', animation: 'pulse 2s infinite' }}>
+                                <span style={{ position: 'absolute', top: 1, right: 1, minWidth: 16, height: 16, borderRadius: 8, background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: 'white', fontWeight: 800, border: '1.5px solid var(--bg-card)', padding: '0 3px' }}>
                                     {notifications.length}
                                 </span>
                             )}
