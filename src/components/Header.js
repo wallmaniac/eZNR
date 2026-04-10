@@ -174,20 +174,20 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 }}>
                     {/* Back / Forward */}
                     <button onClick={handleBack} title={lang === 'bs' ? 'Nazad' : 'Back'}
-                        style={{ ...iBtn({ width: 28, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
+                        style={{ ...iBtn({ width: 42, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
                     <button onClick={() => router.forward?.() || window.history.forward()} title={lang === 'bs' ? 'Naprijed' : 'Forward'}
-                        style={{ ...iBtn({ width: 28, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
+                        style={{ ...iBtn({ width: 42, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip */}
-                    <div ref={companyRef} style={{ position: 'relative', flex: '1 1 100px', maxWidth: 140, minWidth: 0, display: 'flex' }}>
+                    <div ref={companyRef} style={{ position: 'relative', flex: '1 1 100px', minWidth: 0, display: 'flex' }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowNotifs(false); }}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
-                                padding: '5px 8px', borderRadius: 10, border: 'none',
+                                padding: '4px 8px', borderRadius: 10, border: 'none',
                                 background: activeCompanyId === 'all'
                                     ? 'linear-gradient(135deg, #455A64, #263238)'
                                     : 'linear-gradient(135deg, var(--primary), #009985)',
-                                cursor: 'pointer', flex: 1, minHeight: 45,
+                                cursor: 'pointer', flex: 1, minHeight: 40,
                             }}>
                             <span style={{ fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
@@ -221,7 +221,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     </div>
 
                     <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
-                        style={{ ...iBtn({ padding: '0 4px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 32 }), color: 'var(--text-muted)' }}>
+                        style={{ ...iBtn({ padding: '0 6px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 36 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
                         {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
@@ -233,17 +233,17 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* Notifications bell */}
                     <div ref={notifRef} style={{ position: 'relative', flexShrink: 0 }}>
-                        <button onClick={() => { setShowNotifs(v => !v); setShowCompanyMenu(false); }}
-                            style={{ ...iBtn({ position: 'relative', width: 34, height: 34 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
+                        <button onClick={(e) => { e.stopPropagation(); setShowNotifs(v => !v); setShowCompanyMenu(false); }}
+                            style={{ ...iBtn({ position: 'relative', width: 38, height: 38 }), border: showNotifs ? '1.5px solid var(--primary)' : '1px solid var(--border)', borderRadius: 8, background: showNotifs ? 'rgba(0,191,166,0.1)' : 'var(--bg-input)', transition: 'all 0.15s ease' }}>
                             🔔
                             {notifications.length > 0 && (
-                                <span style={{ position: 'absolute', top: 2, right: 2, minWidth: 14, height: 14, borderRadius: 7, background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.5rem', color: 'white', fontWeight: 800, border: '1.5px solid var(--bg-card)', padding: '0 2px' }}>
+                                <span style={{ position: 'absolute', top: 1, right: 1, minWidth: 16, height: 16, borderRadius: 8, background: notifications.some(n => n.severity === 'critical' || n.severity === 'urgent') ? '#EF4444' : '#F59E0B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.55rem', color: 'white', fontWeight: 800, border: '1.5px solid var(--bg-card)', padding: '0 3px', animation: 'pulse 2s infinite' }}>
                                     {notifications.length}
                                 </span>
                             )}
                         </button>
                         {showNotifs && (
-                            <div className="dropdown-menu" style={{ position: 'fixed', top: 54, right: 8, left: 8, width: 'auto', maxWidth: 'calc(100vw - 16px)', zIndex: 400, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14 }}>
+                            <div className="dropdown-menu" style={{ position: 'fixed', top: 58, right: 8, left: 8, width: 'auto', maxWidth: 'calc(100vw - 16px)', zIndex: 9999, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14 }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.9rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
