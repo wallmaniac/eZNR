@@ -538,17 +538,24 @@ export default function AIAssistant() {
     const dragRef = useRef({ dragging: false, startX: 0, startY: 0, totalDist: 0 });
     const fabRef = useRef(null);
 
-    // Load saved position
+    // Load saved position — respect desktop vs mobile boundaries
     useEffect(() => {
         try {
             const saved = JSON.parse(localStorage.getItem('eznr_zia_position'));
             if (saved && typeof saved.x === 'number' && typeof saved.y === 'number') {
-                // Allow sitting mostly off-screen (up to 36px out = only ~12px visible)
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                const x = Math.max(-36, Math.min(saved.x, vw - 16));
-                const y = Math.max(-36, Math.min(saved.y, vh - 16));
-                setFabPos({ x, y });
+                const isMob = vw < 768;
+                // Desktop: keep fully on-screen (48px button + 8px badge overhang = 56px min from each edge)
+                // Mobile: allow up to 36px off-screen
+                const minX = isMob ? -36 : 8;
+                const maxX = isMob ? vw - 16 : vw - 72; // 72 = button width + badge margin
+                const minY = isMob ? -36 : 60; // 60 = keep below header
+                const maxY = isMob ? vh - 16 : vh - 72;
+                setFabPos({
+                    x: Math.max(minX, Math.min(saved.x, maxX)),
+                    y: Math.max(minY, Math.min(saved.y, maxY)),
+                });
             }
         } catch { /* use default */ }
     }, []);
@@ -568,13 +575,18 @@ export default function AIAssistant() {
         d.startY = clientY;
 
         setFabPos(prev => {
-            const cur = prev || { x: window.innerWidth - 64, y: window.innerHeight - 130 };
+            const cur = prev || { x: window.innerWidth - 72, y: window.innerHeight - 130 };
             const vw = window.innerWidth;
             const vh = window.innerHeight;
-            // Allow most of the button to go off any edge (36px out = ~12px visible)
+            const isMob = vw < 768;
+            // Desktop: keep fully visible (button ~56px w/ badge). Mobile: allow partial off-screen.
+            const minX = isMob ? -36 : 8;
+            const maxX = isMob ? vw - 16 : vw - 72;
+            const minY = isMob ? -36 : 60;
+            const maxY = isMob ? vh - 16 : vh - 72;
             return {
-                x: Math.max(-36, Math.min(cur.x + dx, vw - 16)),
-                y: Math.max(-36, Math.min(cur.y + dy, vh - 16)),
+                x: Math.max(minX, Math.min(cur.x + dx, maxX)),
+                y: Math.max(minY, Math.min(cur.y + dy, maxY)),
             };
         });
     }, []);
@@ -588,11 +600,24 @@ export default function AIAssistant() {
             setFabPos(prev => {
                 if (!prev) return prev;
                 const vw = window.innerWidth;
-                // Snap to nearest horizontal edge — allow partial off-screen (-8px)
-                const snapped = {
-                    x: prev.x < vw / 2 ? -16 : vw - 36,
-                    y: prev.y,
-                };
+                const vh = window.innerHeight;
+                const isMob = vw < 768;
+
+                let snapped;
+                if (isMob) {
+                    // Mobile: snap to nearest edge, partially off-screen allowed
+                    snapped = {
+                        x: prev.x < vw / 2 ? -16 : vw - 36,
+                        y: prev.y,
+                    };
+                } else {
+                    // Desktop: snap to nearest edge but stay FULLY visible
+                    // Left edge: 8px margin. Right edge: 8px margin from right (vw - 72)
+                    snapped = {
+                        x: prev.x < vw / 2 ? 8 : vw - 72,
+                        y: Math.max(60, Math.min(prev.y, vh - 72)),
+                    };
+                }
                 try { localStorage.setItem('eznr_zia_position', JSON.stringify(snapped)); } catch {}
                 return snapped;
             });
