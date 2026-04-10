@@ -196,8 +196,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             </div>
                             <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)' }}>▼</span>
                         </button>
-                        {showCompanyMenu && (
-                            <div className="dropdown-menu" style={{ position: 'fixed', top: 54, left: '5%', width: '90%', zIndex: 400, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16 }}>
+                        {showCompanyMenu && typeof document !== 'undefined' && createPortal(
+                            <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, left: '5%', width: '90%', zIndex: 99999, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}</span>
                                     <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
@@ -217,7 +217,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 700, padding: '12px 16px', fontSize: '0.9rem', justifyContent: 'center' }}>
                                     ➕ {lang === 'bs' ? 'Dodaj firmu' : 'Add company'}
                                 </button>
-                            </div>
+                            </div>,
+                            document.body
                         )}
                     </div>
 
@@ -227,7 +228,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     </button>
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                         style={{ position: 'relative', width: 46, height: 32, borderRadius: 8, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, overflow: 'hidden', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)' }}>
-                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', transition: 'left 0.25s ease', pointerEvents: 'none' }}>
+                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 22 : 3, width: 20, height: 20, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', transition: 'left 0.25s ease', pointerEvents: 'none' }}>
                             {isDark ? '🌙' : '☀️'}
                         </span>
                     </button>
