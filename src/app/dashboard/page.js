@@ -703,6 +703,10 @@ export default function DashboardPage() {
                                         boxShadow: '0 16px 48px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.12)',
                                         padding: '16px',
                                         minWidth: 260,
+                                        maxHeight: '320px',
+                                        overflowY: 'auto',
+                                        WebkitOverflowScrolling: 'touch',
+                                        overscrollBehavior: 'contain',
                                         backdropFilter: 'blur(12px)',
                                         animation: 'fadeIn 0.15s ease',
                                     }}>

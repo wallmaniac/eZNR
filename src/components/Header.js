@@ -166,28 +166,28 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             {/* ══ MOBILE: Compact 48px top bar ══ */}
             {isMobile && (
                 <div style={{
-                    position: 'fixed', top: 0, left: 0, right: 0, height: 48, zIndex: 300,
-                    display: 'flex', alignItems: 'center', gap: 6, padding: '0 10px',
+                    position: 'fixed', top: 0, left: 0, right: 0, height: 56, zIndex: 300,
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '0 6px',
                     background: 'var(--bg-header, var(--bg-page))',
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
                 }}>
                     {/* Back / Forward */}
                     <button onClick={handleBack} title={lang === 'bs' ? 'Nazad' : 'Back'}
-                        style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
+                        style={{ ...iBtn({ width: 28, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
                     <button onClick={() => router.forward?.() || window.history.forward()} title={lang === 'bs' ? 'Naprijed' : 'Forward'}
-                        style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
+                        style={{ ...iBtn({ width: 28, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
-                    {/* Company chip (center, fills space) */}
-                    <div ref={companyRef} style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }}>
+                    {/* Company chip */}
+                    <div ref={companyRef} style={{ position: 'relative', flex: '1 1 100px', maxWidth: 140, minWidth: 0, display: 'flex' }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowNotifs(false); }}
                             style={{
-                                display: 'flex', alignItems: 'center', gap: 6,
-                                padding: '5px 10px', borderRadius: 10, border: 'none',
+                                display: 'flex', alignItems: 'center', gap: 4,
+                                padding: '5px 8px', borderRadius: 10, border: 'none',
                                 background: activeCompanyId === 'all'
                                     ? 'linear-gradient(135deg, #455A64, #263238)'
                                     : 'linear-gradient(135deg, var(--primary), #009985)',
-                                cursor: 'pointer', width: '100%',
+                                cursor: 'pointer', flex: 1, minHeight: 45,
                             }}>
                             <span style={{ fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
@@ -219,6 +219,17 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             </div>
                         )}
                     </div>
+
+                    <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
+                        style={{ ...iBtn({ padding: '0 4px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 32 }), color: 'var(--text-muted)' }}>
+                        {lang === 'bs' ? 'EN' : 'BS'}
+                    </button>
+                    <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
+                        style={{ position: 'relative', width: 38, height: 22, borderRadius: 11, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, margin: '0 2px', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)' }}>
+                        <span style={{ position: 'absolute', top: 1, left: isDark ? 17 : 1, width: 17, height: 17, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem' }}>
+                            {isDark ? '🌙' : '☀️'}
+                        </span>
+                    </button>
 
                     {/* Notifications bell */}
                     <div ref={notifRef} style={{ position: 'relative', flexShrink: 0 }}>

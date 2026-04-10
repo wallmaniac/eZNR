@@ -307,7 +307,15 @@ export default function InjuriesPage() {
                   </div>
                   <div className="form-group">
                     <label className="form-label">{lang === 'bs' ? 'Vrijeme povrede' : 'Time of injury'}</label>
-                    <input className="form-input" type="time" value={formData.vrijemePovrede} onChange={e => set('vrijemePovrede', e.target.value)} />
+                    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                        <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.vrijemePovrede || ':').split(':')[0] || '12'} onChange={e => set('vrijemePovrede', `${e.target.value}:${(formData.vrijemePovrede || ':').split(':')[1] || '00'}`)}>
+                            {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
+                        </select>
+                        <span style={{ fontWeight: 700 }}>:</span>
+                        <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.vrijemePovrede || ':').split(':')[1] || '00'} onChange={e => set('vrijemePovrede', `${(formData.vrijemePovrede || ':').split(':')[0] || '12'}:${e.target.value}`)}>
+                            {['00','15','30','45'].map(min => <option key={min} value={min}>{min}</option>)}
+                        </select>
+                    </div>
                   </div>
                   <div className="form-group">
                     <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Tip povrede' : 'Injury type'} <HelpTip text="Odaberite klasifikaciju obavezno u apsolutnom slaganju sa zvaničnim ljekarskim nalazom hitne pomoći/doma zdravlja." /></label>

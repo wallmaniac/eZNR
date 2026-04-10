@@ -154,6 +154,16 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     const ou = orgUnits.find(o => o.id === formData.orgJedinicaId);
     const initials = `${worker.ime?.[0] || ''}${worker.prezime?.[0] || ''}`.toUpperCase();
 
+    const isNightShift = (odStr, doStr) => {
+        if (!odStr || !doStr) return false;
+        const start = parseInt((odStr || '').replace(':', ''));
+        const end = parseInt((doStr || '').replace(':', ''));
+        if (isNaN(start) || isNaN(end)) return false;
+        if (start > end) return true;
+        if (start < 600 || end >= 2200) return true;
+        return false;
+    };
+
 
 
     const openFullEdit = () => {
@@ -224,6 +234,12 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                         🚑 {lang === 'bs' ? 'Prijavi povredu' : 'Report injury'}
                     </button>
                 </div>
+
+                {wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo) && (
+                    <div style={{ background: 'rgba(239,83,80,0.15)', borderBottom: '1px solid var(--danger)', color: 'var(--danger)', padding: '8px 24px', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        🌙 Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad - čl. 40 FBiH)
+                    </div>
+                )}
 
                 {/* ── Body ── */}
                 <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>

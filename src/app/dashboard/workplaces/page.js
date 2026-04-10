@@ -274,13 +274,29 @@ export default function WorkplacesPage() {
                                 <div className="form-group" style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) minmax(120px, 1fr) 2fr', gap: 16 }}>
                                     <div>
                                         <label className="form-label">{lang === 'bs' ? 'Radno vrijeme od' : 'Work from'}</label>
-                                        <input className="form-input" type="time" value={formData.radnoVrijemeOd || ''} onChange={e => updateField('radnoVrijemeOd', e.target.value)} />
+                                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                            <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.radnoVrijemeOd || ':').split(':')[0] || '08'} onChange={e => updateField('radnoVrijemeOd', `${e.target.value}:${(formData.radnoVrijemeOd || ':').split(':')[1] || '00'}`)}>
+                                                {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
+                                            </select>
+                                            <span style={{ fontWeight: 700 }}>:</span>
+                                            <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.radnoVrijemeOd || ':').split(':')[1] || '00'} onChange={e => updateField('radnoVrijemeOd', `${(formData.radnoVrijemeOd || ':').split(':')[0] || '08'}:${e.target.value}`)}>
+                                                {['00','15','30','45'].map(min => <option key={min} value={min}>{min}</option>)}
+                                            </select>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="form-label">{lang === 'bs' ? 'Radno vrijeme do' : 'Work to'}</label>
-                                        <input className="form-input" type="time" value={formData.radnoVrijemeDo || ''} onChange={e => updateField('radnoVrijemeDo', e.target.value)} />
+                                        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                            <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.radnoVrijemeDo || ':').split(':')[0] || '16'} onChange={e => updateField('radnoVrijemeDo', `${e.target.value}:${(formData.radnoVrijemeDo || ':').split(':')[1] || '00'}`)}>
+                                                {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
+                                            </select>
+                                            <span style={{ fontWeight: 700 }}>:</span>
+                                            <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.radnoVrijemeDo || ':').split(':')[1] || '00'} onChange={e => updateField('radnoVrijemeDo', `${(formData.radnoVrijemeDo || ':').split(':')[0] || '16'}:${e.target.value}`)}>
+                                                {['00','15','30','45'].map(min => <option key={min} value={min}>{min}</option>)}
+                                            </select>
+                                        </div>
                                     </div>
-                                    <div style={{ alignSelf: 'flex-end', paddingBottom: 6 }}>
+                                    <div style={{ alignSelf: 'flex-end', paddingBottom: 6, minWidth: 160 }}>
                                         {isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo) && (
                                             <div style={{ background: 'rgba(239,83,80,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 600 }}>
                                                 🌙 Nocni rad (čl. 40 FBiH)

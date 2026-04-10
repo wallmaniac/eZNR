@@ -738,6 +738,17 @@ function WorkersPageInner() {
                 
                 {/* WORKER HEALTH SUMMARY */}
                 {editingWorker && (() => {
+                    const wp = workplaces.find(w => w.id === formData.radnoMjestoId);
+                    const isNightShift = (odStr, doStr) => {
+                        if (!odStr || !doStr) return false;
+                        const start = parseInt((odStr || '').replace(':', ''));
+                        const end = parseInt((doStr || '').replace(':', ''));
+                        if (isNaN(start) || isNaN(end)) return false;
+                        if (start > end) return true;
+                        if (start < 600 || end >= 2200) return true;
+                        return false;
+                    };
+                    const hasNightShift = wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo);
                     const _t = new Date();
                     const _expC = certificates.filter(cx => cx.vrijediDo && new Date(cx.vrijediDo) < _t).length;
                     const _valC = certificates.filter(cx => !cx.vrijediDo || new Date(cx.vrijediDo) >= _t).length;
@@ -746,6 +757,12 @@ function WorkersPageInner() {
                     const _mc = _lmd===null?'none':_lmd<0?'expired':_lmd<=60?'soon':'valid';
                     const _mColor = {expired:'var(--danger)',soon:'var(--warning)',valid:'var(--success)',none:'var(--text-muted)'}[_mc];
                     return (
+                        <>
+                            {hasNightShift && (
+                                <div style={{ background: 'rgba(239,83,80,0.15)', borderBottom: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px 16px', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+                                    🌙 Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad radnog mjesta - čl. 40 FBiH)
+                                </div>
+                            )}
                         <div style={{ display:'flex', gap:10, marginBottom:16, flexWrap:'wrap' }}>
                             <div onClick={()=>{setOpenSections(p=>({...p,uvjerenja:true})); uvjerenjaRef.current?.scrollIntoView({behavior:'smooth',block:'start'});}}
                                 style={{ flex:'1 1 140px', padding:'10px 14px', borderRadius:'var(--radius-md)', cursor:'pointer', background: _expC>0?'rgba(239,68,68,0.07)':'rgba(34,197,94,0.06)', border:`1px solid ${_expC>0?'var(--danger)':'var(--success)'}`, display:'flex', alignItems:'center', gap:10, transition:'filter 0.15s' }}
@@ -776,6 +793,7 @@ function WorkersPageInner() {
                                 </div>
                             </div>
                         </div>
+                        </>
                     );
                 })()}
 {/* ── ACCORDION: Posebni uvjeti rada ── */}
