@@ -10,6 +10,7 @@ import QuestionnaireBuilder from '@/components/SurveyCreator';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
 import QuestionnaireResults from '@/components/QuestionnaireResults';
 import ReminderModal from '@/components/ReminderModal';
+import HelpTip from '@/components/HelpTip';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 
 /* ═══════════════════════════════════════════════
@@ -723,11 +724,15 @@ export default function QuestionnairesPage() {
             {/* Row 1: Naziv, Oznaka */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Naziv' : 'Name'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Naziv' : 'Name'} <HelpTip text="Puno ime upitnika/ankete koje će se prikazivati u listi i na emailu koji se šalje radnicima." />
+                </div>
                 <input className="form-input" value={formData.naziv} onChange={e => set('naziv', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Oznaka' : 'Code'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Oznaka' : 'Code'} <HelpTip text="Kratka interna šifra upitnika (npr. ZOS-TEST, AI-ANKETA). Koristi se za brzo pretraživanje i identifikaciju u listama." />
+                </div>
                 <input className="form-input" value={formData.oznaka} onChange={e => set('oznaka', e.target.value)} />
               </div>
             </div>
@@ -735,7 +740,10 @@ export default function QuestionnairesPage() {
             {/* Row 2: Za vrstu, Prikaži na portalu, Dodaj u prilog procjeni rizika */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}
+                  <HelpTip text="Kategorizira upitnik po namjeni. Odaberite odgovarajuću vrstu ili 'Ostalo' za vlastitu kategoriju. Koristi se za filtriranje i AI generisanje." />
+                </div>
                 {/* Vrsta ankete: dropdown + optional free-text when Ostalo is picked */}
                 {(() => {
                   const knownOpts = ZA_VRSTU_OPTIONS.filter(o => o !== 'Ostalo');
@@ -767,13 +775,19 @@ export default function QuestionnairesPage() {
                 })()}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={labelSt}>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}
+                  <HelpTip text="Kada je uključeno, upitnik je dostupan radnicima direktno na javnom portalu (bez slanja emaila). Radnici mogu popuniti sami." />
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.prikaziNaPortalu} onChange={e => set('prikaziNaPortalu', e.target.checked)} />
                 </label>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Dodaj u prilog procjeni rizika' : 'Add to risk assessment'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Dodaj u prilog procjeni rizika' : 'Add to risk assessment'}
+                  <HelpTip text="Rezultati ovog upitnika automatski se dodaju kao prilog u procjenu rizika za odgovarajuće radno mjesto." />
+                </div>
                 <select className="form-select" value={formData.dodajUPrilogProcjeniRizika} onChange={e => set('dodajUPrilogProcjeniRizika', e.target.value)}>
                   {DODAJ_PROCJENA_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
@@ -783,23 +797,35 @@ export default function QuestionnairesPage() {
             {/* Row 3: Email, checkboxes */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px 200px 250px', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Email adresa za rezultate' : 'Email for results'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Email adresa za rezultate' : 'Email for results'}
+                  <HelpTip text="Na ovu email adresu šalje se obavijest sa rezultatima svaki put kad radnik završi upitnik. Ostavite prazno ako ne trebate obavijesti." />
+                </div>
                 <input className="form-input" type="email" value={formData.emailZaRezultate} onChange={e => set('emailZaRezultate', e.target.value)} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={labelSt}>{lang === 'bs' ? 'Pošalji kopiju korisniku' : 'Send copy to user'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Pošalji kopiju korisniku' : 'Send copy to user'}
+                  <HelpTip text="Radnik koji popuni upitnik dobiva kopiju svojih odgovora i rezultata na email koji je unio pri ispunjavanju." />
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.posaljiKopijuKorisniku} onChange={e => set('posaljiKopijuKorisniku', e.target.checked)} />
                 </label>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={labelSt}>{lang === 'bs' ? 'Prikaži rezultate nakon rješavanja' : 'Show results after'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Prikaži rezultate nakon rješavanja' : 'Show results after'}
+                  <HelpTip text="Nakon što radnik pošalje upitnik, odmah mu se prikazuje rezultat (koliko je % odgovora tačno i prolaz/ne prolaz)." />
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.prikaziRezultateNakonRjesavanja} onChange={e => set('prikaziRezultateNakonRjesavanja', e.target.checked)} />
                 </label>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={labelSt}>{lang === 'bs' ? 'Prikaži samo zadovoljava/nezadovoljava' : 'Show only pass/fail'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Prikaži samo zadovoljava/nezadovoljava' : 'Show only pass/fail'}
+                  <HelpTip text="Radnik vidi samo 'Zadovoljava' ili 'Ne zadovoljava' — bez postotka i bez detalja. Korisno za jednostavne provjere znanja." />
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.prikaziSamoZadovoljavaNezadovoljava} onChange={e => set('prikaziSamoZadovoljavaNezadovoljava', e.target.checked)} />
                 </label>
@@ -809,20 +835,29 @@ export default function QuestionnairesPage() {
             {/* Row 4: Automatski upis, Prag prolaza toggle + value */}
             <div style={{ display: 'grid', gridTemplateColumns: '200px 200px 1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={labelSt}>{lang === 'bs' ? 'Automatski upis u evidenciju' : 'Auto-record'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Automatski upis u evidenciju' : 'Auto-record'}
+                  <HelpTip text="Kada radnik uspješno završi upitnik (tj. prođe prag prolaza), automatski se kreira zapis u evidenciji osposobljavanja za tog radnika." />
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.automatskiUpisUEvidenciju} onChange={e => set('automatskiUpisUEvidenciju', e.target.checked)} />
                 </label>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-                <div style={labelSt}>{lang === 'bs' ? 'Koristi prag prolaza' : 'Use pass threshold'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Koristi prag prolaza' : 'Use pass threshold'}
+                  <HelpTip text="'Da (test)' — upitnik se tretira kao TEST s prolaznim pragom (ocjenjuje se). 'Ne (anketa)' — upitnik je anketa bez ocjenjivanja, svaki odgovor je ispravan." />
+                </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.koristiPragProlaza !== false} onChange={e => set('koristiPragProlaza', e.target.checked)} />
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{formData.koristiPragProlaza !== false ? (lang === 'bs' ? 'Da (test)' : 'Yes (test)') : (lang === 'bs' ? 'Ne (anketa)' : 'No (survey)')}</span>
                 </label>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Prag prolaza (%)' : 'Pass threshold (%)'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Prag prolaza (%)' : 'Pass threshold (%)'}
+                  <HelpTip text="Minimalni postotak tačnih odgovora potreban za prolaz. Npr. 70 znači da radnik mora tačno odgovoriti na barem 70% pitanja. Aktivno samo kada je 'Koristi prag prolaza' uključeno." />
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: formData.koristiPragProlaza !== false ? 1 : 0.35, pointerEvents: formData.koristiPragProlaza !== false ? 'auto' : 'none' }}>
                   <input className="form-input" type="number" min={0} max={100}
                     value={formData.prolazniPrag ?? 70}
@@ -835,7 +870,10 @@ export default function QuestionnairesPage() {
                 </div>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Izlazni tip dokumenta' : 'Output doc type'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Izlazni tip dokumenta' : 'Output doc type'}
+                  <HelpTip text="Tip dokumenta koji se generiše kao rezultat popunjenog upitnika. Trenutno je polje informativno — document generacija je u pripremi." />
+                </div>
                 <select className="form-select" value={formData.izlazniTipDokumenta} onChange={e => set('izlazniTipDokumenta', e.target.value)}>
                   <option value="">—</option>
                   <option value="PDF">PDF</option>
@@ -852,11 +890,17 @@ export default function QuestionnairesPage() {
             {/* Row 5: Email Subject, Email Body */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Naslov emaila' : 'Email Subject'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Naslov emaila' : 'Email Subject'}
+                  <HelpTip text="Naslov (subject) emaila koji se šalje radnicima kada im proslijedite upitnik. Ako ostavite prazno, koristi se automatski generisani naslov." />
+                </div>
                 <input className="form-input" value={formData.emailSubject} onChange={e => set('emailSubject', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Sadržaj emaila' : 'Email Body'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Sadržaj emaila' : 'Email Body'}
+                  <HelpTip text="Tekst poruke u emailu koji radnik prima sa linkom za popunjavanje upitnika. Ako ostavite prazno, koristi se standardna poruka." />
+                </div>
                 <textarea className="form-input" rows={2} value={formData.emailBody} onChange={e => set('emailBody', e.target.value)} />
               </div>
             </div>
@@ -864,7 +908,10 @@ export default function QuestionnairesPage() {
             {/* Row 5.5: Rok isteka */}
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Rok isteka (opcionalno)' : 'Expiry date (optional)'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Rok isteka (opcionalno)' : 'Expiry date (optional)'}
+                  <HelpTip text="Datum do kojeg je moguće popuniti ovaj upitnik. Nakon tog datuma, link za popunjavanje prestaje biti aktivan. Ostavite prazno ako nema roka." />
+                </div>
                 <input className="form-input" type="date" value={formData.rokIsteka || ''} onChange={e => set('rokIsteka', e.target.value)} />
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
@@ -877,11 +924,17 @@ export default function QuestionnairesPage() {
             {/* Row 6: Success / Failure messages */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Poruka za uspješno rješavanje' : 'Success message'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Poruka za uspješno rješavanje' : 'Success message'}
+                  <HelpTip text="Tekst koji se prikazuje radniku na ekranu kada uspješno prođe upitnik (dostigao prag prolaza). Npr. 'Čestitamo, položili ste test!'" />
+                </div>
                 <textarea className="form-input" rows={2} value={formData.porukaUspjesno} onChange={e => set('porukaUspjesno', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Poruka za nedovoljan broj točnih odgovora' : 'Failure message'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Poruka za nedovoljan broj točnih odgovora' : 'Failure message'}
+                  <HelpTip text="Tekst koji se prikazuje radniku kada nije dostigao prag prolaza. Npr. 'Niste položili, molimo ponovite obuku i pokušajte ponovo.'" />
+                </div>
                 <textarea className="form-input" rows={2} value={formData.porukaNedovoljno} onChange={e => set('porukaNedovoljno', e.target.value)} />
               </div>
             </div>
@@ -889,7 +942,10 @@ export default function QuestionnairesPage() {
             {/* Row 7: Jezik */}
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Jezik' : 'Language'}</div>
+                <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                  {lang === 'bs' ? 'Jezik' : 'Language'}
+                  <HelpTip text="Jezik na kojem je napisan upitnik (npr. 'Bosanski', 'hr', 'en'). Informativno polje — koristi se pri AI generisanju i filtriranju." />
+                </div>
                 <input className="form-input" value={formData.jezik} onChange={e => set('jezik', e.target.value)} placeholder={lang === 'bs' ? 'npr. hr, en' : 'e.g. hr, en'} />
               </div>
             </div>
