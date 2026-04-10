@@ -1,5 +1,6 @@
 'use client';
 import { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -225,8 +226,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
-                        style={{ position: 'relative', width: 46, height: 32, borderRadius: 8, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', display: 'flex', alignItems: 'center' }}>
-                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 24 : 3, width: 20, height: 20, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', transition: 'left 0.2s ease' }}>
+                        style={{ position: 'relative', width: 46, height: 32, borderRadius: 8, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, overflow: 'hidden', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)' }}>
+                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 23 : 3, width: 20, height: 20, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', transition: 'left 0.25s ease', pointerEvents: 'none' }}>
                             {isDark ? '🌙' : '☀️'}
                         </span>
                     </button>
@@ -242,8 +243,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 </span>
                             )}
                         </button>
-                        {showNotifs && (
-                            <div className="dropdown-menu" style={{ position: 'fixed', top: 58, right: 8, left: 8, width: 'auto', maxWidth: 'calc(100vw - 16px)', zIndex: 9999, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14 }}>
+                        {showNotifs && typeof document !== 'undefined' && createPortal(
+                            <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, right: 8, left: 8, zIndex: 99999, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.9rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🔔 {lang === 'bs' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -262,7 +263,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                 <span style={{ fontSize: '1.2rem' }}>{n.icon}</span>
                                                 <div style={{ flex: 1 }}>
                                                     <div style={{ fontWeight: 700, fontSize: '0.85rem', color: c.titleColor }}>{n.text}</div>
-                                                    {n.detail && <div style={{ fontSize: '0.78rem', color: 'var(--text-light)', marginTop: 4 }}>{n.detail}</div>}
+                                                    {n.detail && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                                                         {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 6, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
                                                         {n.id && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>✕ {lang === 'bs' ? 'Odbaci' : 'Dismiss'}</button>}
@@ -272,7 +273,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                         </div>
                                     );
                                 })}
-                            </div>
+                            </div>,
+                            document.body
                         )}
                     </div>
                 </div>
