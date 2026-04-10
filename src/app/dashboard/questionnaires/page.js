@@ -736,35 +736,30 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</div>
-                {/* Determine which option is selected in the dropdown */}
+                {/* Vrsta ankete: dropdown + optional free-text when Ostalo is picked */}
                 {(() => {
                   const knownOpts = ZA_VRSTU_OPTIONS.filter(o => o !== 'Ostalo');
-                  const isKnown = knownOpts.includes(formData.zaVrstu);
-                  const dropdownVal = isKnown ? formData.zaVrstu : (formData.zaVrstu ? 'Ostalo' : '');
+                  // dropdownVal: show known option, or 'Ostalo' for any custom/non-empty value, or '' for blank
+                  const dropdownVal = knownOpts.includes(formData.zaVrstu)
+                    ? formData.zaVrstu
+                    : (formData.zaVrstu ? 'Ostalo' : '');
                   return (
                     <>
                       <select className="form-select" value={dropdownVal} onChange={e => {
-                        const val = e.target.value;
-                        if (val === 'Ostalo') {
-                          // keep zaVrstu as-is if it's already custom, otherwise clear so user types
-                          if (knownOpts.includes(formData.zaVrstu) || formData.zaVrstu === '') {
-                            set('zaVrstu', '');
-                          }
-                        } else {
-                          set('zaVrstu', val);
-                        }
+                        // Set zaVrstu directly to the selected value.
+                        // When 'Ostalo' is picked, zaVrstu = 'Ostalo' (not '') so dropdownVal stays 'Ostalo'
+                        set('zaVrstu', e.target.value);
                       }}>
-                        <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                        <option value="">{lang === 'bs' ? '\u2014 Odaberite \u2014' : '\u2014 Select \u2014'}</option>
                         {ZA_VRSTU_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                       {dropdownVal === 'Ostalo' && (
                         <input
                           className="form-input"
                           style={{ marginTop: 8 }}
-                          placeholder={lang === 'bs' ? 'Unesite naziv vrste ankete...' : 'Type survey type...'}
-                          value={formData.zaVrstu}
-                          onChange={e => set('zaVrstu', e.target.value)}
-                          autoFocus
+                          placeholder={lang === 'bs' ? 'Unesite naziv vrste ankete (opcionalno)...' : 'Type survey type (optional)...'}
+                          value={formData.zaVrstu === 'Ostalo' ? '' : formData.zaVrstu}
+                          onChange={e => set('zaVrstu', e.target.value.trim() || 'Ostalo')}
                         />
                       )}
                     </>
