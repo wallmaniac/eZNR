@@ -327,7 +327,7 @@ export default function ZapisniciPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <span style={{ fontSize: '1.6rem' }}>📋</span>
                 <div>
-                    <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Korekcija zapisnika' : 'Minutes Correction'}</h1>
+                    <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Zapisnici' : 'Zapisnici'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         {items.length} {lang === 'bs' ? 'zapisnika' : 'records'}
                     </p>
@@ -493,7 +493,7 @@ export default function ZapisniciPage() {
                                                 <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{lang === 'bs' ? 'Broj' : 'No.'}{sortIcon('broj')}</th>
                                                 <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
                                                 <th style={{ width: 200 }}>{lang === 'bs' ? 'Vrsta' : 'Type'}</th>
-                                                <th style={{ width: 70, textAlign: 'center' }}>{lang === 'bs' ? 'Fajl' : 'File'}</th>
+                                                <th style={{ width: 70, textAlign: 'center' }}>{lang === 'bs' ? 'Dokument' : 'Document'}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -544,10 +544,10 @@ export default function ZapisniciPage() {
                                                                         borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                                         minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                                     }}>
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
                                                                         {item.idbKey && <>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang === 'bs' ? 'Otvori fajl' : 'Open file'}</button>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang === 'bs' ? 'Preuzmi fajl' : 'Download file'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang === 'bs' ? 'Otvori zapisnik' : 'Open record'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang === 'bs' ? 'Preuzmi zapisnik' : 'Download record'}</button>
                                                                         </>}
                                                                         <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
                                                                         <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} style={menuItemSt}>✉️ {lang === 'bs' ? 'Pošalji email' : 'Send email'}</button>
@@ -575,7 +575,7 @@ export default function ZapisniciPage() {
                                                     </td>
                                                     <td style={{ textAlign: 'center' }}>
                                                         {item.idbKey ? (
-                                                            <button className="btn btn-ghost btn-sm btn-icon" title={item.attachedFileName} onClick={e => { e.stopPropagation(); handleOpen(item); }}>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" title={`${item.attachedFileName} — klikni za otvaranje`} onClick={e => { e.stopPropagation(); handleOpen(item); }}>
                                                                 {item.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}
                                                             </button>
                                                         ) : '—'}
