@@ -5,6 +5,7 @@ import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel, extractNameTokens } from '@/lib/textMatch';
+import { idbSaveFile, idbDeleteFile, idbDownloadFile, idbOpenFile, idbKey } from '@/lib/idbFiles';
 
 // ── CDN loader ────────────────────────────────────────────────────────────────
 function loadScript(src) {
@@ -82,7 +83,7 @@ function formatDate(iso) {
 }
 
 // ── Akcije dropdown (portal) ─────────────────────────────────────────────────
-function AkcijeMenu({ item, onEdit, onDelete, onDownload, onCopy, lang }) {
+function AkcijeMenu({ item, onEdit, onDelete, onDownload, onOpen, onCopy, lang }) {
     const [open, setOpen] = useState(false);
     const [pos, setPos] = useState({ top: 0, left: 0 });
     const btnRef = useRef(null);
@@ -102,7 +103,8 @@ function AkcijeMenu({ item, onEdit, onDelete, onDownload, onCopy, lang }) {
 
     const menuItems = [
         { icon: '✏️', label: lang === 'bs' ? 'Uredi' : 'Edit', action: onEdit },
-        { icon: '📥', label: lang === 'bs' ? 'Preuzmi' : 'Download', action: onDownload, disabled: !item.attachedFileData },
+        { icon: '📂', label: lang === 'bs' ? 'Otvori' : 'Open', action: onOpen, disabled: !item.idbKey },
+        { icon: '📥', label: lang === 'bs' ? 'Preuzmi' : 'Download', action: onDownload, disabled: !item.idbKey },
         { icon: '📋', label: lang === 'bs' ? 'Kopiraj naziv' : 'Copy name', action: onCopy },
         { divider: true },
         { icon: '🗑️', label: lang === 'bs' ? 'Obriši' : 'Delete', action: onDelete, danger: true },
@@ -157,7 +159,8 @@ function AkcijeMenu({ item, onEdit, onDelete, onDownload, onCopy, lang }) {
 // ── EMPTY form ────────────────────────────────────────────────────────────────
 const EMPTY_ZAP = {
     naziv: '', broj: '', datum: '', vrsta: '', napomena: '',
-    attachedFileData: null, attachedFileName: '', attachedFileType: '',
+    // File metadata only — actual blob stored in IndexedDB under idbKey
+    idbKey: null, attachedFileName: '', attachedFileSize: 0, attachedFileType: '',
 };
 
 const VRSTE = ['Zapisnik o ispitivanju', 'Zapisnik o osposobljenosti', 'Zapisnik o pregledu', 'Zapisnik o vježbi', 'Ostalo'];
@@ -175,6 +178,8 @@ export default function ZapisniciPage() {
     const [editId, setEditId] = useState(null);
     const [form, setForm] = useState({ ...EMPTY_ZAP });
     const [saving, setSaving] = useState(false);
+    // pendingFile holds the raw File object before save (not persisted yet)
+    const [pendingFile, setPendingFile] = useState(null);
     const fileRef = useRef(null);
 
     const reload = useCallback(() => setItems(getAll(COLLECTIONS.ZAPISNICI)), []);
@@ -191,11 +196,13 @@ export default function ZapisniciPage() {
 
     const handleNew = () => {
         setForm({ ...EMPTY_ZAP, datum: new Date().toISOString().split('T')[0] });
+        setPendingFile(null);
         setEditId(null); setShowForm(true);
     };
 
     const handleEdit = (item) => {
         setForm({ ...EMPTY_ZAP, ...item });
+        setPendingFile(null);
         setEditId(item.id); setShowForm(true);
     };
 
@@ -203,20 +210,45 @@ export default function ZapisniciPage() {
         if (!form.naziv.trim()) { await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
         setSaving(true);
         try {
+            let fileFields = {
+                idbKey: form.idbKey || null,
+                attachedFileName: form.attachedFileName || '',
+                attachedFileSize: form.attachedFileSize || 0,
+                attachedFileType: form.attachedFileType || '',
+            };
+
+            // If user picked a new file, save it to IndexedDB
+            if (pendingFile) {
+                const newKey = idbKey('zap', Date.now());
+                await idbSaveFile(newKey, pendingFile);
+                // Delete old IDB blob if replacing
+                if (form.idbKey) await idbDeleteFile(form.idbKey);
+                fileFields = {
+                    idbKey: newKey,
+                    attachedFileName: pendingFile.name,
+                    attachedFileSize: pendingFile.size,
+                    attachedFileType: pendingFile.type,
+                };
+            }
+
+            const payload = {
+                naziv: form.naziv, broj: form.broj, datum: form.datum,
+                vrsta: form.vrsta, napomena: form.napomena,
+                ...fileFields,
+            };
+
             if (editId) {
-                update(COLLECTIONS.ZAPISNICI, editId, form);
+                update(COLLECTIONS.ZAPISNICI, editId, payload);
             } else {
-                create(COLLECTIONS.ZAPISNICI, form);
+                create(COLLECTIONS.ZAPISNICI, payload);
             }
             reload();
             setShowForm(false);
             setEditId(null);
             setForm({ ...EMPTY_ZAP });
+            setPendingFile(null);
         } catch (err) {
-            const msg = err?.name === 'QuotaExceededError'
-                ? (lang === 'bs' ? 'Nema dovoljno prostora u pohrani! Pokušajte bez priložene datoteke ili obrišite stare zapise.' : 'Storage quota exceeded! Try without the attached file or delete old records.')
-                : (lang === 'bs' ? `Greška pri čuvanju: ${err?.message || 'Nepoznata greška.'}` : `Save error: ${err?.message || 'Unknown error.'}`);
-            await alert(msg);
+            await alert(lang === 'bs' ? `Greška pri čuvanju: ${err?.message || 'Nepoznata greška.'}` : `Save error: ${err?.message}`);
         } finally {
             setSaving(false);
         }
@@ -225,16 +257,21 @@ export default function ZapisniciPage() {
     const handleDelete = async (item) => {
         const ok = await confirm(lang === 'bs' ? `Obrisati "${item.naziv}"?` : `Delete "${item.naziv}"?`);
         if (!ok) return;
+        if (item.idbKey) await idbDeleteFile(item.idbKey).catch(() => {});
         remove(COLLECTIONS.ZAPISNICI, item.id);
         reload();
     };
 
-    const handleDownload = (item) => {
-        if (!item.attachedFileData) return;
-        const link = document.createElement('a');
-        link.href = item.attachedFileData;
-        link.download = item.attachedFileName || `${item.naziv || 'zapisnik'}.pdf`;
-        link.click();
+    const handleDownload = async (item) => {
+        if (!item.idbKey) return;
+        try { await idbDownloadFile(item.idbKey, item.attachedFileName); }
+        catch { await alert(lang === 'bs' ? 'Datoteka nije dostupna.' : 'File not available.'); }
+    };
+
+    const handleOpen = async (item) => {
+        if (!item.idbKey) return;
+        try { await idbOpenFile(item.idbKey); }
+        catch { await alert(lang === 'bs' ? 'Datoteka nije dostupna.' : 'File not available.'); }
     };
 
     const handleCopy = (item) => {
@@ -243,14 +280,18 @@ export default function ZapisniciPage() {
 
     const handleFileUpload = (file) => {
         if (!file) return;
-        if (file.size > 10 * 1024 * 1024) { alert('Max 10MB!'); return; }
-        const reader = new FileReader();
-        reader.onload = e => {
-            setF('attachedFileData', e.target.result);
-            setF('attachedFileName', file.name);
-            setF('attachedFileType', file.type);
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 50 * 1024 * 1024) { alert('Max 50MB!'); return; }
+        setPendingFile(file);
+        // Update form metadata preview (blob stored in IDB only on save)
+        setF('attachedFileName', file.name);
+        setF('attachedFileSize', file.size);
+        setF('attachedFileType', file.type);
+    };
+
+    const handleRemoveFile = async () => {
+        if (form.idbKey) await idbDeleteFile(form.idbKey).catch(() => {});
+        setPendingFile(null);
+        setForm(f => ({ ...f, idbKey: null, attachedFileName: '', attachedFileSize: 0, attachedFileType: '' }));
     };
 
     const labelStyle = {
@@ -411,15 +452,17 @@ export default function ZapisniciPage() {
                                     <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.jpg,.png"
                                         style={{ display: 'none' }}
                                         onChange={e => { handleFileUpload(e.target.files[0]); e.target.value = ''; }} />
-                                    {form.attachedFileData ? (
+                                    {(pendingFile || form.attachedFileName) ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                             <span style={{ fontSize: '1.2rem' }}>{form.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}</span>
-                                            <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.attachedFileName}</span>
+                                            <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                {form.attachedFileName}
+                                                {pendingFile && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>({(pendingFile.size / 1024).toFixed(0)}KB — {lang === 'bs' ? 'sprema se...' : 'pending save'})</span>}
+                                            </span>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>
                                                 {lang === 'bs' ? 'Zamijeni' : 'Replace'}
                                             </button>
-                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                                                onClick={() => { setF('attachedFileData', null); setF('attachedFileName', ''); setF('attachedFileType', ''); }}>✕</button>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={handleRemoveFile}>✕</button>
                                         </div>
                                     ) : (
                                         <button className="btn btn-outline btn-sm" onClick={() => fileRef.current?.click()}>
@@ -497,8 +540,8 @@ export default function ZapisniciPage() {
                                                         ) : '—'}
                                                     </td>
                                                     <td style={{ textAlign: 'center' }}>
-                                                        {item.attachedFileData ? (
-                                                            <button className="btn btn-ghost btn-sm btn-icon" title={item.attachedFileName} onClick={() => handleDownload(item)}>
+                                                        {item.idbKey ? (
+                                                            <button className="btn btn-ghost btn-sm btn-icon" title={item.attachedFileName} onClick={() => handleOpen(item)}>
                                                                 {item.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}
                                                             </button>
                                                         ) : '—'}
@@ -510,6 +553,7 @@ export default function ZapisniciPage() {
                                                             onEdit={() => handleEdit(item)}
                                                             onDelete={() => handleDelete(item)}
                                                             onDownload={() => handleDownload(item)}
+                                                            onOpen={() => handleOpen(item)}
                                                             onCopy={() => handleCopy(item)}
                                                         />
                                                     </td>
