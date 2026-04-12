@@ -102,7 +102,12 @@ export default function ZapisniciPage() {
     const [saving, setSaving]         = useState(false);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [actionMenuId, setActionMenuId] = useState(null);
-    const [menuPos, setMenuPos]       = useState({ top: 0, left: 0 });
+    const [menuPos, setMenuPos]       = useState({ top: 0, left: 0, maxH: 400 });
+    // Email modal state
+    const [emailModal, setEmailModal] = useState(null); // null | { item }
+    const [emailTo, setEmailTo]       = useState('');
+    const [emailSubject, setEmailSubject] = useState('');
+    const [emailBody, setEmailBody]   = useState('');
     const fileRef = useRef(null);
 
     const reload = useCallback(() => setItems(getAll(COLLECTIONS.ZAPISNICI)), []);
@@ -136,10 +141,43 @@ export default function ZapisniciPage() {
     const handleNew = () => {
         setForm({ ...EMPTY_ZAP, datum: new Date().toISOString().split('T')[0] });
         setPendingFile(null); setEditId(null); setShowForm(true);
+        // scroll to top so form is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     };
     const handleEdit = (item) => {
         setForm({ ...EMPTY_ZAP, ...item });
         setPendingFile(null); setEditId(item.id); setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const handleDuplicate = (item) => {
+        // Open new form pre-filled with the copied item (minus id, idbKey, file refs)
+        setForm({
+            ...EMPTY_ZAP,
+            naziv: (lang === 'bs' ? 'Kopija — ' : 'Copy — ') + item.naziv,
+            broj: '', datum: new Date().toISOString().split('T')[0],
+            vrsta: item.vrsta, napomena: item.napomena,
+            // Note: file is NOT copied (lives in IDB under old key)
+        });
+        setPendingFile(null); setEditId(null); setShowForm(true);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    const handleOpenEmailModal = (item) => {
+        setEmailTo('');
+        setEmailSubject(`Zapisnik: ${item.naziv}${item.broj ? ` (${item.broj})` : ''}`);
+        setEmailBody(
+            (lang === 'bs'
+                ? `Poštovani,\n\nU prilogu se nalazi zapisnik:\n\nNaziv: ${item.naziv}\nBroj: ${item.broj || '—'}\nDatum: ${fmtDate(item.datum)}\nVrsta: ${item.vrsta || '—'}${item.napomena ? `\nNapomena: ${item.napomena}` : ''}\n\nS poštovanjem`
+                : `Dear,\n\nPlease find the attached record:\n\nName: ${item.naziv}\nNo.: ${item.broj || '—'}\nDate: ${fmtDate(item.datum)}\nType: ${item.vrsta || '—'}${item.napomena ? `\nNote: ${item.napomena}` : ''}\n\nBest regards`
+            )
+        );
+        setEmailModal({ item });
+    };
+    const handleSendEmail = () => {
+        const recipients = emailTo.split(/[,;\s]+/).filter(Boolean).join(',');
+        if (!recipients) { alert(lang === 'bs' ? 'Unesite bar jednu email adresu!' : 'Enter at least one email address!'); return; }
+        const mailtoLink = `mailto:${recipients}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+        window.open(mailtoLink, '_blank');
+        setEmailModal(null);
     };
 
     const handleSave = async () => {
@@ -497,22 +535,24 @@ export default function ZapisniciPage() {
 
                                                             {actionMenuId === item.id && (
                                                                 <>
-                                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                                    {/* Transparent backdrop — pointer-events none so menu buttons receive clicks */}
+                                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onMouseDown={() => setActionMenuId(null)} />
                                                                     <div style={{
                                                                         position: 'fixed', top: menuPos.top, bottom: menuPos.bottom,
                                                                         left: menuPos.left, zIndex: 9999,
                                                                         background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                                         borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
-                                                                        minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto',
+                                                                        minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                                     }}>
-                                                                        <button onClick={() => { setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
                                                                         {item.idbKey && <>
-                                                                            <button onClick={() => { setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                                                                            <button onClick={() => { setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang === 'bs' ? 'Otvori fajl' : 'Open file'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang === 'bs' ? 'Preuzmi fajl' : 'Download file'}</button>
                                                                         </>}
-                                                                        <button onClick={() => { setActionMenuId(null); handleCopy(item); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj naziv' : 'Copy name'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} style={menuItemSt}>✉️ {lang === 'bs' ? 'Pošalji email' : 'Send email'}</button>
                                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                        <button onClick={() => { setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                                                                     </div>
                                                                 </>
                                                             )}
@@ -551,7 +591,53 @@ export default function ZapisniciPage() {
                 </>
             )}
 
-            {/* ══════════════ TAB 2 — KOREKCIJA ══════════════ */}
+            {/* ══════════════ EMAIL MODAL ══════════════ */}
+            {emailModal && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                    <div className="card" style={{ width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
+                        <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <span style={{ fontWeight: 700 }}>✉️ {lang === 'bs' ? 'Pošalji zapisnik emailom' : 'Send record by email'}</span>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setEmailModal(null)}>✕</button>
+                        </div>
+                        <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                            <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(0,191,166,0.07)', border: '1px solid rgba(0,191,166,0.2)', fontSize: '0.82rem' }}>
+                                <strong>{emailModal.item.naziv}</strong>
+                                {emailModal.item.broj && <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>{emailModal.item.broj}</span>}
+                                {emailModal.item.idbKey && <div style={{ marginTop: 4, color: 'var(--text-muted)' }}>📎 {emailModal.item.attachedFileName} — {lang === 'bs' ? 'Fajl ćete priložiti ručno u email klientu.' : 'Attach the file manually in your email client.'}</div>}
+                            </div>
+
+                            <div>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                                    {lang === 'bs' ? 'Primatelji (odvojite zarezom)' : 'Recipients (comma-separated)'}
+                                </div>
+                                <input className="form-input" value={emailTo} onChange={e => setEmailTo(e.target.value)}
+                                    placeholder="ime@kompanija.ba, drugi@kompanija.ba" autoFocus />
+                            </div>
+
+                            <div>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                                    {lang === 'bs' ? 'Predmet' : 'Subject'}
+                                </div>
+                                <input className="form-input" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
+                            </div>
+
+                            <div>
+                                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                                    {lang === 'bs' ? 'Poruka' : 'Message'}
+                                </div>
+                                <textarea className="form-input" rows={8} value={emailBody} onChange={e => setEmailBody(e.target.value)} style={{ resize: 'vertical', fontFamily: 'var(--font-body)' }} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: 10 }}>
+                                <button className="btn btn-primary" onClick={handleSendEmail}>✉️ {lang === 'bs' ? 'Otvori email klijent' : 'Open email client'}</button>
+                                <button className="btn btn-ghost" onClick={() => setEmailModal(null)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: -6 }}>💡 {lang === 'bs' ? 'Otvorit će se vaš email klijent (Outlook, Gmail...) s popunjenim podacima.' : 'This will open your email client (Outlook, Gmail...) with the fields pre-filled.'}</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {activeTab === 'korekcija' && (
                 <>
                     {step === 'upload' && (
