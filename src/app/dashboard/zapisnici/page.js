@@ -208,8 +208,18 @@ export default function ZapisniciPage() {
             } else {
                 create(COLLECTIONS.ZAPISNICI, form);
             }
-            reload(); setShowForm(false); setEditId(null); setForm({ ...EMPTY_ZAP });
-        } finally { setSaving(false); }
+            reload();
+            setShowForm(false);
+            setEditId(null);
+            setForm({ ...EMPTY_ZAP });
+        } catch (err) {
+            const msg = err?.name === 'QuotaExceededError'
+                ? (lang === 'bs' ? 'Nema dovoljno prostora u pohrani! Pokušajte bez priložene datoteke ili obrišite stare zapise.' : 'Storage quota exceeded! Try without the attached file or delete old records.')
+                : (lang === 'bs' ? `Greška pri čuvanju: ${err?.message || 'Nepoznata greška.'}` : `Save error: ${err?.message || 'Unknown error.'}`);
+            await alert(msg);
+        } finally {
+            setSaving(false);
+        }
     };
 
     const handleDelete = async (item) => {
@@ -327,19 +337,13 @@ export default function ZapisniciPage() {
                         {items.length} {lang === 'bs' ? 'zapisnika' : 'records'}
                     </p>
                 </div>
-                {activeTab === 'list' && (
-                    <div style={{ marginLeft: 'auto' }}>
-                        <button className="btn btn-primary" onClick={handleNew}>
-                            + {lang === 'bs' ? 'Novi zapisnik' : 'New record'}
-                        </button>
-                    </div>
-                )}
                 {activeTab === 'korekcija' && step !== 'upload' && (
                     <div style={{ marginLeft: 'auto' }}>
                         <button className="btn btn-ghost btn-sm" onClick={handleReset}>↺ {lang === 'bs' ? 'Novi dokument' : 'New document'}</button>
                     </div>
                 )}
             </div>
+
 
             {/* Tab bar */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>
@@ -436,8 +440,11 @@ export default function ZapisniciPage() {
                         </div>
                     )}
 
-                    {/* Search */}
+                    {/* Search + New button */}
                     <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <button className="btn btn-primary btn-sm" onClick={handleNew}>
+                            + {lang === 'bs' ? 'Novi zapisnik' : 'New record'}
+                        </button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 400 }}>
                             <input
                                 placeholder={lang === 'bs' ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
@@ -457,7 +464,7 @@ export default function ZapisniciPage() {
                                 <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
                                     <div style={{ fontSize: '3rem', marginBottom: 12 }}>📋</div>
                                     <div style={{ fontWeight: 600, marginBottom: 6 }}>{lang === 'bs' ? 'Nema zapisnika' : 'No records'}</div>
-                                    <div style={{ fontSize: '0.82rem', marginBottom: 16 }}>{lang === 'bs' ? 'Kreirajte prvi zapisnik klikom na gumb iznad.' : 'Create your first record using the button above.'}</div>
+                                    <div style={{ fontSize: '0.82rem', marginBottom: 16 }}>{lang === 'bs' ? 'Kreirajte prvi zapisnik klikom na gumb ispod.' : 'Create your first record using the button below.'}</div>
                                     <button className="btn btn-primary" onClick={handleNew}>+ {lang === 'bs' ? 'Novi zapisnik' : 'New record'}</button>
                                 </div>
                             ) : (
