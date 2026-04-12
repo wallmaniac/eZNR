@@ -73,7 +73,6 @@ const menuItems = [
         key: 'grpDocuments', icon: '📑',
         children: [
             { key: 'employerDocs',   icon: '📑', path: '/dashboard/employer-docs' },
-            { key: 'zapisnici',      icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Minutes' },
             { key: 'requests',       icon: '📝', path: '/dashboard/requests' },
             {
                 key: 'obrasciIUputnice', icon: '📋',
