@@ -251,7 +251,7 @@ export default function ImportPage() {
                 setPreview({ workers, certs, ppe, equip, medExams });
                 setStep('preview');
             } catch (err) {
-                setFileError('Greška pri čitanju fajla: ' + err.message);
+                setFileError('Greška pri čitanju dokumenta: ' + err.message);
             }
         };
         reader.readAsBinaryString(file);
@@ -559,7 +559,7 @@ export default function ImportPage() {
                             {lang === 'bs' ? 'Korak 2: Uploadajte popunjeni Excel' : 'Step 2: Upload your filled Excel'}
                         </div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                            {lang === 'bs' ? 'Kliknite ili prevucite .xlsx fajl ovdje' : 'Click or drag & drop .xlsx file here'}
+                            {lang === 'bs' ? 'Kliknite ili prevucite .xlsx dokument ovdje' : 'Click or drag & drop .xlsx file here'}
                         </div>
                         <input
                             ref={fileRef}

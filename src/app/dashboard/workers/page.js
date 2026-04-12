@@ -287,7 +287,7 @@ function WorkersPageInner() {
     }, [searchParams]);
 
     const filteredWorkers = workers.filter(w => {
-        const matchSearch = !searchTerm || `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib}`.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchSearch = !searchTerm || `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib} ${w.identBroj || ''} ${w.datumRodenja || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
         const matchStatus = showFormer ? !w.aktivan : w.aktivan;
         return matchSearch && matchStatus;
     });

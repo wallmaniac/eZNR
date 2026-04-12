@@ -219,11 +219,11 @@ export default function TrainingsPage() {
             const res = await fetch('/api/parse-presentation', { method: 'POST', body: fd });
             const data = await res.json();
             if (!res.ok || data.error) {
-                setUploadError(data.error || 'Greška pri obradi fajla.');
+                setUploadError(data.error || 'Greška pri obradi dokumenta.');
                 return;
             }
             if ((data.slides || []).length === 0) {
-                setUploadError('Nije pronađen nijedan slajd u fajlu.');
+                setUploadError('Nije pronađen nijedan slajd u dokumentu.');
                 return;
             }
             // Ask what to do with existing slides
@@ -283,7 +283,7 @@ export default function TrainingsPage() {
             setTimeout(() => setUploadStatus(''), 4000);
         } catch (err) {
             console.error('Upload error:', err);
-            setUploadError('Greška pri slanju fajla. Pokušajte ponovo.');
+            setUploadError('Greška pri slanju dokumenta. Pokušajte ponovo.');
         } finally {
             setUploadingFile(false);
             if (fileInputRef.current) fileInputRef.current.value = '';
@@ -810,7 +810,7 @@ export default function TrainingsPage() {
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', padding: '16px 20px' }}>
                             <div style={{ fontSize: '1.8rem' }}>{uploadingFile ? '⏳' : '📂'}</div>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 600, marginBottom: 2 }}>Uvezi iz PowerPoint ili PDF fajla</div>
+                                <div style={{ fontWeight: 600, marginBottom: 2 }}>Uvezi iz PowerPoint ili PDF dokumenta</div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                     <b>.pptx</b> → slajdovi se uvaze direktno &nbsp;·&nbsp; <b>.pdf</b> → 🤖 Gemini AI kreira slajdove iz teksta
                                 </div>
@@ -824,7 +824,7 @@ export default function TrainingsPage() {
                             </div>
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                 <button className="btn btn-outline btn-sm" disabled={uploadingFile} onClick={() => fileInputRef.current?.click()}>
-                                    📂 Odaberi fajl
+                                    📂 Odaberi dokument
                                 </button>
                                 <input ref={fileInputRef} type="file" accept=".pdf,.pptx" style={{ display: 'none' }}
                                     onChange={e => { const f = e.target.files?.[0]; if (f) handleFileUpload(f); }} />

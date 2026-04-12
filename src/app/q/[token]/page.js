@@ -94,7 +94,14 @@ export default function PublicQuestionnairePage({ params }) {
             <div style={bgGradient1} />
             <div style={bgGradient2} />
 
-            <div style={containerStyle}>
+            <div className="pqf-page-container" style={containerStyle}>
+                <style>{`
+                    @media (max-width: 600px) {
+                        .pqf-page-container { padding: 12px !important; }
+                        .pqf-page-container h1 { font-size: 1.15rem !important; }
+                        .pqf-page-container h2 { font-size: 1.1rem !important; }
+                    }
+                `}</style>
 
                 {/* Loading */}
                 {loading && (

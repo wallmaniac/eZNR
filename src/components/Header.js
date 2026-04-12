@@ -71,7 +71,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         const term = searchTerm.toLowerCase();
         const results = [];
         getAll(COLLECTIONS.WORKERS).forEach(w => {
-            if (`${w.ime} ${w.prezime} ${w.jmbg || ''}`.toLowerCase().includes(term))
+            if (`${w.ime} ${w.prezime} ${w.jmbg || ''} ${w.identBroj || ''} ${w.datumRodenja || ''}`.toLowerCase().includes(term))
                 results.push({ type: 'worker', icon: '👷', label: `${w.ime} ${w.prezime}`, sub: getOrgUnitName(w.orgJedinicaId), path: '/dashboard/workers', id: w.id });
         });
         getAll(COLLECTIONS.EQUIPMENT).forEach(e => {

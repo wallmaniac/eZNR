@@ -230,6 +230,19 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
 
     return (
         <div style={{ maxWidth: 720, margin: '0 auto' }}>
+            <style>{`
+                @media (max-width: 600px) {
+                    .pqf-question { padding: 16px !important; }
+                    .pqf-question .pqf-indent { margin-left: 0 !important; }
+                    .pqf-question label { font-size: 1rem !important; }
+                    .pqf-question input[type=text],
+                    .pqf-question input[type=number],
+                    .pqf-question input[type=date],
+                    .pqf-question textarea,
+                    .pqf-question select { font-size: 16px !important; padding: 14px !important; }
+                    .pqf-submit-btn { width: 100% !important; padding: 16px !important; font-size: 1.1rem !important; }
+                }
+            `}</style>
             {questions.map((q, idx) => {
                 const qId = q.id || q.name || `q_${idx}`;
                 const hasError = !!errors[qId];
@@ -267,7 +280,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                 }
 
                 return (
-                    <div key={qId} id={`q-${qId}`} style={{
+                    <div key={qId} id={`q-${qId}`} className="pqf-question" style={{
                         marginBottom: 24, padding: '20px 24px',
                         background: hasError
                             ? 'rgba(239,68,68,0.05)'
@@ -318,7 +331,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                         )}
 
                         {/* Input by type */}
-                        <div style={{ marginLeft: 32 }}>
+                        <div className="pqf-indent" style={{ marginLeft: 32 }}>
                             {q.type === 'text' && (
                                 <input
                                     type="text"
@@ -479,6 +492,7 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
             {/* Submit button */}
             <div style={{ textAlign: 'center', padding: '24px 0 40px' }}>
                 <button
+                    className="pqf-submit-btn"
                     onClick={handleSubmit}
                     disabled={submitting}
                     style={{
@@ -501,6 +515,9 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                 >
                     {submitting ? '⏳ Slanje...' : '📤 Pošalji odgovore'}
                 </button>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', marginTop: 12 }}>
+                    💡 Nakon slanja ne možete promijeniti odgovore.
+                </p>
             </div>
         </div>
     );
@@ -511,8 +528,8 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
 
 const inputStyle = {
     width: '100%',
-    padding: '10px 14px',
-    fontSize: '0.92rem',
+    padding: '12px 14px',
+    fontSize: '1rem',
     borderRadius: 8,
     border: '1px solid rgba(255,255,255,0.12)',
     background: 'rgba(255,255,255,0.04)',
@@ -520,6 +537,7 @@ const inputStyle = {
     outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
     fontFamily: 'inherit',
+    boxSizing: 'border-box',
 };
 
 const radioLabelStyle = {
@@ -527,9 +545,10 @@ const radioLabelStyle = {
     alignItems: 'center',
     gap: 10,
     cursor: 'pointer',
-    padding: '8px 12px',
+    padding: '12px 14px',
     borderRadius: 8,
     transition: 'background 0.15s',
-    fontSize: '0.9rem',
+    fontSize: '0.95rem',
     color: '#cbd5e1',
+    minHeight: 44,
 };

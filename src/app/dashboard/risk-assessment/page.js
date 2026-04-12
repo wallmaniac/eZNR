@@ -1317,7 +1317,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     onChange={e => setDocAiFiles(Array.from(e.target.files))} />
                                                 <div style={{ fontSize: '2rem', marginBottom: 10 }}>📎</div>
                                                 <div style={{ fontWeight: 600, color: 'var(--text)' }}>
-                                                    {docAiFiles.length > 0 ? `${docAiFiles.length} dokument(a) spremno` : 'Klikni ili povuci fajlove ovdje (PDF, Word)'}
+                                                    {docAiFiles.length > 0 ? `${docAiFiles.length} dokument(a) spremno` : 'Klikni ili povuci dokumente ovdje (PDF, Word)'}
                                                 </div>
                                                 {docAiFiles.length > 0 && (
                                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 8 }}>

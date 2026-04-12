@@ -603,7 +603,7 @@ export default function ZapisniciPage() {
                             <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(0,191,166,0.07)', border: '1px solid rgba(0,191,166,0.2)', fontSize: '0.82rem' }}>
                                 <strong>{emailModal.item.naziv}</strong>
                                 {emailModal.item.broj && <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>{emailModal.item.broj}</span>}
-                                {emailModal.item.idbKey && <div style={{ marginTop: 4, color: 'var(--text-muted)' }}>📎 {emailModal.item.attachedFileName} — {lang === 'bs' ? 'Fajl ćete priložiti ručno u email klientu.' : 'Attach the file manually in your email client.'}</div>}
+                                {emailModal.item.idbKey && <div style={{ marginTop: 4, color: 'var(--text-muted)' }}>📎 {emailModal.item.attachedFileName} — {lang === 'bs' ? 'Dokument ćete priložiti ručno u email klientu.' : 'Attach the file manually in your email client.'}</div>}
                             </div>
 
                             <div>

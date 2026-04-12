@@ -21,7 +21,7 @@ export async function POST(request) {
 
         if (fileName.endsWith('.pptx')) {
             const slides = await parsePPTX(buffer);
-            if (!slides?.length) return NextResponse.json({ error: 'Nema slajdova u PPTX fajlu.' }, { status: 400 });
+            if (!slides?.length) return NextResponse.json({ error: 'Nema slajdova u PPTX dokumentu.' }, { status: 400 });
             return NextResponse.json({ slides, count: slides.length, source: 'pptx' });
         }
 
@@ -94,7 +94,7 @@ async function pdfToSlides(buffer) {
                     state = checkData.state || 'ACTIVE';
                     console.log(`[parse-presentation] File state: ${state}`);
                     if (state === 'ACTIVE') break;
-                    if (state === 'FAILED') throw new Error('Obrada PDF fajla neuspješna');
+                    if (state === 'FAILED') throw new Error('Obrada PDF dokumenta neuspješna');
                 }
             } catch (e) {
                 if (e.message.includes('neuspješna')) throw e;

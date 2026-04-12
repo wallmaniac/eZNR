@@ -163,6 +163,102 @@ const menuItems = [
     { key: 'settings',    icon: '⚙️', path: '/dashboard/settings' },
 ];
 
+// ── Tooltip explanations for sidebar items ──────────────────────────────────
+// Shows on hover to help non-technical users understand abbreviations & features.
+const SIDEBAR_TOOLTIPS = {
+    bs: {
+        dashboard: 'Kontrolna ploča — pregled svih ključnih podataka na jednom mjestu',
+        home: 'Početna stranica s novostima iz zaštite na radu',
+        workers: 'Evidencija svih radnika u firmi',
+        workerCertificates: 'Pregled svih uvjerenja (ZOS, ZOP, obuke) za radnike',
+        workerPPE: 'Osobna zaštitna oprema — pregled zaduživanja OZO za radnike',
+        medicalExams: 'Ljekarski pregledi — evidencija periodičnih i prethodnih pregleda',
+        ekWorkers: 'Evidencijski karton (EK) — detaljna kartica svakog radnika za ispis',
+        ekPPE: 'Evidencijski karton OZO — kartica osobne zaštitne opreme za ispis',
+        trainingMasterBook: 'Matična knjiga osposobljavanja — centralna evidencija obuka',
+        orgUnits: 'Organizacijske jedinice — odjeli, sektori, poslovnice',
+        workplaces: 'Radna mjesta — definicija radnih mjesta i uvjeta rada',
+        workplaceList: 'Popis i pregled svih radnih mjesta',
+        sistematizacija: 'Sistematizacija radnih mjesta — raspored radnika po pozicijama',
+        addressBook: 'Adresar — kontakti firmi, inspektora, ovlaštenih institucija',
+        equipment: 'Ispitivanje radne opreme i objekata — evidencija atestiranja i ispitivanja',
+        equipmentExamList: 'Popis radne opreme i objekata s datumima ispitivanja',
+        ekEquipment: 'Evidencijski karton (EK) — kartica opreme ili objekta za ispis',
+        injuryReport: 'Prijava povrede na radu — obrazac za evidentiranje nesreća',
+        annualInjuryReport: 'Godišnji izvještaj o povredama na radu koji se predaje inspekciji',
+        diseaseReport: 'Prijava profesionalne bolesti — obrazac za evidentiranje',
+        trainings: 'Obuke i prezentacije — kreiranje i prikaz prezentacija za radnike',
+        testoviZopZnr: 'Testovi ZOP (zaštita od požara) i ZNR (zaštita na radu) — provjera znanja radnika',
+        questionnaires: 'Upitnici i ankete — kreiranje i slanje obrazaca radnicima putem emaila',
+        riskAssessment: 'Procjena rizika — analiza opasnosti na radnim mjestima',
+        employerDocs: 'Dokumentacija za poslodavca — obavezni dokumenti, pregledi i certifikati',
+        requests: 'Zahtjevnice — interni zahtjevi za opremu, obuke i sl.',
+        formOIR1: 'Obrazac OIR-1 — prijava povrede na radu (službeni obrazac)',
+        medicalReferralRA1: 'Ljekarska uputnica RA-1 — upućivanje radnika na ljekarski pregled',
+        formRO1: 'Obrazac RO-1 — prijava profesionalne bolesti',
+        formRO2: 'Obrazac RO-2 — evidencija o profesionalnim oboljenjima',
+        nightWorkReferral: 'Ljekarska uputnica za noćni rad NR-1 — obavezan pregled za noćne smjene',
+        documents: 'Interni akti ZNR — dokumenti iz zaštite na radu',
+        parties: 'Stranke — partneri, institucije i ovlaštene firme',
+        documentTypes: 'Tipovi dokumenata u ISZNR sistemu',
+        digitalSigning: 'Digitalno potpisivanje dokumenata — elektronski potpis',
+        examiners: 'Ispitivači — ovlaštena lica za ispitivanje opreme',
+        measureEquipment: 'Mjerna i ispitna oprema — instrumenti korišteni pri ispitivanjima',
+        grpISZNR: 'ISZNR — Informacioni sistem zaštite na radu (interni akti i dokumenti)',
+        obrasciIUputnice: 'Obrasci i uputnice — službeni obrasci (OIR-1, RA-1, RO-1, RO-2, NR-1)',
+        fleetVehicles: 'Popis svih vozila u voznom parku',
+        fleetAssignments: 'Zaduženja — koji radnik koristi koje vozilo',
+        fleetDocuments: 'Dokumentacija vozila — registracije, osiguranja, atesti',
+        fleetOrders: 'Putni nalozi — evidencija službenih putovanja',
+        excelImport: 'Uvoz/izvoz podataka iz/u Excel tablice',
+        converter: 'Konverzija i spajanje dokumenata — PDF, Word, pretvaranje formata',
+        digitalArchive: 'Digitalna arhiva — pohranjivanje skeniranih dokumenata',
+        zapisniciAlat: 'Zapisnici — kreiranje i upravljanje zapisnicima (npr. o pregledu, o ispitivanju)',
+        settings: 'Postavke aplikacije — jezik, tema, korisnički profil',
+        adminUsers: 'Upravljanje korisnicima — dodavanje i uređivanje korisničkih računa',
+        adminCompanies: 'Upravljanje firmama — dodavanje i uređivanje podataka o firmama',
+        // Codebooks
+        countries: 'Šifarnik država',
+        counties: 'Šifarnik kantona/županija',
+        places: 'Šifarnik mjesta i općina',
+        certTypes: 'Šifarnik tipova uvjerenja (ZOS, ZOP, obuke)',
+        examTypes: 'Šifarnik tipova ljekarskih pregleda',
+        equipmentTypes: 'Šifarnik vrsta radne opreme i objekata',
+        ppeTypes: 'Šifarnik vrsta osobne zaštitne opreme (OZO)',
+        fileTypes: 'Šifarnik vrsta datoteka za digitalni arhiv',
+        authorizedCompanies: 'Ovlaštene firme za ispitivanje opreme i provedbu pregleda',
+        examiners: 'Ispitivači — ovlaštena fizička lica',
+        doctors: 'Doktori medicine rada',
+        // Fleet
+        grpFleet: 'Vozni park — upravljanje vozilima, putnim nalozima i dokumentacijom',
+        // Fire
+        grpFireProtection: 'Zaštita od požara — elaborati, planovi, protupožarna oprema',
+        grpEvacuation: 'Evakuacija — planovi evakuacije, vježbe, evakuacijske mape',
+    },
+    en: {
+        dashboard: 'Dashboard — overview of all key data in one place',
+        home: 'Home page with occupational safety news',
+        workers: 'Staff registry for all employees',
+        workerCertificates: 'All worker certificates (training, fire safety, etc.)',
+        workerPPE: 'Personal Protective Equipment — PPE assignment tracking',
+        medicalExams: 'Medical examinations — periodic and pre-employment records',
+        ekWorkers: 'Evidence Card (EK) — detailed worker card for printing',
+        ekPPE: 'Evidence Card PPE — protective equipment card for printing',
+        trainingMasterBook: 'Training Master Book — central training registry',
+        ekEquipment: 'Evidence Card (EK) — equipment/facility card for printing',
+        testoviZopZnr: 'Fire Protection (ZOP) & Occupational Safety (ZNR) tests — worker knowledge assessment',
+        questionnaires: 'Questionnaires & surveys — create and email forms to workers',
+        riskAssessment: 'Risk Assessment — workplace hazard analysis',
+        formOIR1: 'Form OIR-1 — official work injury report',
+        medicalReferralRA1: 'Medical Referral RA-1 — refer workers for medical examination',
+        nightWorkReferral: 'Night Work Referral NR-1 — mandatory exam for night shifts',
+        grpISZNR: 'ISZNR — Occupational Safety Information System (internal acts)',
+        obrasciIUputnice: 'Forms & Referrals — official forms (OIR-1, RA-1, RO-1, RO-2, NR-1)',
+        zapisniciAlat: 'Minutes — create and manage inspection/examination records',
+        grpFleet: 'Fleet — vehicle management, travel orders, and documentation',
+    },
+};
+
 
 export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
     const { t, lang } = useLanguage();
@@ -186,6 +282,9 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
         }
         return items;
     }, [isAdmin]);
+
+    // Tooltip helper — returns explanatory text for non-obvious menu items
+    const tip = (key) => SIDEBAR_TOOLTIPS[lang]?.[key] || SIDEBAR_TOOLTIPS.bs?.[key] || undefined;
 
     const toggleMenu = (key) => {
         setOpenMenus((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -226,7 +325,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                     justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
                                     padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
                                 }}
-                                title={(!isDrawerMode && collapsed) ? t(item.key) : undefined}
+                                title={(!isDrawerMode && collapsed) ? t(item.key) : tip(item.key)}
                             >
                                 <span style={sidebarStyles.menuIcon}>{item.icon}</span>
                                 {(isDrawerMode || !collapsed) && (
@@ -253,7 +352,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                     padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
                                     textDecoration: 'none',
                                 }}
-                                title={(!isDrawerMode && collapsed) ? t(item.key) : undefined}
+                                title={(!isDrawerMode && collapsed) ? t(item.key) : tip(item.key)}
                             >
                                 <span style={sidebarStyles.menuIcon}>{item.icon}</span>
                                 {(isDrawerMode || !collapsed) && (
@@ -275,6 +374,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             <div key={child.key}>
                                                 <button
                                                     onClick={() => toggleMenu(child.key)}
+                                                    title={tip(child.key)}
                                                     style={{
                                                         ...sidebarStyles.submenuItem,
                                                         width: '100%',
@@ -296,6 +396,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                                                 href={gc.path}
                                                                 prefetch={true}
                                                                 onClick={handleNavClick}
+                                                                title={tip(gc.key)}
                                                                 style={{
                                                                     ...sidebarStyles.submenuItem,
                                                                     ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
@@ -318,6 +419,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             href={child.path}
                                             prefetch={true}
                                             onClick={handleNavClick}
+                                            title={tip(child.key)}
                                             style={{
                                                 ...sidebarStyles.submenuItem,
                                                 ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),

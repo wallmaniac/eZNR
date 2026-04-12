@@ -69,7 +69,7 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
             }
         } catch (err) {
             console.error(err);
-            alert('Greška pri parsiranju fajla: ' + err.message);
+            alert('Greška pri parsiranju dokumenta: ' + err.message);
         }
         setUploading(false);
         e.target.value = null; // reset
