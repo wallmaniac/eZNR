@@ -578,11 +578,11 @@ export default function ArchivePage() {
                                 </tbody>
                             </table>
                         </div>
-                        </div>
                     )}
                 </div>
             </div>
             </>)}
+
         </div>
     );
 }
