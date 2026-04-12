@@ -180,6 +180,27 @@ export function UvjerenjeFormPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [certTypes, searchParams]);
 
+    // ── Restore scanned file pre-filled from Digitalna Arhiva → Skenirani testovi ──
+    useEffect(() => {
+        const fromScan = searchParams?.get('fromScan');
+        if (!fromScan) return;
+        try {
+            const raw = sessionStorage.getItem('eznr_scan_prefill');
+            if (!raw) return;
+            const { data, name, size, type } = JSON.parse(raw);
+            setFormData(f => ({
+                ...f,
+                attachedFileData: data,
+                attachedFileName: name,
+                attachedFileSize: size,
+                attachedFileType: type,
+                vrstaDateotekeId: 'Sken',
+            }));
+            sessionStorage.removeItem('eznr_scan_prefill');
+        } catch { sessionStorage.removeItem('eznr_scan_prefill'); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
 
     const preselectedWorkerId = searchParams?.get('workerId');
     const [isSingleWorkerMode, setIsSingleWorkerMode] = useState(!!preselectedWorkerId);

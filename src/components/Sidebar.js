@@ -73,6 +73,7 @@ const menuItems = [
         key: 'grpDocuments', icon: '📑',
         children: [
             { key: 'employerDocs',   icon: '📑', path: '/dashboard/employer-docs' },
+            { key: 'zapisnici',      icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Minutes' },
             { key: 'requests',       icon: '📝', path: '/dashboard/requests' },
             {
                 key: 'obrasciIUputnice', icon: '📋',
@@ -155,6 +156,7 @@ const menuItems = [
             { key: 'excelImport',    icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export' },
             { key: 'converter',      icon: '🔄', path: '/dashboard/converter' },
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
+            { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Korekcija zapisnika', label_en: 'Minutes Correction' },
         ],
     },
 

@@ -1,10 +1,13 @@
 'use client';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useRouter } from 'next/navigation';
 import { getAll, create, remove, update, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
 import Link from 'next/link';
+
 
 const FILE_ICONS = {
     pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗',
@@ -41,6 +44,8 @@ const FORM_SOURCES = [
 export default function ArchivePage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
+    const router = useRouter();
+    const [activeTab, setActiveTab] = useState('archive'); // 'archive' | 'scan'
     const [files, setFiles] = useState(() => getAll(COLLECTIONS.DIGITAL_ARCHIVE));
     const [formDocs, setFormDocs] = useState([]);
     const [search, setSearch] = useState('');
@@ -50,6 +55,50 @@ export default function ArchivePage() {
     const [uploadError, setUploadError] = useState('');
     const fileInputRef = useRef(null);
     const MAX_MB = 5;
+
+    // ── Scan tab state ─────────────────────────────────────────────────────────
+    const [scanFile, setScanFile] = useState(null);   // { name, data, size, type }
+    const [scanName, setScanName] = useState('');
+    const [scanDob, setScanDob] = useState('');
+    const [scanDragging, setScanDragging] = useState(false);
+    const [scanMatches, setScanMatches] = useState([]); // top worker matches
+    const [scanSearched, setScanSearched] = useState(false);
+    const scanFileRef = useRef(null);
+
+    const handleScanFileRead = (file) => {
+        if (file.size > 10 * 1024 * 1024) { alert('Max 10MB za skenirani test!'); return; }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setScanFile({ name: file.name, data: e.target.result, size: file.size, type: file.type });
+            // Try to parse name hint from filename: e.g. "Mujo_Mujic_1990.pdf" → "Mujo Mujic"
+            const base = file.name.replace(/\.[^.]+$/, '').replace(/[_\-\.]/g, ' ').replace(/\d{4,}/g, '').trim();
+            if (base.split(' ').length >= 2) setScanName(base);
+            setScanSearched(false);
+            setScanMatches([]);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleScanSearch = () => {
+        if (!scanName.trim()) { alert(lang === 'bs' ? 'Unesite ime radnika!' : 'Enter worker name!'); return; }
+        const workers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
+        const results = matchWorkers(scanName, scanDob, workers);
+        setScanMatches(results);
+        setScanSearched(true);
+    };
+
+    const handleScanSelectWorker = (worker) => {
+        if (!scanFile) { alert('Nema odabranog skena!'); return; }
+        try {
+            sessionStorage.setItem('eznr_scan_prefill', JSON.stringify({
+                data: scanFile.data, name: scanFile.name,
+                size: scanFile.size, type: scanFile.type,
+            }));
+        } catch { /* storage full */ }
+        router.push(`/dashboard/worker-certificates/create?workerId=${worker.id}&fromScan=1`);
+    };
+
+
 
     const reload = useCallback(() => {
         setFiles(getAll(COLLECTIONS.DIGITAL_ARCHIVE));
@@ -235,7 +284,7 @@ export default function ArchivePage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <span style={{ fontSize: '1.6rem' }}>🗄️</span>
                 <div>
                     <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Digitalna arhiva' : 'Digital Archive'}</h1>
@@ -245,7 +294,169 @@ export default function ArchivePage() {
                 </div>
             </div>
 
-            {/* Upload drop zone */}
+            {/* ── Tab bar ── */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>
+                {[
+                    { id: 'archive', icon: '📁', label_bs: 'Arhiva', label_en: 'Archive' },
+                    { id: 'scan',    icon: '📝', label_bs: 'Skenirani testovi', label_en: 'Scanned Tests' },
+                ].map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                        padding: '9px 20px', border: 'none', cursor: 'pointer',
+                        fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: activeTab === tab.id ? 700 : 500,
+                        background: 'transparent', borderBottom: activeTab === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
+                        color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
+                        marginBottom: -2, transition: 'all 0.15s',
+                    }}>
+                        {tab.icon} {lang === 'bs' ? tab.label_bs : tab.label_en}
+                    </button>
+                ))}
+            </div>
+
+            {/* ── Scan tab ── */}
+            {activeTab === 'scan' && (
+                <div>
+                    <div className="card" style={{ marginBottom: 20 }}>
+                        <div className="card-body">
+                            <div style={{ fontWeight: 700, marginBottom: 4 }}>
+                                {lang === 'bs' ? '📝 Ubaci skenirani test' : '📝 Upload Scanned Test'}
+                            </div>
+                            <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                                {lang === 'bs'
+                                    ? 'Aplikacija će pronaći odgovarajućeg radnika prema imenu i datumu rođenja, a vi možete po potrebi ručno doraditi unos.'
+                                    : 'The app will find the matching worker by name and date of birth. You can manually adjust if needed.'}
+                            </div>
+
+                            {/* Drop zone */}
+                            <div
+                                style={{
+                                    border: scanDragging ? '2px solid var(--primary)' : `2px dashed ${scanFile ? 'var(--success)' : 'var(--border)'}`,
+                                    borderRadius: 'var(--radius-md)', padding: '28px 20px', textAlign: 'center',
+                                    background: scanDragging ? 'rgba(0,191,166,0.04)' : scanFile ? 'rgba(34,197,94,0.04)' : 'transparent',
+                                    cursor: 'pointer', transition: 'all 0.2s', marginBottom: 20,
+                                }}
+                                onDragOver={e => { e.preventDefault(); setScanDragging(true); }}
+                                onDragLeave={() => setScanDragging(false)}
+                                onDrop={e => { e.preventDefault(); setScanDragging(false); const f = e.dataTransfer.files[0]; if (f) handleScanFileRead(f); }}
+                                onClick={() => scanFileRef.current?.click()}
+                            >
+                                <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>
+                                    {scanFile ? '✅' : scanDragging ? '📂' : '📄'}
+                                </div>
+                                {scanFile ? (
+                                    <div>
+                                        <div style={{ fontWeight: 700, color: 'var(--success)' }}>{scanFile.name}</div>
+                                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                            {formatSize(scanFile.size)} · {lang === 'bs' ? 'Klikni za promjenu' : 'Click to change'}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div>
+                                        <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                                            {scanDragging
+                                                ? (lang === 'bs' ? 'Ispusti test ovdje' : 'Drop test here')
+                                                : (lang === 'bs' ? 'Prevuci skenirani test ili klikni za odabir' : 'Drag scanned test here or click to select')}
+                                        </div>
+                                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                            PDF, JPG, PNG, DOCX — max 10MB
+                                        </div>
+                                    </div>
+                                )}
+                                <input ref={scanFileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.docx" style={{ display: 'none' }}
+                                    onChange={e => { const f = e.target.files[0]; if (f) handleScanFileRead(f); e.target.value = ''; }} />
+                            </div>
+
+                            {/* Name / DOB hints */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px auto', gap: 12, alignItems: 'flex-end' }}>
+                                <div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                                        {lang === 'bs' ? 'Ime i prezime (iz testa)' : 'Name (from test)'}
+                                    </div>
+                                    <input className="form-input" value={scanName}
+                                        onChange={e => { setScanName(e.target.value); setScanSearched(false); setScanMatches([]); }}
+                                        placeholder={lang === 'bs' ? 'npr. Mujo Mujić' : 'e.g. John Smith'}
+                                        onKeyDown={e => { if (e.key === 'Enter') handleScanSearch(); }} />
+                                </div>
+                                <div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+                                        {lang === 'bs' ? 'Datum r. (opciono)' : 'Date of birth (opt.)'}
+                                    </div>
+                                    <input className="form-input" type="date" value={scanDob}
+                                        onChange={e => { setScanDob(e.target.value); setScanSearched(false); setScanMatches([]); }} />
+                                </div>
+                                <button className="btn btn-primary" onClick={handleScanSearch} style={{ whiteSpace: 'nowrap' }}>
+                                    🔍 {lang === 'bs' ? 'Pronađi radnika' : 'Find worker'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Results */}
+                    {scanSearched && (
+                        <div className="card">
+                            <div className="card-body">
+                                <div style={{ fontWeight: 700, marginBottom: 12, fontSize: '0.88rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                    {lang === 'bs' ? `Pronađeni radnici (top ${scanMatches.length})` : `Matched workers (top ${scanMatches.length})`}
+                                </div>
+                                {scanMatches.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>
+                                        <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔎</div>
+                                        <div style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>
+                                        <div style={{ fontSize: '0.82rem', marginTop: 4 }}>{lang === 'bs' ? 'Pokušajte s drugačijim imenom ili dodajte datum rođenja.' : 'Try a different name or add date of birth.'}</div>
+                                    </div>
+                                ) : scanMatches.map(({ worker: w, score, dobMatch }) => {
+                                    const conf = confidenceLabel(score);
+                                    return (
+                                        <div key={w.id} style={{
+                                            display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                                            borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
+                                            marginBottom: 8, cursor: 'pointer', transition: 'all 0.15s',
+                                            background: 'var(--bg-card)',
+                                        }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                            onClick={() => handleScanSelectWorker(w)}
+                                        >
+                                            <div style={{
+                                                width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                                                background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                color: 'white', fontWeight: 700, fontSize: '1rem',
+                                            }}>
+                                                {(w.ime || '?')[0]}
+                                            </div>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{w.ime} {w.prezime}</div>
+                                                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                                    {w.datumRodjenja && `🎂 ${w.datumRodjenja}`}
+                                                    {w.jmbg && ` · JMBG: ${w.jmbg}`}
+                                                    {dobMatch && <span style={{ color: 'var(--success)', marginLeft: 6, fontWeight: 600 }}>✓ DOB match</span>}
+                                                </div>
+                                            </div>
+                                            <div style={{ textAlign: 'center', flexShrink: 0 }}>
+                                                <div style={{ fontSize: '1.2rem' }}>{conf.emoji}</div>
+                                                <div style={{ fontSize: '0.72rem', fontWeight: 700, color: conf.color }}>{conf.label}</div>
+                                            </div>
+                                            <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); handleScanSelectWorker(w); }}>
+                                                {lang === 'bs' ? 'Odaberi →' : 'Select →'}
+                                            </button>
+                                        </div>
+                                    );
+                                })}
+                                {!scanFile && scanMatches.length > 0 && (
+                                    <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', fontSize: '0.82rem', color: 'var(--warning)' }}>
+                                        ⚠️ {lang === 'bs' ? 'Odaberite datoteku skeniranog testa prije nego nastavite!' : 'Please select the scanned test file before continuing!'}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── Archive tab content ── */}
+            {activeTab === 'archive' && (<>
+
+
             <div
                 className="card"
                 style={{
@@ -367,9 +578,12 @@ export default function ArchivePage() {
                                 </tbody>
                             </table>
                         </div>
+                        </div>
                     )}
                 </div>
             </div>
+            </>)}
         </div>
     );
 }
+
