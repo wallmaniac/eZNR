@@ -1,11 +1,11 @@
 'use client';
-import { useState, useRef, useEffect, useCallback, createPortal } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel, extractNameTokens } from '@/lib/textMatch';
-import { idbSaveFile, idbDeleteFile, idbDownloadFile, idbOpenFile, idbKey } from '@/lib/idbFiles';
+import { idbSaveFile, idbDeleteFile, idbDownloadFile, idbOpenFile, idbKey as makeIdbKey } from '@/lib/idbFiles';
 
 // ── CDN loader ────────────────────────────────────────────────────────────────
 function loadScript(src) {
@@ -17,173 +17,95 @@ function loadScript(src) {
         document.head.appendChild(s);
     });
 }
-
-async function extractPdfText(arrayBuffer) {
-    const PDFJS_CDN  = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    const WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    await loadScript(PDFJS_CDN);
+async function extractPdfText(ab) {
+    const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    const W   = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    await loadScript(CDN);
     if (!window.pdfjsLib) throw new Error('pdf.js not loaded');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_CDN;
-    const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    let text = '';
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = W;
+    const pdf = await window.pdfjsLib.getDocument({ data: ab }).promise;
+    let t = '';
     for (let i = 1; i <= pdf.numPages; i++) {
-        const page = await pdf.getPage(i);
-        const tc = await page.getTextContent();
-        text += tc.items.map(item => item.str).join(' ') + '\n';
+        const p = await pdf.getPage(i);
+        const tc = await p.getTextContent();
+        t += tc.items.map(x => x.str).join(' ') + '\n';
     }
-    return text;
+    return t;
 }
-
-async function extractDocxText(arrayBuffer) {
-    const JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-    await loadScript(JSZIP_CDN);
+async function extractDocxText(ab) {
+    const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    await loadScript(CDN);
     if (!window.JSZip) throw new Error('JSZip not loaded');
-    const zip = await window.JSZip.loadAsync(arrayBuffer);
-    const xmlFile = zip.file('word/document.xml');
-    if (!xmlFile) throw new Error('Not a valid .docx file');
-    const xml = await xmlFile.async('string');
-    return xml
-        .replace(/<w:p[ >]/g, '\n<w:p ')
-        .replace(/<w:br[^>]*>/g, '\n')
-        .replace(/<[^>]+>/g, '')
-        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+    const zip = await window.JSZip.loadAsync(ab);
+    const f = zip.file('word/document.xml');
+    if (!f) throw new Error('Not a valid .docx file');
+    const xml = await f.async('string');
+    return xml.replace(/<w:p[ >]/g, '\n<w:p ').replace(/<w:br[^>]*>/g, '\n').replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
         .replace(/\n{3,}/g, '\n\n').trim();
 }
-
-async function generateCorrectedDocx(originalArrayBuffer, nameReplacements) {
-    const JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
-    await loadScript(JSZIP_CDN);
-    const zip = await window.JSZip.loadAsync(originalArrayBuffer);
-    const xmlFile = zip.file('word/document.xml');
-    if (!xmlFile) throw new Error('Not a valid .docx');
-    let xml = await xmlFile.async('string');
-    for (const { original, corrected } of nameReplacements) {
+async function generateCorrectedDocx(ab, replacements) {
+    const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    await loadScript(CDN);
+    const zip = await window.JSZip.loadAsync(ab);
+    const f = zip.file('word/document.xml');
+    if (!f) throw new Error('Not a valid .docx');
+    let xml = await f.async('string');
+    for (const { original, corrected } of replacements) {
         if (!original || !corrected || original === corrected) continue;
-        const escaped = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        xml = xml.replace(new RegExp(escaped, 'gi'), corrected);
+        xml = xml.replace(new RegExp(original.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), corrected);
     }
     zip.file('word/document.xml', xml);
     return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
-
-function downloadBlob(blob, filename) {
+function downloadBlob(blob, name) {
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-
-function downloadText(text, filename) {
-    downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
+function downloadText(text, name) {
+    downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), name);
 }
-
-function formatDate(iso) {
+function fmtDate(iso) {
     if (!iso) return '—';
-    const [y, m, d] = iso.split('-');
+    const [y,m,d] = iso.split('-');
     return `${d}.${m}.${y}.`;
 }
 
-// ── Akcije dropdown (portal) ─────────────────────────────────────────────────
-function AkcijeMenu({ item, onEdit, onDelete, onDownload, onOpen, onCopy, lang }) {
-    const [open, setOpen] = useState(false);
-    const [pos, setPos] = useState({ top: 0, left: 0 });
-    const btnRef = useRef(null);
-
-    useEffect(() => {
-        if (!open) return;
-        const close = (e) => { if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false); };
-        document.addEventListener('mousedown', close);
-        return () => document.removeEventListener('mousedown', close);
-    }, [open]);
-
-    const handleToggle = (e) => {
-        const rect = btnRef.current.getBoundingClientRect();
-        setPos({ top: rect.bottom + 4, left: Math.min(rect.left, window.innerWidth - 180) });
-        setOpen(v => !v);
-    };
-
-    const menuItems = [
-        { icon: '✏️', label: lang === 'bs' ? 'Uredi' : 'Edit', action: onEdit },
-        { icon: '📂', label: lang === 'bs' ? 'Otvori' : 'Open', action: onOpen, disabled: !item.idbKey },
-        { icon: '📥', label: lang === 'bs' ? 'Preuzmi' : 'Download', action: onDownload, disabled: !item.idbKey },
-        { icon: '📋', label: lang === 'bs' ? 'Kopiraj naziv' : 'Copy name', action: onCopy },
-        { divider: true },
-        { icon: '🗑️', label: lang === 'bs' ? 'Obriši' : 'Delete', action: onDelete, danger: true },
-    ];
-
-    return (
-        <div ref={btnRef} style={{ display: 'inline-block' }}>
-            <button
-                className="btn btn-ghost btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
-                onClick={handleToggle}
-            >
-                {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
-            </button>
-            {open && createPortal(
-                <div style={{
-                    position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999,
-                    background: 'var(--bg-card)', border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', minWidth: 160,
-                    overflow: 'hidden',
-                }}>
-                    {menuItems.map((mi, i) =>
-                        mi.divider ? (
-                            <div key={i} style={{ height: 1, background: 'var(--border-light)', margin: '4px 0' }} />
-                        ) : (
-                            <button key={i}
-                                disabled={mi.disabled}
-                                onClick={() => { setOpen(false); mi.action?.(); }}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: 8,
-                                    padding: '9px 14px', width: '100%', border: 'none',
-                                    background: 'transparent', cursor: mi.disabled ? 'not-allowed' : 'pointer',
-                                    fontFamily: 'var(--font-body)', fontSize: '0.85rem', textAlign: 'left',
-                                    color: mi.danger ? 'var(--danger)' : mi.disabled ? 'var(--text-muted)' : 'var(--text)',
-                                    opacity: mi.disabled ? 0.5 : 1,
-                                    transition: 'background 0.1s',
-                                }}
-                                onMouseEnter={e => { if (!mi.disabled) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
-                            >
-                                <span>{mi.icon}</span> {mi.label}
-                            </button>
-                        )
-                    )}
-                </div>,
-                document.body
-            )}
-        </div>
-    );
-}
-
-// ── EMPTY form ────────────────────────────────────────────────────────────────
+// ── Constants ─────────────────────────────────────────────────────────────────
 const EMPTY_ZAP = {
     naziv: '', broj: '', datum: '', vrsta: '', napomena: '',
-    // File metadata only — actual blob stored in IndexedDB under idbKey
     idbKey: null, attachedFileName: '', attachedFileSize: 0, attachedFileType: '',
 };
-
 const VRSTE = ['Zapisnik o ispitivanju', 'Zapisnik o osposobljenosti', 'Zapisnik o pregledu', 'Zapisnik o vježbi', 'Ostalo'];
+
+const menuItemSt = {
+    display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px',
+    background: 'none', border: 'none', cursor: 'pointer', width: '100%',
+    fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left',
+    transition: 'background 0.12s', fontFamily: 'var(--font-body)',
+};
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function ZapisniciPage() {
     const { lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
-    const [activeTab, setActiveTab] = useState('list'); // 'list' | 'korekcija'
+    const [activeTab, setActiveTab] = useState('list');
 
-    // ── LIST tab state ────────────────────────────────────────────────────────
-    const [items, setItems] = useState(() => getAll(COLLECTIONS.ZAPISNICI));
-    const [search, setSearch] = useState('');
-    const [showForm, setShowForm] = useState(false);
-    const [editId, setEditId] = useState(null);
-    const [form, setForm] = useState({ ...EMPTY_ZAP });
-    const [saving, setSaving] = useState(false);
-    // pendingFile holds the raw File object before save (not persisted yet)
+    // ── LIST tab ──────────────────────────────────────────────────────────────
+    const [items, setItems]           = useState(() => getAll(COLLECTIONS.ZAPISNICI));
+    const [search, setSearch]         = useState('');
+    const [showForm, setShowForm]     = useState(false);
+    const [editId, setEditId]         = useState(null);
+    const [form, setForm]             = useState({ ...EMPTY_ZAP });
     const [pendingFile, setPendingFile] = useState(null);
+    const [saving, setSaving]         = useState(false);
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    const [actionMenuId, setActionMenuId] = useState(null);
+    const [menuPos, setMenuPos]       = useState({ top: 0, left: 0 });
     const fileRef = useRef(null);
 
     const reload = useCallback(() => setItems(getAll(COLLECTIONS.ZAPISNICI)), []);
-
     const setF = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
     const filtered = items.filter(it => {
@@ -191,19 +113,33 @@ export default function ZapisniciPage() {
         const q = search.toLowerCase();
         return `${it.naziv} ${it.broj} ${it.vrsta}`.toLowerCase().includes(q);
     });
-
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
+
+    // Close menu on outside click
+    useEffect(() => {
+        if (!actionMenuId) return;
+        const close = () => setActionMenuId(null);
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [actionMenuId]);
+
+    const toggleAll = () => {
+        if (selectedIds.size === sorted.length && sorted.length > 0) setSelectedIds(new Set());
+        else setSelectedIds(new Set(sorted.map(x => x.id)));
+    };
+    const toggleOne = (id) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        setSelectedIds(next);
+    };
 
     const handleNew = () => {
         setForm({ ...EMPTY_ZAP, datum: new Date().toISOString().split('T')[0] });
-        setPendingFile(null);
-        setEditId(null); setShowForm(true);
+        setPendingFile(null); setEditId(null); setShowForm(true);
     };
-
     const handleEdit = (item) => {
         setForm({ ...EMPTY_ZAP, ...item });
-        setPendingFile(null);
-        setEditId(item.id); setShowForm(true);
+        setPendingFile(null); setEditId(item.id); setShowForm(true);
     };
 
     const handleSave = async () => {
@@ -216,42 +152,19 @@ export default function ZapisniciPage() {
                 attachedFileSize: form.attachedFileSize || 0,
                 attachedFileType: form.attachedFileType || '',
             };
-
-            // If user picked a new file, save it to IndexedDB
             if (pendingFile) {
-                const newKey = idbKey('zap', Date.now());
+                const newKey = makeIdbKey('zap', Date.now());
                 await idbSaveFile(newKey, pendingFile);
-                // Delete old IDB blob if replacing
-                if (form.idbKey) await idbDeleteFile(form.idbKey);
-                fileFields = {
-                    idbKey: newKey,
-                    attachedFileName: pendingFile.name,
-                    attachedFileSize: pendingFile.size,
-                    attachedFileType: pendingFile.type,
-                };
+                if (form.idbKey) await idbDeleteFile(form.idbKey).catch(() => {});
+                fileFields = { idbKey: newKey, attachedFileName: pendingFile.name, attachedFileSize: pendingFile.size, attachedFileType: pendingFile.type };
             }
-
-            const payload = {
-                naziv: form.naziv, broj: form.broj, datum: form.datum,
-                vrsta: form.vrsta, napomena: form.napomena,
-                ...fileFields,
-            };
-
-            if (editId) {
-                update(COLLECTIONS.ZAPISNICI, editId, payload);
-            } else {
-                create(COLLECTIONS.ZAPISNICI, payload);
-            }
-            reload();
-            setShowForm(false);
-            setEditId(null);
-            setForm({ ...EMPTY_ZAP });
-            setPendingFile(null);
+            const payload = { naziv: form.naziv, broj: form.broj, datum: form.datum, vrsta: form.vrsta, napomena: form.napomena, ...fileFields };
+            if (editId) { update(COLLECTIONS.ZAPISNICI, editId, payload); }
+            else { create(COLLECTIONS.ZAPISNICI, payload); }
+            reload(); setShowForm(false); setEditId(null); setForm({ ...EMPTY_ZAP }); setPendingFile(null);
         } catch (err) {
-            await alert(lang === 'bs' ? `Greška pri čuvanju: ${err?.message || 'Nepoznata greška.'}` : `Save error: ${err?.message}`);
-        } finally {
-            setSaving(false);
-        }
+            await alert(lang === 'bs' ? `Greška pri čuvanju: ${err?.message}` : `Save error: ${err?.message}`);
+        } finally { setSaving(false); }
     };
 
     const handleDelete = async (item) => {
@@ -262,32 +175,38 @@ export default function ZapisniciPage() {
         reload();
     };
 
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`);
+        if (!ok) return;
+        for (const id of selectedIds) {
+            const it = items.find(x => x.id === id);
+            if (it?.idbKey) await idbDeleteFile(it.idbKey).catch(() => {});
+            remove(COLLECTIONS.ZAPISNICI, id);
+        }
+        setSelectedIds(new Set()); reload();
+    };
+
     const handleDownload = async (item) => {
         if (!item.idbKey) return;
         try { await idbDownloadFile(item.idbKey, item.attachedFileName); }
         catch { await alert(lang === 'bs' ? 'Datoteka nije dostupna.' : 'File not available.'); }
     };
-
     const handleOpen = async (item) => {
         if (!item.idbKey) return;
         try { await idbOpenFile(item.idbKey); }
         catch { await alert(lang === 'bs' ? 'Datoteka nije dostupna.' : 'File not available.'); }
     };
-
-    const handleCopy = (item) => {
-        navigator.clipboard.writeText(item.naziv || '').catch(() => {});
-    };
+    const handleCopy = (item) => navigator.clipboard.writeText(item.naziv || '').catch(() => {});
 
     const handleFileUpload = (file) => {
         if (!file) return;
         if (file.size > 50 * 1024 * 1024) { alert('Max 50MB!'); return; }
         setPendingFile(file);
-        // Update form metadata preview (blob stored in IDB only on save)
         setF('attachedFileName', file.name);
         setF('attachedFileSize', file.size);
         setF('attachedFileType', file.type);
     };
-
     const handleRemoveFile = async () => {
         if (form.idbKey) await idbDeleteFile(form.idbKey).catch(() => {});
         setPendingFile(null);
@@ -295,23 +214,22 @@ export default function ZapisniciPage() {
     };
 
     const labelStyle = {
-        display: 'inline-block', fontSize: '0.72rem', fontWeight: 700,
-        color: 'white', background: '#455a64', padding: '2px 8px', borderRadius: 3, marginBottom: 4,
+        display: 'block', fontSize: '0.72rem', fontWeight: 600,
+        color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4,
     };
 
-    // ── KOREKCIJA tab state ───────────────────────────────────────────────────
-    const [docFile, setDocFile]         = useState(null);
-    const [dragging, setDragging]       = useState(false);
-    const [extracting, setExtracting]   = useState(false);
+    // ── KOREKCIJA tab ─────────────────────────────────────────────────────────
+    const [docFile, setDocFile]           = useState(null);
+    const [dragging, setDragging]         = useState(false);
+    const [extracting, setExtracting]     = useState(false);
     const [extractError, setExtractError] = useState('');
     const corrFileRef = useRef(null);
-    const [rawText, setRawText]         = useState('');
-    const [step, setStep]               = useState('upload');
-    const [rows, setRows]               = useState([]);
-    const [generating, setGenerating]   = useState(false);
-    const workers = useRef([]);
-
-    useEffect(() => { workers.current = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false); }, []);
+    const [rawText, setRawText]           = useState('');
+    const [step, setStep]                 = useState('upload');
+    const [rows, setRows]                 = useState([]);
+    const [generating, setGenerating]     = useState(false);
+    const workersRef = useRef([]);
+    useEffect(() => { workersRef.current = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false); }, []);
 
     const handleFileRead = useCallback(async (file) => {
         if (file.size > 20 * 1024 * 1024) { await alert('Max 20MB!'); return; }
@@ -326,7 +244,7 @@ export default function ZapisniciPage() {
             else text = await file.text();
             setRawText(text);
             const tokens = extractNameTokens(text);
-            const ws = workers.current;
+            const ws = workersRef.current;
             setRows(tokens.map((tok, i) => {
                 const matches = matchWorkers(tok.original, '', ws);
                 const top = matches[0];
@@ -351,16 +269,14 @@ export default function ZapisniciPage() {
                 downloadBlob(blob, `${baseName}_ispravljen.docx`);
             } else {
                 let corrected = rawText;
-                for (const { original, corrected: rep } of replacements) {
-                    corrected = corrected.replace(new RegExp(original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), rep);
-                }
+                for (const { original, corrected: rep } of replacements)
+                    corrected = corrected.replace(new RegExp(original.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), rep);
                 downloadText(corrected, `${baseName}_ispravljen.txt`);
             }
             setStep('done');
         } catch (err) { await alert(`Greška: ${err.message}`); }
         finally { setGenerating(false); }
     };
-
     const handleReset = () => { setDocFile(null); setRawText(''); setRows([]); setStep('upload'); setExtractError(''); };
     const activeChanges = rows.filter(r => r.keep && r.original !== r.correctedName).length;
 
@@ -385,18 +301,16 @@ export default function ZapisniciPage() {
                 )}
             </div>
 
-
             {/* Tab bar */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>
                 {[
-                    { id: 'list',      icon: '📋', label_bs: 'Zapisnici',         label_en: 'Records' },
-                    { id: 'korekcija', icon: '🔧', label_bs: 'Korekcija imena',   label_en: 'Name Correction' },
+                    { id: 'list',      icon: '📋', label_bs: 'Zapisnici',       label_en: 'Records' },
+                    { id: 'korekcija', icon: '🔧', label_bs: 'Korekcija imena', label_en: 'Name Correction' },
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
                         padding: '9px 20px', border: 'none', cursor: 'pointer',
                         fontFamily: 'var(--font-body)', fontSize: '0.88rem',
-                        fontWeight: activeTab === tab.id ? 700 : 500,
-                        background: 'transparent',
+                        fontWeight: activeTab === tab.id ? 700 : 500, background: 'transparent',
                         borderBottom: activeTab === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
                         color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
                         marginBottom: -2, transition: 'all 0.15s',
@@ -406,12 +320,10 @@ export default function ZapisniciPage() {
                 ))}
             </div>
 
-            {/* ══════════════════════════════════════════════════
-                TAB 1 — ZAPISNICI LIST
-            ══════════════════════════════════════════════════ */}
+            {/* ══════════════ TAB 1 — ZAPISNICI LIST ══════════════ */}
             {activeTab === 'list' && (
                 <>
-                    {/* Create / Edit form */}
+                    {/* ── FORM ── */}
                     {showForm && (
                         <div className="card" style={{ marginBottom: 20, border: '1px solid var(--primary)' }}>
                             <div className="card-header" style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--primary)' }}>
@@ -419,55 +331,53 @@ export default function ZapisniciPage() {
                             </div>
                             <div className="card-body">
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <div>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Naziv *' : 'Name *'}</div>
                                         <input className="form-input" value={form.naziv} onChange={e => setF('naziv', e.target.value)} placeholder={lang === 'bs' ? 'Naziv zapisnika...' : 'Record name...'} autoFocus />
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <div>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Broj zapisnika' : 'Record no.'}</div>
                                         <input className="form-input" value={form.broj} onChange={e => setF('broj', e.target.value)} placeholder="ZAP-001" />
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <div>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
                                         <input className="form-input" type="date" value={form.datum} onChange={e => setF('datum', e.target.value)} />
                                     </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <div>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Vrsta' : 'Type'}</div>
                                         <select className="form-select" value={form.vrsta} onChange={e => setF('vrsta', e.target.value)}>
                                             <option value="">—</option>
                                             {VRSTE.map(v => <option key={v} value={v}>{v}</option>)}
                                         </select>
                                     </div>
-                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <div>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Napomena' : 'Note'}</div>
                                         <input className="form-input" value={form.napomena} onChange={e => setF('napomena', e.target.value)} />
                                     </div>
                                 </div>
 
                                 {/* File attach */}
-                                <div style={{ marginBottom: 14 }}>
+                                <div style={{ marginBottom: 16 }}>
                                     <div style={labelStyle}>{lang === 'bs' ? 'Priloži datoteku (opciono)' : 'Attach file (optional)'}</div>
                                     <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.jpg,.png"
                                         style={{ display: 'none' }}
                                         onChange={e => { handleFileUpload(e.target.files[0]); e.target.value = ''; }} />
                                     {(pendingFile || form.attachedFileName) ? (
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                             <span style={{ fontSize: '1.2rem' }}>{form.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}</span>
                                             <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {form.attachedFileName}
-                                                {pendingFile && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>({(pendingFile.size / 1024).toFixed(0)}KB — {lang === 'bs' ? 'sprema se...' : 'pending save'})</span>}
+                                                {pendingFile && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>({(pendingFile.size/1024).toFixed(0)} KB)</span>}
                                             </span>
-                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>
-                                                {lang === 'bs' ? 'Zamijeni' : 'Replace'}
-                                            </button>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>{lang === 'bs' ? 'Zamijeni' : 'Replace'}</button>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={handleRemoveFile}>✕</button>
                                         </div>
                                     ) : (
-                                        <button className="btn btn-outline btn-sm" onClick={() => fileRef.current?.click()}>
-                                            📎 {lang === 'bs' ? 'Odaberi datoteku...' : 'Choose file...'}
-                                        </button>
+                                        <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: 14, textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                                            📎 {lang === 'bs' ? 'Kliknite za upload dokumenta (PDF, DOCX, max 50MB)' : 'Click to upload document (PDF, DOCX, max 50MB)'}
+                                        </div>
                                     )}
                                 </div>
 
@@ -476,31 +386,49 @@ export default function ZapisniciPage() {
                                         💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}
                                     </button>
                                     <button className="btn btn-ghost" onClick={() => { setShowForm(false); setEditId(null); }}>
-                                        ✕ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                                        ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
                                     </button>
                                 </div>
                             </div>
                         </div>
                     )}
 
-                    {/* Search + New button */}
-                    <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>
-                            + {lang === 'bs' ? 'Novi zapisnik' : 'New record'}
-                        </button>
-                        <div className="search-bar" style={{ flex: 1, maxWidth: 400 }}>
-                            <input
-                                placeholder={lang === 'bs' ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
-                                value={search} onChange={e => setSearch(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
-                            />
+                    {/* ── TOOLBAR ── */}
+                    <div className="card" style={{ marginBottom: 16 }}>
+                        <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <button className="btn btn-primary" onClick={handleNew}>
+                                + {lang === 'bs' ? 'Novi zapisnik' : 'New record'}
+                            </button>
+
+                            <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: 360 }}>
+                                <input
+                                    placeholder={lang === 'bs' ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
+                                    value={search} onChange={e => setSearch(e.target.value)}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                                />
+                                {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+                            </div>
+
+                            {/* Grupne akcije */}
+                            {selectedIds.size > 0 ? (
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} — Grupne akcije:
+                                    </span>
+                                    <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>
+                                        🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                    </button>
+                                    <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}>✕</button>
+                                </div>
+                            ) : (
+                                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                                    {filtered.length} {lang === 'bs' ? 'zapisa' : 'records'}
+                                </span>
+                            )}
                         </div>
-                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            {filtered.length} {lang === 'bs' ? 'rezultata' : 'results'}
-                        </span>
                     </div>
 
-                    {/* Table */}
+                    {/* ── TABLE ── */}
                     <div className="card">
                         <div className="card-body" style={{ padding: 0 }}>
                             {sorted.length === 0 ? (
@@ -512,26 +440,92 @@ export default function ZapisniciPage() {
                                 </div>
                             ) : (
                                 <div className="data-table-wrapper">
-                                    <table className="data-table">
+                                    <table className="data-table" style={{ width: '100%' }}>
                                         <thead>
                                             <tr>
+                                                <th style={{ width: 40, textAlign: 'center' }}>
+                                                    <input type="checkbox"
+                                                        checked={selectedIds.size === sorted.length && sorted.length > 0}
+                                                        onChange={toggleAll}
+                                                        style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
+                                                    />
+                                                </th>
+                                                <th style={{ width: 100 }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                                                 <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{sortIcon('naziv')}</th>
                                                 <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{lang === 'bs' ? 'Broj' : 'No.'}{sortIcon('broj')}</th>
                                                 <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                                                <th style={{ width: 180 }}>{lang === 'bs' ? 'Vrsta' : 'Type'}</th>
-                                                <th style={{ width: 80, textAlign: 'center' }}>{lang === 'bs' ? 'Prilog' : 'File'}</th>
-                                                <th style={{ width: 120 }}></th>
+                                                <th style={{ width: 200 }}>{lang === 'bs' ? 'Vrsta' : 'Type'}</th>
+                                                <th style={{ width: 70, textAlign: 'center' }}>{lang === 'bs' ? 'Fajl' : 'File'}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {sorted.map(item => (
-                                                <tr key={item.id}>
+                                                <tr key={item.id}
+                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                                    onMouseLeave={e => e.currentTarget.style.background = ''}
+                                                >
+                                                    {/* Checkbox */}
+                                                    <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                                        <input type="checkbox"
+                                                            checked={selectedIds.has(item.id)}
+                                                            onChange={() => toggleOne(item.id)}
+                                                            style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
+                                                        />
+                                                    </td>
+
+                                                    {/* Akcije */}
+                                                    <td onClick={e => e.stopPropagation()}>
+                                                        <div style={{ position: 'relative' }}>
+                                                            <button
+                                                                className="btn btn-primary btn-sm"
+                                                                onClick={e => {
+                                                                    e.stopPropagation();
+                                                                    if (actionMenuId === item.id) { setActionMenuId(null); return; }
+                                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                                    const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                                    const spaceAbove = rect.top - 8;
+                                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                                    setMenuPos(flipUp
+                                                                        ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                                                        : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                                    );
+                                                                    setActionMenuId(item.id);
+                                                                }}
+                                                            >
+                                                                {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+                                                            </button>
+
+                                                            {actionMenuId === item.id && (
+                                                                <>
+                                                                    <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                                    <div style={{
+                                                                        position: 'fixed', top: menuPos.top, bottom: menuPos.bottom,
+                                                                        left: menuPos.left, zIndex: 9999,
+                                                                        background: 'var(--bg-card)', border: '1px solid var(--border)',
+                                                                        borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
+                                                                        minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto',
+                                                                    }}>
+                                                                        <button onClick={() => { setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}</button>
+                                                                        {item.idbKey && <>
+                                                                            <button onClick={() => { setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                                                                            <button onClick={() => { setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
+                                                                        </>}
+                                                                        <button onClick={() => { setActionMenuId(null); handleCopy(item); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj naziv' : 'Copy name'}</button>
+                                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                                        <button onClick={() => { setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                                                    </div>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+
+                                                    {/* Data cells */}
                                                     <td>
                                                         <div style={{ fontWeight: 600 }}>{item.naziv}</div>
                                                         {item.napomena && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.napomena}</div>}
                                                     </td>
                                                     <td><code style={{ fontSize: '0.82rem' }}>{item.broj || '—'}</code></td>
-                                                    <td style={{ whiteSpace: 'nowrap' }}>{formatDate(item.datum)}</td>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(item.datum)}</td>
                                                     <td>
                                                         {item.vrsta ? (
                                                             <span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', color: 'var(--secondary)', fontWeight: 600 }}>
@@ -541,21 +535,10 @@ export default function ZapisniciPage() {
                                                     </td>
                                                     <td style={{ textAlign: 'center' }}>
                                                         {item.idbKey ? (
-                                                            <button className="btn btn-ghost btn-sm btn-icon" title={item.attachedFileName} onClick={() => handleOpen(item)}>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" title={item.attachedFileName} onClick={e => { e.stopPropagation(); handleOpen(item); }}>
                                                                 {item.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}
                                                             </button>
                                                         ) : '—'}
-                                                    </td>
-                                                    <td>
-                                                        <AkcijeMenu
-                                                            item={item}
-                                                            lang={lang}
-                                                            onEdit={() => handleEdit(item)}
-                                                            onDelete={() => handleDelete(item)}
-                                                            onDownload={() => handleDownload(item)}
-                                                            onOpen={() => handleOpen(item)}
-                                                            onCopy={() => handleCopy(item)}
-                                                        />
                                                     </td>
                                                 </tr>
                                             ))}
@@ -568,9 +551,7 @@ export default function ZapisniciPage() {
                 </>
             )}
 
-            {/* ══════════════════════════════════════════════════
-                TAB 2 — KOREKCIJA
-            ══════════════════════════════════════════════════ */}
+            {/* ══════════════ TAB 2 — KOREKCIJA ══════════════ */}
             {activeTab === 'korekcija' && (
                 <>
                     {step === 'upload' && (
@@ -591,22 +572,21 @@ export default function ZapisniciPage() {
                                     <div style={{ fontSize: '3rem', marginBottom: 12 }}>{extracting ? '⏳' : dragging ? '📂' : '📋'}</div>
                                     <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: 6 }}>
                                         {extracting ? (lang === 'bs' ? 'Čitanje dokumenta...' : 'Extracting text...')
-                                            : dragging ? (lang === 'bs' ? 'Ispusti zapisnik ovdje' : 'Drop record here')
+                                            : dragging ? (lang === 'bs' ? 'Ispusti zapisnik ovdje' : 'Drop here')
                                             : (lang === 'bs' ? 'Prevuci zapisnik ili klikni za odabir' : 'Drag & drop or click to select')}
                                     </div>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>PDF, DOCX, TXT — max 20MB</div>
-                                    {extractError && <div style={{ marginTop: 16, color: 'var(--danger)', fontWeight: 600, fontSize: '0.85rem' }}>⚠️ {extractError}</div>}
+                                    {extractError && <div style={{ marginTop: 16, color: 'var(--danger)', fontWeight: 600 }}>⚠️ {extractError}</div>}
                                     <input ref={corrFileRef} type="file" accept=".pdf,.docx,.txt" style={{ display: 'none' }}
                                         onChange={e => { const f = e.target.files[0]; if (f) handleFileRead(f); e.target.value = ''; }} />
                                 </div>
-
                                 <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', fontSize: '0.82rem' }}>
                                     <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--secondary)' }}>💡 {lang === 'bs' ? 'Kako funkcioniše?' : 'How does it work?'}</div>
                                     <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7, color: 'var(--text-muted)' }}>
-                                        <li>{lang === 'bs' ? 'Aplikacija iz dokumenta izvlači sva vlastita imena (2-3 kapitalizovane riječi).' : 'App extracts all proper names from the document.'}</li>
-                                        <li>{lang === 'bs' ? 'Svako ime uspoređuje s radnicima u sustavu koristeći fuzzy matching.' : 'Each name is compared against workers using fuzzy matching.'}</li>
-                                        <li>{lang === 'bs' ? 'Prikazuje se tabela s originalnim i ispravnim imenima — možete ih ručno ispraviti.' : 'A table shows original and corrected names — you can edit them.'}</li>
-                                        <li>{lang === 'bs' ? 'Na kraju se generira ispravljen dokument (.docx ili .txt).' : 'Finally, a corrected document (.docx or .txt) is generated.'}</li>
+                                        <li>{lang === 'bs' ? 'Aplikacija iz dokumenta izvlači sva vlastita imena.' : 'App extracts all proper names from the document.'}</li>
+                                        <li>{lang === 'bs' ? 'Svako ime uspoređuje s radnicima koristeći fuzzy matching.' : 'Each name is compared against workers using fuzzy matching.'}</li>
+                                        <li>{lang === 'bs' ? 'Prikazuje tabelu s originalnim i ispravnim imenima — možete ih urediti.' : 'A table shows original and corrected names — editable.'}</li>
+                                        <li>{lang === 'bs' ? 'Generira ispravljen dokument (.docx ili .txt).' : 'Generates a corrected document (.docx or .txt).'}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -620,7 +600,7 @@ export default function ZapisniciPage() {
                                 <div style={{ flex: 1 }}>
                                     <strong>{docFile?.name}</strong>
                                     <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 2 }}>
-                                        {lang === 'bs' ? `Pronađeno ${rows.length} potencijalnih imena · ${activeChanges} izmjena` : `Found ${rows.length} potential names · ${activeChanges} changes`}
+                                        {lang === 'bs' ? `Pronađeno ${rows.length} potencijalnih imena · ${activeChanges} izmjena` : `Found ${rows.length} names · ${activeChanges} changes`}
                                     </div>
                                 </div>
                                 <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
@@ -628,76 +608,63 @@ export default function ZapisniciPage() {
                                 </button>
                             </div>
 
-                            {rows.length === 0 ? (
-                                <div className="card">
-                                    <div className="card-body" style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
-                                        <div style={{ fontSize: '3rem', marginBottom: 12 }}>🔎</div>
-                                        <div style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Nije pronađeno nijedno vlastito ime.' : 'No proper names found.'}</div>
+                            <div className="card">
+                                <div className="card-body" style={{ padding: 0 }}>
+                                    <div className="data-table-wrapper">
+                                        <table className="data-table">
+                                            <thead>
+                                                <tr>
+                                                    <th style={{ width: 40 }}>✓</th>
+                                                    <th>{lang === 'bs' ? 'Iz dokumenta' : 'From document'}</th>
+                                                    <th>{lang === 'bs' ? 'Radnik u sustavu' : 'Worker in system'}</th>
+                                                    <th style={{ width: 80, textAlign: 'center' }}>{lang === 'bs' ? 'Match' : 'Match'}</th>
+                                                    <th>{lang === 'bs' ? 'Ispravno ime' : 'Corrected name'}</th>
+                                                    <th style={{ width: 50 }}></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {rows.map(row => {
+                                                    const conf = row.matchedWorker ? confidenceLabel(row.confidence) : null;
+                                                    const isChanged = row.correctedName !== row.original;
+                                                    return (
+                                                        <tr key={row.id} style={{ opacity: row.keep ? 1 : 0.4, background: isChanged && row.keep ? 'rgba(0,191,166,0.04)' : undefined }}>
+                                                            <td style={{ textAlign: 'center' }}>
+                                                                <input type="checkbox" checked={row.keep} onChange={e => updateRow(row.id, { keep: e.target.checked })} style={{ accentColor: 'var(--primary)' }} />
+                                                            </td>
+                                                            <td><span style={{ fontWeight: 500 }}>{row.original}</span></td>
+                                                            <td>
+                                                                {row.matchedWorker
+                                                                    ? <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{row.matchedWorker.ime} {row.matchedWorker.prezime}</div>
+                                                                    : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.82rem' }}>— nije pronađen —</span>}
+                                                            </td>
+                                                            <td style={{ textAlign: 'center' }}>
+                                                                {conf ? <div><div style={{ fontSize: '1.1rem' }}>{conf.emoji}</div><div style={{ fontSize: '0.68rem', fontWeight: 700, color: conf.color }}>{conf.label}</div></div> : '—'}
+                                                            </td>
+                                                            <td>
+                                                                <input className="form-input" style={{ fontSize: '0.88rem', padding: '5px 8px', borderColor: isChanged ? 'var(--primary)' : undefined }}
+                                                                    value={row.correctedName} onChange={e => updateRow(row.id, { correctedName: e.target.value })} disabled={!row.keep} />
+                                                            </td>
+                                                            <td>
+                                                                <button className="btn btn-ghost btn-sm" title="Reset" onClick={() => updateRow(row.id, { correctedName: row.original })}>↺</button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="card">
-                                    <div className="card-body" style={{ padding: 0 }}>
-                                        <div className="data-table-wrapper">
-                                            <table className="data-table">
-                                                <thead>
-                                                    <tr>
-                                                        <th style={{ width: 40 }}>{lang === 'bs' ? 'Uključi' : 'Include'}</th>
-                                                        <th>{lang === 'bs' ? 'Iz dokumenta' : 'From document'}</th>
-                                                        <th>{lang === 'bs' ? 'Radnik u sustavu' : 'Worker in system'}</th>
-                                                        <th style={{ width: 80, textAlign: 'center' }}>{lang === 'bs' ? 'Podudaranje' : 'Match'}</th>
-                                                        <th>{lang === 'bs' ? 'Ispravno ime' : 'Corrected name'}</th>
-                                                        <th style={{ width: 50 }}></th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {rows.map(row => {
-                                                        const conf = row.matchedWorker ? confidenceLabel(row.confidence) : null;
-                                                        const isChanged = row.correctedName !== row.original;
-                                                        return (
-                                                            <tr key={row.id} style={{ opacity: row.keep ? 1 : 0.4, background: isChanged && row.keep ? 'rgba(0,191,166,0.04)' : undefined }}>
-                                                                <td style={{ textAlign: 'center' }}>
-                                                                    <input type="checkbox" checked={row.keep} onChange={e => updateRow(row.id, { keep: e.target.checked })} style={{ width: 16, height: 16, accentColor: 'var(--primary)' }} />
-                                                                </td>
-                                                                <td><span style={{ fontWeight: 500 }}>{row.original}</span></td>
-                                                                <td>
-                                                                    {row.matchedWorker ? (
-                                                                        <div>
-                                                                            <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{row.matchedWorker.ime} {row.matchedWorker.prezime}</div>
-                                                                            {row.matchedWorker.datumRodjenja && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🎂 {row.matchedWorker.datumRodjenja}</div>}
-                                                                        </div>
-                                                                    ) : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.82rem' }}>{lang === 'bs' ? '— nije pronađen —' : '— not found —'}</span>}
-                                                                </td>
-                                                                <td style={{ textAlign: 'center' }}>
-                                                                    {conf ? <div><div style={{ fontSize: '1.1rem' }}>{conf.emoji}</div><div style={{ fontSize: '0.68rem', fontWeight: 700, color: conf.color }}>{conf.label}</div></div> : '—'}
-                                                                </td>
-                                                                <td>
-                                                                    <input className="form-input" style={{ fontSize: '0.88rem', padding: '5px 8px', borderColor: isChanged ? 'var(--primary)' : undefined }} value={row.correctedName} onChange={e => updateRow(row.id, { correctedName: e.target.value })} disabled={!row.keep} />
-                                                                </td>
-                                                                <td>
-                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Vrati original' : 'Reset'} onClick={() => updateRow(row.id, { correctedName: row.original })}>↺</button>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                            </div>
 
-                            {rows.length > 0 && (
-                                <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                                    <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
-                                        {generating ? '⏳' : '📥'} {lang === 'bs' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
-                                        {activeChanges > 0 && <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>{activeChanges}</span>}
-                                    </button>
-                                    <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: true })))}>✓ {lang === 'bs' ? 'Označi sve' : 'Select all'}</button>
-                                    <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: false })))}>✗ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}</button>
-                                    <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{activeChanges} {lang === 'bs' ? 'izmjena' : 'changes'}</span>
-                                </div>
-                            )}
+                            <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
+                                <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
+                                    {generating ? '⏳' : '📥'} {lang === 'bs' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
+                                    {activeChanges > 0 && <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>{activeChanges}</span>}
+                                </button>
+                                <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: true })))}>✓ {lang === 'bs' ? 'Označi sve' : 'Select all'}</button>
+                                <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: false })))}>✗ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}</button>
+                                <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{activeChanges} {lang === 'bs' ? 'izmjena' : 'changes'}</span>
+                            </div>
                         </>
                     )}
 

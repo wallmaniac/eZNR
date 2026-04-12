@@ -1,4 +1,3 @@
-'use client';
 
 // ============================================================================
 // IndexedDB File Storage — for large binary files (PDFs, DOCX, images)
