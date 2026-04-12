@@ -940,13 +940,22 @@ export default function QuestionnairesPage() {
             </div>
 
             {/* Row 7: Jezik */}
-            <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, marginBottom: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Jezik' : 'Language'}
-                  <HelpTip text="Jezik na kojem je napisan upitnik (npr. 'Bosanski', 'hr', 'en'). Informativno polje — koristi se pri AI generisanju i filtriranju." />
+                  {lang === 'bs' ? 'Jezik upitnika' : 'Questionnaire language'}
+                  <HelpTip text="Jezik na kojem je napisan upitnik. Koristi se pri AI generisanju i slanju emailova radnicima." />
                 </div>
-                <input className="form-input" value={formData.jezik} onChange={e => set('jezik', e.target.value)} placeholder={lang === 'bs' ? 'npr. hr, en' : 'e.g. hr, en'} />
+                <select className="form-select" value={formData.jezik || ''} onChange={e => set('jezik', e.target.value)}>
+                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  <option value="Bosanski">Bosanski</option>
+                  <option value="Hrvatski">Hrvatski</option>
+                  <option value="Srpski">Srpski</option>
+                  <option value="Engleski">English</option>
+                  <option value="Njemački">Deutsch</option>
+                  <option value="Slovenački">Slovenščina</option>
+                  <option value="Makedonski">Македонски</option>
+                </select>
               </div>
             </div>
           </div>
