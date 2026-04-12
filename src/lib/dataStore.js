@@ -60,6 +60,7 @@ const _AL_COLS = {
     calendarEvents: { cat: 'certificate', icon: '\uD83D\uDCC5', label: d => `Događaj: ${d.opis || d.tip || ''}`, relatedId: d => d.id },
     riskAssessments: { cat: 'document', icon: '\u26A0\uFE0F', label: d => `Procjena rizika: ${d.naziv || ''}`, relatedId: d => d.id },
     requests: { cat: 'document', icon: '\uD83D\uDCE9', label: d => `Zahtjev: ${d.naziv || d.tip || ''}`, relatedId: d => d.id },
+    zapisnici: { cat: 'document', icon: '\uD83D\uDCCB', label: d => `Zapisnik: ${d.naziv || d.broj || ''}`, relatedId: d => d.id },
 };
 const _AL_VERBS = { create: 'Dodan(a)', update: 'A\u017euriran(a)', delete: 'Obrisan(a)' };
 
@@ -97,6 +98,7 @@ const COMPANY_SCOPED = [
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
     'trainings', 'annualReports', 'medicalExams', 'sistematizacije',
     'vehicles', 'vehicleAssignments', 'travelOrders', 'fireExtinguishers', 'hydrants', 'evacuationPlans', 'evacuationDrills',
+    'zapisnici',
 ];
 
 // Helper: get active company from localStorage (avoids needing React context)
@@ -356,6 +358,7 @@ export const COLLECTIONS = {
     HYDRANTS: 'hydrants',
     EVACUATION_PLANS: 'evacuationPlans',
     EVACUATION_DRILLS: 'evacuationDrills',
+    ZAPISNICI: 'zapisnici',
 };
 
 // ── getAll — automatically filters by active company for scoped collections ──

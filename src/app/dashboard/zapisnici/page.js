@@ -1,6 +1,5 @@
 'use client';
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useRef, useEffect, useCallback, createPortal } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -17,10 +16,13 @@ function loadScript(src) {
         document.head.appendChild(s);
     });
 }
+
 async function extractPdfText(arrayBuffer) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
+    const PDFJS_CDN  = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    const WORKER_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    await loadScript(PDFJS_CDN);
     if (!window.pdfjsLib) throw new Error('pdf.js not loaded');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER_CDN;
     const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
     let text = '';
     for (let i = 1; i <= pdf.numPages; i++) {
@@ -30,18 +32,26 @@ async function extractPdfText(arrayBuffer) {
     }
     return text;
 }
+
 async function extractDocxText(arrayBuffer) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    await loadScript(JSZIP_CDN);
     if (!window.JSZip) throw new Error('JSZip not loaded');
     const zip = await window.JSZip.loadAsync(arrayBuffer);
     const xmlFile = zip.file('word/document.xml');
     if (!xmlFile) throw new Error('Not a valid .docx file');
     const xml = await xmlFile.async('string');
-    return xml.replace(/<w:p[ >]/g, '\n<w:p ').replace(/<w:br[^>]*>/g, '\n').replace(/<[^>]+>/g, '')
-        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\n{3,}/g, '\n\n').trim();
+    return xml
+        .replace(/<w:p[ >]/g, '\n<w:p ')
+        .replace(/<w:br[^>]*>/g, '\n')
+        .replace(/<[^>]+>/g, '')
+        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+        .replace(/\n{3,}/g, '\n\n').trim();
 }
+
 async function generateCorrectedDocx(originalArrayBuffer, nameReplacements) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+    const JSZIP_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    await loadScript(JSZIP_CDN);
     const zip = await window.JSZip.loadAsync(originalArrayBuffer);
     const xmlFile = zip.file('word/document.xml');
     if (!xmlFile) throw new Error('Not a valid .docx');
@@ -54,599 +64,603 @@ async function generateCorrectedDocx(originalArrayBuffer, nameReplacements) {
     zip.file('word/document.xml', xml);
     return zip.generateAsync({ type: 'blob', mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
 }
+
 function downloadBlob(blob, filename) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+
 function downloadText(text, filename) {
     downloadBlob(new Blob([text], { type: 'text/plain;charset=utf-8' }), filename);
 }
 
-// ── Label style (consistent with other eZNR forms) ────────────────────────────
-const LS = {
-    display: 'inline-block', fontSize: '0.72rem', fontWeight: 700,
-    color: 'white', background: '#455a64', padding: '2px 8px', borderRadius: 3, marginBottom: 4,
+function formatDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}.${m}.${y}.`;
+}
+
+// ── Akcije dropdown (portal) ─────────────────────────────────────────────────
+function AkcijeMenu({ item, onEdit, onDelete, onDownload, onCopy, lang }) {
+    const [open, setOpen] = useState(false);
+    const [pos, setPos] = useState({ top: 0, left: 0 });
+    const btnRef = useRef(null);
+
+    useEffect(() => {
+        if (!open) return;
+        const close = (e) => { if (btnRef.current && !btnRef.current.contains(e.target)) setOpen(false); };
+        document.addEventListener('mousedown', close);
+        return () => document.removeEventListener('mousedown', close);
+    }, [open]);
+
+    const handleToggle = (e) => {
+        const rect = btnRef.current.getBoundingClientRect();
+        setPos({ top: rect.bottom + 4, left: Math.min(rect.left, window.innerWidth - 180) });
+        setOpen(v => !v);
+    };
+
+    const menuItems = [
+        { icon: '✏️', label: lang === 'bs' ? 'Uredi' : 'Edit', action: onEdit },
+        { icon: '📥', label: lang === 'bs' ? 'Preuzmi' : 'Download', action: onDownload, disabled: !item.attachedFileData },
+        { icon: '📋', label: lang === 'bs' ? 'Kopiraj naziv' : 'Copy name', action: onCopy },
+        { divider: true },
+        { icon: '🗑️', label: lang === 'bs' ? 'Obriši' : 'Delete', action: onDelete, danger: true },
+    ];
+
+    return (
+        <div ref={btnRef} style={{ display: 'inline-block' }}>
+            <button
+                className="btn btn-ghost btn-sm"
+                style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+                onClick={handleToggle}
+            >
+                {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
+            </button>
+            {open && createPortal(
+                <div style={{
+                    position: 'fixed', top: pos.top, left: pos.left, zIndex: 9999,
+                    background: 'var(--bg-card)', border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', minWidth: 160,
+                    overflow: 'hidden',
+                }}>
+                    {menuItems.map((mi, i) =>
+                        mi.divider ? (
+                            <div key={i} style={{ height: 1, background: 'var(--border-light)', margin: '4px 0' }} />
+                        ) : (
+                            <button key={i}
+                                disabled={mi.disabled}
+                                onClick={() => { setOpen(false); mi.action?.(); }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: 8,
+                                    padding: '9px 14px', width: '100%', border: 'none',
+                                    background: 'transparent', cursor: mi.disabled ? 'not-allowed' : 'pointer',
+                                    fontFamily: 'var(--font-body)', fontSize: '0.85rem', textAlign: 'left',
+                                    color: mi.danger ? 'var(--danger)' : mi.disabled ? 'var(--text-muted)' : 'var(--text)',
+                                    opacity: mi.disabled ? 0.5 : 1,
+                                    transition: 'background 0.1s',
+                                }}
+                                onMouseEnter={e => { if (!mi.disabled) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                            >
+                                <span>{mi.icon}</span> {mi.label}
+                            </button>
+                        )
+                    )}
+                </div>,
+                document.body
+            )}
+        </div>
+    );
+}
+
+// ── EMPTY form ────────────────────────────────────────────────────────────────
+const EMPTY_ZAP = {
+    naziv: '', broj: '', datum: '', vrsta: '', napomena: '',
+    attachedFileData: null, attachedFileName: '', attachedFileType: '',
 };
 
-const COLLECTION_KEY = 'zapisnici'; // localStorage key via dataStore pattern
+const VRSTE = ['Zapisnik o ispitivanju', 'Zapisnik o osposobljenosti', 'Zapisnik o pregledu', 'Zapisnik o vježbi', 'Ostalo'];
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function ZapisniciPage() {
     const { lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
-    const bs = lang === 'bs';
+    const [activeTab, setActiveTab] = useState('list'); // 'list' | 'korekcija'
 
-    // ── List / view state ─────────────────────────────────────────────────────
-    const [items, setItems]         = useState([]);
-    const [search, setSearch]       = useState('');
-    const [view, setView]           = useState('list'); // 'list' | 'create' | 'correct'
-    const [editItem, setEditItem]   = useState(null);   // item being edited in form
+    // ── LIST tab state ────────────────────────────────────────────────────────
+    const [items, setItems] = useState(() => getAll(COLLECTIONS.ZAPISNICI));
+    const [search, setSearch] = useState('');
+    const [showForm, setShowForm] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [form, setForm] = useState({ ...EMPTY_ZAP });
+    const [saving, setSaving] = useState(false);
+    const fileRef = useRef(null);
 
-    // ── Akcije dropdown portal ────────────────────────────────────────────────
-    const [openMenuId, setOpenMenuId] = useState(null);
-    const [menuPos, setMenuPos]       = useState({ top: 0, left: 0, maxH: 300 });
+    const reload = useCallback(() => setItems(getAll(COLLECTIONS.ZAPISNICI)), []);
 
-    // ── Create / Edit form state ──────────────────────────────────────────────
-    const EMPTY_FORM = { naziv: '', datum: new Date().toISOString().split('T')[0], mjesto: '', predmet: '', komisija: '', sadrzaj: '', napomena: '', fileData: null, fileName: '', fileType: '' };
-    const [form, setForm]           = useState({ ...EMPTY_FORM });
-    const [saving, setSaving]       = useState(false);
-    const formFileRef               = useRef(null);
+    const setF = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
-    // ── Korekcija state ───────────────────────────────────────────────────────
-    const [corrItem, setCorrItem]     = useState(null);   // zapisnik being corrected
-    const [corrText, setCorrText]     = useState('');
-    const [corrRows, setCorrRows]     = useState([]);
-    const [corrExtracting, setCorrExtracting] = useState(false);
-    const [corrExtracted, setCorrExtracted] = useState(false);
-    const [corrError, setCorrError]   = useState('');
-    const [corrGenerating, setCorrGenerating] = useState(false);
-
-    // ── Sorting ───────────────────────────────────────────────────────────────
-    const { sorted, sortKey, sortDir, toggleSort } = useSortedList(
-        items.filter(it => {
-            if (!search) return true;
-            const q = search.toLowerCase();
-            return [it.naziv, it.datum, it.mjesto, it.predmet, it.komisija].some(f => (f || '').toLowerCase().includes(q));
-        }),
-        'datum', 'desc'
-    );
-    const thSt = (col) => ({
-        cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap',
-        color: sortKey === col ? 'var(--primary)' : undefined,
+    const filtered = items.filter(it => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        return `${it.naziv} ${it.broj} ${it.vrsta}`.toLowerCase().includes(q);
     });
-    const sortIco = (col) => sortKey !== col ? ' ↕' : sortDir === 'asc' ? ' ↑' : ' ↓';
 
-    // ── Load data ─────────────────────────────────────────────────────────────
-    const load = useCallback(() => {
-        try {
-            const raw = localStorage.getItem('eznr_zapisnici') || '[]';
-            const all = JSON.parse(raw);
-            // Company scope
-            const cid = localStorage.getItem('eznr_activeCompany') || '';
-            setItems(cid && cid !== 'all' ? all.filter(i => !i.companyId || i.companyId === cid) : all);
-        } catch { setItems([]); }
-    }, []);
+    const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
 
-    const saveToStore = (list) => {
-        try { localStorage.setItem('eznr_zapisnici', JSON.stringify(list)); } catch {}
-    };
-
-    useEffect(() => { load(); }, [load]);
-
-    // ── Close akcije on outside click ─────────────────────────────────────────
-    useEffect(() => {
-        const h = (e) => { if (!e.target.closest('[data-akcije-menu]') && !e.target.closest('[data-akcije-btn]')) setOpenMenuId(null); };
-        document.addEventListener('mousedown', h);
-        return () => document.removeEventListener('mousedown', h);
-    }, []);
-
-    const openMenu = (id, e) => {
-        if (openMenuId === id) { setOpenMenuId(null); return; }
-        const rect = e.currentTarget.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom - 8;
-        const flipUp = spaceBelow < 180;
-        setMenuPos(flipUp
-            ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 140, maxH: Math.max(120, rect.top - 8) }
-            : { top: rect.bottom + 4, left: rect.left - 140, maxH: Math.max(120, spaceBelow) }
-        );
-        setOpenMenuId(id);
-    };
-
-    // ── CRUD helpers ──────────────────────────────────────────────────────────
-    const handleSave = async () => {
-        if (!form.naziv.trim()) { await alert(bs ? 'Naziv je obavezan!' : 'Name is required!'); return; }
-        setSaving(true);
-        try {
-            const cid = localStorage.getItem('eznr_activeCompany') || '';
-            const raw = JSON.parse(localStorage.getItem('eznr_zapisnici') || '[]');
-            if (editItem) {
-                const idx = raw.findIndex(r => r.id === editItem.id);
-                if (idx !== -1) { raw[idx] = { ...raw[idx], ...form, updatedAt: new Date().toISOString() }; }
-            } else {
-                const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 6);
-                raw.push({ ...form, id, companyId: cid && cid !== 'all' ? cid : '', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-            }
-            saveToStore(raw);
-            load();
-            setView('list');
-            setForm({ ...EMPTY_FORM });
-            setEditItem(null);
-        } finally { setSaving(false); }
+    const handleNew = () => {
+        setForm({ ...EMPTY_ZAP, datum: new Date().toISOString().split('T')[0] });
+        setEditId(null); setShowForm(true);
     };
 
     const handleEdit = (item) => {
-        setEditItem(item);
-        setForm({
-            naziv: item.naziv || '', datum: item.datum || '', mjesto: item.mjesto || '',
-            predmet: item.predmet || '', komisija: item.komisija || '',
-            sadrzaj: item.sadrzaj || '', napomena: item.napomena || '',
-            fileData: item.fileData || null, fileName: item.fileName || '', fileType: item.fileType || '',
-        });
-        setView('create');
-        setOpenMenuId(null);
+        setForm({ ...EMPTY_ZAP, ...item });
+        setEditId(item.id); setShowForm(true);
+    };
+
+    const handleSave = async () => {
+        if (!form.naziv.trim()) { await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
+        setSaving(true);
+        try {
+            if (editId) {
+                update(COLLECTIONS.ZAPISNICI, editId, form);
+            } else {
+                create(COLLECTIONS.ZAPISNICI, form);
+            }
+            reload(); setShowForm(false); setEditId(null); setForm({ ...EMPTY_ZAP });
+        } finally { setSaving(false); }
     };
 
     const handleDelete = async (item) => {
-        setOpenMenuId(null);
-        const ok = await confirm(bs ? `Obrisati zapisnik "${item.naziv}"?` : `Delete record "${item.naziv}"?`);
+        const ok = await confirm(lang === 'bs' ? `Obrisati "${item.naziv}"?` : `Delete "${item.naziv}"?`);
         if (!ok) return;
-        const raw = JSON.parse(localStorage.getItem('eznr_zapisnici') || '[]');
-        saveToStore(raw.filter(r => r.id !== item.id));
-        load();
-    };
-
-    const handlePrint = (item) => {
-        setOpenMenuId(null);
-        const w = window.open('', '_blank');
-        if (!w) return;
-        w.document.write(`<html><head><title>${item.naziv}</title><style>body{font-family:Arial,sans-serif;margin:40px;font-size:14px;}h2{margin-bottom:4px;}table{width:100%;border-collapse:collapse;margin-top:12px;}td{padding:6px 10px;border:1px solid #ccc;}td:first-child{font-weight:bold;width:160px;background:#f5f5f5;}</style></head><body>
-        <h2>${item.naziv}</h2>
-        <table>
-            <tr><td>Datum</td><td>${item.datum || '—'}</td></tr>
-            <tr><td>Mjesto</td><td>${item.mjesto || '—'}</td></tr>
-            <tr><td>Predmet</td><td>${item.predmet || '—'}</td></tr>
-            <tr><td>Komisija</td><td>${item.komisija || '—'}</td></tr>
-            <tr><td>Sadržaj</td><td>${(item.sadrzaj || '').replace(/\n/g, '<br>')}</td></tr>
-            <tr><td>Napomena</td><td>${item.napomena || '—'}</td></tr>
-        </table>
-        </body></html>`);
-        w.document.close();
-        w.print();
+        remove(COLLECTIONS.ZAPISNICI, item.id);
+        reload();
     };
 
     const handleDownload = (item) => {
-        setOpenMenuId(null);
-        if (item.fileData) {
-            const a = document.createElement('a');
-            a.href = item.fileData; a.download = item.fileName || `${item.naziv}.pdf`; a.click();
-        } else {
-            const txt = `ZAPISNIK: ${item.naziv}\nDatum: ${item.datum}\nMjesto: ${item.mjesto}\nPredmet: ${item.predmet}\nKomisija: ${item.komisija}\n\n${item.sadrzaj}\n\nNapomena: ${item.napomena}`;
-            downloadText(txt, `${item.naziv.replace(/\s+/g, '_')}.txt`);
-        }
+        if (!item.attachedFileData) return;
+        const link = document.createElement('a');
+        link.href = item.attachedFileData;
+        link.download = item.attachedFileName || `${item.naziv || 'zapisnik'}.pdf`;
+        link.click();
     };
 
-    const handleSendEmail = async (item) => {
-        setOpenMenuId(null);
-        const email = window.prompt(bs ? 'Unesite email adresu:' : 'Enter email address:', '');
-        if (!email) return;
-        window.location.href = `mailto:${email}?subject=${encodeURIComponent(item.naziv)}&body=${encodeURIComponent(`Zapisnik: ${item.naziv}\nDatum: ${item.datum}\nPredmet: ${item.predmet}`)}`;
+    const handleCopy = (item) => {
+        navigator.clipboard.writeText(item.naziv || '').catch(() => {});
     };
 
-    // ── Korekcija (name correction) ───────────────────────────────────────────
-    const startKorekcija = async (item) => {
-        setOpenMenuId(null);
-        setCorrItem(item);
-        setCorrError('');
-        setCorrRows([]);
-        setCorrText('');
-        setCorrExtracted(false);
-        setView('correct');
+    const handleFileUpload = (file) => {
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) { alert('Max 10MB!'); return; }
+        const reader = new FileReader();
+        reader.onload = e => {
+            setF('attachedFileData', e.target.result);
+            setF('attachedFileName', file.name);
+            setF('attachedFileType', file.type);
+        };
+        reader.readAsDataURL(file);
+    };
 
-        if (!item.fileData) {
-            setCorrError(bs ? 'Ovaj zapisnik nema priloženu datoteku.' : 'This record has no attached file.');
-            return;
-        }
-        setCorrExtracting(true);
+    const labelStyle = {
+        display: 'inline-block', fontSize: '0.72rem', fontWeight: 700,
+        color: 'white', background: '#455a64', padding: '2px 8px', borderRadius: 3, marginBottom: 4,
+    };
+
+    // ── KOREKCIJA tab state ───────────────────────────────────────────────────
+    const [docFile, setDocFile]         = useState(null);
+    const [dragging, setDragging]       = useState(false);
+    const [extracting, setExtracting]   = useState(false);
+    const [extractError, setExtractError] = useState('');
+    const corrFileRef = useRef(null);
+    const [rawText, setRawText]         = useState('');
+    const [step, setStep]               = useState('upload');
+    const [rows, setRows]               = useState([]);
+    const [generating, setGenerating]   = useState(false);
+    const workers = useRef([]);
+
+    useEffect(() => { workers.current = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false); }, []);
+
+    const handleFileRead = useCallback(async (file) => {
+        if (file.size > 20 * 1024 * 1024) { await alert('Max 20MB!'); return; }
+        setDocFile({ name: file.name, type: file.type });
+        setExtractError(''); setExtracting(true); setStep('upload');
         try {
-            // Decode base64 to ArrayBuffer
-            const b64 = item.fileData.split(',')[1] || item.fileData;
-            const bin = atob(b64);
-            const ab = new Uint8Array(bin.length);
-            for (let i = 0; i < bin.length; i++) ab[i] = bin.charCodeAt(i);
-            const buf = ab.buffer;
-
+            const ab = await file.arrayBuffer();
+            setDocFile({ name: file.name, type: file.type, arrayBuffer: ab });
             let text = '';
-            const fn = (item.fileName || '').toLowerCase();
-            if (fn.endsWith('.docx')) text = await extractDocxText(buf);
-            else if (fn.endsWith('.pdf')) text = await extractPdfText(buf);
-            else {
-                // Fallback: try to display as text from sadrzaj
-                text = item.sadrzaj || '';
-            }
-
-            if (!text && item.sadrzaj) text = item.sadrzaj;
-            setCorrText(text);
-
-            const tokens = extractNameTokens(text || item.sadrzaj || '');
-            const workers = JSON.parse(localStorage.getItem('eznr_workers') || '[]').filter(w => w.aktivan !== false);
-            const newRows = tokens.map((tok, i) => {
-                const matches = matchWorkers(tok.original, '', workers);
+            if (file.name.toLowerCase().endsWith('.docx')) text = await extractDocxText(ab);
+            else if (file.name.toLowerCase().endsWith('.pdf') || file.type === 'application/pdf') text = await extractPdfText(ab);
+            else text = await file.text();
+            setRawText(text);
+            const tokens = extractNameTokens(text);
+            const ws = workers.current;
+            setRows(tokens.map((tok, i) => {
+                const matches = matchWorkers(tok.original, '', ws);
                 const top = matches[0];
                 return { id: i, original: tok.original, matchedWorker: top?.worker || null, correctedName: top ? `${top.worker.ime} ${top.worker.prezime}` : tok.original, confidence: top?.score || 0, keep: true };
-            });
-            // Also add manual text from sadrzaj if no file
-            setCorrRows(newRows);
-            setCorrExtracted(true);
-        } catch (err) {
-            setCorrError(err.message || 'Greška pri obradi datoteke.');
-        } finally {
-            setCorrExtracting(false);
-        }
-    };
+            }));
+            setStep('review');
+        } catch (err) { setExtractError(err.message || 'Greška'); }
+        finally { setExtracting(false); }
+    }, [alert]);
 
-    const updateCorrRow = (id, patch) => setCorrRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
+    const updateRow = (id, patch) => setRows(prev => prev.map(r => r.id === id ? { ...r, ...patch } : r));
 
-    const handleGenerateCorrected = async () => {
-        const active = corrRows.filter(r => r.keep && r.original !== r.correctedName);
-        if (active.length === 0) { await alert(bs ? 'Nema izmjena.' : 'No changes to apply.'); return; }
-        const replacements = active.map(r => ({ original: r.original, corrected: r.correctedName }));
-        const baseName = (corrItem?.fileName || corrItem?.naziv || 'zapisnik').replace(/\.[^.]+$/, '');
-        setCorrGenerating(true);
+    const handleGenerate = async () => {
+        const activeRows = rows.filter(r => r.keep && r.original !== r.correctedName);
+        if (!activeRows.length) { await alert(lang === 'bs' ? 'Nema izmjena.' : 'No changes.'); return; }
+        const replacements = activeRows.map(r => ({ original: r.original, corrected: r.correctedName }));
+        const baseName = (docFile?.name || 'zapisnik').replace(/\.[^.]+$/, '');
+        setGenerating(true);
         try {
-            const fn = (corrItem?.fileName || '').toLowerCase();
-            if (fn.endsWith('.docx') && corrItem?.fileData) {
-                const b64 = corrItem.fileData.split(',')[1] || corrItem.fileData;
-                const bin = atob(b64); const ab = new Uint8Array(bin.length);
-                for (let i = 0; i < bin.length; i++) ab[i] = bin.charCodeAt(i);
-                const blob = await generateCorrectedDocx(ab.buffer, replacements);
+            if (docFile?.arrayBuffer && docFile.name.toLowerCase().endsWith('.docx')) {
+                const blob = await generateCorrectedDocx(docFile.arrayBuffer, replacements);
                 downloadBlob(blob, `${baseName}_ispravljen.docx`);
             } else {
-                let corrected = corrText || corrItem?.sadrzaj || '';
+                let corrected = rawText;
                 for (const { original, corrected: rep } of replacements) {
-                    const esc = original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-                    corrected = corrected.replace(new RegExp(esc, 'gi'), rep);
+                    corrected = corrected.replace(new RegExp(original.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), rep);
                 }
                 downloadText(corrected, `${baseName}_ispravljen.txt`);
             }
+            setStep('done');
         } catch (err) { await alert(`Greška: ${err.message}`); }
-        finally { setCorrGenerating(false); }
+        finally { setGenerating(false); }
     };
 
-    // ── Form view: Create / Edit ──────────────────────────────────────────────
-    if (view === 'create') return (
-        <div className="animate-fadeIn">
-            <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={() => { setView('list'); setForm({ ...EMPTY_FORM }); setEditItem(null); }}>←</button>
-                <h1 style={{ margin: 0 }}>{editItem ? (bs ? '✏️ Uredi Zapisnik' : '✏️ Edit Record') : (bs ? '+ Novi Zapisnik' : '+ New Record')}</h1>
-            </div>
-            <div className="card">
-                <div className="card-body">
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                        <div>
-                            <div style={LS}>{bs ? 'Naziv zapisnika *' : 'Record name *'}</div>
-                            <input className="form-input" value={form.naziv} onChange={e => setForm(f => ({ ...f, naziv: e.target.value }))} placeholder={bs ? 'npr. Zapisnik o provjeri znanja' : 'e.g. Training minutes'} />
-                        </div>
-                        <div>
-                            <div style={LS}>{bs ? 'Datum' : 'Date'}</div>
-                            <input className="form-input" type="date" value={form.datum} onChange={e => setForm(f => ({ ...f, datum: e.target.value }))} />
-                        </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                        <div>
-                            <div style={LS}>{bs ? 'Mjesto' : 'Location'}</div>
-                            <input className="form-input" value={form.mjesto} onChange={e => setForm(f => ({ ...f, mjesto: e.target.value }))} placeholder={bs ? 'npr. Sarajevo' : 'e.g. Zagreb'} />
-                        </div>
-                        <div>
-                            <div style={LS}>{bs ? 'Predmet / Svrha' : 'Subject / Purpose'}</div>
-                            <input className="form-input" value={form.predmet} onChange={e => setForm(f => ({ ...f, predmet: e.target.value }))} placeholder={bs ? 'npr. Provjera znanja ZNR' : 'e.g. OSH knowledge review'} />
-                        </div>
-                    </div>
-                    <div style={{ marginBottom: 16 }}>
-                        <div style={LS}>{bs ? 'Komisija / Prisutni' : 'Committee / Attendees'}</div>
-                        <input className="form-input" value={form.komisija} onChange={e => setForm(f => ({ ...f, komisija: e.target.value }))} placeholder={bs ? 'npr. Mujo Mujić, Fatima Fatić...' : 'e.g. John Smith, Jane Doe...'} />
-                    </div>
-                    <div style={{ marginBottom: 16 }}>
-                        <div style={LS}>{bs ? 'Sadržaj zapisnika' : 'Record content'}</div>
-                        <textarea className="form-input" rows={6} value={form.sadrzaj} onChange={e => setForm(f => ({ ...f, sadrzaj: e.target.value }))} style={{ resize: 'vertical' }} placeholder={bs ? 'Unesite sadržaj zapisnika...' : 'Enter record content...'} />
-                    </div>
-                    <div style={{ marginBottom: 16 }}>
-                        <div style={LS}>{bs ? 'Napomena' : 'Note'}</div>
-                        <input className="form-input" value={form.napomena} onChange={e => setForm(f => ({ ...f, napomena: e.target.value }))} />
-                    </div>
+    const handleReset = () => { setDocFile(null); setRawText(''); setRows([]); setStep('upload'); setExtractError(''); };
+    const activeChanges = rows.filter(r => r.keep && r.original !== r.correctedName).length;
 
-                    <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 16, marginBottom: 24 }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-                            {bs ? 'Priloži datoteku (opciono)' : 'Attach file (optional)'}
-                        </div>
-                        <input type="file" ref={formFileRef} accept=".pdf,.docx,.doc,.txt,.jpg,.jpeg,.png" style={{ display: 'none' }}
-                            onChange={e => {
-                                const file = e.target.files?.[0];
-                                if (!file) return;
-                                if (file.size > 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
-                                const reader = new FileReader();
-                                reader.onload = ev => setForm(f => ({ ...f, fileData: ev.target.result, fileName: file.name, fileType: file.type }));
-                                reader.readAsDataURL(file);
-                                e.target.value = '';
-                            }} />
-                        {form.fileData ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                <span style={{ fontSize: '1.4rem' }}>{form.fileName?.endsWith('.pdf') ? '📕' : form.fileName?.match(/docx?/) ? '📘' : '🖼️'}</span>
-                                <span style={{ flex: 1, fontWeight: 600, fontSize: '0.88rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.fileName}</span>
-                                <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => setForm(f => ({ ...f, fileData: null, fileName: '', fileType: '' }))}>✕</button>
-                            </div>
-                        ) : (
-                            <button className="btn btn-outline btn-sm" onClick={() => formFileRef.current?.click()}>
-                                📎 {bs ? 'Dodaj datoteku' : 'Attach file'}
-                            </button>
-                        )}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                            {saving ? '⏳' : '💾'} {bs ? 'Sačuvaj' : 'Save'}
-                        </button>
-                        <button className="btn btn-ghost" onClick={() => { setView('list'); setForm({ ...EMPTY_FORM }); setEditItem(null); }}>
-                            ↩ {bs ? 'Odustani' : 'Cancel'}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-
-    // ── Korekcija view ────────────────────────────────────────────────────────
-    if (view === 'correct') return (
-        <div className="animate-fadeIn">
-            <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={() => { setView('list'); setCorrItem(null); setCorrRows([]); }}>←</button>
-                <h1 style={{ margin: 0 }}>🔧 {bs ? 'Korekcija imena' : 'Name Correction'}</h1>
-                {corrItem && <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: 4 }}>— {corrItem.naziv}</span>}
-            </div>
-            <DialogRenderer />
-            {corrExtracting && (
-                <div className="card"><div className="card-body" style={{ textAlign: 'center', padding: 40 }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>⏳</div>
-                    <div style={{ fontWeight: 600 }}>{bs ? 'Čitanje dokumenta...' : 'Reading document...'}</div>
-                </div></div>
-            )}
-            {corrError && (
-                <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: 'var(--danger)', marginBottom: 16 }}>
-                    ⚠️ {corrError}
-                </div>
-            )}
-            {!corrExtracting && corrExtracted && (
-                <>
-                    <div style={{ padding: '12px 16px', marginBottom: 20, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.25)', display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.88rem' }}>
-                        <span style={{ fontSize: '1.4rem' }}>📋</span>
-                        <div style={{ flex: 1 }}>
-                            <strong>{corrItem?.fileName || corrItem?.naziv}</strong>
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 2 }}>
-                                {bs ? `Pronađeno ${corrRows.length} potencijalnih imena` : `Found ${corrRows.length} potential names`}
-                            </div>
-                        </div>
-                        <button className="btn btn-primary" onClick={handleGenerateCorrected} disabled={corrGenerating || corrRows.filter(r => r.keep && r.original !== r.correctedName).length === 0}>
-                            {corrGenerating ? '⏳' : '📥'} {bs ? 'Generiši ispravljen' : 'Generate corrected'}
-                        </button>
-                    </div>
-                    {corrRows.length === 0 ? (
-                        <div className="card"><div className="card-body" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                            <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔎</div>
-                            <div style={{ fontWeight: 600 }}>{bs ? 'Nema pronađenih imena.' : 'No names found.'}</div>
-                        </div></div>
-                    ) : (
-                        <div className="card">
-                            <div className="card-body" style={{ padding: 0 }}>
-                                <div className="data-table-wrapper">
-                                    <table className="data-table">
-                                        <thead>
-                                            <tr>
-                                                <th style={{ width: 40 }}></th>
-                                                <th>{bs ? 'Iz dokumenta' : 'From document'}</th>
-                                                <th>{bs ? 'Radnik u sustavu' : 'Worker in system'}</th>
-                                                <th style={{ width: 80, textAlign: 'center' }}>%</th>
-                                                <th>{bs ? 'Ispravno ime' : 'Corrected name'}</th>
-                                                <th style={{ width: 40 }}></th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {corrRows.map(row => {
-                                                const conf = row.matchedWorker ? confidenceLabel(row.confidence) : null;
-                                                const changed = row.correctedName !== row.original;
-                                                return (
-                                                    <tr key={row.id} style={{ opacity: row.keep ? 1 : 0.4, background: changed && row.keep ? 'rgba(0,191,166,0.04)' : undefined }}>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            <input type="checkbox" checked={row.keep} onChange={e => updateCorrRow(row.id, { keep: e.target.checked })} style={{ width: 15, height: 15, accentColor: 'var(--primary)' }} />
-                                                        </td>
-                                                        <td style={{ fontWeight: 500 }}>{row.original}</td>
-                                                        <td>
-                                                            {row.matchedWorker
-                                                                ? <div><div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{row.matchedWorker.ime} {row.matchedWorker.prezime}</div>
-                                                                    {row.matchedWorker.datumRodjenja && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🎂 {row.matchedWorker.datumRodjenja}</div>}
-                                                                  </div>
-                                                                : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.82rem' }}>—</span>}
-                                                        </td>
-                                                        <td style={{ textAlign: 'center' }}>
-                                                            {conf ? <div><div style={{ fontSize: '1rem' }}>{conf.emoji}</div><div style={{ fontSize: '0.68rem', fontWeight: 700, color: conf.color }}>{conf.label}</div></div> : '—'}
-                                                        </td>
-                                                        <td>
-                                                            <input className="form-input" style={{ fontSize: '0.88rem', padding: '4px 8px', borderColor: changed ? 'var(--primary)' : undefined }}
-                                                                value={row.correctedName} disabled={!row.keep}
-                                                                onChange={e => updateCorrRow(row.id, { correctedName: e.target.value })} />
-                                                        </td>
-                                                        <td>
-                                                            <button className="btn btn-ghost btn-sm btn-icon" title={bs ? 'Vrati original' : 'Reset'} onClick={() => updateCorrRow(row.id, { correctedName: row.original })}>↺</button>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                        <button className="btn btn-primary" onClick={handleGenerateCorrected}
-                            disabled={corrGenerating || corrRows.filter(r => r.keep && r.original !== r.correctedName).length === 0}>
-                            {corrGenerating ? '⏳' : '📥'} {bs ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
-                        </button>
-                        <button className="btn btn-ghost" onClick={() => { setRows => setCorrRows(r => r.map(x => ({ ...x, keep: true })))(undefined); }}>✓ Sve</button>
-                        <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            {corrRows.filter(r => r.keep && r.original !== r.correctedName).length} {bs ? 'izmjena' : 'changes'}
-                        </span>
-                    </div>
-                </>
-            )}
-            {!corrExtracting && !corrExtracted && !corrError && corrItem && !corrItem.fileData && (
-                <div style={{ padding: '16px', borderRadius: 'var(--radius-md)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)' }}>
-                    ⚠️ {bs ? 'Ovaj zapisnik nema priloženu datoteku. Možete koristiti sadržaj iz polja "Sadržaj zapisnika".' : 'This record has no attached file. Content from the "Record content" field will be used.'}
-                </div>
-            )}
-        </div>
-    );
-
-    // ── List view ─────────────────────────────────────────────────────────────
+    // ── RENDER ────────────────────────────────────────────────────────────────
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
                 <span style={{ fontSize: '1.6rem' }}>📋</span>
                 <div>
-                    <h1 style={{ margin: 0 }}>{bs ? 'Zapisnici' : 'Records'}</h1>
+                    <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Korekcija zapisnika' : 'Minutes Correction'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {sorted.length} {bs ? 'zapisnik(a)' : 'record(s)'}
+                        {items.length} {lang === 'bs' ? 'zapisnika' : 'records'}
                     </p>
                 </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary" onClick={() => { setForm({ ...EMPTY_FORM }); setEditItem(null); setView('create'); }}>
-                        + {bs ? 'Novi zapisnik' : 'New record'}
+                {activeTab === 'list' && (
+                    <div style={{ marginLeft: 'auto' }}>
+                        <button className="btn btn-primary" onClick={handleNew}>
+                            + {lang === 'bs' ? 'Novi zapisnik' : 'New record'}
+                        </button>
+                    </div>
+                )}
+                {activeTab === 'korekcija' && step !== 'upload' && (
+                    <div style={{ marginLeft: 'auto' }}>
+                        <button className="btn btn-ghost btn-sm" onClick={handleReset}>↺ {lang === 'bs' ? 'Novi dokument' : 'New document'}</button>
+                    </div>
+                )}
+            </div>
+
+            {/* Tab bar */}
+            <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>
+                {[
+                    { id: 'list',      icon: '📋', label_bs: 'Zapisnici',         label_en: 'Records' },
+                    { id: 'korekcija', icon: '🔧', label_bs: 'Korekcija imena',   label_en: 'Name Correction' },
+                ].map(tab => (
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+                        padding: '9px 20px', border: 'none', cursor: 'pointer',
+                        fontFamily: 'var(--font-body)', fontSize: '0.88rem',
+                        fontWeight: activeTab === tab.id ? 700 : 500,
+                        background: 'transparent',
+                        borderBottom: activeTab === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
+                        color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
+                        marginBottom: -2, transition: 'all 0.15s',
+                    }}>
+                        {tab.icon} {lang === 'bs' ? tab.label_bs : tab.label_en}
                     </button>
-                </div>
+                ))}
             </div>
 
-            {/* Search */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 16, marginTop: 12 }}>
-                <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
-                    <input value={search} onChange={e => setSearch(e.target.value)}
-                        placeholder={bs ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
-                        style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-                    {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
-                </div>
-            </div>
+            {/* ══════════════════════════════════════════════════
+                TAB 1 — ZAPISNICI LIST
+            ══════════════════════════════════════════════════ */}
+            {activeTab === 'list' && (
+                <>
+                    {/* Create / Edit form */}
+                    {showForm && (
+                        <div className="card" style={{ marginBottom: 20, border: '1px solid var(--primary)' }}>
+                            <div className="card-header" style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--primary)' }}>
+                                {editId ? (lang === 'bs' ? '✏️ Uredi zapisnik' : '✏️ Edit record') : (lang === 'bs' ? '+ Novi zapisnik' : '+ New record')}
+                            </div>
+                            <div className="card-body">
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <div style={labelStyle}>{lang === 'bs' ? 'Naziv *' : 'Name *'}</div>
+                                        <input className="form-input" value={form.naziv} onChange={e => setF('naziv', e.target.value)} placeholder={lang === 'bs' ? 'Naziv zapisnika...' : 'Record name...'} autoFocus />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <div style={labelStyle}>{lang === 'bs' ? 'Broj zapisnika' : 'Record no.'}</div>
+                                        <input className="form-input" value={form.broj} onChange={e => setF('broj', e.target.value)} placeholder="ZAP-001" />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <div style={labelStyle}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                                        <input className="form-input" type="date" value={form.datum} onChange={e => setF('datum', e.target.value)} />
+                                    </div>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <div style={labelStyle}>{lang === 'bs' ? 'Vrsta' : 'Type'}</div>
+                                        <select className="form-select" value={form.vrsta} onChange={e => setF('vrsta', e.target.value)}>
+                                            <option value="">—</option>
+                                            {VRSTE.map(v => <option key={v} value={v}>{v}</option>)}
+                                        </select>
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <div style={labelStyle}>{lang === 'bs' ? 'Napomena' : 'Note'}</div>
+                                        <input className="form-input" value={form.napomena} onChange={e => setF('napomena', e.target.value)} />
+                                    </div>
+                                </div>
 
-            {/* Table */}
-            <div className="card">
-                <div className="card-body" style={{ padding: 0 }}>
-                    {sorted.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
-                            <div style={{ fontSize: '3rem', marginBottom: 12 }}>📋</div>
-                            <div style={{ fontWeight: 600, marginBottom: 6 }}>{search ? (bs ? 'Nema rezultata' : 'No results') : (bs ? 'Nema zapisnika' : 'No records yet')}</div>
-                            {!search && <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => { setForm({ ...EMPTY_FORM }); setEditItem(null); setView('create'); }}>+ {bs ? 'Novi zapisnik' : 'New record'}</button>}
-                        </div>
-                    ) : (
-                        <div className="data-table-wrapper">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th onClick={() => toggleSort('naziv')} style={thSt('naziv')}>
-                                            {bs ? 'Naziv' : 'Name'}{sortIco('naziv')}
-                                        </th>
-                                        <th onClick={() => toggleSort('datum')} style={{ ...thSt('datum'), width: 110 }}>
-                                            {bs ? 'Datum' : 'Date'}{sortIco('datum')}
-                                        </th>
-                                        <th onClick={() => toggleSort('mjesto')} style={{ ...thSt('mjesto'), width: 130 }}>
-                                            {bs ? 'Mjesto' : 'Location'}{sortIco('mjesto')}
-                                        </th>
-                                        <th>{bs ? 'Predmet' : 'Subject'}</th>
-                                        <th style={{ width: 70, textAlign: 'center' }}>{bs ? 'Prilog' : 'File'}</th>
-                                        <th style={{ width: 90, textAlign: 'center' }}>{bs ? 'Akcije' : 'Actions'}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {sorted.map(item => (
-                                        <tr key={item.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(item)}>
-                                            <td>
-                                                <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.naziv}</div>
-                                                {item.komisija && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>👥 {item.komisija.slice(0, 60)}{item.komisija.length > 60 ? '...' : ''}</div>}
-                                            </td>
-                                            <td style={{ fontSize: '0.85rem', whiteSpace: 'nowrap' }}>{item.datum ? item.datum.split('-').reverse().join('.') : '—'}</td>
-                                            <td style={{ fontSize: '0.85rem' }}>{item.mjesto || '—'}</td>
-                                            <td style={{ fontSize: '0.85rem', maxWidth: 200 }}>
-                                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block', maxWidth: 200 }}>
-                                                    {item.predmet || '—'}
-                                                </span>
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                {item.fileData
-                                                    ? <span title={item.fileName} style={{ fontSize: '1.2rem' }}>{item.fileName?.endsWith('.pdf') ? '📕' : item.fileName?.match(/docx?/) ? '📘' : '📎'}</span>
-                                                    : <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>—</span>}
-                                            </td>
-                                            <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                                                <button
-                                                    className="btn btn-primary btn-sm"
-                                                    data-akcije-btn
-                                                    onClick={e => openMenu(item.id, e)}
-                                                >
-                                                    {bs ? 'Akcije' : 'Actions'} ▼
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                {/* File attach */}
+                                <div style={{ marginBottom: 14 }}>
+                                    <div style={labelStyle}>{lang === 'bs' ? 'Priloži datoteku (opciono)' : 'Attach file (optional)'}</div>
+                                    <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.jpg,.png"
+                                        style={{ display: 'none' }}
+                                        onChange={e => { handleFileUpload(e.target.files[0]); e.target.value = ''; }} />
+                                    {form.attachedFileData ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                                            <span style={{ fontSize: '1.2rem' }}>{form.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}</span>
+                                            <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{form.attachedFileName}</span>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>
+                                                {lang === 'bs' ? 'Zamijeni' : 'Replace'}
+                                            </button>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
+                                                onClick={() => { setF('attachedFileData', null); setF('attachedFileName', ''); setF('attachedFileType', ''); }}>✕</button>
+                                        </div>
+                                    ) : (
+                                        <button className="btn btn-outline btn-sm" onClick={() => fileRef.current?.click()}>
+                                            📎 {lang === 'bs' ? 'Odaberi datoteku...' : 'Choose file...'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                <div style={{ display: 'flex', gap: 10 }}>
+                                    <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+                                        💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}
+                                    </button>
+                                    <button className="btn btn-ghost" onClick={() => { setShowForm(false); setEditId(null); }}>
+                                        ✕ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
-                </div>
-            </div>
 
-            {/* Aksije portal dropdown */}
-            {openMenuId && typeof window !== 'undefined' && createPortal(
-                <div data-akcije-menu style={{
-                    position: 'fixed',
-                    ...(menuPos.top ? { top: menuPos.top } : { bottom: menuPos.bottom }),
-                    left: menuPos.left, zIndex: 9000,
-                    background: 'var(--bg-card)', border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
-                    minWidth: 190, overflow: 'hidden',
-                    maxHeight: menuPos.maxH, overflowY: 'auto',
-                }}>
-                    {(() => {
-                        const item = items.find(i => i.id === openMenuId);
-                        if (!item) return null;
-                        const menuBtn = (icon, label, onClick, danger) => (
-                            <button key={label} onClick={onClick} style={{
-                                display: 'flex', alignItems: 'center', gap: 10,
-                                width: '100%', padding: '9px 14px', border: 'none',
-                                background: 'transparent', cursor: 'pointer', fontSize: '0.85rem',
-                                fontFamily: 'var(--font-body)', textAlign: 'left',
-                                color: danger ? 'var(--danger)' : 'var(--text)',
-                            }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                            >
-                                <span style={{ width: 18, textAlign: 'center' }}>{icon}</span> {label}
-                            </button>
-                        );
-                        return (
-                            <>
-                                {menuBtn('✏️', bs ? 'Uredi' : 'Edit', () => handleEdit(item))}
-                                {menuBtn('🖨️', bs ? 'Printaj' : 'Print', () => handlePrint(item))}
-                                {menuBtn('⬇️', bs ? 'Preuzmi' : 'Download', () => handleDownload(item))}
-                                {menuBtn('✉️', bs ? 'Pošalji email' : 'Send email', () => handleSendEmail(item))}
-                                <div style={{ height: 1, background: 'var(--border-light)', margin: '4px 0' }} />
-                                {menuBtn('🔧', bs ? 'Korekcija imena' : 'Name correction', () => startKorekcija(item))}
-                                <div style={{ height: 1, background: 'var(--border-light)', margin: '4px 0' }} />
-                                {menuBtn('🗑️', bs ? 'Obriši' : 'Delete', () => handleDelete(item), true)}
-                            </>
-                        );
-                    })()}
-                </div>,
-                document.body
+                    {/* Search */}
+                    <div style={{ marginBottom: 16, display: 'flex', gap: 10, alignItems: 'center' }}>
+                        <div className="search-bar" style={{ flex: 1, maxWidth: 400 }}>
+                            <input
+                                placeholder={lang === 'bs' ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
+                                value={search} onChange={e => setSearch(e.target.value)}
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                            />
+                        </div>
+                        <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+                            {filtered.length} {lang === 'bs' ? 'rezultata' : 'results'}
+                        </span>
+                    </div>
+
+                    {/* Table */}
+                    <div className="card">
+                        <div className="card-body" style={{ padding: 0 }}>
+                            {sorted.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
+                                    <div style={{ fontSize: '3rem', marginBottom: 12 }}>📋</div>
+                                    <div style={{ fontWeight: 600, marginBottom: 6 }}>{lang === 'bs' ? 'Nema zapisnika' : 'No records'}</div>
+                                    <div style={{ fontSize: '0.82rem', marginBottom: 16 }}>{lang === 'bs' ? 'Kreirajte prvi zapisnik klikom na gumb iznad.' : 'Create your first record using the button above.'}</div>
+                                    <button className="btn btn-primary" onClick={handleNew}>+ {lang === 'bs' ? 'Novi zapisnik' : 'New record'}</button>
+                                </div>
+                            ) : (
+                                <div className="data-table-wrapper">
+                                    <table className="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{sortIcon('naziv')}</th>
+                                                <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{lang === 'bs' ? 'Broj' : 'No.'}{sortIcon('broj')}</th>
+                                                <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
+                                                <th style={{ width: 180 }}>{lang === 'bs' ? 'Vrsta' : 'Type'}</th>
+                                                <th style={{ width: 80, textAlign: 'center' }}>{lang === 'bs' ? 'Prilog' : 'File'}</th>
+                                                <th style={{ width: 120 }}></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sorted.map(item => (
+                                                <tr key={item.id}>
+                                                    <td>
+                                                        <div style={{ fontWeight: 600 }}>{item.naziv}</div>
+                                                        {item.napomena && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.napomena}</div>}
+                                                    </td>
+                                                    <td><code style={{ fontSize: '0.82rem' }}>{item.broj || '—'}</code></td>
+                                                    <td style={{ whiteSpace: 'nowrap' }}>{formatDate(item.datum)}</td>
+                                                    <td>
+                                                        {item.vrsta ? (
+                                                            <span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 10, background: 'rgba(99,102,241,0.1)', color: 'var(--secondary)', fontWeight: 600 }}>
+                                                                {item.vrsta}
+                                                            </span>
+                                                        ) : '—'}
+                                                    </td>
+                                                    <td style={{ textAlign: 'center' }}>
+                                                        {item.attachedFileData ? (
+                                                            <button className="btn btn-ghost btn-sm btn-icon" title={item.attachedFileName} onClick={() => handleDownload(item)}>
+                                                                {item.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}
+                                                            </button>
+                                                        ) : '—'}
+                                                    </td>
+                                                    <td>
+                                                        <AkcijeMenu
+                                                            item={item}
+                                                            lang={lang}
+                                                            onEdit={() => handleEdit(item)}
+                                                            onDelete={() => handleDelete(item)}
+                                                            onDownload={() => handleDownload(item)}
+                                                            onCopy={() => handleCopy(item)}
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* ══════════════════════════════════════════════════
+                TAB 2 — KOREKCIJA
+            ══════════════════════════════════════════════════ */}
+            {activeTab === 'korekcija' && (
+                <>
+                    {step === 'upload' && (
+                        <div className="card">
+                            <div className="card-body">
+                                <div
+                                    style={{
+                                        border: dragging ? '2px solid var(--primary)' : '2px dashed var(--border)',
+                                        borderRadius: 'var(--radius-md)', padding: '48px 20px', textAlign: 'center',
+                                        background: dragging ? 'rgba(0,191,166,0.04)' : 'transparent',
+                                        cursor: 'pointer', transition: 'all 0.2s',
+                                    }}
+                                    onDragOver={e => { e.preventDefault(); setDragging(true); }}
+                                    onDragLeave={() => setDragging(false)}
+                                    onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFileRead(f); }}
+                                    onClick={() => corrFileRef.current?.click()}
+                                >
+                                    <div style={{ fontSize: '3rem', marginBottom: 12 }}>{extracting ? '⏳' : dragging ? '📂' : '📋'}</div>
+                                    <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: 6 }}>
+                                        {extracting ? (lang === 'bs' ? 'Čitanje dokumenta...' : 'Extracting text...')
+                                            : dragging ? (lang === 'bs' ? 'Ispusti zapisnik ovdje' : 'Drop record here')
+                                            : (lang === 'bs' ? 'Prevuci zapisnik ili klikni za odabir' : 'Drag & drop or click to select')}
+                                    </div>
+                                    <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>PDF, DOCX, TXT — max 20MB</div>
+                                    {extractError && <div style={{ marginTop: 16, color: 'var(--danger)', fontWeight: 600, fontSize: '0.85rem' }}>⚠️ {extractError}</div>}
+                                    <input ref={corrFileRef} type="file" accept=".pdf,.docx,.txt" style={{ display: 'none' }}
+                                        onChange={e => { const f = e.target.files[0]; if (f) handleFileRead(f); e.target.value = ''; }} />
+                                </div>
+
+                                <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', fontSize: '0.82rem' }}>
+                                    <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--secondary)' }}>💡 {lang === 'bs' ? 'Kako funkcioniše?' : 'How does it work?'}</div>
+                                    <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7, color: 'var(--text-muted)' }}>
+                                        <li>{lang === 'bs' ? 'Aplikacija iz dokumenta izvlači sva vlastita imena (2-3 kapitalizovane riječi).' : 'App extracts all proper names from the document.'}</li>
+                                        <li>{lang === 'bs' ? 'Svako ime uspoređuje s radnicima u sustavu koristeći fuzzy matching.' : 'Each name is compared against workers using fuzzy matching.'}</li>
+                                        <li>{lang === 'bs' ? 'Prikazuje se tabela s originalnim i ispravnim imenima — možete ih ručno ispraviti.' : 'A table shows original and corrected names — you can edit them.'}</li>
+                                        <li>{lang === 'bs' ? 'Na kraju se generira ispravljen dokument (.docx ili .txt).' : 'Finally, a corrected document (.docx or .txt) is generated.'}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {step === 'review' && (
+                        <>
+                            <div style={{ padding: '12px 16px', marginBottom: 20, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.25)', display: 'flex', alignItems: 'center', gap: 12, fontSize: '0.88rem' }}>
+                                <span style={{ fontSize: '1.4rem' }}>📋</span>
+                                <div style={{ flex: 1 }}>
+                                    <strong>{docFile?.name}</strong>
+                                    <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 2 }}>
+                                        {lang === 'bs' ? `Pronađeno ${rows.length} potencijalnih imena · ${activeChanges} izmjena` : `Found ${rows.length} potential names · ${activeChanges} changes`}
+                                    </div>
+                                </div>
+                                <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
+                                    {generating ? '⏳' : '📥'} {lang === 'bs' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
+                                </button>
+                            </div>
+
+                            {rows.length === 0 ? (
+                                <div className="card">
+                                    <div className="card-body" style={{ textAlign: 'center', padding: '48px 20px', color: 'var(--text-muted)' }}>
+                                        <div style={{ fontSize: '3rem', marginBottom: 12 }}>🔎</div>
+                                        <div style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Nije pronađeno nijedno vlastito ime.' : 'No proper names found.'}</div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="card">
+                                    <div className="card-body" style={{ padding: 0 }}>
+                                        <div className="data-table-wrapper">
+                                            <table className="data-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th style={{ width: 40 }}>{lang === 'bs' ? 'Uključi' : 'Include'}</th>
+                                                        <th>{lang === 'bs' ? 'Iz dokumenta' : 'From document'}</th>
+                                                        <th>{lang === 'bs' ? 'Radnik u sustavu' : 'Worker in system'}</th>
+                                                        <th style={{ width: 80, textAlign: 'center' }}>{lang === 'bs' ? 'Podudaranje' : 'Match'}</th>
+                                                        <th>{lang === 'bs' ? 'Ispravno ime' : 'Corrected name'}</th>
+                                                        <th style={{ width: 50 }}></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {rows.map(row => {
+                                                        const conf = row.matchedWorker ? confidenceLabel(row.confidence) : null;
+                                                        const isChanged = row.correctedName !== row.original;
+                                                        return (
+                                                            <tr key={row.id} style={{ opacity: row.keep ? 1 : 0.4, background: isChanged && row.keep ? 'rgba(0,191,166,0.04)' : undefined }}>
+                                                                <td style={{ textAlign: 'center' }}>
+                                                                    <input type="checkbox" checked={row.keep} onChange={e => updateRow(row.id, { keep: e.target.checked })} style={{ width: 16, height: 16, accentColor: 'var(--primary)' }} />
+                                                                </td>
+                                                                <td><span style={{ fontWeight: 500 }}>{row.original}</span></td>
+                                                                <td>
+                                                                    {row.matchedWorker ? (
+                                                                        <div>
+                                                                            <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>{row.matchedWorker.ime} {row.matchedWorker.prezime}</div>
+                                                                            {row.matchedWorker.datumRodjenja && <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>🎂 {row.matchedWorker.datumRodjenja}</div>}
+                                                                        </div>
+                                                                    ) : <span style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '0.82rem' }}>{lang === 'bs' ? '— nije pronađen —' : '— not found —'}</span>}
+                                                                </td>
+                                                                <td style={{ textAlign: 'center' }}>
+                                                                    {conf ? <div><div style={{ fontSize: '1.1rem' }}>{conf.emoji}</div><div style={{ fontSize: '0.68rem', fontWeight: 700, color: conf.color }}>{conf.label}</div></div> : '—'}
+                                                                </td>
+                                                                <td>
+                                                                    <input className="form-input" style={{ fontSize: '0.88rem', padding: '5px 8px', borderColor: isChanged ? 'var(--primary)' : undefined }} value={row.correctedName} onChange={e => updateRow(row.id, { correctedName: e.target.value })} disabled={!row.keep} />
+                                                                </td>
+                                                                <td>
+                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Vrati original' : 'Reset'} onClick={() => updateRow(row.id, { correctedName: row.original })}>↺</button>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {rows.length > 0 && (
+                                <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
+                                    <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
+                                        {generating ? '⏳' : '📥'} {lang === 'bs' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
+                                        {activeChanges > 0 && <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>{activeChanges}</span>}
+                                    </button>
+                                    <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: true })))}>✓ {lang === 'bs' ? 'Označi sve' : 'Select all'}</button>
+                                    <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: false })))}>✗ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}</button>
+                                    <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{activeChanges} {lang === 'bs' ? 'izmjena' : 'changes'}</span>
+                                </div>
+                            )}
+                        </>
+                    )}
+
+                    {step === 'done' && (
+                        <div className="card">
+                            <div className="card-body" style={{ textAlign: 'center', padding: '60px 20px' }}>
+                                <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>✅</div>
+                                <div style={{ fontWeight: 700, fontSize: '1.2rem', marginBottom: 8 }}>{lang === 'bs' ? 'Ispravljen dokument generisan!' : 'Corrected document generated!'}</div>
+                                <div style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{lang === 'bs' ? 'Datoteka je preuzeta.' : 'File downloaded.'}</div>
+                                <button className="btn btn-primary" onClick={handleReset}>↺ {lang === 'bs' ? 'Obradi novi dokument' : 'Process another'}</button>
+                            </div>
+                        </div>
+                    )}
+                </>
             )}
         </div>
     );
