@@ -5,7 +5,7 @@ import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/data
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
-import { fmtDate } from '@/lib/dateUtils';
+import { fmtDate, fmtDateTime } from '@/lib/dateUtils';
 
 const MONTHS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -598,7 +598,7 @@ export default function AnnualInjuriesPage() {
                             {r.totals && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: 6 }}>({r.totals.laka || 0}L / {r.totals.teska || 0}T / {r.totals.smrtna || 0}S)</span>}
                           </td>
                           <td style={{ fontSize: '0.82rem' }}>{r.savedAt ? fmtDate(r.savedAt) : '—'}</td>
-                          <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{r.updatedAt ? `${fmtDate(r.updatedAt)} ${new Date(r.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}` : '—'}</td>
+                          <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{fmtDateTime(r.updatedAt) || '—'}</td>
                         </tr>
                       ))}
                     </tbody>

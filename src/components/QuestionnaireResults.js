@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getQuestionnaireResponse } from '@/lib/firebaseSync';
+import { fmtDateTime } from '@/lib/dateUtils';
 
 /* ═══════════════════════════════════════════════════════
    Questionnaire Results Dashboard
@@ -202,10 +203,10 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
                                                     )}
                                                 </td>
                                                 <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                                    {s.createdAt ? new Date(s.createdAt).toLocaleString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                                    {fmtDateTime(s.createdAt) || '—'}
                                                 </td>
                                                 <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                                    {s.completedAt ? new Date(s.completedAt).toLocaleString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                                                    {fmtDateTime(s.completedAt) || '—'}
                                                 </td>
                                                 <td>
                                                     {s.status === 'completed' && (
@@ -270,9 +271,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
                                 </div>
                             ) : (<div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                                    {lang === 'bs' ? 'Predano' : 'Submitted'}: {responseData.submittedAt
-                                        ? new Date(responseData.submittedAt).toLocaleString('hr-HR')
-                                        : '—'}
+                                    {lang === 'bs' ? 'Predano' : 'Submitted'}: {fmtDateTime(responseData.submittedAt) || '—'}
                                 </div>
                                 {(() => {
                                     // Get ordered questions from session surveyJson

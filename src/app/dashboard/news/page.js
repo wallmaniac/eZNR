@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { fmtDateTime } from '@/lib/dateUtils';
 
 // No localStorage cache — server caches for 2h, so every page load is fresh within 2h
 
@@ -210,7 +211,7 @@ export default function NewsPage() {
         { key: 'forms', label: 'Obrasci', icon: '📄' },
     ];
 
-    const formatTime = (d) => d ? d.toLocaleString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+    const formatTime = (d) => fmtDateTime(d) || '';
 
     return (
         <div className="animate-fadeIn">
