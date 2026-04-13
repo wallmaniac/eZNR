@@ -7,6 +7,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { fmtDate } from '@/lib/dateUtils';
 
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
@@ -329,7 +330,7 @@ export default function DiseasesPage() {
                           title={d.radnikId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
                         >{d.radnikIme || '—'}</button>
                       </td>
-                      <td>{d.datum ? new Date(d.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : '—'}</td>
+                      <td>{d.datum ? fmtDate(d.datum) : '—'}</td>
                       <td>{d.dijagnoza || '—'}</td>
                       <td>{d.uzrok || '—'}</td>
                       <td style={{ textAlign: 'center' }}>{d.bolovanje ? '✅' : '—'}</td>

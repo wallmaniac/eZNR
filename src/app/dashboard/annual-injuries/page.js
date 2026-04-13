@@ -5,6 +5,7 @@ import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/data
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import { fmtDate } from '@/lib/dateUtils';
 
 const MONTHS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -596,8 +597,8 @@ export default function AnnualInjuriesPage() {
                             <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{r.totalInjuries || 0}</span>
                             {r.totals && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginLeft: 6 }}>({r.totals.laka || 0}L / {r.totals.teska || 0}T / {r.totals.smrtna || 0}S)</span>}
                           </td>
-                          <td style={{ fontSize: '0.82rem' }}>{r.savedAt ? new Date(r.savedAt).toLocaleDateString('bs-BA') : '—'}</td>
-                          <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{r.updatedAt ? new Date(r.updatedAt).toLocaleString('bs-BA', { dateStyle: 'short', timeStyle: 'short' }) : '—'}</td>
+                          <td style={{ fontSize: '0.82rem' }}>{r.savedAt ? fmtDate(r.savedAt) : '—'}</td>
+                          <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{r.updatedAt ? `${fmtDate(r.updatedAt)} ${new Date(r.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })}` : '—'}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -837,7 +838,7 @@ export default function AnnualInjuriesPage() {
                         // Try to get worker details for richer data
                         const worker = inj.radnikId ? (() => { try { return getById(COLLECTIONS.WORKERS, inj.radnikId); } catch { return null; } })() : null;
                         const workerInfo = worker
-                          ? `${worker.ime} ${worker.prezime}${worker.datumRodenja ? `, ${new Date(worker.datumRodenja).toLocaleDateString('bs-BA')}` : ''}${worker.spol ? `, ${worker.spol}` : ''}`
+                          ? `${worker.ime} ${worker.prezime}${worker.datumRodenja ? `, ${fmtDate(worker.datumRodenja)}` : ''}${worker.spol ? `, ${worker.spol}` : ''}`
                           : (inj.radnikIme || '—');
                         return (
                           <tr key={inj.id}>
@@ -847,7 +848,7 @@ export default function AnnualInjuriesPage() {
                             <td style={{ textAlign: 'center' }}>{isKolektivna ? (inj.brojStradalih || '—') : (isSmrtna ? '1' : '')}</td>
                             <td>{workerInfo}</td>
                             <td>
-                              {inj.datum ? new Date(inj.datum).toLocaleDateString('bs-BA') : '—'}
+                              {inj.datum ? fmtDate(inj.datum) : '—'}
                               {inj.lokacija ? `, ${inj.lokacija}` : ''}
                             </td>
                             <td style={{ maxWidth: 180, fontSize: '0.75rem' }}>{inj.uzrokPovrede || inj.opisPovrede || '—'}</td>
@@ -961,7 +962,7 @@ export default function AnnualInjuriesPage() {
                                 style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
                               >{inj.radnikIme || '—'}</button>
                             </td>
-                            <td>{inj.datum ? new Date(inj.datum).toLocaleDateString('bs-BA') : '—'}</td>
+                            <td>{inj.datum ? fmtDate(inj.datum) : '—'}</td>
                             <td>{tipBadge(inj.tip)}</td>
                             <td>{inj.lokacija || '—'}</td>
                             <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.uzrokPovrede || inj.opisPovrede || '—'}</td>

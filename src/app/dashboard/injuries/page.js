@@ -9,6 +9,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import HelpTip from '@/components/HelpTip';
+import { fmtDate } from '@/lib/dateUtils';
 
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
@@ -487,7 +488,7 @@ export default function InjuriesPage() {
                       <td style={{ fontWeight: 600 }}>
                         <button onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }} style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} title={inj.radnikId ? (lang === 'bs' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}>{inj.radnikIme || '—'}</button>
                       </td>
-                      <td>{inj.datum ? new Date(inj.datum).toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB') : '—'}</td>
+                      <td>{inj.datum ? fmtDate(inj.datum) : '—'}</td>
                       <td>{tipBadge(inj.tip)}</td>
                       <td>{inj.lokacija || '—'}</td>
                       <td style={{ maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{inj.opisPovrede || '—'}</td>

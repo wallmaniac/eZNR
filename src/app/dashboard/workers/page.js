@@ -15,6 +15,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
 import * as XLSX from 'xlsx';
+import { fmtDate, matchesSearch } from '@/lib/dateUtils';
 
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
@@ -287,7 +288,10 @@ function WorkersPageInner() {
     }, [searchParams]);
 
     const filteredWorkers = workers.filter(w => {
-        const matchSearch = !searchTerm || `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib} ${w.identBroj || ''} ${w.datumRodenja || ''}`.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchSearch = !searchTerm || matchesSearch(
+            `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib} ${w.identBroj || ''} ${w.datumRodenja || ''} ${w.datumZaposlenja || ''} ${w.datumOdlaska || ''}`,
+            searchTerm
+        );
         const matchStatus = showFormer ? !w.aktivan : w.aktivan;
         return matchSearch && matchStatus;
     });
@@ -1749,11 +1753,17 @@ function WorkersPageInner() {
 // ── REUSABLE COMPONENTS ──
 
 function Field({ label, value, onChange, type = 'text', required, placeholder, tooltip, ...props }) {
+    const formattedDate = type === 'date' && value ? fmtDate(value) : null;
     return (
         <div className="form-group">
             <label className="form-label" style={{ ...(required ? { fontWeight: 700 } : {}), display: 'flex', alignItems: 'center', gap: 6 }}>
                 {label} {required && <span style={{ color: 'var(--danger)' }}>*</span>}
                 {tooltip && <InfoTip text={tooltip} />}
+                {formattedDate && (
+                    <span style={{ marginLeft: 'auto', fontSize: '0.72rem', fontWeight: 600, color: 'var(--primary)', letterSpacing: '0.02em' }}>
+                        {formattedDate}
+                    </span>
+                )}
             </label>
             <input
                 className="form-input"
