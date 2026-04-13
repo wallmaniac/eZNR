@@ -147,29 +147,7 @@ export default function PublicTrainingPage({ params }) {
         return (
             <div style={pageStyle}>
                 <BgGlow />
-                <style>{`
-                    @keyframes spin { to { transform:rotate(360deg); } }
-                    @keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
-                    /* Mobile slide viewer */
-                    @media (max-width: 600px) {
-                        .t-slide-card { padding: 20px 16px !important; min-height: 280px !important; }
-                        .t-slide-card h2 { font-size: 1.1rem !important; }
-                        .t-slide-content { font-size: 0.97rem !important; line-height: 1.75 !important; }
-                        .t-nav { flex-direction: column !important; gap: 10px !important; }
-                        .t-nav-btn { width: 100% !important; justify-content: center !important; padding: 13px 20px !important; font-size: 1rem !important; }
-                        .t-nav-btn-green { width: 100% !important; justify-content: center !important; padding: 14px 20px !important; font-size: 1rem !important; }
-                        .t-dots { display: none !important; }
-                        .t-dots-counter { display: flex !important; }
-                        .t-title { font-size: 1.2rem !important; }
-                        .t-container { padding: 12px 14px !important; }
-                        /* Quiz */
-                        .t-q-card { padding: 20px 16px !important; }
-                        .t-q-opt { padding: 12px 14px !important; font-size: 0.97rem !important; min-height: 52px !important; }
-                        .t-quiz-nav { flex-direction: column !important; gap: 10px !important; }
-                        .t-quiz-q-dots { display: none !important; }
-                        .t-quiz-q-counter { display: flex !important; }
-                    }
-                `}</style>
+                <MobileStyles />
                 <div style={{ ...containerStyle, maxWidth: 860 }} className="t-container">
 
                     {/* Company header */}
@@ -229,48 +207,60 @@ export default function PublicTrainingPage({ params }) {
                         </div>
                     </div>
 
-                    {/* Navigation */}
-                    <div className="t-nav" style={{ display: 'flex', gap: 12, alignItems: 'center', justifyContent: 'space-between' }}>
+                    {/* Navigation row: Prev | counter | Next (always horizontal) */}
+                    <div className="t-nav" style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                         <button
                             className="t-nav-btn"
                             onClick={() => setSlideIdx(i => Math.max(0, i - 1))}
                             disabled={slideIdx === 0}
-                            style={{ ...navBtnStyle, opacity: slideIdx === 0 ? 0.3 : 1 }}>
+                            style={{ ...navBtnStyle, opacity: slideIdx === 0 ? 0.3 : 1, minWidth: 110 }}>
                             ← Prethodni
                         </button>
 
-                        {/* Slide dots — hidden on mobile if too many slides, replaced by counter */}
-                        <div className="t-dots" style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center', flex: 1 }}>
-                            {slides.length <= 20 && slides.map((_, i) => (
-                                <button key={i} onClick={() => setSlideIdx(i)}
-                                    style={{ width: i === slideIdx ? 24 : 8, height: 8, borderRadius: 4, border: 'none', cursor: 'pointer', transition: 'all 0.2s', background: i === slideIdx ? '#6366f1' : i < slideIdx ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.15)' }} />
-                            ))}
-                            {slides.length > 20 && (
-                                <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600 }}>{slideIdx + 1} / {slides.length}</span>
-                            )}
-                        </div>
-                        {/* Mobile compact counter */}
-                        <div className="t-dots-counter" style={{ display: 'none', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                            <span style={{ fontSize: '0.95rem', color: '#94a3b8', fontWeight: 700 }}>{slideIdx + 1} / {slides.length}</span>
-                        </div>
+                        <span style={{ fontSize: '0.88rem', color: '#64748b', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                            {slideIdx + 1} / {slides.length}
+                        </span>
 
                         {isLast ? (
                             <button
                                 className="t-nav-btn-green"
                                 onClick={() => { setPhase('quiz'); setQuizIdx(0); }}
-                                style={{ padding: '10px 28px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 4px 20px rgba(34,197,94,0.3)' }}>
+                                style={{ minWidth: 110, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.92rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 4px 20px rgba(34,197,94,0.3)', whiteSpace: 'nowrap' }}>
                                 {questions.length > 0
                                     ? (Object.keys(answers).length > 0 ? '▶️ Nastavi test →' : '✅ Počni test →')
-                                    : '✅ Završi prezentaciju'}
+                                    : '✅ Završi'}
                             </button>
                         ) : (
                             <button
                                 className="t-nav-btn"
                                 onClick={() => setSlideIdx(i => Math.min(slides.length - 1, i + 1))}
-                                style={navBtnStyle}>
+                                style={{ ...navBtnStyle, minWidth: 110 }}>
                                 Sljedeći →
                             </button>
                         )}
+                    </div>
+
+                    {/* Slide picker — numbered buttons, always horizontal, wraps to multiple rows */}
+                    <div style={{
+                        display: 'flex', flexWrap: 'wrap', gap: 6,
+                        justifyContent: 'center', marginBottom: 8,
+                        padding: '10px 8px', borderRadius: 12,
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                    }}>
+                        {slides.map((_, i) => (
+                            <button key={i} onClick={() => setSlideIdx(i)}
+                                style={{
+                                    width: 32, height: 32, borderRadius: 7,
+                                    border: `1px solid ${i === slideIdx ? '#6366f1' : i < slideIdx ? 'rgba(99,102,241,0.35)' : 'rgba(255,255,255,0.1)'}`,
+                                    background: i === slideIdx ? '#6366f1' : i < slideIdx ? 'rgba(99,102,241,0.12)' : 'rgba(255,255,255,0.03)',
+                                    color: i === slideIdx ? '#fff' : i < slideIdx ? '#818cf8' : '#475569',
+                                    cursor: 'pointer', fontSize: '0.7rem', fontWeight: 700,
+                                    transition: 'all 0.15s', flexShrink: 0,
+                                }}>
+                                {i + 1}
+                            </button>
+                        ))}
                     </div>
 
 
@@ -309,7 +299,8 @@ export default function PublicTrainingPage({ params }) {
             <div style={pageStyle}>
                 <BgGlow />
                 <style>{`@keyframes spin { to { transform:rotate(360deg); } } @keyframes fadeSlide { from { opacity:0;transform:translateY(10px); } to { opacity:1;transform:translateY(0); } }`}</style>
-                <div style={{ ...containerStyle, maxWidth: 720 }}>
+                <MobileStyles />
+                <div style={{ ...containerStyle, maxWidth: 720 }} className="t-container">
 
                     {/* Header — back button only if officer enabled it */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 8 }}>
@@ -386,38 +377,45 @@ export default function PublicTrainingPage({ params }) {
                         )}
                     </div>
 
-                    {/* Quiz navigation */}
-                    <div className="t-quiz-nav" style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                        <button className="t-nav-btn" onClick={() => setQuizIdx(i => Math.max(0, i - 1))} disabled={quizIdx === 0}
-                            style={{ ...navBtnStyle, opacity: quizIdx === 0 ? 0.3 : 1 }}>← Prethodno</button>
+                    {/* Question picker — always horizontal, wraps to multiple rows */}
+                    <div style={{
+                        display: 'flex', flexWrap: 'wrap', gap: 6,
+                        justifyContent: 'center', marginBottom: 14,
+                        padding: '10px 8px', borderRadius: 12,
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                    }}>
+                        {questions.map((_, i) => (
+                            <button key={i} onClick={() => setQuizIdx(i)}
+                                style={{
+                                    width: 34, height: 34, borderRadius: 8,
+                                    border: `1px solid ${i === quizIdx ? '#6366f1' : answers[i] !== undefined ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.12)'}`,
+                                    background: i === quizIdx ? '#6366f1' : answers[i] !== undefined ? 'rgba(99,102,241,0.15)' : 'transparent',
+                                    color: i === quizIdx ? '#fff' : answers[i] !== undefined ? '#818cf8' : '#475569',
+                                    cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700,
+                                    flexShrink: 0, transition: 'all 0.15s',
+                                }}>
+                                {i + 1}
+                            </button>
+                        ))}
+                    </div>
 
-                        {/* Question number dots — hidden on mobile, replaced by counter */}
-                        <div className="t-quiz-q-dots" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center', flex: 1 }}>
-                            {questions.map((_, i) => (
-                                <button key={i} onClick={() => setQuizIdx(i)}
-                                    style={{
-                                        width: 28, height: 28, borderRadius: 6, border: '1px solid',
-                                        borderColor: i === quizIdx ? '#6366f1' : answers[i] !== undefined ? 'rgba(99,102,241,0.4)' : 'rgba(255,255,255,0.12)',
-                                        background: i === quizIdx ? '#6366f1' : answers[i] !== undefined ? 'rgba(99,102,241,0.15)' : 'transparent',
-                                        color: i === quizIdx ? '#fff' : answers[i] !== undefined ? '#818cf8' : '#475569',
-                                        cursor: 'pointer', fontSize: '0.72rem', fontWeight: 700,
-                                    }}>
-                                    {i + 1}
-                                </button>
-                            ))}
-                        </div>
-                        {/* Mobile counter */}
-                        <div className="t-quiz-q-counter" style={{ display: 'none', alignItems: 'center', justifyContent: 'center', flex: 1 }}>
-                            <span style={{ fontSize: '0.95rem', color: '#94a3b8', fontWeight: 700 }}>Pitanje {quizIdx + 1} / {questions.length}</span>
-                        </div>
+                    {/* Quiz nav row: Prev | answered/total | Next/Submit — always horizontal */}
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'space-between' }}>
+                        <button className="t-nav-btn" onClick={() => setQuizIdx(i => Math.max(0, i - 1))} disabled={quizIdx === 0}
+                            style={{ ...navBtnStyle, opacity: quizIdx === 0 ? 0.3 : 1, minWidth: 110 }}>← Prethodno</button>
+
+                        <span style={{ fontSize: '0.82rem', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {answered}/{questions.length} odg.
+                        </span>
 
                         {isLastQ ? (
                             <button className="t-nav-btn-green" onClick={handleSubmitQuiz} disabled={submitting}
-                                style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.95rem', cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: submitting ? 0.7 : 1 }}>
+                                style={{ minWidth: 110, padding: '10px 16px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg,#22c55e,#16a34a)', color: '#fff', fontWeight: 700, fontSize: '0.9rem', cursor: submitting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 6, opacity: submitting ? 0.7 : 1, whiteSpace: 'nowrap' }}>
                                 {submitting ? <><Spinner size={14} /> Šaljem...</> : '✅ Predaj test'}
                             </button>
                         ) : (
-                            <button className="t-nav-btn" onClick={() => setQuizIdx(i => Math.min(questions.length - 1, i + 1))} style={navBtnStyle}>
+                            <button className="t-nav-btn" onClick={() => setQuizIdx(i => Math.min(questions.length - 1, i + 1))} style={{ ...navBtnStyle, minWidth: 110 }}>
                                 Sljedeće →
                             </button>
                         )}
@@ -557,6 +555,25 @@ function Footer() {
         <div style={{ textAlign: 'center', padding: '40px 0 24px' }}>
             <img src="/blulogo.jpg" alt="eZNR" style={{ height: 128, maxWidth: 440, objectFit: 'contain' }} />
         </div>
+    );
+}
+
+function MobileStyles() {
+    return (
+        <style>{`
+            @keyframes spin { to { transform:rotate(360deg); } }
+            @keyframes fadeSlide { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+            @media (max-width: 600px) {
+                .t-container { padding: 10px 12px !important; }
+                .t-slide-card { padding: 18px 14px !important; min-height: 260px !important; }
+                .t-slide-card h2 { font-size: 1.05rem !important; }
+                .t-slide-content { font-size: 0.95rem !important; line-height: 1.7 !important; }
+                .t-nav-btn { padding: 11px 14px !important; font-size: 0.92rem !important; }
+                .t-nav-btn-green { padding: 11px 14px !important; font-size: 0.88rem !important; }
+                .t-q-card { padding: 18px 14px !important; }
+                .t-q-opt { padding: 12px 12px !important; font-size: 0.95rem !important; min-height: 50px !important; }
+            }
+        `}</style>
     );
 }
 

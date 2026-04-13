@@ -68,13 +68,22 @@ export function buildHtmlEmail({
               </p>
 
               <!-- CTA -->
-              <div style="text-align:center;margin:32px 0;">
+              <div style="text-align:center;margin:36px 0;">
+                <p style="margin:0 0 16px;font-size:14px;color:#64748b;font-weight:600;">
+                  👇 Pritisnite dugme ispod za pristup:
+                </p>
                 <a href="${fillLink}"
-                   style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);
-                          color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;
-                          padding:16px 44px;border-radius:12px;letter-spacing:0.2px;">
-                  ${ctaLabel}
+                   style="display:block;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);
+                          color:#ffffff;font-size:20px;font-weight:800;text-decoration:none;
+                          padding:22px 20px;border-radius:16px;letter-spacing:0.3px;
+                          box-shadow:0 6px 32px rgba(99,102,241,0.55),0 2px 8px rgba(79,70,229,0.4);
+                          border:3px solid rgba(255,255,255,0.25);
+                          max-width:480px;margin:0 auto;">
+                  ${isTraining ? '🎬 Započni obuku / prezentaciju →' : '📝 Ispuni upitnik →'}
                 </a>
+                <p style="margin:14px 0 0;font-size:12px;color:#94a3b8;">
+                  Dugme vas vodi direktno na ${itemLabel} — nema prijave
+                </p>
               </div>
 
               <!-- Info boxes -->
@@ -197,13 +206,22 @@ export function buildReminderEmail({
               </p>
 
               <!-- CTA -->
-              <div style="text-align:center;margin:32px 0;">
+              <div style="text-align:center;margin:36px 0;">
+                <p style="margin:0 0 16px;font-size:14px;color:#64748b;font-weight:600;">
+                  👇 Pritisnite dugme ispod za pristup:
+                </p>
                 <a href="${fillLink}"
-                   style="display:inline-block;background:linear-gradient(135deg,#f59e0b,#d97706);
-                          color:#ffffff;font-size:16px;font-weight:700;text-decoration:none;
-                          padding:16px 44px;border-radius:12px;letter-spacing:0.2px;">
-                  ${ctaLabel}
+                   style="display:block;background:linear-gradient(135deg,#f59e0b 0%,#d97706 50%,#f59e0b 100%);
+                          color:#ffffff;font-size:20px;font-weight:800;text-decoration:none;
+                          padding:22px 20px;border-radius:16px;letter-spacing:0.3px;
+                          box-shadow:0 6px 32px rgba(245,158,11,0.55),0 2px 8px rgba(217,119,6,0.4);
+                          border:3px solid rgba(255,255,255,0.25);
+                          max-width:480px;margin:0 auto;">
+                  ${isTraining ? '🎬 Započni obuku / prezentaciju →' : '📝 Ispuni upitnik →'}
                 </a>
+                <p style="margin:14px 0 0;font-size:12px;color:#94a3b8;">
+                  Dugme vas vodi direktno na ${itemLabel} — nema prijave
+                </p>
               </div>
 
               <!-- Link fallback -->
