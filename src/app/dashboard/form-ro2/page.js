@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -376,7 +377,7 @@ export default function FormRO2Page() {
                 <span style={{ fontWeight: 600 }}>
                   {lang === 'bs' ? 'Od posljednje ocjene radne sposobnosti dne:' : 'Since last fitness assessment on:'}
                 </span>
-                <input className="form-input" type="date" style={{ width: 180 }} value={formData.datumOcjene} onChange={e => set('datumOcjene', e.target.value)} />
+                <DateInput value={formData.datumOcjene} onChange={v => set('datumOcjene', v)} />
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                   {lang === 'bs'
                     ? 'radnik nije mijenjao radno mjesto odnosno nisu promijenjeni uvjeti rada na tim poslovima'

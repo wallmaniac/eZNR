@@ -227,7 +227,7 @@ export default function WorkerPPEPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
                 <div className="form-group">
                   <label className="form-label">📅 {lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
-                  <input className="form-input" type="date" value={addForm.datumZaduzenja} onChange={e => setAddForm(f => ({ ...f, datumZaduzenja: e.target.value }))} />
+                  <DateInput value={addForm.datumZaduzenja} onChange={v => setAddForm(f => ({ ...f, datumZaduzenja: v }))} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">{lang === 'bs' ? 'Količina' : 'Quantity'}</label>

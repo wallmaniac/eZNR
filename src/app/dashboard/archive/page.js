@@ -410,8 +410,8 @@ export default function ArchivePage() {
                                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
                                         {lang === 'bs' ? 'Datum r. (opciono)' : 'Date of birth (opt.)'}
                                     </div>
-                                    <input className="form-input" type="date" value={scanDob}
-                                        onChange={e => { setScanDob(e.target.value); setScanSearched(false); setScanMatches([]); }} />
+                                    <DateInput value={scanDob}
+                                        onChange={v => { setScanDob(v); setScanSearched(false); setScanMatches([]); }} />
                                 </div>
                                 <button className="btn btn-primary" onClick={handleScanSearch} style={{ whiteSpace: 'nowrap' }}>
                                     🔍 {lang === 'bs' ? 'Pronađi radnika' : 'Find worker'}

@@ -301,11 +301,11 @@ function FleetDocumentsInner() {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
-                                        <input className="form-input" type="date" value={formData.datumIzdavanja} onChange={e => setFormData(f => ({...f, datumIzdavanja: e.target.value}))} />
+                                        <DateInput value={formData.datumIzdavanja} onChange={v => setFormData(f => ({...f, datumIzdavanja: v}))} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum isteka' : 'Expiry Date'}</label>
-                                        <input className="form-input" type="date" value={formData.datumIsteka} onChange={e => setFormData(f => ({...f, datumIsteka: e.target.value}))} />
+                                        <DateInput value={formData.datumIsteka} onChange={v => setFormData(f => ({...f, datumIsteka: v}))} />
                                     </div>
                                 </div>
                             </div>

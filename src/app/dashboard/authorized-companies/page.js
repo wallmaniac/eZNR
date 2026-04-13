@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
@@ -35,7 +36,7 @@ export default function AuthorizedCompaniesPage() {
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.naziv} onChange={e => setFormData({ ...formData, naziv: e.target.value })} /></div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                 <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Broj rješenja' : 'Decision number'}</label><input className="form-input" value={formData.rješenjeBroj} onChange={e => setFormData({ ...formData, rješenjeBroj: e.target.value })} /></div>
-                <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Datum rješenja' : 'Decision date'}</label><input className="form-input" type="date" value={formData.datumRješenja} onChange={e => setFormData({ ...formData, datumRješenja: e.target.value })} /></div>
+                <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Datum rješenja' : 'Decision date'}</label><DateInput value={formData.datumRješenja} onChange={v => setFormData({ ...formData, datumRješenja: v })} /></div>
               </div>
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('address')}</label><input className="form-input" value={formData.adresa} onChange={e => setFormData({ ...formData, adresa: e.target.value })} /></div>
               <div className="form-group"><label className="form-label">{t('phone')}</label><input className="form-input" value={formData.tel} onChange={e => setFormData({ ...formData, tel: e.target.value })} /></div>

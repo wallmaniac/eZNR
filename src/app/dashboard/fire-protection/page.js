@@ -259,7 +259,7 @@ export default function FireProtectionPage() {
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Datum nabavke' : 'Purchased'}</label>
-                                            <input className="form-input" type="date" value={extForm.datumNabavke} onChange={e => setExt('datumNabavke', e.target.value)} />
+                                            <DateInput value={extForm.datumNabavke} onChange={v => setExt('datumNabavke', v)} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Status' : 'Status'}</label>
@@ -269,11 +269,11 @@ export default function FireProtectionPage() {
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Zadnji servis' : 'Last Service'}</label>
-                                            <input className="form-input" type="date" value={extForm.zadnjiServis} onChange={e => setExt('zadnjiServis', e.target.value)} />
+                                            <DateInput value={extForm.zadnjiServis} onChange={v => setExt('zadnjiServis', v)} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Sljedeći servis' : 'Next Service'}</label>
-                                            <input className="form-input" type="date" value={extForm.sljedeciServis} onChange={e => setExt('sljedeciServis', e.target.value)} />
+                                            <DateInput value={extForm.sljedeciServis} onChange={v => setExt('sljedeciServis', v)} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Odgovorna osoba' : 'Responsible Person'}</label>
@@ -390,11 +390,11 @@ export default function FireProtectionPage() {
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Zadnji pregled' : 'Last Inspection'}</label>
-                                            <input className="form-input" type="date" value={hydForm.datumZadnjegPregleda} onChange={e => setHyd('datumZadnjegPregleda', e.target.value)} />
+                                            <DateInput value={hydForm.datumZadnjegPregleda} onChange={v => setHyd('datumZadnjegPregleda', v)} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Sljedeći pregled' : 'Next Inspection'}</label>
-                                            <input className="form-input" type="date" value={hydForm.sljedeciPregled} onChange={e => setHyd('sljedeciPregled', e.target.value)} />
+                                            <DateInput value={hydForm.sljedeciPregled} onChange={v => setHyd('sljedeciPregled', v)} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Status' : 'Status'}</label>

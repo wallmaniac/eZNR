@@ -94,7 +94,7 @@ export default function ISZNRDocumentsPage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{t('date')}</label>
-                                    <input className="form-input" type="date" value={formData.datum} onChange={e => updateField('datum', e.target.value)} />
+                                    <DateInput value={formData.datum} onChange={v => updateField('datum', v)} />
                                 </div>
                                 <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 8 }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>

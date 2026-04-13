@@ -1529,7 +1529,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
                                             <div><div style={labelSt}>Odgovorna osoba</div><input className="form-input" value={riForm.odgovornaOsoba || ''} onChange={e => setRi('odgovornaOsoba', e.target.value)} /></div>
-                                            <div><div style={labelSt}>Rok provedbe</div><input className="form-input" type="date" value={riForm.rokProvedbe || ''} onChange={e => setRi('rokProvedbe', e.target.value)} /></div>
+                                            <div><div style={labelSt}>Rok provedbe</div><DateInput value={riForm.rokProvedbe || ''} onChange={v => setRi('rokProvedbe', v)} /></div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
                                             <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {lang === 'bs' ? 'Spremi' : 'Save'}</button>
@@ -1829,12 +1829,9 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </td>
                                             {/* ROK — stays inline */}
                                             <td style={{ fontSize: '0.82rem' }}>
-                                                <input
-                                                    className="form-input"
-                                                    type="date"
-                                                    style={{ fontSize: '0.75rem', padding: '4px 8px', width: '100%', minWidth: 110 }}
+                                                <DateInput
                                                     value={ri.rokProvedbe || ''}
-                                                    onChange={(e) => handleInlineRiUpdate(ri.id, 'rokProvedbe', e.target.value)}
+                                                    onChange={(v) => handleInlineRiUpdate(ri.id, 'rokProvedbe', v)}
                                                 />
                                             </td>
                                         </tr>;

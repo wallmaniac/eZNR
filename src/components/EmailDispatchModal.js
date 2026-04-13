@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
+import DateInput from '@/components/DateInput';
 import { getAll, COLLECTIONS } from '@/lib/dataStore';
 import { createQuestionnaireSession, generateToken } from '@/lib/firebaseSync';
 import { sendBatchEmails } from '@/lib/emailService';
@@ -302,11 +303,9 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                 <label style={labelStyle}>
                                     📅 {lang === 'bs' ? 'Rok za ispunjavanje (opcionalno)' : 'Deadline (optional)'}
                                 </label>
-                                <input
-                                    type="date"
+                                <DateInput
                                     value={deadline}
-                                    onChange={e => setDeadline(e.target.value)}
-                                    style={{ ...searchInputStyle, maxWidth: 220 }}
+                                    onChange={v => setDeadline(v)}
                                 />
                             </div>
 

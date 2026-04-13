@@ -213,7 +213,7 @@ export default function EKPPEPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
                 <div className="form-group">
                   <label className="form-label">📅 {lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
-                  <input className="form-input" type="date" value={assignForm.datumZaduzenja} onChange={e => setAssignForm(f => ({ ...f, datumZaduzenja: e.target.value }))} />
+                  <DateInput value={assignForm.datumZaduzenja} onChange={v => setAssignForm(f => ({ ...f, datumZaduzenja: v }))} />
                 </div>
                 <div className="form-group">
                   <label className="form-label">{lang === 'bs' ? 'Količina' : 'Quantity'}</label>

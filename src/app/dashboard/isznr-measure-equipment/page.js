@@ -36,7 +36,7 @@ export default function ISZNRMeasureEquipmentPage() {
             <div className="modal-body">
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.naziv} onChange={e => setFormData({ ...formData, naziv: e.target.value })} /></div>
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('serialNumber')}</label><input className="form-input" value={formData.serijskiBroj} onChange={e => setFormData({ ...formData, serijskiBroj: e.target.value })} /></div>
-              <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Kalibriran do' : 'Calibrated until'}</label><input className="form-input" type="date" value={formData.kalibriranDo} onChange={e => setFormData({ ...formData, kalibriranDo: e.target.value })} /></div>
+              <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Kalibriran do' : 'Calibrated until'}</label><DateInput value={formData.kalibriranDo} onChange={v => setFormData({ ...formData, kalibriranDo: v })} /></div>
             </div>
             <div className="modal-footer"><button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button><button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button></div>
           </div>

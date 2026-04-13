@@ -217,7 +217,7 @@ function FleetAssignmentsInner() {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum zaduženja' : 'Date Given'}</label>
-                                        <input className="form-input" type="date" value={formData.datumZaduzenja} onChange={e => setFormData(f => ({...f, datumZaduzenja: e.target.value}))} />
+                                        <DateInput value={formData.datumZaduzenja} onChange={v => setFormData(f => ({...f, datumZaduzenja: v}))} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Početna kilometraža' : 'Starting Mileage'}</label>

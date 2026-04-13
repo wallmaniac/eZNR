@@ -298,15 +298,15 @@ function EquipmentPageInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum upisa' : 'Entry date'}</label>
-                                        <input className="form-input" type="date" value={formData.datumUpisa} onChange={e => updateField('datumUpisa', e.target.value)} />
+                                        <DateInput value={formData.datumUpisa} onChange={v => updateField('datumUpisa', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'U primjeni od' : 'In use from'}</label>
-                                        <input className="form-input" type="date" value={formData.uPrimjeniOd} onChange={e => updateField('uPrimjeniOd', e.target.value)} />
+                                        <DateInput value={formData.uPrimjeniOd} onChange={v => updateField('uPrimjeniOd', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Izvan upotrebe od' : 'Out of use from'}</label>
-                                        <input className="form-input" type="date" value={formData.izvanUpotrebeOd} onChange={e => updateField('izvanUpotrebeOd', e.target.value)} />
+                                        <DateInput value={formData.izvanUpotrebeOd} onChange={v => updateField('izvanUpotrebeOd', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{t('evidenceNumber')}</label>
@@ -318,11 +318,11 @@ function EquipmentPageInner() {
                                     </div>
                                     <div className="form-group" style={{ background: 'rgba(0,191,166,0.04)', borderRadius: 8, padding: 12, border: '1px solid rgba(0,191,166,0.15)' }}>
                                         <label className="form-label" style={{ color: 'var(--primary)' }}>🕐 {lang === 'bs' ? 'Posljednji pregled' : 'Last examination'}</label>
-                                        <input className="form-input" type="date" value={formData.posljednji} onChange={e => updateField('posljednji', e.target.value)} />
+                                        <DateInput value={formData.posljednji} onChange={v => updateField('posljednji', v)} />
                                     </div>
                                     <div className="form-group" style={{ background: 'rgba(0,191,166,0.04)', borderRadius: 8, padding: 12, border: '1px solid rgba(0,191,166,0.15)' }}>
                                         <label className="form-label" style={{ color: 'var(--primary)' }}>📅 {lang === 'bs' ? 'Idući pregled' : 'Next examination'}</label>
-                                        <input className="form-input" type="date" value={formData.iduci} onChange={e => updateField('iduci', e.target.value)} />
+                                        <DateInput value={formData.iduci} onChange={v => updateField('iduci', v)} />
                                     </div>
                                 </div>
                             )}
@@ -430,7 +430,7 @@ function EquipmentPageInner() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                 <div className="form-group">
                                     <label className="form-label" style={{ fontWeight: 700 }}>📅 {lang === 'bs' ? 'Datum servisa' : 'Service date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
-                                    <input className="form-input" type="date" value={serviceFormData.datum} onChange={e => setServiceFormData(p => ({ ...p, datum: e.target.value }))} />
+                                    <DateInput value={serviceFormData.datum} onChange={v => setServiceFormData(p => ({ ...p, datum: v }))} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{lang === 'bs' ? 'Tip servisa' : 'Service type'}</label>
@@ -448,7 +448,7 @@ function EquipmentPageInner() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">📅 {lang === 'bs' ? 'Idući servis' : 'Next service date'}</label>
-                                    <input className="form-input" type="date" value={serviceFormData.iduciServis} onChange={e => setServiceFormData(p => ({ ...p, iduciServis: e.target.value }))} />
+                                    <DateInput value={serviceFormData.iduciServis} onChange={v => setServiceFormData(p => ({ ...p, iduciServis: v }))} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label className="form-label">📝 {lang === 'bs' ? 'Napomena / Opis radova' : 'Notes / Description'}</label>

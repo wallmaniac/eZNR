@@ -9,6 +9,7 @@ import { getNotificationSettings } from '@/lib/systemMonitor';
 import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useDialog } from '@/hooks/useDialog';
+import DateInput from '@/components/DateInput';
 import PullToRefresh from '@/components/mobile/PullToRefresh';
 import CollapsibleWidget from '@/components/mobile/CollapsibleWidget';
 import LongPressMenu, { useLongPress } from '@/components/mobile/LongPressMenu';
@@ -1137,13 +1138,13 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{lang === 'bs' ? 'Datum izdavanja' : 'Issue date'}</label>
-                                            <input className="form-input" type="date" value={eventFormData.certDatum}
-                                                onChange={e => setEventFormData(prev => ({ ...prev, certDatum: e.target.value }))} />
+                                            <DateInput value={eventFormData.certDatum}
+                                                onChange={v => setEventFormData(prev => ({ ...prev, certDatum: v }))} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{lang === 'bs' ? 'Vrijedi do' : 'Valid until'}</label>
-                                            <input className="form-input" type="date" value={eventFormData.certVrijediDo}
-                                                onChange={e => setEventFormData(prev => ({ ...prev, certVrijediDo: e.target.value }))} />
+                                            <DateInput value={eventFormData.certVrijediDo}
+                                                onChange={v => setEventFormData(prev => ({ ...prev, certVrijediDo: v }))} />
                                         </div>
                                     </div>
                                     <div className="form-group">
@@ -1177,8 +1178,8 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
-                                        <input className="form-input" type="date" value={eventFormData.ppeDatum}
-                                            onChange={e => setEventFormData(prev => ({ ...prev, ppeDatum: e.target.value }))} />
+                                        <DateInput value={eventFormData.ppeDatum}
+                                            onChange={v => setEventFormData(prev => ({ ...prev, ppeDatum: v }))} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Kol.' : 'Qty'}</label>

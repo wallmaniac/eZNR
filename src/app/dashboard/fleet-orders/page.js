@@ -240,11 +240,11 @@ function FleetOrdersInner() {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum polaska' : 'Date Out'}</label>
-                                        <input className="form-input" type="date" value={formData.datumPolaska} onChange={e => setFormData(f => ({...f, datumPolaska: e.target.value}))} />
+                                        <DateInput value={formData.datumPolaska} onChange={v => setFormData(f => ({...f, datumPolaska: v}))} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum povratka' : 'Date In'}</label>
-                                        <input className="form-input" type="date" value={formData.datumPovratka} onChange={e => setFormData(f => ({...f, datumPovratka: e.target.value}))} />
+                                        <DateInput value={formData.datumPovratka} onChange={v => setFormData(f => ({...f, datumPovratka: v}))} />
                                     </div>
                                 </div>
 

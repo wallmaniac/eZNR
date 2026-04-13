@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -1196,11 +1197,11 @@ function WorkersPageInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{t('date')}</label>
-                                        <input className="form-input" type="date" value={certFormData.datum} onChange={e => setCertFormData({ ...certFormData, datum: e.target.value })} />
+                                        <DateInput value={certFormData.datum} onChange={v => setCertFormData({ ...certFormData, datum: v })} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'} <InfoTip text="Aplikacija će promijeniti status u crveno kada ovaj datum istekne ili postane blizu isteka." /></label>
-                                        <input className="form-input" type="date" value={certFormData.vrijediDo} onChange={e => setCertFormData({ ...certFormData, vrijediDo: e.target.value })} />
+                                        <DateInput value={certFormData.vrijediDo} onChange={v => setCertFormData({ ...certFormData, vrijediDo: v })} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Sposobnost' : 'Capability'}</label>
@@ -1250,11 +1251,11 @@ function WorkersPageInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum pregleda *' : 'Exam Date *'}</label>
-                                        <input type="date" className="form-input" value={medExamForm.datumPregleda} onChange={e => setMedExamForm(p => ({ ...p, datumPregleda: e.target.value }))} />
+                                        <DateInput value={medExamForm.datumPregleda} onChange={v => setMedExamForm(p => ({ ...p, datumPregleda: v }))} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Naredni pregled do' : 'Next Exam By'}</label>
-                                        <input type="date" className="form-input" value={medExamForm.vrijediDo} onChange={e => setMedExamForm(p => ({ ...p, vrijediDo: e.target.value }))} />
+                                        <DateInput value={medExamForm.vrijediDo} onChange={v => setMedExamForm(p => ({ ...p, vrijediDo: v }))} />
                                     </div>
                                 </div>
                                 <div className="form-group">
@@ -1334,11 +1335,11 @@ function WorkersPageInner() {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
-                                        <input className="form-input" type="date" value={ppeFormData.datumZaduzenja} onChange={e => setPpeFormData({ ...ppeFormData, datumZaduzenja: e.target.value })} />
+                                        <DateInput value={ppeFormData.datumZaduzenja} onChange={v => setPpeFormData({ ...ppeFormData, datumZaduzenja: v })} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum razduženja' : 'Return date'}</label>
-                                        <input className="form-input" type="date" value={ppeFormData.datumRazduzenja} onChange={e => setPpeFormData({ ...ppeFormData, datumRazduzenja: e.target.value })} />
+                                        <DateInput value={ppeFormData.datumRazduzenja} onChange={v => setPpeFormData({ ...ppeFormData, datumRazduzenja: v })} />
                                     </div>
                                 </div>
                             </div>

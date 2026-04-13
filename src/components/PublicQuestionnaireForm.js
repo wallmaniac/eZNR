@@ -1,5 +1,6 @@
 'use client';
 import { useState, useCallback } from 'react';
+import DateInput from '@/components/DateInput';
 
 /* ═══════════════════════════════════════════════════════
    Public Questionnaire Form — Renders a questionnaire
@@ -363,11 +364,9 @@ export default function PublicQuestionnaireForm({ surveyJson, questionnaireName,
                             )}
 
                             {q.type === 'date' && (
-                                <input
-                                    type="date"
+                                <DateInput
                                     value={answers[qId] || ''}
-                                    onChange={e => setAnswer(qId, e.target.value)}
-                                    style={{ ...inputStyle, maxWidth: 220 }}
+                                    onChange={v => setAnswer(qId, v)}
                                 />
                             )}
 
