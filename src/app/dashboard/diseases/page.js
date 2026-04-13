@@ -214,7 +214,7 @@ export default function DiseasesPage() {
 
                   <div className="form-group">
                     <label className="form-label">{t('date')} *</label>
-                    <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+                    <DateInput value={formData.datum} onChange={v => set('datum', v)} />
                   </div>
                   <div className="form-group">
                     <label className="form-label">{lang === 'bs' ? 'Status' : 'Status'}</label>

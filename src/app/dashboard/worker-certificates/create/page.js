@@ -580,11 +580,11 @@ export function UvjerenjeFormPage() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Datum' : 'Date'} <HelpTip text="Datum donošenja zapisnika/ljekarskog nalaza" /></div>
-                            <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+                            <DateInput value={formData.datum} onChange={v => set('datum', v)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'} <HelpTip text="Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu." /></div>
-                            <input className="form-input" type="date" value={formData.vrijediDo} onChange={e => set('vrijediDo', e.target.value)} />
+                            <DateInput value={formData.vrijediDo} onChange={v => set('vrijediDo', v)} />
                         </div>
                     </div>
 

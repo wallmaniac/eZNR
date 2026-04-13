@@ -240,11 +240,11 @@ ${toPrint.map((d, i) => `<tr>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{lang === 'bs' ? 'Datum izdavanja' : 'Issue date'}</label>
-                                    <input className="form-input" type="date" value={formData.datumIzdavanja} onChange={e => updateField('datumIzdavanja', e.target.value)} />
+                                    <DateInput value={formData.datumIzdavanja} onChange={v => updateField('datumIzdavanja', v)} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{lang === 'bs' ? 'Datum isteka' : 'Expiry date'}</label>
-                                    <input className="form-input" type="date" value={formData.datumIsteka} onChange={e => updateField('datumIsteka', e.target.value)} />
+                                    <DateInput value={formData.datumIsteka} onChange={v => updateField('datumIsteka', v)} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label className="form-label">{lang === 'bs' ? 'Povezana datoteka (opcionalno)' : 'Attached file (optional)'}</label>

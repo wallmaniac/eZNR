@@ -325,7 +325,7 @@ export default function FormRO2Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
-                <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+                <DateInput value={formData.datum} onChange={v => set('datum', v)} />
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>

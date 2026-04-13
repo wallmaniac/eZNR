@@ -1250,7 +1250,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 16, marginBottom: 20 }}>
                             <div><div style={labelSt}>Br. zaposlenih</div><input className="form-input" type="number" min="0" value={formData.ukupnoZaposlenih || ''} onChange={e => set('ukupnoZaposlenih', e.target.value)} /></div>
                             <div><div style={labelSt}>Revizija</div><input className="form-input" value={formData.revizija} onChange={e => set('revizija', e.target.value)} /></div>
-                            <div><div style={labelSt}>Datum izrade</div><input className="form-input" type="date" value={formData.datumIzrade} onChange={e => set('datumIzrade', e.target.value)} /></div>
+                            <div><div style={labelSt}>Datum izrade</div><DateInput value={formData.datumIzrade} onChange={v => set('datumIzrade', v)} /></div>
                         </div>
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14, marginTop: 10 }}>OVLAŠTENA ORGANIZACIJA</div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>

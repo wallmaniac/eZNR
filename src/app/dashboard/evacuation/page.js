@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
@@ -184,11 +185,11 @@ export default function EvacuationPage() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum izrade' : 'Created Date'}</label>
-                                        <input className="form-input" type="date" value={formData.datumIzrade} onChange={e => set('datumIzrade', e.target.value)} />
+                                        <DateInput value={formData.datumIzrade} onChange={v => set('datumIzrade', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum revizije' : 'Revision Date'}</label>
-                                        <input className="form-input" type="date" value={formData.datumRevizije} onChange={e => set('datumRevizije', e.target.value)} />
+                                        <DateInput value={formData.datumRevizije} onChange={v => set('datumRevizije', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Broj evak. puteva' : 'No. Evacuation Routes'}</label>

@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';

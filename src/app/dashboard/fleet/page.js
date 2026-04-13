@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -334,31 +335,31 @@ function FleetInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Registracija od' : 'Registered On'}</label>
-                                        <input className="form-input" type="date" value={formData.datumRegistracije} onChange={e => set('datumRegistracije', e.target.value)} />
+                                        <DateInput value={formData.datumRegistracije} onChange={v => set('datumRegistracije', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Registracija ističe' : 'Reg. Expires'}</label>
-                                        <input className="form-input" type="date" value={formData.registracijaIstice} onChange={e => set('registracijaIstice', e.target.value)} />
+                                        <DateInput value={formData.registracijaIstice} onChange={v => set('registracijaIstice', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Zadnji tehnički pregled' : 'Last Technical Inspection'}</label>
-                                        <input className="form-input" type="date" value={formData.datumTehnickogPregleda} onChange={e => set('datumTehnickogPregleda', e.target.value)} />
+                                        <DateInput value={formData.datumTehnickogPregleda} onChange={v => set('datumTehnickogPregleda', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Sljedeći tehnički' : 'Next Inspection'}</label>
-                                        <input className="form-input" type="date" value={formData.tehnickiIstice} onChange={e => set('tehnickiIstice', e.target.value)} />
+                                        <DateInput value={formData.tehnickiIstice} onChange={v => set('tehnickiIstice', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Osiguranje ističe' : 'Insurance Expires'}</label>
-                                        <input className="form-input" type="date" value={formData.osiguranjeIstice} onChange={e => set('osiguranjeIstice', e.target.value)} />
+                                        <DateInput value={formData.osiguranjeIstice} onChange={v => set('osiguranjeIstice', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'PP aparat ističe' : 'Fire Ext. Expires'}</label>
-                                        <input className="form-input" type="date" value={formData.vatrogasniAparatDatum} onChange={e => set('vatrogasniAparatDatum', e.target.value)} />
+                                        <DateInput value={formData.vatrogasniAparatDatum} onChange={v => set('vatrogasniAparatDatum', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Prva pomoć ističe' : 'First Aid Kit Expires'}</label>
-                                        <input className="form-input" type="date" value={formData.prvaPomocIstice} onChange={e => set('prvaPomocIstice', e.target.value)} />
+                                        <DateInput value={formData.prvaPomocIstice} onChange={v => set('prvaPomocIstice', v)} />
                                     </div>
 
                                     {/* Driver section */}

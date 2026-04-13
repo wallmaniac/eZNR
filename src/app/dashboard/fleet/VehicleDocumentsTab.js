@@ -112,11 +112,11 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
-                                        <input className="form-input" type="date" value={form.datumIzdavanja} onChange={e => setForm(f => ({...f, datumIzdavanja: e.target.value}))} />
+                                        <DateInput value={form.datumIzdavanja} onChange={v => setForm(f => ({...f, datumIzdavanja: v}))} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum isteka' : 'Expiry Date'}</label>
-                                        <input className="form-input" type="date" value={form.datumIsteka} onChange={e => setForm(f => ({...f, datumIsteka: e.target.value}))} />
+                                        <DateInput value={form.datumIsteka} onChange={v => setForm(f => ({...f, datumIsteka: v}))} />
                                     </div>
                                 </div>
                             </div>

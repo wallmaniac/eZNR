@@ -488,7 +488,7 @@ export default function ReferralRA1Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
-                <input className="form-input" type="date" value={formData.datum} onChange={e => set('datum', e.target.value)} />
+                <DateInput value={formData.datum} onChange={v => set('datum', v)} />
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
@@ -565,7 +565,7 @@ export default function ReferralRA1Page() {
             <div style={{ display: 'grid', gridTemplateColumns: '200px 200px', gap: 12 }}>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Na dan (datum pregleda)' : 'Exam date'}</div>
-                <input className="form-input" type="date" value={formData.datumPregleda} onChange={e => set('datumPregleda', e.target.value)} />
+                <DateInput value={formData.datumPregleda} onChange={v => set('datumPregleda', v)} />
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Sati' : 'Time'}</div>
@@ -634,7 +634,7 @@ export default function ReferralRA1Page() {
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr 1fr', gap: 12, marginBottom: 14, alignItems: 'end' }}>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Posljednji pregled' : 'Last exam date'}</div>
-                <input className="form-input" type="date" value={formData.posljednjiPregledDatum} onChange={e => set('posljednjiPregledDatum', e.target.value)} />
+                <DateInput value={formData.posljednjiPregledDatum} onChange={v => set('posljednjiPregledDatum', v)} />
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'prema članku' : 'per article'}</div>

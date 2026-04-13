@@ -106,7 +106,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
-                                        <input className="form-input" type="date" value={form.datumIzdavanja} onChange={e => setForm(f => ({...f, datumIzdavanja: e.target.value}))} />
+                                        <DateInput value={form.datumIzdavanja} onChange={v => setForm(f => ({...f, datumIzdavanja: v}))} />
                                     </div>
                                 </div>
                             </div>

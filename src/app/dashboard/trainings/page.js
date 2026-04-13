@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -1194,7 +1195,7 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text,#e2e8f0)', marginBottom: 8 }}>📅 Rok (opcionalno)</div>
-                                    <input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} style={inputSt} />
+                                    <DateInput value={deadline} onChange={setDeadline} inputStyle={inputSt} />
                                 </div>
                                 <div>
                                     <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text,#e2e8f0)', marginBottom: 8 }}>↩️ Vaš email (Reply-To)</div>

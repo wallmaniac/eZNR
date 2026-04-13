@@ -352,7 +352,7 @@ export default function FormOIR1Page() {
             <div style={{ display: 'grid', gridTemplateColumns: '200px 140px', gap: 12 }}>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Dana (datum)' : 'Date'}</div>
-                <input className="form-input" type="date" value={formData.datumDogadjaja} onChange={e => set('datumDogadjaja', e.target.value)} />
+                <DateInput value={formData.datumDogadjaja} onChange={v => set('datumDogadjaja', v)} />
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Vrijeme' : 'Time'}</div>
@@ -447,7 +447,7 @@ export default function FormOIR1Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Datum prijave' : 'Filing date'}</div>
-                <input className="form-input" type="date" value={formData.datumPrijave} onChange={e => set('datumPrijave', e.target.value)} />
+                <DateInput value={formData.datumPrijave} onChange={v => set('datumPrijave', v)} />
               </div>
             </div>
           </div>

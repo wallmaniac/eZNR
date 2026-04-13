@@ -160,7 +160,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{bs ? 'Datum zaduženja' : 'Assigned Date'} <span style={{color:'var(--danger)'}}>*</span></label>
-                                    <input className="form-input" type="date" value={form.datumZaduzenja} onChange={e => setForm(f => ({...f, datumZaduzenja: e.target.value}))} />
+                                    <DateInput value={form.datumZaduzenja} onChange={v => setForm(f => ({...f, datumZaduzenja: v}))} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{bs ? 'Početna kilometraža' : 'Starting Mileage'}</label>
@@ -170,7 +170,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                     <>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Datum razduženja' : 'Date Returned'}</label>
-                                            <input className="form-input" type="date" value={form.datumRazduzenja} onChange={e => setForm(f => ({...f, datumRazduzenja: e.target.value}))} />
+                                            <DateInput value={form.datumRazduzenja} onChange={v => setForm(f => ({...f, datumRazduzenja: v}))} />
                                         </div>
                                         <div className="form-group">
                                             <label className="form-label">{bs ? 'Završna kilometraža' : 'Ending Mileage'}</label>

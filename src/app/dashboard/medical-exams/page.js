@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import {  useState, useCallback, useMemo, useEffect  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -447,11 +448,11 @@ export default function MedicalExamsPage() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="form-group">
                                     <label className="form-label">{bs ? 'Datum pregleda *' : 'Exam Date *'}</label>
-                                    <input type="date" className="form-input" value={form.datumPregleda} onChange={e => setField('datumPregleda', e.target.value)} />
+                                    <DateInput value={form.datumPregleda} onChange={v => setField('datumPregleda', v)} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{bs ? 'Naredni pregled do' : 'Next Exam Due By'}</label>
-                                    <input type="date" className="form-input" value={form.vrijediDo} onChange={e => setField('vrijediDo', e.target.value)} />
+                                    <DateInput value={form.vrijediDo} onChange={v => setField('vrijediDo', v)} />
                                 </div>
                             </div>
 

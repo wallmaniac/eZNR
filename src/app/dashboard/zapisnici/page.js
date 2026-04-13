@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
@@ -379,7 +380,7 @@ export default function ZapisniciPage() {
                                     </div>
                                     <div>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
-                                        <input className="form-input" type="date" value={form.datum} onChange={e => setF('datum', e.target.value)} />
+                                        <DateInput value={form.datum} onChange={v => setF('datum', v)} />
                                     </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>

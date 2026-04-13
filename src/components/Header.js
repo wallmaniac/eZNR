@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies, getRawAll, seedCompanyData } from '@/lib/dataStore';
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 import { useTheme } from '@/contexts/ThemeContext';
+import { matchesSearch } from '@/lib/dateUtils';
 
 export default function Header({ sidebarCollapsed, isMobile = false, onMobileMenuToggle }) {
     const { t, lang, toggleLang } = useLanguage();
@@ -71,7 +72,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         const term = searchTerm.toLowerCase();
         const results = [];
         getAll(COLLECTIONS.WORKERS).forEach(w => {
-            if (`${w.ime} ${w.prezime} ${w.jmbg || ''} ${w.identBroj || ''} ${w.datumRodenja || ''}`.toLowerCase().includes(term))
+            const haystack = `${w.ime} ${w.prezime} ${w.jmbg || ''} ${w.oib || ''} ${w.identBroj || ''} ${w.datumRodenja || ''} ${w.datumZaposlenja || ''} ${w.datumOdlaska || ''}`;
+            if (matchesSearch(haystack, term))
                 results.push({ type: 'worker', icon: '👷', label: `${w.ime} ${w.prezime}`, sub: getOrgUnitName(w.orgJedinicaId), path: '/dashboard/workers', id: w.id });
         });
         getAll(COLLECTIONS.EQUIPMENT).forEach(e => {

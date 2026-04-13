@@ -1,4 +1,6 @@
 'use client';
+import DateInput from '@/components/DateInput';
+import { fmtDate } from '@/lib/dateUtils';
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -29,6 +31,8 @@ function ModalField({ label, field, type = 'text', opts = null, editMode, formDa
                         <input type="checkbox" checked={!!formData[field]} onChange={e => set(field, e.target.checked)} />
                         {lang === 'bs' ? 'Da' : 'Yes'}
                     </label>
+                ) : type === 'date' ? (
+                    <DateInput value={formData[field] || ''} onChange={v => set(field, v)} />
                 ) : (
                     <input className="form-input" type={type} value={formData[field] || ''} onChange={e => set(field, type === 'number' ? Number(e.target.value) : e.target.value)} />
                 )
@@ -36,7 +40,8 @@ function ModalField({ label, field, type = 'text', opts = null, editMode, formDa
                 <div style={valueStyle}>{
                     type === 'checkbox' ? (formData[field] ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No'))
                         : opts ? (opts.find(o => o.value === formData[field])?.label || '—')
-                            : (formData[field] || '—')
+                        : type === 'date' ? (fmtDate(formData[field]) || '—')
+                        : (formData[field] || '—')
                 }</div>
             )}
         </div>
@@ -320,11 +325,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
-                                        <input className="form-input" type="date" value={certFormData.datum || ''} onChange={e => setCertFormData(f => ({ ...f, datum: e.target.value }))} />
+                                        <DateInput value={certFormData.datum || ''} onChange={v => setCertFormData(f => ({ ...f, datum: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'}</div>
-                                        <input className="form-input" type="date" value={certFormData.vrijediDo || ''} onChange={e => setCertFormData(f => ({ ...f, vrijediDo: e.target.value }))} />
+                                        <DateInput value={certFormData.vrijediDo || ''} onChange={v => setCertFormData(f => ({ ...f, vrijediDo: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Sposobnost' : 'Capability'}</div>
@@ -387,11 +392,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Datum zaduženja' : 'Assigned'}</div>
-                                        <input className="form-input" type="date" value={ppeFormData.datumZaduzenja || ''} onChange={e => setPpeFormData(f => ({ ...f, datumZaduzenja: e.target.value }))} />
+                                        <DateInput value={ppeFormData.datumZaduzenja || ''} onChange={v => setPpeFormData(f => ({ ...f, datumZaduzenja: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Datum razduženja' : 'Returned'}</div>
-                                        <input className="form-input" type="date" value={ppeFormData.datumRazduzenja || ''} onChange={e => setPpeFormData(f => ({ ...f, datumRazduzenja: e.target.value }))} />
+                                        <DateInput value={ppeFormData.datumRazduzenja || ''} onChange={v => setPpeFormData(f => ({ ...f, datumRazduzenja: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
                                         <div style={labelStyle}>{lang === 'bs' ? 'Kol.' : 'Qty'}</div>

@@ -912,7 +912,7 @@ export default function QuestionnairesPage() {
                   {lang === 'bs' ? 'Rok isteka (opcionalno)' : 'Expiry date (optional)'}
                   <HelpTip text="Datum do kojeg je moguće popuniti ovaj upitnik. Nakon tog datuma, link za popunjavanje prestaje biti aktivan. Ostavite prazno ako nema roka." />
                 </div>
-                <input className="form-input" type="date" value={formData.rokIsteka || ''} onChange={e => set('rokIsteka', e.target.value)} />
+                <DateInput value={formData.rokIsteka || ''} onChange={v => set('rokIsteka', v)} />
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
                 <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>

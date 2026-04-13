@@ -1,4 +1,5 @@
 'use client';
+import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
@@ -191,7 +192,7 @@ export default function EvacuationDrillsPage() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Datum vježbe' : 'Drill Date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
-                                        <input className="form-input" type="date" value={formData.datumVjezbe} onChange={e => set('datumVjezbe', e.target.value)} />
+                                        <DateInput value={formData.datumVjezbe} onChange={v => set('datumVjezbe', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Vrijeme početka' : 'Start Time'}</label>
