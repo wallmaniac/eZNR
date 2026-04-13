@@ -97,6 +97,7 @@ const menuItems = [
                     { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
                 ],
             },
+            { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Zapisnici' },
         ],
     },
 
@@ -155,7 +156,6 @@ const menuItems = [
             { key: 'excelImport',    icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export' },
             { key: 'converter',      icon: '🔄', path: '/dashboard/converter' },
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
-            { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Zapisnici' },
         ],
     },
 

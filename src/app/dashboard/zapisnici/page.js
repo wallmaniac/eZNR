@@ -405,10 +405,21 @@ export default function ZapisniciPage() {
                                     {(pendingFile || form.attachedFileName) ? (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 8, background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                             <span style={{ fontSize: '1.2rem' }}>{form.attachedFileName?.endsWith('.pdf') ? '📕' : '📄'}</span>
-                                            <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {form.attachedFileName}
-                                                {pendingFile && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>({(pendingFile.size/1024).toFixed(0)} KB)</span>}
-                                            </span>
+                                            {/* Clickable filename — opens in new tab if saved, plain text if still pending */}
+                                            {form.idbKey && !pendingFile ? (
+                                                <button
+                                                    onClick={() => handleOpen({ idbKey: form.idbKey, attachedFileName: form.attachedFileName })}
+                                                    style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                                    title={lang === 'bs' ? 'Klikni za pregledavanje / ispis' : 'Click to view / print'}
+                                                >
+                                                    {form.attachedFileName}
+                                                </button>
+                                            ) : (
+                                                <span style={{ flex: 1, fontSize: '0.85rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {form.attachedFileName}
+                                                    {pendingFile && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>({(pendingFile.size/1024).toFixed(0)} KB)</span>}
+                                                </span>
+                                            )}
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>{lang === 'bs' ? 'Zamijeni' : 'Replace'}</button>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={handleRemoveFile}>✕</button>
                                         </div>
@@ -561,7 +572,14 @@ export default function ZapisniciPage() {
 
                                                     {/* Data cells */}
                                                     <td>
-                                                        <div style={{ fontWeight: 600 }}>{item.naziv}</div>
+                                                        <div
+                                                            onClick={() => handleEdit(item)}
+                                                            style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}
+                                                            onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
+                                                            onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
+                                                        >
+                                                            {item.naziv}
+                                                        </div>
                                                         {item.napomena && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.napomena}</div>}
                                                     </td>
                                                     <td><code style={{ fontSize: '0.82rem' }}>{item.broj || '—'}</code></td>

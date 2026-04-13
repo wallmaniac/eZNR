@@ -7,6 +7,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
 import Link from 'next/link';
+import { idbOpenFile, idbDownloadFile } from '@/lib/idbFiles';
 
 
 const FILE_ICONS = {
@@ -27,7 +28,7 @@ const formatSize = (bytes) => {
     return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
 };
 
-const CATEGORIES = ['Sve', 'Obrasci', 'Ugovori', 'Certifikati', 'Pravilnici', 'Izvješća', 'Upute', 'Ostalo'];
+const CATEGORIES = ['Sve', 'Obrasci', 'Zapisnici', 'Ugovori', 'Certifikati', 'Pravilnici', 'Izvješća', 'Upute', 'Ostalo'];
 
 // Form collections that contribute read-only attachments classified as Obrasci
 const FORM_SOURCES = [
@@ -199,6 +200,26 @@ export default function ArchivePage() {
             }
         });
 
+        // Aggregate Zapisnici docs (stored in IDB — flagged with _idbKey)
+        const zapisnici = getAll(COLLECTIONS.ZAPISNICI);
+        zapisnici.forEach(z => {
+            if (z.idbKey && z.attachedFileName) {
+                docs.push({
+                    id: `zap-${z.id}`,
+                    name: z.attachedFileName,
+                    data: null,          // lives in IDB, not base64
+                    _idbKey: z.idbKey,  // signal to open/download via idbFiles
+                    category: 'Zapisnici',
+                    description: `${z.naziv}${z.broj ? ` · ${z.broj}` : ''}${z.vrsta ? ` · ${z.vrsta}` : ''}`,
+                    size: z.attachedFileSize || null,
+                    uploadedAt: z.datum || null,
+                    _readonly: true,
+                    _sourceLabel: 'Zapisnici',
+                    _sourceLink: `/dashboard/zapisnici`,
+                });
+            }
+        });
+
         setFormDocs(docs);
     }, []);
 
@@ -254,14 +275,22 @@ export default function ArchivePage() {
         if (ok) { remove(COLLECTIONS.DIGITAL_ARCHIVE, id); reload(); }
     };
 
-    const handleDownload = (file) => {
+    const handleDownload = async (file) => {
+        if (file._idbKey) {
+            try { await idbDownloadFile(file._idbKey, file.name); } catch { /* ignore */ }
+            return;
+        }
         const a = document.createElement('a');
         a.href = file.data;
         a.download = file.name;
         a.click();
     };
 
-    const handleOpen = (file) => {
+    const handleOpen = async (file) => {
+        if (file._idbKey) {
+            try { await idbOpenFile(file._idbKey); } catch { /* ignore */ }
+            return;
+        }
         const w = window.open();
         if (w) {
             w.document.write(`<html><head><title>${file.name}</title></head><body style="margin:0"><iframe src="${file.data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
