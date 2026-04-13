@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAll, create, update, remove, COLLECTIONS, getUserCompanies, getById } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
+import ReminderModal from '@/components/ReminderModal';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import {
     createTrainingSession, generateToken, getSessionsForTraining, getTrainingResponse,
@@ -65,6 +66,8 @@ export default function TrainingsPage() {
     const [answerDetail, setAnswerDetail] = useState(null); // { session, response, training }
     const [loadingAnswers, setLoadingAnswers] = useState(false);
     const [copiedEmail, setCopiedEmail] = useState(null);
+    const [reminderOpen, setReminderOpen] = useState(false);
+    const [reminderTraining, setReminderTraining] = useState(null);
 
     const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
     useEffect(() => { loadData(); }, [loadData]);
@@ -122,6 +125,17 @@ export default function TrainingsPage() {
     const handleDelete = async (id) => {
         setOpenMenuId(null);
         if (await confirm('Obrisati ovu obuku?')) { remove(COLLECTIONS.TRAININGS, id); loadData(); }
+    };
+
+    const handleDuplicate = (item) => {
+        const dup = { ...EMPTY_TRAINING, ...item };
+        delete dup.id;
+        delete dup.createdAt;
+        delete dup.updatedAt;
+        dup.naziv = (dup.naziv || '') + ' (kopija)';
+        create(COLLECTIONS.TRAININGS, dup);
+        loadData();
+        setOpenMenuId(null);
     };
 
     // ── SLIDES ────────────────────────────────
@@ -505,8 +519,10 @@ export default function TrainingsPage() {
                                                             minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                         }}>
                                                             <button onClick={() => handleEdit(r)} style={menuItemSt}>📝 Uredi</button>
+                                                            <button onClick={() => handleDuplicate(r)} style={menuItemSt}>📋 Dupliciraj</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} style={menuItemSt}>📧 Pošalji radnicima</button>
+                                                            <button onClick={() => { setOpenMenuId(null); setReminderTraining(r); setReminderOpen(true); }} style={menuItemSt}>📩 Pošalji podsjetnik</button>
                                                             <button onClick={() => openResults(r)} style={menuItemSt}>📊 Rezultati</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <button onClick={() => handleDelete(r.id)} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Obriši</button>
@@ -545,6 +561,15 @@ export default function TrainingsPage() {
                     isOpen={dispatchOpen}
                     onClose={() => { setDispatchOpen(false); setDispatchTraining(null); }}
                     training={dispatchTraining}
+                />
+                {/* Training Reminder Modal */}
+                <ReminderModal
+                    isOpen={reminderOpen}
+                    onClose={() => { setReminderOpen(false); setReminderTraining(null); }}
+                    questionnaire={reminderTraining}
+                    isTraining={true}
+                    officerName={officerName}
+                    companyName={companyName}
                 />
             </div>
         );

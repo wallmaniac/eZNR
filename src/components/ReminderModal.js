@@ -1,13 +1,13 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
-import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
+import { getSessionsForQuestionnaire, getSessionsForTraining } from '@/lib/firebaseSync';
 import { sendReminderEmail } from '@/lib/emailService';
 
 /* =======================================================
    Reminder Modal — shows who hasn't completed, allows batch resend
    ======================================================= */
 
-export default function ReminderModal({ isOpen, onClose, questionnaire, lang = 'bs', officerName = '', companyName = '' }) {
+export default function ReminderModal({ isOpen, onClose, questionnaire, isTraining = false, lang = 'bs', officerName = '', companyName = '' }) {
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [sending, setSending] = useState(false);
@@ -21,7 +21,8 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, lang = '
         setResult(null);
         setProgress({ current: 0, total: 0 });
 
-        getSessionsForQuestionnaire(questionnaire.id)
+        const fetchFn = isTraining ? getSessionsForTraining : getSessionsForQuestionnaire;
+        fetchFn(questionnaire.id)
             .then(data => setSessions(data || []))
             .catch(err => { console.error(err); setSessions([]); })
             .finally(() => setLoading(false));
@@ -37,7 +38,9 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, lang = '
 
         let sent = 0, failed = 0;
         const errors = [];
-        const baseUrl = typeof window !== 'undefined' ? `${window.location.origin}/q/` : 'https://zastitanaradu.ba/q/';
+        const baseUrl = typeof window !== 'undefined'
+            ? `${window.location.origin}/${isTraining ? 't' : 'q'}/`
+            : `https://zastitanaradu.ba/${isTraining ? 't' : 'q'}/`;
 
         for (let i = 0; i < incomplete.length; i++) {
             const s = incomplete[i];
@@ -51,6 +54,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, lang = '
                 deadline: s.deadline || null,
                 senderName: officerName || 'eZNR Admin',
                 companyName: companyName || '',
+                isTraining,
             });
 
             if (res.success) sent++;
@@ -127,7 +131,10 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, lang = '
                     {!loading && sessions.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '2rem', marginBottom: 12 }}>📭</div>
-                            <p>{lang === 'bs' ? 'Nema poslatih sesija za ovaj upitnik.' : 'No sessions sent for this questionnaire.'}</p>
+                            <p>{lang === 'bs'
+                                ? (isTraining ? 'Nema poslatih sesija za ovu obuku.' : 'Nema poslatih sesija za ovaj upitnik.')
+                                : (isTraining ? 'No sessions sent for this training.' : 'No sessions sent for this questionnaire.')}
+                        </p>
                         </div>
                     )}
 
@@ -184,7 +191,10 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, lang = '
                             ) : (
                                 <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
                                     <div style={{ fontSize: '2rem', marginBottom: 8 }}>🎉</div>
-                                    <p style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Svi su ispunili upitnik!' : 'Everyone completed!'}</p>
+                                    <p style={{ fontWeight: 600 }}>{lang === 'bs'
+                                        ? (isTraining ? 'Svi su završili obuku!' : 'Svi su ispunili upitnik!')
+                                        : 'Everyone completed!'}
+                                </p>
                                 </div>
                             )}
                         </>
