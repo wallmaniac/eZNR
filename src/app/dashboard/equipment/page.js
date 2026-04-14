@@ -186,12 +186,71 @@ function EquipmentPageInner() {
         reader.readAsDataURL(file);
     };
 
+    const openDocInTab = (log) => {
+        if (!log.docData) return;
+        // For PDFs and images, open in new tab for preview/print
+        const isPdf = log.docData.startsWith('data:application/pdf');
+        const isImage = log.docData.startsWith('data:image/');
+        if (isPdf || isImage) {
+            const byteString = atob(log.docData.split(',')[1]);
+            const mimeString = log.docData.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+            const blob = new Blob([ab], { type: mimeString });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+        } else {
+            // For Word/other files, download directly
+            const a = document.createElement('a');
+            a.href = log.docData;
+            a.download = log.docName || 'servisni_dokument';
+            a.click();
+        }
+    };
+
     const downloadDoc = (log) => {
         if (!log.docData) return;
         const a = document.createElement('a');
         a.href = log.docData;
         a.download = log.docName || 'servisni_dokument';
         a.click();
+    };
+
+    const handleCopy = async (eq) => {
+        setActionMenuId(null);
+        if (!await confirm(lang === 'bs' ? `Kopirati opremu "${eq.naziv}"?` : `Duplicate equipment "${eq.naziv}"?`)) return;
+        const copyData = { ...eq };
+        delete copyData.id;
+        copyData.naziv = (copyData.naziv || '') + ' (Kopija)';
+        copyData.status = 'active';
+        create(COLLECTIONS.EQUIPMENT, copyData);
+        loadData();
+        showFlash();
+    };
+
+    const handlePrintSingle = (eq) => {
+        setActionMenuId(null);
+        const orgName = getOrgUnitName(eq.orgJedinicaId);
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${eq.naziv}</title>
+<style>body{font-family:'Segoe UI',Arial,sans-serif;font-size:11pt;color:#1a1a1a;padding:20px}h1{font-size:18pt;color:#1a237e}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10pt}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#e8eaf6;font-weight:700;color:#283593;width:200px}@media print{button{display:none!important}}</style></head><body>
+<h1>⚙️ ${eq.naziv}</h1>
+<table>
+<tr><th>Vrsta</th><td>${eq.vrsta || '—'}</td></tr>
+<tr><th>Tip</th><td>${eq.tip || '—'}</td></tr>
+<tr><th>Tv. broj</th><td>${eq.tvBroj || '—'}</td></tr>
+<tr><th>Inv. broj</th><td>${eq.invBroj || '—'}</td></tr>
+<tr><th>Organizacija</th><td>${orgName || '—'}</td></tr>
+<tr><th>Proizvođač</th><td>${eq.proizvodjac || '—'}</td></tr>
+<tr><th>Godina proizvodnje</th><td>${eq.godinaProizvodnje || '—'}</td></tr>
+<tr><th>Posljednji pregled</th><td>${eq.posljednji ? formatDate(eq.posljednji) : '—'}</td></tr>
+<tr><th>Idući pregled</th><td>${eq.iduci ? formatDate(eq.iduci) : '—'}</td></tr>
+</table>
+<button onclick="window.print()" style="position:fixed;bottom:20px;right:20px;padding:12px 24px;font-size:14px;cursor:pointer;background:#3f51b5;color:white;border:none;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.3);z-index:999">🖨️ Print</button>
+<script>setTimeout(()=>window.print(),500);<\/script></body></html>`;
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(html); w.document.close(); }
     };
 
     const tipLabel = (tip) => ({
@@ -222,22 +281,16 @@ function EquipmentPageInner() {
                         </div>
 
                         {/* Tab bar */}
-                        <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', gap: 0, padding: '0 24px', borderBottom: '1px solid var(--border)' }}>
                             {[
                                 { key: 'podaci', icon: '📋', label: lang === 'bs' ? 'Podaci' : 'Details' },
                                 { key: 'servis', icon: '🔧', label: lang === 'bs' ? 'Servisni zapisnici' : 'Service Log' },
                             ].map(tab => (
-                                <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-                                    padding: '10px 20px', border: 'none', cursor: 'pointer',
-                                    fontFamily: 'var(--font-body)', fontSize: '0.85rem', fontWeight: activeTab === tab.key ? 700 : 400,
-                                    background: activeTab === tab.key ? 'var(--primary)' : 'var(--bg-card)',
-                                    color: activeTab === tab.key ? '#fff' : 'var(--text)',
-                                    borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
-                                    transition: 'all 0.15s',
-                                }}>
+                                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
+                                    className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}>
                                     {tab.icon} {tab.label}
                                     {tab.key === 'servis' && serviceLogs.length > 0 && (
-                                        <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 6px', fontSize: '0.75rem' }}>
+                                        <span style={{ marginLeft: 6, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem', fontWeight: 700 }}>
                                             {serviceLogs.length}
                                         </span>
                                     )}
@@ -389,10 +442,11 @@ function EquipmentPageInner() {
                                                             </div>
                                                         )}
                                                         {log.docName && (
-                                                            <button onClick={() => downloadDoc(log)} style={{
+                                                            <button onClick={() => openDocInTab(log)} title={lang === 'bs' ? 'Kliknite za pregled dokumenta u novom tabu (PDF/slike) ili preuzimanje (Word)' : 'Click to preview in new tab (PDF/images) or download (Word)'} style={{
                                                                 marginTop: 6, display: 'inline-flex', alignItems: 'center', gap: 6,
                                                                 background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.2)',
                                                                 borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--info)',
+                                                                textDecoration: 'underline',
                                                             }}>
                                                                 📎 {log.docName}
                                                             </button>
@@ -558,6 +612,9 @@ function EquipmentPageInner() {
                                                     <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(eq, 'podaci')} style={menuItemSt}>📂 {t('open')}</button>
                                                         <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
+                                                        <button onClick={() => handleCopy(eq)} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                        <button onClick={() => handlePrintSingle(eq)} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                         <button onClick={() => { setActionMenuId(null); handleDelete(eq.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
                                                     </div>

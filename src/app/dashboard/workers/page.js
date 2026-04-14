@@ -1783,6 +1783,7 @@ function DateField({ label, value, onChange, required, tooltip }) {
     const [text, setText] = useState(() => isoToDisplay(value));
     const [prevText, setPrevText] = useState(() => isoToDisplay(value));
     const nativeRef = useRef(null);
+    const pickerOpenRef = useRef(false);
 
     // Sync when value changes externally (e.g. edit form load)
     useEffect(() => {
@@ -1807,7 +1808,13 @@ function DateField({ label, value, onChange, required, tooltip }) {
         else if (!text) { onChange(''); }
     };
 
-    const openPicker = () => {
+    const togglePicker = () => {
+        if (pickerOpenRef.current) {
+            nativeRef.current?.blur?.();
+            pickerOpenRef.current = false;
+            return;
+        }
+        pickerOpenRef.current = true;
         try { nativeRef.current?.showPicker?.(); } catch { nativeRef.current?.click(); }
     };
 
@@ -1817,6 +1824,7 @@ function DateField({ label, value, onChange, required, tooltip }) {
         const d = isoToDisplay(iso);
         setText(d);
         setPrevText(d);
+        pickerOpenRef.current = false;
     };
 
     return (
@@ -1838,7 +1846,7 @@ function DateField({ label, value, onChange, required, tooltip }) {
                 />
                 <button
                     type="button"
-                    onClick={openPicker}
+                    onClick={togglePicker}
                     style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1, padding: 2 }}
                     title="Odaberi datum iz kalendara"
                 >📅</button>
@@ -1847,6 +1855,7 @@ function DateField({ label, value, onChange, required, tooltip }) {
                     type="date"
                     value={value || ''}
                     onChange={handlePickerChange}
+                    onBlur={() => { pickerOpenRef.current = false; }}
                     style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0, top: 0, left: 0 }}
                     tabIndex={-1}
                 />

@@ -41,8 +41,7 @@ const menuItems = [
     {
         key: 'grpEquipment', icon: '⚙️',
         children: [
-            { key: 'equipment',          icon: '⚙️', path: '/dashboard/equipment' },
-            { key: 'equipmentExamList',  icon: '🔍', path: '/dashboard/equipment-exams' },
+            { key: 'equipment',          icon: '⚙️', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
             { key: 'ekEquipment',        icon: '📇', path: '/dashboard/ek-equipment' },
         ],
     },

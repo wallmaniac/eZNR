@@ -346,14 +346,8 @@ export default function ZapisniciPage() {
                     { id: 'list',      icon: '📋', label_bs: 'Zapisnici',       label_en: 'Records' },
                     { id: 'korekcija', icon: '🔧', label_bs: 'Korekcija imena', label_en: 'Name Correction' },
                 ].map(tab => (
-                    <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
-                        padding: '9px 20px', border: 'none', cursor: 'pointer',
-                        fontFamily: 'var(--font-body)', fontSize: '0.88rem',
-                        fontWeight: activeTab === tab.id ? 700 : 500, background: 'transparent',
-                        borderBottom: activeTab === tab.id ? '2px solid var(--primary)' : '2px solid transparent',
-                        color: activeTab === tab.id ? 'var(--primary)' : 'var(--text-muted)',
-                        marginBottom: -2, transition: 'all 0.15s',
-                    }}>
+                    <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+                        className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}>
                         {tab.icon} {lang === 'bs' ? tab.label_bs : tab.label_en}
                     </button>
                 ))}

@@ -123,22 +123,18 @@ export default function TestsZopZnrPage() {
         <div className="animate-fadeIn">
             <h1 style={{ marginBottom: 24 }}>📝 {bs ? 'Testovi ZOP i ZNR' : 'ZOP & ZNR Tests'}</h1>
             
-            <div className="tab-buttons" style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
-                <button 
-                    className={`btn ${activeTab === 'DOWNLOAD' ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setActiveTab('DOWNLOAD')}
-                >
+            <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', alignItems: 'center', flexWrap: 'wrap' }}>
+                <button onClick={() => setActiveTab('DOWNLOAD')}
+                    className={`tab-btn ${activeTab === 'DOWNLOAD' ? 'active' : ''}`}>
                     ⬇️ {bs ? 'Preuzimanje obrazaca' : 'Download Templates'}
                 </button>
-                <button 
-                    className={`btn ${activeTab === 'GENERATOR' ? 'btn-primary' : 'btn-outline'}`}
-                    onClick={() => setActiveTab('GENERATOR')}
-                >
+                <button onClick={() => setActiveTab('GENERATOR')}
+                    className={`tab-btn ${activeTab === 'GENERATOR' ? 'active' : ''}`}>
                     ⚙️ {bs ? 'Generator testova' : 'Test Generator'}
                 </button>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                    <button className="btn btn-dark" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                    <button className="btn btn-dark" onClick={() => window.open('/print-template?type=ZOP', '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOP', '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                 </div>
             </div>
 

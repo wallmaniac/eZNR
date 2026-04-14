@@ -333,16 +333,11 @@ export default function SettingsPage() {
       {/* Removed global Success toast */}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 24, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
         {tabs.map(tb => (
-          <button key={tb.key} onClick={() => tb.key === 'firebase' ? handleFirebaseTabOpen() : setActiveTab(tb.key)} style={{
-            padding: '10px 20px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-            fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6,
-            background: currentTab === tb.key ? (tb.key === 'firebase' ? '#FF6D00' : 'var(--dark)') : 'var(--bg-input)',
-            color: currentTab === tb.key ? 'white' : 'var(--text)',
-            boxShadow: currentTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
-            transition: 'background 0.2s', whiteSpace: 'nowrap',
-          }}>
+          <button key={tb.key} onClick={() => tb.key === 'firebase' ? handleFirebaseTabOpen() : setActiveTab(tb.key)}
+            className={`tab-btn ${currentTab === tb.key ? 'active' : ''}`}
+            style={tb.key === 'firebase' && currentTab === tb.key ? { color: '#FF6D00', borderBottomColor: '#FF6D00' } : {}}>
             {tb.icon} {tb.label}
           </button>
         ))}

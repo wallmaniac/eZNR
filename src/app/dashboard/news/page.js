@@ -218,16 +218,10 @@ export default function NewsPage() {
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>🏠 Početna</h1>
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
                 {tabs.map(tb => (
-                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} style={{
-                        padding: '10px 22px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-                        fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.88rem',
-                        background: activeTab === tb.key ? 'var(--dark)' : 'var(--bg-input)',
-                        color: activeTab === tb.key ? 'white' : 'var(--text)',
-                        boxShadow: activeTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
-                        transition: 'all 0.2s',
-                    }}>
+                    <button key={tb.key} onClick={() => setActiveTab(tb.key)}
+                        className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}>
                         {tb.icon} {tb.label}
                     </button>
                 ))}

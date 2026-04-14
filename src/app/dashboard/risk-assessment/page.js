@@ -1211,14 +1211,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 <DialogRenderer />
 
                 {/* Tabs */}
-                <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
                     {tabs.map(tb => (
-                        <button key={tb.key} title={`Prikaži stranicu: ${lang === 'bs' ? tb.label : tb.en}`} onClick={() => setActiveTab(tb.key)} style={{
-                            padding: '8px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-light)',
-                            cursor: 'pointer', fontWeight: 600, fontSize: '0.82rem',
-                            background: activeTab === tb.key ? 'var(--primary)' : 'var(--bg-card)',
-                            color: activeTab === tb.key ? '#fff' : 'var(--text)', transition: 'all 0.15s',
-                        }}>{lang === 'bs' ? tb.label : tb.en}</button>
+                        <button key={tb.key} title={`Prikaži stranicu: ${lang === 'bs' ? tb.label : tb.en}`} onClick={() => setActiveTab(tb.key)}
+                            className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}
+                        >{lang === 'bs' ? tb.label : tb.en}</button>
                     ))}
                 </div>
 

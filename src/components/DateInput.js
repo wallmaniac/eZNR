@@ -71,6 +71,7 @@ export default function DateInput({
     const [text, setText] = useState(() => isoToDisplay(value));
     const [prev, setPrev] = useState(() => isoToDisplay(value));
     const nativeRef = useRef(null);
+    const pickerOpenRef = useRef(false);
 
     // Sync display when external value changes (e.g. form reset or edit-load)
     useEffect(() => {
@@ -100,7 +101,14 @@ export default function DateInput({
         }
     };
 
-    const openPicker = () => {
+    const togglePicker = () => {
+        if (pickerOpenRef.current) {
+            // Close picker by blurring
+            nativeRef.current?.blur?.();
+            pickerOpenRef.current = false;
+            return;
+        }
+        pickerOpenRef.current = true;
         try { nativeRef.current?.showPicker?.(); }
         catch { nativeRef.current?.click?.(); }
     };
@@ -111,6 +119,11 @@ export default function DateInput({
         const d = isoToDisplay(iso);
         setText(d);
         setPrev(d);
+        pickerOpenRef.current = false;
+    };
+
+    const handlePickerBlur = () => {
+        pickerOpenRef.current = false;
     };
 
     const inputEl = (
@@ -134,7 +147,7 @@ export default function DateInput({
             {!disabled && (
                 <button
                     type="button"
-                    onClick={openPicker}
+                    onClick={togglePicker}
                     style={{
                         position: 'absolute', right: 8,
                         background: 'none', border: 'none', cursor: 'pointer',
@@ -151,6 +164,7 @@ export default function DateInput({
                 type="date"
                 value={value || ''}
                 onChange={handlePickerChange}
+                onBlur={handlePickerBlur}
                 disabled={disabled}
                 style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0 }}
                 tabIndex={-1}

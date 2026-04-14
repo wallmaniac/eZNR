@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -270,17 +270,11 @@ ${toPrint.map((d, i) => `<tr>
             )}
 
             {/* Tabs */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 24 }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)' }}>
                 {tabs.map(tb => (
-                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} title={`PrikaÅ¾i dokumente iz kategorije: ${tb.label}`} style={{
-                        padding: '12px 24px', borderRadius: 'var(--radius-md)', border: 'none', cursor: 'pointer',
-                        fontFamily: 'var(--font-heading)', fontWeight: 600, fontSize: '0.85rem',
-                        background: activeTab === tb.key ? 'var(--dark)' : 'var(--bg-input)',
-                        color: activeTab === tb.key ? 'white' : 'var(--text)',
-                        boxShadow: activeTab === tb.key ? 'var(--shadow-md)' : 'var(--shadow-sm)',
-                        transition: 'all 0.2s',
-                    }}>
-                        {tb.icon} {tb.label} <span style={{ marginLeft: 8, background: activeTab === tb.key ? 'rgba(255,255,255,0.2)' : 'var(--bg-badge)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem' }}>{docs.filter(d => d.kategorija === tb.key).length}</span>
+                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} title={`Prikaži dokumente iz kategorije: ${tb.label}`}
+                        className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}>
+                        {tb.icon} {tb.label} <span style={{ marginLeft: 8, background: activeTab === tb.key ? 'rgba(0,191,166,0.15)' : 'var(--bg-badge)', color: activeTab === tb.key ? 'var(--primary)' : 'var(--text-muted)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 700 }}>{docs.filter(d => d.kategorija === tb.key).length}</span>
                     </button>
                 ))}
             </div>
