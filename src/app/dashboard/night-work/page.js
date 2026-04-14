@@ -1,4 +1,5 @@
-﻿'use client';
+'use client';
+import DateInput from '@/components/DateInput';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
@@ -31,7 +32,7 @@ const EMPTY_NR1 = {
   orgSmjene: false, orgNocniRad: false, orgTerenskiRad: false,
   orgRadiSam: false, orgRadiSGrupom: false, orgRadiSaStrankama: false,
   orgRadiNaTraci: false, orgBrziTempo: false, orgRitamOdreden: false, orgMonotonija: false,
-  // Položaj tijela
+  // Polo�aj tijela
   polRadStojeci: false, polRadSjedeci: false, polUPokretu: false, polKombinirano: false,
   polUcestaloSagibanje: false, polZakretanjeTrupa: false,
   polKlecanje: false, polCucanje: false,
@@ -109,7 +110,7 @@ export default function NightWorkPage() {
     : records;
     const enrichedRecords = filteredRecords.map(r => {
     const _w = workers.find(wk => wk.id === r.workerId);
-    return { ...r, _workerName: _w ? `${_w.prezime} ${_w.ime}` : '—' };
+    return { ...r, _workerName: _w ? `${_w.prezime} ${_w.ime}` : '�' };
   });
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(enrichedRecords, 'datum');
 
@@ -152,7 +153,7 @@ export default function NightWorkPage() {
 
   const getWorkerName = (id) => {
     const w = workers.find(wk => wk.id === id);
-    return w ? `${w.prezime} ${w.ime}` : '—';
+    return w ? `${w.prezime} ${w.ime}` : '�';
   };
   const getWorkerInfo = (id) => workers.find(wk => wk.id === id);
 
@@ -170,13 +171,13 @@ export default function NightWorkPage() {
   );
 
   const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
-  // ── List view ──
+  // -- List view --
   if (!showForm) {
     const allSelected = sorted.length > 0 && sorted.every(r => selectedIds.has(r.id));
     return (
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>🌙 {t('nightWorkReferral')}</h1>
+          <h1 style={{ margin: 0 }}>?? {t('nightWorkReferral')}</h1>
         </div>
         <DialogRenderer />
 
@@ -186,18 +187,18 @@ export default function NightWorkPage() {
               + {lang === 'bs' ? 'Nova uputnica NR-1' : 'New NR-1 referral'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
-              <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
+              <input placeholder={lang === 'bs' ? 'Pretra�i...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>?</button>}
             </div>
-            {/* ── Grupne akcije bar ── */}
+            {/* -- Grupne akcije bar -- */}
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                   {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                 </span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>??? {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>??? {lang === 'bs' ? 'Obri�i' : 'Delete'}</button>
               </div>
             )}
             {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
@@ -214,7 +215,7 @@ export default function NightWorkPage() {
                     <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th>{lang === 'bs' ? 'Noćni rad' : 'Night work'}</th>
+                    <th>{lang === 'bs' ? 'Nocni rad' : 'Night work'}</th>
                     <th>{lang === 'bs' ? 'Tip pregleda' : 'Exam type'}</th>
                   </tr>
                 </thead>
@@ -222,7 +223,7 @@ export default function NightWorkPage() {
                   {sorted.length === 0 ? (
                     <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : sorted.map((r) => {
-                    const examType = r.pregledPrethodni ? (lang === 'bs' ? 'Prethodni' : 'Initial') : r.pregledKontrolni ? (lang === 'bs' ? 'Kontrolni' : 'Control') : '—';
+                    const examType = r.pregledPrethodni ? (lang === 'bs' ? 'Prethodni' : 'Initial') : r.pregledKontrolni ? (lang === 'bs' ? 'Kontrolni' : 'Control') : '�';
                     const isChecked = selectedIds.has(r.id);
                     return (
                       <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
@@ -243,16 +244,16 @@ export default function NightWorkPage() {
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                               );
                               setActionMenuId(r.id);
-                            }}>Akcije ▼</button>
+                            }}>Akcije ?</button>
                             {actionMenuId === r.id && (
                               <>
                               <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                               <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
-                                {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>📎 Preuzmi prilog</button>}
-                                <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} style={menuItemSt}>📋 Kopiraj</button>
+                                <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>?? Otvori</button>
+                                {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>?? Preuzmi prilog</button>}
+                                <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} style={menuItemSt}>?? Kopiraj</button>
                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                                <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>??? Izbri�i</button>
                               </div>
                               </>
                             )}
@@ -260,7 +261,7 @@ export default function NightWorkPage() {
                         </td>
                         <td><button style={{ padding: 0, fontWeight: 600, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)', border: 'none', cursor: 'pointer', fontSize: 'inherit', fontFamily: 'inherit', background: 'none', color: 'var(--text)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }}>{getWorkerName(r.workerId)}</button></td>
                         <td>{formatDate(r.datum)}</td>
-                        <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nocniRadZaKoji || '—'}</td>
+                        <td style={{ maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.nocniRadZaKoji || '�'}</td>
                         <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: '#EDE7F6', color: '#4527A0', fontWeight: 600 }}>{examType}</span></td>
                       </tr>
                     );
@@ -274,7 +275,7 @@ export default function NightWorkPage() {
     );
   }
 
-  // ── Form view ──
+  // -- Form view --
   const worker = getWorkerInfo(formData.workerId);
   const workerOu = worker ? orgUnits.find(o => o.id === worker.orgJedinicaId) : null;
 
@@ -317,18 +318,18 @@ export default function NightWorkPage() {
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
-        <h1 style={{ margin: 0 }}>🌙 {editingId ? (lang === 'bs' ? 'Uredi uputnicu NR-1' : 'Edit NR-1') : (lang === 'bs' ? 'Nova uputnica NR-1' : 'New NR-1')}</h1>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>?</button>
+        <h1 style={{ margin: 0 }}>?? {editingId ? (lang === 'bs' ? 'Uredi uputnicu NR-1' : 'Edit NR-1') : (lang === 'bs' ? 'Nova uputnica NR-1' : 'New NR-1')}</h1>
       </div>
       <DialogRenderer />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* ═══ SECTION 1: Worker & General ═══ */}
+        {/* --- SECTION 1: Worker & General --- */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
-              {lang === 'bs' ? 'Uputnica za utvrđivanje zdravstvene sposobnosti radnika' : 'Referral for determining worker health fitness'}
+              {lang === 'bs' ? 'Uputnica za utvrdivanje zdravstvene sposobnosti radnika' : 'Referral for determining worker health fitness'}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr', gap: 16, marginBottom: 16 }}>
@@ -343,7 +344,7 @@ export default function NightWorkPage() {
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
                 <select className="form-select" value={formData.workerId} onChange={e => set('workerId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                  <option value="">{lang === 'bs' ? '� Odaberite radnika �' : '� Select worker �'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
@@ -354,23 +355,23 @@ export default function NightWorkPage() {
             {worker && (
               <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>OIB:</span> <strong>{worker.oib || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>OIB:</span> <strong>{worker.oib || '�'}</strong></div>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Prezime, ime, ime oca:' : 'Name:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum rodenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '�'}</strong></div>
                 </div>
               </div>
             )}
           </div>
         </div>
 
-        {/* ═══ SECTION 2: NR-1 Specifics ═══ */}
+        {/* --- SECTION 2: NR-1 Specifics --- */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>NR-1</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Noćni rad za koji se utvrđuje zdravstvena sposobnost' : 'Night work for health fitness assessment'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'Nocni rad za koji se utvrduje zdravstvena sposobnost' : 'Night work for health fitness assessment'}</div>
               <input className="form-input" value={formData.nocniRadZaKoji} onChange={e => set('nocniRadZaKoji', e.target.value)}
                 placeholder={lang === 'bs' ? 'npr. Komercijalista' : 'e.g. Sales representative'} />
             </div>
@@ -385,11 +386,11 @@ export default function NightWorkPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 12, marginBottom: 14, alignItems: 'end' }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Posljednji zdravstveni pregled je učinjen' : 'Last health exam was on'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'Posljednji zdravstveni pregled je ucinjen' : 'Last health exam was on'}</div>
                 <DateInput value={formData.posljednjiPregledDatum} onChange={v => set('posljednjiPregledDatum', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'za noćni rad' : 'for night work'}</div>
+                <div style={labelSt}>{lang === 'bs' ? 'za nocni rad' : 'for night work'}</div>
                 <input className="form-input" value={formData.posljednjiPregledZanocniRad} onChange={e => set('posljednjiPregledZanocniRad', e.target.value)} />
               </div>
             </div>
@@ -401,7 +402,7 @@ export default function NightWorkPage() {
           </div>
         </div>
 
-        {/* ═══ SECTION 3: Working conditions ═══ */}
+        {/* --- SECTION 3: Working conditions --- */}
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>{lang === 'bs' ? 'Opis posla i uvjeti rada' : 'Job description & working conditions'}</div>
@@ -438,33 +439,33 @@ export default function NightWorkPage() {
               <div style={labelSt}>{lang === 'bs' ? 'Organizacija rada' : 'Work organization'}</div>
               <div style={checkGroup}>
                 <Chk field="orgSmjene" label={lang === 'bs' ? 'u smjenama' : 'in shifts'} />
-                <Chk field="orgNocniRad" label={lang === 'bs' ? 'noćni rad' : 'night work'} />
+                <Chk field="orgNocniRad" label={lang === 'bs' ? 'nocni rad' : 'night work'} />
                 <Chk field="orgTerenskiRad" label={lang === 'bs' ? 'terenski rad' : 'field work'} />
                 <Chk field="orgRadiSam" label={lang === 'bs' ? 'radi sam' : 'works alone'} />
                 <Chk field="orgRadiSGrupom" label={lang === 'bs' ? 'radi s grupom' : 'in group'} />
                 <Chk field="orgRadiSaStrankama" label={lang === 'bs' ? 'radi sa strankama' : 'with clients'} />
                 <Chk field="orgRadiNaTraci" label={lang === 'bs' ? 'radi na traci' : 'assembly line'} />
                 <Chk field="orgBrziTempo" label={lang === 'bs' ? 'brzi tempo rada' : 'fast pace'} />
-                <Chk field="orgRitamOdreden" label={lang === 'bs' ? 'ritam određen' : 'fixed rhythm'} />
+                <Chk field="orgRitamOdreden" label={lang === 'bs' ? 'ritam odreden' : 'fixed rhythm'} />
                 <Chk field="orgMonotonija" label={lang === 'bs' ? 'monotonija' : 'monotony'} />
               </div>
             </div>
 
-            {/* Položaj tijela */}
+            {/* Polo�aj tijela */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'Položaj tijela i aktivnosti' : 'Body position & activities'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'Polo�aj tijela i aktivnosti' : 'Body position & activities'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 16px', marginBottom: 10 }}>
-                <Chk field="polRadStojeci" label={lang === 'bs' ? 'rad stojeći' : 'standing'} />
-                <Chk field="polUcestaloSagibanje" label={lang === 'bs' ? 'učestalo sagibanje' : 'frequent bending'} />
-                <Chk field="polPodvlacenje" label={lang === 'bs' ? 'podvlačenje' : 'crawling'} />
-                <Chk field="polRadSjedeci" label={lang === 'bs' ? 'rad sjedeći' : 'sitting'} />
+                <Chk field="polRadStojeci" label={lang === 'bs' ? 'rad stojeci' : 'standing'} />
+                <Chk field="polUcestaloSagibanje" label={lang === 'bs' ? 'ucestalo sagibanje' : 'frequent bending'} />
+                <Chk field="polPodvlacenje" label={lang === 'bs' ? 'podvlacenje' : 'crawling'} />
+                <Chk field="polRadSjedeci" label={lang === 'bs' ? 'rad sjedeci' : 'sitting'} />
                 <Chk field="polZakretanjeTrupa" label={lang === 'bs' ? 'zakretanje trupa' : 'torso rotation'} />
                 <Chk field="polBalansiranje" label={lang === 'bs' ? 'balansiranje' : 'balancing'} />
                 <Chk field="polUPokretu" label={lang === 'bs' ? 'u pokretu' : 'in motion'} />
-                <Chk field="polKlecanje" label={lang === 'bs' ? 'klečanje' : 'kneeling'} />
+                <Chk field="polKlecanje" label={lang === 'bs' ? 'klecanje' : 'kneeling'} />
                 <Chk field="polUspinjanjeLjestvama" label={lang === 'bs' ? 'uspinjanje ljestvama' : 'climbing ladders'} />
                 <Chk field="polKombinirano" label={lang === 'bs' ? 'kombinirano' : 'combined'} />
-                <Chk field="polCucanje" label={lang === 'bs' ? 'čučanje' : 'squatting'} />
+                <Chk field="polCucanje" label={lang === 'bs' ? 'cucanje' : 'squatting'} />
                 <Chk field="polUspinjanjeStepen" label={lang === 'bs' ? 'uspinjanje stepenicama' : 'climbing stairs'} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -474,7 +475,7 @@ export default function NightWorkPage() {
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'prenoš. tereta:' : 'carry:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'preno�. tereta:' : 'carry:'}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.prenosTereta} onChange={e => set('prenosTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
@@ -488,7 +489,7 @@ export default function NightWorkPage() {
 
             {/* Sensory */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'U poslu je važan' : 'Important in work'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'U poslu je va�an' : 'Important in work'}</div>
               <div style={checkGroup}>
                 <Chk field="vidNaDaljinu" label={lang === 'bs' ? 'vid na daljinu' : 'distance vision'} />
                 <Chk field="vidNaBlizinu" label={lang === 'bs' ? 'vid na blizinu' : 'near vision'} />
@@ -503,16 +504,16 @@ export default function NightWorkPage() {
               <div style={labelSt}>{lang === 'bs' ? 'Uvjeti rada' : 'Working conditions'}</div>
               <div style={checkGroup}>
                 <Chk field="uvjetiVisokaTemp" label={lang === 'bs' ? 'visoka temperatura' : 'high temp'} />
-                <Chk field="uvjetiVisokaVlaznost" label={lang === 'bs' ? 'visoka vlažnost' : 'high humidity'} />
+                <Chk field="uvjetiVisokaVlaznost" label={lang === 'bs' ? 'visoka vla�nost' : 'high humidity'} />
                 <Chk field="uvjetiNiskaTemp" label={lang === 'bs' ? 'niska temperatura' : 'low temp'} />
                 <Chk field="uvjetiBuka" label={lang === 'bs' ? 'buka' : 'noise'} />
                 <Chk field="uvjetiVibracijeStroj" label={lang === 'bs' ? 'vibracije stroja ili alata' : 'machine vibrations'} />
                 <Chk field="uvjetiVibracijePoda" label={lang === 'bs' ? 'vibracije poda' : 'floor vibrations'} />
-                <Chk field="uvjetiPoviseniTlak" label={lang === 'bs' ? 'povišeni atmosferski tlak' : 'increased pressure'} />
-                <Chk field="uvjetiPovecanaOzljeda" label={lang === 'bs' ? 'povećana izloženost ozljedama' : 'increased injury risk'} />
-                <Chk field="uvjetiIonizacija" label={lang === 'bs' ? 'ionizacijska zračenja' : 'ionizing radiation'} />
-                <Chk field="uvjetiNeionizacija" label={lang === 'bs' ? 'neionizacijska zračenja' : 'non-ionizing radiation'} />
-                <Chk field="uvjetiPrasina" label={lang === 'bs' ? 'prašina' : 'dust'} />
+                <Chk field="uvjetiPoviseniTlak" label={lang === 'bs' ? 'povi�eni atmosferski tlak' : 'increased pressure'} />
+                <Chk field="uvjetiPovecanaOzljeda" label={lang === 'bs' ? 'povecana izlo�enost ozljedama' : 'increased injury risk'} />
+                <Chk field="uvjetiIonizacija" label={lang === 'bs' ? 'ionizacijska zracenja' : 'ionizing radiation'} />
+                <Chk field="uvjetiNeionizacija" label={lang === 'bs' ? 'neionizacijska zracenja' : 'non-ionizing radiation'} />
+                <Chk field="uvjetiPrasina" label={lang === 'bs' ? 'pra�ina' : 'dust'} />
               </div>
             </div>
 
@@ -522,7 +523,7 @@ export default function NightWorkPage() {
               <textarea className="form-input" rows={2} value={formData.kemijskeTvari} onChange={e => set('kemijskeTvari', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Biološke štetnosti' : 'Biological hazards'}</div>
+              <div style={labelSt}>{lang === 'bs' ? 'Biolo�ke �tetnosti' : 'Biological hazards'}</div>
               <textarea className="form-input" rows={2} value={formData.bioloskeStetnosti} onChange={e => set('bioloskeStetnosti', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
@@ -532,24 +533,24 @@ export default function NightWorkPage() {
           </div>
         </div>
 
-        {/* ═══ Document Upload ═══ */}
+        {/* --- Document Upload --- */}
         <div className="card">
           <div className="card-body">
             <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang === 'bs' ? 'Prilog' : 'Attachment'}</div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">📎 {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
+              <label className="form-label">?? {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
-                      <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }}>📎 {formData.docName}</button>
+                      <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }}>?? {formData.docName}</button>
                       <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }}>?? {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }}>? {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }}>? {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
                       </div>
                   </div>
               ) : (
                   <div onClick={() => docInputRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '16px', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      📂 {lang === 'bs' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
+                      ?? {lang === 'bs' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
                   </div>
               )}
               <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
@@ -557,18 +558,18 @@ export default function NightWorkPage() {
           </div>
         </div>
 
-        {/* ═══ Action buttons ═══ */}
+        {/* --- Action buttons --- */}
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
+              ?? {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
             </button>
             <SavedFlash />
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
-              💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
+              ?? {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              ? {lang === 'bs' ? 'Odustani' : 'Cancel'}
             </button>
           </div>
         </div>
