@@ -42,6 +42,7 @@ function EquipmentPageInner() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [serviceDocFile, setServiceDocFile] = useState(null);
     const openItemHandledRef = useRef(false);
     const serviceDocRef = useRef(null);
 
@@ -127,12 +128,14 @@ function EquipmentPageInner() {
         const today = new Date().toISOString().slice(0, 10);
         setServiceFormData({ ...emptyServiceEntry, datum: today });
         setEditingServiceId(null);
+        setServiceDocFile(null);
         setShowServiceForm(true);
     };
 
     const handleEditService = (log) => {
         setServiceFormData({ ...log });
         setEditingServiceId(log.id);
+        setServiceDocFile(null);
         setShowServiceForm(true);
     };
 
@@ -146,11 +149,15 @@ function EquipmentPageInner() {
             return;
         }
         const data = { ...serviceFormData, equipmentId: editingId };
+        
+        let shouldSyncToArchive = false;
         if (editingServiceId) {
             update(COLLECTIONS.SERVICE_LOG, editingServiceId, data);
         } else {
             create(COLLECTIONS.SERVICE_LOG, data);
+            shouldSyncToArchive = !!serviceDocFile;
         }
+        
         // Auto-update posljednji/iduci dates on equipment
         if (serviceFormData.datum) {
             const updates = { posljednji: serviceFormData.datum };
@@ -158,6 +165,26 @@ function EquipmentPageInner() {
             update(COLLECTIONS.EQUIPMENT, editingId, { ...formData, ...updates });
             setFormData(prev => ({ ...prev, ...updates }));
         }
+
+        // Sync to Zapisnici if new document was just uploaded during creation
+        if (shouldSyncToArchive) {
+            import('@/lib/idbFiles').then(async ({ idbSaveFile, idbKey: makeIdbKey }) => {
+                const newKey = makeIdbKey('zap', Date.now());
+                await idbSaveFile(newKey, serviceDocFile);
+                create(COLLECTIONS.ZAPISNICI, {
+                   naziv: `Servisni zapisnik - ${formData.naziv}`,
+                   broj: '', 
+                   datum: data.datum, 
+                   vrsta: 'Zapisnik o pregledu', 
+                   napomena: data.napomena || '',
+                   idbKey: newKey,
+                   attachedFileName: serviceDocFile.name,
+                   attachedFileSize: serviceDocFile.size,
+                   attachedFileType: serviceDocFile.type
+                });
+            }).catch(console.error);
+        }
+
         setShowServiceForm(false);
         loadServiceLogs(editingId);
         loadData();
@@ -175,6 +202,7 @@ function EquipmentPageInner() {
             await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
             return;
         }
+        setServiceDocFile(file);
         const reader = new FileReader();
         reader.onload = (ev) => {
             setServiceFormData(prev => ({
@@ -301,7 +329,7 @@ function EquipmentPageInner() {
                         <div className="modal-body" style={{ flex: 1, overflowY: 'auto' }}>
                             {/* ── TAB: Podaci ── */}
                             {activeTab === 'podaci' && (
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, paddingTop: 16 }}>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label" style={{ fontWeight: 700 }}>{t('name')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} />
@@ -382,7 +410,7 @@ function EquipmentPageInner() {
 
                             {/* ── TAB: Servisni zapisnici ── */}
                             {activeTab === 'servis' && (
-                                <div>
+                                <div style={{ paddingTop: 16 }}>
                                     {!editingId && (
                                         <div style={{ padding: '20px', background: 'rgba(255,152,0,0.06)', borderRadius: 8, border: '1px solid rgba(255,152,0,0.2)', marginBottom: 16, fontSize: '0.85rem', color: 'var(--warning)' }}>
                                             ⚠️ {lang === 'bs' ? 'Najprije sačuvajte opremu da biste mogli dodavati servisne zapise.' : 'Save the equipment first before adding service records.'}
@@ -588,7 +616,10 @@ function EquipmentPageInner() {
                                     <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sortedEquipment.map((eq) => {
                                     const isExpired = eq.iduci && new Date(eq.iduci) < new Date();
-                                    const logCount = getAll(COLLECTIONS.SERVICE_LOG).filter(l => l.equipmentId === eq.id).length;
+                                    const serviceLogsForEq = getAll(COLLECTIONS.SERVICE_LOG).filter(l => l.equipmentId === eq.id);
+                                    const logCount = serviceLogsForEq.length;
+                                    const docLog = [...serviceLogsForEq].sort((a,b) => new Date(b.datum) - new Date(a.datum)).find(l => l.docData);
+
                                     return (
                                         <tr key={eq.id} onClick={() => handleEdit(eq, 'podaci')} style={{ cursor: 'pointer' }}>
                                             <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(eq.id)} onChange={() => toggleOne(eq.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
@@ -612,9 +643,15 @@ function EquipmentPageInner() {
                                                     <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(eq, 'podaci')} style={menuItemSt}>📂 {t('open')}</button>
                                                         <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
-                                                        <button onClick={() => handleCopy(eq)} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                        {docLog && (
+                                                            <>
+                                                                <button onClick={() => downloadDoc(docLog)} style={menuItemSt}>📎 {lang === 'bs' ? 'Preuzmi dokument' : 'Download document'}</button>
+                                                                <button onClick={() => openDocInTab(docLog)} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Isprintaj dokument' : 'Print document'}</button>
+                                                            </>
+                                                        )}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => handlePrintSingle(eq)} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                                        <button onClick={() => handleCopy(eq)} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                        <button onClick={() => handlePrintSingle(eq)} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Isprintaj podatke' : 'Print details'}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                         <button onClick={() => { setActionMenuId(null); handleDelete(eq.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
                                                     </div>

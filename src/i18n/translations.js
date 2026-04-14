@@ -58,7 +58,7 @@ export const translations = {
     orgUnits: 'Organizacijske jedinice',
     workplaces: 'Radna mjesta',
     workers: 'Radnici',
-    equipment: 'Ispitivanje radne opreme i objekata',
+    equipment: 'Popis radne opreme i objekata',
     injuryReport: 'Prijava povrede na radu',
     diseaseReport: 'Prijava profesionalne bolesti',
     formOIR1: 'Obrazac OIR1',

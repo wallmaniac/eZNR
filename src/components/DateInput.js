@@ -101,11 +101,15 @@ export default function DateInput({
         }
     };
 
+    const lastBlurRef = useRef(0);
+
     const togglePicker = () => {
-        if (pickerOpenRef.current) {
-            // Close picker by blurring
-            nativeRef.current?.blur?.();
-            pickerOpenRef.current = false;
+        if (pickerOpenRef.current || (Date.now() - lastBlurRef.current < 150)) {
+            // Close picker by blurring, or ignore click if we just blurred natively
+            if (pickerOpenRef.current) {
+                nativeRef.current?.blur?.();
+                pickerOpenRef.current = false;
+            }
             return;
         }
         pickerOpenRef.current = true;
@@ -124,6 +128,7 @@ export default function DateInput({
 
     const handlePickerBlur = () => {
         pickerOpenRef.current = false;
+        lastBlurRef.current = Date.now();
     };
 
     const inputEl = (
