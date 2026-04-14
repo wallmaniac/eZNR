@@ -4,12 +4,11 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { initializeData, findUserByUsername } from '@/lib/dataStore';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential } from '@/lib/webAuthn';
 
 export default function LoginPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { login, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated, forgotPassword } = useAuth();
   const router = useRouter();
 
   const [isRegister, setIsRegister] = useState(false);
@@ -33,16 +32,16 @@ export default function LoginPage() {
   const [showBiometricOffer, setShowBiometricOffer] = useState(false);
   const [pendingLoginData, setPendingLoginData] = useState(null);
   const [hasBiometric, setHasBiometric] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
 
-  // If already logged in, redirect to dashboard (prevents "back" looking like a logout)
+  // If already logged in, redirect to dashboard
   useEffect(() => {
     if (isAuthenticated && !showBiometricOffer) {
       router.replace('/dashboard');
     }
   }, [isAuthenticated, router, showBiometricOffer]);
-
-  // Initialize data so user records are available
-  useEffect(() => { initializeData(); }, []);
 
   // Check if biometric login is available
   useEffect(() => {
@@ -64,108 +63,68 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setLoginError('');
-    await new Promise((r) => setTimeout(r, 500));
 
-    if (isRegister) {
-      // Registration — creates user via dataStore
-      const { create, COLLECTIONS } = await import('@/lib/dataStore');
-      const existing = findUserByUsername(formData.username || formData.email);
-      if (existing) {
-        setLoginError(lang === 'bs' ? 'Korisničko ime već postoji!' : 'Username already exists!');
-        setIsLoading(false);
-        return;
-      }
-      // Create a default company for the new user
-      const newCompany = create(COLLECTIONS.COMPANIES, {
-        naziv: formData.companyName || 'Nova firma',
-        skraceniNaziv: formData.companyName || 'Nova firma',
-        adresa: formData.address || '',
-        mjesto: formData.city || '',
-        telefon: formData.phone || '',
-        email: formData.email || '',
-        aktivan: true,
-      });
-      const newUser = create(COLLECTIONS.USERS, {
-        username: formData.username || formData.email,
-        password: formData.password,
-        firstName: formData.firstName || 'Korisnik',
-        lastName: formData.lastName || '',
-        email: formData.email || '',
-        role: 'officer',
-        companyIds: [newCompany.id],
-        aktivan: true,
-      });
-      login({
-        id: newUser.id,
-        username: newUser.username,
-        firstName: newUser.firstName,
-        lastName: newUser.lastName,
-        role: 'officer',
-        companyIds: [newCompany.id],
-        companyName: formData.companyName || 'Nova firma',
-      });
-    } else {
-      // Login validation
-      const { getById, COLLECTIONS, findUserByUsername } = await import('@/lib/dataStore');
-      let foundUser = findUserByUsername(formData.username);
-
-      // If user typed 'admin' instead of email, grab their email from the DB
-      // If we didn't find them by username, assume they typed an email directly
-      const loginEmail = foundUser ? foundUser.email : formData.username;
-
-      if (!loginEmail) {
-        setLoginError(lang === 'bs' ? 'Korisnik nije pronađen.' : 'User not found.');
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        // Securely verify password against Firebase Authentication
-        const { getAuth, signInWithEmailAndPassword } = await import('firebase/auth');
-        const appModule = await import('@/lib/firebase');
-        const auth = getAuth(appModule.default);
-
-        await signInWithEmailAndPassword(auth, loginEmail, formData.password);
-
-        // If we only had the email but not the full user object, look them up again
-        // (in a real app you'd query Firestore by email here)
-        if (!foundUser) {
-          foundUser = findUserByUsername('admin'); // Fallback placeholder
-        }
-
-        if (!foundUser.aktivan) {
-          setLoginError(lang === 'bs' ? 'Račun je deaktiviran. Kontaktirajte administratora.' : 'Account is deactivated. Contact admin.');
+    try {
+      if (isRegister) {
+        // ── Registration via Firebase Auth ──
+        if (formData.password !== formData.confirmPassword) {
+          setLoginError(lang === 'bs' ? 'Lozinke se ne poklapaju!' : 'Passwords do not match!');
           setIsLoading(false);
           return;
         }
-      } catch (err) {
-        // Firebase rejected the login
-        console.error("Firebase login error:", err);
-        setLoginError(lang === 'bs' ? 'Pogrešno korisničko ime ili lozinka!' : 'Invalid username or password!');
-        setIsLoading(false);
-        return;
+        if (formData.password.length < 6) {
+          setLoginError(lang === 'bs' ? 'Lozinka mora imati najmanje 6 znakova!' : 'Password must be at least 6 characters!');
+          setIsLoading(false);
+          return;
+        }
+        await register({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          companyName: formData.companyName,
+          phone: formData.phone,
+          city: formData.city,
+          address: formData.address,
+        });
+        // onAuthStateChanged in AuthContext handles the rest
+        router.push('/dashboard');
+      } else {
+        // ── Login via Firebase Auth ──
+        const emailToUse = formData.username.includes('@') ? formData.username : formData.username;
+        await login(emailToUse, formData.password);
+        // onAuthStateChanged in AuthContext handles the rest
       }
-      // Resolve company name for display
-      const firstCompany = foundUser.companyIds?.[0] ? getById(COLLECTIONS.COMPANIES, foundUser.companyIds[0]) : null;
-      login({
-        id: foundUser.id,
-        username: foundUser.username,
-        firstName: foundUser.firstName,
-        lastName: foundUser.lastName,
-        email: foundUser.email,
-        role: foundUser.role,
-        companyIds: foundUser.companyIds || [],
-        companyName: firstCompany?.naziv || '',
-      });
+    } catch (err) {
+      console.error('Auth error:', err);
+      const code = err?.code || err?.message || '';
+      if (code.includes('user-not-found') || code === 'USER_PROFILE_NOT_FOUND') {
+        setLoginError(lang === 'bs' ? 'Korisnik nije pronađen.' : 'User not found.');
+      } else if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+        setLoginError(lang === 'bs' ? 'Pogrešna lozinka!' : 'Wrong password!');
+      } else if (code.includes('email-already-in-use')) {
+        setLoginError(lang === 'bs' ? 'Email je već registriran!' : 'Email already registered!');
+      } else if (code.includes('invalid-email')) {
+        setLoginError(lang === 'bs' ? 'Neispravan email format!' : 'Invalid email format!');
+      } else if (code.includes('weak-password')) {
+        setLoginError(lang === 'bs' ? 'Lozinka je preslaba (min 6 znakova)!' : 'Password too weak (min 6 chars)!');
+      } else if (code === 'ACCOUNT_DEACTIVATED') {
+        setLoginError(lang === 'bs' ? 'Račun je deaktiviran. Kontaktirajte administratora.' : 'Account deactivated. Contact admin.');
+      } else {
+        setLoginError(lang === 'bs' ? 'Greška pri prijavi. Pokušajte ponovo.' : 'Login failed. Please try again.');
+      }
+      setIsLoading(false);
+      return;
     }
+
     setIsLoading(false);
     // If WebAuthn is available and no credential yet, offer to enroll
-    if (isWebAuthnAvailable() && !hasStoredCredential()) {
+    if (!isRegister && isWebAuthnAvailable() && !hasStoredCredential()) {
       const userData = JSON.parse(localStorage.getItem('eznr_user'));
       if (userData) {
         setPendingLoginData(userData);
         setShowBiometricOffer(true);
-        return; // Don't navigate yet — show offer first
+        return;
       }
     }
     router.push('/dashboard');
@@ -255,11 +214,12 @@ export default function LoginPage() {
           )}
 
           <div className="form-group" style={styles.formGroup}>
-            <label className="form-label" style={styles.label}>{t('username')}</label>
+            <label className="form-label" style={styles.label}>{isRegister ? t('email') : t('username')}</label>
             <input
               className="form-input" style={styles.input}
               name="username" value={formData.username} onChange={handleChange}
-              placeholder={lang === 'bs' ? 'Korisničko ime ili email' : 'Username or email'}
+              placeholder={isRegister ? 'email@example.com' : (lang === 'bs' ? 'Email adresa' : 'Email address')}
+              type={isRegister ? 'email' : 'text'}
               required autoComplete="username"
             />
           </div>
@@ -292,7 +252,53 @@ export default function LoginPage() {
                 <input type="checkbox" name="rememberMe" checked={formData.rememberMe} onChange={handleChange} style={{ accentColor: 'var(--primary)' }} />
                 {t('rememberMe')}
               </label>
-              <a href="#" style={styles.forgotLink}>{t('forgotPassword')}</a>
+              <a href="#" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }} style={styles.forgotLink}>{t('forgotPassword')}</a>
+            </div>
+          )}
+
+          {/* Forgot password modal */}
+          {showForgotPassword && (
+            <div style={{ padding: '14px', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 12 }}>
+              {forgotSent ? (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
+                    {lang === 'bs' ? 'Email za resetiranje lozinke je poslan!' : 'Password reset email sent!'}
+                  </div>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowForgotPassword(false); setForgotSent(false); setForgotEmail(''); }}>
+                    {lang === 'bs' ? 'Zatvori' : 'Close'}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontWeight: 600 }}>
+                    {lang === 'bs' ? 'Unesite email za resetiranje lozinke:' : 'Enter email to reset password:'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      className="form-input" style={{ ...styles.input, flex: 1 }}
+                      type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                      placeholder="email@example.com"
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={async () => {
+                      if (!forgotEmail) return;
+                      try {
+                        await forgotPassword(forgotEmail);
+                        setForgotSent(true);
+                      } catch (err) {
+                        setLoginError(lang === 'bs' ? 'Email nije pronađen.' : 'Email not found.');
+                        setShowForgotPassword(false);
+                      }
+                    }}>
+                      {lang === 'bs' ? 'Pošalji' : 'Send'}
+                    </button>
+                  </div>
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '0.75rem' }}
+                    onClick={() => setShowForgotPassword(false)}>
+                    {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                  </button>
+                </>
+              )}
             </div>
           )}
 
