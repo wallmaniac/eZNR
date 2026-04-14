@@ -137,6 +137,28 @@ export default function ArchivePage() {
             });
         });
 
+        // Aggregate equipment service logs
+        const serviceLogs = getAll(COLLECTIONS.SERVICE_LOG);
+        const equipments = getAll(COLLECTIONS.EQUIPMENT);
+        serviceLogs.forEach(sl => {
+            if (sl.docName && sl.docData) {
+                const eq = equipments.find(e => e.id === sl.equipmentId);
+                const eqName = eq ? eq.naziv : 'Oprema';
+                docs.push({
+                    id: `eq-svclog-${sl.id}`,
+                    name: sl.docName,
+                    data: sl.docData,
+                    category: 'Zapisnici',
+                    description: `Servisni zapisnik — ${eqName}`,
+                    size: null,
+                    uploadedAt: sl.datum || null,
+                    _readonly: true,
+                    _sourceLabel: 'Popis radne opreme i objekata',
+                    _sourceLink: `/dashboard/equipment?openItem=${sl.equipmentId}&tab=servis`,
+                });
+            }
+        });
+
         // Aggregate fleet vehicle documents (nested inside vehicle records)
         const vehicles = getAll('vehicles');
         vehicles.forEach(v => {

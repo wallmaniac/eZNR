@@ -42,7 +42,6 @@ function EquipmentPageInner() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
     const [selectedIds, setSelectedIds] = useState(new Set());
-    const [serviceDocFile, setServiceDocFile] = useState(null);
     const openItemHandledRef = useRef(false);
     const serviceDocRef = useRef(null);
 
@@ -128,14 +127,12 @@ function EquipmentPageInner() {
         const today = new Date().toISOString().slice(0, 10);
         setServiceFormData({ ...emptyServiceEntry, datum: today });
         setEditingServiceId(null);
-        setServiceDocFile(null);
         setShowServiceForm(true);
     };
 
     const handleEditService = (log) => {
         setServiceFormData({ ...log });
         setEditingServiceId(log.id);
-        setServiceDocFile(null);
         setShowServiceForm(true);
     };
 
@@ -150,12 +147,10 @@ function EquipmentPageInner() {
         }
         const data = { ...serviceFormData, equipmentId: editingId };
         
-        let shouldSyncToArchive = false;
         if (editingServiceId) {
             update(COLLECTIONS.SERVICE_LOG, editingServiceId, data);
         } else {
             create(COLLECTIONS.SERVICE_LOG, data);
-            shouldSyncToArchive = !!serviceDocFile;
         }
         
         // Auto-update posljednji/iduci dates on equipment
@@ -164,25 +159,6 @@ function EquipmentPageInner() {
             if (serviceFormData.iduciServis) updates.iduci = serviceFormData.iduciServis;
             update(COLLECTIONS.EQUIPMENT, editingId, { ...formData, ...updates });
             setFormData(prev => ({ ...prev, ...updates }));
-        }
-
-        // Sync to Zapisnici if new document was just uploaded during creation
-        if (shouldSyncToArchive) {
-            import('@/lib/idbFiles').then(async ({ idbSaveFile, idbKey: makeIdbKey }) => {
-                const newKey = makeIdbKey('zap', Date.now());
-                await idbSaveFile(newKey, serviceDocFile);
-                create(COLLECTIONS.ZAPISNICI, {
-                   naziv: `Servisni zapisnik - ${formData.naziv}`,
-                   broj: '', 
-                   datum: data.datum, 
-                   vrsta: 'Zapisnik o pregledu', 
-                   napomena: data.napomena || '',
-                   idbKey: newKey,
-                   attachedFileName: serviceDocFile.name,
-                   attachedFileSize: serviceDocFile.size,
-                   attachedFileType: serviceDocFile.type
-                });
-            }).catch(console.error);
         }
 
         setShowServiceForm(false);
@@ -202,7 +178,6 @@ function EquipmentPageInner() {
             await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
             return;
         }
-        setServiceDocFile(file);
         const reader = new FileReader();
         reader.onload = (ev) => {
             setServiceFormData(prev => ({
