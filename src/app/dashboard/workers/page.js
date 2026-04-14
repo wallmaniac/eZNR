@@ -46,7 +46,7 @@ function WorkersPageInner() {
     const [editingWorker, setEditingWorker] = useState(null);
     const [showForm, setShowForm] = useState(false);
     const [formData, setFormData] = useState({ ...emptyWorker });
-    const [openSections, setOpenSections] = useState({ kontakt: false, osobni: false, posebni: false, uvjerenja: true, ozo: false, medExams: false, mjestoRada: false, dodatniPoslovi: false });
+    const [openSections, setOpenSections] = useState({ kontakt: false, osobni: false, posebni: false, uvjerenja: true, ozo: false, medExams: false, mjestoRada: false, dodatniPoslovi: false, dokumenti: false });
     const [orgUnits, setOrgUnits] = useState([]);
     const [workplaces, setWorkplaces] = useState([]);
     const [certificates, setCertificates] = useState([]);
@@ -64,6 +64,7 @@ function WorkersPageInner() {
     const openedViaUrlRef = useRef(false); // true when form was opened via ?openWorker= param
     const uvjerenjaRef = useRef(null); // ref for scroll-to on cert section
     const ozoRef = useRef(null);       // ref for scroll-to on OZO section
+    const dokumentiRef = useRef(null); // ref for scroll-to on Dokumenti section
     // Certificate form state
     const [showCertForm, setShowCertForm] = useState(false);
     const [certFormData, setCertFormData] = useState({ oznaka: '', datum: '', vrijediDo: '', ime: '', tipUvjerenja: 'ZNR', upisao: 'Admin', sposobnost: 'Sposoban' });
@@ -268,6 +269,11 @@ function WorkersPageInner() {
                 setTimeout(() => {
                     setOpenSections(prev => ({ ...prev, medExams: true, uvjerenja: false }));
                     medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'dokumenti') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false }));
+                    dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }, 350);
             }
             // Strip the param from the URL immediately so this effect never re-fires
@@ -1163,6 +1169,160 @@ function WorkersPageInner() {
                 </Accordion>
 
 
+{/* ── ACCORDION: Dokumenti ── */}
+                <div ref={dokumentiRef}>
+                <Accordion title={`📁 ${lang === 'bs' ? 'Dokumenti' : 'Documents'}`} open={openSections.dokumenti} onToggle={() => toggleSection('dokumenti')}>
+                    {(() => {
+                        // Collect all documents from this worker's certificates
+                        const workerDocs = [];
+                        const wCerts = getAll(COLLECTIONS.CERTIFICATES).filter(c => c.workerId === editingWorker);
+                        wCerts.forEach(c => {
+                            if (c.attachedFileData) {
+                                workerDocs.push({ id: c.id + '_attached', certId: c.id, name: c.attachedFileName || c.ime || 'Dokument', data: c.attachedFileData, type: c.attachedFileType || '', size: c.attachedFileSize || 0, source: c.tipUvjerenjaIme || c.ime || 'Uvjerenje', date: c.datum || '' });
+                            }
+                            if (c.fileData) {
+                                workerDocs.push({ id: c.id + '_file', certId: c.id, name: c.fileName || c.ime || 'Dokument', data: c.fileData, type: '', size: 0, source: c.tipUvjerenjaIme || c.ime || 'Uvjerenje', date: c.datum || '' });
+                            }
+                            if (c.potpisanScan) {
+                                workerDocs.push({ id: c.id + '_scan', certId: c.id, name: c.potpisanScanName || `Potpisan ${c.ime || 'Dokument'}`, data: c.potpisanScan, type: '', size: 0, source: c.tipUvjerenjaIme || c.ime || 'Potpisan scan', date: c.potpisanScanDate || c.datum || '' });
+                            }
+                        });
+                        // Also check for worker-level documents (if any stored directly on the worker)
+                        const w = editingWorker ? getById(COLLECTIONS.WORKERS, editingWorker) : null;
+                        if (w?.dokumenti && Array.isArray(w.dokumenti)) {
+                            w.dokumenti.forEach((d, i) => {
+                                workerDocs.push({ id: `wdoc_${i}`, name: d.name || 'Dokument', data: d.data, type: d.type || '', size: d.size || 0, source: lang === 'bs' ? 'Direktno učitano' : 'Direct upload', date: d.date || '' });
+                            });
+                        }
+
+                        const openDoc = (data, name) => {
+                            const isPdf = data.startsWith('data:application/pdf');
+                            const isImg = data.startsWith('data:image/');
+                            if (isPdf || isImg) {
+                                const win = window.open('');
+                                if (win) {
+                                    win.document.write(`<html><head><title>${name}</title></head><body style="margin:0">${isPdf ? `<iframe src="${data}" style="width:100%;height:100vh;border:none"></iframe>` : `<img src="${data}" style="max-width:100%;margin:20px auto;display:block;" />`}</body></html>`);
+                                    win.document.close();
+                                }
+                            }
+                        };
+                        const downloadDoc = (data, name) => {
+                            const a = document.createElement('a');
+                            a.href = data;
+                            a.download = name;
+                            a.click();
+                        };
+                        const printDoc = (data, name) => {
+                            const isPdf = data.startsWith('data:application/pdf');
+                            const isImg = data.startsWith('data:image/');
+                            if (isPdf || isImg) {
+                                const win = window.open('');
+                                if (win) {
+                                    win.document.write(`<html><head><title>${name}</title></head><body style="margin:0">${isPdf ? `<iframe src="${data}" style="width:100%;height:100vh;border:none"></iframe>` : `<img src="${data}" style="max-width:100%;margin:20px auto;display:block;" />`}</body></html>`);
+                                    win.document.close();
+                                    setTimeout(() => win.print(), 500);
+                                }
+                            }
+                        };
+
+                        return (
+                            <div>
+                                {/* Upload new document directly */}
+                                <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+                                    <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                                        📎 {lang === 'bs' ? 'Učitaj novi dokument' : 'Upload new document'}
+                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display: 'none' }} onChange={async (e) => {
+                                            const file = e.target.files?.[0];
+                                            if (!file || !editingWorker) return;
+                                            if (file.size > 5 * 1024 * 1024) { alert('Max 5MB!'); return; }
+                                            const data = await new Promise((res, rej) => { const r = new FileReader(); r.onload = ev => res(ev.target.result); r.onerror = rej; r.readAsDataURL(file); });
+                                            // Store as a certificate record with docData
+                                            create(COLLECTIONS.CERTIFICATES, {
+                                                workerId: editingWorker,
+                                                ime: file.name.replace(/\.[^.]+$/, ''),
+                                                tipUvjerenjaIme: 'Dokument',
+                                                oznaka: `DOC-${Date.now().toString(36).toUpperCase()}`,
+                                                datum: new Date().toISOString().split('T')[0],
+                                                vrijediDo: '',
+                                                sposobnost: 'Sposoban',
+                                                upisao: 'Admin',
+                                                attachedFileData: data,
+                                                attachedFileName: file.name,
+                                                attachedFileSize: file.size,
+                                                attachedFileType: file.type,
+                                            });
+                                            setCertificates(getWorkerCertificates(editingWorker));
+                                            e.target.value = '';
+                                            if (typeof window !== 'undefined' && window.eznrToast) {
+                                                window.eznrToast(lang === 'bs' ? 'Dokument učitan!' : 'Document uploaded!', 'success');
+                                            }
+                                        }} />
+                                    </label>
+                                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                        {workerDocs.length} {lang === 'bs' ? 'dokument(a)' : 'document(s)'}
+                                    </span>
+                                </div>
+
+                                {workerDocs.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                                        {lang === 'bs' ? 'Nema učitanih dokumenata za ovog radnika.' : 'No documents uploaded for this worker.'}
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'grid', gap: 8 }}>
+                                        {workerDocs.map(doc => {
+                                            const isPdf = doc.data?.startsWith('data:application/pdf');
+                                            const isImg = doc.data?.startsWith('data:image/');
+                                            const icon = isPdf ? '📕' : isImg ? '🖼️' : '📄';
+                                            return (
+                                                <div key={doc.id} style={{
+                                                    display: 'flex', alignItems: 'center', gap: 12,
+                                                    padding: '10px 14px', borderRadius: 'var(--radius-sm)',
+                                                    background: 'var(--bg-input)', border: '1px solid var(--border-light)',
+                                                    transition: 'border-color 0.15s',
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                                onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}
+                                                >
+                                                    <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{icon}</span>
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {doc.name}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                                                            <span>{doc.source}</span>
+                                                            {doc.date && <span>{formatDate(doc.date)}</span>}
+                                                            {doc.size > 0 && <span>{(doc.size / 1024).toFixed(1)} KB</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                                                        {(isPdf || isImg) && (
+                                                            <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Prikaži' : 'View'}
+                                                                onClick={() => openDoc(doc.data, doc.name)} style={{ padding: '4px 6px', fontSize: '0.9rem' }}>
+                                                                👁️
+                                                            </button>
+                                                        )}
+                                                        <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Preuzmi' : 'Download'}
+                                                            onClick={() => downloadDoc(doc.data, doc.name)} style={{ padding: '4px 6px', fontSize: '0.9rem' }}>
+                                                            ⬇️
+                                                        </button>
+                                                        {(isPdf || isImg) && (
+                                                            <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Isprintaj' : 'Print'}
+                                                                onClick={() => printDoc(doc.data, doc.name)} style={{ padding: '4px 6px', fontSize: '0.9rem' }}>
+                                                                🖨️
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })()}
+                </Accordion>
+                </div>
+
                 {/* ── NAPOMENA ── */}
                 <div className="card" style={{ marginBottom: 24, marginTop: 24 }}>
                     <div className="card-body">
@@ -1677,7 +1837,7 @@ function WorkersPageInner() {
                                                                     );
                                                                 })()}
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); router.push('/dashboard/archive'); }}>📁 {t('files')}</button>
+                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false })); dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 350); }}>📁 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={{ ..._miSt, color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                             </div>
