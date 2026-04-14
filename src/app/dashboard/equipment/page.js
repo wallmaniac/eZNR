@@ -284,13 +284,19 @@ function EquipmentPageInner() {
                         </div>
 
                         {/* Tab bar */}
-                        <div style={{ display: 'flex', gap: 0, padding: '0 24px', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ display: 'flex', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
                             {[
                                 { key: 'podaci', icon: '📋', label: lang === 'bs' ? 'Podaci' : 'Details' },
                                 { key: 'servis', icon: '🔧', label: lang === 'bs' ? 'Servisni zapisnici' : 'Service Log' },
                             ].map(tab => (
-                                <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-                                    className={`tab-btn ${activeTab === tab.key ? 'active' : ''}`}>
+                                <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                                    padding: '9px 20px', border: 'none', cursor: 'pointer',
+                                    fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: activeTab === tab.key ? 700 : 500,
+                                    background: 'transparent', borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
+                                    color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
+                                    marginBottom: -2, transition: 'all 0.15s',
+                                    display: 'flex', alignItems: 'center', gap: 6,
+                                }}>
                                     {tab.icon} {tab.label}
                                     {tab.key === 'servis' && serviceLogs.length > 0 && (
                                         <span style={{ marginLeft: 6, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem', fontWeight: 700 }}>
@@ -620,8 +626,8 @@ function EquipmentPageInner() {
                                                         <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
                                                         {docLog && (
                                                             <>
-                                                                <button onClick={() => downloadDoc(docLog)} style={menuItemSt}>📎 {lang === 'bs' ? 'Preuzmi dokument' : 'Download document'}</button>
-                                                                <button onClick={() => openDocInTab(docLog)} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Isprintaj dokument' : 'Print document'}</button>
+                                                                <button onClick={() => downloadDoc(docLog)} style={menuItemSt}>📎 {lang === 'bs' ? 'Preuzmi zapisnik' : 'Download log'}</button>
+                                                                <button onClick={() => openDocInTab(docLog)} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
                                                             </>
                                                         )}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />

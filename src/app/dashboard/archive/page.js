@@ -141,13 +141,15 @@ export default function ArchivePage() {
         const serviceLogs = getAll(COLLECTIONS.SERVICE_LOG);
         const equipments = getAll(COLLECTIONS.EQUIPMENT);
         serviceLogs.forEach(sl => {
-            if (sl.docName && sl.docData) {
+            const fName = sl.docName || sl.fileName || sl.attachedFileName || sl.datotekaIme;
+            const fData = sl.docData || sl.fileData || sl.attachedFileData || sl.datotekaSadrzaj;
+            if (fName && fData) {
                 const eq = equipments.find(e => e.id === sl.equipmentId);
                 const eqName = eq ? eq.naziv : 'Oprema';
                 docs.push({
                     id: `eq-svclog-${sl.id}`,
-                    name: sl.docName,
-                    data: sl.docData,
+                    name: fName,
+                    data: fData,
                     category: 'Zapisnici',
                     description: `Servisni zapisnik — ${eqName}`,
                     size: null,
@@ -606,7 +608,7 @@ export default function ArchivePage() {
                                             </td>
                                             <td>
                                                 {file._readonly ? (
-                                                    <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', fontWeight: 600 }}>Obrasci</span>
+                                                    <span style={{ fontSize: '0.75rem', padding: '2px 8px', borderRadius: 12, background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', fontWeight: 600 }}>{file.category || 'Obrasci'}</span>
                                                 ) : (
                                                     <select value={file.category || 'Ostalo'} onChange={e => handleCategoryChange(file.id, e.target.value)}
                                                         style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: 'pointer', width: '100%' }}>

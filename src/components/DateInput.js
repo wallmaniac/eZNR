@@ -70,6 +70,7 @@ export default function DateInput({
 }) {
     const [text, setText] = useState(() => isoToDisplay(value));
     const [prev, setPrev] = useState(() => isoToDisplay(value));
+    const [pickerKey, setPickerKey] = useState(0);
     const nativeRef = useRef(null);
     const pickerOpenRef = useRef(false);
 
@@ -104,17 +105,20 @@ export default function DateInput({
     const lastBlurRef = useRef(0);
 
     const togglePicker = () => {
-        if (pickerOpenRef.current || (Date.now() - lastBlurRef.current < 150)) {
-            // Close picker by blurring, or ignore click if we just blurred natively
-            if (pickerOpenRef.current) {
-                nativeRef.current?.blur?.();
-                pickerOpenRef.current = false;
-            }
+        if (pickerOpenRef.current || (Date.now() - lastBlurRef.current < 250)) {
+            // Force close picker by unmounting it (blur() does not work for showPicker)
+            setPickerKey(k => k + 1);
+            pickerOpenRef.current = false;
             return;
         }
         pickerOpenRef.current = true;
-        try { nativeRef.current?.showPicker?.(); }
-        catch { nativeRef.current?.click?.(); }
+        // Small delay to ensure the new input is mounted if we just unmounted it recently,
+        // but typically it's immediate.
+        setTimeout(() => {
+            if (!nativeRef.current) return;
+            try { nativeRef.current.showPicker?.(); }
+            catch { nativeRef.current.click?.(); }
+        }, 10);
     };
 
     const handlePickerChange = (e) => {
@@ -124,6 +128,8 @@ export default function DateInput({
         setText(d);
         setPrev(d);
         pickerOpenRef.current = false;
+        // Unmount to ensure the date picker is fully closed in all browsers
+        setPickerKey(k => k + 1);
     };
 
     const handlePickerBlur = () => {
@@ -165,6 +171,7 @@ export default function DateInput({
             )}
             {/* Hidden native date picker — only used by the calendar button */}
             <input
+                key={pickerKey}
                 ref={nativeRef}
                 type="date"
                 value={value || ''}
