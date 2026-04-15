@@ -20,6 +20,7 @@ import {
     isCompanyAdmin as checkCompanyAdmin,
     ROLES,
 } from '@/lib/authService';
+import { loadCompanyData, switchCompanyData } from '@/lib/dataStore';
 import { logLogin, updatePresence } from '@/lib/activityLog';
 
 const AuthContext = createContext({});
@@ -63,6 +64,11 @@ export function AuthProvider({ children }) {
                         setActiveCompanyId(companyId);
                         if (companyId && companyId !== 'all') {
                             localStorage.setItem('eznr_activeCompany', companyId);
+                        }
+
+                        // Load company data from Firestore into dataStore cache
+                        if (companyId && companyId !== 'all') {
+                            await loadCompanyData(companyId);
                         }
 
                         // Load user's companies list
@@ -146,6 +152,7 @@ export function AuthProvider({ children }) {
 
     // ── Switch Company ────────────────────────────────────────────────────────
     const switchCompany = useCallback(async (companyId) => {
+        setLoading(true);
         setActiveCompanyId(companyId);
         if (typeof window !== 'undefined') {
             localStorage.setItem('eznr_activeCompany', companyId);
@@ -158,9 +165,11 @@ export function AuthProvider({ children }) {
                 const comp = await getCompany(companyId);
                 setActiveCompany(comp);
             }
+            await switchCompanyData(companyId);
         } else {
             setActiveCompany(null);
         }
+        setLoading(false);
     }, [userCompanies]);
 
     // ── Password Reset ────────────────────────────────────────────────────────

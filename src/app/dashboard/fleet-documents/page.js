@@ -3,14 +3,16 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, update, COLLECTIONS, formatDate, genId } from '@/lib/dataStore';
+import { useAuth } from '@/contexts/AuthContext';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
-import { uploadFleetDocument, deleteFleetDocument } from '@/lib/storageService';
+import { uploadSecureFile, deleteSecureFile } from '@/lib/storageService';
 
 function FleetDocumentsInner() {
     const { t, lang } = useLanguage();
+    const { activeCompanyId } = useAuth();
     const bs = lang === 'bs';
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -133,7 +135,7 @@ function FleetDocumentsInner() {
             const v = vehicles.find(x => x.id === doc.vehicleId);
             if (v && v.dokumenti) {
                 // Delete from Firebase Storage if it was uploaded there
-                if (doc.storagePath) await deleteFleetDocument(doc.storagePath);
+                if (doc.storagePath) await deleteSecureFile(activeCompanyId, doc.storagePath, doc.fileSize || 0);
                 const newDocs = v.dokumenti.filter(d => d.id !== doc.id);
                 update(COLLECTIONS.VEHICLES, doc.vehicleId, { dokumenti: newDocs });
                 setActionMenuId(null);
@@ -201,9 +203,10 @@ function FleetDocumentsInner() {
         if (selectedFile) {
             try {
                 setUploadProgress(0);
-                const { url, storagePath } = await uploadFleetDocument(
+                const { url, storagePath } = await uploadSecureFile(
+                    activeCompanyId,
+                    'fleet-documents',
                     selectedFile,
-                    formData.vehicleId,
                     (pct) => setUploadProgress(pct)
                 );
                 newDoc.fileUrl = url;

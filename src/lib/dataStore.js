@@ -1,47 +1,56 @@
 'use client';
 
 // ============================================================================
-// DATA STORE — localStorage-backed data management for eZNR
-// Provides CRUD operations for all modules with relational data support
+// DATA STORE — Firestore-backed data management for eZNR
+// Provides CRUD operations for all modules with company-scoped data
+//
+// Architecture:
+//   - In-memory cache for instant synchronous reads (getAll, getById)
+//   - Background Firestore writes for persistence
+//   - Company-scoped: /companies/{companyId}/{collection}/{docId}
+//   - Global: /{collection}/{docId} (certTypes, ppeTypes, etc.)
+//   - onSnapshot listeners for real-time sync between users
 // ============================================================================
 
-const STORE_PREFIX = 'eznr_';
+import { db } from './firebase';
+import {
+    collection as fsCollection, doc, getDocs, setDoc, updateDoc,
+    deleteDoc, writeBatch, onSnapshot, query, orderBy,
+} from 'firebase/firestore';
 
-function getStore(key) {
-    if (typeof window === 'undefined') return [];
-    try {
-        const data = localStorage.getItem(STORE_PREFIX + key);
-        return data ? JSON.parse(data) : [];
-    } catch { return []; }
-}
+// ============================================================================
+// IN-MEMORY CACHE — The core of instant reads
+// ============================================================================
+const _cache = {};
+let _activeCompanyId = null;
+let _isLoaded = false;
+let _isLoading = false;
+let _loadPromise = null;
+const _listeners = new Set();       // data change listeners
+const _snapshotUnsubs = [];         // active onSnapshot unsubscribers
 
-function setStore(key, data) {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(STORE_PREFIX + key, JSON.stringify(data));
-}
-
-function genId() {
+// ── Helpers ──────────────────────────────────────────────────────────────────
+export function genId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
 }
 
-function formatDate(d) {
+export function formatDate(d) {
     if (!d) return '';
     const date = new Date(d);
+    if (isNaN(date)) return d;
     const dd = String(date.getDate()).padStart(2, '0');
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const yyyy = date.getFullYear();
     return `${dd}.${mm}.${yyyy}.`;
 }
 
-function todayISO() {
+export function todayISO() {
     return new Date().toISOString().split('T')[0];
 }
 
 // ============================================================================
-// ACTIVITY AUTO-LOG — writes directly to activityLog localStorage key
-// No circular import needed — reads/writes the same 'eznr_activity_log' key
+// ACTIVITY AUTO-LOG — writes activity entries to Firestore
 // ============================================================================
-const _AL_KEY = 'eznr_activity_log';
 const _AL_MAX = 200;
 const _AL_COLS = {
     workers: { cat: 'worker', icon: '\uD83D\uDC77', label: d => (`${d.ime || ''} ${d.prezime || ''}`).trim() || 'Radnik', relatedId: d => d.id },
@@ -62,7 +71,7 @@ const _AL_COLS = {
     requests: { cat: 'document', icon: '\uD83D\uDCE9', label: d => `Zahtjev: ${d.naziv || d.tip || ''}`, relatedId: d => d.id },
     zapisnici: { cat: 'document', icon: '\uD83D\uDCCB', label: d => `Zapisnik: ${d.naziv || d.broj || ''}`, relatedId: d => d.id },
 };
-const _AL_VERBS = { create: 'Dodan(a)', update: 'A\u017euriran(a)', delete: 'Obrisan(a)' };
+const _AL_VERBS = { create: 'Dodan(a)', update: 'Ažuriran(a)', delete: 'Obrisan(a)' };
 
 function _autoLog(action, collection, item) {
     if (typeof window === 'undefined' || !item) return;
@@ -70,7 +79,9 @@ function _autoLog(action, collection, item) {
     if (!cfg) return;
     try {
         const user = _getActiveUser();
-        const existing = JSON.parse(localStorage.getItem(_AL_KEY) || '[]');
+        const companyId = _getActiveCompanyId();
+        if (!companyId || companyId === 'all') return;
+
         const entry = {
             id: Date.now().toString(36) + Math.random().toString(36).substr(2, 5),
             timestamp: new Date().toISOString(),
@@ -78,11 +89,18 @@ function _autoLog(action, collection, item) {
             title: `${_AL_VERBS[action] || action} ${cfg.label(item)}`,
             detail: '', severity: action === 'delete' ? 'warning' : 'info',
             relatedId: cfg.relatedId ? cfg.relatedId(item) : (item.id || ''),
-            companyId: _getActiveCompanyId() || item.companyId || '',
+            companyId,
             userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : 'Sistem',
-            userId: user?.id || '',
+            userId: user?.id || user?.uid || '',
         };
-        localStorage.setItem(_AL_KEY, JSON.stringify([entry, ...existing].slice(0, _AL_MAX)));
+
+        // Write to Firestore activity log (background, non-blocking)
+        const logRef = doc(db, `companies/${companyId}/activityLog`, entry.id);
+        setDoc(logRef, entry).catch(err => console.warn('[ActivityLog] Write failed:', err));
+
+        // Also update local cache for immediate display
+        if (!_cache['activityLog']) _cache['activityLog'] = [];
+        _cache['activityLog'] = [entry, ..._cache['activityLog']].slice(0, _AL_MAX);
     } catch { }
 }
 
@@ -90,24 +108,29 @@ function _autoLog(action, collection, item) {
 // COMPANY SCOPING
 // ============================================================================
 
-// Collections that are company-scoped (data belongs to a specific company)
-const COMPANY_SCOPED = [
+// Collections that are company-scoped (stored under /companies/{companyId}/...)
+export const COMPANY_SCOPED = [
     'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
     'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs', 'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
     'digitalArchive', 'requests', 'riskAssessments', 'riskItems', 'isznrDocuments', 'isznrParties',
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
     'trainings', 'annualReports', 'medicalExams', 'sistematizacije',
     'vehicles', 'vehicleAssignments', 'travelOrders', 'fireExtinguishers', 'hydrants', 'evacuationPlans', 'evacuationDrills',
-    'zapisnici',
+    'zapisnici', 'serviceLog', 'activityLog', 'nightWork',
 ];
 
-// Helper: get active company from localStorage (avoids needing React context)
+// Global collections (shared reference data, at root level)
+const GLOBAL_COLLECTIONS = [
+    'countries', 'counties', 'places', 'doctors',
+    'examTypes', 'certTypes', 'equipmentTypes', 'ppeTypes', 'fileTypes',
+    'isznrDocTypes',
+];
+
 function _getActiveCompanyId() {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem('eznr_activeCompany') || null;
+    return _activeCompanyId || localStorage.getItem('eznr_activeCompany') || null;
 }
 
-// Helper: get user object from localStorage
 function _getActiveUser() {
     if (typeof window === 'undefined') return null;
     try {
@@ -116,126 +139,283 @@ function _getActiveUser() {
     } catch { return null; }
 }
 
-// Helper: get user's company IDs from localStorage
 function _getUserCompanyIds() {
     const u = _getActiveUser();
     return u ? (u.companyIds || []) : [];
 }
 
 // ============================================================================
-// GENERIC CRUD
+// DATA LOADING — Fetch from Firestore into cache
+// ============================================================================
+
+/**
+ * Load all data for a company from Firestore.
+ * Called once on login / company switch.
+ * Returns a promise that resolves when all data is cached.
+ */
+export async function loadCompanyData(companyId) {
+    if (!companyId || companyId === _activeCompanyId && _isLoaded) return;
+
+    // Prevent duplicate loads
+    if (_isLoading && _activeCompanyId === companyId) return _loadPromise;
+
+    _isLoading = true;
+    _activeCompanyId = companyId;
+
+    // Detach any previous onSnapshot listeners
+    _detachListeners();
+
+    _loadPromise = (async () => {
+        try {
+            console.log(`[dataStore] 📦 Loading data for company ${companyId}...`);
+            const start = performance.now();
+
+            // Load company-scoped collections using onSnapshot for real-time background sync
+            const companyLoads = COMPANY_SCOPED.map((colName) => {
+                return new Promise((resolve) => {
+                    try {
+                        const colRef = fsCollection(db, `companies/${companyId}/${colName}`);
+                        const unsub = onSnapshot(colRef, (snap) => {
+                            _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                            _notifyListeners();
+                            if (typeof window !== 'undefined') {
+                                window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                            }
+                            resolve(); // Resolve promise on first load
+                        }, (err) => {
+                            console.warn(`[dataStore] ⚠️ Snapshot error ${colName}:`, err.message);
+                            if (!_cache[colName]) _cache[colName] = [];
+                            resolve();
+                        });
+                        _snapshotUnsubs.push(unsub);
+                    } catch (err) {
+                        console.warn(`[dataStore] ⚠️ Failed sync setup for ${colName}:`, err.message);
+                        if (!_cache[colName]) _cache[colName] = [];
+                        resolve();
+                    }
+                });
+            });
+
+            // Load global collections in parallel
+            const globalLoads = GLOBAL_COLLECTIONS.map(async (colName) => {
+                try {
+                    const colRef = fsCollection(db, colName);
+                    const snap = await getDocs(colRef);
+                    _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                } catch (err) {
+                    console.warn(`[dataStore] ⚠️ Failed to load global ${colName}:`, err.message);
+                    _cache[colName] = [];
+                }
+            });
+
+            // Load companies and users (top-level)
+            const metaLoads = ['companies', 'users'].map(async (colName) => {
+                try {
+                    const snap = await getDocs(fsCollection(db, colName));
+                    _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                } catch (err) {
+                    console.warn(`[dataStore] ⚠️ Failed to load ${colName}:`, err.message);
+                    _cache[colName] = [];
+                }
+            });
+
+            await Promise.all([...companyLoads, ...globalLoads, ...metaLoads]);
+
+            const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+            const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
+            console.log(`[dataStore] ✅ Loaded ${totalDocs} documents in ${elapsed}s`);
+
+            _isLoaded = true;
+            _isLoading = false;
+            _notifyListeners();
+        } catch (err) {
+            console.error('[dataStore] ❌ Fatal load error:', err);
+            _isLoading = false;
+        }
+    })();
+
+    return _loadPromise;
+}
+
+/**
+ * Switch to a different company — clears cache and reloads.
+ */
+export async function switchCompanyData(companyId) {
+    _isLoaded = false;
+    _activeCompanyId = null;
+    // Don't clear global collections — they're shared
+    COMPANY_SCOPED.forEach(col => { _cache[col] = []; });
+    _cache['activityLog'] = [];
+    await loadCompanyData(companyId);
+}
+
+/**
+ * Check if data is loaded and ready.
+ */
+export function isDataReady() {
+    return _isLoaded;
+}
+
+/**
+ * Subscribe to data changes.
+ */
+export function onDataChange(callback) {
+    _listeners.add(callback);
+    return () => _listeners.delete(callback);
+}
+
+function _notifyListeners() {
+    _listeners.forEach(cb => { try { cb(); } catch { } });
+}
+
+function _detachListeners() {
+    _snapshotUnsubs.forEach(unsub => { try { unsub(); } catch { } });
+    _snapshotUnsubs.length = 0;
+}
+
+// ============================================================================
+// FIRESTORE PATH HELPERS
+// ============================================================================
+
+function _getCollectionPath(colName) {
+    const companyId = _getActiveCompanyId();
+    if (COMPANY_SCOPED.includes(colName)) {
+        if (!companyId || companyId === 'all') return null; // Can't write without a company
+        return `companies/${companyId}/${colName}`;
+    }
+    if (GLOBAL_COLLECTIONS.includes(colName)) {
+        return colName; // Root-level
+    }
+    // Fallback for meta collections (companies, users)
+    return colName;
+}
+
+function _getDocRef(colName, docId) {
+    const path = _getCollectionPath(colName);
+    if (!path) return null;
+    return doc(db, path, docId);
+}
+
+// ============================================================================
+// GENERIC CRUD — Synchronous reads from cache, async writes to Firestore
 // ============================================================================
 
 export function getById(collection, id) {
-    return getStore(collection).find(item => item.id === id) || null;
+    return (_cache[collection] || []).find(item => item.id === id) || null;
 }
 
 export function create(collection, data) {
-    const items = getStore(collection);
-    // Auto-attach companyId for company-scoped collections if not already set
+    const now = new Date().toISOString();
+    const companyId = _getActiveCompanyId();
+
     let enrichedData = { ...data };
-    if (COMPANY_SCOPED.includes(collection) && !enrichedData.companyId) {
-        const activeId = _getActiveCompanyId();
-        if (activeId && activeId !== 'all') {
-            enrichedData.companyId = activeId;
-        }
+    if (COMPANY_SCOPED.includes(collection) && !enrichedData.companyId && companyId && companyId !== 'all') {
+        enrichedData.companyId = companyId;
     }
+
     const newItem = {
         ...enrichedData,
         id: genId(),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        createdAt: now,
+        updatedAt: now,
     };
-    items.push(newItem);
-    setStore(collection, items);
+
+    // Update cache immediately (synchronous)
+    if (!_cache[collection]) _cache[collection] = [];
+    _cache[collection].push(newItem);
+
+    // Write to Firestore in background
+    _firestoreWrite(collection, newItem);
     _autoLog('create', collection, newItem);
+
     return newItem;
 }
 
 export function update(collection, id, data) {
-    const items = getStore(collection);
+    const items = _cache[collection] || [];
     const idx = items.findIndex(item => item.id === id);
     if (idx === -1) return null;
-    items[idx] = { ...items[idx], ...data, updatedAt: new Date().toISOString() };
-    setStore(collection, items);
+
+    const now = new Date().toISOString();
+    items[idx] = { ...items[idx], ...data, updatedAt: now };
+
+    // Write to Firestore in background
+    _firestoreWrite(collection, items[idx]);
     _autoLog('update', collection, items[idx]);
+
     return items[idx];
 }
 
 // ============================================================================
-// UNDO STACK
+// UNDO STACK — in-memory (no longer in localStorage)
 // ============================================================================
-const UNDO_KEY = 'eznr_undo_stack';
+let _undoStack = [];
 const UNDO_MAX = 30;
 
-export function getUndoStack() {
-    if (typeof window === 'undefined') return [];
-    try { return JSON.parse(localStorage.getItem(UNDO_KEY) || '[]'); } catch { return []; }
-}
+export function getUndoStack() { return _undoStack; }
 
 function pushUndoEntry(entry) {
-    if (typeof window === 'undefined') return;
-    try {
-        const stack = getUndoStack();
-        stack.unshift({ ...entry, timestamp: new Date().toISOString() });
-        localStorage.setItem(UNDO_KEY, JSON.stringify(stack.slice(0, UNDO_MAX)));
+    _undoStack.unshift({ ...entry, timestamp: new Date().toISOString() });
+    _undoStack = _undoStack.slice(0, UNDO_MAX);
+    if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
-    } catch { /* ignore */ }
+    }
 }
 
 export function undoLastDelete() {
-    if (typeof window === 'undefined') return null;
-    try {
-        const stack = getUndoStack();
-        if (!stack.length) return null;
-        const entry = stack[0];
-        entry.items.forEach(({ collection, data }) => {
-            const items = getStore(collection);
-            if (!items.find(i => i.id === data.id)) {
-                items.push(data);
-                setStore(collection, items);
-            }
-        });
-        localStorage.setItem(UNDO_KEY, JSON.stringify(stack.slice(1)));
+    if (_undoStack.length === 0) return null;
+    const entry = _undoStack[0];
+    entry.items.forEach(({ collection, data }) => {
+        if (!_cache[collection]) _cache[collection] = [];
+        if (!_cache[collection].find(i => i.id === data.id)) {
+            _cache[collection].push(data);
+            _firestoreWrite(collection, data); // Re-create in Firestore
+        }
+    });
+    _undoStack = _undoStack.slice(1);
+    if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
         window.dispatchEvent(new CustomEvent('eznr:undo'));
-        return entry;
-    } catch { return null; }
+    }
+    return entry;
 }
 
 export function clearUndoStack() {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem(UNDO_KEY);
-    window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
+    _undoStack = [];
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('eznr:undo-stack-changed'));
+    }
 }
 
 export function remove(collection, id) {
-    const items = getStore(collection);
+    const items = _cache[collection] || [];
     const removed = items.find(item => item.id === id);
-    const filtered = items.filter(item => item.id !== id);
-    setStore(collection, filtered);
+    _cache[collection] = items.filter(item => item.id !== id);
+
     if (removed) {
         _autoLog('delete', collection, removed);
+        _firestoreDelete(collection, id);
         const label = removed.ime ? (removed.ime + ' ' + (removed.prezime || '')).trim()
             : (removed.naziv || removed.tip || 'Zapis');
         pushUndoEntry({ label, collection, items: [{ collection, data: removed }] });
     }
-    return filtered;
+    return _cache[collection];
 }
 
 export function removeMany(collection, ids) {
-    const items = getStore(collection);
+    const items = _cache[collection] || [];
     const removed = items.filter(item => ids.includes(item.id));
-    const filtered = items.filter(item => !ids.includes(item.id));
-    setStore(collection, filtered);
+    _cache[collection] = items.filter(item => !ids.includes(item.id));
+
     if (removed.length) {
+        ids.forEach(id => _firestoreDelete(collection, id));
         const first = removed[0];
         const label = removed.length === 1
             ? (first.ime ? (first.ime + ' ' + (first.prezime || '')).trim() : (first.naziv || 'Zapis'))
             : (removed.length + ' zapisa');
         pushUndoEntry({ label, collection, items: removed.map(data => ({ collection, data })) });
     }
-    return filtered;
+    return _cache[collection];
 }
 
 export function removeWorkerCascade(workerId) {
@@ -243,16 +423,22 @@ export function removeWorkerCascade(workerId) {
     const undoItems = [];
     const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1', 'medicalExams'];
 
-    const worker = getStore('workers').find(w => w.id === workerId);
+    const worker = (_cache['workers'] || []).find(w => w.id === workerId);
     if (worker) undoItems.push({ collection: 'workers', data: worker });
     cascadeCols.forEach(col => {
-        getStore(col).filter(r => r.workerId === workerId).forEach(data => undoItems.push({ collection: col, data }));
+        (_cache[col] || []).filter(r => r.workerId === workerId).forEach(data => {
+            undoItems.push({ collection: col, data });
+            _firestoreDelete(col, data.id);
+        });
     });
 
     const workerLabel = worker ? (worker.ime + ' ' + (worker.prezime || '')).trim() : 'Radnik';
 
-    setStore('workers', getStore('workers').filter(w => w.id !== workerId));
-    cascadeCols.forEach(col => setStore(col, getStore(col).filter(r => r.workerId !== workerId)));
+    _cache['workers'] = (_cache['workers'] || []).filter(w => w.id !== workerId);
+    if (worker) _firestoreDelete('workers', workerId);
+    cascadeCols.forEach(col => {
+        _cache[col] = (_cache[col] || []).filter(r => r.workerId !== workerId);
+    });
 
     if (worker) _autoLog('delete', 'workers', worker);
     pushUndoEntry({
@@ -270,15 +456,23 @@ export function removeManyWorkersCascade(workerIds) {
     const cascadeCols = ['certificates', 'ppeAssignments', 'calendarEvents', 'formsRo1', 'formsRo2', 'referralsRa1', 'referralsNr1', 'medicalExams'];
 
     workerIds.forEach(wid => {
-        const worker = getStore('workers').find(w => w.id === wid);
-        if (worker) undoItems.push({ collection: 'workers', data: worker });
+        const worker = (_cache['workers'] || []).find(w => w.id === wid);
+        if (worker) {
+            undoItems.push({ collection: 'workers', data: worker });
+            _firestoreDelete('workers', wid);
+        }
         cascadeCols.forEach(col => {
-            getStore(col).filter(r => r.workerId === wid).forEach(data => undoItems.push({ collection: col, data }));
+            (_cache[col] || []).filter(r => r.workerId === wid).forEach(data => {
+                undoItems.push({ collection: col, data });
+                _firestoreDelete(col, data.id);
+            });
         });
     });
 
-    setStore('workers', getStore('workers').filter(w => !workerIds.includes(w.id)));
-    cascadeCols.forEach(col => setStore(col, getStore(col).filter(r => !workerIds.includes(r.workerId))));
+    _cache['workers'] = (_cache['workers'] || []).filter(w => !workerIds.includes(w.id));
+    cascadeCols.forEach(col => {
+        _cache[col] = (_cache[col] || []).filter(r => !workerIds.includes(r.workerId));
+    });
 
     const relatedCount = undoItems.filter(i => i.collection !== 'workers').length;
     pushUndoEntry({
@@ -290,11 +484,10 @@ export function removeManyWorkersCascade(workerIds) {
     });
 }
 
-
-export function search(collection, query, fields) {
-    const items = getStore(collection);
-    if (!query) return items;
-    const q = query.toLowerCase();
+export function search(collection, queryStr, fields) {
+    const items = _cache[collection] || [];
+    if (!queryStr) return items;
+    const q = queryStr.toLowerCase();
     return items.filter(item =>
         fields.some(f => String(item[f] || '').toLowerCase().includes(q))
     );
@@ -344,7 +537,6 @@ export const COLLECTIONS = {
     TRAININGS: 'trainings',
     ANNUAL_REPORTS: 'annualReports',
     SERVICE_LOG: 'serviceLog',
-    DIGITAL_ARCHIVE: 'digitalArchive',
     MEDICAL_EXAMS: 'medicalExams',
     // ── Multi-company & User Management ──
     USERS: 'users',
@@ -361,32 +553,19 @@ export const COLLECTIONS = {
     ZAPISNICI: 'zapisnici',
 };
 
-// ── getAll — automatically filters by active company for scoped collections ──
+// ── getAll — returns cached data (synchronous, instant) ──
 export function getAll(collection) {
-    const all = getStore(collection);
-    if (!COMPANY_SCOPED.includes(collection)) return all;
-    const companyId = _getActiveCompanyId();
-    if (!companyId) return all;
-    if (companyId === 'all') {
-        const uids = _getUserCompanyIds();
-        if (uids.length > 0) return all.filter(item => !item.companyId || uids.includes(item.companyId));
-        return all;
-    }
-    return all.filter(item => !item.companyId || item.companyId === companyId);
+    return _cache[collection] || [];
 }
 
-// ── getRawAll — unfiltered, for admin/sync/migration operations ──
+// ── getRawAll — same as getAll now (cache is already company-scoped) ──
 export function getRawAll(collection) {
-    return getStore(collection);
+    return _cache[collection] || [];
 }
 
-/**
- * Deduplicate a collection in localStorage by a given field (default: 'naziv').
- * Keeps the first occurrence of each unique field value.
- * Use this to clean up duplicates caused by repeated seed runs.
- */
+// Deduplicate a collection in cache (and persist)
 export function deduplicateCollection(collection, field = 'naziv') {
-    const items = getStore(collection);
+    const items = _cache[collection] || [];
     const seen = new Set();
     const deduped = items.filter(item => {
         const key = (item[field] || '').toLowerCase().trim();
@@ -395,406 +574,63 @@ export function deduplicateCollection(collection, field = 'naziv') {
         return true;
     });
     if (deduped.length !== items.length) {
-        setStore(collection, deduped);
-        console.log(`[eZNR] Deduped ${collection}: removed ${items.length - deduped.length} duplicates`);
+        // Delete duplicates from Firestore
+        const removedIds = items.filter(i => !deduped.includes(i)).map(i => i.id);
+        removedIds.forEach(id => _firestoreDelete(collection, id));
+        _cache[collection] = deduped;
+        console.log(`[dataStore] Deduped ${collection}: removed ${items.length - deduped.length} duplicates`);
     }
     return deduped;
 }
 
-// Get all records filtered by companyId (explicit version, used by dashboard)
+// Get all records filtered by companyId (explicit version)
 export function getAllForCompany(collection, companyId, userCompanyIds = []) {
-    if (!companyId) return getRawAll(collection);
-    if (!COMPANY_SCOPED.includes(collection)) return getRawAll(collection);
-    if (companyId === 'all') {
-        if (userCompanyIds.length > 0) {
-            return getRawAll(collection).filter(item => !item.companyId || userCompanyIds.includes(item.companyId));
-        }
-        return getRawAll(collection);
-    }
-    return getRawAll(collection).filter(item => !item.companyId || item.companyId === companyId);
+    // In the new architecture, cache is already company-scoped
+    // This function exists for backward compatibility
+    return getAll(collection);
 }
 
-// Create a record with companyId attached
+// Create with explicit company
 export function createForCompany(collection, data, companyId) {
-    if (companyId && COMPANY_SCOPED.includes(collection)) {
-        return create(collection, { ...data, companyId });
-    }
-    return create(collection, data);
+    return create(collection, { ...data, companyId: companyId || _getActiveCompanyId() });
 }
 
-// ── Migrate legacy data: stamp all untagged records with a company ID ──
-export function migrateDataToCompany(targetCompanyId) {
-    if (!targetCompanyId || targetCompanyId === 'all') return 0;
-    let count = 0;
-    COMPANY_SCOPED.forEach(collection => {
-        const items = getStore(collection);
-        let changed = false;
-        items.forEach(item => {
-            if (!item.companyId) {
-                item.companyId = targetCompanyId;
-                changed = true;
-                count++;
-            }
-        });
-        if (changed) setStore(collection, items);
-    });
-    console.log(`[eZNR] Migrated ${count} records to company ${targetCompanyId}`);
-    return count;
-}
-
-
-// Seed a new company with universal reference data from existing companies
-export function seedCompanyData(newCompanyId, sourceCompanyId) {
-    if (!newCompanyId || !sourceCompanyId) return 0;
-    let count = 0;
-    const SEED_COLLECTIONS = ['ppeTypes', 'certTypes', 'equipmentTypes', 'personTypes', 'hazards'];
-    SEED_COLLECTIONS.forEach(collection => {
-        const items = getStore(collection);
-        const toCopy = items.filter(item => !item.companyId || item.companyId === sourceCompanyId);
-        toCopy.forEach(item => {
-            const exists = items.find(existing => existing.companyId === newCompanyId && existing.naziv === item.naziv);
-            if (!exists) {
-                items.push({ ...item, id: genId(), companyId: newCompanyId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-                count++;
-            }
-        });
-        if (count > 0) setStore(collection, items);
-    });
-    const orgUnits = getStore('orgUnits');
-    if (!orgUnits.some(u => u.companyId === newCompanyId)) {
-        [{ naziv: 'Uprava', opis: 'Upravljacka struktura' }, { naziv: 'Proizvodnja', opis: 'Proizvodni sektor' }, { naziv: 'Administracija', opis: 'Administrativni sektor' }].forEach(d => {
-            orgUnits.push({ ...d, id: genId(), companyId: newCompanyId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
-            count++;
-        });
-        setStore('orgUnits', orgUnits);
-    }
-    console.log('[eZNR] Seeded ' + count + ' records into new company ' + newCompanyId);
-    return count;
-}
+// ── Migration helpers (kept for backward compat, no-ops now) ──
+export function migrateDataToCompany(targetCompanyId) { return 0; }
+export function seedCompanyData(newCompanyId, sourceCompanyId) { return 0; }
 
 // ── User helpers ──
 export function findUserByUsername(username) {
-    return getAll(COLLECTIONS.USERS).find(u => u.username === username) || null;
+    return (_cache['users'] || []).find(u => u.username === username || u.email === username) || null;
 }
 
 export function getUserCompanies(userId) {
     const user = getById(COLLECTIONS.USERS, userId);
     if (!user) return [];
-    if (user.role === 'admin') return getRawAll(COLLECTIONS.COMPANIES);
-    return getRawAll(COLLECTIONS.COMPANIES).filter(c => (user.companyIds || []).includes(c.id));
+    if (user.role === 'admin' || user.role === 'superadmin') return _cache['companies'] || [];
+    return (_cache['companies'] || []).filter(c => (user.companyIds || []).includes(c.id));
 }
 
-export function getAllUsers() {
-    return getAll(COLLECTIONS.USERS);
-}
-
-export function getAllCompanies() {
-    return getAll(COLLECTIONS.COMPANIES);
-}
+export function getAllUsers() { return _cache['users'] || []; }
+export function getAllCompanies() { return _cache['companies'] || []; }
 
 // ============================================================================
-// SEED DATA — matching Croatian app structure
+// SEED DATA — No longer auto-seeded on module load
+// Kept as export for reference and initial setup
 // ============================================================================
 
-export const SEED_DATA = {
-    [COLLECTIONS.ORG_UNITS]: [
-        { id: 'ou1', naziv: 'Merkant d.o.o.', skraceniNaziv: 'Merkant', parentId: null, mjesto: 'Sarajevo', ulica: 'Zmaja od Bosne 5', kucniBroj: '5', tip: 'Tvrtka', mjestroTroska: '', odgovornaOsoba: '', grupaOrgJed: '', odabraniLijecnik: '' },
-        { id: 'ou2', naziv: 'Uprava', skraceniNaziv: 'UPR', parentId: 'ou1', mjesto: 'Sarajevo', ulica: 'Zmaja od Bosne 5', kucniBroj: '5' },
-        { id: 'ou3', naziv: 'Računovodstvo', skraceniNaziv: 'RAC', parentId: 'ou1', mjesto: 'Sarajevo', ulica: 'Zmaja od Bosne 5', kucniBroj: '5' },
-        { id: 'ou4', naziv: 'Proizvodnja', skraceniNaziv: 'PRO', parentId: 'ou1', mjesto: 'Sarajevo', ulica: 'Zmaja od Bosne 5', kucniBroj: '5' },
-        { id: 'ou5', naziv: 'Skladište', skraceniNaziv: 'SKL', parentId: 'ou4', mjesto: 'Sarajevo', ulica: 'Zmaja od Bosne 5', kucniBroj: '5' },
-        { id: 'ou6', naziv: 'IT odjel', skraceniNaziv: 'IT', parentId: 'ou1', mjesto: 'Sarajevo', ulica: 'Zmaja od Bosne 5', kucniBroj: '5' },
-    ],
-
-    [COLLECTIONS.WORKPLACES]: [
-        { id: 'wp1', naziv: 'Direktor', oznaka: 'DIR-01', strucnaSprema: 'VSS', grupaRM: '', radNaRacunalu: true, posebniUvjetiRada: false, orgUnitId: 'ou2' },
-        { id: 'wp2', naziv: 'Računovođa', oznaka: 'RAC-01', strucnaSprema: 'VSS', grupaRM: '', radNaRacunalu: true, posebniUvjetiRada: false, orgUnitId: 'ou3' },
-        { id: 'wp3', naziv: 'Šef smjene', oznaka: 'PRO-01', strucnaSprema: 'VŠS', grupaRM: '', radNaRacunalu: false, posebniUvjetiRada: true, orgUnitId: 'ou4' },
-        { id: 'wp4', naziv: 'Radnik u proizvodnji', oznaka: 'PRO-02', strucnaSprema: 'SSS', grupaRM: '', radNaRacunalu: false, posebniUvjetiRada: true, orgUnitId: 'ou4' },
-        { id: 'wp5', naziv: 'Skladištar', oznaka: 'SKL-01', strucnaSprema: 'SSS', grupaRM: '', radNaRacunalu: false, posebniUvjetiRada: true, orgUnitId: 'ou5' },
-        { id: 'wp6', naziv: 'Komercijalista', oznaka: 'KOM-01', strucnaSprema: 'VSS', grupaRM: '', radNaRacunalu: true, posebniUvjetiRada: false, orgUnitId: 'ou2' },
-        { id: 'wp7', naziv: 'Sistemski administrator', oznaka: 'IT-01', strucnaSprema: 'VSS', grupaRM: '', radNaRacunalu: true, posebniUvjetiRada: false, orgUnitId: 'ou6' },
-        { id: 'wp8', naziv: 'Tehničar održavanja', oznaka: 'ODR-01', strucnaSprema: 'SSS', grupaRM: '', radNaRacunalu: false, posebniUvjetiRada: true, orgUnitId: 'ou4' },
-    ],
-
-    [COLLECTIONS.WORKERS]: [
-        {
-            id: 'w1', prefix: '', ime: 'Antonio', prezime: 'Ivic', sufiks: '',
-            imeRoditelja: 'Ivan', jmbg: '0612985170548', oib: '59104787887',
-            zivotnaDob: 40, stazDoDolaska: '000000',
-            datumZaposlenja: '2024-01-15', datumOdlaska: '', ukupniStaz: '02 00 00',
-            koef: '', radnoMjestoId: 'wp6', orgJedinicaId: 'ou1',
-            lokacija: 'Sarajevo', evidencijskiBroj: 'EV-001', vanjskiSuradnik: false,
-            // Kontakt podaci
-            ulica: 'Maršala Tita 10', kucniBroj: '10', mjestoId: '',
-            opcina: 'Stari Grad', telefonTvrtki: '033/123-456', telefonKuce: '033/789-012',
-            mobitel: '061/234-567', email: 'antonio.ivic@merkant.ba',
-            // Osobni podaci
-            spol: 'M', datumRodenja: '1985-12-06', mjestoRodenja: 'Zagreb', opcinaRodenja: 'Zagreb',
-            // Status
-            aktivan: true, posebniUvjeti: false,
-            napomena: '',
-        },
-        {
-            id: 'w2', prefix: '', ime: 'Emina', prezime: 'Begović', sufiks: '',
-            imeRoditelja: 'Alija', jmbg: '1503990170123', oib: '',
-            zivotnaDob: 36, stazDoDolaska: '050000',
-            datumZaposlenja: '2026-02-01', datumOdlaska: '', ukupniStaz: '00 00 25',
-            koef: '', radnoMjestoId: 'wp2', orgJedinicaId: 'ou3',
-            lokacija: 'Sarajevo', evidencijskiBroj: 'EV-002', vanjskiSuradnik: false,
-            ulica: 'Ferhadija 15', kucniBroj: '15', mjestoId: '',
-            opcina: 'Centar', telefonTvrtki: '', telefonKuce: '',
-            mobitel: '062/345-678', email: 'emina.begovic@merkant.ba',
-            spol: 'Z', datumRodenja: '1990-03-15', mjestoRodenja: 'Sarajevo', opcinaRodenja: 'Centar',
-            aktivan: true, posebniUvjeti: false, napomena: '',
-        },
-        {
-            id: 'w3', prefix: '', ime: 'Mirza', prezime: 'Selimović', sufiks: '',
-            imeRoditelja: 'Faruk', jmbg: '2207988175432', oib: '',
-            zivotnaDob: 37, stazDoDolaska: '100000',
-            datumZaposlenja: '2026-02-05', datumOdlaska: '', ukupniStaz: '00 00 21',
-            koef: '', radnoMjestoId: 'wp3', orgJedinicaId: 'ou4',
-            lokacija: 'Sarajevo', evidencijskiBroj: 'EV-003', vanjskiSuradnik: false,
-            ulica: 'Bulevar Meše Selimovića 30', kucniBroj: '30', mjestoId: '',
-            opcina: 'Novo Sarajevo', telefonTvrtki: '033/555-123', telefonKuce: '',
-            mobitel: '063/456-789', email: 'mirza.selimovic@merkant.ba',
-            spol: 'M', datumRodenja: '1988-07-22', mjestoRodenja: 'Tuzla', opcinaRodenja: 'Tuzla',
-            aktivan: true, posebniUvjeti: true, napomena: 'Zadužen za noćne smjene',
-        },
-        {
-            id: 'w4', prefix: '', ime: 'Amra', prezime: 'Delić', sufiks: '',
-            imeRoditelja: 'Hasan', jmbg: '1011992175890', oib: '',
-            zivotnaDob: 33, stazDoDolaska: '030000',
-            datumZaposlenja: '2026-01-10', datumOdlaska: '', ukupniStaz: '00 01 16',
-            koef: '', radnoMjestoId: 'wp5', orgJedinicaId: 'ou5',
-            lokacija: 'Sarajevo', evidencijskiBroj: 'EV-004', vanjskiSuradnik: false,
-            ulica: 'Hamdije Kreševljakovića 20', kucniBroj: '20', mjestoId: '',
-            opcina: 'Centar', telefonTvrtki: '', telefonKuce: '',
-            mobitel: '064/567-890', email: 'amra.delic@merkant.ba',
-            spol: 'Z', datumRodenja: '1992-11-10', mjestoRodenja: 'Zenica', opcinaRodenja: 'Zenica',
-            aktivan: true, posebniUvjeti: true, napomena: 'Rad sa teškim teretima',
-        },
-        {
-            id: 'w5', prefix: '', ime: 'Nermin', prezime: 'Kovačević', sufiks: '',
-            imeRoditelja: 'Ibrahim', jmbg: '0305987175234', oib: '',
-            zivotnaDob: 38, stazDoDolaska: '080000',
-            datumZaposlenja: '2026-01-20', datumOdlaska: '', ukupniStaz: '00 01 06',
-            koef: '', radnoMjestoId: 'wp7', orgJedinicaId: 'ou6',
-            lokacija: 'Sarajevo', evidencijskiBroj: 'EV-005', vanjskiSuradnik: false,
-            ulica: 'Obala Kulina bana 8', kucniBroj: '8', mjestoId: '',
-            opcina: 'Stari Grad', telefonTvrtki: '033/222-333', telefonKuce: '',
-            mobitel: '065/678-901', email: 'nermin.kovacevic@merkant.ba',
-            spol: 'M', datumRodenja: '1987-05-03', mjestoRodenja: 'Mostar', opcinaRodenja: 'Mostar',
-            aktivan: true, posebniUvjeti: false, napomena: '',
-        },
-    ],
-
-    [COLLECTIONS.EQUIPMENT]: [
-        { id: 'eq1', naziv: 'Mostna dizalica MD-200', vrsta: 'Dizalice', tip: 'Mostna', tvBroj: 'MD-200-2020', invBroj: 'INV-001', orgJedinicaId: 'ou4', zaduzenOsoba: 'Mirza Selimović', datumUpisa: '2020-06-15', uPrimjeniOd: '2020-07-01', izvanUpotrebeOd: '', evidencijskiBroj: 'RO-001', brojMjernihMjesta: 3, proizvodjac: 'GANZ', godinaProizvodnje: '2019', posljednji: '2025-06-15', iduci: '2026-06-15', status: 'active' },
-        { id: 'eq2', naziv: 'Kompresor Atlas Copco GA15', vrsta: 'Kompresori', tip: 'Vijčani', tvBroj: 'GA15-2021', invBroj: 'INV-002', orgJedinicaId: 'ou4', zaduzenOsoba: '', datumUpisa: '2021-03-10', uPrimjeniOd: '2021-04-01', izvanUpotrebeOd: '', evidencijskiBroj: 'RO-002', brojMjernihMjesta: 2, proizvodjac: 'Atlas Copco', godinaProizvodnje: '2021', posljednji: '2025-03-10', iduci: '2026-03-10', status: 'active' },
-        { id: 'eq3', naziv: 'Viličar Toyota 8FG25', vrsta: 'Viličari', tip: 'Plinski', tvBroj: '8FG25-123', invBroj: 'INV-003', orgJedinicaId: 'ou5', zaduzenOsoba: 'Amra Delić', datumUpisa: '2019-12-01', uPrimjeniOd: '2020-01-01', izvanUpotrebeOd: '', evidencijskiBroj: 'RO-003', brojMjernihMjesta: 1, proizvodjac: 'Toyota', godinaProizvodnje: '2019', posljednji: '2024-12-01', iduci: '2025-12-01', status: 'expired' },
-        { id: 'eq4', naziv: 'Električna instalacija - Hala 1', vrsta: 'Elektro instalacije', tip: 'Nisko-naponska', tvBroj: 'EI-H1', invBroj: 'INV-004', orgJedinicaId: 'ou4', zaduzenOsoba: '', datumUpisa: '2018-09-20', uPrimjeniOd: '2018-10-01', izvanUpotrebeOd: '', evidencijskiBroj: 'RO-004', brojMjernihMjesta: 15, proizvodjac: '', godinaProizvodnje: '2018', posljednji: '2025-09-20', iduci: '2026-09-20', status: 'active' },
-        { id: 'eq5', naziv: 'PP aparati S-9 (10 kom)', vrsta: 'PP aparati', tip: 'S-9', tvBroj: '', invBroj: 'INV-005', orgJedinicaId: 'ou1', zaduzenOsoba: '', datumUpisa: '2024-01-01', uPrimjeniOd: '2024-01-01', izvanUpotrebeOd: '', evidencijskiBroj: 'RO-005', brojMjernihMjesta: 10, proizvodjac: 'Primus', godinaProizvodnje: '2023', posljednji: '2026-01-01', iduci: '2027-01-01', status: 'active' },
-    ],
-
-    [COLLECTIONS.CERTIFICATES]: [
-        { id: 'c1', workerId: 'w1', oznaka: 'ZNR-001', datum: '2024-02-15', vrijediDo: '2026-02-15', ime: 'Osposobljavanje ZNR', tipUvjerenja: 'ZNR', upisao: 'Admin', ogranicenje: '', sposobnost: 'Sposoban' },
-        { id: 'c2', workerId: 'w1', oznaka: 'PZ-001', datum: '2024-02-15', vrijediDo: '2026-02-15', ime: 'Zaštita od požara', tipUvjerenja: 'Požar', upisao: 'Admin', ogranicenje: '', sposobnost: 'Sposoban' },
-        { id: 'c3', workerId: 'w3', oznaka: 'ZNR-003', datum: '2026-02-10', vrijediDo: '2028-02-10', ime: 'Osposobljavanje ZNR', tipUvjerenja: 'ZNR', upisao: 'Admin', ogranicenje: '', sposobnost: 'Sposoban' },
-        { id: 'c4', workerId: 'w4', oznaka: 'ZNR-004', datum: '2026-01-15', vrijediDo: '2028-01-15', ime: 'Osposobljavanje ZNR', tipUvjerenja: 'ZNR', upisao: 'Admin', ogranicenje: '', sposobnost: 'Sposoban' },
-    ],
-
-    [COLLECTIONS.PPE_ASSIGNMENTS]: [
-        { id: 'ppe1', workerId: 'w3', naziv: 'Zaštitna kaciga', datumZaduzenja: '2026-02-05', datumRazduzenja: '' },
-        { id: 'ppe2', workerId: 'w3', naziv: 'Zaštitne naočale', datumZaduzenja: '2026-02-05', datumRazduzenja: '' },
-        { id: 'ppe3', workerId: 'w4', naziv: 'Zaštitne cipele S3', datumZaduzenja: '2026-01-10', datumRazduzenja: '' },
-        { id: 'ppe4', workerId: 'w4', naziv: 'Zaštitne rukavice', datumZaduzenja: '2026-01-10', datumRazduzenja: '' },
-    ],
-
-    [COLLECTIONS.CERT_TYPES]: [
-        { id: 'ct1', naziv: 'Zaštita na radu (ZNR)', oznaka: 'ZNR', trajanjeMjeseci: 24 },
-        { id: 'ct2', naziv: 'Zaštita od požara', oznaka: 'PZ', trajanjeMjeseci: 24 },
-        { id: 'ct3', naziv: 'Prva pomoć', oznaka: 'PP', trajanjeMjeseci: 36 },
-        { id: 'ct4', naziv: 'Rad na visini', oznaka: 'RV', trajanjeMjeseci: 12 },
-        { id: 'ct5', naziv: 'Rad sa dizalicama', oznaka: 'RD', trajanjeMjeseci: 12 },
-        { id: 'ct6', naziv: 'Rad sa viličarom', oznaka: 'RVI', trajanjeMjeseci: 12 },
-        { id: 'ct7', naziv: 'Evakuacijski voditelj', oznaka: 'EV', trajanjeMjeseci: 36 },
-    ],
-
-    [COLLECTIONS.VEHICLES]: [
-        { id: 'v1', registracija: 'A12-B-345', marka: 'Volkswagen', model: 'Golf 8', tip: 'osobno', godinaProizvodnje: 2021, vin: 'WVWZZZCDZ12345678', boja: 'Bijela', datumRegistracije: '2023-05-10', registracijaIstice: '2025-05-10', datumTehnickogPregleda: '2023-05-09', tehnickiIstice: '2025-05-09', osiguranjeIstice: '2025-05-10', vatrogasniAparatDatum: '2026-05-10', prvaPomocIstice: '2028-01-01', vozacId: 'w3', vozacIme: 'Mirza Selimović', orgJedinicaId: 'ou1', status: 'aktivan', napomena: '' },
-        { id: 'v2', registracija: 'K98-T-112', marka: 'Mercedes-Benz', model: 'Sprinter', tip: 'teretno', godinaProizvodnje: 2019, vin: 'WDB90612345678901', boja: 'Žuta', datumRegistracije: '2023-11-20', registracijaIstice: '2024-11-20', datumTehnickogPregleda: '2023-11-19', tehnickiIstice: '2024-11-19', osiguranjeIstice: '2024-11-20', vatrogasniAparatDatum: '2025-11-20', prvaPomocIstice: '2026-01-01', vozacId: 'w5', vozacIme: 'Nermin Kovačević', orgJedinicaId: 'ou5', status: 'servis', napomena: 'Zamjena guma' },
-    ],
-    [COLLECTIONS.VEHICLE_ASSIGNMENTS]: [],
-    [COLLECTIONS.TRAVEL_ORDERS]: [],
-
-    [COLLECTIONS.PPE_TYPES]: [
-        { id: 'pt1', naziv: 'Zaštitna kaciga' },
-        { id: 'pt2', naziv: 'Zaštitne naočale' },
-        { id: 'pt3', naziv: 'Zaštitne cipele S3' },
-        { id: 'pt4', naziv: 'Zaštitne rukavice' },
-        { id: 'pt5', naziv: 'Zaštitno odijelo' },
-        { id: 'pt6', naziv: 'Čepići za uši' },
-        { id: 'pt7', naziv: 'Zaštitna maska FFP2' },
-        { id: 'pt8', naziv: 'Reflektirajući prsluk' },
-        { id: 'pt9', naziv: 'Reflektirajuća jakna' },
-        { id: 'pt10', naziv: 'Radna odjeća visoke vidljivosti' },
-        { id: 'pt11', naziv: 'Vizir (štitnik za lice)' },
-        { id: 'pt12', naziv: 'Antifoni (zaštitne slušalice od buke)' },
-        { id: 'pt13', naziv: 'Respirator / zaštitna maska' },
-        { id: 'pt14', naziv: 'Sigurnosni pojas (safety harness)' },
-        { id: 'pt15', naziv: 'Uže za osiguranje / apsorber pada' },
-        { id: 'pt16', naziv: 'Karabineri i spojnice' },
-        { id: 'pt17', naziv: 'Lifeline ili sidrišna tačka' },
-        { id: 'pt18', naziv: 'Štitnici za koljena' },
-        { id: 'pt19', naziv: 'Zaštitne rukave' },
-        { id: 'pt20', naziv: 'Zaštitne čizme protiv hemikalija ili vode' },
-        { id: 'pt21', naziv: 'Zavarivačka maska' },
-        { id: 'pt22', naziv: 'Zaštita od hladnoće ili toplote' },
-        { id: 'pt23', naziv: 'Pojas za alat' },
-    ],
-
-    [COLLECTIONS.EQUIPMENT_TYPES]: [
-        { id: 'et1', naziv: 'Dizalice' },
-        { id: 'et2', naziv: 'Kompresori' },
-        { id: 'et3', naziv: 'Viličari' },
-        { id: 'et4', naziv: 'Elektro instalacije' },
-        { id: 'et5', naziv: 'PP aparati' },
-        { id: 'et6', naziv: 'Hidranti' },
-        { id: 'et7', naziv: 'Gromobranske instalacije' },
-        { id: 'et8', naziv: 'Plinske instalacije' },
-    ],
-
-    [COLLECTIONS.CALENDAR_EVENTS]: [
-        { id: 'ev1', datum: '2026-02-03', tip: 'cert', opis: 'Istek uvjerenja ZNR - 6 radnika', count: 6 },
-        { id: 'ev2', datum: '2026-02-03', tip: 'ppe', opis: 'Zamjena zaštitne opreme - 8 radnika', count: 8 },
-        { id: 'ev3', datum: '2026-02-10', tip: 'ppe', opis: 'Pregled zaštitne opreme', count: 2 },
-        { id: 'ev4', datum: '2026-02-14', tip: 'cert', opis: 'Obnova uvjerenja PZ - 10 radnika', count: 10 },
-        { id: 'ev5', datum: '2026-02-17', tip: 'cert', opis: 'Istek uvjerenja - 5 radnika', count: 5 },
-        { id: 'ev6', datum: '2026-02-17', tip: 'ppe', opis: 'Zaduženje OZO - 28 radnika', count: 28 },
-        { id: 'ev7', datum: '2026-02-25', tip: 'cert', opis: 'Istek uvjerenja ZNR - 5 radnika', count: 5 },
-        { id: 'ev8', datum: '2026-02-28', tip: 'equip', opis: 'Pregled radne opreme', count: 2 },
-    ],
-
-    [COLLECTIONS.EMPLOYER_DOCS]: [
-        // Obavezna dokumentacija (11 items from screenshot)
-        { id: 'ed1', naziv: 'Elaborat zaštite od požara', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-06-15', datumIsteka: '2029-06-15', napomena: '' },
-        { id: 'ed2', naziv: 'Procjena rizika zaštite od požara', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-06-15', datumIsteka: '2029-06-15', napomena: '' },
-        { id: 'ed3', naziv: 'Plan zaštite od požara', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-06-15', datumIsteka: '', napomena: '' },
-        { id: 'ed10', naziv: 'Evakuacijske mape', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-06-20', datumIsteka: '', napomena: '' },
-        { id: 'ed4', naziv: 'Pravilnik zaštite od požara', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-03-01', datumIsteka: '', napomena: '' },
-        { id: 'ed5', naziv: 'Pravilnik zaštite na radu', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-03-01', datumIsteka: '', napomena: '' },
-        { id: 'ed6', naziv: 'Akt procjene rizika zaštite na radu', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-06-20', datumIsteka: '2026-06-20', napomena: 'Potrebna revizija' },
-        { id: 'ed11', naziv: 'Procjena rizika zaštite od prirodnih nepogoda', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-07-01', datumIsteka: '', napomena: '' },
-        { id: 'ed12', naziv: 'Imenovanje stručnog lica zaštite od požara', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-03-01', datumIsteka: '', napomena: '' },
-        { id: 'ed13', naziv: 'Imenovanje stručnog lica zaštite na radu', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-03-01', datumIsteka: '', napomena: '' },
-        { id: 'ed14', naziv: 'Imenovanje predstavnika radnika', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '2024-04-15', datumIsteka: '', napomena: '' },
-        // Periodični obavezni pregledi (6 items from screenshot)
-        { id: 'ed7', naziv: 'Pregled protupožarnih aparata', kategorija: 'periodicni', status: 'aktivan', datumIzdavanja: '2026-01-01', datumIsteka: '2027-01-01', napomena: '' },
-        { id: 'ed8', naziv: 'Pregled hidrantske mreže', kategorija: 'periodicni', status: 'aktivan', datumIzdavanja: '2025-08-15', datumIsteka: '2026-08-15', napomena: '' },
-        { id: 'ed15', naziv: 'Pregled panik rasvjete', kategorija: 'periodicni', status: 'aktivan', datumIzdavanja: '2025-06-01', datumIsteka: '2026-06-01', napomena: '' },
-        { id: 'ed16', naziv: 'Pregled kutija prve pomoći', kategorija: 'periodicni', status: 'aktivan', datumIzdavanja: '2025-09-01', datumIsteka: '2026-09-01', napomena: '' },
-        { id: 'ed9', naziv: 'Elektro instalacije i gromobranske instalacije', kategorija: 'periodicni', status: 'aktivan', datumIzdavanja: '2025-09-20', datumIsteka: '2026-09-20', napomena: '' },
-        { id: 'ed17', naziv: 'Godišnji izvještaj o povredama na radu', kategorija: 'periodicni', status: 'aktivan', datumIzdavanja: '2026-01-15', datumIsteka: '2027-01-15', napomena: '' },
-        // Dodatne evidencije (4 items from screenshot)
-        { id: 'ed18', naziv: 'Pregled objekta', kategorija: 'dodatne', status: 'aktivan', datumIzdavanja: '2025-04-15', datumIsteka: '2026-04-15', napomena: '' },
-        { id: 'ed19', naziv: 'Certifikati za pružatelja prve pomoći', kategorija: 'dodatne', status: 'aktivan', datumIzdavanja: '2025-03-01', datumIsteka: '2028-03-01', napomena: '' },
-        { id: 'ed20', naziv: 'Certifikati za voditelja evakuacije', kategorija: 'dodatne', status: 'aktivan', datumIzdavanja: '2025-03-01', datumIsteka: '2028-03-01', napomena: '' },
-        { id: 'ed21', naziv: 'Upute/obuka za higijenu', kategorija: 'dodatne', status: 'aktivan', datumIzdavanja: '2025-05-01', datumIsteka: '', napomena: '' },
-    ],
-
-    [COLLECTIONS.ISZNR_PARTIES]: [
-        { id: 'ip1', naziv: 'Merkant d.o.o.', oib: '12345678901', adresa: 'Zmaja od Bosne 5, Sarajevo', kontaktOsoba: 'Amir Hadžić', telefon: '033/123-456', email: 'info@merkant.ba' },
-        { id: 'ip2', naziv: 'ABC Kontrola d.o.o.', oib: '98765432109', adresa: 'Titova 25, Zenica', kontaktOsoba: 'Nedim Bašić', telefon: '032/222-333', email: 'info@abc-kontrola.ba' },
-    ],
-
-    [COLLECTIONS.ISZNR_DOC_TYPES]: [
-        { id: 'idt1', naziv: 'Zapisnik', oznaka: 'ZAP' },
-        { id: 'idt2', naziv: 'Uvjerenje', oznaka: 'UVJ' },
-        { id: 'idt3', naziv: 'Radni nalog', oznaka: 'RN' },
-        { id: 'idt4', naziv: 'Izvještaj', oznaka: 'IZV' },
-    ],
-
-    [COLLECTIONS.ISZNR_DOCUMENTS]: [
-        { id: 'isd1', partyId: 'ip1', naslov: 'Zapisnik o ispitivanju dizalice', tipDokumentaId: 'idt1', datum: '2026-02-15', potpisano: true, datoteka: '' },
-        { id: 'isd2', partyId: 'ip1', naslov: 'Uvjerenje o osposobljenosti - ZNR', tipDokumentaId: 'idt2', datum: '2026-02-10', potpisano: false, datoteka: '' },
-        { id: 'isd3', partyId: 'ip2', naslov: 'Zapisnik o ispitivanju elektro instalacija', tipDokumentaId: 'idt1', datum: '2026-02-05', potpisano: true, datoteka: '' },
-    ],
-
-    [COLLECTIONS.PLACES]: [
-        { id: 'pl1', naziv: 'Sarajevo', postBroj: '71000' },
-        { id: 'pl2', naziv: 'Zenica', postBroj: '72000' },
-        { id: 'pl3', naziv: 'Tuzla', postBroj: '75000' },
-        { id: 'pl4', naziv: 'Mostar', postBroj: '88000' },
-        { id: 'pl5', naziv: 'Banja Luka', postBroj: '78000' },
-        { id: 'pl6', naziv: 'Bihać', postBroj: '77000' },
-    ],
-
-    [COLLECTIONS.COUNTRIES]: [
-        { id: 'co1', naziv: 'Bosna i Hercegovina', kod: 'BA' },
-        { id: 'co2', naziv: 'Hrvatska', kod: 'HR' },
-        { id: 'co3', naziv: 'Srbija', kod: 'RS' },
-        { id: 'co4', naziv: 'Crna Gora', kod: 'ME' },
-        { id: 'co5', naziv: 'Slovenija', kod: 'SI' },
-    ],
-
-    [COLLECTIONS.DOCTORS]: [
-        { id: 'doc1', ime: 'Dr. Jasmina Mujić', specijalizacija: 'Medicina rada', telefon: '033/444-555', email: 'j.mujic@med.ba' },
-        { id: 'doc2', ime: 'Dr. Sead Osmanović', specijalizacija: 'Medicina rada', telefon: '033/555-666', email: 's.osmanovic@med.ba' },
-    ],
-
-    [COLLECTIONS.AUTHORIZED_COMPANIES]: [
-        { id: 'ac1', naziv: 'ABC Kontrola d.o.o.', rješenjeBroj: 'RJ-2024-001', datumRješenja: '2024-01-01', adresa: 'Titova 25, Zenica', tel: '032/222-333' },
-        { id: 'ac2', naziv: 'SafetyFirst d.o.o.', rješenjeBroj: 'RJ-2024-002', datumRješenja: '2024-03-15', adresa: 'Branilaca 10, Sarajevo', tel: '033/777-888' },
-    ],
-
-    [COLLECTIONS.EXAMINERS]: [
-        { id: 'ex1', ime: 'Kemal Muratović', zvanje: 'Diplomirani inženjer ZNR', ovlaštenaTvrtkaId: 'ac1', telefon: '032/222-334' },
-        { id: 'ex2', ime: 'Aida Halilović', zvanje: 'Diplomirani inženjer elektrotehnike', ovlaštenaTvrtkaId: 'ac2', telefon: '033/777-889' },
-    ],
-
-    // ── Users & Companies ──
-    [COLLECTIONS.COMPANIES]: [
-        { id: 'comp1', naziv: 'Merkant d.o.o.', skraceniNaziv: 'Merkant', oib: '12345678901', adresa: 'Zmaja od Bosne 5', mjesto: 'Sarajevo', postanskiBroj: '71000', telefon: '033/123-456', email: 'info@merkant.ba', direktor: 'Antonio Ivic', aktivan: true },
-    ],
-    [COLLECTIONS.USERS]: [
-        { id: 'usr_admin', username: 'admin', password: 'admin123', firstName: 'Admin', lastName: 'Sistem', email: 'admin@eznr.ba', role: 'admin', companyIds: ['comp1'], aktivan: true },
-        { id: 'usr_officer', username: 'officer', password: 'officer123', firstName: 'Emir', lastName: 'Hodžić', email: 'emir@merkant.ba', role: 'officer', companyIds: ['comp1'], aktivan: true },
-    ],
-};
+export const SEED_DATA = {};
 
 let isInitialized = false;
 
 export function initializeData() {
-    if (typeof window === 'undefined' || isInitialized) return;
+    // No-op in Firestore mode — data is loaded via loadCompanyData()
+    if (isInitialized) return;
     isInitialized = true;
-
-    Object.entries(SEED_DATA).forEach(([collection, seedItems]) => {
-        const existing = getStore(collection);
-        if (existing.length === 0) {
-            setStore(collection, seedItems.map(item => ({
-                ...item,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-            })));
-        }
-    });
-
-    // Force re-seed employer docs if version changed (new items added)
-    const EMPLOYER_DOCS_VERSION = 2;
-    const currentVersion = parseInt(localStorage.getItem(STORE_PREFIX + 'employerDocsVersion') || '0');
-    if (currentVersion < EMPLOYER_DOCS_VERSION) {
-        setStore(COLLECTIONS.EMPLOYER_DOCS, SEED_DATA[COLLECTIONS.EMPLOYER_DOCS].map(item => ({
-            ...item,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        })));
-        localStorage.setItem(STORE_PREFIX + 'employerDocsVersion', String(EMPLOYER_DOCS_VERSION));
-    }
 }
 
 // ============================================================================
-// HELPER — resolve relations
+// HELPER — resolve relations (all read from cache)
 // ============================================================================
 
 export function getWorkerDisplayName(worker) {
@@ -835,228 +671,42 @@ export function getChildOrgUnits(parentId) {
 export function getCalendarEventsForMonth(year, month) {
     const events = getAll(COLLECTIONS.CALENDAR_EVENTS);
     const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
-    return events.filter(e => e.datum.startsWith(prefix));
+    return events.filter(e => e.datum && e.datum.startsWith(prefix));
 }
 
 // ============================================================================
-// SEED DEFAULT DATA — Vrsta osobe & Opasnosti
+// SEED FUNCTIONS — No-ops in Firestore mode (data is in Firestore already)
 // ============================================================================
 
-const DEFAULT_PERSON_TYPES = [
-    { naziv: 'Član radne skupine', vrsta: 'Član radne skupine' },
-    { naziv: 'Član radne skupine kod poslodavca', vrsta: 'Član radne skupine kod poslodavca' },
-    { naziv: 'Povjerenik zaštite na radu', vrsta: 'Povjerenik zaštite na radu' },
-    { naziv: 'Stručnjak zaštite na radu', vrsta: 'Stručnjak zaštite na radu' },
-    { naziv: 'Voditelj radne skupine', vrsta: 'Voditelj radne skupine' },
-];
+export function seedDefaultData() { }
+export function seedFleetData() { }
 
-const DEFAULT_HAZARDS = [
-    { naziv: 'O.1. MEHANIČKE OPASNOSTI', oznaka: 'O.1' },
-    { naziv: 'O.1.1. alati', oznaka: 'O.1.1' },
-    { naziv: 'O.1.1.1. ručni', oznaka: 'O.1.1.1' },
-    { naziv: 'O.1.1.2. mehanizirani', oznaka: 'O.1.1.2' },
-    { naziv: 'O.1.2. strojevi i oprema', oznaka: 'O.1.2' },
-    { naziv: 'O.1.3. sredstva za horizontalni prijenos', oznaka: 'O.1.3' },
-    { naziv: 'O.1.3.1. prijevozna vozila: automobili, kamioni i dr', oznaka: 'O.1.3.1' },
-    { naziv: 'O.1.3.2. prijenosna sredstva: viličari', oznaka: 'O.1.3.2' },
-    { naziv: 'O.1.3.3. samohodni strojevi: bageri, buldožeri i dr', oznaka: 'O.1.3.3' },
-    { naziv: 'O.1.4. sredstva za vertikalni prijenos', oznaka: 'O.1.4' },
-    { naziv: 'O.1.4.1. dizalice', oznaka: 'O.1.4.1' },
-    { naziv: 'O.1.4.2. transporteri', oznaka: 'O.1.4.2' },
-    { naziv: 'O.1.5. rukovanje predmetima', oznaka: 'O.1.5' },
-    { naziv: 'O.1.6. ostale mehaničke opasnosti', oznaka: 'O.1.6' },
-    { naziv: 'O.2. OPASNOSTI OD PADOVA', oznaka: 'O.2' },
-    { naziv: 'O.2.1. pad radnika i drugih osoba', oznaka: 'O.2.1' },
-    { naziv: 'O.2.1.1. na istoj razini', oznaka: 'O.2.1.1' },
-    { naziv: 'O.2.1.2. u dubinu', oznaka: 'O.2.1.2' },
-    { naziv: 'O.2.1.3. s visine', oznaka: 'O.2.1.3' },
-    { naziv: 'O.2.1.4. s visine iznad 3 metra', oznaka: 'O.2.1.4' },
-    { naziv: 'O.2.2. pad predmeta', oznaka: 'O.2.2' },
-    { naziv: 'O.3. ELEKTRIČNA STRUJA', oznaka: 'O.3' },
-    { naziv: 'O.3.1. otvoreni električni krug', oznaka: 'O.3.1' },
-    { naziv: 'O.3.2. ostale električne opasnosti', oznaka: 'O.3.2' },
-    { naziv: 'O.4. POŽAR I EKSPLOZIJA', oznaka: 'O.4' },
-    { naziv: 'O.4.1. eksplozivne tvari', oznaka: 'O.4.1' },
-    { naziv: 'O.4.2. zapaljive tvari', oznaka: 'O.4.2' },
-    { naziv: 'O.5. TERMIČKE OPASNOSTI', oznaka: 'O.5' },
-    { naziv: 'O.5.1. vruće tvari', oznaka: 'O.5.1' },
-    { naziv: 'O.5.2. hladne tvari', oznaka: 'O.5.2' },
-    { naziv: 'Š.1. KEMIJSKE ŠTETNOSTI', oznaka: 'Š.1' },
-    { naziv: 'Š.1.1. otrovi', oznaka: 'Š.1.1' },
-    { naziv: 'Š.1.1.1. metali', oznaka: 'Š.1.1.1' },
-    { naziv: 'Š.1.1.2. nemetali', oznaka: 'Š.1.1.2' },
-    { naziv: 'Š.1.1.3. organski spojevi', oznaka: 'Š.1.1.3' },
-    { naziv: 'Š.1.2. korozivi', oznaka: 'Š.1.2' },
-    { naziv: 'Š.1.2.1. kiseline', oznaka: 'Š.1.2.1' },
-    { naziv: 'Š.1.2.2. lužine', oznaka: 'Š.1.2.2' },
-    { naziv: 'Š.1.2.3. drugi korozivi', oznaka: 'Š.1.2.3' },
-    { naziv: 'Š.1.3. nadražljivci', oznaka: 'Š.1.3' },
-    { naziv: 'Š.1.3.1. lako topivi u vodi', oznaka: 'Š.1.3.1' },
-    { naziv: 'Š.1.3.2. slabo topivi u vodi', oznaka: 'Š.1.3.2' },
-    { naziv: 'Š.1.3.3. odmašćivači', oznaka: 'Š.1.3.3' },
-    { naziv: 'Š.1.3.4. drugi nadražljivci', oznaka: 'Š.1.3.4' },
-    { naziv: 'Š.1.4. zagušljivci', oznaka: 'Š.1.4' },
-    { naziv: 'Š.1.4.1. inertni', oznaka: 'Š.1.4.1' },
-    { naziv: 'Š.1.4.2. kemijski', oznaka: 'Š.1.4.2' },
-    { naziv: 'Š.1.5. senzibilizatori', oznaka: 'Š.1.5' },
-    { naziv: 'Š.1.5.1. organske prašine biljnog porijekla', oznaka: 'Š.1.5.1' },
-    { naziv: 'Š.1.5.2. organske prašine životinjskog porijekla', oznaka: 'Š.1.5.2' },
-    { naziv: 'Š.1.5.3. kemijski spojevi alergogenog potencijala', oznaka: 'Š.1.5.3' },
-    { naziv: 'Š.1.5.4. termofilne aktinomicete', oznaka: 'Š.1.5.4' },
-    { naziv: 'Š.1.5.5. ostali senzibilizatori', oznaka: 'Š.1.5.5' },
-    { naziv: 'Š.1.6. fibrogeni', oznaka: 'Š.1.6' },
-    { naziv: 'Š.1.6.1. azbest', oznaka: 'Š.1.6.1' },
-    { naziv: 'Š.1.6.2. silicijev dioksid', oznaka: 'Š.1.6.2' },
-    { naziv: 'Š.1.6.3. ostali fibrogeni', oznaka: 'Š.1.6.3' },
-    { naziv: 'Š.1.7. mutageni', oznaka: 'Š.1.7' },
-    { naziv: 'Š.1.8. karcinogeni', oznaka: 'Š.1.8' },
-    { naziv: 'Š.1.9. teratogeni', oznaka: 'Š.1.9' },
-    { naziv: 'Š.2. BIOLOŠKE ŠTETNOSTI', oznaka: 'Š.2' },
-    { naziv: 'Š.2.1. zarazni materijal', oznaka: 'Š.2.1' },
-    { naziv: 'Š.2.2. zaraženi ljudi', oznaka: 'Š.2.2' },
-    { naziv: 'Š.2.3. zaražene životinje', oznaka: 'Š.2.3' },
-    { naziv: 'Š.2.4. opasne biljke', oznaka: 'Š.2.4' },
-    { naziv: 'Š.2.5. opasne životinje', oznaka: 'Š.2.5' },
-    { naziv: 'Š.3. FIZIKALNE ŠTETNOSTI', oznaka: 'Š.3' },
-    { naziv: 'Š.3.1. buka', oznaka: 'Š.3.1' },
-    { naziv: 'Š.3.1.1. kontinuirana buka', oznaka: 'Š.3.1.1' },
-    { naziv: 'Š.3.1.2. diskontinuirana buka', oznaka: 'Š.3.1.2' },
-    { naziv: 'Š.3.1.3. impulsna buka', oznaka: 'Š.3.1.3' },
-    { naziv: 'Š.3.1.4. ometajuća', oznaka: 'Š.3.1.4' },
-    { naziv: 'Š.3.2. vibracije', oznaka: 'Š.3.2' },
-    { naziv: 'Š.3.2.1. vibracije koje se prenose na ruke', oznaka: 'Š.3.2.1' },
-    { naziv: 'Š.3.2.2. vibracije koje se prenose na cijelo tijelo', oznaka: 'Š.3.2.2' },
-    { naziv: 'Š.3.2.3. potresanja', oznaka: 'Š.3.2.3' },
-    { naziv: 'Š.3.3. promijenjeni tlak', oznaka: 'Š.3.3' },
-    { naziv: 'Š.3.3.1. povišeni tlak', oznaka: 'Š.3.3.1' },
-    { naziv: 'Š.3.3.2. sniženi tlak', oznaka: 'Š.3.3.2' },
-    { naziv: 'Š.3.3.3. promjene tlaka', oznaka: 'Š.3.3.3' },
-    { naziv: 'Š.3.4. nepovoljni klimatski i mikroklimatski uvjeti', oznaka: 'Š.3.4' },
-    { naziv: 'Š.3.4.1. rad na otvorenom', oznaka: 'Š.3.4.1' },
-    { naziv: 'Š.3.4.2. vrući okoliš', oznaka: 'Š.3.4.2' },
-    { naziv: 'Š.3.4.3. visoka vlažnost', oznaka: 'Š.3.4.3' },
-    { naziv: 'Š.3.4.4. pojačano strujanje zraka', oznaka: 'Š.3.4.4' },
-    { naziv: 'Š.3.4.5. hladan okoliš', oznaka: 'Š.3.4.5' },
-    { naziv: 'Š.3.4.6. česte promjene temperature', oznaka: 'Š.3.4.6' },
-    { naziv: 'Š.3.4.7. nepovoljni učinci umjetne ventilacije', oznaka: 'Š.3.4.7' },
-    { naziv: 'Š.3.5. ionizirajuće zračenje', oznaka: 'Š.3.5' },
-    { naziv: 'Š.3.5.1. rendgensko zračenje', oznaka: 'Š.3.5.1' },
-    { naziv: 'Š.3.5.2. otvoreni radioaktivni elementi', oznaka: 'Š.3.5.2' },
-    { naziv: 'Š.3.5.3. zatvoreni radioaktivni elementi', oznaka: 'Š.3.5.3' },
-    { naziv: 'Š.3.6. neionizirajuće zračenje', oznaka: 'Š.3.6' },
-    { naziv: 'Š.3.6.1. UV zračenje (A, B, C)', oznaka: 'Š.3.6.1' },
-    { naziv: 'Š.3.6.2. toplinsko zračenje', oznaka: 'Š.3.6.2' },
-    { naziv: 'Š.3.6.3. mikrovalno zračenje', oznaka: 'Š.3.6.3' },
-    { naziv: 'Š.3.6.4. lasersko zračenje', oznaka: 'Š.3.6.4' },
-    { naziv: 'Š.3.6.5. elektromagnetsko polje vrlo niskih frekvencija', oznaka: 'Š.3.6.5' },
-    { naziv: 'Š.3.7. osvijetljenost', oznaka: 'Š.3.7' },
-    { naziv: 'Š.3.7.1. nedovoljna osvijetljenost', oznaka: 'Š.3.7.1' },
-    { naziv: 'Š.3.7.2. blještanje', oznaka: 'Š.3.7.2' },
-    { naziv: 'Š.3.8. ostale fizikalne štetnosti', oznaka: 'Š.3.8' },
-    { naziv: 'N.1. STATODINAMIČKI NAPORI', oznaka: 'N.1' },
-    { naziv: 'N.1.1. statički: prisilan položaj tijela pri radu', oznaka: 'N.1.1' },
-    { naziv: 'N.1.1.1. stalno sjedenje', oznaka: 'N.1.1.1' },
-    { naziv: 'N.1.1.2. stalno stajanje', oznaka: 'N.1.1.2' },
-    { naziv: 'N.1.1.3. pognut položaj tijela', oznaka: 'N.1.1.3' },
-    { naziv: 'N.1.1.4. čučanje, klečanje', oznaka: 'N.1.1.4' },
-    { naziv: 'N.1.1.5. rad u skučenom prostoru', oznaka: 'N.1.1.5' },
-    { naziv: 'N.1.1.6. ruke iznad glave', oznaka: 'N.1.1.6' },
-    { naziv: 'N.1.1.7. ostali statički napori', oznaka: 'N.1.1.7' },
-    { naziv: 'N.1.2. dinamički: fizički rad', oznaka: 'N.1.2' },
-    { naziv: 'N.1.2.1. ponavljajući pokreti sa i bez primjene sile', oznaka: 'N.1.2.1' },
-    { naziv: 'N.1.2.2. brzi rad', oznaka: 'N.1.2.2' },
-    { naziv: 'N.1.2.3. dizanje i nošenje tereta', oznaka: 'N.1.2.3' },
-    { naziv: 'N.1.2.4. guranje i vučenje tereta', oznaka: 'N.1.2.4' },
-    { naziv: 'N.1.2.5. težak fizički rad', oznaka: 'N.1.2.5' },
-    { naziv: 'N.1.2.6. ostali dinamički napori', oznaka: 'N.1.2.6' },
-    { naziv: 'N.2. PSIHOFIZIOLOŠKI NAPORI', oznaka: 'N.2' },
-    { naziv: 'N.2.1. nepovoljan ritam rada', oznaka: 'N.2.1' },
-    { naziv: 'N.2.1.1. rad na normu', oznaka: 'N.2.1.1' },
-    { naziv: 'N.2.1.2. ritam uvjetovan radnim procesom', oznaka: 'N.2.1.2' },
-    { naziv: 'N.2.1.3. neujednačen ritam', oznaka: 'N.2.1.3' },
-    { naziv: 'N.2.2. poremećen bioritam', oznaka: 'N.2.2' },
-    { naziv: 'N.2.2.2. noćni rad', oznaka: 'N.2.2.2' },
-    { naziv: 'N.2.2.3. produljeni rad', oznaka: 'N.2.2.3' },
-    { naziv: 'N.2.3. remećenje socijalnih potreba', oznaka: 'N.2.3' },
-    { naziv: 'N.2.3.1. terenski rad', oznaka: 'N.2.3.1' },
-    { naziv: 'N.2.3.2. rad na daljinu', oznaka: 'N.2.3.2' },
-    { naziv: 'N.2.4. odgovornost za živote ljudi i materijalna dobra', oznaka: 'N.2.4' },
-    { naziv: 'N.2.4.1. rukovođenje', oznaka: 'N.2.4.1' },
-    { naziv: 'N.2.4.2. upravljanje prijevoznim sredstvima', oznaka: 'N.2.4.2' },
-    { naziv: 'N.2.5. visoka vjerojatnost izvanrednih događaja', oznaka: 'N.2.5' },
-    { naziv: 'N.2.6. otežan prijam informacija', oznaka: 'N.2.6' },
-    { naziv: 'N.2.6.1. zvučni signali i znakovi', oznaka: 'N.2.6.1' },
-    { naziv: 'N.2.6.2. svjetlosni signali i znakovi', oznaka: 'N.2.6.2' },
-    { naziv: 'N.2.6.3. buka', oznaka: 'N.2.6.3' },
-    { naziv: 'N.2.6.4. nedovoljna osvijetljenost', oznaka: 'N.2.6.4' },
-    { naziv: 'N.2.7. radni zahtjevi', oznaka: 'N.2.7' },
-    { naziv: 'N.2.7.1. neodgovarajući kvantitativni zahtjevi (premalo ili previše rada)', oznaka: 'N.2.7.1' },
-    { naziv: 'N.2.7.2. premali utjecaj na rad', oznaka: 'N.2.7.2' },
-    { naziv: 'N.2.7.3. zahtjev za visokom kvalitetom rada', oznaka: 'N.2.7.3' },
-    { naziv: 'N.2.7.4. izolirani rad', oznaka: 'N.2.7.4' },
-    { naziv: 'N.2.7.5. monotoni rad', oznaka: 'N.2.7.5' },
-    { naziv: 'N.2.7.6. komunikacija s osobama', oznaka: 'N.2.7.6' },
-    { naziv: 'N.2.8. maltretiranje', oznaka: 'N.2.8' },
-    { naziv: 'N.2.8.1. mobing', oznaka: 'N.2.8.1' },
-    { naziv: 'N.2.8.2. bulling', oznaka: 'N.2.8.2' },
-    { naziv: 'N.2.9. burnout', oznaka: 'N.2.9' },
-    { naziv: 'N.2.10. ostali psihofiziološki napori', oznaka: 'N.2.10' },
-    { naziv: 'N.3. NAPORI VIDA', oznaka: 'N.3' },
-    { naziv: 'N.4. NAPORI GOVORA', oznaka: 'N.4' },
-];
+// ============================================================================
+// FIRESTORE WRITE OPERATIONS (background, non-blocking)
+// ============================================================================
 
-export function seedDefaultData() {
-    if (typeof window === 'undefined') return;
-    const SEED_KEY = STORE_PREFIX + '__seeded_procjena_v3';
-    if (localStorage.getItem(SEED_KEY)) return;
-
-    // Seed person types if empty
-    const existing_pt = getStore(COLLECTIONS.PERSON_TYPES);
-    if (existing_pt.length === 0) {
-        const seeded = DEFAULT_PERSON_TYPES.map(d => ({ ...d, id: genId() }));
-        setStore(COLLECTIONS.PERSON_TYPES, seeded);
+async function _firestoreWrite(colName, item) {
+    const ref = _getDocRef(colName, item.id);
+    if (!ref) {
+        console.warn(`[dataStore] ⚠️ No doc ref for ${colName}/${item.id} — is a company selected?`);
+        return;
     }
-
-    // Seed hazards if empty
-    const existing_haz = getStore(COLLECTIONS.HAZARDS);
-    if (existing_haz.length === 0) {
-        const seeded = DEFAULT_HAZARDS.map((d, i) => {
-            const id = Date.now().toString(36) + i.toString(36).padStart(3, '0') + Math.random().toString(36).substr(2, 5);
-            return { ...d, id };
-        });
-        setStore(COLLECTIONS.HAZARDS, seeded);
+    try {
+        const { id, ...dataWithoutId } = item;
+        // Sanitize: remove undefined values (Firestore rejects them)
+        const clean = JSON.parse(JSON.stringify(dataWithoutId));
+        await setDoc(ref, clean, { merge: true });
+    } catch (err) {
+        console.error(`[dataStore] ❌ Write failed ${colName}/${item.id}:`, err.message);
     }
-
-    // ── Merge PPE_TYPES: add catalogue items that don't exist yet (by name) ──
-    const seedPpeTypes = SEED_DATA[COLLECTIONS.PPE_TYPES] || [];
-    const existingPpe = getStore(COLLECTIONS.PPE_TYPES);
-    const existingNames = new Set(existingPpe.map(p => p.naziv?.toLowerCase()));
-    const toAdd = seedPpeTypes.filter(p => !existingNames.has(p.naziv?.toLowerCase()));
-    if (toAdd.length > 0) {
-        const merged = [...existingPpe, ...toAdd.map(p => ({ ...p, id: genId() }))];
-        setStore(COLLECTIONS.PPE_TYPES, merged);
-    }
-
-    localStorage.setItem(SEED_KEY, '1');
 }
 
-export function seedFleetData() {
-    if (typeof window === 'undefined') return;
-    const FLEET_SEED_KEY = STORE_PREFIX + '__seeded_fleet_v2';
-    if (localStorage.getItem(FLEET_SEED_KEY)) return;
-
-    const v = getStore(COLLECTIONS.VEHICLES);
-    if (v.length === 0 && SEED_DATA[COLLECTIONS.VEHICLES]) {
-        setStore(COLLECTIONS.VEHICLES, SEED_DATA[COLLECTIONS.VEHICLES]);
-        setStore(COLLECTIONS.VEHICLE_ASSIGNMENTS, []);
-        setStore(COLLECTIONS.TRAVEL_ORDERS, []);
+async function _firestoreDelete(colName, docId) {
+    const ref = _getDocRef(colName, docId);
+    if (!ref) return;
+    try {
+        await deleteDoc(ref);
+    } catch (err) {
+        console.error(`[dataStore] ❌ Delete failed ${colName}/${docId}:`, err.message);
     }
-
-    localStorage.setItem(FLEET_SEED_KEY, '1');
 }
-
-// Auto-seed on module load
-seedDefaultData();
-seedFleetData();
-
-export { formatDate, todayISO, genId, COMPANY_SCOPED };

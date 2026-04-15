@@ -10,6 +10,7 @@ import {
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
+import { uploadSecureFile } from '@/lib/storageService';
 import HelpTip from '@/components/HelpTip';
 
 const EMPTY_CERT = {
@@ -739,22 +740,26 @@ export function UvjerenjeFormPage() {
                                         className="form-input"
                                         style={{ paddingTop: 6 }}
                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                        onChange={(e) => {
+                                        onChange={async (e) => {
                                             const file = e.target.files?.[0];
                                             if (!file) return;
-                                            if (file.size > 5 * 1024 * 1024) { alert('Max 5MB!'); return; }
-                                            const reader = new FileReader();
-                                            reader.onload = (ev) => {
-                                                set('attachedFileData', ev.target.result);
-                                                set('attachedFileName', file.name);
-                                                set('attachedFileSize', file.size);
-                                                set('attachedFileType', file.type);
-                                            };
-                                            reader.readAsDataURL(file);
-                                            e.target.value = '';
+                                            if (file.size > 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
+                                            try {
+                                                const result = await uploadSecureFile(activeCompanyId, 'certificates', file);
+                                                set('attachedFileUrl', result.url);
+                                                set('attachedFilePath', result.storagePath);
+                                                set('attachedFileName', result.name);
+                                                set('attachedFileSize', result.size);
+                                                set('attachedFileType', result.type);
+                                            } catch (err) {
+                                                console.error('[Upload] Attachment error:', err);
+                                                alert(lang === 'bs' ? 'Greška pri učitavanju.' : 'Upload failed.');
+                                            } finally {
+                                                e.target.value = '';
+                                            }
                                         }}
                                     />
-                                    {formData.attachedFileData && (
+                                    {(formData.attachedFileUrl || formData.attachedFileData) && (
                                         <div style={{
                                             marginTop: 8, padding: '8px 12px', borderRadius: 'var(--radius-sm)',
                                             background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)',
@@ -763,9 +768,10 @@ export function UvjerenjeFormPage() {
                                             <span>{formData.attachedFileName?.endsWith('.pdf') ? '📕' : '🖼️'}</span>
                                             <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                                                 {formData.attachedFileName}
+                                                {formData.attachedFileUrl && <span style={{ marginLeft: 6, color: 'var(--success)', fontSize: '0.75rem' }}>☁️ Cloud</span>}
                                             </span>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                                                onClick={() => { set('attachedFileData', null); set('attachedFileName', ''); }}>✕</button>
+                                                onClick={() => { set('attachedFileUrl', null); set('attachedFileData', null); set('attachedFileName', ''); }}>✕</button>
                                         </div>
                                     )}
                                 </div>
