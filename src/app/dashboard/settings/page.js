@@ -18,6 +18,7 @@ import {
   getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
+import { seedMockDataConfig } from '@/lib/mockDataGenerator';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -213,6 +214,22 @@ export default function SettingsPage() {
       setSyncStatus(`❌ Greška: ${e.message}`);
     } finally {
       setIsSyncing(false);
+    }
+  };
+
+  const handleSeedMockData = () => {
+    if (!activeCompanyId) return;
+    if (!confirm(lang === 'bs' 
+      ? 'Ovo će kreirati preko 30 mock zapisa (za svaku kolekciju) u vašem browseru za testiranje migracije. Nastaviti?'
+      : 'This will seed over 30 mock records (one for each collection) in your browser to test migration. Proceed?'
+    )) return;
+
+    try {
+      const generated = seedMockDataConfig(activeCompanyId);
+      alert(lang === 'bs' ? `Uspješno generirano ${generated} mock zapisa! Stranica će se osvježiti.` : `Successfully generated ${generated} mock records! Reloading...`);
+      window.location.reload();
+    } catch (e) {
+      alert(`Greška: ${e.message}`);
     }
   };
 
@@ -905,19 +922,19 @@ export default function SettingsPage() {
                   ? 'Prijenos i sinkronizacija lokalnih podataka u Firebase bazu za trenutno aktivnu kompaniju.' 
                   : 'Transfer and synchronize local data to Firebase database for the currently active company.'}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
-                  <span>👷 Radnici:</span><strong>{syncStats.workers || 0}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
-                  <span>⚙️ Oprema:</span><strong>{syncStats.equipment || 0}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
-                  <span>📜 Uvjerenja:</span><strong>{syncStats.certificates || 0}</strong>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
-                  <span>🚗 Vozila:</span><strong>{syncStats.vehicles || 0}</strong>
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 6, marginBottom: 16 }}>
+                {Object.entries(syncStats)
+                  .filter(([name, count]) => count > 0)
+                  .map(([name, count]) => (
+                    <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
+                      <span style={{color: 'var(--text-muted)'}}>{name}:</span><strong>{count}</strong>
+                    </div>
+                  ))}
+                {Object.values(syncStats).every(count => count === 0) && (
+                  <div style={{ padding: '12px', fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', gridColumn: '1 / -1' }}>
+                    {lang === 'bs' ? 'Nema lokalnih podataka za ovu kompaniju.' : 'No local data found for this company.'}
+                  </div>
+                )}
               </div>
               
               <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -925,11 +942,22 @@ export default function SettingsPage() {
                   type="button" 
                   className="btn btn-primary" 
                   onClick={handleRunSync}
-                  disabled={isSyncing || !activeCompanyId}
+                  disabled={isSyncing || !activeCompanyId || Object.values(syncStats).every(count => count === 0)}
                 >
                   {isSyncing ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☁️'} 
                   {lang === 'bs' ? 'Sinkroniziraj na Firebase' : 'Sync to Firebase'}
                 </button>
+                
+                <button 
+                  type="button" 
+                  className="btn"
+                  style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', fontSize: '0.8rem', padding: '8px 14px' }}
+                  onClick={handleSeedMockData}
+                  disabled={isSyncing || !activeCompanyId}
+                >
+                  🛠️ {lang === 'bs' ? 'Generiši testne podatke (40+)' : 'Generate Mock Data (40+)'}
+                </button>
+
                 {syncStatus && (
                   <span style={{ fontSize: '0.8rem', fontWeight: 600, color: syncStatus.includes('Greška') || syncStatus.includes('Error') ? 'var(--danger)' : 'var(--success)' }}>
                     {syncStatus}
