@@ -53,8 +53,11 @@ export function AuthProvider({ children }) {
                         let companyId = null;
 
                         if (profile.role === ROLES.SUPER_ADMIN) {
-                            // Super admin can see all or pick one
-                            companyId = savedCompany || (profile.companyIds?.[0] || 'all');
+                            // Super admin: restore from localStorage but NEVER use 'all'
+                            // — Superadmin always works in single-company mode
+                            companyId = (savedCompany && savedCompany !== 'all')
+                                ? savedCompany
+                                : profile.companyIds?.[0] || null;
                         } else {
                             companyId = savedCompany && profile.companyIds?.includes(savedCompany)
                                 ? savedCompany
@@ -73,9 +76,29 @@ export function AuthProvider({ children }) {
 
                         // Load user's companies list
                         if (profile.role === ROLES.SUPER_ADMIN) {
-                            // Super admin gets all companies — but load lazily in useEffect below
-                        }
-                        if (profile.companyIds?.length) {
+                            // Super admin: load ALL companies from Firestore eagerly
+                            try {
+                                const { getAllCompaniesFromFirestore } = await import('@/lib/authService');
+                                const allComps = await getAllCompaniesFromFirestore();
+                                setUserCompanies(allComps);
+                                // Super admin always picks a SPECIFIC company — never 'all'
+                                // Use the first company if the saved one was 'all' or invalid
+                                if (!companyId || companyId === 'all') {
+                                    const firstId = allComps[0]?.id || null;
+                                    if (firstId) {
+                                        setActiveCompanyId(firstId);
+                                        localStorage.setItem('eznr_activeCompany', firstId);
+                                        await loadCompanyData(firstId);
+                                        setActiveCompany(allComps[0]);
+                                    }
+                                } else {
+                                    const ac = allComps.find(c => c.id === companyId);
+                                    setActiveCompany(ac || null);
+                                }
+                            } catch (e) {
+                                console.error('[AuthContext] Failed to load all companies for superadmin:', e);
+                            }
+                        } else if (profile.companyIds?.length) {
                             const companies = await getUserCompanies(profile.companyIds);
                             setUserCompanies(companies);
                             if (companyId && companyId !== 'all') {

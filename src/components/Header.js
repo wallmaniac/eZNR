@@ -11,7 +11,7 @@ import { matchesSearch } from '@/lib/dateUtils';
 
 export default function Header({ sidebarCollapsed, isMobile = false, onMobileMenuToggle }) {
     const { t, lang, toggleLang } = useLanguage();
-    const { user, logout, isAdmin, activeCompanyId, switchCompany } = useAuth();
+    const { user, logout, isAdmin, isSuperAdmin, activeCompanyId, userCompanies, switchCompany } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const router = useRouter();
     const [searchFocused, setSearchFocused] = useState(false);
@@ -28,16 +28,22 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const searchRef = useRef(null);
     const companyRef = useRef(null);
 
+    // Companies list — source of truth depending on role
+    // SuperAdmin: uses userCompanies from AuthContext (loaded from Firestore)
+    // Officer: uses getUserCompanies from local dataStore cache
     const companies = useMemo(() => {
         if (!user?.id) return [];
-        if (isAdmin) {
-            const { getAllCompanies } = require('@/lib/dataStore');
-            return getAllCompanies();
+        if (isSuperAdmin) {
+            // Super admin: list of ALL companies from AuthContext
+            return userCompanies || [];
         }
+        // Officer/Admin: their assigned companies from local store
         return getUserCompanies(user?.id);
-    }, [user?.id, isAdmin]);
+    }, [user?.id, isSuperAdmin, userCompanies]);
 
-    const activeCompany = companies.find(c => c.id === activeCompanyId);
+    const activeCompany = useMemo(() =>
+        companies.find(c => c.id === activeCompanyId) || null,
+    [companies, activeCompanyId]);
 
     const officers = useMemo(() => {
         if (!isAdmin) return [];
@@ -201,24 +207,38 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {showCompanyMenu && typeof document !== 'undefined' && createPortal(
                             <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, left: '5%', width: '90%', zIndex: 99999, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}</span>
+                                    <span>🏢 {isSuperAdmin ? (lang === 'bs' ? 'Sve firme klijenata' : 'All client companies') : (lang === 'bs' ? 'Moje firme' : 'My companies')}</span>
                                     <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                 </div>
-                                <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
-                                    style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
-                                    {activeCompanyId === 'all' ? '✅' : '🌐'} {lang === 'bs' ? 'Sve firme' : 'All companies'}
-                                </button>
-                                <div className="dropdown-divider" />
+                                {/* Officer: aggregate mode */}
+                                {!isSuperAdmin && (
+                                    <>
+                                        <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
+                                            style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
+                                            {activeCompanyId === 'all' ? '✅' : '🌐'} {lang === 'bs' ? 'Sve firme' : 'All companies'}
+                                        </button>
+                                        <div className="dropdown-divider" />
+                                    </>
+                                )}
+                                {companies.length === 0 && (
+                                    <div style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
+                                        {isSuperAdmin ? (lang === 'bs' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang === 'bs' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.')}
+                                    </div>
+                                )}
                                 {companies.map(c => (
                                     <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }}
                                         style={{ fontWeight: c.id === activeCompanyId ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
-                                        {c.id === activeCompanyId ? '✅' : '🏛️'} {c.naziv}
+                                        {c.id === activeCompanyId ? '✅' : '🏛️'} {c.naziv || c.skraceniNaziv}
                                     </button>
                                 ))}
-                                <div className="dropdown-divider" />
-                                <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 700, padding: '12px 16px', fontSize: '0.9rem', justifyContent: 'center' }}>
-                                    ➕ {lang === 'bs' ? 'Dodaj firmu' : 'Add company'}
-                                </button>
+                                {!isSuperAdmin && (
+                                    <>
+                                        <div className="dropdown-divider" />
+                                        <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 700, padding: '12px 16px', fontSize: '0.9rem', justifyContent: 'center' }}>
+                                            ➕ {lang === 'bs' ? 'Dodaj firmu' : 'Add company'}
+                                        </button>
+                                    </>
+                                )}
                             </div>,
                             document.body
                         )}
@@ -320,26 +340,46 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.75)', flexShrink: 0 }}>▼</span>
                         </button>
                         {showCompanyMenu && (
-                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 280, zIndex: 200 }}>
+                            <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 300, zIndex: 200 }}>
                                 <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>🏢 {lang === 'bs' ? 'Moje firme' : 'My companies'}</span>
+                                    <span>🏢 {isSuperAdmin ? (lang === 'bs' ? 'Sve firme klijenata' : 'All client companies') : (lang === 'bs' ? 'Moje firme' : 'My companies')}</span>
                                     <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>✕</button>
                                 </div>
-                                <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
-                                    <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang === 'bs' ? 'Sve firme' : 'All companies'}</div></div>
-                                </button>
-                                <div className="dropdown-divider" />
+
+                                {/* Officer: "Sve firme" aggregate mode */}
+                                {!isSuperAdmin && (
+                                    <>
+                                        <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
+                                            <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang === 'bs' ? 'Sve firme' : 'All companies'}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Kombinirani prikaz' : 'Combined view'}</div></div>
+                                        </button>
+                                        <div className="dropdown-divider" />
+                                    </>
+                                )}
+
+                                {/* Company list */}
+                                {companies.length === 0 && (
+                                    <div style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.83rem', textAlign: 'center' }}>
+                                        {isSuperAdmin ? (lang === 'bs' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang === 'bs' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.')}
+                                    </div>
+                                )}
                                 {companies.map(c => (
                                     <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
                                         <span>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
                                         <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv}</div>
+                                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv || c.skraceniNaziv}</div>
                                             {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
                                         </div>
+                                        {isSuperAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flexShrink: 0 }}>👁️</span>}
                                     </button>
                                 ))}
-                                <div className="dropdown-divider" />
-                                <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}</button>
+
+                                {/* Officer only: add new company */}
+                                {!isSuperAdmin && (
+                                    <>
+                                        <div className="dropdown-divider" />
+                                        <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}</button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>

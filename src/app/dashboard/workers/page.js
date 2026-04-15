@@ -118,25 +118,23 @@ function WorkersPageInner() {
         try {
             const w = workers.find(wk => wk.id === uploadingDocForWorker);
             // 1. Upload file to Storage
-            const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
-            
-            // 2. Save metadata to Firestore
-            const userAdmin = 'Admin';
-            create(COLLECTIONS.CERTIFICATES, {
-                workerId: uploadingDocForWorker,
-                ime: type === 'ZOS' ? 'Zapisnik ZOS' : 'Zapisnik ZOP',
-                tipUvjerenjaIme: type === 'ZOS' ? 'Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način' : 'Zapisnik o ocjeni osposobljenosti iz oblasti zaštite od požara',
-                oznaka: `${type}-${Date.now().toString(36).toUpperCase()}`,
-                datum: new Date().toISOString().split('T')[0],
-                vrijediDo: '',
-                sposobnost: 'Sposoban',
-                strucnjakZNR: userAdmin,
-                upisao: userAdmin,
-                fileUrl: uploadResult.url,
-                filePath: uploadResult.storagePath,
-                fileSize: uploadResult.size,
-                fileName: uploadResult.name,
-                fileType: uploadResult.type
+            const uploadResult = await uploadSecureFile(activeCompanyId, 'workers', file);
+
+            // 2. Save document directly on the worker record (NOT as a certificate)
+            const { update: updateWorker, getById: getWorkerById } = require('@/lib/dataStore');
+            const workerData = getWorkerById(COLLECTIONS.WORKERS, uploadingDocForWorker);
+            const existingDocs = workerData?.dokumenti || [];
+            updateWorker(COLLECTIONS.WORKERS, uploadingDocForWorker, {
+                dokumenti: [...existingDocs, {
+                    id: Date.now().toString(36),
+                    name: file.name,
+                    url: uploadResult.url,
+                    storagePath: uploadResult.storagePath,
+                    size: uploadResult.size,
+                    type: uploadResult.type,
+                    source: type === 'ZOS' ? 'Zapisnik ZOS' : 'Zapisnik ZOP',
+                    date: new Date().toISOString().split('T')[0],
+                }]
             });
             loadData();
             alert(lang === 'bs' ? `Zapisnik uspješno dodan za radnika ${w?.ime} ${w?.prezime}!` : `Document successfully added for ${w?.ime} ${w?.prezime}!`);
@@ -1268,23 +1266,23 @@ function WorkersPageInner() {
                                                 if (file.size > 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
                                                 try {
                                                     const uploadResult = await uploadSecureFile(activeCompanyId, 'workers', file);
-                                                    // Store as a certificate record with storage URL
-                                                    create(COLLECTIONS.CERTIFICATES, {
-                                                        workerId: editingWorker,
-                                                        ime: file.name.replace(/\.[^.]+$/, ''),
-                                                        tipUvjerenjaIme: 'Dokument',
-                                                        oznaka: `DOC-${Date.now().toString(36).toUpperCase()}`,
-                                                        datum: new Date().toISOString().split('T')[0],
-                                                        vrijediDo: '',
-                                                        sposobnost: 'Sposoban',
-                                                        upisao: 'Admin',
-                                                        fileUrl: uploadResult.url,
-                                                        filePath: uploadResult.storagePath,
-                                                        fileSize: uploadResult.size,
-                                                        fileName: uploadResult.name,
-                                                        fileType: uploadResult.type,
+                                                    // Save document directly on the worker record (NOT as a certificate)
+                                                    const { update: updateW, getById: getWorkerById2 } = require('@/lib/dataStore');
+                                                    const workerData2 = getWorkerById2(COLLECTIONS.WORKERS, editingWorker);
+                                                    const existingDocs2 = workerData2?.dokumenti || [];
+                                                    updateW(COLLECTIONS.WORKERS, editingWorker, {
+                                                        dokumenti: [...existingDocs2, {
+                                                            id: Date.now().toString(36),
+                                                            name: file.name,
+                                                            url: uploadResult.url,
+                                                            storagePath: uploadResult.storagePath,
+                                                            size: uploadResult.size,
+                                                            type: uploadResult.type,
+                                                            source: lang === 'bs' ? 'Direktno učitano' : 'Direct upload',
+                                                            date: new Date().toISOString().split('T')[0],
+                                                        }]
                                                     });
-                                                    setCertificates(getWorkerCertificates(editingWorker));
+                                                    loadData();
                                                     if (typeof window !== 'undefined' && window.eznrToast) {
                                                         window.eznrToast(lang === 'bs' ? 'Dokument učitan!' : 'Document uploaded!', 'success');
                                                     }
@@ -1331,7 +1329,6 @@ function WorkersPageInner() {
                                                                 <span>{doc.source}</span>
                                                                 {doc.date && <span>{formatDate(doc.date)}</span>}
                                                                 {doc.size > 0 && <span>{(doc.size / 1024).toFixed(1)} KB</span>}
-                                                                {isUrl && <span style={{ color: 'var(--success)', fontWeight: 600 }}>☁️ Cloud</span>}
                                                             </div>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>

@@ -165,6 +165,10 @@ export async function getAllCompanies() {
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
 }
 
+// Alias used by AuthContext for SuperAdmin company loading
+export const getAllCompaniesFromFirestore = getAllCompanies;
+
+
 export async function getAllUsers() {
     const snap = await getDocs(collection(db, 'users'));
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
