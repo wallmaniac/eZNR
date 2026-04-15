@@ -1,7 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import HelpTip from '@/components/HelpTip';
@@ -26,6 +26,8 @@ export default function SistematizacijaPage() {
     const [editData, setEditData] = useState(null);
     const [searchQ, setSearchQ] = useState('');
     const { showFlash, SavedFlash } = useSavedFlash();
+    const { activeCompanyId } = useAuth();
+    const activeCompany = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
 
     const loadData = useCallback(() => {
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
@@ -49,7 +51,8 @@ export default function SistematizacijaPage() {
                     workplaceName: wp.naziv,
                     oznaka: wp.oznaka || '',
                     strucnaSprema: wp.strucnaSprema || '',
-                    industry: '', // TODO: can pull from company data
+                    industry: activeCompany.djelatnost || '',
+                    companyName: activeCompany.naziv || '',
                     numberOfWorkers: '',
                     orgUnit: ou?.naziv || '',
                     radnoVrijemeOd: wp.radnoVrijemeOd || '',
@@ -97,6 +100,106 @@ export default function SistematizacijaPage() {
         } catch (err) { await alert('Greška: ' + err.message); }
         setUploadLoading(false);
         setSelectedWp(null);
+    };
+
+    // ─── Print / Export ───
+    const handlePrintSist = (sist, wp, ou) => {
+        const logoHtml = activeCompany.logo ? `<img src="${activeCompany.logo}" style="height:60px;max-width:200px;object-fit:contain;margin-bottom:10px" />` : '';
+        const today = new Date().toLocaleDateString('bs-BA');
+        
+        const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+            <title>Sistematizacija - ${wp?.naziv}</title>
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 11pt; color: #000; padding: 40px; margin: 0 auto; max-width: 800px; line-height: 1.5; }
+                .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+                h1 { font-size: 18pt; margin: 5px 0; text-transform: uppercase; letter-spacing: 1px; }
+                .comp-name { font-size: 12pt; font-weight: bold; color: #555; }
+                .sect { margin-bottom: 20px; }
+                .s-title { font-size: 10pt; font-weight: bold; text-transform: uppercase; color: #555; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 2px; }
+                .val { font-weight: bold; }
+                .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+                ul { margin: 5px 0; padding-left: 20px; }
+                .footer { margin-top: 50px; display: flex; justify-content: space-between; font-size: 10pt; }
+                .sig-box { text-align: center; width: 220px; }
+                .sig-line { border-bottom: 1px solid #000; height: 40px; margin-bottom: 5px; }
+                @media print { body { padding: 0; } button { display: none !important; } }
+            </style></head><body>
+            <div class="header">
+                ${logoHtml}
+                <div class="comp-name">${activeCompany.naziv || ''}</div>
+                <h1>OPIS I POPIS POSLOVA</br>(SISTEMATIZACIJA)</h1>
+            </div>
+            
+            <div class="grid">
+                <div><span class="s-title">RADNO MJESTO:</span><br/><span class="val">${wp?.naziv || ''}</span></div>
+                <div><span class="s-title">ORG. JEDINICA:</span><br/><span class="val">${ou?.naziv || '—'}</span></div>
+                <div><span class="s-title">KATEGORIJA:</span><br/><span class="val">${sist.kategorijaRM || '—'}</span></div>
+                <div><span class="s-title">SLOŽENOST POSLOVA:</span><br/><span class="val">${sist.slozenostPoslova || '—'}</span></div>
+            </div>
+
+            <div class="sect">
+                <div class="s-title">OPIS POSLOVA I ZADATAKA</div>
+                <div>${(sist.opisPoslova || '—').replace(/\\n/g, '<br/>')}</div>
+            </div>
+
+            <div class="sect">
+                <div class="s-title">ODGOVORNOSTI</div>
+                <div>${(sist.odgovornosti || '—').replace(/\\n/g, '<br/>')}</div>
+            </div>
+
+            <div class="grid">
+                <div><span class="s-title">STRUČNA SPREMA:</span> <span class="val">${sist.strucnaSprema || wp?.strucnaSprema || '—'}</span></div>
+                <div><span class="s-title">RADNO ISKUSTVO:</span> <span class="val">${sist.radnoIskustvo || '—'}</span></div>
+                <div><span class="s-title">BROJ IZVRŠILACA:</span> <span class="val">${sist.brojIzvrsilaca || 1}</span></div>
+                <div><span class="s-title">PROBNI RAD:</span> <span class="val">${sist.probniRad || '—'}</span></div>
+            </div>
+
+            <div class="sect">
+                <div class="s-title">POSEBNI UVJETI RADA</div>
+                <div>${sist.posebniUvjeti?.length > 0 ? Object.values(sist.posebniUvjeti).join(', ') : 'Nema posebnih uvjeta'}</div>
+            </div>
+
+            <div class="grid">
+                <div>
+                    <div class="s-title">POTREBNA LZO (OZO)</div>
+                    <ul>${(sist.potrebnaOZO || []).map(o => '<li>'+o+'</li>').join('') || '<li>—</li>'}</ul>
+                </div>
+                <div>
+                    <div class="s-title">ZDRAVSTVENI ZAHTJEVI</div>
+                    <ul>${(sist.zdravstveniZahtjevi || []).map(o => '<li>'+o+'</li>').join('') || '<li>—</li>'}</ul>
+                </div>
+                <div>
+                    <div class="s-title">RADNA OPREMA</div>
+                    <ul>${(sist.radnaOprema || []).map(o => '<li>'+o+'</li>').join('') || '<li>—</li>'}</ul>
+                </div>
+                <div>
+                    <div class="s-title">POTREBNE OBUKE / CERTIFIKATI</div>
+                    <ul>${([...(sist.potrebneObuke || []), ...(sist.certifikati || [])]).map(o => '<li>'+o+'</li>').join('') || '<li>—</li>'}</ul>
+                </div>
+            </div>
+
+            <div class="sect" style="margin-top:40px; font-size:9pt; color:#666;">
+                <i>Pravni osnov: ${sist.pravniOsnov || 'Zakon o radu FBiH'}</i>
+            </div>
+
+            <button onclick="window.print()" style="margin-top: 20px; padding: 12px 24px; background: #000; color: #fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ Isprintaj / Spremi PDF</button>
+
+            <div class="footer">
+                <div class="sig-box">
+                    <div style="margin-bottom: 40px; text-align: left;">Sastavio:</div>
+                    <div class="sig-line"></div>
+                    <div>Stručno lice za ZNR</div>
+                </div>
+                <div class="sig-box">
+                    <div style="margin-bottom: 40px; text-align:left;">Odobrio:</div>
+                    <div class="sig-line"></div>
+                    <div>Direktor / Ovlašteno lice</div>
+                </div>
+            </div>
+            
+        </body></html>`;
+        const win = window.open('', '_blank');
+        if (win) { win.document.write(html); win.document.close(); }
     };
 
     // ─── Manual Edit ───
@@ -203,6 +306,7 @@ export default function SistematizacijaPage() {
                                         </div>
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                             <button className="btn btn-outline btn-sm" onClick={() => setEditData({ ...sist })}>✏️ {lang === 'bs' ? 'Detalji' : 'Details'}</button>
+                                            <button className="btn btn-outline btn-sm" onClick={() => handlePrintSist(sist, wp, ou)} style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
                                             <button className="btn btn-outline btn-sm" onClick={() => handleAIGenerate(wp)} disabled={isLoading}
                                                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
                                                 {isLoading ? '⏳' : '🤖'} {lang === 'bs' ? 'Regeneriši' : 'Regenerate'}
