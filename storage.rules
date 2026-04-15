@@ -1,0 +1,24 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ── Company-scoped files ────────────────────────────────────────────────
+    // Any authenticated user can read/write files within their company folder.
+    // Path: companies/{companyId}/{module}/{filename}
+    match /companies/{companyId}/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Legacy fleet-documents path (backwards compat) ──────────────────────
+    match /fleet-documents/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+
+    // ── Deny everything else ────────────────────────────────────────────────
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
