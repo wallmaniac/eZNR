@@ -17,17 +17,7 @@ import {
     deleteDoc,
     setDoc,
 } from 'firebase/firestore';
-import { COLLECTIONS } from './dataStore';
-
-// Company-scoped collections (stored under /companies/{companyId}/...)
-const COMPANY_SCOPED = [
-    'orgUnits', 'workplaces', 'workers', 'equipment', 'injuries', 'diseases',
-    'certificates', 'ppeAssignments', 'calendarEvents', 'employerDocs',
-    'referralsRa1', 'formsOir1', 'formsRo1', 'formsRo2', 'referralsNr1',
-    'digitalArchive', 'requests', 'riskAssessments', 'riskItems', 'isznrDocuments', 'isznrParties',
-    'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires', 'trainings',
-    'annualReports', 'medicalExams', 'sistematizacije', 'serviceLog',
-];
+import { COLLECTIONS, COMPANY_SCOPED } from './dataStore';
 
 // Global collections (shared/reference data)
 const GLOBAL_COLLECTIONS = [
