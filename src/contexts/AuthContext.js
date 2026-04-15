@@ -59,7 +59,8 @@ export function AuthProvider({ children }) {
                                 ? savedCompany
                                 : profile.companyIds?.[0] || null;
                         } else {
-                            companyId = savedCompany && profile.companyIds?.includes(savedCompany)
+                            // Officer/Admin: restore 'all' or explicit company from localStorage
+                            companyId = savedCompany && (savedCompany === 'all' || profile.companyIds?.includes(savedCompany))
                                 ? savedCompany
                                 : (profile.companyIds?.[0] || null);
                         }

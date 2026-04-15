@@ -1258,7 +1258,7 @@ export default function DashboardPage() {
                                          upisao: 'Kalendar',
                                          ogranicenje: '',
                                      }, companyId);
-                                     setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, user?.companyIds));
+                                     setCerts([...getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, user?.companyIds)]);
                                  }
 
                                 // 3. If ppe type + worker selected → also create PPE assignment
@@ -1270,10 +1270,10 @@ export default function DashboardPage() {
                                          datumRazduzenja: '',
                                          kolicina: ppeKolicina,
                                      }, companyId);
-                                     setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, user?.companyIds));
+                                     setPpeAssignments([...getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, user?.companyIds)]);
                                  }
 
-                                setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds));
+                                setCalEvents([...getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds)]);
                                 setEventFormError(''); setShowEventForm(false);
                             }}>💾 {t('save')}</button>
                         </div>
