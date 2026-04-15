@@ -194,12 +194,9 @@ export default function TrainingsPage() {
         }
         setGeneratingQuiz(true);
         try {
-            const res = await fetch('/api/generate-quiz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ slides: slides.map(s => ({ naslov: s.naslov, sadrzaj: s.sadrzaj })) }),
-            });
-            const data = await res.json();
+            const data = await apiGenerateQuiz(slides);
+            if (data.error) throw new Error(data.error);
+
             if (data.questions?.length > 0) {
                 const withIds = data.questions.map(q => ({ ...q, id: genId() }));
                 setF('questions', withIds);
@@ -229,11 +226,8 @@ export default function TrainingsPage() {
             ? '🤖 Gemini čita dokument i kreira slajdove... (10-20s)'
             : '📦 Izvlačim slajdove iz prezentacije...');
         try {
-            const fd = new FormData();
-            fd.append('file', file);
-            const res = await fetch('/api/parse-presentation', { method: 'POST', body: fd });
-            const data = await res.json();
-            if (!res.ok || data.error) {
+            const data = await apiParsePresentation(file);
+            if (data.error) {
                 setUploadError(data.error || 'Greška pri obradi dokumenta.');
                 return;
             }

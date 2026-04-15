@@ -13,6 +13,7 @@ import QuestionnaireResults from '@/components/QuestionnaireResults';
 import ReminderModal from '@/components/ReminderModal';
 import HelpTip from '@/components/HelpTip';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
+import { apiGenerateRiskQuestionnaire } from '@/lib/riskAI';
 
 /* ═══════════════════════════════════════════════
    Upitnici/Ankete — Questionnaire System
@@ -271,9 +272,7 @@ export default function QuestionnairesPage() {
       const allEquip = getAll(COLLECTIONS.EQUIPMENT || 'equipment');
       // Load sistematizacija for this workplace (if available)
       const sist = getAll(COLLECTIONS.SISTEMATIZACIJE).find(s => s.radnoMjestoId === wp.id);
-      const res = await fetch('/api/generate-risk-questionnaire', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const surveyJson = await apiGenerateRiskQuestionnaire({
           workplaceName: wp.naziv || '',
           workplaceDescription: wp.opis || wp.napomena || '',
           hazards: allHazards.map(h => h.naziv).filter(Boolean).slice(0, 20),
@@ -290,17 +289,16 @@ export default function QuestionnairesPage() {
           } : null,
           vrstaAnkete: aiVrstaAnkete === 'Ostalo' ? aiCustomVrsta : aiVrstaAnkete,
           jezik: aiJezik,
-        }),
       });
-      const data = await res.json();
-      if (data.success && data.surveyJson) {
+
+      if (surveyJson) {
         const newQ = create(COLLECTIONS.QUESTIONNAIRES, {
           ...EMPTY_UPITNIK,
           naziv: `${aiVrstaAnkete === 'Ostalo' ? aiCustomVrsta : aiVrstaAnkete} — ${wp.naziv}`,
           oznaka: 'AI-ANKETA',
           zaVrstu: aiVrstaAnkete === 'Ostalo' ? aiCustomVrsta : aiVrstaAnkete,
           dodajUPrilogProcjeniRizika: 'Dodaje se u procjenu rizika',
-          surveyJson: data.surveyJson,
+          surveyJson: surveyJson,
           radnoMjestoId: wp.id,
           jezik: aiJezik,
           aiGenerated: true,
@@ -309,8 +307,6 @@ export default function QuestionnairesPage() {
         setSelectedWpId('');
         loadData();
         handleEdit(newQ);
-      } else {
-        await alert('AI greška: ' + (data.error || 'Nepoznata greška'));
       }
     } catch (err) { await alert('Greška: ' + err.message); }
     setAiGenerating(false);

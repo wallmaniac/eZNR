@@ -5,6 +5,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { getRawAll } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
+import { apiCallZia } from '@/lib/ziaAPI';
 
 // ─── App knowledge base for the AI system prompt ───────────────────────────
 const APP_KNOWLEDGE = {
@@ -809,19 +810,7 @@ export default function AIAssistant() {
 
     // ── Proxy API call through /api/zia (key never leaves server) ────────────
     const callZiaAPI = useCallback(async (history, systemPrompt, tools) => {
-        const res = await fetch('/api/zia', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: history, systemPrompt, tools }),
-        });
-        const data = await res.json();
-        if (!res.ok) {
-            const err = new Error(data.error || `API error ${res.status}`);
-            err.isRateLimit = data.isRateLimit || res.status === 429;
-            err.retryAfter = data.retryAfter || 30;
-            throw err;
-        }
-        return data; // { text } or { function_call: { name, args } }
+        return await apiCallZia({ messages: history, systemPrompt, tools });
     }, []);
 
     // ── Execute a tool call from Gemini ──────────────────────────────────────

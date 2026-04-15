@@ -8,7 +8,7 @@ import {
   getAll, getById, update, getRawAll, COLLECTIONS,
 } from '@/lib/dataStore';
 import {
-  getNotificationSettings, saveNotificationSettings,
+  getNotificationSettings, saveNotificationSettings, apiSaveNotifSettings,
   getAppSettings, saveAppSettings,
   getSystemStats, APP_VERSION, APP_BUILD_DATE, CHANGELOG,
   clearDismissedNotifications,
@@ -16,8 +16,7 @@ import {
 import {
   getUserLog, getAdminLog, clearUserLog, clearAdminLog, formatLogTime, getSeverityColors,
   getOnlineUsers, humanizePage,
-} from '@/lib/activityLog';
-
+import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -57,6 +56,11 @@ export default function SettingsPage() {
   const onlineUsers = useMemo(() => getOnlineUsers(), [logRefresh]);
 
 
+  // Firebase Sync state (admin only)
+  const [syncStatus, setSyncStatus] = useState('');
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncResults, setSyncResults] = useState(null);
+  const syncStats = useMemo(() => isAdmin ? getSyncStats() : {}, [isAdmin]);
 
   // Load profile data
   useEffect(() => {
@@ -175,16 +179,7 @@ export default function SettingsPage() {
     //    The client SDK cannot write directly — app uses localStorage auth, not Firebase Auth
     const cId = activeCompanyId;
     if (cId) {
-      try {
-        const res = await fetch('/api/notif-settings', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ companyId: cId, settings: notifSettings }),
-        });
-        if (!res.ok) console.error('[eZNR] notif-settings API error:', await res.text());
-      } catch (err) {
-        console.error('[eZNR] Failed to sync notif_settings to Firestore:', err);
-      }
+      await apiSaveNotifSettings(cId, notifSettings);
     }
 
     showSaved();
@@ -197,6 +192,28 @@ export default function SettingsPage() {
 
   const updateNotif = (key, value) => setNotifSettings(prev => ({ ...prev, [key]: value }));
   const updateApp = (key, value) => setAppSettings(prev => ({ ...prev, [key]: value }));
+
+  const handleRunSync = async () => {
+    if (!activeCompanyId) return;
+    if (!confirm(lang === 'bs' 
+      ? 'Ova akcija će učitati sve lokalne podatke na Firebase za TRENUTNU KOMPANIJU. Da li ste sigurni?' 
+      : 'This will upload all local data to Firebase for the CURRENT COMPANY. Are you sure?')) return;
+      
+    setIsSyncing(true);
+    setSyncStatus(lang === 'bs' ? 'Pokrećem učitavanje na oblak...' : 'Starting cloud sync...');
+    setSyncResults(null);
+    try {
+      const { results, errors } = await syncAllToFirebase(activeCompanyId, (msg) => {
+        setSyncStatus(msg);
+      });
+      setSyncResults({ results, errors });
+      setSyncStatus(lang === 'bs' ? '✅ Učitavanje završeno!' : '✅ Sync completed!');
+    } catch (e) {
+      setSyncStatus(`❌ Greška: ${e.message}`);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   // ── Tabs ──
   const tabs = [
@@ -697,9 +714,11 @@ export default function SettingsPage() {
                   onChange={e => updateNotif('emailNotifLang', e.target.value)}
                 >
                   <option value="bs">🇧🇦 Bosanski</option>
-                  <option value="bilingual">🇧🇦🇬🇧 Bosanski + English</option>
+                  <option value="hr">🇭🇷 Hrvatski</option>
+                  <option value="sr">🇷🇸 Srpski</option>
+                  <option value="sl">🇸🇮 Slovenski</option>
                   <option value="en">🇬🇧 English only</option>
-                  {/* TODO: Add Croatian 🇭🇷, Slovenian 🇸🇮, Serbian 🇷🇸 when those app versions launch */}
+                  <option value="bilingual">🌍 Bilingual (Local + English)</option>
                 </select>
               </div>
 
@@ -877,7 +896,62 @@ export default function SettingsPage() {
 
             <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
 
-            {/* App version info */}
+            {/* ── Firebase Migration ── */}
+            <SectionHeader icon="☁️" title={lang === 'bs' ? 'Sinkronizacija sa Cloudom (Firebase)' : 'Cloud Synchronization'} />
+            <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--primary)' }}>
+              <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                {lang === 'bs' 
+                  ? 'Prijenos i sinkronizacija lokalnih podataka u Firebase bazu za trenutno aktivnu kompaniju.' 
+                  : 'Transfer and synchronize local data to Firebase database for the currently active company.'}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 16 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
+                  <span>👷 Radnici:</span><strong>{syncStats.workers || 0}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
+                  <span>⚙️ Oprema:</span><strong>{syncStats.equipment || 0}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
+                  <span>📜 Uvjerenja:</span><strong>{syncStats.certificates || 0}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
+                  <span>🚗 Vozila:</span><strong>{syncStats.vehicles || 0}</strong>
+                </div>
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <button 
+                  type="button" 
+                  className="btn btn-primary" 
+                  onClick={handleRunSync}
+                  disabled={isSyncing || !activeCompanyId}
+                >
+                  {isSyncing ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☁️'} 
+                  {lang === 'bs' ? 'Sinkroniziraj na Firebase' : 'Sync to Firebase'}
+                </button>
+                {syncStatus && (
+                  <span style={{ fontSize: '0.8rem', fontWeight: 600, color: syncStatus.includes('Greška') || syncStatus.includes('Error') ? 'var(--danger)' : 'var(--success)' }}>
+                    {syncStatus}
+                  </span>
+                )}
+              </div>
+              
+              {syncResults && (
+                <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.15)', borderRadius: 8, fontSize: '0.7rem' }}>
+                  <div style={{ fontWeight: 700, marginBottom: 4 }}>Detalji sinkronizacije:</div>
+                  <div style={{ maxHeight: 120, overflowY: 'auto' }}>
+                    {syncResults.results.filter(r => r.synced > 0).map((r, i) => (
+                      <div key={i} style={{ color: 'var(--text-muted)' }}>✅ {r.collection}: {r.synced} zapisa</div>
+                    ))}
+                    {syncResults.errors.map((e, i) => (
+                      <div key={i} style={{ color: 'var(--danger)' }}>❌ {e.collection}: {e.error}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />            {/* App version info */}
             <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div>

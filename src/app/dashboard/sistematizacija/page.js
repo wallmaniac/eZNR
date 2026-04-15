@@ -5,6 +5,7 @@ import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/data
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import HelpTip from '@/components/HelpTip';
+import { apiGenerateSistematizacija, apiParseSistematizacija } from '@/lib/sistematizacijaAI';
 
 /* ═══════════════════════════════════════════════
    Sistematizacija radnih mjesta
@@ -45,31 +46,28 @@ export default function SistematizacijaPage() {
         setSelectedWp(wp.id);
         try {
             const ou = orgUnits.find(o => o.id === wp.orgUnitId);
-            const res = await fetch('/api/generate-sistematizacija', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    workplaceName: wp.naziv,
-                    oznaka: wp.oznaka || '',
-                    strucnaSprema: wp.strucnaSprema || '',
-                    industry: activeCompany.djelatnost || '',
-                    companyName: activeCompany.naziv || '',
-                    numberOfWorkers: '',
-                    orgUnit: ou?.naziv || '',
-                    radnoVrijemeOd: wp.radnoVrijemeOd || '',
-                    radnoVrijemeDo: wp.radnoVrijemeDo || '',
-                    additionalInfo: wp.opis || '',
-                }),
+            const { data, error } = await apiGenerateSistematizacija({
+                workplaceName: wp.naziv,
+                oznaka: wp.oznaka || '',
+                strucnaSprema: wp.strucnaSprema || '',
+                industry: activeCompany.djelatnost || '',
+                companyName: activeCompany.naziv || '',
+                numberOfWorkers: '',
+                orgUnit: ou?.naziv || '',
+                radnoVrijemeOd: wp.radnoVrijemeOd || '',
+                radnoVrijemeDo: wp.radnoVrijemeDo || '',
+                additionalInfo: wp.opis || '',
             });
-            const data = await res.json();
-            if (data.success && data.sistematizacija) {
+            
+            if (data) {
                 const existing = getSistForWp(wp.id);
                 if (existing) {
-                    update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data.sistematizacija, radnoMjestoId: wp.id, aiGenerated: true });
+                    update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data, radnoMjestoId: wp.id, aiGenerated: true });
                 } else {
-                    create(COLLECTIONS.SISTEMATIZACIJE, { ...data.sistematizacija, radnoMjestoId: wp.id, aiGenerated: true });
+                    create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true });
                 }
                 loadData();
-            } else { await alert('AI greška: ' + (data.error || 'Nepoznata greška')); }
+            } else { await alert('AI greška: ' + error); }
         } catch (err) { await alert('Greška: ' + err.message); }
         setAiLoading(false);
         setSelectedWp(null);
@@ -83,20 +81,17 @@ export default function SistematizacijaPage() {
         setSelectedWp(wp.id);
         try {
             const text = await file.text();
-            const res = await fetch('/api/parse-sistematizacija', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ documentText: text, workplaceName: wp.naziv }),
-            });
-            const data = await res.json();
-            if (data.success && data.sistematizacija) {
+            const { data, error } = await apiParseSistematizacija(text, wp.naziv);
+            
+            if (data) {
                 const existing = getSistForWp(wp.id);
                 if (existing) {
-                    update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data.sistematizacija, radnoMjestoId: wp.id, uploadedFile: file.name, aiGenerated: false });
+                    update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data, radnoMjestoId: wp.id, uploadedFile: file.name, aiGenerated: false });
                 } else {
-                    create(COLLECTIONS.SISTEMATIZACIJE, { ...data.sistematizacija, radnoMjestoId: wp.id, uploadedFile: file.name, aiGenerated: false });
+                    create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, uploadedFile: file.name, aiGenerated: false });
                 }
                 loadData();
-            } else { await alert('Greška: ' + (data.error || 'Neuspjelo parsiranje')); }
+            } else { await alert('Greška: ' + error); }
         } catch (err) { await alert('Greška: ' + err.message); }
         setUploadLoading(false);
         setSelectedWp(null);

@@ -68,9 +68,6 @@ export const DEFAULT_NOTIFICATION_SETTINGS = {
     emailNotifMedical: true,
     // Days threshold to include in email (items expiring within N days)
     emailNotifDays: 30,
-    // TODO: Add 'hr' (Croatian), 'sl' (Slovenian), 'sr' (Serbian) language options
-    //       when those app versions are launched. Update emailNotifLang select options
-    //       in settings/page.js and the email template builder in notify-expiry/route.js.
 
     // Admin-only notification settings
     adminDbSize: true,
@@ -145,6 +142,25 @@ export function getAppSettings() {
         const saved = JSON.parse(localStorage.getItem('eznr_app_settings') || 'null');
         return saved ? { ...DEFAULT_APP_SETTINGS, ...saved } : DEFAULT_APP_SETTINGS;
     } catch { return DEFAULT_APP_SETTINGS; }
+}
+
+export async function apiSaveNotifSettings(cId, notifSettings) {
+    if (!cId) return false;
+    try {
+        const res = await fetch('/api/notif-settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ companyId: cId, settings: notifSettings }),
+        });
+        if (!res.ok) {
+            console.error('[eZNR] notif-settings API error:', await res.text());
+            return false;
+        }
+        return true;
+    } catch (err) {
+        console.error('[eZNR] Failed to sync notif_settings to Firestore:', err);
+        return false;
+    }
 }
 
 export function saveAppSettings(settings) {

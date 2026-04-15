@@ -53,6 +53,80 @@ function fmtDate(dateStr) {
     return d.toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
+// ── Localization ──────────────────────────────────────────────────────────────
+const TRANSLATIONS = {
+    bs: {
+        expired: 'Isteklo', days: 'd', status: 'Status',
+        titleDig: 'DNEVNI PREGLED ISTICANJA', company: 'Firma', generated: 'Generisano',
+        intro: 'Ispod se nalazi pregled svih stavki koje su istekle ili ističu u narednom periodu. Molimo preduzmite odgovarajuće mjere.',
+        openApp: 'Otvori aplikaciju →', autoEmail: 'Automatski email — eZNR Platforma za zaštitu na radu',
+        disableOpt: 'Za isključivanje ovih emailova idite na: Postavke → Obavijesti → Automatski Email',
+        catCerts: 'Uvjerenja radnika', worker: 'Radnik', type: 'Vrsta', expires: 'Ističe',
+        catPPE: 'Zaštitna oprema', item: 'Artikal', assigned: 'Dodijeljeno',
+        catEquip: 'Radna oprema', equipName: 'Oprema', invCode: 'Inv. br.', nextIns: 'Sljedeći pregled',
+        catDocs: 'Dokumenti poslodavca', document: 'Dokument', category: 'Kategorija',
+        catFleet: 'Vozni park', vehicle: 'Vozilo',
+        catMed: 'Ljekarski pregledi', examType: 'Vrsta pregleda', validUntil: 'Važi do'
+    },
+    hr: {
+        expired: 'Isteklo', days: 'd', status: 'Status',
+        titleDig: 'DNEVNI PREGLED ISTICANJA', company: 'Tvrtka', generated: 'Generirano',
+        intro: 'U nastavku je pregled svih stavki koje su istekle ili istječu u narednom periodu. Molimo poduzmite odgovarajuće mjere.',
+        openApp: 'Otvori aplikaciju →', autoEmail: 'Automatski e-mail — eZNR Platforma za zaštitu na radu',
+        disableOpt: 'Za isključivanje ovih e-mailova idite na: Postavke → Obavijesti → Automatski Email',
+        catCerts: 'Uvjerenja radnika', worker: 'Radnik', type: 'Vrsta', expires: 'Istječe',
+        catPPE: 'Zaštitna oprema', item: 'Artikl', assigned: 'Dodijeljeno',
+        catEquip: 'Radna oprema', equipName: 'Oprema', invCode: 'Inv. br.', nextIns: 'Sljedeći pregled',
+        catDocs: 'Dokumenti poslodavca', document: 'Dokument', category: 'Kategorija',
+        catFleet: 'Vozni park', vehicle: 'Vozilo',
+        catMed: 'Liječnički pregledi', examType: 'Vrsta pregleda', validUntil: 'Vrijedi do'
+    },
+    sr: {
+        expired: 'Isteklo', days: 'd', status: 'Status',
+        titleDig: 'DNEVNI PREGLED ISTICANJA', company: 'Preduzeće', generated: 'Generisano',
+        intro: 'U nastavku se nalazi pregled svih stavki koje su istekle ili ističu u narednom periodu. Molimo preduzmite odgovarajuće mere.',
+        openApp: 'Otvori aplikaciju →', autoEmail: 'Automatski email — eZNR Platforma za zaštitu na radu',
+        disableOpt: 'Za isključivanje ovih emailova idite na: Postavke → Obaveštenja → Automatski Email',
+        catCerts: 'Uverenja radnika', worker: 'Radnik', type: 'Vrsta', expires: 'Ističe',
+        catPPE: 'Zaštitna oprema', item: 'Artikal', assigned: 'Dodeljeno',
+        catEquip: 'Radna oprema', equipName: 'Oprema', invCode: 'Inv. br.', nextIns: 'Sledeći pregled',
+        catDocs: 'Dokumenti poslodavca', document: 'Dokument', category: 'Kategorija',
+        catFleet: 'Vozni park', vehicle: 'Vozilo',
+        catMed: 'Lekarski pregledi', examType: 'Vrsta pregleda', validUntil: 'Važi do'
+    },
+    sl: {
+        expired: 'Poteklo', days: 'd', status: 'Status',
+        titleDig: 'DNEVNI PREGLED POTEKA', company: 'Podjetje', generated: 'Generirano',
+        intro: 'Spodaj je pregled vseh postavk, ki so potekle ali bodo kmalu potekle. Prosimo, ustrezno ukrepajte.',
+        openApp: 'Odpri aplikacijo →', autoEmail: 'Samodejna e-pošta — eZNR Platforma za varnost pri delu',
+        disableOpt: 'Za izklop teh e-poštnih sporočil pojdite na: Nastavitve → Obvestila → Samodejna e-pošta',
+        catCerts: 'Potrdila delavcev', worker: 'Delavec', type: 'Vrsta', expires: 'Poteka',
+        catPPE: 'Zaščitna oprema', item: 'Artikel', assigned: 'Dodeljeno',
+        catEquip: 'Delovna oprema', equipName: 'Oprema', invCode: 'Inv. št.', nextIns: 'Naslednji pregled',
+        catDocs: 'Dokumenti delodajalca', document: 'Dokument', category: 'Kategorija',
+        catFleet: 'Vozni park', vehicle: 'Vozilo',
+        catMed: 'Zdravniški pregledi', examType: 'Vrsta pregleda', validUntil: 'Velja do'
+    },
+    en: {
+        expired: 'Expired', days: 'd', status: 'Status',
+        titleDig: 'DAILY EXPIRY DIGEST', company: 'Company', generated: 'Generated',
+        intro: 'Below is a summary of all items that have expired or are expiring soon. Please take appropriate action.',
+        openApp: 'Open App →', autoEmail: 'Automated email — eZNR Occupational Safety Platform',
+        disableOpt: 'To disable these emails go to: Settings → Notifications → Automated Email',
+        catCerts: 'Worker Certificates', worker: 'Worker', type: 'Type', expires: 'Expires',
+        catPPE: 'Protective Equipment', item: 'Item', assigned: 'Assigned',
+        catEquip: 'Equipment', equipName: 'Equipment', invCode: 'Inv. Code', nextIns: 'Next Insp.',
+        catDocs: 'Employer Docs', document: 'Document', category: 'Category',
+        catFleet: 'Vehicle Fleet', vehicle: 'Vehicle',
+        catMed: 'Medical Exams', examType: 'Exam Type', validUntil: 'Valid Until'
+    }
+};
+
+function t(lang, key) {
+    const dict = TRANSLATIONS[lang] || TRANSLATIONS.bs;
+    return dict[key] || TRANSLATIONS.en[key] || key;
+}
+
 // ── Row color by expiry ───────────────────────────────────────────────────────
 function rowStyle(days) {
     if (days === null) return '';
@@ -63,18 +137,16 @@ function rowStyle(days) {
 }
 
 function statusBadge(days, lang) {
-    const bs = lang !== 'en';
     if (days === null) return '';
-    if (days < 0) return `<span style="color:#ef4444;font-weight:700">⛔ ${bs ? 'Isteklo' : 'Expired'}</span>`;
-    if (days <= 7) return `<span style="color:#f97316;font-weight:700">🔴 ${days}d</span>`;
-    if (days <= 30) return `<span style="color:#eab308;font-weight:700">⚠️ ${days}d</span>`;
-    return `<span style="color:#22c55e;font-weight:600">✅ ${days}d</span>`;
+    if (days < 0) return `<span style="color:#ef4444;font-weight:700">⛔ ${t(lang, 'expired')}</span>`;
+    if (days <= 7) return `<span style="color:#f97316;font-weight:700">🔴 ${days}${t(lang, 'days')}</span>`;
+    if (days <= 30) return `<span style="color:#eab308;font-weight:700">⚠️ ${days}${t(lang, 'days')}</span>`;
+    return `<span style="color:#22c55e;font-weight:600">✅ ${days}${t(lang, 'days')}</span>`;
 }
 
 // ── Section block builder ─────────────────────────────────────────────────────
 function buildSection(title, rows, cols, lang) {
     if (!rows || rows.length === 0) return '';
-    const bs = lang !== 'en';
 
     const rowsHtml = rows.map(row => `
         <tr style="${rowStyle(row._days)}">
@@ -89,7 +161,7 @@ function buildSection(title, rows, cols, lang) {
                 <thead>
                     <tr style="background:#f8fafc">
                         ${cols.map(col => `<th style="padding:9px 10px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e2e8f0">${col.label}</th>`).join('')}
-                        <th style="padding:9px 10px;text-align:center;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e2e8f0">${bs ? 'Status' : 'Status'}</th>
+                        <th style="padding:9px 10px;text-align:center;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid #e2e8f0">${t(lang, 'status')}</th>
                     </tr>
                 </thead>
                 <tbody>${rowsHtml}</tbody>
@@ -99,7 +171,6 @@ function buildSection(title, rows, cols, lang) {
 
 // ── Main email builder ────────────────────────────────────────────────────────
 function buildEmailBody({ companyName, sections, lang, today }) {
-    const bs = lang !== 'en';
     const todayStr = fmtDate(today.toISOString().split('T')[0]);
 
     const sectionsHtml = sections.join('');
@@ -107,8 +178,8 @@ function buildEmailBody({ companyName, sections, lang, today }) {
     if (!sectionsHtml.trim()) return null; // Nothing to report
 
     return `<!DOCTYPE html>
-<html lang="${bs ? 'bs' : 'en'}">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>eZNR — ${bs ? 'Dnevni pregled isticanja' : 'Daily Expiry Digest'}</title></head>
+<html lang="${lang || 'bs'}">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>eZNR — ${t(lang, 'titleDig')}</title></head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0">
   <tr><td align="center">
@@ -122,22 +193,20 @@ function buildEmailBody({ companyName, sections, lang, today }) {
       <!-- Urgency banner -->
       <tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 40px;text-align:center">
         <p style="margin:0;font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:2px">
-          ⏰ ${bs ? 'DNEVNI PREGLED ISTICANJA' : 'DAILY EXPIRY DIGEST'}
+          ⏰ ${t(lang, 'titleDig')}
         </p>
       </td></tr>
 
       <!-- Body -->
       <tr><td style="background:#fff;padding:36px 40px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0">
         <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700">
-          ${bs ? 'Firma' : 'Company'}
+          ${t(lang, 'company')}
         </p>
         <h1 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#1e293b">${companyName}</h1>
-        <p style="margin:0 0 28px;font-size:13px;color:#64748b">${bs ? 'Generisano' : 'Generated'}: ${todayStr}</p>
+        <p style="margin:0 0 28px;font-size:13px;color:#64748b">${t(lang, 'generated')}: ${todayStr}</p>
 
         <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.7">
-          ${bs
-            ? 'Ispod se nalazi pregled svih stavki koje su istekle ili ističu u narednom periodu. Molimo preduzmite odgovarajuće mjere.'
-            : 'Below is a summary of all items that have expired or are expiring soon. Please take appropriate action.'}
+          ${t(lang, 'intro')}
         </p>
 
         ${sectionsHtml}
@@ -145,7 +214,7 @@ function buildEmailBody({ companyName, sections, lang, today }) {
         <!-- CTA -->
         <div style="text-align:center;margin:28px 0">
           <a href="${APP_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 40px;border-radius:12px">
-            ${bs ? 'Otvori aplikaciju →' : 'Open App →'}
+            ${t(lang, 'openApp')}
           </a>
         </div>
       </td></tr>
@@ -153,11 +222,10 @@ function buildEmailBody({ companyName, sections, lang, today }) {
       <!-- Footer -->
       <tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center">
         <p style="margin:0 0 4px;font-size:12px;color:#64748b">
-          ${bs ? 'Automatski email — eZNR Platforma za zaštitu na radu' : 'Automated email — eZNR Occupational Safety Platform'}
+          ${t(lang, 'autoEmail')}
         </p>
         <p style="margin:0;font-size:11px;color:#94a3b8">
-          ${bs ? 'Za isključivanje ovih emailova idite na: Postavke → Obavijesti → Automatski Email'
-                : 'To disable these emails go to: Settings → Notifications → Automated Email'}
+          ${t(lang, 'disableOpt')}
         </p>
       </td></tr>
 
@@ -306,8 +374,6 @@ export async function GET(request) {
                 const allSections = [];
 
                 for (const lang of langs) {
-                    const bs = lang !== 'en';
-
                     // Helper: sort and cap rows
                     const cap = (rows) => rows.sort((a, b) => a._days - b._days).slice(0, rowLimit);
 
@@ -319,20 +385,20 @@ export async function GET(request) {
                             if (days !== null && days <= threshold) {
                                 acc.push({
                                     _days: days,
-                                    [bs ? 'Radnik' : 'Worker']: c.workerName || c.workerId || '—',
-                                    [bs ? 'Vrsta uvjerenja' : 'Certificate type']: c.vrstaUvjerenja || c.tip || '—',
-                                    [bs ? 'Važi do' : 'Expires']: fmtDate(c.vrijediDo),
+                                    [t(lang, 'worker')]: c.workerName || c.workerId || '—',
+                                    [t(lang, 'type')]: c.vrstaUvjerenja || c.tip || '—',
+                                    [t(lang, 'expires')]: fmtDate(c.vrijediDo),
                                 });
                             }
                             return acc;
                         }, []));
                         if (certRows.length) allSections.push(buildSection(
-                            bs ? `📜 Uvjerenja radnika (${certRows.length}${isTest ? ' — TEST' : ''})` : `📜 Worker Certificates (${certRows.length}${isTest ? ' — TEST' : ''})`,
+                            `📜 ${t(lang, 'catCerts')} (${certRows.length}${isTest ? ' — TEST' : ''})`,
                             certRows,
                             [
-                                { key: bs ? 'Radnik' : 'Worker', label: bs ? 'Radnik' : 'Worker' },
-                                { key: bs ? 'Vrsta uvjerenja' : 'Certificate type', label: bs ? 'Vrsta' : 'Type' },
-                                { key: bs ? 'Važi do' : 'Expires', label: bs ? 'Važi do' : 'Expires' },
+                                { key: t(lang, 'worker'), label: t(lang, 'worker') },
+                                { key: t(lang, 'type'), label: t(lang, 'type') },
+                                { key: t(lang, 'expires'), label: t(lang, 'expires') },
                             ],
                             lang
                         ));
@@ -346,20 +412,20 @@ export async function GET(request) {
                             if (days !== null && days <= threshold) {
                                 acc.push({
                                     _days: days,
-                                    [bs ? 'Oprema' : 'Equipment']: e.naziv || e.vrsta || '—',
-                                    [bs ? 'Inv. broj' : 'Inv. #']: e.inventarniBroj || '—',
-                                    [bs ? 'Sljedeći pregled' : 'Next inspection']: fmtDate(e.iduci),
+                                    [t(lang, 'equipName')]: e.naziv || e.vrsta || '—',
+                                    [t(lang, 'invCode')]: e.inventarniBroj || '—',
+                                    [t(lang, 'nextIns')]: fmtDate(e.iduci),
                                 });
                             }
                             return acc;
                         }, []));
                         if (equipRows.length) allSections.push(buildSection(
-                            bs ? `⚙️ Radna oprema (${equipRows.length}${isTest ? ' — TEST' : ''})` : `⚙️ Equipment (${equipRows.length}${isTest ? ' — TEST' : ''})`,
+                            `⚙️ ${t(lang, 'catEquip')} (${equipRows.length}${isTest ? ' — TEST' : ''})`,
                             equipRows,
                             [
-                                { key: bs ? 'Oprema' : 'Equipment', label: bs ? 'Naziv' : 'Name' },
-                                { key: bs ? 'Inv. broj' : 'Inv. #', label: bs ? 'Inv. br.' : 'Inv. #' },
-                                { key: bs ? 'Sljedeći pregled' : 'Next inspection', label: bs ? 'Sljedeći pregled' : 'Next Inspection' },
+                                { key: t(lang, 'equipName'), label: t(lang, 'equipName') },
+                                { key: t(lang, 'invCode'), label: t(lang, 'invCode') },
+                                { key: t(lang, 'nextIns'), label: t(lang, 'nextIns') },
                             ],
                             lang
                         ));
@@ -373,20 +439,20 @@ export async function GET(request) {
                             if (days !== null && days <= threshold) {
                                 acc.push({
                                     _days: days,
-                                    [bs ? 'Dokument' : 'Document']: d.naziv || '—',
-                                    [bs ? 'Kategorija' : 'Category']: d.kategorija || '—',
-                                    [bs ? 'Ističe' : 'Expires']: fmtDate(d.datumIsteka),
+                                    [t(lang, 'document')]: d.naziv || '—',
+                                    [t(lang, 'category')]: d.kategorija || '—',
+                                    [t(lang, 'expires')]: fmtDate(d.datumIsteka),
                                 });
                             }
                             return acc;
                         }, []));
                         if (docRows.length) allSections.push(buildSection(
-                            bs ? `📄 Dokumenti poslodavca (${docRows.length}${isTest ? ' — TEST' : ''})` : `📄 Employer Documents (${docRows.length}${isTest ? ' — TEST' : ''})`,
+                            `📄 ${t(lang, 'catDocs')} (${docRows.length}${isTest ? ' — TEST' : ''})`,
                             docRows,
                             [
-                                { key: bs ? 'Dokument' : 'Document', label: bs ? 'Naziv' : 'Name' },
-                                { key: bs ? 'Kategorija' : 'Category', label: bs ? 'Kategorija' : 'Category' },
-                                { key: bs ? 'Ističe' : 'Expires', label: bs ? 'Ističe' : 'Expires' },
+                                { key: t(lang, 'document'), label: t(lang, 'document') },
+                                { key: t(lang, 'category'), label: t(lang, 'category') },
+                                { key: t(lang, 'expires'), label: t(lang, 'expires') },
                             ],
                             lang
                         ));
@@ -397,29 +463,29 @@ export async function GET(request) {
                         const fleetRows = cap(vehiclesSnap.docs.flatMap(doc => {
                             const v = doc.data();
                             return [
-                                { label: bs ? 'Registracija' : 'Registration', date: v.registracijaIstice },
-                                { label: bs ? 'Tehnički pregled' : 'Technical inspection', date: v.tehnickiIstice },
-                                { label: bs ? 'Osiguranje' : 'Insurance', date: v.osiguranjeIstice },
+                                { label: t(lang, 'assigned'), date: v.registracijaIstice },
+                                { label: t(lang, 'type'), date: v.tehnickiIstice },
+                                { label: t(lang, 'category'), date: v.osiguranjeIstice },
                             ].reduce((acc, chk) => {
                                 const days = daysUntil(chk.date);
                                 if (days !== null && days <= threshold) {
                                     acc.push({
                                         _days: days,
-                                        [bs ? 'Vozilo' : 'Vehicle']: `${v.registracija || ''} ${v.marka || ''}`.trim(),
-                                        [bs ? 'Tip' : 'Type']: chk.label,
-                                        [bs ? 'Ističe' : 'Expires']: fmtDate(chk.date),
+                                        [t(lang, 'vehicle')]: `${v.registracija || ''} ${v.marka || ''}`.trim(),
+                                        [t(lang, 'type')]: chk.label,
+                                        [t(lang, 'expires')]: fmtDate(chk.date),
                                     });
                                 }
                                 return acc;
                             }, []);
                         }));
                         if (fleetRows.length) allSections.push(buildSection(
-                            bs ? `🚗 Vozni park (${fleetRows.length}${isTest ? ' — TEST' : ''})` : `🚗 Fleet (${fleetRows.length}${isTest ? ' — TEST' : ''})`,
+                            `🚗 ${t(lang, 'catFleet')} (${fleetRows.length}${isTest ? ' — TEST' : ''})`,
                             fleetRows,
                             [
-                                { key: bs ? 'Vozilo' : 'Vehicle', label: bs ? 'Vozilo' : 'Vehicle' },
-                                { key: bs ? 'Tip' : 'Type', label: bs ? 'Tip' : 'Type' },
-                                { key: bs ? 'Ističe' : 'Expires', label: bs ? 'Ističe' : 'Expires' },
+                                { key: t(lang, 'vehicle'), label: t(lang, 'vehicle') },
+                                { key: t(lang, 'type'), label: t(lang, 'type') },
+                                { key: t(lang, 'expires'), label: t(lang, 'expires') },
                             ],
                             lang
                         ));
@@ -433,9 +499,9 @@ export async function GET(request) {
                             if (days !== null && days <= threshold) {
                                 acc.push({
                                     _days: days,
-                                    [bs ? 'Radnik' : 'Worker']: m.workerName || m.workerId || '—',
-                                    [bs ? 'Vrsta pregleda' : 'Exam type']: m.vrstaPregleda || m.tip || '—',
-                                    [bs ? 'Važi do' : 'Valid until']: fmtDate(m.vrijediDo || m.datumIsteka),
+                                    [t(lang, 'worker')]: m.workerName || m.workerId || '—',
+                                    [t(lang, 'examType')]: m.vrstaPregleda || m.tip || '—',
+                                    [t(lang, 'validUntil')]: fmtDate(m.vrijediDo || m.datumIsteka),
                                 });
                             }
                             return acc;

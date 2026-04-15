@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { fmtDateTime } from '@/lib/dateUtils';
+import { apiFetchNews } from '@/lib/newsAPI';
 
 // No localStorage cache — server caches for 2h, so every page load is fresh within 2h
 
@@ -182,9 +183,7 @@ export default function NewsPage() {
     const fetchAndCache = useCallback(async (force = false) => {
         setLoading(true);
         try {
-            const url = `/api/news${force ? '?force=1' : ''}`;
-            const res = await fetch(url);
-            const data = await res.json();
+            const data = await apiFetchNews(force);
             const freshNews = data.news || [];
             setNews(freshNews);
             setLastUpdated(new Date());

@@ -8,8 +8,8 @@ import JSZip from 'jszip';
 import PizZip from 'pizzip'; // Actually docxtemplater uses pizzip
 import Docxtemplater from 'docxtemplater';
 import { saveAs } from 'file-saver';
-
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { apiExtractQuestionsFromDocument } from '@/lib/testGeneratorAI';
 
 export default function TestGenerator() {
     const { lang } = useLanguage();
@@ -47,26 +47,17 @@ Odgovori ISKLJUČIVO u JSON formatu na sljedeći način:
 ]
 Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je dodijeli.`;
 
-            const res = await fetch('/api/generate-from-document', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    systemPrompt,
-                    userPrompt: "Izdvoji pitanja u traženi JSON format.",
-                    base64Document: base64,
-                    mimeType: file.type
-                })
+            const result = await apiExtractQuestionsFromDocument({
+                systemPrompt,
+                userPrompt: "Izdvoji pitanja u traženi JSON format.",
+                base64Document: base64,
+                mimeType: file.type
             });
-            const data = await res.json();
-            if (data.success && Array.isArray(data.result)) {
-                // Determine starting ID based on current questions length
-                const startId = questions.length;
-                const extracted = data.result.map((q, i) => ({ ...q, id: i + 1 + startId }));
-                setQuestions(prev => [...prev, ...extracted]);
-                alert(bs ? "Uspješno uvezeno " + extracted.length + " pitanja." : "Successfully imported " + extracted.length + " questions.");
-            } else {
-                alert('AI Greška: Ne mogu pročitati pitanja ' + (data.error || ''));
-            }
+            
+            const startId = questions.length;
+            const extracted = result.map((q, i) => ({ ...q, id: i + 1 + startId }));
+            setQuestions(prev => [...prev, ...extracted]);
+            alert(bs ? "Uspješno uvezeno " + extracted.length + " pitanja." : "Successfully imported " + extracted.length + " questions.");
         } catch (err) {
             console.error(err);
             alert('Greška pri parsiranju dokumenta: ' + err.message);

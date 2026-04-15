@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, getRawAll, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { apiParsePdf } from '@/lib/converterAPI';
 
 const FILE_ICONS = {
   pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗',
@@ -347,13 +348,7 @@ async function buildDocxFromPages(pages) {
 async function convertPdfToDocxMuPDF(dataUri) {
   const form = new FormData();
   form.append('file', new Blob([dataUriToBuffer(dataUri)], { type: 'application/pdf' }), 'document.pdf');
-
-  const resp = await fetch('/api/pdf-parse', { method: 'POST', body: form });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error || `Parse failed: ${resp.status}`);
-  }
-  const { pages } = await resp.json();
+  const { pages } = await apiParsePdf(form);
   return buildDocxFromPages(pages);
 }
 
