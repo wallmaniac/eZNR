@@ -17,7 +17,6 @@ import {
   getUserLog, getAdminLog, clearUserLog, clearAdminLog, formatLogTime, getSeverityColors,
   getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
-import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 
 
 export default function SettingsPage() {
@@ -56,12 +55,6 @@ export default function SettingsPage() {
   const userLog = useMemo(() => getUserLog(100, logFilter, activeCompanyId), [logFilter, logRefresh, activeCompanyId]);
   const adminLog = useMemo(() => getAdminLog(100, logFilter, activeCompanyId), [logFilter, logRefresh, activeCompanyId]);
   const onlineUsers = useMemo(() => getOnlineUsers(), [logRefresh]);
-
-  // Firebase sync state
-  const [syncStatus, setSyncStatus] = useState('idle'); // idle | syncing | done | error
-  const [syncProgress, setSyncProgress] = useState('');
-  const [syncResults, setSyncResults] = useState(null);
-  const [syncStats, setSyncStats] = useState(null);
 
 
 
@@ -215,7 +208,6 @@ export default function SettingsPage() {
     ...(isAdmin ? [
       { key: 'system', label: lang === 'bs' ? 'Sistem' : 'System', icon: '🛡️' },
       { key: 'statistics', label: lang === 'bs' ? 'Statistika' : 'Statistics', icon: '📊' },
-      { key: 'firebase', label: 'Firebase Sync', icon: '🔥' },
     ] : []),
   ];
 
@@ -224,29 +216,6 @@ export default function SettingsPage() {
   const validTabs = tabs.map(t => t.key);
   const currentTab = validTabs.includes(activeTab) ? activeTab : validTabs[0];
 
-  // Load sync stats when firebase tab is opened
-  const handleFirebaseTabOpen = () => {
-    setActiveTab('firebase');
-    setSyncStats(getSyncStats());
-  };
-
-  const handleSyncToFirebase = async () => {
-    setSyncStatus('syncing');
-    setSyncResults(null);
-    setSyncProgress('Pokretanje sinkronizacije...');
-    try {
-      const companyId = activeCompanyId || 'default';
-      const { results, errors } = await syncAllToFirebase(companyId, (msg) => {
-        setSyncProgress(msg);
-      });
-      setSyncResults({ results, errors });
-      setSyncStatus(errors.length > 0 ? 'error' : 'done');
-      setSyncProgress('');
-    } catch (err) {
-      setSyncStatus('error');
-      setSyncProgress(`Greška: ${err.message}`);
-    }
-  };
 
   // ── Toggle component ──
   const Toggle = ({ checked, onChange, label, description }) => (
@@ -335,9 +304,9 @@ export default function SettingsPage() {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
         {tabs.map(tb => (
-          <button key={tb.key} onClick={() => tb.key === 'firebase' ? handleFirebaseTabOpen() : setActiveTab(tb.key)}
+          <button key={tb.key} onClick={() => setActiveTab(tb.key)}
             className={`tab-btn ${currentTab === tb.key ? 'active' : ''}`}
-            style={tb.key === 'firebase' && currentTab === tb.key ? { color: '#FF6D00', borderBottomColor: '#FF6D00' } : {}}>
+          >
             {tb.icon} {tb.label}
           </button>
         ))}
@@ -1025,126 +994,6 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* ══════════════════════════════════════════════════ */}
-      {/* TAB: FIREBASE SYNC (Admin only)                  */}
-      {/* ══════════════════════════════════════════════════ */}
-      {currentTab === 'firebase' && isAdmin && (
-        <div className="card">
-          <div className="card-body">
-            {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <span style={{ fontSize: '2rem' }}>🔥</span>
-              <div>
-                <h3 style={{ margin: 0 }}>Firebase Sync</h3>
-                <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                  Projekt: <strong>eznr-ee559</strong> · Sinkroniziraj sve localStorage podatke u Firestore
-                </p>
-              </div>
-            </div>
-
-            {/* Connection status */}
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px',
-              borderRadius: 10, background: 'rgba(76,175,80,0.1)', border: '1px solid #A5D6A7', marginBottom: 20,
-            }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }} />
-              <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--success)' }}>
-                Spojen na Firebase projekt eznr-ee559
-              </span>
-            </div>
-
-            {/* Data stats */}
-            {syncStats && (
-              <>
-                <SectionHeader icon="📦" title="Podatci u localStorage" />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginBottom: 20 }}>
-                  {Object.entries(syncStats)
-                    .filter(([, count]) => count > 0)
-                    .sort((a, b) => b[1] - a[1])
-                    .map(([col, count]) => (
-                      <div key={col} style={{
-                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                        padding: '7px 12px', fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)',
-                      }}>
-                        <span style={{ color: 'var(--text-muted)' }}>{col}</span>
-                        <span style={{
-                          fontWeight: 700, background: 'var(--primary)', color: 'white',
-                          padding: '1px 8px', borderRadius: 10, fontSize: '0.72rem',
-                        }}>{count}</span>
-                      </div>
-                    ))}
-                </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 20 }}>
-                  Ukupno: <strong>{Object.values(syncStats).reduce((a, b) => a + b, 0)}</strong> zapisa u {Object.values(syncStats).filter(c => c > 0).length} kolekcija
-                </div>
-              </>
-            )}
-
-            {/* Sync progress */}
-            {syncStatus === 'syncing' && (
-              <div style={{
-                padding: '16px', borderRadius: 10, background: 'rgba(255,193,7,0.1)',
-                border: '1px solid #FFE082', marginBottom: 20,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-                  <div style={{
-                    width: 16, height: 16, border: '2px solid #F57C00', borderTopColor: 'transparent',
-                    borderRadius: '50%', animation: 'spin 0.8s linear infinite',
-                  }} />
-                  <span style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--warning)' }}>Sinkronizacija u tijeku...</span>
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--warning)' }}>{syncProgress}</div>
-              </div>
-            )}
-
-            {/* Results */}
-            {syncResults && syncStatus !== 'syncing' && (
-              <div style={{
-                padding: 16, borderRadius: 10, marginBottom: 20,
-                background: syncResults.errors.length === 0 ? 'rgba(76,175,80,0.12)' : 'rgba(255,152,0,0.12)',
-                border: `1px solid ${syncResults.errors.length === 0 ? '#A5D6A7' : '#FFCC80'}`,
-              }}>
-                <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 8, color: syncResults.errors.length === 0 ? 'var(--success)' : 'var(--warning)' }}>
-                  {syncResults.errors.length === 0 ? '✅ Sinkronizacija uspješna!' : '⚠️ Sinkronizacija s greškama'}
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 8 }}>
-                  Sinkronizirano: <strong>{syncResults.results.reduce((a, r) => a + r.synced, 0)}</strong> zapisa u <strong>{syncResults.results.length}</strong> kolekcija
-                </div>
-                {syncResults.errors.length > 0 && (
-                  <div>
-                    {syncResults.errors.map((e, i) => (
-                      <div key={i} style={{ fontSize: '0.75rem', color: 'var(--danger)', padding: '2px 0' }}>
-                        ❌ {e.collection}: {e.error}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Sync button */}
-            <button
-              onClick={handleSyncToFirebase}
-              disabled={syncStatus === 'syncing'}
-              style={{
-                padding: '14px 32px', borderRadius: 'var(--radius-md)', border: 'none',
-                cursor: syncStatus === 'syncing' ? 'not-allowed' : 'pointer',
-                background: syncStatus === 'syncing' ? '#ccc' : 'linear-gradient(135deg, #FF6D00, #FF9100)',
-                color: 'white', fontWeight: 700, fontSize: '0.95rem',
-                fontFamily: 'var(--font-heading)', boxShadow: '0 4px 16px rgba(255,109,0,0.35)',
-                transition: 'all 0.2s',
-              }}
-            >
-              {syncStatus === 'syncing' ? '⏳ Sinkronizacija...' : '🔥 Sinkroniziraj sve u Firebase'}
-            </button>
-
-            <div style={{ marginTop: 12, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-              ℹ️ Ovo neće obrisati postojeće Firebase podatke — koristit će <code>merge: true</code> (dodaj ili ažuriraj).
-              Sigurno je pokrenuti više puta.
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 7: ACTIVITY LOG (all users)                   */}
