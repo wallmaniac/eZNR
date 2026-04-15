@@ -2002,102 +2002,18 @@ function displayToISO(text) {
     return '';
 }
 // Auto-inserts slashes as user types: "0" → "0", "06" → "06/", "06/0" → "06/0", "06/03" → "06/03/", etc.
-function autoFormatDateInput(prev, next) {
-    // Only auto-format when adding characters
-    if (next.length < prev.length) return next;
-    let digits = next.replace(/\D/g, '');
-    if (digits.length > 8) digits = digits.slice(0, 8);
-    let out = '';
-    if (digits.length <= 2) out = digits;
-    else if (digits.length <= 4) out = `${digits.slice(0, 2)}/${digits.slice(2)}`;
-    else out = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
-    return out;
-}
-
 function DateField({ label, value, onChange, required, tooltip }) {
-    const [text, setText] = useState(() => isoToDisplay(value));
-    const [prevText, setPrevText] = useState(() => isoToDisplay(value));
-    const nativeRef = useRef(null);
-    const pickerOpenRef = useRef(false);
-
-    // Sync when value changes externally (e.g. edit form load)
-    useEffect(() => {
-        setText(isoToDisplay(value));
-        setPrevText(isoToDisplay(value));
-    }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
-
-    const handleChange = (e) => {
-        const raw = e.target.value;
-        const formatted = autoFormatDateInput(prevText, raw);
-        setPrevText(formatted);
-        setText(formatted);
-        const iso = displayToISO(formatted);
-        if (iso) onChange(iso);
-        else if (!formatted) onChange('');
-    };
-
-    const handleBlur = () => {
-        // On blur, if valid date, always show clean DD/MM/YYYY
-        const iso = displayToISO(text);
-        if (iso) { const d = isoToDisplay(iso); setText(d); setPrevText(d); }
-        else if (!text) { onChange(''); }
-    };
-
-    const togglePicker = () => {
-        if (pickerOpenRef.current) {
-            nativeRef.current?.blur?.();
-            pickerOpenRef.current = false;
-            return;
-        }
-        pickerOpenRef.current = true;
-        try { nativeRef.current?.showPicker?.(); } catch { nativeRef.current?.click(); }
-    };
-
-    const handlePickerChange = (e) => {
-        const iso = e.target.value;
-        onChange(iso);
-        const d = isoToDisplay(iso);
-        setText(d);
-        setPrevText(d);
-        pickerOpenRef.current = false;
-    };
-
     return (
-        <div className="form-group">
-            <label className="form-label" style={{ ...(required ? { fontWeight: 700 } : {}), display: 'flex', alignItems: 'center', gap: 6 }}>
-                {label} {required && <span style={{ color: 'var(--danger)' }}>*</span>}
-                {tooltip && <InfoTip text={tooltip} />}
-            </label>
-            <div style={{ position: 'relative' }}>
-                <input
-                    className="form-input"
-                    type="text"
-                    value={text}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    placeholder="DD/MM/YYYY"
-                    maxLength={10}
-                    style={{ paddingRight: 36, ...(required && !value ? { borderColor: '#FF9800' } : {}) }}
-                />
-                <button
-                    type="button"
-                    onClick={togglePicker}
-                    style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '1rem', lineHeight: 1, padding: 2 }}
-                    title="Odaberi datum iz kalendara"
-                >📅</button>
-                <input
-                    ref={nativeRef}
-                    type="date"
-                    value={value || ''}
-                    onChange={handlePickerChange}
-                    onBlur={() => { pickerOpenRef.current = false; }}
-                    style={{ position: 'absolute', opacity: 0, pointerEvents: 'none', width: 0, height: 0, top: 0, left: 0 }}
-                    tabIndex={-1}
-                />
-            </div>
-        </div>
+        <DateInput
+            label={label}
+            value={value || ''}
+            onChange={onChange}
+            required={required}
+            tooltip={tooltip}
+        />
     );
 }
+
 
 function Field({ label, value, onChange, type = 'text', required, placeholder, tooltip, ...props }) {
     if (type === 'date') {
