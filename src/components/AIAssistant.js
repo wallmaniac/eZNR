@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter, usePathname } from 'next/navigation';
 import { getRawAll } from '@/lib/dataStore';
+import { useAuth } from '@/contexts/AuthContext';
 
 // ─── App knowledge base for the AI system prompt ───────────────────────────
 const APP_KNOWLEDGE = {
@@ -60,7 +61,7 @@ const APP_KNOWLEDGE = {
 };
 
 // ─── Live data context builder ────────────────────────────────────────────────
-function buildDataContext(lang) {
+function buildDataContext(lang, activeCompanyId, userCompanies) {
     if (typeof window === 'undefined') return '';
     try {
         const get = (key) => getRawAll(key);
@@ -73,6 +74,17 @@ function buildDataContext(lang) {
         const questionnaires = get('questionnaires');
 
         const lines = [];
+        
+        // Add multi-tenant context awareness
+        const activeCompName = activeCompanyId === 'all' 
+            ? (lang === 'bs' ? 'Sve dodijeljene firme (Agregatni prikaz)' : 'All assigned companies (Aggregate view)')
+            : (userCompanies?.find(c => c.id === activeCompanyId)?.name || activeCompanyId);
+            
+        lines.push(lang === 'bs' 
+            ? `TRENUTNI KONTEKST FIRME: ${activeCompName}. Prilikom davanja odgovora o radnicima ili incidentima obavezno uzmi u obzir iz koje su firme ako je odabrano više firmi.`
+            : `CURRENT COMPANY CONTEXT: ${activeCompName}. When answering queries about workers or incidents, be sure to consider which company they belong to if multiple companies are selected.`
+        );
+
         const today = new Date();
         const in30 = new Date(); in30.setDate(in30.getDate() + 30);
         const in60 = new Date(); in60.setDate(in60.getDate() + 60);
@@ -133,7 +145,9 @@ function buildDataContext(lang) {
             const rosterLines = activeWorkerList.map(w => {
                 const wp = wpMap[w.radnoMjestoId] || wpMap[w.radnoMjesto] || '';
                 const ou = ouMap[w.orgJedinicaId] || ouMap[w.orgJedinica] || '';
-                return `[ID:${w.id}] ${w.ime} ${w.prezime}${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}`;
+                const compMatch = userCompanies?.find(c => c.id === w.companyId);
+                const compStr = compMatch ? ` [Firma: ${compMatch.name}]` : '';
+                return `[ID:${w.id}] ${w.ime} ${w.prezime}${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}${compStr}`;
             });
             lines.push(lang === 'bs'
                 ? `\nSVI AKTIVNI RADNICI (${activeWorkerList.length}) sa radnim mjestima:\n${rosterLines.join('\n')}`
@@ -198,7 +212,7 @@ function buildDataContext(lang) {
     } catch { return ''; }
 }
 
-function buildSystemPrompt(lang, currentPath, dataContext) {
+function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies) {
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
         ? (lang === 'bs' ? `Korisnik se trenutno nalazi na: ${currentPage.label_bs} — ${currentPage.desc_bs}` : `User is currently on: ${currentPage.label_en} — ${currentPage.desc_en}`)
@@ -232,6 +246,7 @@ KADA KORISTITI ALATE:
 - Ako korisnik kaže da je radnik dobio opremu, zaštitna sredstva, kaciga, rukavice, prsluk, cipele ili slično (OZO) → koristi assign_ppe s worker_id iz ŽIVIH PODATAKA. Podrazumijevano: datum = danas, kolicina = 1, osim ako korisnik ne navede drugačije. Snima DIREKTNO — nije potrebna forma.
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 - Ako korisnik traži izmjenu svih povreda na radu za neku godinu → koristi alat bulk_update_injuries
+- VAŽNO O FIRMAMA: Ako je u kontekstu vidljivo da radnik pripada određenoj firmi, a trenutni kontekst je "Sve firme", obavezno u odgovorima spomeni i naziv firme radnika kako bi korisnik znao o kome se radi.
 
 RJEČNIK POJMOVA (koristi kad korisnik pita "šta znači...?" ili kad nešto nije jasno):
 
@@ -513,6 +528,7 @@ const ZIA_TOOLS = [
 export default function AIAssistant() {
     const { lang } = useLanguage();
     const { isDark } = useTheme();
+    const { userCompanies } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -955,7 +971,12 @@ export default function AIAssistant() {
                     // Auto-resend
                     const pending = pendingRetryRef.current;
                     pendingRetryRef.current = null;
-                    if (pending) sendMessageInternal(pending.text, pending.history, true);
+                    if (pending) {
+                        const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
+                        const dataContextTxt = buildDataContext(lang, activeCompId, userCompanies);
+                        const systemPromptTxt = buildSystemPrompt(lang, pathname, dataContextTxt, activeCompId, userCompanies);
+                        sendMessageInternal(pending.text, pending.history, true);
+                    }
                     return 0;
                 }
                 return prev - 1;
@@ -975,7 +996,9 @@ export default function AIAssistant() {
         if (!existingHistory) chatHistoryRef.current = newHistory;
 
         setIsLoading(true);
-        const systemPrompt = buildSystemPrompt(lang, pathname, buildDataContext(lang));
+        const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
+        const dataCtx = buildDataContext(lang, activeCompId, userCompanies);
+        const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies);
 
         try {
             const result = await callZiaAPI(newHistory, systemPrompt, ZIA_TOOLS);
