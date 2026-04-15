@@ -6,6 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getRawAll, seedCompanyData } from '@/lib/dataStore';
 import { updateUserProfile } from '@/lib/authService';
+import { db } from '@/lib/firebase';
+import { doc, setDoc } from 'firebase/firestore';
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 import { useTheme } from '@/contexts/ThemeContext';
 import { matchesSearch } from '@/lib/dateUtils';
@@ -122,10 +124,22 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         if (!newCompanyData.naziv.trim()) return;
         setSwitchingCompany(true);
         try {
-            const newComp = create(COLLECTIONS.COMPANIES, { ...newCompanyData, skraceniNaziv: newCompanyData.naziv, aktivan: true });
+            // Natively create the company in Firestore and AWAIT completion
+            // This prevents the browser from killing the network socket during reload
+            const newCompanyId = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+            const newComp = { ...newCompanyData, skraceniNaziv: newCompanyData.naziv, aktivan: true, id: newCompanyId, createdAt: new Date().toISOString() };
+            
+            await setDoc(doc(db, 'companies', newCompanyId), newComp);
+            
+            // Push to local offline cache to maintain temporary compatibility
+            try { 
+                const { _cache } = require('@/lib/dataStore'); 
+                if (!_cache['companies']) _cache['companies'] = []; 
+                _cache['companies'].push(newComp); 
+            } catch(e) {}
             
             if (user?.id) {
-                // Update Firestore native profile instead of outdated local storage profile
+                // Update Firestore native profile synchronously
                 const updatedIds = [...new Set([...(user.companyIds || []), newComp.id])];
                 await updateUserProfile(user.uid || user.id, { companyIds: updatedIds });
                 
