@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "eslint"
   },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@hello-pangea/dnd": "^18.0.1",
     "docx": "^9.6.1",

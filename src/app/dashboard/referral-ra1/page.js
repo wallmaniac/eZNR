@@ -595,7 +595,7 @@ export default function ReferralRA1Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Sati' : 'Time'}</div>
-                <input className="form-input" type="time" value={formData.vrijemePregleda} onChange={e => set('vrijemePregleda', e.target.value)} />
+                <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemePregleda} onChange={e => set('vrijemePregleda', e.target.value)} />
               </div>
             </div>
           </div>

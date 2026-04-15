@@ -200,7 +200,7 @@ export default function EvacuationDrillsPage() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Vrijeme početka' : 'Start Time'}</label>
-                                        <input className="form-input" type="time" value={formData.vrijemePocetka} onChange={e => set('vrijemePocetka', e.target.value)} />
+                                        <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemePocetka} onChange={e => set('vrijemePocetka', e.target.value)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Trajanje (minute)' : 'Duration (minutes)'}</label>

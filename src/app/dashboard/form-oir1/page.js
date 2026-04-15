@@ -381,7 +381,7 @@ export default function FormOIR1Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang === 'bs' ? 'Vrijeme' : 'Time'}</div>
-                <input className="form-input" type="time" value={formData.vrijemeDogadjaja} onChange={e => set('vrijemeDogadjaja', e.target.value)} />
+                <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemeDogadjaja} onChange={e => set('vrijemeDogadjaja', e.target.value)} />
               </div>
             </div>
           </div>
