@@ -271,7 +271,12 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            await Promise.all([...companyLoads, ...globalLoads, ...metaLoads]);
+            // Unblock main thread: let company listeners initialize asynchronously
+            await Promise.all([...globalLoads, ...metaLoads]);
+            
+            Promise.all(companyLoads).then(() => {
+                console.log('[dataStore] 📡 All real-time module listeners established.');
+            });
 
             const elapsed = ((performance.now() - start) / 1000).toFixed(2);
             const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
