@@ -221,7 +221,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     <button onClick={() => { setShowCompanyMenu(false); setCompanySearchTerm(''); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                 </div>
                                 {/* Fast company search bar */}
-                                {companies.length > 5 && (
+                                {companies.length > 1 && (
                                     <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 10 }}>
                                         <div style={{ position: 'relative' }}>
                                             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', opacity: 0.5 }}>🔍</span>
@@ -371,7 +371,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 </div>
 
                                 {/* Fast company search bar */}
-                                {companies.length > 5 && (
+                                {companies.length > 1 && (
                                     <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 10 }}>
                                         <div style={{ position: 'relative' }}>
                                             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', opacity: 0.5 }}>🔍</span>
