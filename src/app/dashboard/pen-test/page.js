@@ -33,16 +33,24 @@ export default function FirebasePenTest() {
             return;
         }
 
-        log(`Spamming 'storm_events' for company: ${activeCompanyId} in background...`, 'info');
+        log(`Continuously spamming 'storm_events' for 15 seconds in background... Please TEST YOUR UI NOW!`, 'info');
         
         try {
-            const promises = [];
-            for(let i = 0; i < 100; i++) {
-                const stormDoc = doc(db, 'companies', activeCompanyId, 'storm_events', `event_${i}`);
-                promises.push(setDoc(stormDoc, { timestamp: Date.now(), rand: Math.random() }));
+            const startTime = Date.now();
+            let count = 0;
+            
+            while (Date.now() - startTime < 15000) {
+                const batchPromises = [];
+                // Fire 4 writes per batch (approx 40 concurrent writes a second)
+                for(let i = 0; i < 4; i++) {
+                    const stormDoc = doc(db, 'companies', activeCompanyId, 'storm_events', `event_${count++}`);
+                    batchPromises.push(setDoc(stormDoc, { timestamp: Date.now(), rand: Math.random() }));
+                }
+                await Promise.all(batchPromises);
+                // Pause for 100ms to allow React to render the UI before the next blast
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
-            await Promise.all(promises);
-            log('✅ Storm injected successfully. If your dashboard did not freeze, the local state engine efficiently handled the burst!', 'success');
+            log(`✅ Sustained 15-second storm finished. Total background updates: ${count}. If your dashboard remained snappy, you passed the stress test!`, 'success');
         } catch (err) {
             log(`❌ Storm failed: ${err.message}`, 'error');
         }
