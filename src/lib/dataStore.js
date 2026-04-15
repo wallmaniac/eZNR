@@ -13,6 +13,7 @@
 // ============================================================================
 
 import { db } from './firebase';
+import { logUserAction } from './activityLog';
 import {
     collection as fsCollection, doc, getDocs, setDoc, updateDoc,
     deleteDoc, writeBatch, onSnapshot, query, orderBy,
@@ -70,6 +71,20 @@ const _AL_COLS = {
     riskAssessments: { cat: 'document', icon: '\u26A0\uFE0F', label: d => `Procjena rizika: ${d.naziv || ''}`, relatedId: d => d.id },
     requests: { cat: 'document', icon: '\uD83D\uDCE9', label: d => `Zahtjev: ${d.naziv || d.tip || ''}`, relatedId: d => d.id },
     zapisnici: { cat: 'document', icon: '\uD83D\uDCCB', label: d => `Zapisnik: ${d.naziv || d.broj || ''}`, relatedId: d => d.id },
+    vehicles: { cat: 'equipment', icon: '🚗', label: d => (`Vozilo: ${d.registracija || d.marka || ''}`).trim(), relatedId: d => d.id },
+    vehicleAssignments: { cat: 'equipment', icon: '🔑', label: d => `Zaduženje vozila: ${d.workerIme || ''}`, relatedId: d => d.vehicleId },
+    travelOrders: { cat: 'document', icon: '📝', label: d => `Putni nalog: ${d.brojNaloga || ''}`, relatedId: d => d.id },
+    fireExtinguishers: { cat: 'equipment', icon: '🧯', label: d => `Vatrogasni aparat: ${d.lokacija || d.serijskiBroj || ''}`, relatedId: d => d.id },
+    hydrants: { cat: 'equipment', icon: '🚰', label: d => `Hidrantska mreža: ${d.mjernaTacka || ''}`, relatedId: d => d.id },
+    evacuationPlans: { cat: 'document', icon: '🗺️', label: d => `Plan evakuacije: ${d.nazivObjekta || ''}`, relatedId: d => d.id },
+    evacuationDrills: { cat: 'document', icon: '🏃', label: d => `Vježba evakuacije: ${d.nazivVjezbe || ''}`, relatedId: d => d.id },
+    serviceLog: { cat: 'equipment', icon: '🛠️', label: d => `Servis: ${d.opis || ''}`, relatedId: d => d.itemId },
+    nightWork: { cat: 'worker', icon: '🌙', label: d => `Noćni rad: ${d.radnikIme || ''}`, relatedId: d => d.workerId },
+    referralsRa1: { cat: 'document', icon: '🩺', label: d => `Uputnica RA-1: ${d.radnikIme || ''}`, relatedId: d => d.id },
+    formsOir1: { cat: 'document', icon: '📋', label: d => `OIR-1: ${d.radnikIme || ''}`, relatedId: d => d.id },
+    formsRo1: { cat: 'document', icon: '📋', label: d => `RO-1: ${d.radnikIme || ''}`, relatedId: d => d.id },
+    formsRo2: { cat: 'document', icon: '📋', label: d => `RO-2: ${d.radnikIme || ''}`, relatedId: d => d.id },
+    referralsNr1: { cat: 'document', icon: '🌙', label: d => `Uputnica Noćni Rad: ${d.radnikIme || ''}`, relatedId: d => d.id },
 };
 const _AL_VERBS = { create: 'Dodan(a)', update: 'Ažuriran(a)', delete: 'Obrisan(a)' };
 
@@ -79,7 +94,8 @@ function _autoLog(action, collection, item) {
     if (!cfg) return;
     try {
         const user = _getActiveUser();
-        const companyId = _getActiveCompanyId();
+        let ac = _getActiveCompanyId();
+        const companyId = (ac && ac !== 'all') ? ac : item.companyId;
         if (!companyId || companyId === 'all') return;
 
         const entry = {
@@ -98,10 +114,21 @@ function _autoLog(action, collection, item) {
         const logRef = doc(db, `companies/${companyId}/activityLog`, entry.id);
         setDoc(logRef, entry).catch(err => console.warn('[ActivityLog] Write failed:', err));
 
+        // Write to localStorage via activityLog to populate Dnevnik aktivnosti
+        if (typeof logUserAction === 'function') {
+            logUserAction({
+                action, category: cfg.cat, title: entry.title,
+                detail: entry.detail || '',
+                userId: entry.userId, userName: entry.userName,
+                companyId: entry.companyId, severity: entry.severity,
+                relatedId: entry.relatedId
+            });
+        }
+
         // Also update local cache for immediate display
         if (!_cache['activityLog']) _cache['activityLog'] = [];
         _cache['activityLog'] = [entry, ..._cache['activityLog']].slice(0, _AL_MAX);
-    } catch { }
+    } catch (e) { console.warn('[ActivityLog] Exception:', e); }
 }
 
 // ============================================================================

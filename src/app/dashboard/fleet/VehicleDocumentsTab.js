@@ -2,6 +2,7 @@ import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { update, COLLECTIONS, formatDate, genId } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import DateInput from '@/components/DateInput';
 
 export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData }) {
     const { t, lang } = useLanguage();

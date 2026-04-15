@@ -181,18 +181,24 @@ export default function DashboardPage() {
 
     useEffect(() => {
         const uids = user?.companyIds || [];
-        setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
-        setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
-        setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
-        setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
-        setFleetVehicles(getAllForCompany(COLLECTIONS.VEHICLES, activeCompanyId, uids));
-        setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
-        setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
-        setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
-        setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
-        setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
-        setRiskAssessments(getAllForCompany(COLLECTIONS.RISK_ASSESSMENTS, activeCompanyId, uids));
-        setRiskItems(getAll(COLLECTIONS.RISK_ITEMS));
+        const updateData = () => {
+            setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
+            setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
+            setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
+            setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
+            setFleetVehicles(getAllForCompany(COLLECTIONS.VEHICLES, activeCompanyId, uids));
+            setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
+            setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
+            setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
+            setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
+            setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+            setRiskAssessments(getAllForCompany(COLLECTIONS.RISK_ASSESSMENTS, activeCompanyId, uids));
+            setRiskItems(getAll(COLLECTIONS.RISK_ITEMS));
+        };
+        
+        updateData();
+        window.addEventListener('eznr:data-synced', updateData);
+        return () => window.removeEventListener('eznr:data-synced', updateData);
     }, [activeCompanyId, user?.companyIds]);
 
     useEffect(() => {
