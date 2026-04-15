@@ -22,6 +22,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
     const [switchingCompany, setSwitchingCompany] = useState(false);
     const [mobileExpanded, setMobileExpanded] = useState(true);
+    const [companySearchTerm, setCompanySearchTerm] = useState('');
     const [newCompanyData, setNewCompanyData] = useState({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
     const profileRef = useRef(null);
     const notifRef = useRef(null);
@@ -41,6 +42,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         return getUserCompanies(user?.id);
     }, [user?.id, isSuperAdmin, userCompanies]);
 
+    const filteredCompaniesForMenu = useMemo(() => {
+        if (!companySearchTerm.trim()) return companies;
+        const q = companySearchTerm.toLowerCase();
+        return companies.filter(c => (c.naziv || c.skraceniNaziv || '').toLowerCase().includes(q) || (c.mjesto || '').toLowerCase().includes(q));
+    }, [companies, companySearchTerm]);
+
     const activeCompany = useMemo(() =>
         companies.find(c => c.id === activeCompanyId) || null,
     [companies, activeCompanyId]);
@@ -55,7 +62,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             if (profileRef.current && !profileRef.current.contains(e.target)) setShowProfile(false);
             if (notifRef.current && !notifRef.current.contains(e.target)) setShowNotifs(false);
             if (searchRef.current && !searchRef.current.contains(e.target)) setSearchFocused(false);
-            if (companyRef.current && !companyRef.current.contains(e.target)) setShowCompanyMenu(false);
+            if (companyRef.current && !companyRef.current.contains(e.target)) {
+                setShowCompanyMenu(false);
+                setCompanySearchTerm(''); // Reset search on close
+            }
         };
         const handleKeyDown = (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -208,10 +218,24 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, left: '5%', width: '90%', zIndex: 99999, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🏢 {isSuperAdmin ? (lang === 'bs' ? 'Sve firme klijenata' : 'All client companies') : (lang === 'bs' ? 'Moje firme' : 'My companies')}</span>
-                                    <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+                                    <button onClick={() => { setShowCompanyMenu(false); setCompanySearchTerm(''); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                 </div>
+                                {/* Fast company search bar */}
+                                {companies.length > 5 && (
+                                    <div style={{ padding: '8px 14px', borderBottom: '1px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 10 }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', opacity: 0.5 }}>🔍</span>
+                                            <input
+                                                value={companySearchTerm} onChange={e => setCompanySearchTerm(e.target.value)}
+                                                placeholder={lang === 'bs' ? 'Pretraži firme...' : 'Search companies...'}
+                                                style={{ width: '100%', padding: '6px 10px 6px 30px', fontSize: '0.85rem', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', outline: 'none' }}
+                                                autoFocus
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 {/* Officer: aggregate mode */}
-                                {!isSuperAdmin && (
+                                {!isSuperAdmin && !companySearchTerm && (
                                     <>
                                         <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
                                             style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
@@ -220,12 +244,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                         <div className="dropdown-divider" />
                                     </>
                                 )}
-                                {companies.length === 0 && (
+                                {filteredCompaniesForMenu.length === 0 && (
                                     <div style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                                        {isSuperAdmin ? (lang === 'bs' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang === 'bs' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.')}
+                                        {companySearchTerm ? (lang === 'bs' ? 'Nema rezultata.' : 'No results found.') : (isSuperAdmin ? (lang === 'bs' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang === 'bs' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.'))}
                                     </div>
                                 )}
-                                {companies.map(c => (
+                                {filteredCompaniesForMenu.map(c => (
                                     <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }}
                                         style={{ fontWeight: c.id === activeCompanyId ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
                                         {c.id === activeCompanyId ? '✅' : '🏛️'} {c.naziv || c.skraceniNaziv}
@@ -343,11 +367,25 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 300, zIndex: 200 }}>
                                 <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <span>🏢 {isSuperAdmin ? (lang === 'bs' ? 'Sve firme klijenata' : 'All client companies') : (lang === 'bs' ? 'Moje firme' : 'My companies')}</span>
-                                    <button onClick={() => setShowCompanyMenu(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>✕</button>
+                                    <button onClick={() => { setShowCompanyMenu(false); setCompanySearchTerm(''); }} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>✕</button>
                                 </div>
 
+                                {/* Fast company search bar */}
+                                {companies.length > 5 && (
+                                    <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-card)', zIndex: 10 }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', opacity: 0.5 }}>🔍</span>
+                                            <input
+                                                value={companySearchTerm} onChange={e => setCompanySearchTerm(e.target.value)}
+                                                placeholder={lang === 'bs' ? 'Pretraži firme...' : 'Search companies...'}
+                                                style={{ width: '100%', padding: '6px 10px 6px 30px', fontSize: '0.85rem', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', outline: 'none' }}
+                                                autoFocus
+                                            />
+                                        </div>
+                                    </div>
+                                )}
                                 {/* Officer: "Sve firme" aggregate mode */}
-                                {!isSuperAdmin && (
+                                {!isSuperAdmin && !companySearchTerm && (
                                     <>
                                         <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
                                             <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang === 'bs' ? 'Sve firme' : 'All companies'}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Kombinirani prikaz' : 'Combined view'}</div></div>
@@ -357,21 +395,23 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 )}
 
                                 {/* Company list */}
-                                {companies.length === 0 && (
+                                {filteredCompaniesForMenu.length === 0 && (
                                     <div style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.83rem', textAlign: 'center' }}>
-                                        {isSuperAdmin ? (lang === 'bs' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang === 'bs' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.')}
+                                        {companySearchTerm ? (lang === 'bs' ? 'Nema rezultata.' : 'No results found.') : (isSuperAdmin ? (lang === 'bs' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang === 'bs' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.'))}
                                     </div>
                                 )}
-                                {companies.map(c => (
-                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
-                                        <span>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv || c.skraceniNaziv}</div>
-                                            {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
-                                        </div>
-                                        {isSuperAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flexShrink: 0 }}>👁️</span>}
-                                    </button>
-                                ))}
+                                <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
+                                    {filteredCompaniesForMenu.map(c => (
+                                        <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
+                                            <span>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
+                                            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                                                <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv || c.skraceniNaziv}</div>
+                                                {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
+                                            </div>
+                                            {isSuperAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flexShrink: 0 }}>👁️</span>}
+                                        </button>
+                                    ))}
+                                </div>
 
                                 {/* Officer only: add new company */}
                                 {!isSuperAdmin && (

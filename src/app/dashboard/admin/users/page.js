@@ -72,11 +72,11 @@ export default function AdminUsersPage() {
     };
 
     const handleSave = () => {
-        if (!formData.username.trim() || !formData.firstName.trim()) return;
+        // firstName is required; username is optional (Firebase users may not have one)
+        if (!formData.firstName.trim()) return;
         if (editUser) {
             update(COLLECTIONS.USERS, editUser.id, formData);
         } else {
-            if (!formData.password.trim()) return;
             create(COLLECTIONS.USERS, formData);
         }
         setShowModal(false);
@@ -130,8 +130,8 @@ export default function AdminUsersPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
                 {[
                     { label: lang === 'bs' ? 'Ukupno' : 'Total', value: users.length, icon: '👥', color: 'var(--primary)' },
-                    { label: 'Admin', value: users.filter(u => u.role === 'admin').length, icon: '👑', color: '#7B1FA2' },
-                    { label: lang === 'bs' ? 'Stručnjaci' : 'Officers', value: users.filter(u => u.role === 'officer').length, icon: '🛡️', color: 'var(--info)' },
+                    { label: 'Superadmin', value: users.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' },
+                    { label: lang === 'bs' ? 'Stručnjaci ZNR' : 'Officers', value: users.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
                     { label: lang === 'bs' ? 'Aktivni' : 'Active', value: users.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
                 ].map((s, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
@@ -176,10 +176,11 @@ export default function AdminUsersPage() {
                     </select>
                     {/* Role filter */}
                     <select className="form-input" value={filterRole} onChange={e => setFilterRole(e.target.value)}
-                        style={{ width: 160, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }}>
+                        style={{ width: 180, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }}>
                         <option value="all">👥 {lang === 'bs' ? 'Sve uloge' : 'All roles'}</option>
-                        <option value="admin">👑 Admin</option>
-                        <option value="officer">🛡️ Officer</option>
+                        <option value="superadmin">👑 Superadmin</option>
+                        <option value="officer">🛡️ {lang === 'bs' ? 'Stručnjak ZNR' : 'Officer'}</option>
+                        <option value="admin">⚙️ Admin</option>
                     </select>
                     {/* Result count */}
                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
@@ -231,13 +232,21 @@ export default function AdminUsersPage() {
                                         <td><code style={{ fontSize: '0.82rem' }}>{u.username}</code></td>
                                         <td style={{ fontSize: '0.82rem' }}>{u.email || '—'}</td>
                                         <td>
-                                            <span style={{
-                                                padding: '3px 10px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 700,
-                                                background: u.role === 'admin' ? 'linear-gradient(135deg, #7B1FA2, #E040FB)' : 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                                color: 'white',
-                                            }}>
-                                                {u.role === 'admin' ? '👑 Admin' : '🛡️ Officer'}
-                                            </span>
+                                            {(() => {
+                                                const roleMap = {
+                                                    superadmin: { label: '👑 Superadmin', bg: 'linear-gradient(135deg, #E65100, #FF6D00)' },
+                                                    admin:      { label: '⚙️ Admin',      bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)' },
+                                                    officer:    { label: '🛡️ Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))' },
+                                                    companyadmin: { label: '🛡️ Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))' },
+                                                };
+                                                const r = roleMap[u.role] || roleMap.officer;
+                                                return (
+                                                    <span style={{
+                                                        padding: '3px 10px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 700,
+                                                        background: r.bg, color: 'white',
+                                                    }}>{r.label}</span>
+                                                );
+                                            })()}
                                         </td>
                                         <td>
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
@@ -305,12 +314,12 @@ export default function AdminUsersPage() {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Korisničko ime' : 'Username'} *</label>
-                                    <input className="form-input" value={formData.username} onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} required />
+                                    <label className="form-label">{lang === 'bs' ? 'Korisničko ime' : 'Username'} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>({lang === 'bs' ? 'opcionalno' : 'optional'})</span></label>
+                                    <input className="form-input" value={formData.username || ''} onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{editUser ? (lang === 'bs' ? 'Nova lozinka' : 'New password') : (lang === 'bs' ? 'Lozinka' : 'Password')} {!editUser && '*'}</label>
-                                    <input className="form-input" type="password" value={formData.password} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} placeholder={editUser ? '(ne mijenjaj)' : ''} />
+                                    <input className="form-input" type="password" value={formData.password || ''} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} placeholder={editUser ? '(ne mijenjaj)' : ''} />
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
@@ -322,7 +331,8 @@ export default function AdminUsersPage() {
                                     <label className="form-label">{lang === 'bs' ? 'Uloga' : 'Role'}</label>
                                     <select className="form-input" value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}>
                                         <option value="officer">{lang === 'bs' ? '🛡️ Stručnjak ZNR' : '🛡️ Safety Officer'}</option>
-                                        <option value="admin">👑 Admin</option>
+                                        <option value="admin">⚙️ Admin</option>
+                                        <option value="superadmin">👑 Superadmin</option>
                                     </select>
                                 </div>
                             </div>
@@ -355,7 +365,7 @@ export default function AdminUsersPage() {
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowModal(false)}>{t('cancel')}</button>
-                            <button className="btn btn-primary" onClick={handleSave} disabled={!formData.username.trim() || !formData.firstName.trim()}>
+                            <button className="btn btn-primary" onClick={handleSave} disabled={!formData.firstName.trim()}>
                                 💾 {t('save')}
                             </button>
                         </div>
