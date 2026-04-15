@@ -1,5 +1,7 @@
 // src/lib/riskAI.js
 import { apiCallZia } from '@/lib/ziaAPI';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '@/lib/firebase';
 
 export const riskLevel = (score) => {
     if (score <= 5) return { label: 'Neznatan', color: '#4caf50', bg: 'rgba(76,175,80,0.15)' };
@@ -10,49 +12,46 @@ export const riskLevel = (score) => {
 };
 
 export const fetchAiOpisProcesa = async (workplaces, hazards) => {
-    const wNames = workplaces.map(w => w.naziv).join(', ');
-    const hNames = hazards.map(h => h.naziv).join(', ');
-    
-    const res = await fetch('/api/generate-opis-procesa', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ radnaMjesta: wNames, opasnosti: hNames }),
-    });
-    
-    const data = await res.json();
-    if (!data.success || !data.result) {
-        throw new Error(data.error || 'Nepoznata greška');
+    try {
+        const wNames = workplaces.map(w => w.naziv).join(', ');
+        const hNames = hazards.map(h => h.naziv).join(', ');
+        const functions = getFunctions(app, 'europe-west1');
+        const callableOpis = httpsCallable(functions, 'generateOpisProcesa');
+        const res = await callableOpis({ radnaMjesta: wNames, opasnosti: hNames });
+        return res.data?.result;
+    } catch (firebaseError) {
+        throw new Error(firebaseError.message || 'Nepoznata greška');
     }
-    return data.result;
 };
 
 export const fetchAiMeasures = async (payload) => {
-    // payload: hazardName, hazardCode, workplaceName, opisOpasnosti, vjerovatnoca, posljedica, postojeceMjere, documentData, documentMimeType
-    const res = await fetch('/api/risk-measures', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    
-    const data = await res.json();
-    if (!data.success || !data.measures) {
-        throw new Error(data.error || 'Nepoznata greška');
+    try {
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, 'riskMeasures');
+        const res = await callable(payload);
+        const data = res.data;
+        if (!data.success || !data.measures) {
+            throw new Error(data.error || 'Nepoznata greška');
+        }
+        return data.measures;
+    } catch (firebaseError) {
+        throw new Error(firebaseError.message || 'Nepoznata greška');
     }
-    return data.measures;
 };
 
 export const fetchAiDocAnalyze = async (documents, companyName) => {
-    const res = await fetch('/api/analyze-risk-docs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ documents, companyName }),
-    });
-    
-    const data = await res.json();
-    if (!data.success || !data.analysis) {
-        throw new Error(data.error || 'Nepoznata greška');
+    try {
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, 'analyzeRiskDocs');
+        const res = await callable({ documents, companyName });
+        const data = res.data;
+        if (!data.success || !data.analysis) {
+            throw new Error(data.error || 'Nepoznata greška');
+        }
+        return data.analysis;
+    } catch (firebaseError) {
+        throw new Error(firebaseError.message || 'Nepoznata greška');
     }
-    return data.analysis;
 };
 
 export const fetchAiAutoConclusion = async (riskItems, formData) => {
@@ -85,29 +84,27 @@ Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uklju
 };
 
 export const apiGenerateRiskQuestionnaire = async (payload) => {
-    const res = await fetch('/api/generate-risk-questionnaire', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    
-    const data = await res.json();
-    if (!data.success || !data.surveyJson) {
-        throw new Error(data.error || 'Nepoznata greška');
+    try {
+        const functions = getFunctions(app, 'europe-west1');
+        const callableQuest = httpsCallable(functions, 'generateRiskQuestionnaire');
+        const res = await callableQuest(payload);
+        return res.data?.surveyJson;
+    } catch (firebaseError) {
+        throw new Error(firebaseError.message || 'Nepoznata greška');
     }
-    return data.surveyJson;
 };
 
 export const apiAnalyzeQuestionnaire = async (payload) => {
-    const res = await fetch('/api/analyze-questionnaire', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-    
-    const data = await res.json();
-    if (!data.success || !data.analysis?.items) {
-        throw new Error(data.error || 'Nepoznata greška');
+    try {
+        const functions = getFunctions(app, 'europe-west1');
+        const callableAnalyze = httpsCallable(functions, 'analyzeQuestionnaire');
+        const res = await callableAnalyze(payload);
+        const data = res.data;
+        if (!data.success || !data.analysis?.items) {
+            throw new Error(data.error || 'Nepoznata greška');
+        }
+        return { data: data.analysis, raw: data.raw };
+    } catch (firebaseError) {
+        throw new Error(firebaseError.message || 'Nepoznata greška pri analizi');
     }
-    return { data: data.analysis, raw: data.raw };
 };

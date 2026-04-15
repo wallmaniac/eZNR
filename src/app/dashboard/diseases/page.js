@@ -40,7 +40,11 @@ export default function DiseasesPage() {
     setWorkers(getAll(COLLECTIONS.WORKERS));
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   useEffect(() => {
     const handler = (e) => {

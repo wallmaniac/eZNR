@@ -3,9 +3,9 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO, getActiveCompanyId
 } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageAPI';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 
@@ -42,6 +42,7 @@ const EMPTY_OIR1 = {
   datumPrijave: todayISO(),
   docName: '',
   docData: '',
+  fileObj: null,
 };
 
 export default function FormOIR1Page() {
@@ -85,7 +86,11 @@ export default function FormOIR1Page() {
     setWorkers(getAll(COLLECTIONS.WORKERS));
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   useEffect(() => {
     const openId = searchParams?.get('openId');
@@ -142,10 +147,24 @@ export default function FormOIR1Page() {
   };
 
   const handleSave = async () => {
+    let uploadedUrl = formData.docData;
+    if (formData.fileObj) {
+      try {
+        const cid = getActiveCompanyId();
+        const res = await uploadDocument(formData.fileObj, cid, 'form-oir1');
+        uploadedUrl = res.url;
+      } catch (e) {
+        await alert('Upload failed: ' + e.message); return;
+      }
+    }
+    
+    const payload = { ...formData, docData: uploadedUrl };
+    delete payload.fileObj;
+
     if (editingId) {
-      update(COLLECTIONS.FORMS_OIR1, editingId, formData);
+      update(COLLECTIONS.FORMS_OIR1, editingId, payload);
     } else {
-      create(COLLECTIONS.FORMS_OIR1, formData);
+      create(COLLECTIONS.FORMS_OIR1, payload);
     }
     setShowForm(false);
     loadData();
@@ -170,23 +189,23 @@ export default function FormOIR1Page() {
   const handleDocUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
+    if (file.size > 15 * 1024 * 1024) {
+      await alert(lang === 'bs' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setFormData(prev => ({
-        ...prev,
-        docName: file.name,
-        docData: ev.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
+    setFormData(prev => ({
+      ...prev,
+      docName: file.name,
+      fileObj: file,
+    }));
   };
 
   const downloadDoc = (log) => {
     if (!log.docData) return;
+    if (log.docData.startsWith('http')) {
+      window.open(log.docData, '_blank');
+      return;
+    }
     const a = document.createElement('a');
     a.href = log.docData;
     a.download = log.docName || 'prilog_dokumenta';
@@ -195,6 +214,10 @@ export default function FormOIR1Page() {
 
   const openDoc = (docData, docName) => {
     if (!docData) return;
+    if (docData.startsWith('http')) {
+      window.open(docData, '_blank');
+      return;
+    }
     const w = window.open();
     if (w) {
       w.document.write('<html><head><title>' + (docName || 'Dokument') + '</title></head><body style="margin:0"><iframe src="' + docData + '" style="width:100%;height:100vh;border:none"></iframe></body></html>');

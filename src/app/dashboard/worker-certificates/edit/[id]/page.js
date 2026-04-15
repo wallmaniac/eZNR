@@ -7,6 +7,7 @@ import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import {
     getAll, getById, create, update, COLLECTIONS,
 } from '@/lib/dataStore';
+import { uploadSecureFile } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import HelpTip from '@/components/HelpTip';
@@ -313,24 +314,26 @@ function EditCertPageInner() {
                                         className="form-input"
                                         style={{ paddingTop: 6 }}
                                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                        onChange={(e) => {
+                                        onChange={async (e) => {
                                             const file = e.target.files?.[0];
                                             if (!file) return;
-                                            if (file.size > 5 * 1024 * 1024) { dlgAlert('Max 5MB!'); return; }
-                                            const reader = new FileReader();
-                                            reader.onload = (ev) => {
-                                                set('attachedFileData', ev.target.result);
+                                            if (file.size > 15 * 1024 * 1024) { dlgAlert('Max 15MB!'); return; }
+                                            try {
+                                                const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
+                                                set('attachedFileUrl', uploadResult.url);
+                                                set('attachedFileData', null); // clear legacy base64 if it existed
                                                 set('attachedFileName', file.name);
                                                 set('attachedFileSize', file.size);
                                                 set('attachedFileType', file.type);
-                                            };
-                                            reader.readAsDataURL(file);
+                                            } catch (err) {
+                                                dlgAlert('Upload failed: ' + err.message);
+                                            }
                                             e.target.value = '';
                                         }}
                                     />
                                 </div>
                                 {/* Preview of attached file */}
-                                {formData.attachedFileData && (
+                                { (formData.attachedFileData || formData.attachedFileUrl) && (
                                     <div style={{
                                         padding: '10px 14px', borderRadius: 'var(--radius-sm)',
                                         background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)',
@@ -350,8 +353,9 @@ function EditCertPageInner() {
                                         <button className="btn btn-ghost btn-sm"
                                             onClick={() => {
                                                 const a = document.createElement('a');
-                                                a.href = formData.attachedFileData;
+                                                a.href = formData.attachedFileUrl || formData.attachedFileData;
                                                 a.download = formData.attachedFileName;
+                                                if (formData.attachedFileUrl) a.target = '_blank';
                                                 a.click();
                                             }}
                                             title={lang === 'bs' ? 'Preuzmi' : 'Download'}>
@@ -359,11 +363,17 @@ function EditCertPageInner() {
                                         </button>
                                         <button className="btn btn-ghost btn-sm"
                                             onClick={() => {
+                                                const fileSrc = formData.attachedFileUrl || formData.attachedFileData;
+                                                if (!fileSrc) return;
+                                                if (fileSrc.startsWith('http')) {
+                                                    window.open(fileSrc, '_blank');
+                                                    return;
+                                                }
                                                 const w = window.open('', '_blank');
-                                                if (formData.attachedFileData.startsWith('data:application/pdf')) {
-                                                    w.document.write(`<embed src="${formData.attachedFileData}" width="100%" height="100%" type="application/pdf" />`);
+                                                if (fileSrc.startsWith('data:application/pdf')) {
+                                                    w.document.write(`<embed src="${fileSrc}" width="100%" height="100%" type="application/pdf" />`);
                                                 } else {
-                                                    w.document.write(`<img src="${formData.attachedFileData}" style="max-width:100%;margin:20px auto;display:block;" />`);
+                                                    w.document.write(`<img src="${fileSrc}" style="max-width:100%;margin:20px auto;display:block;" />`);
                                                 }
                                                 w.document.close();
                                             }}
@@ -371,7 +381,7 @@ function EditCertPageInner() {
                                             👁️
                                         </button>
                                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                                            onClick={() => { set('attachedFileData', null); set('attachedFileName', ''); }}
+                                            onClick={() => { set('attachedFileData', null); set('attachedFileUrl', null); set('attachedFileName', ''); }}
                                             title={lang === 'bs' ? 'Ukloni' : 'Remove'}>
                                             ✕
                                         </button>

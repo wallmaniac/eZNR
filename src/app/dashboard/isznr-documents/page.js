@@ -30,7 +30,11 @@ export default function ISZNRDocumentsPage() {
         setDocTypes(getAll(COLLECTIONS.ISZNR_DOC_TYPES));
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
     useEffect(() => {
         const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
         document.addEventListener('mousedown', handleClick);

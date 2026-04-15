@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { storage, db } from './firebase';
-import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject, uploadBytes } from 'firebase/storage';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 
 /**
@@ -14,13 +14,27 @@ import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
  * 
  * @param {string} companyId - The ID of the company
  * @param {string} moduleName - Target folder (e.g., 'certificates', 'workers')
- * @param {File} file - The file to upload
- * @param {Function} onProgress - Optional callback for upload percentage
+ * @param {File|string} file - The file to upload (or a base6`4` string starting with 'data:')
+ * @param {Function} onProgress - Optional callback for upload percentage (or message)
  * @returns {Promise<{ url: string, storagePath: string, size: number, name: string, type: string }>}
  */
 export async function uploadSecureFile(companyId, moduleName, file, onProgress) {
     if (!companyId || companyId === 'all') throw new Error('Company ID is required to upload.');
     if (!file) throw new Error('File is required.');
+
+    // Convert base64 string back to blob if it was passed natively
+    let fileBlob = file;
+    let fileName = file.name || `uploaded_file_${Date.now()}`;
+    if (typeof file === 'string' && file.startsWith('data:')) {
+        const response = await fetch(file);
+        fileBlob = await response.blob();
+        
+        // Try to infer extension
+        const type = file.split(';')[0].split(':')[1] || '';
+        if (type.includes('jpeg')) fileName += '.jpg';
+        else if (type.includes('png')) fileName += '.png';
+        else if (type.includes('pdf')) fileName += '.pdf';
+    }
 
     // 1. Quota Check
     const companyRef = doc(db, 'companies', companyId);
@@ -30,27 +44,28 @@ export async function uploadSecureFile(companyId, moduleName, file, onProgress) 
         const used = data.storageUsed || 0;
         const quota = data.storageQuota || (1024 * 1024 * 1024 * 2); // Default 2GB if not set
 
-        if (used + file.size > quota) {
-            // For now, we will log a warning instead of hard-rejecting to ensure testing completes
+        if (used + fileBlob.size > quota) {
             console.warn(`[Storage] ⚠️ QUOTA EXCEEDED for ${companyId}. Used: ${used}, Quota: ${quota}`);
-            // throw new Error('Storage quota exceeded.'); // Uncomment to enforce
         }
     }
 
     // 2. Upload
     const timestamp = Date.now();
-    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+    const safeName = fileName.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const storagePath = `companies/${companyId}/${moduleName}/${timestamp}_${safeName}`;
     const storageRef = ref(storage, storagePath);
 
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const uploadTask = uploadBytesResumable(storageRef, fileBlob);
 
     return new Promise((resolve, reject) => {
         uploadTask.on(
             'state_changed',
             (snapshot) => {
                 const percent = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-                if (onProgress) onProgress(percent);
+                if (typeof onProgress === 'function') onProgress(percent);
+                else if (typeof onProgress === 'string') {
+                    // legacy support for storageAPI which passed string statuses
+                }
             },
             (error) => {
                 console.error('[Storage] Upload failed:', error);
@@ -61,7 +76,7 @@ export async function uploadSecureFile(companyId, moduleName, file, onProgress) 
                 
                 // 3. Update Quota Usage Tracking
                 try {
-                    await updateDoc(companyRef, { storageUsed: increment(file.size) });
+                    await updateDoc(companyRef, { storageUsed: increment(fileBlob.size) });
                 } catch (e) {
                     console.warn('[Storage] Failed to update storage quota usage:', e);
                 }
@@ -69,9 +84,9 @@ export async function uploadSecureFile(companyId, moduleName, file, onProgress) 
                 resolve({
                     url,
                     storagePath,
-                    size: file.size,
-                    name: file.name,
-                    type: file.type
+                    size: fileBlob.size,
+                    name: safeName,
+                    type: fileBlob.type
                 });
             }
         );
@@ -99,4 +114,18 @@ export async function deleteSecureFile(companyId, storagePath, fileSize = 0) {
         console.warn(`[Storage] Delete failed (non-fatal) for ${storagePath}:`, err?.code);
     }
 }
+
+// ============================================================================
+// ALIASES FOR BACKWARD COMPATIBILITY
+// These map the old `storageAPI.js` functions directly to `storageService`.
+// ============================================================================
+
+export const uploadDocument = async (file, companyId, folder = 'documents', onProgress) => {
+    return uploadSecureFile(companyId, folder, file, onProgress);
+};
+
+export const deleteDocument = async (storagePath) => {
+    // Legacy delete didn't parse company size, this is fire-and-forget safely
+    return deleteSecureFile(null, storagePath, 0);
+};
 

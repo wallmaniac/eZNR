@@ -184,13 +184,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                 {/* ── Header ── */}
                 <div className="modal-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                        {worker.slika ? (
-                            <img src={worker.slika} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.2)' }} />
-                        ) : (
-                            <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #4CAF50)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem', flexShrink: 0 }}>
-                                {initials}
-                            </div>
-                        )}
+                        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg, var(--primary), #4CAF50)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.1rem', flexShrink: 0 }}>
+                            {initials}
+                        </div>
                         <div>
                             <h2 style={{ margin: 0, fontSize: '1.1rem' }}>
                                 {worker.ime} {worker.prezime}

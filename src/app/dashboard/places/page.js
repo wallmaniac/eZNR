@@ -14,7 +14,11 @@ export default function PlacesPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.PLACES)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const filtered = items.filter(i => !searchTerm || i.naziv.toLowerCase().includes(searchTerm.toLowerCase()));
   const handleNew = () => { setFormData({ naziv: '', postBroj: '' }); setEditingId(null); setShowForm(true); };

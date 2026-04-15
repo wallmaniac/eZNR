@@ -36,7 +36,11 @@ export default function SistematizacijaPage() {
         setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     const getSistForWp = (wpId) => sistematizacije.find(s => s.radnoMjestoId === wpId);
 

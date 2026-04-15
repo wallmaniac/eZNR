@@ -14,7 +14,11 @@ export default function ISZNRMeasureEquipmentPage() {
   const [formData, setFormData] = useState({ naziv: '', serijskiBroj: '', kalibriranDo: '' });
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.ISZNR_MEASURE_EQUIP || 'isznr_measure_equip')); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const handleNew = () => { setFormData({ naziv: '', serijskiBroj: '', kalibriranDo: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };

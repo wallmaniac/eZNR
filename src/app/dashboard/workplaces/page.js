@@ -51,7 +51,11 @@ export default function WorkplacesPage() {
         setWorkers(getAll(COLLECTIONS.WORKERS));
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     const toggleAll = () => {
         const allIds = new Set(sortedWP.map(w => w.id));

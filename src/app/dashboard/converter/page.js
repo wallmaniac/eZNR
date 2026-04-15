@@ -346,9 +346,8 @@ async function buildDocxFromPages(pages) {
 
 
 async function convertPdfToDocxMuPDF(dataUri) {
-  const form = new FormData();
-  form.append('file', new Blob([dataUriToBuffer(dataUri)], { type: 'application/pdf' }), 'document.pdf');
-  const { pages } = await apiParsePdf(form);
+  const base64Data = dataUri.split(',')[1];
+  const { pages } = await apiParsePdf(base64Data, 'document.pdf');
   return buildDocxFromPages(pages);
 }
 

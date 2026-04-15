@@ -13,7 +13,11 @@ export default function CountriesPage() {
   const [formData, setFormData] = useState({ naziv: '', kod: '' });
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.COUNTRIES)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const handleNew = () => { setFormData({ naziv: '', kod: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };

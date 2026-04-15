@@ -12,7 +12,11 @@ export default function ExtraFieldsPage() {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ naziv: '', tip: 'text' });
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EXTRA_FIELDS || 'extra_fields')); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
   const handleNew = () => { setFormData({ naziv: '', tip: 'text' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.EXTRA_FIELDS || 'extra_fields'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };

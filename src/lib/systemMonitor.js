@@ -7,6 +7,8 @@
 // ============================================================================
 
 import { getAll, COLLECTIONS, formatDate } from './dataStore';
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '@/lib/firebase';
 
 // ============================================================================
 // APP VERSION & CHANGELOG
@@ -147,15 +149,9 @@ export function getAppSettings() {
 export async function apiSaveNotifSettings(cId, notifSettings) {
     if (!cId) return false;
     try {
-        const res = await fetch('/api/notif-settings', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ companyId: cId, settings: notifSettings }),
-        });
-        if (!res.ok) {
-            console.error('[eZNR] notif-settings API error:', await res.text());
-            return false;
-        }
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, 'saveNotifSettings');
+        await callable({ companyId: cId, settings: notifSettings });
         return true;
     } catch (err) {
         console.error('[eZNR] Failed to sync notif_settings to Firestore:', err);

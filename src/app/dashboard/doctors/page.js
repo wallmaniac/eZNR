@@ -13,7 +13,11 @@ export default function DoctorsPage() {
   const [formData, setFormData] = useState({ ime: '', specijalizacija: '', telefon: '', email: '' });
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.DOCTORS)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const handleNew = () => { setFormData({ ime: '', specijalizacija: '', telefon: '', email: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };

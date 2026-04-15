@@ -140,7 +140,11 @@ export default function QuestionnairesPage() {
     });
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   // ── Zia agent: pick up dispatch intent set by open_dispatch_modal tool ──────
   useEffect(() => {

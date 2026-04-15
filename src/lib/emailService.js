@@ -6,6 +6,9 @@
 // No client configuration required — zero setup for end users.
 // ============================================================================
 
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '@/lib/firebase';
+
 /**
  * Email is always configured — Resend API key is set server-side.
  */
@@ -27,23 +30,21 @@ export async function sendEmail({
     isTraining = false,
 }) {
     try {
-        const res = await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                toEmail,
-                toName,
-                questionnaireName,
-                fillLink: link,
-                deadline,
-                senderName,
-                companyName,
-                isTraining,
-            }),
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, 'sendEmail');
+        
+        const res = await callable({
+            toEmail,
+            toName,
+            questionnaireName,
+            fillLink: link,
+            deadline,
+            senderName,
+            companyName,
+            isTraining,
         });
 
-        const data = await res.json();
-        return data.success ? { success: true } : { success: false, error: data.error || 'Greška pri slanju.' };
+        return res.data.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
     } catch (err) {
         return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }
@@ -118,24 +119,22 @@ export async function sendReminderEmail({
     isTraining = false,
 }) {
     try {
-        const res = await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                toEmail,
-                toName,
-                questionnaireName,
-                fillLink: link,
-                deadline,
-                senderName,
-                companyName,
-                isTraining,
-                isReminder: true,
-            }),
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, 'sendEmail');
+        
+        const res = await callable({
+            toEmail,
+            toName,
+            questionnaireName,
+            fillLink: link,
+            deadline,
+            senderName,
+            companyName,
+            isTraining,
+            isReminder: true,
         });
 
-        const data = await res.json();
-        return data.success ? { success: true } : { success: false, error: data.error || 'Greška pri slanju.' };
+        return res.data.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
     } catch (err) {
         return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }

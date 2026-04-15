@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { update, COLLECTIONS, formatDate, genId } from '@/lib/dataStore';
+import { update, COLLECTIONS, formatDate, genId, getActiveCompanyId } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageAPI';
 import { useDialog } from '@/hooks/useDialog';
 import DateInput from '@/components/DateInput';
 
@@ -34,27 +35,40 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
 
     const handleSave = async () => {
         if (!selectedFile && !form.naziv && !editingId) { alert(bs ? 'Unesite naziv ili odaberite datoteku!' : 'Enter name or select file!'); return; }
+        
+        let uploadedUrl = null;
+        if (selectedFile) {
+            try {
+                const cid = getActiveCompanyId();
+                const res = await uploadDocument(selectedFile, cid, 'fleet-documents');
+                uploadedUrl = res.url;
+            } catch (e) {
+                alert('Upload failed: ' + e.message); return;
+            }
+        }
+
         const buildPayload = (dataUri) => {
             if (editingId) {
                 return docs.map(d => d.id === editingId ? { ...d, naziv: form.naziv || d.naziv, kategorija: form.kategorija, datumIzdavanja: form.datumIzdavanja, datumIsteka: form.datumIsteka, ...(selectedFile ? { velicina: (selectedFile.size / 1024).toFixed(1) + ' KB', docData: dataUri } : {}) } : d);
             } else {
-                return [...docs, { id: genId(), naziv: form.naziv || (selectedFile ? selectedFile.name : 'Dokument'), kategorija: form.kategorija, datumIzdavanja: form.datumIzdavanja, datumIsteka: form.datumIsteka, velicina: selectedFile ? (selectedFile.size / 1024).toFixed(1) + ' KB' : '', datumUpisa: new Date().toISOString(), docData: dataUri }];
+                return [...docs, { id: genId(), naziv: form.naziv || (selectedFile ? selectedFile.name : 'Dokument'), kategorija: form.kategorija, datumIzdavanja: form.datumIzdavanja, datumIsteka: form.datumIsteka, velicina: selectedFile ? (selectedFile.size / 1024).toFixed(1) + ' KB' : '', datumUpisa: new Date().toISOString(), docData: dataUri || null }];
             }
         };
-        if (selectedFile) {
-            const reader = new FileReader();
-            reader.onload = (e) => { update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: buildPayload(e.target.result) }); setShowForm(false); setSelectedFile(null); setEditingId(null); reloadData(); };
-            reader.readAsDataURL(selectedFile);
+
+        if (selectedFile && uploadedUrl) {
+            update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: buildPayload(uploadedUrl) });
         } else {
-            update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: buildPayload(null) }); setShowForm(false); setSelectedFile(null); setEditingId(null); reloadData();
+            update(COLLECTIONS.VEHICLES, vehicleId, { dokumenti: buildPayload(null) });
         }
+        setShowForm(false); setSelectedFile(null); setEditingId(null); reloadData();
     };
 
     const handleEdit = (doc) => { setEditingId(doc.id); setForm({ naziv: doc.naziv || '', kategorija: doc.kategorija || 'Ostalo', datumIzdavanja: doc.datumIzdavanja || '', datumIsteka: doc.datumIsteka || '' }); setSelectedFile(null); setShowForm(true); };
     const handleCopy = (doc) => { setEditingId(null); setForm({ naziv: (doc.naziv || 'Dokument') + ' (Kopija)', kategorija: doc.kategorija || 'Ostalo', datumIzdavanja: doc.datumIzdavanja || '', datumIsteka: doc.datumIsteka || '' }); setSelectedFile(null); setShowForm(true); };
-    const handleDownload = (doc) => { if (!doc.docData) return; const a = document.createElement('a'); a.href = doc.docData; a.download = doc.naziv; a.click(); };
+    const handleDownload = (doc) => { if (!doc.docData) return; if (doc.docData.startsWith('http')) { window.open(doc.docData, '_blank'); return; } const a = document.createElement('a'); a.href = doc.docData; a.download = doc.naziv; a.click(); };
     const handlePrint = (doc) => {
         if (!doc.docData) return;
+        if (doc.docData.startsWith('http')) { window.open(doc.docData, '_blank'); return; }
         const pw = window.open('', '_blank');
         if (doc.docData.startsWith('data:image/')) { pw.document.write(`<html><body style="margin:0;display:flex;justify-content:center"><img src="${doc.docData}" style="max-width:100%"/></body></html>`); pw.document.close(); setTimeout(() => pw.print(), 500); }
         else if (doc.docData.startsWith('data:application/pdf')) { pw.document.write(`<html><body style="margin:0"><embed width="100%" height="100%" src="${doc.docData}" type="application/pdf"/></body></html>`); pw.document.close(); }

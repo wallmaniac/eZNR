@@ -66,7 +66,11 @@ export default function FireProtectionPage() {
         setHydrants(getAll(COLLECTIONS.HYDRANTS));
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     const today = new Date().toISOString().split('T')[0];
     const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];

@@ -3,10 +3,10 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import {
     getAll, create, update, remove, COLLECTIONS,
-    getOrgUnitName, formatDate,
+    getOrgUnitName, formatDate, getActiveCompanyId
 } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageAPI';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -19,7 +19,7 @@ const emptyEQ = {
 };
 
 const emptyServiceEntry = {
-    datum: '', tip: 'pregled', servisirao: '', napomena: '', iduciServis: '', docName: '', docData: '',
+    datum: '', tip: 'pregled', servisirao: '', napomena: '', iduciServis: '', docName: '', docData: '', fileObj: null,
 };
 
 function EquipmentPageInner() {
@@ -46,7 +46,11 @@ function EquipmentPageInner() {
     const serviceDocRef = useRef(null);
 
     const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EQUIPMENT)); }, []);
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     const toggleAll = (e) => {
         if (e.target.checked) setSelectedIds(new Set(filtered.map(x => x.id)));
@@ -145,7 +149,20 @@ function EquipmentPageInner() {
             await alert(lang === 'bs' ? 'Najprije sačuvajte opremu.' : 'Save equipment first.');
             return;
         }
-        const data = { ...serviceFormData, equipmentId: editingId };
+
+        let uploadedUrl = serviceFormData.docData;
+        if (serviceFormData.fileObj) {
+            try {
+                const cid = getActiveCompanyId();
+                const res = await uploadDocument(serviceFormData.fileObj, cid, 'service-logs');
+                uploadedUrl = res.url;
+            } catch (e) {
+                await alert('Upload failed: ' + e.message); return;
+            }
+        }
+
+        const data = { ...serviceFormData, equipmentId: editingId, docData: uploadedUrl };
+        delete data.fileObj;
         
         if (editingServiceId) {
             update(COLLECTIONS.SERVICE_LOG, editingServiceId, data);
@@ -174,23 +191,19 @@ function EquipmentPageInner() {
     const handleDocUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 2 * 1024 * 1024) {
-            await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
+        if (file.size > 15 * 1024 * 1024) {
+            await alert(lang === 'bs' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
             return;
         }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            setServiceFormData(prev => ({
-                ...prev,
-                docName: file.name,
-                docData: ev.target.result, // base64
-            }));
-        };
-        reader.readAsDataURL(file);
+        setServiceFormData(prev => ({ ...prev, fileObj: file, docName: file.name }));
     };
 
     const openDocInTab = (log) => {
         if (!log.docData) return;
+        if (log.docData.startsWith('http')) {
+            window.open(log.docData, '_blank');
+            return;
+        }
         // For PDFs and images, open in new tab for preview/print
         const isPdf = log.docData.startsWith('data:application/pdf');
         const isImage = log.docData.startsWith('data:image/');
@@ -215,6 +228,10 @@ function EquipmentPageInner() {
 
     const downloadDoc = (log) => {
         if (!log.docData) return;
+        if (log.docData.startsWith('http')) {
+            window.open(log.docData, '_blank');
+            return;
+        }
         const a = document.createElement('a');
         a.href = log.docData;
         a.download = log.docName || 'servisni_dokument';

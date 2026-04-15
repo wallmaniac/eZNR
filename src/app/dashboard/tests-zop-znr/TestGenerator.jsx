@@ -237,13 +237,35 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
                 }
                 
                 if (company && company.logo) {
-                    let base64Logo = company.logo;
-                    if (base64Logo.includes('base64,')) {
-                        base64Logo = base64Logo.split('base64,')[1];
+                    let isBase64 = false;
+                    let logoData;
+                    
+                    if (company.logo.startsWith('http')) {
+                        try {
+                            const res = await fetch(company.logo);
+                            logoData = await res.arrayBuffer();
+                        } catch (e) {
+                            console.error("Failed to fetch remote logo:", e);
+                        }
+                    } else {
+                        logoData = company.logo;
+                        if (logoData.includes('base64,')) {
+                            logoData = logoData.split('base64,')[1];
+                        }
+                        isBase64 = true;
                     }
-                    usedMedia.forEach(mediaPath => {
-                        if (zip.file(mediaPath)) zip.file(mediaPath, base64Logo, { base64: true });
-                    });
+                    
+                    if (logoData) {
+                        usedMedia.forEach(mediaPath => {
+                            if (zip.file(mediaPath)) {
+                                if (isBase64) {
+                                    zip.file(mediaPath, logoData, { base64: true });
+                                } else {
+                                    zip.file(mediaPath, logoData);
+                                }
+                            }
+                        });
+                    }
                 } else {
                     const transparentBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
                     usedMedia.forEach(mediaPath => {

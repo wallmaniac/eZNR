@@ -3,7 +3,8 @@ import DateInput from '@/components/DateInput';
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import { getAll, create, remove, update, COLLECTIONS } from '@/lib/dataStore';
+import { getAll, create, remove, update, COLLECTIONS, getActiveCompanyId } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageAPI';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
@@ -273,19 +274,22 @@ export default function ArchivePage() {
         setUploadError('');
         setUploading(true);
         try {
-            const data = await new Promise((res, rej) => {
-                const reader = new FileReader();
-                reader.onload = e => res(e.target.result);
-                reader.onerror = rej;
-                reader.readAsDataURL(file);
-            });
+            let url = null;
+            try {
+                const cid = getActiveCompanyId();
+                const res = await uploadDocument(file, cid, 'digital-archive');
+                url = res.url;
+            } catch (e) {
+                throw new Error('Upload rejected');
+            }
+
             create(COLLECTIONS.DIGITAL_ARCHIVE, {
                 name: file.name,
                 size: file.size,
                 type: file.type,
                 category: 'Ostalo',
                 description: '',
-                data,
+                data: url,
                 uploadedAt: new Date().toISOString(),
             });
             reload();

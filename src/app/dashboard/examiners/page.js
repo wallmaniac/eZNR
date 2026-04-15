@@ -14,7 +14,11 @@ export default function ExaminersPage() {
   const [formData, setFormData] = useState({ ime: '', zvanje: '', ovlaštenaTvrtkaId: '', telefon: '' });
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EXAMINERS)); setCompanies(getAll(COLLECTIONS.AUTHORIZED_COMPANIES)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const getCompanyName = (id) => { const c = companies.find(x => x.id === id); return c ? c.naziv : '-'; };
   const handleNew = () => { setFormData({ ime: '', zvanje: '', ovlaštenaTvrtkaId: '', telefon: '' }); setEditingId(null); setShowForm(true); };

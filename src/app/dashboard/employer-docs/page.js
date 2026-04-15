@@ -3,8 +3,9 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-    getAll, create, update, remove, COLLECTIONS, formatDate,
+    getAll, create, update, remove, COLLECTIONS, formatDate, getActiveCompanyId
 } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageAPI';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSearchParams } from 'next/navigation';
@@ -23,7 +24,7 @@ function EmployerDocsInner() {
     const [activeTab, setActiveTab] = useState('obavezna');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
-    const [formData, setFormData] = useState({ naziv: '', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '' });
+    const [formData, setFormData] = useState({ naziv: '', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '', fileObj: null });
 
     // Akcije dropdown state (per-row, fixed position)
     const [openMenuId, setOpenMenuId] = useState(null);
@@ -45,7 +46,11 @@ function EmployerDocsInner() {
     }, [openMenuId]);
 
     const loadData = useCallback(() => { setDocs(getAll(COLLECTIONS.EMPLOYER_DOCS)); }, []);
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     useEffect(() => {
         const openId = searchParams?.get('openId');
@@ -66,11 +71,27 @@ function EmployerDocsInner() {
         }
     }, [highlightId, docs]);
 
-    const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '' }); setEditingId(null); setShowForm(true); };
-    const handleEdit = (item) => { setOpenMenuId(null); setFormData({ docData: null, docName: '', docType: '', ...item }); setEditingId(item.id); setShowForm(true); };
+    const handleNew = () => { setFormData({ naziv: '', kategorija: activeTab, status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '', fileObj: null }); setEditingId(null); setShowForm(true); };
+    const handleEdit = (item) => { setOpenMenuId(null); setFormData({ docData: null, docName: '', docType: '', fileObj: null, ...item }); setEditingId(item.id); setShowForm(true); };
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
-        if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, formData); } else { create(COLLECTIONS.EMPLOYER_DOCS, formData); }
+        
+        let uploadedUrl = formData.docData;
+        
+        if (formData.fileObj) {
+            try {
+                const cid = getActiveCompanyId();
+                const res = await uploadDocument(formData.fileObj, cid, 'employer-docs');
+                uploadedUrl = res.url;
+            } catch (e) {
+                await alert('Upload failed: ' + e.message); return;
+            }
+        }
+        
+        const payload = { ...formData, docData: uploadedUrl };
+        delete payload.fileObj; // drop non-serializable blob
+
+        if (editingId) { update(COLLECTIONS.EMPLOYER_DOCS, editingId, payload); } else { create(COLLECTIONS.EMPLOYER_DOCS, payload); }
         setShowForm(false); loadData(); showFlash();
     };
     const handleDelete = async (id) => {
@@ -113,16 +134,16 @@ function EmployerDocsInner() {
     const handleFileUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 5 * 1024 * 1024) { await alert(lang === 'bs' ? 'Datoteka mora biti manja od 5MB!' : 'File must be under 5MB!'); return; }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            setFormData(prev => ({ ...prev, docData: ev.target.result, docName: file.name, docType: file.type }));
-        };
-        reader.readAsDataURL(file);
+        if (file.size > 15 * 1024 * 1024) { await alert(lang === 'bs' ? 'Datoteka mora biti manja od 15MB!' : 'File must be under 15MB!'); return; }
+        setFormData(prev => ({ ...prev, fileObj: file, docName: file.name, docType: file.type }));
     };
 
     const handleDownloadFile = (doc) => {
         if (!doc.docData) return;
+        if (doc.docData.startsWith('http')) {
+            window.open(doc.docData, '_blank');
+            return;
+        }
         const a = document.createElement('a');
         a.href = doc.docData;
         a.download = doc.docName || doc.naziv;

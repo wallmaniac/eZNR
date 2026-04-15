@@ -1,4 +1,5 @@
-// src/lib/ziaAPI.js
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '@/lib/firebase';
 
 /**
  * Call the Zia AI assistant server endpoint.
@@ -9,18 +10,17 @@
  * @returns {Promise<Object>} The response data { text } or { function_call }
  */
 export const apiCallZia = async ({ messages, systemPrompt, tools }) => {
-    const res = await fetch('/api/zia', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages, systemPrompt, tools }),
-    });
-    
-    const data = await res.json();
-    if (!res.ok) {
-        const err = new Error(data.error || `API error ${res.status}`);
-        err.isRateLimit = data.isRateLimit || res.status === 429;
-        err.retryAfter = data.retryAfter || 30;
-        throw err;
+    try {
+        const functions = getFunctions(app, 'europe-west1');
+        const callableZia = httpsCallable(functions, 'zia');
+        const res = await callableZia({ messages, systemPrompt, tools });
+        return res.data;
+    } catch (firebaseError) {
+        // Map HttpsError code / details into the format expected by the frontend
+        const error = new Error(firebaseError.message || 'API error');
+        const isRateLimit = firebaseError.code === 'resource-exhausted' || firebaseError.details?.isRateLimit;
+        error.isRateLimit = isRateLimit;
+        error.retryAfter = firebaseError.details?.retryAfter || 30;
+        throw error;
     }
-    return data;
 };

@@ -175,7 +175,11 @@ function WorkersPageInner() {
         setPlaces(getAll(COLLECTIONS.PLACES));
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     // ── Auto-calculate Ukupni staž ──────────────────────────────────────────
     useEffect(() => {
@@ -434,21 +438,28 @@ function WorkersPageInner() {
             await alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
             return null;
         }
+        
+        let finalFormData = { ...formData };
+        
         let savedId = editingWorker;
         if (editingWorker) {
-            update(COLLECTIONS.WORKERS, editingWorker, formData);
+            update(COLLECTIONS.WORKERS, editingWorker, finalFormData);
         } else {
-            const newWorker = create(COLLECTIONS.WORKERS, formData);
+            const newWorker = create(COLLECTIONS.WORKERS, finalFormData);
             savedId = newWorker.id;
             setEditingWorker(savedId);
             editingWorkerRef.current = savedId;
         }
+        
+        // Keep formData in sync with the new cloud URL
+        setFormData(finalFormData);
+
         loadData();
         markClean();
         isDirtyRef.current = false;
         // Toast feedback
         if (typeof window !== 'undefined' && window.eznrToast) {
-            window.eznrToast(lang === 'bs' ? `Radnik ${formData.ime} ${formData.prezime} spremljen ✅` : `Worker ${formData.ime} ${formData.prezime} saved ✅`, 'success');
+            window.eznrToast(lang === 'bs' ? `Radnik ${finalFormData.ime} ${finalFormData.prezime} spremljen ✅` : `Worker ${finalFormData.ime} ${finalFormData.prezime} saved ✅`, 'success');
         }
         // Clear refs BEFORE state changes so the openWorker watcher never re-fires
         openWorkerHandledRef.current = null;
@@ -508,59 +519,6 @@ function WorkersPageInner() {
         isDirtyRef.current = true;
     };
 
-    // ── Photo upload with auto-crop to face (center-top crop, 3:4 ratio) ──
-    const handlePhotoUpload = async (e) => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-        if (!file.type.startsWith('image/')) {
-            await alert(lang === 'bs' ? 'Molimo odaberite sliku.' : 'Please select an image file.');
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                // Target: 3:4 portrait ratio (standard employee photo)
-                const TARGET_W = 300;
-                const TARGET_H = 400;
-                const targetRatio = TARGET_W / TARGET_H; // 0.75
-                const imgRatio = img.width / img.height;
-
-                let sx, sy, sw, sh;
-                if (imgRatio > targetRatio) {
-                    // Image is wider — crop sides, keep full height
-                    sh = img.height;
-                    sw = sh * targetRatio;
-                    sx = (img.width - sw) / 2; // center horizontally
-                    sy = 0; // top-aligned (face is usually in upper portion)
-                } else {
-                    // Image is taller — crop bottom, keep full width
-                    sw = img.width;
-                    sh = sw / targetRatio;
-                    sx = 0;
-                    sy = 0; // top-aligned to capture face
-                }
-
-                const canvas = document.createElement('canvas');
-                canvas.width = TARGET_W;
-                canvas.height = TARGET_H;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, sx, sy, sw, sh, 0, 0, TARGET_W, TARGET_H);
-                const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-                updateField('slika', dataUrl);
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-        // Reset input so same file can be re-selected
-        e.target.value = '';
-    };
-
-    const handleRemovePhoto = (e) => {
-        e.stopPropagation();
-        updateField('slika', '');
-    };
-
     // ── Render ──
 
     const _miSt = { display: 'block', width: '100%', textAlign: 'left', padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text)', fontFamily: 'var(--font-body)', transition: 'background 0.12s' };
@@ -579,81 +537,7 @@ function WorkersPageInner() {
                 {/* ── MAIN FORM CARD ── */}
                 <div className="card" style={{ marginBottom: 24 }}>
                     <div className="card-body">
-                        {/* Hidden file input for photo */}
-                        <input
-                            ref={photoInputRef}
-                            type="file"
-                            accept="image/*"
-                            style={{ display: 'none' }}
-                            onChange={handlePhotoUpload}
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            {/* Photo upload area */}
-                            <div style={{ gridRow: '1 / 3' }}>
-                                <div
-                                    onClick={() => photoInputRef.current?.click()}
-                                    style={{
-                                        width: 120, height: 160,
-                                        border: formData.slika ? 'none' : '2px dashed var(--border)',
-                                        borderRadius: 'var(--radius-md)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        flexDirection: 'column', gap: 4,
-                                        fontSize: '0.72rem', color: 'var(--text-muted)', textAlign: 'center',
-                                        cursor: 'pointer', overflow: 'hidden', position: 'relative',
-                                        background: formData.slika ? 'none' : 'var(--bg-input)',
-                                        transition: 'border-color 0.2s, box-shadow 0.2s',
-                                        boxShadow: formData.slika ? 'var(--shadow-md)' : 'none',
-                                    }}
-                                    onMouseOver={e => { if (!formData.slika) e.currentTarget.style.borderColor = 'var(--primary)'; }}
-                                    onMouseOut={e => { if (!formData.slika) e.currentTarget.style.borderColor = 'var(--border)'; }}
-                                >
-                                    {formData.slika ? (
-                                        <>
-                                            <img
-                                                src={formData.slika}
-                                                alt="Worker"
-                                                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
-                                            />
-                                            {/* Remove button overlay */}
-                                            <div
-                                                onClick={handleRemovePhoto}
-                                                style={{
-                                                    position: 'absolute', top: 4, right: 4,
-                                                    width: 22, height: 22, borderRadius: '50%',
-                                                    background: 'rgba(0,0,0,0.6)', color: 'white',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: '0.7rem', cursor: 'pointer',
-                                                    opacity: 0, transition: 'opacity 0.2s',
-                                                }}
-                                                onMouseOver={e => e.currentTarget.style.opacity = 1}
-                                                onMouseOut={e => e.currentTarget.style.opacity = 0}
-                                            >
-                                                ✕
-                                            </div>
-                                            {/* Change photo hint */}
-                                            <div style={{
-                                                position: 'absolute', bottom: 0, left: 0, right: 0,
-                                                padding: '4px 0', textAlign: 'center',
-                                                background: 'rgba(0,0,0,0.5)', color: 'white',
-                                                fontSize: '0.6rem', fontWeight: 600,
-                                                opacity: 0, transition: 'opacity 0.2s',
-                                            }}
-                                                onMouseOver={e => e.currentTarget.style.opacity = 1}
-                                                onMouseOut={e => e.currentTarget.style.opacity = 0}
-                                            >
-                                                {lang === 'bs' ? 'Promijeni' : 'Change'}
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <span style={{ fontSize: '1.8rem', opacity: 0.5 }}>📷</span>
-                                            <span style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Izaberi sliku' : 'Choose photo'}</span>
-                                            <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>3:4, JPG/PNG</span>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
                             <Field label={t('workerName')} value={formData.ime} onChange={v => updateField('ime', v)} required />
                             <Field label={t('workerSurname')} value={formData.prezime} onChange={v => updateField('prezime', v)} required />
                             <Field label={t('dateOfBirth')} value={formData.datumRodenja} onChange={v => updateField('datumRodenja', v)} type="date" />
@@ -1017,18 +901,29 @@ function WorkersPageInner() {
                                                             )}
                                                             <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
                                                                 📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (isZNR ? (lang === 'bs' ? 'Upload potpisan Test ZNR' : 'Upload signed ZNR Test') : isZOP ? (lang === 'bs' ? 'Upload potpisan Test ZOP' : 'Upload signed ZOP Test') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan'))}</span>
-                                                                <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => {
+                                                                <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={async (e) => {
                                                                     const file = e.target.files?.[0]; if (!file) return;
-                                                                    if (file.size > 5000000) { alert(lang === 'bs' ? 'Max 5MB' : 'Max 5MB'); return; }
-                                                                    const reader = new FileReader();
-                                                                    reader.onload = (ev) => { update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: ev.target.result, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() }); setCertificates(getWorkerCertificates(editingWorker)); setCertMenuId(null); };
-                                                                    reader.readAsDataURL(file); e.target.value = '';
+                                                                    if (file.size > 15000000) { alert(lang === 'bs' ? 'Max 15MB' : 'Max 15MB'); return; }
+                                                                    try {
+                                                                        const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
+                                                                        update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: uploadResult.url, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
+                                                                        setCertificates(getWorkerCertificates(editingWorker));
+                                                                        setCertMenuId(null);
+                                                                        showFlash();
+                                                                    } catch(err) {
+                                                                        alert('Upload failed: ' + err.message);
+                                                                    }
+                                                                    e.target.value = '';
                                                                 }} />
                                                             </label>
                                                             {c.potpisanScan && (
                                                                 <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                                     onClick={() => {
                                                                         setCertMenuId(null);
+                                                                        if (c.potpisanScan.startsWith('http')) {
+                                                                            window.open(c.potpisanScan, '_blank');
+                                                                            return;
+                                                                        }
                                                                         const w = window.open('', '_blank');
                                                                         if (c.potpisanScan.startsWith('data:application/pdf')) { w.document.write(`<embed src="${c.potpisanScan}" width="100%" height="100%" type="application/pdf" />`); }
                                                                         else { w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`); }
@@ -1194,7 +1089,11 @@ function WorkersPageInner() {
                                     workerDocs.push({ id: c.id + '_attached', certId: c.id, name: c.attachedFileName || c.ime || 'Dokument', data: c.attachedFileData, type: c.attachedFileType || '', size: c.attachedFileSize || 0, source: c.tipUvjerenjaIme || c.ime || 'Uvjerenje', date: c.datum || '' });
                                 }
                                 if (c.potpisanScan) {
-                                    workerDocs.push({ id: c.id + '_scan', certId: c.id, name: c.potpisanScanName || `Potpisan ${c.ime || 'Dokument'}`, data: c.potpisanScan, type: '', size: 0, source: c.tipUvjerenjaIme || c.ime || 'Potpisan scan', date: c.potpisanScanDate || c.datum || '' });
+                                    if (c.potpisanScan.startsWith('http')) {
+                                        workerDocs.push({ id: c.id + '_scan', certId: c.id, name: c.potpisanScanName || `Potpisan ${c.ime || 'Dokument'}`, url: c.potpisanScan, type: '', size: 0, source: c.tipUvjerenjaIme || c.ime || 'Potpisan scan', date: c.potpisanScanDate || c.datum || '' });
+                                    } else {
+                                        workerDocs.push({ id: c.id + '_scan', certId: c.id, name: c.potpisanScanName || `Potpisan ${c.ime || 'Dokument'}`, data: c.potpisanScan, type: '', size: 0, source: c.tipUvjerenjaIme || c.ime || 'Potpisan scan', date: c.potpisanScanDate || c.datum || '' });
+                                    }
                                 }
                             });
                             // Also check for worker-level documents stored directly on the worker

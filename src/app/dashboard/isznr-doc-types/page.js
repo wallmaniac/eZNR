@@ -13,7 +13,11 @@ export default function ISZNRDocTypesPage() {
   const [formData, setFormData] = useState({ naziv: '', oznaka: '' });
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.ISZNR_DOC_TYPES)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const handleNew = () => { setFormData({ naziv: '', oznaka: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };

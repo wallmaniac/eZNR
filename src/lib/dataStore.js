@@ -153,10 +153,13 @@ const GLOBAL_COLLECTIONS = [
     'isznrDocTypes',
 ];
 
-function _getActiveCompanyId() {
+export function getActiveCompanyId() {
     if (typeof window === 'undefined') return null;
     return _activeCompanyId || localStorage.getItem('eznr_activeCompany') || null;
 }
+
+// Keep the old internal name aliased just in case
+function _getActiveCompanyId() { return getActiveCompanyId(); }
 
 function _getActiveUser() {
     if (typeof window === 'undefined') return null;

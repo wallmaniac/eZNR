@@ -3,9 +3,9 @@ import DateInput from '@/components/DateInput';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import {
-  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+  getAll, create, update, remove, COLLECTIONS, formatDate, todayISO, getActiveCompanyId
 } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageAPI';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 
@@ -115,6 +115,7 @@ const EMPTY_RA1 = {
   odgovornaOsoba: '',
   docName: '',
   docData: '',
+  fileObj: null,
 };
 
 export default function ReferralRA1Page() {
@@ -173,7 +174,11 @@ export default function ReferralRA1Page() {
     }
   };
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
   
   useEffect(() => {
     const openId = searchParams?.get('openId');
@@ -218,10 +223,25 @@ export default function ReferralRA1Page() {
       await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Select a worker!');
       return;
     }
+
+    let uploadedUrl = formData.docData;
+    if (formData.fileObj) {
+      try {
+        const cid = getActiveCompanyId();
+        const res = await uploadDocument(formData.fileObj, cid, 'referral-ra1');
+        uploadedUrl = res.url;
+      } catch (e) {
+        await alert('Upload failed: ' + e.message); return;
+      }
+    }
+    
+    const payload = { ...formData, docData: uploadedUrl };
+    delete payload.fileObj;
+
     if (editingId) {
-      update(COLLECTIONS.REFERRALS_RA1, editingId, formData);
+      update(COLLECTIONS.REFERRALS_RA1, editingId, payload);
     } else {
-      create(COLLECTIONS.REFERRALS_RA1, formData);
+      create(COLLECTIONS.REFERRALS_RA1, payload);
     }
     setShowForm(false);
     loadData();
@@ -281,23 +301,23 @@ export default function ReferralRA1Page() {
   const handleDocUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      await alert(lang === 'bs' ? 'Dokument mora biti manji od 2MB!' : 'Document must be under 2MB!');
+    if (file.size > 15 * 1024 * 1024) {
+      await alert(lang === 'bs' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      setFormData(prev => ({
-        ...prev,
-        docName: file.name,
-        docData: ev.target.result,
-      }));
-    };
-    reader.readAsDataURL(file);
+    setFormData(prev => ({
+      ...prev,
+      docName: file.name,
+      fileObj: file,
+    }));
   };
 
   const downloadDoc = (log) => {
     if (!log.docData) return;
+    if (log.docData.startsWith('http')) {
+      window.open(log.docData, '_blank');
+      return;
+    }
     const a = document.createElement('a');
     a.href = log.docData;
     a.download = log.docName || 'prilog_dokumenta';
@@ -306,6 +326,10 @@ export default function ReferralRA1Page() {
 
   const openDoc = (docData, docName) => {
     if (!docData) return;
+    if (docData.startsWith('http')) {
+      window.open(docData, '_blank');
+      return;
+    }
     const w = window.open();
     if (w) {
       w.document.write('<html><head><title>' + (docName || 'Dokument') + '</title></head><body style="margin:0"><iframe src="' + docData + '" style="width:100%;height:100vh;border:none"></iframe></body></html>');

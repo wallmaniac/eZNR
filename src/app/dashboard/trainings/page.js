@@ -71,7 +71,11 @@ export default function TrainingsPage() {
     const [reminderTraining, setReminderTraining] = useState(null);
 
     const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     // Close dropdown on outside click — ignore clicks on the trigger button itself
     useEffect(() => {

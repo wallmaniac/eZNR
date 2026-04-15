@@ -58,7 +58,11 @@ export default function AnnualInjuriesPage() {
     } catch { /* ignore */ }
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   // ── Years dropdown: include current year ──
   const years = useMemo(() => {

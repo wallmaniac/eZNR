@@ -231,7 +231,11 @@ export default function RiskAssessmentPage() {
         fetchCounts();
     }, [questionnaires]);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     const loadRiskItems = useCallback((procjenaId) => {
         if (!procjenaId) { setRiskItems([]); return; }

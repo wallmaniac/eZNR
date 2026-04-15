@@ -20,7 +20,11 @@ export default function CertTypesPage() {
   const [selectedIds, setSelectedIds] = useState(new Set());
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.CERT_TYPES)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(items, 'naziv');
 

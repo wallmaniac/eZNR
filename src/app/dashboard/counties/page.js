@@ -12,7 +12,11 @@ export default function CountiesPage() {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ naziv: '', kod: '' });
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.COUNTIES || 'counties')); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
   const handleNew = () => { setFormData({ naziv: '', kod: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.COUNTIES || 'counties'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };

@@ -1,4 +1,6 @@
-/**
+// src/lib/trainingsAI.js
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '@/lib/firebase';
  * trainingsAI.js — Library bridge for AI & parser endpoints within the Trainings module.
  * 
  * Extracts API logic from the UI (trainings/page.js) to improve maintainability.
@@ -12,19 +14,10 @@
 export async function apiGenerateQuiz(slides) {
     try {
         const payload = slides.map(s => ({ naslov: s.naslov || '', sadrzaj: s.sadrzaj || '' }));
-        const res = await fetch('/api/generate-quiz', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ slides: payload }),
-        });
-
-        const data = await res.json();
-        
-        if (!res.ok) {
-            throw new Error(data.error || 'Network response was not ok');
-        }
-
-        return data; 
+        const functions = getFunctions(app, 'europe-west1');
+        const callableGenerateQuiz = httpsCallable(functions, 'generateQuiz');
+        const res = await callableGenerateQuiz({ slides: payload });
+        return res.data; 
     } catch (err) {
         console.error('[trainingsAI] apiGenerateQuiz error:', err);
         return { error: err.message };
@@ -39,19 +32,19 @@ export async function apiGenerateQuiz(slides) {
  */
 export async function apiParsePresentation(file) {
     try {
-        const fd = new FormData();
-        fd.append('file', file);
-
-        const res = await fetch('/api/parse-presentation', { 
-            method: 'POST', 
-            body: fd 
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result.split(',')[1]);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
         });
 
-        const data = await res.json();
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, 'parsePresentation');
+        const res = await callable({ base64Data, filename: file.name });
         
-        if (!res.ok || data.error) {
-            throw new Error(data.error || 'Error parsing document');
-        }
+        const data = res.data;
+        if (data.error) throw new Error(data.error);
 
         return data;
     } catch (err) {

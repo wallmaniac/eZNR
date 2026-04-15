@@ -499,7 +499,7 @@ export default function SettingsPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <label style={{ cursor: 'pointer', padding: '8px 16px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: '0.82rem', display: 'inline-block' }}>
                         📁 {lang === 'bs' ? 'Učitaj logo' : 'Upload Logo'}
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={e => {
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           if (file.size > 500000) {
@@ -507,9 +507,12 @@ export default function SettingsPage() {
                             return;
                           }
                           setLogoError('');
-                          const reader = new FileReader();
-                          reader.onload = ev => setCompanyData(p => ({ ...p, logo: ev.target.result }));
-                          reader.readAsDataURL(file);
+                          try {
+                            const url = await uploadSecureFile(activeCompanyId, 'company_logo', file);
+                            setCompanyData(p => ({ ...p, logo: url }));
+                          } catch (err) {
+                            setLogoError(lang === 'bs' ? 'Greška pri uploadu loga' : 'Error uploading logo');
+                          }
                         }} />
                       </label>
                       {logoError && <div style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 600 }}>⚠️ {logoError}</div>}

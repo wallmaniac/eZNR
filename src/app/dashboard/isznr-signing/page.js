@@ -42,7 +42,11 @@ export default function ISZNRSigningPage() {
   const loadData = useCallback(() => {
     setDocuments(getAll(COLLECTIONS.ISZNR_DOCUMENTS));
   }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   // Document types
   const docTypes = useMemo(() => getAll(COLLECTIONS.ISZNR_DOC_TYPES), []);

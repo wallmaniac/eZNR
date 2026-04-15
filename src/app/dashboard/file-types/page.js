@@ -12,7 +12,11 @@ export default function FileTypesPage() {
   const [editingId, setEditingId] = useState(null);
   const [formData, setFormData] = useState({ naziv: '', ekstenzija: '' });
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.FILE_TYPES || 'file_types')); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
   const handleNew = () => { setFormData({ naziv: '', ekstenzija: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => { if (!formData.naziv) return; const col = COLLECTIONS.FILE_TYPES || 'file_types'; if (editingId) update(col, editingId, formData); else create(col, formData); setShowForm(false); loadData(); };

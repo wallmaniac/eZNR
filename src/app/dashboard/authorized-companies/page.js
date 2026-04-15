@@ -14,7 +14,11 @@ export default function AuthorizedCompaniesPage() {
   const [formData, setFormData] = useState({ naziv: '', rješenjeBroj: '', datumRješenja: '', adresa: '', tel: '' });
 
   const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.AUTHORIZED_COMPANIES)); }, []);
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const handleNew = () => { setFormData({ naziv: '', rješenjeBroj: '', datumRješenja: '', adresa: '', tel: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };

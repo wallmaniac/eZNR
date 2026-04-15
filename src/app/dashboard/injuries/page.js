@@ -55,7 +55,11 @@ export default function InjuriesPage() {
     setWorkers(getAll(COLLECTIONS.WORKERS));
   }, []);
 
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => {
+      loadData();
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, [loadData]);
 
   const toggleAll = (e) => {
     if (e.target.checked) setSelectedIds(new Set(filtered.map(x => x.id)));

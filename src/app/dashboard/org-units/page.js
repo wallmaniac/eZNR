@@ -41,7 +41,11 @@ export default function OrgUnitsPage() {
         setWorkers(getAll(COLLECTIONS.WORKERS));
     }, []);
 
-    useEffect(() => { loadData(); }, [loadData]);
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
 
     // ── Tree hierarchy sort ────────────────────────────────────────────────────
     const [sortField, setSortField] = useState('naziv');
