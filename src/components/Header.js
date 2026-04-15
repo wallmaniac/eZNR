@@ -255,14 +255,11 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                         {c.id === activeCompanyId ? '✅' : '🏛️'} {c.naziv || c.skraceniNaziv}
                                     </button>
                                 ))}
-                                {!isSuperAdmin && (
-                                    <>
-                                        <div className="dropdown-divider" />
-                                        <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 700, padding: '12px 16px', fontSize: '0.9rem', justifyContent: 'center' }}>
-                                            ➕ {lang === 'bs' ? 'Dodaj firmu' : 'Add company'}
-                                        </button>
-                                    </>
-                                )}
+                                {/* Add new company - Available for all roles */}
+                                <div className="dropdown-divider" />
+                                <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 700, padding: '12px 16px', fontSize: '0.9rem', justifyContent: 'center' }}>
+                                    ➕ {lang === 'bs' ? 'Dodaj firmu' : 'Add company'}
+                                </button>
                             </div>,
                             document.body
                         )}
@@ -413,13 +410,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     ))}
                                 </div>
 
-                                {/* Officer only: add new company */}
-                                {!isSuperAdmin && (
-                                    <>
-                                        <div className="dropdown-divider" />
-                                        <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}</button>
-                                    </>
-                                )}
+                                {/* Add new company - Available for all roles */}
+                                <div className="dropdown-divider" />
+                                <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>➕ {lang === 'bs' ? 'Dodaj novu firmu' : 'Add new company'}</button>
                             </div>
                         )}
                     </div>
