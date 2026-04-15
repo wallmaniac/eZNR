@@ -137,7 +137,7 @@ function AlertsWidget({ groups, total, lang }) {
 export default function DashboardPage() {
     const { t, lang } = useLanguage();
     const router = useRouter();
-    const { activeCompanyId, user } = useAuth();
+    const { activeCompanyId, user, userCompanies } = useAuth();
     const { confirm, DialogRenderer } = useDialog();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
@@ -302,7 +302,7 @@ export default function DashboardPage() {
         return events;
     }, [certs, equipment, fleetVehicles, employerDocs, workers, riskAssessments, riskItems, notifSettings]);
 
-    const companies = useMemo(() => getRawAll(COLLECTIONS.COMPANIES), [activeCompanyId]);
+    const companies = userCompanies || [];
     const getCompName = (id) => companies.find(c => c.id === id)?.skraceniNaziv || companies.find(c => c.id === id)?.naziv || '';
 
     const allCalendarEvents = useMemo(() => {

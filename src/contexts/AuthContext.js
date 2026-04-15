@@ -71,7 +71,7 @@ export function AuthProvider({ children }) {
                         }
 
                         // Load company data from Firestore into dataStore cache
-                        if (companyId && companyId !== 'all') {
+                        if (companyId) {
                             await loadCompanyData(companyId);
                         }
 
@@ -189,9 +189,11 @@ export function AuthProvider({ children }) {
                 const comp = await getCompany(companyId);
                 setActiveCompany(comp);
             }
-            await switchCompanyData(companyId);
         } else {
             setActiveCompany(null);
+        }
+        if (companyId) {
+            await switchCompanyData(companyId);
         }
         setLoading(false);
     }, [userCompanies]);

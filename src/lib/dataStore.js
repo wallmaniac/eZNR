@@ -174,20 +174,42 @@ export async function loadCompanyData(companyId) {
             const companyLoads = COMPANY_SCOPED.map((colName) => {
                 return new Promise((resolve) => {
                     try {
-                        const colRef = fsCollection(db, `companies/${companyId}/${colName}`);
-                        const unsub = onSnapshot(colRef, (snap) => {
-                            _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                            _notifyListeners();
-                            if (typeof window !== 'undefined') {
-                                window.dispatchEvent(new CustomEvent('eznr:data-synced'));
-                            }
-                            resolve(); // Resolve promise on first load
-                        }, (err) => {
-                            console.warn(`[dataStore] ⚠️ Snapshot error ${colName}:`, err.message);
-                            if (!_cache[colName]) _cache[colName] = [];
-                            resolve();
+                        const targets = companyId === 'all' ? _getUserCompanyIds() : [companyId];
+                        
+                        if (targets.length === 0) {
+                            _cache[colName] = [];
+                            return resolve();
+                        }
+                        
+                        let completed = 0;
+                        if (!_cache[colName] || companyId === _activeCompanyId) _cache[colName] = []; // initialize empty
+                        
+                        targets.forEach(targetId => {
+                            const colRef = fsCollection(db, `companies/${targetId}/${colName}`);
+                            const unsub = onSnapshot(colRef, (snap) => {
+                                const newDocs = snap.docs.map(d => ({ id: d.id, companyId: targetId, ...d.data() }));
+                                
+                                // Merge data: remove old entries for THIS target company, then push new ones natively
+                                _cache[colName] = [
+                                    ...(_cache[colName] || []).filter(item => item.companyId !== targetId),
+                                    ...newDocs
+                                ];
+                                
+                                _notifyListeners();
+                                if (typeof window !== 'undefined') {
+                                    window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                                }
+                                
+                                completed++;
+                                // Only resolve after all initial snapshots return to unblock the main screen
+                                if (completed === targets.length) resolve();
+                            }, (err) => {
+                                console.warn(`[dataStore] ⚠️ Snapshot error ${colName} [${targetId}]:`, err.message);
+                                completed++;
+                                if (completed === targets.length) resolve();
+                            });
+                            _snapshotUnsubs.push(unsub);
                         });
-                        _snapshotUnsubs.push(unsub);
                     } catch (err) {
                         console.warn(`[dataStore] ⚠️ Failed sync setup for ${colName}:`, err.message);
                         if (!_cache[colName]) _cache[colName] = [];
