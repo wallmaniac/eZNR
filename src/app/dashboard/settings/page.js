@@ -16,6 +16,7 @@ import {
 import {
   getUserLog, getAdminLog, clearUserLog, clearAdminLog, formatLogTime, getSeverityColors,
   getOnlineUsers, humanizePage,
+} from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 
 export default function SettingsPage() {
