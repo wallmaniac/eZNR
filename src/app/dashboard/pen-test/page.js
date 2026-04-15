@@ -7,9 +7,38 @@ import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 export default function FirebasePenTest() {
     const [logs, setLogs] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
+    const [isStorming, setIsStorming] = useState(false);
 
     const log = (msg, type = 'info') => {
         setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg, type }]);
+    };
+
+    const runStormTest = async () => {
+        setIsStorming(true);
+        setLogs([]);
+        log('Starting 100-User Background Storm Simulation...', 'warning');
+        
+        const activeCompanyId = localStorage.getItem('eznr_activeCompany');
+        if (!activeCompanyId) {
+            log('No active company. Please select a company.', 'error');
+            setIsStorming(false);
+            return;
+        }
+
+        log(`Spamming 'storm_events' for company: ${activeCompanyId} in background...`, 'info');
+        
+        try {
+            const promises = [];
+            for(let i = 0; i < 100; i++) {
+                const stormDoc = doc(db, 'companies', activeCompanyId, 'storm_events', `event_${i}`);
+                promises.push(setDoc(stormDoc, { timestamp: Date.now(), rand: Math.random() }));
+            }
+            await Promise.all(promises);
+            log('✅ Storm injected successfully. If your dashboard did not freeze, the local state engine efficiently handled the burst!', 'success');
+        } catch (err) {
+            log(`❌ Storm failed: ${err.message}`, 'error');
+        }
+        setIsStorming(false);
     };
 
     const runTests = async () => {
@@ -97,6 +126,22 @@ export default function FirebasePenTest() {
                     marginBottom: 24
                 }}>
                 {isRunning ? 'Running Tests...' : 'Execute Pen Test'}
+            </button>
+            <button 
+                onClick={runStormTest} 
+                disabled={isRunning || isStorming}
+                style={{ 
+                    padding: '10px 20px', 
+                    background: 'var(--warning)', 
+                    color: 'white', 
+                    border: 'none', 
+                    marginLeft: 12,
+                    borderRadius: 8, 
+                    cursor: (isRunning || isStorming) ? 'not-allowed' : 'pointer',
+                    fontWeight: 700,
+                    marginBottom: 24
+                }}>
+                {isStorming ? 'Storming...' : 'Simulate 100-User Background Storm'}
             </button>
 
             <div style={{ 
