@@ -4,7 +4,8 @@ import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
-import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getUserCompanies, getRawAll, seedCompanyData } from '@/lib/dataStore';
+import { getAll, create, COLLECTIONS, getOrgUnitName, formatDate, getRawAll, seedCompanyData } from '@/lib/dataStore';
+import { updateUserProfile } from '@/lib/authService';
 import { getHeaderNotifications, dismissNotification, APP_VERSION } from '@/lib/systemMonitor';
 import { useTheme } from '@/contexts/ThemeContext';
 import { matchesSearch } from '@/lib/dateUtils';
@@ -30,17 +31,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const companyRef = useRef(null);
 
     // Companies list — source of truth depending on role
-    // SuperAdmin: uses userCompanies from AuthContext (loaded from Firestore)
-    // Officer: uses getUserCompanies from local dataStore cache
+    // AuthContext safely loads ALL companies for Superadmin and ASSIGNED companies for Officer natively from Firestore.
+    // We safely rely on userCompanies from AuthContext for all roles now.
     const companies = useMemo(() => {
         if (!user?.id) return [];
-        if (isSuperAdmin) {
-            // Super admin: list of ALL companies from AuthContext
-            return userCompanies || [];
-        }
-        // Officer/Admin: their assigned companies from local store
-        return getUserCompanies(user?.id);
-    }, [user?.id, isSuperAdmin, userCompanies]);
+        return userCompanies || [];
+    }, [user?.id, userCompanies]);
 
     const filteredCompaniesForMenu = useMemo(() => {
         if (!companySearchTerm.trim()) return companies;
@@ -122,34 +118,41 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const handleNotifNav = (path) => { setShowNotifs(false); router.push(path); };
     const handleLogout = () => { setShowProfile(false); logout(); router.push('/'); };
 
-    const handleCreateCompany = () => {
+    const handleCreateCompany = async () => {
         if (!newCompanyData.naziv.trim()) return;
-        const newComp = create(COLLECTIONS.COMPANIES, { ...newCompanyData, skraceniNaziv: newCompanyData.naziv, aktivan: true });
-        const { update } = require('@/lib/dataStore');
-        if (user?.id) {
-            const currentUser = getRawAll(COLLECTIONS.USERS).find(u => u.id === user.id);
-            if (currentUser) {
-                const updatedIds = [...(currentUser.companyIds || []), newComp.id];
-                update(COLLECTIONS.USERS, user.id, { companyIds: updatedIds });
+        setSwitchingCompany(true);
+        try {
+            const newComp = create(COLLECTIONS.COMPANIES, { ...newCompanyData, skraceniNaziv: newCompanyData.naziv, aktivan: true });
+            
+            if (user?.id) {
+                // Update Firestore native profile instead of outdated local storage profile
+                const updatedIds = [...new Set([...(user.companyIds || []), newComp.id])];
+                await updateUserProfile(user.uid || user.id, { companyIds: updatedIds });
+                
+                // Keep local storage session cache in sync purely for legacy reasons
                 try { const p = JSON.parse(localStorage.getItem('eznr_user')); p.companyIds = updatedIds; localStorage.setItem('eznr_user', JSON.stringify(p)); } catch(e) {}
             }
-        }
-        
-        // Assign to officer if selected
-        if (isAdmin && newCompanyData.assignedOfficerId) {
-            const officerUser = getRawAll(COLLECTIONS.USERS).find(u => u.id === newCompanyData.assignedOfficerId);
-            if (officerUser) {
-                const updatedOfficerIds = [...(officerUser.companyIds || []), newComp.id];
-                update(COLLECTIONS.USERS, officerUser.id, { companyIds: updatedOfficerIds });
+            
+            // Assign to officer if selected
+            if (isAdmin && newCompanyData.assignedOfficerId) {
+                const { update } = require('@/lib/dataStore');
+                const officerUser = getRawAll(COLLECTIONS.USERS).find(u => u.id === newCompanyData.assignedOfficerId);
+                if (officerUser) {
+                    const updatedOfficerIds = [...(officerUser.companyIds || []), newComp.id];
+                    update(COLLECTIONS.USERS, officerUser.id, { companyIds: updatedOfficerIds });
+                }
             }
-        }
 
-        const sourceId = (user?.companyIds || [])[0];
-        if (sourceId) seedCompanyData(newComp.id, sourceId);
-        switchCompany(newComp.id);
-        setShowNewCompanyModal(false);
-        setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
-        window.location.reload();
+            const sourceId = (user?.companyIds || [])[0];
+            if (sourceId) seedCompanyData(newComp.id, sourceId);
+            switchCompany(newComp.id);
+            setShowNewCompanyModal(false);
+            setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
+            window.location.reload();
+        } catch (err) {
+            console.error('[Header] Failed to create company natively:', err);
+            setSwitchingCompany(false);
+        }
     };
 
     const roleBadge = isAdmin
