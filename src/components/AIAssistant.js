@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter, usePathname } from 'next/navigation';
+import { getRawAll } from '@/lib/dataStore';
 
 // ─── App knowledge base for the AI system prompt ───────────────────────────
 const APP_KNOWLEDGE = {
@@ -62,8 +63,7 @@ const APP_KNOWLEDGE = {
 function buildDataContext(lang) {
     if (typeof window === 'undefined') return '';
     try {
-        const prefix = 'eznr_';
-        const get = (key) => { try { return JSON.parse(localStorage.getItem(prefix + key) || '[]'); } catch { return []; } };
+        const get = (key) => getRawAll(key);
 
         const workers = get('workers');
         const injuries = get('injuries');
@@ -373,8 +373,7 @@ Keep responses short and action-focused`;
 function buildDynamicSuggestions(lang) {
     const chips = [];
     try {
-        const prefix = 'eznr_';
-        const get = (key) => { try { return JSON.parse(localStorage.getItem(prefix + key) || '[]'); } catch { return []; } };
+        const get = (key) => getRawAll(key);
         const certificates = get('certificates');
         const injuries = get('injuries');
         const diseases = get('diseases');
@@ -692,7 +691,7 @@ export default function AIAssistant() {
                     return;
                 }
 
-                const get = (k) => { try { return JSON.parse(localStorage.getItem('eznr_' + k) || '[]'); } catch { return []; } };
+                const get = (k) => getRawAll(k);
                 const today = new Date();
                 const certs = get('certificates');
                 const equip = get('equipment');
@@ -737,7 +736,7 @@ export default function AIAssistant() {
         // On first open: show data-driven summary instead of generic welcome
         if (messages.length === 0) {
             try {
-                const get = (k) => { try { return JSON.parse(localStorage.getItem('eznr_' + k) || '[]'); } catch { return []; } };
+                const get = (k) => getRawAll(k);
                 const today = new Date();
                 const in30 = new Date(); in30.setDate(in30.getDate() + 30);
                 const certs = get('certificates');

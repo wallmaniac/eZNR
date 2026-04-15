@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { create, update, remove, COLLECTIONS, formatDate, getRawAll } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
 export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, reloadData }) {
@@ -8,7 +8,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
     const bs = lang === 'bs';
     const { confirm } = useDialog();
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
-    const getOrders = () => { try { return JSON.parse(localStorage.getItem('eznr_travelOrders') || '[]').filter(o => o.vehicleId === vehicleId); } catch { return []; } };
+    const getOrders = () => getRawAll(COLLECTIONS.TRAVEL_ORDERS).filter(o => o.vehicleId === vehicleId);
     const orders = getOrders().sort((a,b) => new Date(b.datumIzdavanja) - new Date(a.datumIzdavanja));
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
