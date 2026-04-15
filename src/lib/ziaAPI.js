@@ -1,8 +1,7 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import app from '@/lib/firebase';
-
 /**
- * Call the Zia AI assistant server endpoint.
+ * Call the Zia AI assistant via our own Next.js API route.
+ * This avoids all Cloud Run CORS/IAM issues by keeping the request same-origin.
+ *
  * @param {Object} payload 
  * @param {Array} payload.messages - Chat history messages
  * @param {String} payload.systemPrompt - The system prompt
@@ -11,16 +10,27 @@ import app from '@/lib/firebase';
  */
 export const apiCallZia = async ({ messages, systemPrompt, tools }) => {
     try {
-        const functions = getFunctions(app, 'europe-west1');
-        const callableZia = httpsCallable(functions, 'zia');
-        const res = await callableZia({ messages, systemPrompt, tools });
-        return res.data;
-    } catch (firebaseError) {
-        // Map HttpsError code / details into the format expected by the frontend
-        const error = new Error(firebaseError.message || 'API error');
-        const isRateLimit = firebaseError.code === 'resource-exhausted' || firebaseError.details?.isRateLimit;
-        error.isRateLimit = isRateLimit;
-        error.retryAfter = firebaseError.details?.retryAfter || 30;
+        const res = await fetch('/api/zia', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages, systemPrompt, tools }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+            const error = new Error(data.error || 'API error');
+            error.isRateLimit = data.isRateLimit || false;
+            error.retryAfter = data.retryAfter || 30;
+            throw error;
+        }
+
+        return data.result;
+    } catch (err) {
+        if (err.isRateLimit !== undefined) throw err;
+        const error = new Error(err.message || 'API error');
+        error.isRateLimit = false;
         throw error;
     }
 };
+
