@@ -109,25 +109,26 @@ export default function ArchivePage() {
         FORM_SOURCES.forEach(({ col, label, link }) => {
             const recs = getAll(col);
             recs.forEach(r => {
+                // Support both legacy base64 and new Firebase Storage URLs
                 const fName = r.docName || r.attachedFileName || r.fileName || r.datotekaIme;
                 const fData = r.docData || r.attachedFileData || r.fileData || r.datotekaSadrzaj;
-                if (fName && fData) {
-                    // Decide if we can deep-link into the specific document editor/view
+                const fUrl = r.fileUrl || r.attachedFileUrl || r.docUrl;
+
+                if (fName && (fData || fUrl)) {
                     let finalLink = link;
                     if (col === 'certificates') {
                         finalLink = `${link}/edit/${r.id}`;
                     } else if (col === 'requests' || col.startsWith('forms') || col.startsWith('referrals') || col === 'employerDocs') {
-                        // For generic single-page modules, try appending open parameter just in case
                         finalLink = `${link}?openId=${r.id}`;
                     }
-                    
                     docs.push({
                         id: `form-${col}-${r.id}`,
                         name: fName,
-                        data: fData,
+                        data: fData || null,
+                        url: fUrl || null,
                         category: label.includes('Uvjerenje') ? 'Certifikati' : 'Obrasci',
                         description: r.ime ? `${r.ime}` : label,
-                        size: r.attachedFileSize || null,
+                        size: r.fileSize || r.attachedFileSize || null,
                         uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
                         _readonly: true,
                         _sourceLabel: label,
@@ -143,16 +144,18 @@ export default function ArchivePage() {
         serviceLogs.forEach(sl => {
             const fName = sl.docName || sl.fileName || sl.attachedFileName || sl.datotekaIme;
             const fData = sl.docData || sl.fileData || sl.attachedFileData || sl.datotekaSadrzaj;
-            if (fName && fData) {
+            const fUrl = sl.fileUrl || sl.attachedFileUrl || sl.docUrl;
+            if (fName && (fData || fUrl)) {
                 const eq = equipments.find(e => e.id === sl.equipmentId);
                 const eqName = eq ? eq.naziv : 'Oprema';
                 docs.push({
                     id: `eq-svclog-${sl.id}`,
                     name: fName,
-                    data: fData,
+                    data: fData || null,
+                    url: fUrl || null,
                     category: 'Zapisnici',
                     description: `Servisni zapisnik — ${eqName}`,
-                    size: null,
+                    size: sl.fileSize || null,
                     uploadedAt: sl.datum || null,
                     _readonly: true,
                     _sourceLabel: 'Popis radne opreme i objekata',
@@ -166,14 +169,16 @@ export default function ArchivePage() {
         vehicles.forEach(v => {
             const vDocs = v.dokumenti || [];
             vDocs.forEach(d => {
-                if (d.naziv && d.docData) {
+                // Support both legacy base64 (docData) and Firebase Storage URLs (fileUrl)
+                if (d.naziv && (d.docData || d.fileUrl)) {
                     docs.push({
                         id: `fleet-doc-${v.id}-${d.id}`,
-                        name: d.naziv,
-                        data: d.docData,
+                        name: d.docName || d.naziv,
+                        data: d.docData || null,
+                        url: d.fileUrl || null,
                         category: d.kategorija === 'Osiguranje' ? 'Ugovori' : d.kategorija === 'Tehnički pregled' ? 'Certifikati' : 'Ostalo',
                         description: `${v.registracija || 'Vozilo'} — ${d.kategorija || 'Ostalo'}`,
-                        size: d.velicina ? parseFloat(d.velicina) * 1024 : null,
+                        size: d.fileSize || (d.velicina ? parseFloat(d.velicina) * 1024 : null),
                         uploadedAt: d.datumUpisa || null,
                         _readonly: true,
                         _sourceLabel: 'Vozni park',
@@ -305,10 +310,20 @@ export default function ArchivePage() {
             try { await idbDownloadFile(file._idbKey, file.name); } catch { /* ignore */ }
             return;
         }
-        const a = document.createElement('a');
-        a.href = file.data;
-        a.download = file.name;
-        a.click();
+        if (file.url) {
+            const a = document.createElement('a');
+            a.href = file.url;
+            a.download = file.name;
+            a.target = '_blank';
+            a.click();
+            return;
+        }
+        if (file.data) {
+            const a = document.createElement('a');
+            a.href = file.data;
+            a.download = file.name;
+            a.click();
+        }
     };
 
     const handleOpen = async (file) => {
@@ -316,10 +331,16 @@ export default function ArchivePage() {
             try { await idbOpenFile(file._idbKey); } catch { /* ignore */ }
             return;
         }
-        const w = window.open();
-        if (w) {
-            w.document.write(`<html><head><title>${file.name}</title></head><body style="margin:0"><iframe src="${file.data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
-            w.document.close();
+        if (file.url) {
+            window.open(file.url, '_blank');
+            return;
+        }
+        if (file.data) {
+            const w = window.open();
+            if (w) {
+                w.document.write(`<html><head><title>${file.name}</title></head><body style="margin:0"><iframe src="${file.data}" style="width:100%;height:100vh;border:none"></iframe></body></html>`);
+                w.document.close();
+            }
         }
     };
 
