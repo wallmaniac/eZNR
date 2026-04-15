@@ -1,5 +1,5 @@
 import { initializeApp, getApps } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { getStorage } from 'firebase/storage';
 
@@ -14,10 +14,28 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (prevent duplicate initialization in Next.js hot reload)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+let app;
+if (getApps().length === 0) {
+    app = initializeApp(firebaseConfig);
+} else {
+    app = getApps()[0];
+}
+
+let firestoreDb;
+try {
+    if (typeof window !== 'undefined') {
+        firestoreDb = initializeFirestore(app, {
+            localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+        });
+    } else {
+        firestoreDb = getFirestore(app);
+    }
+} catch (e) {
+    firestoreDb = getFirestore(app);
+}
 
 // Export the services we use
-export const db = getFirestore(app);       // Firestore database
+export const db = firestoreDb;       // Firestore database
 export const auth = getAuth(app);          // Authentication
 export const storage = getStorage(app);    // File storage
 
