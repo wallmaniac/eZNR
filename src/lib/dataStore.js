@@ -248,12 +248,17 @@ export async function loadCompanyData(companyId) {
                 });
             });
 
-            // Load global collections in parallel
+            // Load global collections in parallel (non-blocking)
             const globalLoads = GLOBAL_COLLECTIONS.map(async (colName) => {
                 try {
                     const colRef = fsCollection(db, colName);
                     const snap = await getDocs(colRef);
                     _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                    
+                    // Dispatch sync event individually so dependent UI (dropdowns) populate lazily
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                    }
                 } catch (err) {
                     console.warn(`[dataStore] ⚠️ Failed to load global ${colName}:`, err.message);
                     _cache[colName] = [];
@@ -271,16 +276,17 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // Unblock main thread: let company listeners initialize asynchronously
-            await Promise.all([...globalLoads, ...metaLoads]);
+            // Unblock main thread: Only await critical meta-data (users & companies for auth routing)
+            await Promise.all(metaLoads);
             
-            Promise.all(companyLoads).then(() => {
-                console.log('[dataStore] 📡 All real-time module listeners established.');
+            // Allow everything else to initialize gracefully in the background
+            Promise.all([...companyLoads, ...globalLoads]).then(() => {
+                console.log('[dataStore] 📡 All real-time modules & global references established.');
             });
 
             const elapsed = ((performance.now() - start) / 1000).toFixed(2);
             const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
-            console.log(`[dataStore] ✅ Loaded ${totalDocs} documents in ${elapsed}s`);
+            console.log(`[dataStore] ✅ Fast boot finished in ${elapsed}s, background tasks running.`);
 
             _isLoaded = true;
             _isLoading = false;
