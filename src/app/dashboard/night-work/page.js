@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO, getActiveCompanyId
 } from '@/lib/dataStore';
-import { uploadDocument } from '@/lib/storageAPI';
+import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';

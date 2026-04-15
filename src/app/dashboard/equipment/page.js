@@ -6,7 +6,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
     getAll, create, update, remove, COLLECTIONS,
     getOrgUnitName, formatDate, getActiveCompanyId
 } from '@/lib/dataStore';
-import { uploadDocument } from '@/lib/storageAPI';
+import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';

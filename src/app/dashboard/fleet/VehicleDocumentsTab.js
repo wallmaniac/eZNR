@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { update, COLLECTIONS, formatDate, genId, getActiveCompanyId } from '@/lib/dataStore';
-import { uploadDocument } from '@/lib/storageAPI';
+import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import DateInput from '@/components/DateInput';
 

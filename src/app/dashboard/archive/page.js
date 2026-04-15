@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import { getAll, create, remove, update, COLLECTIONS, getActiveCompanyId } from '@/lib/dataStore';
-import { uploadDocument } from '@/lib/storageAPI';
+import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel } from '@/lib/textMatch';

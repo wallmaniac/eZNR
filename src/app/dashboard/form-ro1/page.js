@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate, todayISO, getActiveCompanyId
 } from '@/lib/dataStore';
-import { uploadDocument } from '@/lib/storageAPI';
+import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 
