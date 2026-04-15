@@ -18,7 +18,15 @@ export default function FirebasePenTest() {
         setLogs([]);
         log('Starting 100-User Background Storm Simulation...', 'warning');
         
-        const activeCompanyId = localStorage.getItem('eznr_activeCompany');
+        let activeCompanyId = localStorage.getItem('eznr_activeCompany');
+        const userStr = localStorage.getItem('eznr_user');
+        const user = userStr ? JSON.parse(userStr) : null;
+
+        if (activeCompanyId === 'all' && user?.companyIds?.length) {
+            activeCompanyId = user.companyIds[0];
+            log(`Active company is "all". Automatically using first assigned company: ${activeCompanyId} for the test.`, 'info');
+        }
+
         if (!activeCompanyId) {
             log('No active company. Please select a company.', 'error');
             setIsStorming(false);
@@ -46,9 +54,14 @@ export default function FirebasePenTest() {
         setLogs([]);
         log('Starting Firebase Multi-Tenancy Penetration Test...', 'info');
 
-        const activeCompanyId = localStorage.getItem('eznr_activeCompany');
+        let activeCompanyId = localStorage.getItem('eznr_activeCompany');
         const userStr = localStorage.getItem('eznr_user');
         const user = userStr ? JSON.parse(userStr) : null;
+
+        if (activeCompanyId === 'all' && user?.companyIds?.length) {
+            activeCompanyId = user.companyIds[0];
+            log(`Active company is "all". Using first assigned company for security check: ${activeCompanyId}`, 'info');
+        }
 
         if (!user || user.role === 'admin') {
             log('WARNING: You are logged in as Admin or not logged in. Admins bypass all rules. Please login as a standard "officer" of a company to test true isolation.', 'warning');
