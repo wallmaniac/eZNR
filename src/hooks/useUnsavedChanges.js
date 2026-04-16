@@ -17,7 +17,7 @@ import { useEffect, useCallback } from 'react';
 import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 
 export function useUnsavedChanges(onSave) {
-    const { markDirty, markClean } = useNavigationGuard();
+    const { markDirty, markClean, isDirty } = useNavigationGuard();
 
     // Allow passing an onSave so the guard can offer "Save & continue"
     const markDirtyWithSave = useCallback(() => {
@@ -29,5 +29,5 @@ export function useUnsavedChanges(onSave) {
         return () => markClean();
     }, [markClean]);
 
-    return { markDirty: markDirtyWithSave, markClean };
+    return { markDirty: markDirtyWithSave, markClean, isDirty };
 }

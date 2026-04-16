@@ -37,7 +37,7 @@ function WorkersPageInner() {
     const { activeCompanyId } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
-    const { markDirty, markClean } = useUnsavedChanges(async () => await handleSave());
+    const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(async () => await handleSave());
     const { alert, confirm, prompt, DialogRenderer } = useDialog();
     const isDirtyRef = useRef(false);
     const [workers, setWorkers] = useState([]);
@@ -490,28 +490,20 @@ function WorkersPageInner() {
         }
     };
 
-    const handleBack = async () => {
-        if (isDirtyRef.current) {
-            const choice = await confirm(
-                lang === 'bs'
-                    ? 'Imate nesačuvane promjene. Odbaciti promjene?'
-                    : 'You have unsaved changes. Discard changes?'
-            );
-            if (!choice) return;
-        }
-        handleCancel(); // this calls history.back()
+    const handleBack = () => {
+        window.history.back(); // Trigger popstate, allowing NavigationGuardContext to intercept if dirty
     };
 
     // Listen for browser back button to close the worker form
     useEffect(() => {
         const onPopState = () => {
-            if (showForm) {
+            if (showForm && !contextIsDirty) {
                 handleCancel(true); // skipHistoryBack — browser already went back
             }
         };
         window.addEventListener('popstate', onPopState);
         return () => window.removeEventListener('popstate', onPopState);
-    }, [showForm]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [showForm, contextIsDirty]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const updateField = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));

@@ -18,6 +18,8 @@ import {
 } from '@/lib/activityLog';
 import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 import { seedMockDataConfig } from '@/lib/mockDataGenerator';
+import { useDialog } from '@/hooks/useDialog';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -30,10 +32,9 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   // Dirty-tracking: which tab has unsaved edits (null = clean)
   const [dirtyTab, setDirtyTab] = useState(null);
-  // Refs for navigation guard — must be refs so event handlers see latest values
-  const dirtyTabRef = useRef(null);
-  const prevWasDirtyRef = useRef(false); // track clean→dirty transition for sentinel push
   const [logoError, setLogoError] = useState('');
+
+  const { choose, alert, confirm, DialogRenderer } = useDialog();
 
   // Profile state
   const [profileData, setProfileData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
@@ -130,82 +131,26 @@ export default function SettingsPage() {
     if (tabParam) setActiveTab(tabParam);
   }, [tabParam]);
 
-  // Keep dirty ref in sync with state (so event handlers see latest value without re-subscribing)
-  useEffect(() => {
-    dirtyTabRef.current = dirtyTab;
-    // When transitioning from clean → dirty, push a sentinel history entry.
-    // This gives the back button something to "pop" before leaving the page,
-    // allowing our popstate handler to intercept and show the confirm dialog.
-    if (dirtyTab && !prevWasDirtyRef.current) {
-      window.history.pushState({ _settingsGuard: true }, '', window.location.href);
-    }
-    prevWasDirtyRef.current = !!dirtyTab;
-  }, [dirtyTab]);
-
-  // Comprehensive navigation guard (mounted once — uses refs to avoid stale closures)
-  useEffect(() => {
-    let skipNextPopState = false;
-
-    // 1. Browser tab close / F5 / external link
-    const handleBeforeUnload = (e) => {
-      if (!dirtyTabRef.current) return;
-      e.preventDefault();
-      e.returnValue = '';
-    };
-
-    // 2. Browser back/forward button (popstate)
-    // Sequence: user pressed back → landed on sentinel (same /settings URL) → we re-push → show confirm
-    // If leave: go(-2) skips past both the re-push and the sentinel, reaching the actual previous page
-    const handlePopState = () => {
-      if (skipNextPopState) { skipNextPopState = false; return; }
-      if (!dirtyTabRef.current) return;
-      // Re-push current URL so user stays on this page while the confirm is shown
-      window.history.pushState(null, '', window.location.href);
-      const leave = window.confirm(
-        'Imate nesačuvane promjene.\nNapustiti stranicu bez čuvanja?'
-      );
-      if (leave) {
-        dirtyTabRef.current = null;
-        setDirtyTab(null);
-        skipNextPopState = true;
-        window.history.go(-2); // skip re-push + sentinel → arrive at actual previous page
-      }
-    };
-
-    // 3. Next.js <Link> / sidebar anchor clicks (client-side navigation)
-    const handleLinkClick = (e) => {
-      if (!dirtyTabRef.current) return;
-      const a = e.target.closest('a[href]');
-      if (!a) return;
-      const href = a.getAttribute('href') || '';
-      // Only intercept internal links that navigate away from settings
-      if (!href.startsWith('/') || href.startsWith('/dashboard/settings')) return;
-      e.preventDefault();
-      e.stopPropagation();
-      const leave = window.confirm(
-        'Imate nesačuvane promjene.\nNapustiti stranicu bez čuvanja?'
-      );
-      if (leave) {
-        dirtyTabRef.current = null;
-        setDirtyTab(null);
-        router.push(href);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
-    document.addEventListener('click', handleLinkClick, true); // capture phase
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-      document.removeEventListener('click', handleLinkClick, true);
-    };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- uses refs
+  const handleAllSaves = async () => {
+    if (activeTab === 'profile') return handleSaveProfile();
+    if (activeTab === 'company') return handleSaveCompany();
+    if (activeTab === 'notifications') return handleSaveNotifSettings();
+  };
+  const { markDirty, markClean } = useUnsavedChanges(handleAllSaves);
 
   // NOTE: validTabs and currentTab are derived after the tabs array is defined below
 
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
-  const clearDirty = () => setDirtyTab(null);
+  
+  const setDirty = (tabKey) => {
+    setDirtyTab(tabKey);
+    markDirty();
+  };
+  
+  const clearDirty = () => {
+    setDirtyTab(null);
+    markClean();
+  };
 
   const handleSaveProfile = () => {
     if (!user?.id) return;
@@ -269,17 +214,18 @@ export default function SettingsPage() {
     clearDirty(); showSaved();
   };
 
-  const updateNotif = (key, value) => { setNotifSettings(prev => ({ ...prev, [key]: value })); setDirtyTab('notifications'); };
-  const updateApp = (key, value) => { setAppSettings(prev => ({ ...prev, [key]: value })); setDirtyTab('display'); };
+  const updateNotif = (key, value) => { setNotifSettings(prev => ({ ...prev, [key]: value })); setDirty('notifications'); };
+  const updateApp = (key, value) => { setAppSettings(prev => ({ ...prev, [key]: value })); setDirty('display'); };
   // Dirty-aware setters for profile / company inline inputs
-  const setProfileDirty = (updater) => { setProfileData(updater); setDirtyTab('profile'); };
-  const setCompanyDirty = (updater) => { setCompanyData(updater); setDirtyTab('company'); };
+  const setProfileDirty = (updater) => { setProfileData(updater); setDirty('profile'); };
+  const setCompanyDirty = (updater) => { setCompanyData(updater); setDirty('company'); };
 
   const handleRunSync = async () => {
     if (!activeCompanyId) return;
-    if (!confirm(lang === 'bs' 
+    const isConfirmed = await confirm(lang === 'bs' 
       ? 'Ova akcija će učitati sve lokalne podatke na Firebase za TRENUTNU KOMPANIJU. Da li ste sigurni?' 
-      : 'This will upload all local data to Firebase for the CURRENT COMPANY. Are you sure?')) return;
+      : 'This will upload all local data to Firebase for the CURRENT COMPANY. Are you sure?');
+    if (!isConfirmed) return;
       
     setIsSyncing(true);
     setSyncStatus(lang === 'bs' ? 'Pokrećem učitavanje na oblak...' : 'Starting cloud sync...');
@@ -297,19 +243,20 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSeedMockData = () => {
+  const handleSeedMockData = async () => {
     if (!activeCompanyId) return;
-    if (!confirm(lang === 'bs' 
+    const isSure = await confirm(lang === 'bs' 
       ? 'Ovo će kreirati preko 30 mock zapisa (za svaku kolekciju) u vašem browseru za testiranje migracije. Nastaviti?'
       : 'This will seed over 30 mock records (one for each collection) in your browser to test migration. Proceed?'
-    )) return;
+    );
+    if (!isSure) return;
 
     try {
       const generated = seedMockDataConfig(activeCompanyId);
-      alert(lang === 'bs' ? `Uspješno generirano ${generated} mock zapisa! Stranica će se osvježiti.` : `Successfully generated ${generated} mock records! Reloading...`);
+      await alert(lang === 'bs' ? `Uspješno generirano ${generated} mock zapisa! Stranica će se osvježiti.` : `Successfully generated ${generated} mock records! Reloading...`);
       window.location.reload();
     } catch (e) {
-      alert(`Greška: ${e.message}`);
+      await alert(`Greška: ${e.message}`);
     }
   };
 
@@ -412,6 +359,7 @@ export default function SettingsPage() {
 
   return (
     <div className="animate-fadeIn">
+      <DialogRenderer />
       <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('settings')}</h1>
 
       {/* Removed global Success toast */}
@@ -429,12 +377,19 @@ export default function SettingsPage() {
                   profile: handleSaveProfile,
                   company: handleSaveCompany,
                 };
-                const shouldSave = window.confirm(
+                const action = await choose(
                   lang === 'bs'
-                    ? 'Imate nesačuvane promjene. Sačuvati ih před odlaskom?'
-                    : 'You have unsaved changes. Save them before leaving?'
+                    ? 'Imate nesačuvane promjene.\nŽelite li ih sačuvati prije promjene taba?'
+                    : 'You have unsaved changes.\nDo you want to save them before switching tabs?',
+                  [
+                    { label: '💾 Spremi i nastavi', value: 'save', primary: true },
+                    { label: '🗑️ Odbaci promjene', value: 'discard', danger: true },
+                    { label: 'Odustani', value: null }
+                  ]
                 );
-                if (shouldSave && saveFns[dirtyTab]) {
+                if (action === null) return;
+                
+                if (action === 'save' && saveFns[dirtyTab]) {
                   await saveFns[dirtyTab]();
                 } else {
                   clearDirty();
