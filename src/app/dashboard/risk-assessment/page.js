@@ -10,7 +10,7 @@ import HelpTip from '@/components/HelpTip';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
 import { generateSafeWordDoc } from '@/lib/riskExportDocx';
-import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire } from '@/lib/riskAI';
+import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
 
 /* ═══════════════════════════════════════════════
    5×5 Risk Matrix — Procjena rizika (FBiH ZNR)
@@ -200,6 +200,10 @@ export default function RiskAssessmentPage() {
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [bulkWpId, setBulkWpId] = useState('');
     const [bulkSelected, setBulkSelected] = useState([]);
+    // AI Generation
+    const [showAiGenTableModal, setShowAiGenTableModal] = useState(false);
+    const [aiGenJobTitle, setAiGenJobTitle] = useState('');
+    const [aiGenLoading, setAiGenLoading] = useState(false);
     // Mjere inline cell edit modal
     const [mjeraEdit, setMjeraEdit] = useState(null); // { riId, field, label, value, type }
 
@@ -613,6 +617,50 @@ export default function RiskAssessmentPage() {
             }
         } catch (err) { await alert('Greška: ' + err.message); }
         setImportLoading(false);
+    };
+
+    // ─── Auto-Generate Risk Items Table ───
+    const handleAiGenerateTableSubmit = async () => {
+        if (!editingId) return;
+        if (!aiGenJobTitle.trim()) { alert('Unesite naziv radnog mjesta!'); return; }
+        setAiGenLoading(true);
+        try {
+            const items = await apiGenerateRiskTable(aiGenJobTitle, formData.nazivTvrtke, formData.djelatnost);
+            let created = 0;
+            for (const item of items) {
+                const rizik = item.vjerovatnoca * item.posljedica;
+                const rizikNakon = item.vjerovatnocaNakon * item.posljedlicaNakon;
+                create(COLLECTIONS.RISK_ITEMS, {
+                    procjenaId: editingId,
+                    radnoMjestoId: formData.radnoMjestoId || '',
+                    opasnostId: '',
+                    opisOpasnosti: item.opisOpasnosti || '',
+                    vjerovatnoca: item.vjerovatnoca,
+                    posljedica: item.posljedica,
+                    rizik: rizik,
+                    nivoRizika: riskLevel(rizik).label,
+                    postojeceMjere: item.postojeceMjere || '',
+                    predlozeneMjere: item.predlozeneMjere || '',
+                    vjerovatnocaNakon: item.vjerovatnocaNakon,
+                    posljedlicaNakon: item.posljedlicaNakon,
+                    rizikNakon: rizikNakon,
+                    nivoRizikaNakon: rizikNakon > 0 ? riskLevel(rizikNakon).label : '',
+                    odgovornaOsoba: formData.ovlOsobaIme || '',
+                    rokProvedbe: '',
+                    status: 'draft',
+                    aiGenerated: true
+                });
+                created++;
+            }
+            loadRiskItems(editingId);
+            setShowAiGenTableModal(false);
+            setAiGenJobTitle('');
+            showFlash();
+            alert(`Uspješno generisano ${created} stavki procjene.`);
+        } catch (err) {
+            alert('Greška pri AI izradi: ' + err.message);
+        }
+        setAiGenLoading(false);
     };
 
     // ─── Word (.docx) Export ───
@@ -1182,6 +1230,14 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             📋 Uvezi iz upitnika
                                         </button>
+                                        <button className="btn btn-outline btn-sm" onClick={() => {
+                                            const wpName = workplaces.find(w => w.id === formData.radnoMjestoId)?.naziv || '';
+                                            setAiGenJobTitle(wpName);
+                                            setShowAiGenTableModal(true);
+                                        }} title="Zia AI Automatski izrađuje tabelu rizika za specifično radno mjesto sukladno normama"
+                                            style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                            ✨ Autoizradi s AI
+                                        </button>
                                         <button className="btn btn-outline btn-sm" onClick={() => { setShowBulkModal(true); setBulkSelected([]); setBulkWpId(''); }} title="Brzo dodajte više gotovih rizika odjednom iz glavnog centralnog kataloga opasnosti"
                                             style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             ⚠️ Dodaj iz kataloga
@@ -1189,6 +1245,29 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         <button className="btn btn-outline btn-sm" title="Ručno popunite formu i napravite procjenu za jedan pojedinačni rizik" onClick={handleNewRi}>+ {lang === 'bs' ? 'Dodaj stavku' : 'Add item'}</button>
                                     </div>
                                 </div>
+
+                                {showAiGenTableModal && (
+                                    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
+                                         onClick={(e) => { if (e.target === e.currentTarget && !aiGenLoading) setShowAiGenTableModal(false); }}>
+                                        <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>✨ AI Generisanje Tabele Rizika</div>
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
+                                                Zia AI će analizirati radno mjesto i kreirati standardne (8-15) opasnosti, zajedno sa FBiH procjenom posljedica, vjerovatnoće i listom mjera prevencije.
+                                            </div>
+                                            <div style={{ marginBottom: 16 }}>
+                                                <div style={labelSt}>Naziv radnog mjesta *</div>
+                                                <input className="form-input" value={aiGenJobTitle} onChange={e => setAiGenJobTitle(e.target.value)} placeholder="Npr. Zavarivač, Referent, Skladištar..." disabled={aiGenLoading} />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                                                <button className="btn btn-ghost" onClick={() => setShowAiGenTableModal(false)} disabled={aiGenLoading}>Odustani</button>
+                                                <button className="btn btn-primary" onClick={handleAiGenerateTableSubmit} disabled={!aiGenJobTitle.trim() || aiGenLoading}
+                                                        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
+                                                    {aiGenLoading ? '⏳ Generišem tabelu...' : '⚡ Generiši Tabela'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
 
                                 {showRiForm && (
                                     <div style={{ padding: 16, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary)', marginBottom: 16 }}>

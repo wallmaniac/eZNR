@@ -348,6 +348,52 @@ export default function ArchivePage() {
         }
     };
 
+    const handleAskZia = async (file) => {
+        const isPdf = file.name.toLowerCase().endsWith('.pdf');
+        if (!isPdf) {
+            alert(lang === 'bs' ? 'Zia trenutno može analizirati samo PDF datoteke iz arhive.' : 'Zia can currently only analyze PDF files from the archive.');
+            return;
+        }
+
+        try {
+            let base64Data = null;
+            let fileType = 'application/pdf';
+
+            // Base64 already present
+            if (file.data && file.data.startsWith('data:')) {
+                base64Data = file.data.split(',')[1];
+            } 
+            // Remote URL
+            else if (file.url) {
+                const res = await fetch(file.url);
+                const blob = await res.blob();
+                if (blob.size > 4_000_000) {
+                    alert(lang === 'bs' ? 'Datoteka je prevelika za AI analizu (Maks 4MB).' : 'File is too large for AI analysis (Max 4MB).');
+                    return;
+                }
+                const reader = new FileReader();
+                base64Data = await new Promise(resolve => {
+                    reader.onload = e => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(blob);
+                });
+            }
+            // IndexedDB 
+            else if (file._idbKey) {
+                // Not easily supported synchronously right here without importing IDB logic deeply
+                alert(lang === 'bs' ? 'Skenirani testovi nisu podržani. Preuzmite datoteku pa je prevucite u Zia chat.' : 'Scanned tests not supported directly. Download the file and drop it into Zia chat.');
+                return;
+            }
+
+            if (base64Data) {
+                window.dispatchEvent(new CustomEvent('ziaLoadFile', {
+                    detail: { name: file.name, type: fileType, data: base64Data, size: file.size }
+                }));
+            }
+        } catch (err) {
+            alert(lang === 'bs' ? `Greška pri učenju datoteke: ${err.message}` : `Error loading file: ${err.message}`);
+        }
+    };
+
     const handleCategoryChange = (id, cat) => {
         update(COLLECTIONS.DIGITAL_ARCHIVE, id, { category: cat });
         reload();
@@ -647,6 +693,9 @@ export default function ArchivePage() {
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
+                                                    {file.name.toLowerCase().endsWith('.pdf') && (
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{color: 'transparent', textShadow: '0 0 0 var(--primary)'}} title={lang === 'bs' ? 'Analiziraj sa Zia' : 'Ask Zia'} onClick={() => handleAskZia(file)}>✨</button>
+                                                    )}
                                                     <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'Open'} onClick={() => handleOpen(file)}>👁️</button>
                                                     <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => handleDownload(file)}>⬇️</button>
                                                     {!file._readonly && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>}

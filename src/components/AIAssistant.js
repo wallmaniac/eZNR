@@ -237,12 +237,12 @@ NISI SAMO CHATBOT — TI SI AGENT. Možeš aktivno pomagati službenicima da izv
 - Otvoriti formu za PRIJAVU POVREDE za određenog radnika (koristi report_injury alat)
 - Analizirati podatke i dati konkretne preporuke
 
-KADA KORISTITI ALATE:
+- VAŽNO: NIKADA nemoj koristiti "dummy" ili izmišljene podatke. Ako ti nedostaju obavezni podaci za kreiranje zapisa, PITAJ KORISNIKA da ti ih proslijedi prije nego pozoveš alat.
 - Ako korisnik kaže "idi na", "otvori", "prikaži stranicu" → ODMAH koristi navigate_to
 - Ako korisnik želi poslati upitnik → koristi open_dispatch_modal s ID-om upitnika iz ŽIVIH PODATAKA
-- Ako korisnik kaže "dodaj radnika", "novi radnik", "unesi radnika" → koristi create_new_worker s imenom/prezimenom
-- Ako korisnik kaže "povreda na radu", "ozljeda", "incident" za određenog radnika → koristi report_injury s podacima radnika iz ŽIVIH PODATAKA
-- Ako korisnik kaže "dodaj uvjerenje", "nova potvrda", "novi pregled" za radnika → koristi add_certificate s ID-om radnika iz ŽIVIH PODATAKA i svim detaljima (tipUvjerenja, datum, vrijediDo)
+- Ako korisnik kaže "dodaj radnika", "novi radnik" → prikupi obavezne podatke (ime, prezime, OIB, datumZaposlenja) kroz razgovor, zatim koristi create_new_worker alat da SNIMIŠ u bazu.
+- Ako korisnik kaže "povreda na radu", "ozljeda" → prikupi obavezne podatke (radnik, datum, tip), zatim koristi report_injury alat da SNIMIŠ u bazu.
+- Ako korisnik kaže "dodaj uvjerenje", "novi pregled" → prikupi obavezne podatke (radnik, tip, datum, vrijediDo), zatim koristi add_certificate alat da SNIMIŠ u bazu.
 - Ako korisnik navede trajanje (npr. "2 godine"), izračunaj vrijediDo = datum + trajanje i proslijeđi u alat
 - Ako korisnik kaže da je radnik dobio opremu, zaštitna sredstva, kaciga, rukavice, prsluk, cipele ili slično (OZO) → koristi assign_ppe s worker_id iz ŽIVIH PODATAKA. Podrazumijevano: datum = danas, kolicina = 1, osim ako korisnik ne navede drugačije. Snima DIREKTNO — nije potrebna forma.
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
@@ -326,12 +326,12 @@ YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers 
 - Open an INJURY REPORT form pre-filled with a worker (use report_injury tool)
 - Analyse data and give concrete recommendations
 
-WHEN TO USE TOOLS:
+- IMPORTANT: NEVER use "dummy" or fake data. If you are missing required data to create a record, ASK THE USER to provide it before calling the tool.
 - If the user says "go to", "open", "show me" a page → USE navigate_to immediately
 - If the user wants to send a questionnaire → use open_dispatch_modal with the questionnaire ID from LIVE DATA
-- If the user says "add worker", "new worker", "register employee" → use create_new_worker with the name
-- If the user mentions a work injury, accident, or incident for a specific worker → use report_injury with that worker's data from LIVE DATA
-- If the user says "add certificate", "new training", "new medical exam" for a worker → use add_certificate with the worker ID from LIVE DATA and all details (tipUvjerenja, datum, vrijediDo)
+- If the user says "add worker" → collect required data (firstName, lastName, OIB, employmentDate) via chat, then use create_new_worker to SAVE to database.
+- If the user mentions a work injury → collect required data (worker, date, type) via chat, then use report_injury to SAVE to database.
+- If the user says "add certificate" → collect required data (worker, type, date, validUntil) via chat, then use add_certificate to SAVE to database.
 - If user specifies duration (e.g. "2 years"), calculate vrijediDo = datum + duration and pass it to the tool
 - If the user mentions assigning PPE (equipment, gloves, helmet, vest, boots, etc.) to a worker → use assign_ppe with worker_id from LIVE DATA. Default datum = today, default kolicina = 1 unless user specifies otherwise. This saves DIRECTLY — no form needed.
 - If the user asks about data you already have → answer directly without tools
@@ -459,42 +459,46 @@ const ZIA_TOOLS = [
     },
     {
         name: 'create_new_worker',
-        description: 'Open the new worker creation form, optionally pre-filled with a name. Use this when the user says they want to add, create, or register a new worker/employee.',
+        description: 'Create and save a new worker directly to the database. You MUST collect all required parameters from the user first.',
         parameters: {
             type: 'object',
             properties: {
-                ime: { type: 'string', description: 'First name (ime) of the new worker, if mentioned' },
-                prezime: { type: 'string', description: 'Last name (prezime) of the new worker, if mentioned' },
+                ime: { type: 'string', description: 'First name (ime)' },
+                prezime: { type: 'string', description: 'Last name (prezime)' },
+                oib: { type: 'string', description: 'OIB or JMBG number. Must be provided by user.' },
+                datumZaposlenja: { type: 'string', description: 'Employment start date (YYYY-MM-DD).' },
             },
+            required: ['ime', 'prezime', 'oib', 'datumZaposlenja']
         },
     },
     {
         name: 'report_injury',
-        description: 'Open the injury report form pre-filled with a worker. Use when the user says a worker had an injury, accident, or work incident. The date defaults to today if not specified.',
+        description: 'Create and save an injury report (Obrada Povrede OIR-1) directly to the database.',
         parameters: {
             type: 'object',
             properties: {
                 worker_name: { type: 'string', description: 'Full name of the injured worker' },
-                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA (SVI AKTIVNI RADNICI section)' },
-                datum: { type: 'string', description: 'Date of injury in YYYY-MM-DD format, defaults to today' },
-                tip: { type: 'string', description: 'Injury type: laka (minor), teska (severe), or smrtna (fatal). Default: laka' },
+                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA' },
+                datum: { type: 'string', description: 'Date of injury in YYYY-MM-DD format.' },
+                tip: { type: 'string', description: 'Injury type: laka (minor), teska (severe), or smrtna (fatal).' },
+                opis: { type: 'string', description: 'Brief description of what happened, provided by user.' }
             },
-            required: ['worker_name'],
+            required: ['worker_name', 'worker_id', 'datum', 'tip', 'opis'],
         },
     },
     {
         name: 'add_certificate',
-        description: 'Open the certificate creation form pre-filled with worker and certificate details. Use when user wants to add a certificate, training, or medical fitness record for a worker.',
+        description: 'Create and save a certificate, training, or medical fitness record directly to the database.',
         parameters: {
             type: 'object',
             properties: {
                 worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA' },
                 worker_name: { type: 'string', description: 'Full name of the worker' },
-                tipUvjerenja: { type: 'string', description: 'Certificate type name. For fire protection use "PP - Osposobljenost za gašenje požara". Match to available types in the app.' },
-                datum: { type: 'string', description: 'Issue date in YYYY-MM-DD format. Default: today.' },
-                vrijediDo: { type: 'string', description: 'Expiry date in YYYY-MM-DD format. Calculate from datum + duration if user specifies (e.g. "2 years" = datum + 730 days).' },
+                tipUvjerenja: { type: 'string', description: 'Certificate type name.' },
+                datum: { type: 'string', description: 'Issue date in YYYY-MM-DD format.' },
+                vrijediDo: { type: 'string', description: 'Expiry date in YYYY-MM-DD format.' },
             },
-            required: ['worker_name'],
+            required: ['worker_id', 'worker_name', 'tipUvjerenja', 'datum', 'vrijediDo'],
         },
     },
     {
@@ -720,8 +724,23 @@ export default function AIAssistant() {
 
         updateBadge();
         window.addEventListener('appSettingsUpdated', updateBadge);
-        return () => window.removeEventListener('appSettingsUpdated', updateBadge);
-    }, [pathname]);
+
+        // Listen for files sent from other components (like Archive)
+        const handleLoadFile = (e) => {
+            const { name, type, data, size } = e.detail;
+            setAttachments([{ name, type, data, preview: null }]);
+            setIsOpen(true);
+            setIsMinimized(false);
+            const msg = lang === 'bs' ? `Prikačio sam datoteku **${name}**. Şta želiš da uradim s njom?` : `I attached **${name}**. What should I do with it?`;
+            setMessages(prev => [...prev, { role: 'assistant', content: msg, timestamp: new Date() }]);
+        };
+        window.addEventListener('ziaLoadFile', handleLoadFile);
+
+        return () => {
+            window.removeEventListener('appSettingsUpdated', updateBadge);
+            window.removeEventListener('ziaLoadFile', handleLoadFile);
+        };
+    }, [pathname, lang]);
 
     // Cleanup retry timer on unmount
     useEffect(() => {
@@ -828,33 +847,44 @@ export default function AIAssistant() {
             return { success: true, message: `Opening dispatch for ${args.questionnaire_name}` };
         }
         if (name === 'create_new_worker') {
-            const params = new URLSearchParams({ zia_new: '1' });
-            if (args.ime) params.set('ime', args.ime);
-            if (args.prezime) params.set('prezime', args.prezime);
-            router.push(`/dashboard/workers?${params.toString()}`);
-            setIsMinimized(true);
-            return { success: true, message: `Opening new worker form` };
+            try {
+                const { create: createRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const newWorker = createRecord(COLS.WORKERS, {
+                    ime: args.ime,
+                    prezime: args.prezime,
+                    identifikacijskiBroj: args.oib || '',
+                    datumZaposlenja: args.datumZaposlenja || new Date().toISOString().split('T')[0],
+                    oib: args.oib || '',
+                    aktivan: true
+                });
+                return { success: true, message: `Radnik "${args.ime} ${args.prezime}" kreiran. [Otvori Profil](/dashboard/workers/edit/${newWorker.id})` };
+            } catch (e) { return { error: e.message }; }
         }
         if (name === 'report_injury') {
-            const today = new Date().toISOString().split('T')[0];
-            const params = new URLSearchParams({ zia_new: '1' });
-            if (args.worker_name) params.set('radnikIme', args.worker_name);
-            if (args.worker_id) params.set('radnikId', args.worker_id);
-            params.set('datum', args.datum || today);
-            if (args.tip) params.set('tip', args.tip);
-            router.push(`/dashboard/injuries?${params.toString()}`);
-            setIsMinimized(true);
-            return { success: true, message: `Opening injury report for ${args.worker_name}` };
+            try {
+                const { create: createRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const newInjury = createRecord(COLS.INJURIES, {
+                    radnikId: args.worker_id,
+                    radnikIme: args.worker_name,
+                    datum: args.datum,
+                    tip: args.tip,
+                    opisDogadaja: args.opis || '',
+                    status: 'otvorena'
+                });
+                return { success: true, message: `Prijava povrede za "${args.worker_name}" kreirana. [Otvori Prijavu](/dashboard/injuries/edit/${newInjury.id})` };
+            } catch (e) { return { error: e.message }; }
         }
         if (name === 'add_certificate') {
-            const params = new URLSearchParams();
-            if (args.worker_id) params.set('workerId', args.worker_id);
-            if (args.tipUvjerenja) params.set('tipUvjerenja', args.tipUvjerenja);
-            if (args.datum) params.set('datum', args.datum);
-            if (args.vrijediDo) params.set('vrijediDo', args.vrijediDo);
-            router.push(`/dashboard/worker-certificates/create?${params.toString()}`);
-            setIsMinimized(true);
-            return { success: true, message: `Opening certificate form for ${args.worker_name}` };
+            try {
+                const { create: createRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const newCert = createRecord(COLS.CERTIFICATES, {
+                    workerId: args.worker_id,
+                    tipUvjerenja: args.tipUvjerenja,
+                    datum: args.datum,
+                    vrijediDo: args.vrijediDo,
+                });
+                return { success: true, message: `Uvjerenje "${args.tipUvjerenja}" dodano radniku "${args.worker_name}". [Otvori Uvjerenja](/dashboard/worker-certificates/edit/${newCert.id})` };
+            } catch (e) { return { error: e.message }; }
         }
         if (name === 'assign_ppe') {
             try {
@@ -1080,7 +1110,11 @@ export default function AIAssistant() {
     const handleFilesSelected = useCallback((files) => {
         Array.from(files).forEach(file => {
             const ok = file.type.startsWith('image/') || file.type === 'application/pdf' || file.type.startsWith('text/');
-            if (!ok || file.size > 20_000_000) return; // 20 MB max
+            // Keep under 4MB to avoid Vercel 4.5MB Serverless Function payload limits
+            if (!ok || file.size > 4_000_000) {
+                alert(lang === 'bs' ? `Fajl ${file.name} je prevelik (Maks 4MB) ili format nije podržan.` : `File ${file.name} is too large (Max 4MB) or format not supported.`);
+                return;
+            }
             const reader = new FileReader();
             reader.onload = (e) => {
                 const dataUrl = e.target.result;

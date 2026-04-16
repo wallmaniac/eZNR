@@ -108,3 +108,19 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
         throw new Error(firebaseError.message || 'Nepoznata greška pri analizi');
     }
 };
+
+export const apiGenerateRiskTable = async (jobTitle, companyName, industry) => {
+    try {
+        const res = await fetch('/api/risk-ai', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ jobTitle, companyName, industry })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Server error');
+        if (!data.items) throw new Error('Invalid JSON schema received from AI');
+        return data.items;
+    } catch (err) {
+        throw new Error(err.message || 'Nepoznata greška pri generisanju rizika');
+    }
+};
