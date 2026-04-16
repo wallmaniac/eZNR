@@ -392,7 +392,7 @@ function WorkerCertificatesInner() {
                         </td>
                         <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px', gap: 6, width: 'fit-content', margin: '0 auto' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px', gap: 6, width: 'fit-content', margin: '0 auto' }}>
                             <div>
                               <button
                                 onClick={() => handleEdit(r.id)}
@@ -434,34 +434,19 @@ function WorkerCertificatesInner() {
                                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.08)'; }}
                               >🖨️</button>
                             </div>
-                            <div>
-                              {r.isExpired && (
-                                <button
-                                  onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}
-                                  title={bs ? 'Obnovi uvjerenje (nova serija)' : 'Renew certificate (new entry)'}
-                                  style={{
-                                    background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6,
-                                    cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontSize: '0.85rem', color: 'var(--secondary)', transition: 'all 0.15s', width: '100%', height: 28,
-                                  }}
-                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
-                                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
-                                >📋</button>
-                              )}
-                            </div>
-                            {/* Clone / Copy certificate */}
+                            {/* Renew / Copy certificate (Available on all rows) */}
                             <div>
                               <button
-                                onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}`)}
-                                title={bs ? 'Kloniraj/kopiraj ovo uvjerenje' : 'Clone/copy this certificate'}
+                                onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}
+                                title={bs ? 'Obnovi/kopiraj uvjerenje' : 'Renew/copy certificate'}
                                 style={{
-                                  background: 'none', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 6,
+                                  background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6,
                                   cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: '0.85rem', color: '#10B981', transition: 'all 0.15s', width: '100%', height: 28, opacity: 0.8
+                                  fontSize: '0.85rem', color: 'var(--secondary)', transition: 'all 0.15s', width: '100%', height: 28,
                                 }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; e.currentTarget.style.opacity = '1'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.opacity = '0.8'; }}
-                              >📑</button>
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
+                              >📋</button>
                             </div>
 
                             {actionMenuId === r.id && (
