@@ -2,12 +2,10 @@
 
 // ============================================================================
 // EMAIL SERVICE — Resend dispatcher
-// Calls /api/send-email which uses Resend to send styled HTML emails.
-// No client configuration required — zero setup for end users.
+// Calls Firebase sendEmail function via server-side proxy.
 // ============================================================================
 
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import app from '@/lib/firebase';
+import { callFirebaseFunction } from '@/lib/firebaseCallable';
 
 /**
  * Email is always configured — Resend API key is set server-side.
@@ -30,10 +28,7 @@ export async function sendEmail({
     isTraining = false,
 }) {
     try {
-        const functions = getFunctions(app, 'europe-west1');
-        const callable = httpsCallable(functions, 'sendEmail');
-        
-        const res = await callable({
+        const res = await callFirebaseFunction('sendEmail', {
             toEmail,
             toName,
             questionnaireName,
@@ -44,7 +39,7 @@ export async function sendEmail({
             isTraining,
         });
 
-        return res.data.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
+        return res.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
     } catch (err) {
         return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }
@@ -119,10 +114,7 @@ export async function sendReminderEmail({
     isTraining = false,
 }) {
     try {
-        const functions = getFunctions(app, 'europe-west1');
-        const callable = httpsCallable(functions, 'sendEmail');
-        
-        const res = await callable({
+        const res = await callFirebaseFunction('sendEmail', {
             toEmail,
             toName,
             questionnaireName,
@@ -134,7 +126,7 @@ export async function sendReminderEmail({
             isReminder: true,
         });
 
-        return res.data.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
+        return res.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
     } catch (err) {
         return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }

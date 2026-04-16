@@ -1,9 +1,9 @@
 // src/lib/trainingsAI.js
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import app from '@/lib/firebase';
+import { callFirebaseFunction } from '@/lib/firebaseCallable';
+
+/**
  * trainingsAI.js — Library bridge for AI & parser endpoints within the Trainings module.
- * 
- * Extracts API logic from the UI (trainings/page.js) to improve maintainability.
+ * Uses server-side proxy to avoid Firebase CORS/IAM issues.
  */
 
 /**
@@ -14,16 +14,13 @@ import app from '@/lib/firebase';
 export async function apiGenerateQuiz(slides) {
     try {
         const payload = slides.map(s => ({ naslov: s.naslov || '', sadrzaj: s.sadrzaj || '' }));
-        const functions = getFunctions(app, 'europe-west1');
-        const callableGenerateQuiz = httpsCallable(functions, 'generateQuiz');
-        const res = await callableGenerateQuiz({ slides: payload });
-        return res.data; 
+        const res = await callFirebaseFunction('generateQuiz', { slides: payload });
+        return res;
     } catch (err) {
         console.error('[trainingsAI] apiGenerateQuiz error:', err);
         return { error: err.message };
     }
 }
-
 
 /**
  * Uploads a Presentation (PDF or PPTX) to be parsed into eZNR slide format.
@@ -39,13 +36,8 @@ export async function apiParsePresentation(file) {
             reader.readAsDataURL(file);
         });
 
-        const functions = getFunctions(app, 'europe-west1');
-        const callable = httpsCallable(functions, 'parsePresentation');
-        const res = await callable({ base64Data, filename: file.name });
-        
-        const data = res.data;
+        const data = await callFirebaseFunction('parsePresentation', { base64Data, filename: file.name });
         if (data.error) throw new Error(data.error);
-
         return data;
     } catch (err) {
         console.error('[trainingsAI] apiParsePresentation error:', err);

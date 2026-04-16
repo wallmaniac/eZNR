@@ -1,12 +1,8 @@
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import app from '@/lib/firebase';
+import { callFirebaseFunction } from '@/lib/firebaseCallable';
 
 export async function apiGenerateSistematizacija(data) {
     try {
-        const functions = getFunctions(app, 'europe-west1');
-        const callableSist = httpsCallable(functions, 'generateSistematizacija');
-        const res = await callableSist(data);
-        const result = res.data;
+        const result = await callFirebaseFunction('generateSistematizacija', data);
         if (!result.success || !result.sistematizacija) throw new Error(result.error || 'Nepoznata greška pri generiranju.');
         return { data: result.sistematizacija };
     } catch (err) {
@@ -17,10 +13,7 @@ export async function apiGenerateSistematizacija(data) {
 
 export async function apiParseSistematizacija(documentText, workplaceName) {
     try {
-        const functions = getFunctions(app, 'europe-west1');
-        const callable = httpsCallable(functions, 'parseSistematizacija');
-        const res = await callable({ documentText, workplaceName });
-        const result = res.data;
+        const result = await callFirebaseFunction('parseSistematizacija', { documentText, workplaceName });
         if (!result.success || !result.sistematizacija) throw new Error(result.error || 'Neuspjelo parsiranje dokumenta.');
         return { data: result.sistematizacija };
     } catch (err) {
