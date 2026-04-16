@@ -81,7 +81,10 @@ export async function POST(req) {
                 }
 
                 const data = await res.json();
-                const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const allParts = data.candidates?.[0]?.content?.parts ?? [];
+                // Skip thought tokens (Gemini 2.5 Flash returns thinking first)
+                const outputText = allParts.find(p => !p.thought && p.text)?.text
+                    ?? allParts.find(p => p.text)?.text;
 
                 if (!outputText) throw new Error("No output text from Gemini");
 
