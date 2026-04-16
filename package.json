@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -12,6 +12,7 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "@ducanh2912/next-pwa": "^10.2.9",
     "@hello-pangea/dnd": "^18.0.1",
     "docx": "^9.6.1",
     "docxtemplater": "^3.68.3",

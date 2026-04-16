@@ -48,3 +48,8 @@ create_pages.py
 next-env.d.ts
 
 .vercel
+
+# PWA
+public/sw.js
+public/workbox-*.js
+public/swe-worker-*.js

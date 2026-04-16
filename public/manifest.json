@@ -1,0 +1,18 @@
+{
+  "name": "eZNR — Zaštita na radu",
+  "short_name": "eZNR",
+  "description": "Digitalna platforma za zaštitu na radu i zaštitu od požara u Bosni i Hercegovini.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#121212",
+  "theme_color": "#121212",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

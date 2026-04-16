@@ -28,6 +28,11 @@ export const metadata = {
     description: 'Vodite evidencije, upravljajte dokumentacijom i osigurajte usklađenost sa zakonom o zaštiti na radu u BiH.',
     images: ['/logo-full.png'],
   },
+  manifest: '/manifest.json',
+};
+
+export const viewport = {
+  themeColor: '#121212',
 };
 
 export default function RootLayout({ children }) {
