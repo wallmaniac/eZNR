@@ -26,6 +26,9 @@ const withPWA = withPWAInit({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   swcMinify: true,
+  fallbacks: {
+    document: "/~offline",
+  }
 });
 
 export default withPWA(nextConfig);
