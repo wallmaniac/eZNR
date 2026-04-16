@@ -187,7 +187,24 @@ export default function ReferralRA1Page() {
       const rec = referrals.find(r => r.id === openId);
       if (rec) handleEdit(rec);
     }
-  }, [searchParams, referrals]);
+    
+    // Auto-fill worker if opening new form via Zia/Query
+    if (searchParams?.get('openNew') === '1' && searchParams?.get('workerId') && workers.length > 0 && orgUnits.length > 0 && workplaces.length > 0) {
+        const wId = searchParams.get('workerId');
+        if (formData.workerId !== wId) {
+            const w = workers.find(wk => wk.id === wId);
+            if (w) {
+                const wp = workplaces.find(p => p.id === w.radnoMjestoId);
+                setFormData(prev => ({
+                    ...prev,
+                    workerId: w.id,
+                    posloviZaKoje: wp?.naziv || '',
+                    ukupniRadniStaz: w.ukupniStaz || w.stazDoDolaska || '',
+                }));
+            }
+        }
+    }
+  }, [searchParams, referrals, workers, orgUnits, workplaces]);
   const filteredRecords = search
     ? referrals.filter(r => r.broj?.toLowerCase().includes(search.toLowerCase()))
     : referrals;

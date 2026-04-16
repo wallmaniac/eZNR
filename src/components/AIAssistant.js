@@ -484,6 +484,20 @@ const ZIA_TOOLS = [
         },
     },
     {
+        name: 'open_creation_form',
+        description: 'Navigate to a specific page AND open its "New Item" or "Create" form immediately. Use this when the user specifically asks to create, initiate, or make a new document or record. Supports: uputnica, bolovanje, povreda, vozilo, etc.',
+        parameters: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: 'App path WITHOUT query params, e.g. /dashboard/referral-ra1, /dashboard/injuries, /dashboard/medical-exams, /dashboard/diseases' },
+                worker_id: { type: 'string', description: 'Optional. If creating an item for a specific worker, look up their ID from LIVE DATA and provide it.' },
+                worker_name: { type: 'string', description: 'Optional. Full name of the worker for the confirmation message.' },
+                reason: { type: 'string', description: 'One-sentence explanation shown to the user' },
+            },
+            required: ['path', 'reason'],
+        },
+    },
+    {
         name: 'open_dispatch_modal',
         description: 'Navigate to the Questionnaires page and trigger the dispatch modal so the officer can send a questionnaire to workers. Use when the user wants to send a questionnaire.',
         parameters: {
@@ -878,6 +892,16 @@ export default function AIAssistant() {
             router.push(args.path);
             setIsMinimized(true);
             return { success: true, message: args.reason };
+        }
+        if (name === 'open_creation_form') {
+            const url = new URL(args.path, window.location.origin);
+            url.searchParams.set('openNew', '1');
+            if (args.worker_id) {
+                url.searchParams.set('workerId', args.worker_id);
+            }
+            router.push(url.pathname + url.search);
+            setIsMinimized(true);
+            return { success: true, message: `Opening creation form at ${args.path}${args.worker_name ? ` for ${args.worker_name}` : ''}` };
         }
         if (name === 'open_dispatch_modal') {
             // Store intent for the questionnaires page to pick up
