@@ -13,6 +13,8 @@ import {
 } from '@/lib/firebaseSync';
 import { sendBatchEmails } from '@/lib/emailService';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
+import { apiGenerateQuiz, apiParsePresentation } from '@/lib/trainingsAI';
+
 
 /* ═══════════════════════════════════════════════
    Obuke i prezentacije — Training Module Builder
