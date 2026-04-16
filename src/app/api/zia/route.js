@@ -5,7 +5,7 @@
 
 export const maxDuration = 60; // Vercel function timeout
 
-const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-flash-latest'];
 
 // Simple in-memory rate limiter
 const rateMap = new Map();

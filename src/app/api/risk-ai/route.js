@@ -42,7 +42,7 @@ export async function POST(req) {
         if (companyName) prompt += `Kompanija: ${companyName}\n`;
         if (industry) prompt += `Djelatnost: ${industry}\n`;
 
-        const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
+        const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-flash-latest'];
         let lastErrStr = null;
 
         for (const model of MODELS) {
