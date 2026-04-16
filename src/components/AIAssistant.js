@@ -693,11 +693,13 @@ export default function AIAssistant() {
 
     // Is the screen mobile-sized?
     const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 768;
-
     const messagesEndRef = useRef(null);
     const inputRef = useRef(null);
     const fileInputRef = useRef(null);
     const chatHistoryRef = useRef([]); // keep full history for context
+    const recognitionRef = useRef(null);
+    const [isRecording, setIsRecording] = useState(false);
+
     const retryTimerRef = useRef(null);
     const pendingRetryRef = useRef(null); // stores { text, history } for auto-retry
     const retryAttemptRef = useRef(0);    // counts how many auto-retries done
@@ -1136,6 +1138,44 @@ export default function AIAssistant() {
             sendMessage(inputValue);
         }
     }, [inputValue, sendMessage]);
+
+    // ── Microphone recording (Speech-to-Text) ─────────────────────────────────
+    const handleMicClick = useCallback(() => {
+        if (isRecording) {
+            recognitionRef.current?.stop();
+            setIsRecording(false);
+            return;
+        }
+        
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert(lang === 'bs' ? 'Vaš preglednik ne podržava glasovni unos (preporučujemo Chrome/Edge).' : 'Your browser does not support speech recognition (use Chrome/Edge).');
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
+        recognition.interimResults = true;
+        recognition.continuous = false;
+        
+        const startValue = inputValue;
+
+        recognition.onstart = () => setIsRecording(true);
+        recognition.onresult = (e) => {
+            const transcript = Array.from(e.results)
+                .map(res => res[0].transcript)
+                .join('');
+            setInputValue(startValue ? startValue + ' ' + transcript : transcript);
+        };
+        recognition.onerror = (e) => {
+            console.error('Speech recognition error', e.error);
+            setIsRecording(false);
+        };
+        recognition.onend = () => setIsRecording(false);
+
+        recognitionRef.current = recognition;
+        recognition.start();
+    }, [isRecording, inputValue, lang]);
 
     const handleNavLink = useCallback((path) => {
         router.push(path);
