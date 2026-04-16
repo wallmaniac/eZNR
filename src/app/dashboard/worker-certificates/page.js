@@ -391,18 +391,19 @@ function WorkerCertificatesInner() {
                           {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
                         </td>
                         <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
-                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '34px 34px 34px', gap: 4, width: 'fit-content', margin: '0 auto' }}>
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px', gap: 6, width: 'fit-content', margin: '0 auto' }}>
                             <div>
                               <button
                                 onClick={() => handleEdit(r.id)}
                                 disabled={isNavigating}
-                                title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
+                                title={bs ? 'Otvori/Uredi uvjerenje' : 'Open/Edit certificate'}
                                 style={{
                                   background: 'none', border: '1px solid var(--border)', borderRadius: 6,
-                                  cursor: isNavigating ? 'wait' : 'pointer', padding: '4px 8px',
-                                  fontSize: '1rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
-                                  transition: 'all 0.15s', minWidth: 34, width: '100%',
+                                  cursor: isNavigating ? 'wait' : 'pointer', padding: 0,
+                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '0.85rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
+                                  transition: 'all 0.15s', width: '100%', height: 28,
                                   borderColor: isNavigating ? 'var(--primary)' : undefined,
                                 }}
                                 onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'rgba(0,191,166,0.07)'; } }}
@@ -426,7 +427,8 @@ function WorkerCertificatesInner() {
                                 title={bs ? 'Isprintaj ovo uvjerenje' : 'Print this certificate'}
                                 style={{
                                   background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.25)', borderRadius: 6,
-                                  cursor: 'pointer', padding: '4px 8px', fontSize: '1rem', color: 'var(--primary)', transition: 'all 0.15s', minWidth: 34, width: '100%',
+                                  cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '0.85rem', color: 'var(--primary)', transition: 'all 0.15s', width: '100%', height: 28,
                                 }}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.2)'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.08)'; }}
@@ -439,12 +441,27 @@ function WorkerCertificatesInner() {
                                   title={bs ? 'Obnovi uvjerenje (nova serija)' : 'Renew certificate (new entry)'}
                                   style={{
                                     background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6,
-                                    cursor: 'pointer', padding: '4px 8px', fontSize: '1rem', color: 'var(--secondary)', transition: 'all 0.15s', minWidth: 34, width: '100%',
+                                    cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontSize: '0.85rem', color: 'var(--secondary)', transition: 'all 0.15s', width: '100%', height: 28,
                                   }}
                                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
                                   onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
                                 >📋</button>
                               )}
+                            </div>
+                            {/* Delete icon that shows explanation on hover */}
+                            <div>
+                              <button
+                                onClick={() => alert(bs ? 'Sigurnosno pravilo: Da biste obrisali uvjerenje, morate otići na "Meni > Radnici", ući u profil ovog radnika i tamo izbrisati certifikat.' : 'Security Rule: To delete a certificate, go to "Menu > Workers", open the worker profile, and delete it from there.')}
+                                title={bs ? 'Brisanje je onemogućeno ovdje radi sprječavanja grešaka. Brisanje se vrši unutar Profila Radnika.' : 'Deletion is disabled here to prevent mistakes. Go to the Worker Profile to delete.'}
+                                style={{
+                                  background: 'none', border: '1px dotted rgba(239,68,68,0.4)', borderRadius: 6,
+                                  cursor: 'help', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '0.85rem', color: 'var(--danger)', transition: 'all 0.15s', width: '100%', height: 28, opacity: 0.65
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.opacity = '1'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.opacity = '0.65'; }}
+                              >🗑️</button>
                             </div>
 
                             {actionMenuId === r.id && (
