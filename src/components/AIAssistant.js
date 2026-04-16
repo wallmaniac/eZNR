@@ -656,17 +656,16 @@ export default function AIAssistant() {
 
     // Drag handlers
     const handleDragStart = useCallback((clientX, clientY) => {
-        dragRef.current = { dragging: true, startX: clientX, startY: clientY, totalDist: 0 };
+        dragRef.current = { dragging: true, startX: clientX, startY: clientY, currentX: clientX, currentY: clientY };
     }, []);
 
     const handleDragMove = useCallback((clientX, clientY) => {
         const d = dragRef.current;
         if (!d.dragging) return;
-        const dx = clientX - d.startX;
-        const dy = clientY - d.startY;
-        d.totalDist += Math.abs(dx) + Math.abs(dy);
-        d.startX = clientX;
-        d.startY = clientY;
+        const dx = clientX - d.currentX;
+        const dy = clientY - d.currentY;
+        d.currentX = clientX;
+        d.currentY = clientY;
 
         setFabPos(prev => {
             const cur = prev || { x: window.innerWidth - 72, y: window.innerHeight - 130 };
@@ -689,8 +688,11 @@ export default function AIAssistant() {
         const d = dragRef.current;
         d.dragging = false;
 
+        // Calculate absolute distance from start to end (ignoring wiggles)
+        const dist = Math.abs(d.currentX - d.startX) + Math.abs(d.currentY - d.startY);
+
         // Only snap + persist if it was a real drag (not a click)
-        if (d.totalDist > 8) {
+        if (dist > 15) {
             setFabPos(prev => {
                 if (!prev) return prev;
                 const vw = window.innerWidth;
@@ -728,8 +730,10 @@ export default function AIAssistant() {
             handleDragEnd();
             window.removeEventListener('mousemove', onMove);
             window.removeEventListener('mouseup', onUp);
-            // If total dist < threshold, treat as click
-            if (dragRef.current.totalDist <= 8) {
+            // If drag distance < threshold, treat as click
+            const d = dragRef.current;
+            const dist = Math.abs(d.currentX - d.startX) + Math.abs(d.currentY - d.startY);
+            if (dist <= 15) {
                 if (isOpen) handleClose(); else handleOpen();
             }
         };
@@ -751,7 +755,9 @@ export default function AIAssistant() {
 
     const onFabTouchEnd = useCallback(() => {
         handleDragEnd();
-        if (dragRef.current.totalDist <= 8) {
+        const d = dragRef.current;
+        const dist = Math.abs(d.currentX - d.startX) + Math.abs(d.currentY - d.startY);
+        if (dist <= 15) {
             if (isOpen) handleClose(); else handleOpen();
         }
     }, [handleDragEnd, isOpen]);

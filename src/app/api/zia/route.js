@@ -5,7 +5,7 @@
 
 export const maxDuration = 60; // Vercel function timeout
 
-const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro'];
+const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
 
 // Simple in-memory rate limiter
 const rateMap = new Map();
@@ -85,7 +85,7 @@ export async function POST(request) {
                         const match = errMsg.match(/retry in ([\d.]+)s/i);
                         const retryAfter = match ? Math.ceil(parseFloat(match[1])) + 2 : 30;
                         return Response.json(
-                            { error: errMsg, isRateLimit: true, retryAfter },
+                            { error: 'AI serveri su trenutno preopterećeni zbog velike potražnje. Molimo pokušajte ponovo za par minuta.', isRateLimit: true, retryAfter },
                             { status: 429 }
                         );
                     }

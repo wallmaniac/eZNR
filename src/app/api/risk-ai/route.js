@@ -42,41 +42,61 @@ export async function POST(req) {
         if (companyName) prompt += `Kompanija: ${companyName}\n`;
         if (industry) prompt += `Djelatnost: ${industry}\n`;
 
-        const model = 'gemini-2.5-flash';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+        const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'];
+        let lastErrStr = null;
 
-        const geminiBody = {
-            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: {
-                responseMimeType: "application/json",
-                responseSchema: hazardSchema,
+        for (const model of MODELS) {
+            try {
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+                const geminiBody = {
+                    system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: hazardSchema,
+                    }
+                };
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(geminiBody),
+                });
+
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    let msg = errData.error?.message ?? `API error ${res.status}`;
+                    
+                    // Translate 503 Overloaded or 429 Quota errors
+                    if (res.status === 503 || res.status === 429 || msg.toLowerCase().includes('high demand') || msg.toLowerCase().includes('overloaded')) {
+                        msg = 'AI serveri su trenutno preopterećeni zbog velike potražnje. Molimo pokušajte ponovo za par minuta.';
+                    }
+
+                    if (model !== MODELS[MODELS.length - 1]) {
+                        lastErrStr = msg;
+                        continue; // try next model
+                    }
+                    throw new Error(msg);
+                }
+
+                const data = await res.json();
+                const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!outputText) throw new Error("No output text from Gemini");
+
+                const jsonResponse = JSON.parse(outputText);
+                
+                return new Response(JSON.stringify(jsonResponse), {
+                    status: 200,
+                    headers: { 'Content-Type': 'application/json' },
+                });
+            } catch (err) {
+                if (model === MODELS[MODELS.length - 1]) {
+                    throw err;
+                }
+                lastErrStr = err.message;
             }
-        };
-
-        const res = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geminiBody),
-        });
-
-        if (!res.ok) {
-            const errData = await res.json().catch(() => ({}));
-            throw new Error(errData.error?.message ?? `API error ${res.status}`);
-        }
-
-        const data = await res.json();
-        const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (!outputText) throw new Error("No output text from Gemini");
-
-        const jsonResponse = JSON.parse(outputText);
-
-        return new Response(JSON.stringify(jsonResponse), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
-        });
-
     } catch (error) {
         console.error('API /api/risk-ai error:', error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
