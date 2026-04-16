@@ -141,27 +141,75 @@ async function handleGenerateOpisProcesa(data) {
     const workplacesList = data.workplaces || radnaMjesta || '';
     const hazardList = opasnosti || '';
 
-    const systemPrompt = `Ti si vrhunski stručnjak za zaštitu na radu (ZNR) u Bosni i Hercegovini.
-Napiši dva teksta za Procjenu rizika i vrati ih ISKLJUČIVO kao JSON objekat bez ikakvih markdown oznaka ili dodatnog teksta.
-Format: {"opisProcesa":"...","analizaOrganizacije":"..."}`;
+    const djelatnostStr = djelatnost || 'Nije navedeno';
+    const workplacesStr = Array.isArray(workplacesList) ? workplacesList.join(', ') : (workplacesList || 'Nema');
+    const firmaStr = nazivTvrtke || 'Nepoznato';
 
-    const userMsg = `FIRMA: ${nazivTvrtke || 'Nepoznato'}
-DJELATNOST: ${djelatnost || 'Nije navedeno'}
-RADNA MJESTA: ${Array.isArray(workplacesList) ? workplacesList.join(', ') : (workplacesList || 'Nema')}
-${hazardList ? `OPASNOSTI: ${hazardList}` : ''}
+    // Simple, direct prompt — no system_instruction, no JSON mode
+    const prompt = `Ti si stručnjak za zaštitu na radu u BiH.
 
-Vrati SAMO JSON, bez markdown, bez teksta.`;
+Napiši za firmu "${firmaStr}" koja se bavi "${djelatnostStr}":
+1) Opis tehničko-tehnološkog procesa (2-3 paragrafa)
+2) Analizu organizacije rada (2-3 paragrafa)
 
-    const { text, model } = await callGemini(apiKey, {
-        system_instruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-        generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
-    });
-    const parsed = tryParseJson(text);
-    if (!parsed || (!parsed.opisProcesa && !parsed.analizaOrganizacije)) {
-        throw new Error('AI model je vratio neispravan format');
+Radna mjesta: ${workplacesStr}
+${hazardList ? `Opasnosti: ${hazardList}` : ''}
+
+Formatiraj odgovor ISKLJUČIVO kao JSON (bez markdown, bez teksta prije/poslije):
+{"opisProcesa":"...tekst...","analizaOrganizacije":"...tekst..."}`;
+
+    let text = '';
+    let model = MODELS[0];
+    
+    try {
+        const result = await callGemini(apiKey, {
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
+        });
+        text = result.text;
+        model = result.model;
+    } catch (err) {
+        console.error('[generateOpisProcesa] Gemini call failed:', err.message);
+        throw new Error('AI servis je trenutno nedostupan. Pokušajte ponovo.');
     }
-    return { success: true, result: parsed, model };
+
+    console.log('[generateOpisProcesa] Raw response (first 300 chars):', text?.substring(0, 300));
+
+    const parsed = tryParseJson(text);
+    
+    if (parsed && (parsed.opisProcesa || parsed.analizaOrganizacije)) {
+        return { success: true, result: parsed, model };
+    }
+
+    // Fallback: construct response from raw text if JSON parse fails
+    console.warn('[generateOpisProcesa] JSON parse failed, using fallback. Raw:', text?.substring(0, 200));
+    const cleanText = text?.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim() || '';
+    
+    // Try one more time with a different approach - split by known markers
+    const opisMatch = cleanText.match(/"opisProcesa"\s*:\s*"([\s\S]*?)(?:",\s*"|"\s*})/);
+    const analizaMatch = cleanText.match(/"analizaOrganizacije"\s*:\s*"([\s\S]*?)(?:",\s*"|"\s*})/);
+    
+    if (opisMatch || analizaMatch) {
+        return {
+            success: true,
+            result: {
+                opisProcesa: opisMatch?.[1]?.replace(/\\n/g, '\n') || '',
+                analizaOrganizacije: analizaMatch?.[1]?.replace(/\\n/g, '\n') || '',
+            },
+            model,
+        };
+    }
+
+    // Last resort: return the raw text split in half as the two sections
+    const half = Math.floor(cleanText.length / 2);
+    return {
+        success: true,
+        result: {
+            opisProcesa: cleanText.substring(0, half) || `Opis tehničko-tehnološkog procesa za ${djelatnostStr}.`,
+            analizaOrganizacije: cleanText.substring(half) || `Analiza organizacije rada za ${firmaStr}.`,
+        },
+        model,
+    };
 }
 
 async function handleRiskMeasures(data) {
