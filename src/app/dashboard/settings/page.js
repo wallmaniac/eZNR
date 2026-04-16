@@ -29,6 +29,8 @@ export default function SettingsPage() {
   const tabParam = searchParams.get('tab');
   const [activeTab, setActiveTab] = useState(tabParam || 'activity');
   const [saved, setSaved] = useState(false);
+  // Dirty-tracking: which tab has unsaved edits (null = clean)
+  const [dirtyTab, setDirtyTab] = useState(null);
   const [logoError, setLogoError] = useState('');
 
   // Profile state
@@ -126,9 +128,21 @@ export default function SettingsPage() {
     if (tabParam) setActiveTab(tabParam);
   }, [tabParam]);
 
+  // Warn on page unload if there are unsaved changes
+  useEffect(() => {
+    const handler = (e) => {
+      if (!dirtyTab) return;
+      e.preventDefault();
+      e.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirtyTab]);
+
   // NOTE: validTabs and currentTab are derived after the tabs array is defined below
 
   const showSaved = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  const clearDirty = () => setDirtyTab(null);
 
   const handleSaveProfile = () => {
     if (!user?.id) return;
@@ -139,7 +153,7 @@ export default function SettingsPage() {
       phone: profileData.phone,
     });
     login({ ...user, firstName: profileData.firstName, lastName: profileData.lastName, email: profileData.email });
-    showSaved();
+    clearDirty(); showSaved();
   };
 
   const handleChangePassword = () => {
@@ -170,7 +184,7 @@ export default function SettingsPage() {
   const handleSaveCompany = () => {
     if (!activeCompanyId) return;
     update(COLLECTIONS.COMPANIES, activeCompanyId, companyData);
-    showSaved();
+    clearDirty(); showSaved();
   };
 
   const handleSaveNotifSettings = async () => {
@@ -184,16 +198,19 @@ export default function SettingsPage() {
       await apiSaveNotifSettings(cId, notifSettings);
     }
 
-    showSaved();
+    clearDirty(); showSaved();
   };
 
   const handleSaveAppSettings = () => {
     saveAppSettings(appSettings);
-    showSaved();
+    clearDirty(); showSaved();
   };
 
-  const updateNotif = (key, value) => setNotifSettings(prev => ({ ...prev, [key]: value }));
-  const updateApp = (key, value) => setAppSettings(prev => ({ ...prev, [key]: value }));
+  const updateNotif = (key, value) => { setNotifSettings(prev => ({ ...prev, [key]: value })); setDirtyTab('notifications'); };
+  const updateApp = (key, value) => { setAppSettings(prev => ({ ...prev, [key]: value })); setDirtyTab('display'); };
+  // Dirty-aware setters for profile / company inline inputs
+  const setProfileDirty = (updater) => { setProfileData(updater); setDirtyTab('profile'); };
+  const setCompanyDirty = (updater) => { setCompanyData(updater); setDirtyTab('company'); };
 
   const handleRunSync = async () => {
     if (!activeCompanyId) return;
@@ -339,10 +356,32 @@ export default function SettingsPage() {
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
         {tabs.map(tb => (
-          <button key={tb.key} onClick={() => setActiveTab(tb.key)}
+          <button key={tb.key}
             className={`tab-btn ${currentTab === tb.key ? 'active' : ''}`}
+            onClick={async () => {
+              if (dirtyTab && dirtyTab !== tb.key) {
+                const saveFns = {
+                  notifications: handleSaveNotifSettings,
+                  display: handleSaveAppSettings,
+                  profile: handleSaveProfile,
+                  company: handleSaveCompany,
+                };
+                const shouldSave = window.confirm(
+                  lang === 'bs'
+                    ? 'Imate nesačuvane promjene. Sačuvati ih před odlaskom?'
+                    : 'You have unsaved changes. Save them before leaving?'
+                );
+                if (shouldSave && saveFns[dirtyTab]) {
+                  await saveFns[dirtyTab]();
+                } else {
+                  clearDirty();
+                }
+              }
+              setActiveTab(tb.key);
+            }}
           >
             {tb.icon} {tb.label}
+            {dirtyTab === tb.key && <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--warning)', marginLeft: 6, verticalAlign: 'middle', boxShadow: '0 0 4px var(--warning)' }} title="Nesačuvane promjene" />}
           </button>
         ))}
       </div>
@@ -382,19 +421,19 @@ export default function SettingsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
               <div className="form-group">
                 <label className="form-label">{t('firstName')}</label>
-                <input className="form-input" value={profileData.firstName} onChange={e => setProfileData(p => ({ ...p, firstName: e.target.value }))} />
+                <input className="form-input" value={profileData.firstName} onChange={e => setProfileDirty(p => ({ ...p, firstName: e.target.value }))} />
               </div>
               <div className="form-group">
                 <label className="form-label">{t('lastName')}</label>
-                <input className="form-input" value={profileData.lastName} onChange={e => setProfileData(p => ({ ...p, lastName: e.target.value }))} />
+                <input className="form-input" value={profileData.lastName} onChange={e => setProfileDirty(p => ({ ...p, lastName: e.target.value }))} />
               </div>
               <div className="form-group">
                 <label className="form-label">Email</label>
-                <input className="form-input" type="email" value={profileData.email} onChange={e => setProfileData(p => ({ ...p, email: e.target.value }))} />
+                <input className="form-input" type="email" value={profileData.email} onChange={e => setProfileDirty(p => ({ ...p, email: e.target.value }))} />
               </div>
               <div className="form-group">
                 <label className="form-label">{t('phone')}</label>
-                <input className="form-input" value={profileData.phone} onChange={e => setProfileData(p => ({ ...p, phone: e.target.value }))} />
+                <input className="form-input" value={profileData.phone} onChange={e => setProfileDirty(p => ({ ...p, phone: e.target.value }))} />
               </div>
             </div>
             <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -441,16 +480,16 @@ export default function SettingsPage() {
             ) : (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Naziv firme' : 'Company name'}</label><input className="form-input" value={companyData.naziv} onChange={e => setCompanyData(p => ({ ...p, naziv: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Skraćeni naziv' : 'Short name'}</label><input className="form-input" value={companyData.skraceniNaziv} onChange={e => setCompanyData(p => ({ ...p, skraceniNaziv: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'ID broj / OIB' : 'ID number'}</label><input className="form-input" value={companyData.oib} onChange={e => setCompanyData(p => ({ ...p, oib: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{t('address')}</label><input className="form-input" value={companyData.adresa} onChange={e => setCompanyData(p => ({ ...p, adresa: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{t('city')}</label><input className="form-input" value={companyData.mjesto} onChange={e => setCompanyData(p => ({ ...p, mjesto: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Poštanski broj' : 'Postal code'}</label><input className="form-input" value={companyData.postanskiBroj} onChange={e => setCompanyData(p => ({ ...p, postanskiBroj: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{t('phone')}</label><input className="form-input" value={companyData.telefon} onChange={e => setCompanyData(p => ({ ...p, telefon: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={companyData.email} onChange={e => setCompanyData(p => ({ ...p, email: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Direktor' : 'Director'}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyData(p => ({ ...p, direktor: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyData(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Naziv firme' : 'Company name'}</label><input className="form-input" value={companyData.naziv} onChange={e => setCompanyDirty(p => ({ ...p, naziv: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Skraćeni naziv' : 'Short name'}</label><input className="form-input" value={companyData.skraceniNaziv} onChange={e => setCompanyDirty(p => ({ ...p, skraceniNaziv: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'ID broj / OIB' : 'ID number'}</label><input className="form-input" value={companyData.oib} onChange={e => setCompanyDirty(p => ({ ...p, oib: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('address')}</label><input className="form-input" value={companyData.adresa} onChange={e => setCompanyDirty(p => ({ ...p, adresa: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('city')}</label><input className="form-input" value={companyData.mjesto} onChange={e => setCompanyDirty(p => ({ ...p, mjesto: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Poštanski broj' : 'Postal code'}</label><input className="form-input" value={companyData.postanskiBroj} onChange={e => setCompanyDirty(p => ({ ...p, postanskiBroj: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('phone')}</label><input className="form-input" value={companyData.telefon} onChange={e => setCompanyDirty(p => ({ ...p, telefon: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={companyData.email} onChange={e => setCompanyDirty(p => ({ ...p, email: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Direktor' : 'Director'}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyDirty(p => ({ ...p, direktor: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyDirty(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
                 </div>
 
                 {isAdmin && allOfficersList.length > 0 && (
@@ -544,7 +583,19 @@ export default function SettingsPage() {
       {currentTab === 'notifications' && (
         <div className="card">
           <div className="card-body">
-            <h3 style={{ marginBottom: 8 }}>🔔 {lang === 'bs' ? 'Postavke obavijesti' : 'Notification Preferences'}</h3>
+            {/* Top save bar */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ margin: 0 }}>🔔 {lang === 'bs' ? 'Postavke obavijesti' : 'Notification Preferences'}</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {dirtyTab === 'notifications' && (
+                  <span style={{ fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600 }}>● {lang === 'bs' ? 'Nesačuvano' : 'Unsaved'}</span>
+                )}
+                <button className="btn btn-primary btn-sm" onClick={handleSaveNotifSettings}>
+                  💾 {lang === 'bs' ? 'Spremi' : 'Save'}
+                </button>
+                {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.85rem' }}>✅</span>}
+              </div>
+            </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 16 }}>
               {lang === 'bs' ? 'Odaberite koje obavijesti želite primati u aplikaciji.' : 'Choose which notifications you want to receive.'}
             </p>
