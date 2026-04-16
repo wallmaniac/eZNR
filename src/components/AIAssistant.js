@@ -398,7 +398,7 @@ Keep responses short and action-focused`;
 }
 
 // ─── Dynamic suggestion chips based on live data ────────────────────────────
-function buildDynamicSuggestions(lang) {
+function buildDynamicSuggestions(lang, pathname) {
     const chips = [];
     try {
         const get = (key) => getRawAll(key);
@@ -414,6 +414,7 @@ function buildDynamicSuggestions(lang) {
         const sickLeave = [...injuries, ...diseases].filter(i => i.bolovanje && i.status !== 'zatvorena');
         const overdueEq = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
 
+        // ALWAYS show urgent issues first
         if (expired.length > 0) chips.push(lang === 'bs'
             ? { label: `🔴 ${expired.length} istekla uvjerenja`, text: 'Koji radnici imaju istekla uvjerenja?' }
             : { label: `🔴 ${expired.length} expired certs`, text: 'Which workers have expired certificates?' });
@@ -426,21 +427,46 @@ function buildDynamicSuggestions(lang) {
         if (overdueEq.length > 0) chips.push(lang === 'bs'
             ? { label: `⚠️ ${overdueEq.length} pregleda opreme kasni`, text: 'Koja oprema ima prekoračen pregled?' }
             : { label: `⚠️ ${overdueEq.length} equipment overdue`, text: 'Which equipment has overdue inspection?' });
+
+        // Context-aware suggestions based on current page
+        if (pathname === '/dashboard/workers') {
+            chips.push(lang === 'bs' ? { label: '👷 Dodaj novog radnika', text: 'Otvori formu za dodavanje novog radnika.' } : { label: '👷 Add new worker', text: 'Open the form to add a new worker.' });
+            chips.push(lang === 'bs' ? { label: '📊 Statistika radnika', text: 'Koliko ukupno imamo radnika po odjelima?' } : { label: '📊 Worker stats', text: 'How many workers do we have per department?' });
+        } else if (pathname === '/dashboard/equipment') {
+            chips.push(lang === 'bs' ? { label: '📅 Idući pregledi', text: 'Kojoj opremi najprije ističe pregled?' } : { label: '📅 Upcoming exams', text: 'Which equipment needs inspection next?' });
+        } else if (pathname === '/dashboard/injuries') {
+            chips.push(lang === 'bs' ? { label: '🚑 Prijavi tešku povredu', text: 'Želim prijaviti tešku povredu na radu.' } : { label: '🚑 Report severe injury', text: 'I want to report a severe injury.' });
+            chips.push(lang === 'bs' ? { label: '📅 Promijeni godinu svima', text: 'Želim prebaciti sve povrede u 2026. godinu.' } : { label: '📅 Change all years', text: 'Set all injuries to year 2026.' });
+        } else if (pathname === '/dashboard/worker-ppe' || pathname === '/dashboard/ppe') {
+            chips.push(lang === 'bs' ? { label: '🦺 Zaduži šljem', text: 'Želim zadužiti zaštitni šljem radniku.' } : { label: '🦺 Assign helmet', text: 'I want to assign a safety helmet to a worker.' });
+            chips.push(lang === 'bs' ? { label: '🧤 Zaduži rukavice', text: 'Radnik je zadužio zaštitne rukavice.' } : { label: '🧤 Assign gloves', text: 'Worker received safety gloves.' });
+        } else if (pathname === '/dashboard/questionnaires') {
+            chips.push(lang === 'bs' ? { label: '📧 Pošalji anketu', text: 'Želim poslati upitnik radnicima.' } : { label: '📧 Send survey', text: 'I want to send a questionnaire to workers.' });
+        } else if (pathname === '/dashboard/archive') {
+            chips.push(lang === 'bs' ? { label: '📄 Analiza PDF-a', text: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.' } : { label: '📄 PDF Analysis', text: 'Analyze the contents of a document I upload.' });
+        }
+
     } catch { /* ignore */ }
 
-    // Always-available actions
-    if (lang === 'bs') {
-        chips.push({ label: '📧 Pošalji upitnik radnicima', text: 'Pošalji upitnik radnicima u određenom odjelu.' });
-        chips.push({ label: '📊 Pregled stanja', text: 'Daj mi pregled trenutnog stanja zaštite na radu.' });
-        chips.push({ label: '👷 Dodaj novog radnika', text: 'Otvori formu za dodavanje novog radnika.' });
-        chips.push({ label: '📋 Obavezna dokumentacija', text: 'Koja je obavezna dokumentacija za poslodavca?' });
-    } else {
-        chips.push({ label: '📧 Send questionnaire', text: 'Send a questionnaire to workers in a department.' });
-        chips.push({ label: '📊 Status overview', text: 'Give me a current occupational safety status overview.' });
-        chips.push({ label: '👷 Add new worker', text: 'Open the form to add a new worker.' });
-        chips.push({ label: '📋 Mandatory docs', text: 'What mandatory documentation is required for employers?' });
+    // Fallback actions if we don't have enough chips
+    if (chips.length < 4) {
+        if (lang === 'bs') {
+            chips.push({ label: '📊 Pregled stanja', text: 'Daj mi pregled trenutnog stanja zaštite na radu.' });
+            chips.push({ label: '📋 Obavezna dokumentacija', text: 'Koja je obavezna dokumentacija za poslodavca?' });
+            chips.push({ label: 'ℹ️ Šta sve možeš?', text: 'Šta sve mogu uraditi sa tobom?' });
+        } else {
+            chips.push({ label: '📊 Status overview', text: 'Give me a current occupational safety status overview.' });
+            chips.push({ label: '📋 Mandatory docs', text: 'What mandatory documentation is required for employers?' });
+            chips.push({ label: 'ℹ️ What can you do?', text: 'What can I do with you?' });
+        }
     }
-    return chips.slice(0, 6);
+    
+    // Shuffle the non-urgent context chips to keep it dynamic, but keep urgents at top
+    const urgents = chips.filter(c => c.label.includes('🔴') || c.label.includes('📜') || c.label.includes('🏥') || c.label.includes('⚠️'));
+    const others = chips.filter(c => !urgents.includes(c));
+    const shuffledOthers = others.sort(() => 0.5 - Math.random());
+    
+    return [...urgents, ...shuffledOthers].slice(0, 5);
 }
 
 // ─── Tool definitions for Gemini function calling ────────────────────────────
@@ -564,6 +590,38 @@ export default function AIAssistant() {
     const [attachments, setAttachments] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
     const [urgentCount, setUrgentCount] = useState(0); // badge on FAB
+    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+    const audioEnabledRef = useRef(false);
+
+    const toggleAudio = useCallback(() => {
+        setIsAudioEnabled(prev => {
+            const next = !prev;
+            audioEnabledRef.current = next;
+            if (!next && 'speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+            }
+            return next;
+        });
+    }, []);
+
+    const playTts = useCallback((text) => {
+        if (!audioEnabledRef.current || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel(); // Stop current speech
+        // Strip markdown, links, emojis, and nav components
+        const cleanText = text
+            .replace(/__NAV_LINK__.*?__END_NAV__/g, '')
+            .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // pure links to text
+            .replace(/[*#_]/g, '')
+            .replace(/[^\p{L}\p{N}\s.,!?'-]/gu, '') // remove emojis and weird symbols
+            .trim();
+        
+        if (!cleanText) return;
+
+        const utterance = new SpeechSynthesisUtterance(cleanText);
+        utterance.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
+        utterance.rate = 1.05;
+        window.speechSynthesis.speak(utterance);
+    }, [lang]);
 
     // ── Draggable FAB state ─────────────────────────────────────────────────
     const [fabPos, setFabPos] = useState(null); // { x, y } or null = default
@@ -1067,6 +1125,7 @@ export default function AIAssistant() {
                 if (isMinimized) setHasNewMessage(true);
                 retryAttemptRef.current = 0;
                 setIsLoading(false);
+                playTts(reply);
                 return;
             }
 
@@ -1077,6 +1136,7 @@ export default function AIAssistant() {
             if (isMinimized) setHasNewMessage(true);
             retryAttemptRef.current = 0;
             setIsLoading(false);
+            playTts(reply);
 
         } catch (err) {
             console.warn('Zia API error:', err.message);
@@ -1094,7 +1154,7 @@ export default function AIAssistant() {
             setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
             setIsLoading(false);
         }
-    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
+    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown, playTts]);
 
     // ── Proactive logic REMOVED — badge count instead ─────────────────────────
     // (urgentCount computed in separate useEffect above)
@@ -1198,6 +1258,7 @@ export default function AIAssistant() {
         setMessages([]);
         chatHistoryRef.current = [];
         setShowSuggestions(true);
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         // Re-show welcome
         const welcome = lang === 'bs'
             ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nMogu navigirati do stranica, pokrenuti slanje upitnika i analizirati vaše podatke. Šta trebate uraditi?`
@@ -1238,7 +1299,7 @@ export default function AIAssistant() {
         });
     };
 
-    const suggestions = buildDynamicSuggestions(lang);
+    const suggestions = buildDynamicSuggestions(lang, pathname);
 
     return (
         <>
@@ -1326,6 +1387,9 @@ export default function AIAssistant() {
                             </div>
                         </div>
                         <div style={chatStyles.headerActions}>
+                            <button onClick={toggleAudio} style={{...chatStyles.actionBtn, color: isAudioEnabled ? '#00BFA6' : (isDark ? '#888' : '#aaa') }} title={lang === 'bs' ? 'Uključi/isključi glasovni odgovor' : 'Toggle voice reply'}>
+                                {isAudioEnabled ? '🔊' : '🔇'}
+                            </button>
                             <button onClick={clearChat} style={chatStyles.actionBtn} title={lang === 'bs' ? 'Novi razgovor' : 'New conversation'}>↺</button>
                             <button onClick={handleMinimize} style={chatStyles.actionBtn} title={lang === 'bs' ? 'Minimiziraj' : 'Minimize'}>
                                 {isMinimized ? '▲' : '▼'}
