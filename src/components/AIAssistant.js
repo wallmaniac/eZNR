@@ -992,7 +992,7 @@ export default function AIAssistant() {
                 // Log to activity log
                 try { logPPEAssigned(newPpe, args.worker_name, null); } catch { }
 
-                router.push('/dashboard/worker-ppe');
+                router.push(`/dashboard/workers/edit/${resolvedId}?tab=ozo`);
                 setIsMinimized(true);
                 return { success: true, message: `OZO "${args.ppe_name}" dodijeljen${args.worker_name ? ` radniku ${args.worker_name}` : ''} (kol: ${args.kolicina || 1}, datum: ${args.datum || today})` };
             } catch (err) {
