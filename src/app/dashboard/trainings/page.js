@@ -71,8 +71,29 @@ export default function TrainingsPage() {
     const [copiedEmail, setCopiedEmail] = useState(null);
     const [reminderOpen, setReminderOpen] = useState(false);
     const [reminderTraining, setReminderTraining] = useState(null);
+    // Completion stats per training { [trainingId]: { total, completed } }
+    const [completionStats, setCompletionStats] = useState({});
 
-    const loadData = useCallback(() => setRecords(getAll(COLLECTIONS.TRAININGS)), []);
+    const loadData = useCallback(() => {
+        const recs = getAll(COLLECTIONS.TRAININGS);
+        setRecords(recs);
+        // Load completion stats for each training (async, non-blocking)
+        recs.forEach(tr => {
+            getSessionsForTraining(tr.id)
+                .then(sessions => {
+                    if (sessions && sessions.length > 0) {
+                        setCompletionStats(prev => ({
+                            ...prev,
+                            [tr.id]: {
+                                total: sessions.length,
+                                completed: sessions.filter(s => s.status === 'completed').length,
+                            },
+                        }));
+                    }
+                })
+                .catch(() => { /* ignore */ });
+        });
+    }, []);
     useEffect(() => {
         loadData();
         window.addEventListener('eznr:data-synced', loadData);
@@ -479,13 +500,14 @@ export default function TrainingsPage() {
                                         <th>Naziv obuke</th>
                                         <th>Slajdova</th>
                                         <th>Pitanja</th>
+                                        <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
                                         <th>Prag prolaza</th>
                                         <th>Kreirano</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filtered.length === 0 ? (
-                                        <tr><td colSpan={6} style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
+                                        <tr><td colSpan={7} style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
                                             <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>🎬</div>
                                             <div style={{ fontWeight: 600 }}>Nema kreiranih obuka</div>
                                             <div style={{ fontSize: '0.85rem', marginTop: 4 }}>Kliknite &quot;+ Nova obuka&quot; da kreirate prvu</div>
@@ -550,6 +572,22 @@ export default function TrainingsPage() {
                                             </td>
                                             <td><span style={{ fontWeight: 600 }}>{(r.slides || []).length}</span> slajdova</td>
                                             <td><span style={{ fontWeight: 600 }}>{(r.questions || []).length}</span> pitanja</td>
+                                            <td>
+                                                {completionStats[r.id] ? (() => {
+                                                    const cs = completionStats[r.id];
+                                                    const pct = cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
+                                                    return (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                            <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
+                                                                <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
+                                                            </div>
+                                                            <span style={{ fontSize: '0.78rem', fontWeight: 600, color: pct === 100 ? '#22c55e' : 'var(--text-muted)' }}>
+                                                                {cs.completed}/{cs.total}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })() : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>}
+                                            </td>
                                             <td><span style={{ padding: '2px 8px', borderRadius: 6, background: 'rgba(99,102,241,0.12)', color: '#6366f1', fontWeight: 700, fontSize: '0.8rem' }}>{r.prolazniPrag ?? 70}%</span></td>
                                             <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{r.createdAt ? new Date(r.createdAt).toLocaleDateString('hr-HR') : '—'}</td>
                                         </tr>
