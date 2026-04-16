@@ -145,18 +145,17 @@ async function handleGenerateOpisProcesa(data) {
     const workplacesStr = Array.isArray(workplacesList) ? workplacesList.join(', ') : (workplacesList || 'Nema');
     const firmaStr = nazivTvrtke || 'Nepoznato';
 
-    // Simple, direct prompt — no system_instruction, no JSON mode
     const prompt = `Ti si stručnjak za zaštitu na radu u BiH.
 
-Napiši za firmu "${firmaStr}" koja se bavi "${djelatnostStr}":
+Napiši dva teksta za firmu "${firmaStr}" koja se bavi "${djelatnostStr}":
 1) Opis tehničko-tehnološkog procesa (2-3 paragrafa)
 2) Analizu organizacije rada (2-3 paragrafa)
 
 Radna mjesta: ${workplacesStr}
 ${hazardList ? `Opasnosti: ${hazardList}` : ''}
 
-Formatiraj odgovor ISKLJUČIVO kao JSON (bez markdown, bez teksta prije/poslije):
-{"opisProcesa":"...tekst...","analizaOrganizacije":"...tekst..."}`;
+Vrati SAMO ovaj JSON objekat (nema dodatnog teksta):
+{"opisProcesa":"<samo tekst ovdje, ne JSON>","analizaOrganizacije":"<samo tekst ovdje, ne JSON>"}`;
 
     let text = '';
     let model = MODELS[0];
@@ -173,39 +172,47 @@ Formatiraj odgovor ISKLJUČIVO kao JSON (bez markdown, bez teksta prije/poslije)
         throw new Error('AI servis je trenutno nedostupan. Pokušajte ponovo.');
     }
 
-    console.log('[generateOpisProcesa] Raw response (first 300 chars):', text?.substring(0, 300));
+    console.log('[generateOpisProcesa] Raw (first 200):', text?.substring(0, 200));
 
-    const parsed = tryParseJson(text);
+    let parsed = tryParseJson(text);
     
-    if (parsed && (parsed.opisProcesa || parsed.analizaOrganizacije)) {
-        return { success: true, result: parsed, model };
+    // Unwrap double-nested: { opisProcesa: { opisProcesa: "...", ... } }
+    if (parsed && typeof parsed.opisProcesa === 'object' && parsed.opisProcesa !== null) {
+        const inner = parsed.opisProcesa;
+        parsed = { opisProcesa: inner.opisProcesa || '', analizaOrganizacije: parsed.analizaOrganizacije || inner.analizaOrganizacije || '' };
+    }
+    
+    // Unwrap double-encoded string: { opisProcesa: '{"opisProcesa":"..."}' }
+    if (parsed && typeof parsed.opisProcesa === 'string' && parsed.opisProcesa.trim().startsWith('{')) {
+        try {
+            const inner = JSON.parse(parsed.opisProcesa);
+            if (inner.opisProcesa) {
+                parsed = { opisProcesa: inner.opisProcesa || '', analizaOrganizacije: parsed.analizaOrganizacije || inner.analizaOrganizacije || '' };
+            }
+        } catch {}
     }
 
-    // Fallback: construct response from raw text if JSON parse fails
-    console.warn('[generateOpisProcesa] JSON parse failed, using fallback. Raw:', text?.substring(0, 200));
-    const cleanText = text?.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim() || '';
-    
-    // Try one more time with a different approach - split by known markers
-    const opisMatch = cleanText.match(/"opisProcesa"\s*:\s*"([\s\S]*?)(?:",\s*"|"\s*})/);
-    const analizaMatch = cleanText.match(/"analizaOrganizacije"\s*:\s*"([\s\S]*?)(?:",\s*"|"\s*})/);
-    
-    if (opisMatch || analizaMatch) {
+    // Ensure top-level fields exist
+    if (parsed && (parsed.opisProcesa || parsed.analizaOrganizacije)) {
         return {
             success: true,
             result: {
-                opisProcesa: opisMatch?.[1]?.replace(/\\n/g, '\n') || '',
-                analizaOrganizacije: analizaMatch?.[1]?.replace(/\\n/g, '\n') || '',
+                // Force strings — NEVER return objects to the client (causes React crash)
+                opisProcesa: String(parsed.opisProcesa || ''),
+                analizaOrganizacije: String(parsed.analizaOrganizacije || ''),
             },
             model,
         };
     }
 
-    // Last resort: return the raw text split in half as the two sections
+    // Last resort: split raw text
+    console.warn('[generateOpisProcesa] All parse strategies failed, using raw text split');
+    const cleanText = text?.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim() || '';
     const half = Math.floor(cleanText.length / 2);
     return {
         success: true,
         result: {
-            opisProcesa: cleanText.substring(0, half) || `Opis tehničko-tehnološkog procesa za ${djelatnostStr}.`,
+            opisProcesa: cleanText.substring(0, half) || `Opis procesa za ${djelatnostStr}.`,
             analizaOrganizacije: cleanText.substring(half) || `Analiza organizacije rada za ${firmaStr}.`,
         },
         model,
@@ -213,6 +220,7 @@ Formatiraj odgovor ISKLJUČIVO kao JSON (bez markdown, bez teksta prije/poslije)
 }
 
 async function handleRiskMeasures(data) {
+
     const apiKey = getApiKey();
     const { hazardName, hazardCode, workplaceName, opisOpasnosti, vjerovatnoca, posljedica, postojeceMjere, documentData, documentMimeType } = data;
 
