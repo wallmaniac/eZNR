@@ -201,7 +201,10 @@ export default function TrainingsPage() {
         setGeneratingQuiz(true);
         try {
             const data = await apiGenerateQuiz(slides);
-            if (data.error) throw new Error(data.error);
+            if (data.error) {
+                await alert(data.error || 'Greška pri generiranju testa.');
+                return;
+            }
 
             if (data.questions?.length > 0) {
                 const withIds = data.questions.map(q => ({ ...q, id: genId() }));

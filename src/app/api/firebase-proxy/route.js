@@ -303,10 +303,13 @@ async function handleAnalyzeQuestionnaire(data) {
     const { text, model } = await callGemini(apiKey, {
         system_instruction: { parts: [{ text: 'Ti si stručnjak za ZNR u BiH. Analiziraj odgovore i generiši stavke procjene rizika. Vrati SAMO JSON bez markdown:\n{"items":[{"opisOpasnosti":"...","kategorija":"fizička","vjerovatnoca":3,"posljedica":4,"postojeceMjere":"...","predlozeneMjere":"...","vjerovatnocaNakon":2,"posljedlicaNakon":3,"rokProvedbe":"30","obrazlozenje":"..."}],"ukupniKomentar":"..."}' }] },
         contents: [{ role: 'user', parts: [{ text: `RADNO MJESTO: ${workplaceName || 'Nepoznato'}\n\nODGOVORI:\n${responseSummary}\n\nGeneriši 5-8 stavki. Vrati SAMO JSON.` }] }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 16384 },
+        generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
     });
     const parsed = tryParseJson(text);
-    if (!parsed) throw new Error('AI nije vratio validnu analizu');
+    if (!parsed) {
+        console.error('[analyzeQuestionnaire] Parse failed. Raw:', text?.substring(0, 200));
+        return { success: false, analysis: null, error: 'AI nije mogao analizirati upitnik. Pokušajte ponovo.' };
+    }
     return { success: true, analysis: parsed, model };
 }
 
@@ -325,7 +328,12 @@ async function handleGenerateSistematizacija(data) {
         generationConfig: { temperature: 0.4, maxOutputTokens: 4096 },
     });
     const parsed = tryParseJson(text);
-    if (!parsed?.opisPoslova) throw new Error('AI je vratio neispravan format sistematizacije');
+    if (!parsed?.opisPoslova) {
+        // Fallback: if we got SOMETHING use it, otherwise return nice error
+        if (parsed) return { success: true, sistematizacija: { ...parsed, opisPoslova: parsed.opisPoslova || parsed.opis || '' }, model };
+        console.error('[generateSistematizacija] Parse failed. Raw:', text?.substring(0, 200));
+        return { success: false, sistematizacija: null, error: 'AI nije mogao generirati sistematizaciju. Pokušajte ponovo.' };
+    }
     return { success: true, sistematizacija: parsed, model };
 }
 
@@ -339,7 +347,10 @@ async function handleParseSistematizacija(data) {
         generationConfig: { temperature: 0.2, maxOutputTokens: 4096 },
     });
     const parsed = tryParseJson(text);
-    if (!parsed) throw new Error('Nije moguće parsirati dokument');
+    if (!parsed) {
+        console.error('[parseSistematizacija] Parse failed. Raw:', text?.substring(0, 200));
+        return { success: false, sistematizacija: null, error: 'Nije moguće parsirati dokument. Pokušajte sa tekstualnim formatom.' };
+    }
     return { success: true, sistematizacija: parsed, model };
 }
 
@@ -348,16 +359,38 @@ async function handleGenerateQuiz(data) {
     const { slides } = data;
     if (!slides?.length) throw new Error('Nema slajdova za generisanje kviza');
 
-    const slideContent = slides.map((s, i) => `Slajd ${i + 1}: ${s.naslov || ''}\n${s.sadrzaj || ''}`).join('\n\n---\n\n');
+    // Truncate slide content to avoid hitting token limits
+    const slideContent = slides
+        .map((s, i) => `Slajd ${i + 1}: ${s.naslov || ''}\n${(s.sadrzaj || '').substring(0, 800)}`)
+        .join('\n\n---\n\n')
+        .substring(0, 8000);
+
+    const prompt = `Ti si instruktor zaštite na radu. Na osnovu ove prezentacije generiši 10 pitanja za test znanja.
+
+PREZENTACIJA:
+${slideContent}
+
+Vrati SAMO JSON niz (bez ikakvog teksta prije ili poslije, bez markdown, bez objasnjenja):
+[{"pitanje":"Tekst pitanja?","opcije":["Odgovor A","Odgovor B","Odgovor C","Odgovor D"],"tacno":0,"objasnjenje":"Kratko objasnjenje"},{...}]
+
+tacno = indeks tacnog odgovora (0=prvi, 1=drugi, 2=treci, 3=cetvrti)
+Vrati SAMO JSON niz.`;
 
     const { text, model } = await callGemini(apiKey, {
-        system_instruction: { parts: [{ text: 'Ti si instruktor zaštite na radu. Generiši kviz iz prezentacije. Vrati SAMO JSON bez markdown:\n{"questions":[{"pitanje":"...","opcije":["A","B","C","D"],"tacno":0,"objasnjenje":"..."}]}' }] },
-        contents: [{ role: 'user', parts: [{ text: `Prezentacija:\n\n${slideContent}\n\nGeneriši 10-15 pitanja sa 4 opcije svako. Vrati SAMO JSON.` }] }],
-        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 4096 },
     });
+
     const parsed = tryParseJson(text);
-    const questions = parsed?.questions || (Array.isArray(parsed) ? parsed : []);
-    if (!questions.length) throw new Error('AI nije generisao pitanja');
+    let questions = Array.isArray(parsed) ? parsed
+        : parsed?.questions ? parsed.questions
+        : parsed?.result ? parsed.result
+        : [];
+
+    if (!questions.length) {
+        console.error('[generateQuiz] Parse failed. Raw text (first 300):', text?.substring(0, 300));
+        return { success: false, questions: [], error: 'AI nije mogao generirati pitanja iz ovog sadržaja. Provjerite da li slajdovi imaju textualnog sadržaja i pokušajte ponovo.', model };
+    }
     return { success: true, questions, model };
 }
 
@@ -371,11 +404,15 @@ async function handleGenerateFromDocument(data) {
 
     const { text, model } = await callGemini(apiKey, {
         contents: [{ role: 'user', parts }],
-        generationConfig: { temperature: 0.3, maxOutputTokens: 8192 },
+        generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
     });
     const parsed = tryParseJson(text);
-    if (!parsed?.result) throw new Error('AI nije vratio validna pitanja');
-    return { success: true, result: parsed.result, model };
+    const result = parsed?.result || (Array.isArray(parsed) ? parsed : null);
+    if (!result) {
+        console.error('[generateFromDocument] Parse failed. Raw:', text?.substring(0, 200));
+        return { success: false, result: [], error: 'AI nije mogao ekstrahirati pitanja iz dokumenta.' };
+    }
+    return { success: true, result, model };
 }
 
 async function handleParsePresentation(data) {
