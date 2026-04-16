@@ -145,82 +145,64 @@ async function handleGenerateOpisProcesa(data) {
     const workplacesStr = Array.isArray(workplacesList) ? workplacesList.join(', ') : (workplacesList || 'Nema');
     const firmaStr = nazivTvrtke || 'Nepoznato';
 
-    const prompt = `Ti si stručnjak za zaštitu na radu u BiH.
+    // Use custom delimiters — no JSON, avoids double-encoding entirely
+    const prompt = `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini.
 
-Napiši dva teksta za firmu "${firmaStr}" koja se bavi "${djelatnostStr}":
-1) Opis tehničko-tehnološkog procesa (2-3 paragrafa)
-2) Analizu organizacije rada (2-3 paragrafa)
+Napiši dva teksta za akt o procjeni rizika za firmu "${firmaStr}" koja se bavi "${djelatnostStr}".
+Radna mjesta: ${workplacesStr || 'nisu navedena'}
+${hazardList ? `Potencijalne opasnosti: ${hazardList}` : ''}
 
-Radna mjesta: ${workplacesStr}
-${hazardList ? `Opasnosti: ${hazardList}` : ''}
+Odgovor formatiraj TAČNO ovako — koristi ove headere:
 
-Vrati SAMO ovaj JSON objekat (nema dodatnog teksta):
-{"opisProcesa":"<samo tekst ovdje, ne JSON>","analizaOrganizacije":"<samo tekst ovdje, ne JSON>"}`;
+##OPIS_PROCESA##
+Napiši 3-4 paragrafa opisa tehničko-tehnološkog procesa. Opisuj konkretne radne procese, mašine, alate, materijale i tok rada u firmi. Pisati profesionalno i formalno.
+
+##ANALIZA_ORGANIZACIJE##
+Napiši 3-4 paragrafa analize organizacije rada. Opisuj radno vrijeme, broj radnika, organizacionu strukturu, smjene, rukovođenje i uvjete rada. Pisati profesionalno i formalno.
+
+Piši SAMO tekst, bez JSON-a, bez markdown-a, bez zaglavlja osim navedenih.`;
 
     let text = '';
     let model = MODELS[0];
-    
+
     try {
         const result = await callGemini(apiKey, {
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
+            generationConfig: { temperature: 0.6, maxOutputTokens: 3000 },
         });
         text = result.text;
         model = result.model;
     } catch (err) {
-        console.error('[generateOpisProcesa] Gemini call failed:', err.message);
+        console.error('[generateOpisProcesa] Gemini failed:', err.message);
         throw new Error('AI servis je trenutno nedostupan. Pokušajte ponovo.');
     }
 
-    console.log('[generateOpisProcesa] Raw (first 200):', text?.substring(0, 200));
+    // Parse sections using delimiters
+    const opisMatch = text.match(/##OPIS_PROCESA##\s*([\s\S]*?)(?=##ANALIZA_ORGANIZACIJE##|$)/i);
+    const analizaMatch = text.match(/##ANALIZA_ORGANIZACIJE##\s*([\s\S]*?)$/i);
 
-    let parsed = tryParseJson(text);
-    
-    // Unwrap double-nested: { opisProcesa: { opisProcesa: "...", ... } }
-    if (parsed && typeof parsed.opisProcesa === 'object' && parsed.opisProcesa !== null) {
-        const inner = parsed.opisProcesa;
-        parsed = { opisProcesa: inner.opisProcesa || '', analizaOrganizacije: parsed.analizaOrganizacije || inner.analizaOrganizacije || '' };
-    }
-    
-    // Unwrap double-encoded string: { opisProcesa: '{"opisProcesa":"..."}' }
-    if (parsed && typeof parsed.opisProcesa === 'string' && parsed.opisProcesa.trim().startsWith('{')) {
-        try {
-            const inner = JSON.parse(parsed.opisProcesa);
-            if (inner.opisProcesa) {
-                parsed = { opisProcesa: inner.opisProcesa || '', analizaOrganizacije: parsed.analizaOrganizacije || inner.analizaOrganizacije || '' };
-            }
-        } catch {}
+    const opisProcesa = opisMatch?.[1]?.trim() || '';
+    const analizaOrganizacije = analizaMatch?.[1]?.trim() || '';
+
+    if (opisProcesa || analizaOrganizacije) {
+        return { success: true, result: { opisProcesa, analizaOrganizacije }, model };
     }
 
-    // Ensure top-level fields exist
-    if (parsed && (parsed.opisProcesa || parsed.analizaOrganizacije)) {
-        return {
-            success: true,
-            result: {
-                // Force strings — NEVER return objects to the client (causes React crash)
-                opisProcesa: String(parsed.opisProcesa || ''),
-                analizaOrganizacije: String(parsed.analizaOrganizacije || ''),
-            },
-            model,
-        };
+    // Fallback: try JSON parse (in case model still responded in JSON)
+    const parsed = tryParseJson(text);
+    if (parsed) {
+        const op = typeof parsed.opisProcesa === 'string' ? parsed.opisProcesa : JSON.stringify(parsed.opisProcesa);
+        const ao = typeof parsed.analizaOrganizacije === 'string' ? parsed.analizaOrganizacije : JSON.stringify(parsed.analizaOrganizacije);
+        const finalOp = tryParseJson(op)?.opisProcesa || op;
+        const finalAo = tryParseJson(ao)?.analizaOrganizacije || ao;
+        return { success: true, result: { opisProcesa: finalOp || '', analizaOrganizacije: finalAo || '' }, model };
     }
 
-    // Last resort: split raw text
-    console.warn('[generateOpisProcesa] All parse strategies failed, using raw text split');
-    const cleanText = text?.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim() || '';
-    const half = Math.floor(cleanText.length / 2);
-    return {
-        success: true,
-        result: {
-            opisProcesa: cleanText.substring(0, half) || `Opis procesa za ${djelatnostStr}.`,
-            analizaOrganizacije: cleanText.substring(half) || `Analiza organizacije rada za ${firmaStr}.`,
-        },
-        model,
-    };
+    // Last resort: use full raw text
+    return { success: true, result: { opisProcesa: text.trim() || `Opis procesa za ${djelatnostStr}.`, analizaOrganizacije: '' }, model };
 }
 
 async function handleRiskMeasures(data) {
-
     const apiKey = getApiKey();
     const { hazardName, hazardCode, workplaceName, opisOpasnosti, vjerovatnoca, posljedica, postojeceMjere, documentData, documentMimeType } = data;
 
