@@ -632,6 +632,28 @@ export default function AIAssistant() {
         } catch { /* use default */ }
     }, []);
 
+    // ── Listen for ziaLoadFile events (Context-Aware PDF Analysis) ───────────
+    useEffect(() => {
+        const handleZiaLoad = (e) => {
+            const { name, type, data, size } = e.detail;
+            setAttachments(prev => {
+                // Prevent duplicate loading
+                if (prev.some(a => a.name === name)) return prev;
+                return [...prev, { name, type, data, size, preview: null }];
+            });
+            setIsOpen(true);
+            setIsMinimized(false);
+            
+            // Welcome message for file analysis
+            const welcomeMsg = lang === 'bs' 
+                ? `📄 Učitao sam dokument **${name}**. Šta te zanima iz njega? (Možeš me tražiti sažetak, objašnjenje ili specifične podatke).`
+                : `📄 I've loaded the document **${name}**. What would you like to know? (You can ask for a summary, explanation, or specific data).`;
+            setMessages(prev => [...prev.filter(m => !m.isSystemWelcome), { role: 'assistant', content: welcomeMsg, timestamp: new Date(), isSystemWelcome: true }]);
+        };
+        window.addEventListener('ziaLoadFile', handleZiaLoad);
+        return () => window.removeEventListener('ziaLoadFile', handleZiaLoad);
+    }, [lang]);
+
     // Drag handlers
     const handleDragStart = useCallback((clientX, clientY) => {
         dragRef.current = { dragging: true, startX: clientX, startY: clientY, totalDist: 0 };
