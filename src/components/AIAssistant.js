@@ -1131,7 +1131,7 @@ export default function AIAssistant() {
         } catch (err) {
             console.warn('Zia API error:', err.message);
             if (err.isRateLimit) {
-                const waitSec = err.retryAfter || 30;
+                const waitSec = 10; // Changed to 10s per user request (reduced from 30)
                 const countdownMsg = lang === 'bs'
                     ? `⏳ Limit zahtjeva dostignut. Pokušavam ponovo za **${waitSec}s**...`
                     : `⏳ Rate limit reached. Auto-retrying in **${waitSec}s**...`;
@@ -1368,7 +1368,12 @@ export default function AIAssistant() {
                                         background: retryCountdown > 0 ? '#FF9800' : '#4CAF50',
                                     }} />
                                     {retryCountdown > 0
-                                        ? (lang === 'bs' ? `Pokušavam ponovo za ${retryCountdown}s...` : `Retrying in ${retryCountdown}s...`)
+                                        ? (
+                                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                               {lang === 'bs' ? `Pokušavalac za ${retryCountdown}s` : `Retry in ${retryCountdown}s`}
+                                               <button onClick={(e) => { e.stopPropagation(); if (retryTimerRef.current) clearInterval(retryTimerRef.current); retryTimerRef.current = null; setRetryCountdown(0); pendingRetryRef.current = null; setIsLoading(false); }} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 4, fontSize: '0.6rem', padding: '2px 5px', cursor: 'pointer', opacity: 0.85, color: 'inherit', fontWeight: 600 }}>{lang === 'bs' ? 'Otkaži' : 'Cancel'}</button>
+                                           </div>
+                                        )
                                         : isLoading
                                             ? (lang === 'bs' ? 'Tipka...' : 'Typing...')
                                             : (lang === 'bs' ? 'Online • AI Agent' : 'Online • AI Agent')}
