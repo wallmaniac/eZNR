@@ -1230,6 +1230,13 @@ export default function AIAssistant() {
 
     return (
         <>
+            <style>{`
+                @keyframes pulse-red {
+                    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+                    70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+                    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+                }
+            `}</style>
             {/* ── Floating Action Button (Draggable) — hidden when chat is open ── */}
             {!isOpen && (
                 <button
@@ -1447,11 +1454,29 @@ export default function AIAssistant() {
                                     {/* Mic recording button */}
                                     <button
                                         onClick={handleMicClick}
-                                        disabled={isLoading}
-                                        title={lang === 'bs' ? 'Glasovni unos' : 'Voice input'}
-                                        style={{ flexShrink: 0, width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: isRecording ? '#EF4444' : 'var(--text-muted)', transition: 'all 0.15s' }}
+                                        disabled={isLoading && !isRecording}
+                                        title={lang === 'bs' ? (isRecording ? 'Završi snimanje' : 'Glasovni unos') : (isRecording ? 'Stop recording' : 'Voice input')}
+                                        style={{
+                                            flexShrink: 0,
+                                            width: isRecording ? 'auto' : 34,
+                                            padding: isRecording ? '0 12px' : 0,
+                                            height: 34,
+                                            borderRadius: isRecording ? 17 : '50%',
+                                            border: 'none',
+                                            background: isRecording ? 'rgba(239,68,68,0.15)' : 'transparent',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: 6,
+                                            fontSize: '1.2rem',
+                                            color: isRecording ? '#EF4444' : 'var(--text-muted)',
+                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            animation: isRecording ? 'pulse-red 1.5s infinite' : 'none'
+                                        }}
                                     >
-                                        <span className={isRecording ? 'fast-pulse' : ''}>🎙️</span>
+                                        <span>{isRecording ? '🛑' : '🎙️'}</span>
+                                        {isRecording && <span style={{ fontSize: '0.75rem', fontWeight: 700, fontFamily: 'var(--font-heading)' }}>SNIMANJE...</span>}
                                     </button>
                                     <button
                                         id="ai-assistant-send"

@@ -76,7 +76,7 @@ export async function POST(request) {
                 if (!res.ok) {
                     const errData = await res.json().catch(() => ({}));
                     const errMsg = errData.error?.message ?? `API error ${res.status}`;
-                    const isRateLimit = res.status === 429 || errMsg.toLowerCase().includes('quota');
+                    const isRateLimit = res.status === 429 || res.status === 503 || errMsg.toLowerCase().includes('quota') || errMsg.toLowerCase().includes('high demand');
                     const isModelUnavailable = res.status === 404 || errMsg.toLowerCase().includes('not found');
                     const tryNext = (isRateLimit || isModelUnavailable) && model !== MODELS[MODELS.length - 1];
                     if (tryNext) continue;
