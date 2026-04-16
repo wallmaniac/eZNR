@@ -1,3 +1,5 @@
+export const maxDuration = 60;
+
 const SYSTEM_PROMPT = `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini (FBiH). Tvoj zadatak je da na osnovu naziva radnog mjesta i opisa poslova (ukoliko je dostupan) izradiš nacrt tabele Opasnosti i štetnosti (Procjena rizika) u skladu s metodologijom 5x5.
 Za svaku prepoznatu opasnost ili štetnost definiši tipičnu Vjerovatnoću (1-5), Posljedicu (1-5) i predložene mjere zaštite na radu.
 Fokusiraj se na realne, specifične opasnosti za to radno mjesto. Generiši između 8 i 15 najvažnijih opasnosti.`;
