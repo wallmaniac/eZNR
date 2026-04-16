@@ -1194,7 +1194,7 @@ export default function AIAssistant() {
         const recognition = new SpeechRecognition();
         recognition.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
         recognition.interimResults = true;
-        recognition.continuous = false;
+        recognition.continuous = true;
         
         const startValue = inputValue;
 
