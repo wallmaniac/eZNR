@@ -97,6 +97,7 @@ export async function POST(req) {
                 }
                 lastErrStr = err.message;
             }
+        }
     } catch (error) {
         console.error('API /api/risk-ai error:', error);
         return new Response(JSON.stringify({ error: error.message }), { status: 500 });
