@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -11,7 +11,6 @@ import {
   getNotificationSettings, saveNotificationSettings, apiSaveNotifSettings,
   getAppSettings, saveAppSettings,
   getSystemStats, APP_VERSION, APP_BUILD_DATE, CHANGELOG,
-  clearDismissedNotifications,
 } from '@/lib/systemMonitor';
 import {
   getUserLog, getAdminLog, clearUserLog, clearAdminLog, formatLogTime, getSeverityColors,
@@ -31,6 +30,9 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   // Dirty-tracking: which tab has unsaved edits (null = clean)
   const [dirtyTab, setDirtyTab] = useState(null);
+  // Refs for navigation guard — must be refs so event handlers see latest values
+  const dirtyTabRef = useRef(null);
+  const prevWasDirtyRef = useRef(false); // track clean→dirty transition for sentinel push
   const [logoError, setLogoError] = useState('');
 
   // Profile state
@@ -128,16 +130,77 @@ export default function SettingsPage() {
     if (tabParam) setActiveTab(tabParam);
   }, [tabParam]);
 
-  // Warn on page unload if there are unsaved changes
+  // Keep dirty ref in sync with state (so event handlers see latest value without re-subscribing)
   useEffect(() => {
-    const handler = (e) => {
-      if (!dirtyTab) return;
+    dirtyTabRef.current = dirtyTab;
+    // When transitioning from clean → dirty, push a sentinel history entry.
+    // This gives the back button something to "pop" before leaving the page,
+    // allowing our popstate handler to intercept and show the confirm dialog.
+    if (dirtyTab && !prevWasDirtyRef.current) {
+      window.history.pushState({ _settingsGuard: true }, '', window.location.href);
+    }
+    prevWasDirtyRef.current = !!dirtyTab;
+  }, [dirtyTab]);
+
+  // Comprehensive navigation guard (mounted once — uses refs to avoid stale closures)
+  useEffect(() => {
+    let skipNextPopState = false;
+
+    // 1. Browser tab close / F5 / external link
+    const handleBeforeUnload = (e) => {
+      if (!dirtyTabRef.current) return;
       e.preventDefault();
       e.returnValue = '';
     };
-    window.addEventListener('beforeunload', handler);
-    return () => window.removeEventListener('beforeunload', handler);
-  }, [dirtyTab]);
+
+    // 2. Browser back/forward button (popstate)
+    // Sequence: user pressed back → landed on sentinel (same /settings URL) → we re-push → show confirm
+    // If leave: go(-2) skips past both the re-push and the sentinel, reaching the actual previous page
+    const handlePopState = () => {
+      if (skipNextPopState) { skipNextPopState = false; return; }
+      if (!dirtyTabRef.current) return;
+      // Re-push current URL so user stays on this page while the confirm is shown
+      window.history.pushState(null, '', window.location.href);
+      const leave = window.confirm(
+        'Imate nesačuvane promjene.\nNapustiti stranicu bez čuvanja?'
+      );
+      if (leave) {
+        dirtyTabRef.current = null;
+        setDirtyTab(null);
+        skipNextPopState = true;
+        window.history.go(-2); // skip re-push + sentinel → arrive at actual previous page
+      }
+    };
+
+    // 3. Next.js <Link> / sidebar anchor clicks (client-side navigation)
+    const handleLinkClick = (e) => {
+      if (!dirtyTabRef.current) return;
+      const a = e.target.closest('a[href]');
+      if (!a) return;
+      const href = a.getAttribute('href') || '';
+      // Only intercept internal links that navigate away from settings
+      if (!href.startsWith('/') || href.startsWith('/dashboard/settings')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const leave = window.confirm(
+        'Imate nesačuvane promjene.\nNapustiti stranicu bez čuvanja?'
+      );
+      if (leave) {
+        dirtyTabRef.current = null;
+        setDirtyTab(null);
+        router.push(href);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('popstate', handlePopState);
+    document.addEventListener('click', handleLinkClick, true); // capture phase
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
+      document.removeEventListener('click', handleLinkClick, true);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- uses refs
 
   // NOTE: validTabs and currentTab are derived after the tabs array is defined below
 
@@ -818,9 +881,6 @@ export default function SettingsPage() {
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
               <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
-              <button className="btn" style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }} onClick={() => { clearDismissedNotifications(); showSaved(); }}>
-                🔄 {lang === 'bs' ? 'Poništi odbačene obavijesti' : 'Reset dismissed notifications'}
-              </button>
               {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>
