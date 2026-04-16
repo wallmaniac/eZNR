@@ -34,8 +34,8 @@ export function NavigationGuardProvider({ children }) {
     useEffect(() => {
         const handlePopState = (e) => {
             if (dirtyRef.current) {
-                // Push the current path back to restore it
-                window.history.pushState(null, '', window.location.pathname);
+                // Push the full current URL back to restore it without stripping query params
+                window.history.pushState(null, '', window.location.href);
                 setPendingPath('__back__');
                 setShowPrompt(true);
             }
