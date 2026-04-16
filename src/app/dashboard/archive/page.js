@@ -692,13 +692,21 @@ export default function ArchivePage() {
                                                 {file.uploadedAt ? new Date(file.uploadedAt).toLocaleDateString('hr-HR') : '-'}
                                             </td>
                                             <td>
-                                                <div style={{ display: 'flex', gap: 4 }}>
-                                                    {typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.pdf') && (
-                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{color: 'transparent', textShadow: '0 0 0 var(--primary)'}} title={lang === 'bs' ? 'Analiziraj sa Zia' : 'Ask Zia'} onClick={() => handleAskZia(file)}>✨</button>
-                                                    )}
-                                                    <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'Open'} onClick={() => handleOpen(file)}>👁️</button>
-                                                    <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => handleDownload(file)}>⬇️</button>
-                                                    {!file._readonly && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>}
+                                                <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px', gap: 4, alignItems: 'center' }}>
+                                                    <div>
+                                                        {typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.pdf') && (
+                                                            <button className="btn btn-ghost btn-sm btn-icon" style={{color: 'transparent', textShadow: '0 0 0 var(--primary)', width: '100%', padding: 0}} title={lang === 'bs' ? 'Analiziraj sa Zia' : 'Ask Zia'} onClick={() => handleAskZia(file)}>✨</button>
+                                                        )}
+                                                    </div>
+                                                    <div>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ width: '100%', padding: 0 }} title={lang === 'bs' ? 'Otvori' : 'Open'} onClick={() => handleOpen(file)}>👁️</button>
+                                                    </div>
+                                                    <div>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ width: '100%', padding: 0 }} title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => handleDownload(file)}>⬇️</button>
+                                                    </div>
+                                                    <div>
+                                                        {!file._readonly && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)', width: '100%', padding: 0 }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>}
+                                                    </div>
                                                 </div>
                                             </td>
                                         </tr>
