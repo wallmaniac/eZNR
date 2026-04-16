@@ -590,38 +590,6 @@ export default function AIAssistant() {
     const [attachments, setAttachments] = useState([]);
     const [isDragging, setIsDragging] = useState(false);
     const [urgentCount, setUrgentCount] = useState(0); // badge on FAB
-    const [isAudioEnabled, setIsAudioEnabled] = useState(false);
-    const audioEnabledRef = useRef(false);
-
-    const toggleAudio = useCallback(() => {
-        setIsAudioEnabled(prev => {
-            const next = !prev;
-            audioEnabledRef.current = next;
-            if (!next && 'speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
-            return next;
-        });
-    }, []);
-
-    const playTts = useCallback((text) => {
-        if (!audioEnabledRef.current || !('speechSynthesis' in window)) return;
-        window.speechSynthesis.cancel(); // Stop current speech
-        // Strip markdown, links, emojis, and nav components
-        const cleanText = text
-            .replace(/__NAV_LINK__.*?__END_NAV__/g, '')
-            .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // pure links to text
-            .replace(/[*#_]/g, '')
-            .replace(/[^\p{L}\p{N}\s.,!?'-]/gu, '') // remove emojis and weird symbols
-            .trim();
-        
-        if (!cleanText) return;
-
-        const utterance = new SpeechSynthesisUtterance(cleanText);
-        utterance.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
-        utterance.rate = 1.05;
-        window.speechSynthesis.speak(utterance);
-    }, [lang]);
 
     // ── Draggable FAB state ─────────────────────────────────────────────────
     const [fabPos, setFabPos] = useState(null); // { x, y } or null = default
@@ -929,7 +897,7 @@ export default function AIAssistant() {
                     oib: args.oib || '',
                     aktivan: true
                 });
-                return { success: true, message: `Radnik "${args.ime} ${args.prezime}" kreiran. [Otvori Profil](/dashboard/workers/edit/${newWorker.id})` };
+                return { success: true, message: `Radnik "${args.ime} ${args.prezime}" kreiran. [Otvori Profil](/dashboard/workers?openWorker=${newWorker.id})` };
             } catch (e) { return { error: e.message }; }
         }
         if (name === 'report_injury') {
@@ -992,7 +960,7 @@ export default function AIAssistant() {
                 // Log to activity log
                 try { logPPEAssigned(newPpe, args.worker_name, null); } catch { }
 
-                router.push(`/dashboard/workers/edit/${resolvedId}?tab=ozo`);
+                router.push(`/dashboard/workers?openWorker=${resolvedId}&section=ozo`);
                 setIsMinimized(true);
                 return { success: true, message: `OZO "${args.ppe_name}" dodijeljen${args.worker_name ? ` radniku ${args.worker_name}` : ''} (kol: ${args.kolicina || 1}, datum: ${args.datum || today})` };
             } catch (err) {
@@ -1125,7 +1093,6 @@ export default function AIAssistant() {
                 if (isMinimized) setHasNewMessage(true);
                 retryAttemptRef.current = 0;
                 setIsLoading(false);
-                playTts(reply);
                 return;
             }
 
@@ -1136,7 +1103,6 @@ export default function AIAssistant() {
             if (isMinimized) setHasNewMessage(true);
             retryAttemptRef.current = 0;
             setIsLoading(false);
-            playTts(reply);
 
         } catch (err) {
             console.warn('Zia API error:', err.message);
@@ -1154,7 +1120,7 @@ export default function AIAssistant() {
             setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
             setIsLoading(false);
         }
-    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown, playTts]);
+    }, [callZiaAPI, executeTool, isMinimized, lang, pathname, startRetryCountdown]);
 
     // ── Proactive logic REMOVED — badge count instead ─────────────────────────
     // (urgentCount computed in separate useEffect above)
@@ -1258,7 +1224,6 @@ export default function AIAssistant() {
         setMessages([]);
         chatHistoryRef.current = [];
         setShowSuggestions(true);
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
         // Re-show welcome
         const welcome = lang === 'bs'
             ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nMogu navigirati do stranica, pokrenuti slanje upitnika i analizirati vaše podatke. Šta trebate uraditi?`
@@ -1387,9 +1352,6 @@ export default function AIAssistant() {
                             </div>
                         </div>
                         <div style={chatStyles.headerActions}>
-                            <button onClick={toggleAudio} style={{...chatStyles.actionBtn, color: isAudioEnabled ? '#00BFA6' : (isDark ? '#888' : '#aaa') }} title={lang === 'bs' ? 'Uključi/isključi glasovni odgovor' : 'Toggle voice reply'}>
-                                {isAudioEnabled ? '🔊' : '🔇'}
-                            </button>
                             <button onClick={clearChat} style={chatStyles.actionBtn} title={lang === 'bs' ? 'Novi razgovor' : 'New conversation'}>↺</button>
                             <button onClick={handleMinimize} style={chatStyles.actionBtn} title={lang === 'bs' ? 'Minimiziraj' : 'Minimize'}>
                                 {isMinimized ? '▲' : '▼'}
