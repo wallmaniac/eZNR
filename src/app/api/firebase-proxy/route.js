@@ -1,14 +1,81 @@
 /**
  * /api/firebase-proxy/route.js
- * 
- * Runs ALL Firebase AI functions directly on Vercel using the Gemini REST API.
+ *
+ * Runs ALL Firebase functions directly on Vercel (Gemini AI + Resend email + Firestore Admin).
  * Eliminates Firebase Cloud Run entirely — no IAM/CORS issues possible.
- * 
+ *
  * POST /api/firebase-proxy
  * Body: { functionName: string, data: object }
  */
 
+import { Resend } from 'resend';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
 export const maxDuration = 300;
+
+// ─── Rate Limiter ─────────────────────────────────────────────────────────────
+const rateMap = new Map();
+const RATE_LIMIT = 30;   // requests per window
+const RATE_WINDOW = 60_000; // 1 minute
+
+function checkRate(ip) {
+    const now = Date.now();
+    let r = rateMap.get(ip);
+    if (!r || now > r.resetAt) r = { count: 0, resetAt: now + RATE_WINDOW };
+    r.count++;
+    rateMap.set(ip, r);
+    // Prune old entries every 500 requests to prevent memory leak
+    if (rateMap.size > 500) {
+        for (const [k, v] of rateMap) if (now > v.resetAt) rateMap.delete(k);
+    }
+    return { allowed: r.count <= RATE_LIMIT, waitSec: Math.ceil((r.resetAt - now) / 1000) };
+}
+
+// ─── Firebase Admin (for Firestore server-side access) ────────────────────────
+function getAdminDb() {
+    if (!getApps().length) {
+        initializeApp({
+            credential: cert({
+                projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+                clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+                privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+            }),
+        });
+    }
+    return getFirestore();
+}
+
+// ─── Resend email client ──────────────────────────────────────────────────────
+let resendInstance = null;
+function getResend() {
+    if (!resendInstance) {
+        const apiKey = process.env.RESEND_API_KEY;
+        if (!apiKey) throw new Error('RESEND_API_KEY not configured');
+        resendInstance = new Resend(apiKey);
+    }
+    return resendInstance;
+}
+
+// ─── Email HTML templates (ported from functions/endpoints/emailTemplate.js) ──
+const EMAIL_BASE = 'https://zastitanaradu.ba';
+
+function buildHtmlEmail({ toName, questionnaireName, fillLink, deadline, senderName = 'eZNR Admin', companyName = '', isTraining = false }) {
+    const itemLabel = isTraining ? 'obuku / prezentaciju' : 'upitnik';
+    const itemLabelCap = isTraining ? 'Obuka / Prezentacija' : 'Upitnik';
+    const titleIcon = isTraining ? '🎬' : '📝';
+    const deadlineStr = deadline ? new Date(deadline).toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Nema roka';
+    const senderDisplay = companyName ? `${senderName} (${companyName})` : senderName;
+    return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>${isTraining ? 'Obuka' : 'Upitnik'} — ${questionnaireName}</title></head><body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;"><tr><td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;"><img src="${EMAIL_BASE}/email-header.png" alt="eZNR" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;" /></td></tr><tr><td style="background:#ffffff;padding:40px 40px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;"><p style="margin:0 0 8px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Pozvani ste na ispunjavanje</p><h1 style="margin:0 0 24px;font-size:22px;font-weight:800;color:#1e293b;line-height:1.35;">${titleIcon} ${questionnaireName}</h1><p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.75;">Poštovani/a <strong style="color:#1e293b;">${toName}</strong>,<br><br>pozivamo Vas da popunite ${itemLabel} koji Vam je dodijelio <strong style="color:#4f46e5;">${senderDisplay}</strong>. Kliknite na dugme ispod kako biste pristupili ${itemLabel}u.</p><div style="text-align:center;margin:36px 0;"><p style="margin:0 0 16px;font-size:14px;color:#64748b;font-weight:600;">👇 Pritisnite dugme ispod za pristup:</p><a href="${fillLink}" style="display:block;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);color:#ffffff;font-size:20px;font-weight:800;text-decoration:none;padding:22px 20px;border-radius:16px;max-width:480px;margin:0 auto;">${isTraining ? '🎬 Započni obuku →' : '📝 Ispuni upitnik →'}</a><p style="margin:14px 0 0;font-size:12px;color:#94a3b8;">Dugme vas vodi direktno na ${itemLabel} — nema prijave</p></div><table width="100%" cellpadding="0" cellspacing="0" style="margin:28px 0 0;"><tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;width:48%;vertical-align:top;"><p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">${itemLabelCap}</p><p style="margin:0;font-size:14px;font-weight:600;color:#1e293b;">${questionnaireName}</p></td><td style="width:4%;"></td><td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;width:48%;vertical-align:top;"><p style="margin:0 0 4px;font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.8px;">Rok za ispunjavanje</p><p style="margin:0;font-size:14px;font-weight:600;color:#1e293b;">${deadlineStr}</p></td></tr></table><div style="background:#f0f4f8;border-radius:8px;padding:14px 18px;margin-top:20px;"><p style="margin:0 0 5px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;">Ili kopirajte link:</p><a href="${fillLink}" style="font-size:12px;color:#4f46e5;word-break:break-all;text-decoration:none;">${fillLink}</a></div></td></tr><tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 16px 16px;padding:22px 40px;text-align:center;"><p style="margin:0 0 6px;font-size:13px;color:#64748b;">Poslao: <strong style="color:#4f46e5;">${senderDisplay}</strong></p><p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">Ovaj email je automatski generiran putem platforme eZNR.<br>Za pitanja kontaktirajte osobu koja Vam je poslala ${itemLabel}.</p></td></tr></table></td></tr></table></body></html>`;
+}
+
+function buildReminderEmail({ toName, questionnaireName, fillLink, deadline, senderName = 'eZNR Admin', companyName = '', isTraining = false }) {
+    const itemLabel = isTraining ? 'obuku / prezentaciju' : 'upitnik';
+    const titleIcon = isTraining ? '🎬' : '📝';
+    const deadlineStr = deadline ? new Date(deadline).toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Nema roka';
+    const senderDisplay = companyName ? `${senderName} (${companyName})` : senderName;
+    return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Podsjetnik — ${questionnaireName}</title></head><body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0;"><tr><td align="center"><table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;"><tr><td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;"><img src="${EMAIL_BASE}/email-header.png" alt="eZNR" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;" /></td></tr><tr><td style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:14px 40px;text-align:center;"><p style="margin:0;font-size:14px;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:2px;">⏰ PODSJETNIK — Još niste ispunili ${itemLabel}</p></td></tr><tr><td style="background:#ffffff;padding:40px 40px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;"><h1 style="margin:0 0 24px;font-size:22px;font-weight:800;color:#1e293b;line-height:1.35;">${titleIcon} ${questionnaireName}</h1><p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.75;">Poštovani/a <strong style="color:#1e293b;">${toName}</strong>,<br><br>podsjećamo Vas da još uvijek niste popunili ${itemLabel} koji Vam je dodijelio/la <strong style="color:#4f46e5;">${senderDisplay}</strong>.${deadline ? `<br><br><strong style="color:#d97706;">⚠️ Rok ističe: ${deadlineStr}</strong>` : ''}</p><div style="text-align:center;margin:36px 0;"><p style="margin:0 0 16px;font-size:14px;color:#64748b;font-weight:600;">👇 Pritisnite dugme ispod za pristup:</p><a href="${fillLink}" style="display:block;background:linear-gradient(135deg,#f59e0b 0%,#d97706 50%,#f59e0b 100%);color:#ffffff;font-size:20px;font-weight:800;text-decoration:none;padding:22px 20px;border-radius:16px;max-width:480px;margin:0 auto;">${isTraining ? '🎬 Započni obuku →' : '📝 Ispuni upitnik →'}</a><p style="margin:14px 0 0;font-size:12px;color:#94a3b8;">Dugme vas vodi direktno na ${itemLabel} — nema prijave</p></div><div style="background:#f0f4f8;border-radius:8px;padding:14px 18px;margin-top:20px;"><p style="margin:0 0 5px;font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.7px;">Ili kopirajte link:</p><a href="${fillLink}" style="font-size:12px;color:#4f46e5;word-break:break-all;text-decoration:none;">${fillLink}</a></div></td></tr><tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 16px 16px;padding:22px 40px;text-align:center;"><p style="margin:0 0 6px;font-size:13px;color:#64748b;">Podsjetnik poslao: <strong style="color:#4f46e5;">${senderDisplay}</strong></p><p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">Ovaj email je automatski generiran putem platforme eZNR.</p></td></tr></table></td></tr></table></body></html>`;
+}
 
 const MODELS = ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-flash-latest'];
 
@@ -436,6 +503,77 @@ async function handleParsePresentation(data) {
     return { slides, count: slides.length, source: filename || 'document', model };
 }
 
+// ─── sendEmail handler ───────────────────────────────────────────────────────
+async function handleSendEmail(data) {
+    const { toEmail, toName, questionnaireName, fillLink, deadline, senderName, companyName, isTraining, isReminder } = data;
+    if (!toEmail || !fillLink) throw new Error('Missing required fields: toEmail or fillLink');
+    const resend = getResend();
+    const FROM = process.env.RESEND_FROM_EMAIL || 'noreply@mail.zastitanaradu.ba';
+    const senderDisplay = companyName ? `${senderName || 'eZNR'} (${companyName}) via eZNR` : `${senderName || 'eZNR'} via eZNR`;
+    const html = isReminder
+        ? buildReminderEmail({ toName: toName || toEmail, questionnaireName, fillLink, deadline, senderName, companyName, isTraining })
+        : buildHtmlEmail({ toName: toName || toEmail, questionnaireName, fillLink, deadline, senderName, companyName, isTraining });
+    const subjectPrefix = isReminder ? '⏰ Podsjetnik' : (isTraining ? '🎬 Obuka' : '📝 Upitnik');
+    const { error } = await resend.emails.send({
+        from: `${senderDisplay} <${FROM}>`,
+        to: [toEmail],
+        subject: `${subjectPrefix}: ${questionnaireName}`,
+        html,
+    });
+    if (error) throw new Error(error.message || 'Resend API error');
+    return { success: true };
+}
+
+// ─── pdfParse handler (Gemini vision — replaces MuPDF which can't run on Vercel) ─
+async function handlePdfParse(data) {
+    const { base64Data, filename = 'document.pdf' } = data;
+    if (!base64Data) throw new Error('No base64Data provided');
+    const apiKey = getApiKey();
+    try {
+        const { text } = await callGemini(apiKey, {
+            contents: [{ role: 'user', parts: [
+                { inlineData: { data: base64Data, mimeType: 'application/pdf' } },
+                { text: 'Extract all text from this PDF document page by page. Return ONLY valid JSON without markdown:\n{"pages":[{"pageNum":1,"text":"..."}],"numPages":1}' },
+            ]}],
+            generationConfig: { temperature: 0, maxOutputTokens: 16384 },
+        });
+        const parsed = tryParseJson(text);
+        if (parsed?.pages && Array.isArray(parsed.pages)) return parsed;
+        // Fallback: return raw text as single page
+        return { pages: [{ pageNum: 1, text: text || '' }], numPages: 1 };
+    } catch (err) {
+        console.error('[pdfParse] Gemini error:', err.message);
+        throw new Error('PDF parsing failed: ' + err.message);
+    }
+}
+
+// ─── notifSettings handlers (real Firestore via Admin SDK) ───────────────────
+async function handleSaveNotifSettings(data) {
+    const { companyId, settings } = data;
+    if (!companyId || !settings) return { success: false, error: 'Missing companyId or settings' };
+    try {
+        const db = getAdminDb();
+        await db.collection('notif_settings').doc(companyId).set(settings, { merge: true });
+        return { success: true };
+    } catch (err) {
+        console.error('[saveNotifSettings] Error:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
+async function handleGetNotifSettings(data) {
+    const { companyId } = data;
+    if (!companyId) return { success: true, settings: null };
+    try {
+        const db = getAdminDb();
+        const docSnap = await db.collection('notif_settings').doc(companyId).get();
+        return { success: true, settings: docSnap.exists ? docSnap.data() : null };
+    } catch (err) {
+        console.error('[getNotifSettings] Error:', err.message);
+        return { success: true, settings: null };
+    }
+}
+
 // ─── Main Router ──────────────────────────────────────────────────────────────
 
 const HANDLERS = {
@@ -450,12 +588,24 @@ const HANDLERS = {
     generateQuiz: handleGenerateQuiz,
     generateFromDocument: handleGenerateFromDocument,
     parsePresentation: handleParsePresentation,
-    saveNotifSettings: async () => ({ success: true }),
-    getNotifSettings: async () => ({ success: true, settings: null }),
+    sendEmail: handleSendEmail,
+    pdfParse: handlePdfParse,
+    saveNotifSettings: handleSaveNotifSettings,
+    getNotifSettings: handleGetNotifSettings,
 };
 
 export async function POST(req) {
     try {
+        // Rate limiting
+        const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
+        const { allowed, waitSec } = checkRate(ip);
+        if (!allowed) {
+            return new Response(JSON.stringify({ error: 'rate_limit', retryAfter: waitSec }), {
+                status: 429,
+                headers: { 'Content-Type': 'application/json', 'Retry-After': String(waitSec) },
+            });
+        }
+
         const body = await req.json();
         const { functionName, data } = body;
 

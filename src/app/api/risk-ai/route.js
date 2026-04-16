@@ -1,5 +1,22 @@
 export const maxDuration = 60;
 
+// Simple in-memory rate limiter (matches Zia's implementation)
+const rateMap = new Map();
+const RATE_LIMIT = 20;
+const RATE_WINDOW = 60_000;
+
+function checkRate(ip) {
+    const now = Date.now();
+    let r = rateMap.get(ip);
+    if (!r || now > r.resetAt) r = { count: 0, resetAt: now + RATE_WINDOW };
+    r.count++;
+    rateMap.set(ip, r);
+    if (rateMap.size > 500) {
+        for (const [k, v] of rateMap) if (now > v.resetAt) rateMap.delete(k);
+    }
+    return { allowed: r.count <= RATE_LIMIT, waitSec: Math.ceil((r.resetAt - now) / 1000) };
+}
+
 const SYSTEM_PROMPT = `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini (FBiH). Tvoj zadatak je da na osnovu naziva radnog mjesta i opisa poslova (ukoliko je dostupan) izradiš nacrt tabele Opasnosti i štetnosti (Procjena rizika) u skladu s metodologijom 5x5.
 Za svaku prepoznatu opasnost ili štetnost definiši tipičnu Vjerovatnoću (1-5), Posljedicu (1-5) i predložene mjere zaštite na radu.
 Fokusiraj se na realne, specifične opasnosti za to radno mjesto. Generiši između 8 i 15 najvažnijih opasnosti.`;
@@ -32,6 +49,16 @@ export async function POST(req) {
     const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
     if (!apiKey) {
         return new Response(JSON.stringify({ error: 'GEMINI_API_KEY is not configured on the server.' }), { status: 500 });
+    }
+
+    // Rate limiting
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'local';
+    const { allowed, waitSec } = checkRate(ip);
+    if (!allowed) {
+        return new Response(JSON.stringify({ error: 'rate_limit', retryAfter: waitSec }), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json', 'Retry-After': String(waitSec) },
+        });
     }
 
     try {

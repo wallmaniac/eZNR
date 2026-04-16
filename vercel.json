@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/notify-expiry?secret=eznr-notify-k9x2mQ7rLpW4vTfN8hYsDjAu3bCeZqKw",
+      "schedule": "0 7 * * *"
+    }
+  ]
+}
