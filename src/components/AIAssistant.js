@@ -1444,6 +1444,15 @@ export default function AIAssistant() {
                                             e.target.style.height = Math.min(e.target.scrollHeight, 100) + 'px';
                                         }}
                                     />
+                                    {/* Mic recording button */}
+                                    <button
+                                        onClick={handleMicClick}
+                                        disabled={isLoading}
+                                        title={lang === 'bs' ? 'Glasovni unos' : 'Voice input'}
+                                        style={{ flexShrink: 0, width: 34, height: 34, borderRadius: '50%', border: 'none', background: 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', color: isRecording ? '#EF4444' : 'var(--text-muted)', transition: 'all 0.15s' }}
+                                    >
+                                        <span className={isRecording ? 'fast-pulse' : ''}>🎙️</span>
+                                    </button>
                                     <button
                                         id="ai-assistant-send"
                                         onClick={() => sendMessage(inputValue)}
