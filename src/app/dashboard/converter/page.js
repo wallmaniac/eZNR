@@ -126,7 +126,38 @@ async function buildDocxFromPages(pages) {
     const { blocks = [], pageWidth = 595 } = pages[pi];
     const pageCenterX = pageWidth / 2;
 
-    // ── Flatten all lines from all text blocks ──────────────────────────────
+    // ── Gemini fallback: plain text per page (no MuPDF block data) ──────────
+    // Gemini returns { pageNum, text } — no blocks/font metadata.
+    // Build a simple but clean DOCX from the raw text lines.
+    if (!blocks.length && pages[pi].text) {
+      const rawLines = (pages[pi].text || '').split('\n');
+      for (const rawLine of rawLines) {
+        const text = rawLine.trim();
+        if (!text) { allChildren.push(new Paragraph({ children: [], spacing: { after: 40 } })); continue; }
+        // Heuristic heading detection: ALL-CAPS, Roman numeral sections, or short bold-looking lines
+        const looksLikeHeading =
+          (text.length <= 80 && text === text.toUpperCase() && /[A-ZČĆŽŠĐ]/.test(text)) ||
+          /^(I{1,3}|IV|V{1,3}I{0,3}|IX|X{1,3})\.\s+\S/.test(text);
+        if (looksLikeHeading) {
+          allChildren.push(new Paragraph({
+            children: [new TextRun({ text, bold: true, color: NAVY, size: 22 })],
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 280, after: 100 },
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: NAVY, space: 4 } },
+          }));
+        } else {
+          allChildren.push(new Paragraph({
+            children: [new TextRun({ text, color: DARK })],
+            spacing: { after: 60 },
+          }));
+        }
+      }
+      if (pi < pages.length - 1)
+        allChildren.push(new Paragraph({ children: [], pageBreakBefore: true }));
+      continue; // skip MuPDF block processing for this page
+    }
+
+
     // Each line: { text, font:{weight,style,size,name}, bbox, blockBbox, x, y }
     const allLines = [];
     for (const block of blocks) {
