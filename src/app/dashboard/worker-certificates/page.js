@@ -399,15 +399,15 @@ function WorkerCertificatesInner() {
                                 disabled={isNavigating}
                                 title={bs ? 'Otvori/Uredi uvjerenje' : 'Open/Edit certificate'}
                                 style={{
-                                  background: 'none', border: '1px solid var(--border)', borderRadius: 6,
+                                  background: 'rgba(148,163,184,0.15)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: 6,
                                   cursor: isNavigating ? 'wait' : 'pointer', padding: 0,
                                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                                   fontSize: '0.85rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
                                   transition: 'all 0.15s', width: '100%', height: 28,
                                   borderColor: isNavigating ? 'var(--primary)' : undefined,
                                 }}
-                                onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'rgba(0,191,166,0.07)'; } }}
-                                onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; } }}
+                                onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.background = 'rgba(148,163,184,0.25)'; } }}
+                                onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.background = 'rgba(148,163,184,0.15)'; } }}
                               >
                                 {isNavigating
                                   ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite', verticalAlign: 'middle' }} />
