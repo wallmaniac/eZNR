@@ -392,54 +392,60 @@ function WorkerCertificatesInner() {
                         </td>
                         <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                            <button
-                              onClick={() => handleEdit(r.id)}
-                              disabled={isNavigating}
-                              title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
-                              style={{
-                                background: 'none', border: '1px solid var(--border)', borderRadius: 6,
-                                cursor: isNavigating ? 'wait' : 'pointer', padding: '4px 8px',
-                                fontSize: '1rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
-                                transition: 'all 0.15s', minWidth: 34,
-                                borderColor: isNavigating ? 'var(--primary)' : undefined,
-                              }}
-                              onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'rgba(0,191,166,0.07)'; } }}
-                              onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; } }}
-                            >
-                              {isNavigating
-                                ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite', verticalAlign: 'middle' }} />
-                                : '📄'}
-                            </button>
-                            {/* Single-cert print */}
-                            <button
-                              onClick={() => {
-                                const html = buildBulkPrintHtml([r], workers, lang);
-                                const win = window.open('', '_blank', 'width=900,height=700');
-                                if (!win) return;
-                                win.document.write(html);
-                                win.document.close();
-                              }}
-                              title={bs ? 'Isprintaj ovo uvjerenje' : 'Print this certificate'}
-                              style={{
-                                background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.25)', borderRadius: 6,
-                                cursor: 'pointer', padding: '4px 8px', fontSize: '1rem', color: 'var(--primary)', transition: 'all 0.15s', minWidth: 34,
-                              }}
-                              onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.2)'; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.08)'; }}
-                            >🖨️</button>
-                            {r.isExpired && (
+                          <div style={{ display: 'grid', gridTemplateColumns: '34px 34px 34px', gap: 4, width: 'fit-content', margin: '0 auto' }}>
+                            <div>
                               <button
-                                onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}
-                                title={bs ? 'Obnovi uvjerenje (nova serija)' : 'Renew certificate (new entry)'}
+                                onClick={() => handleEdit(r.id)}
+                                disabled={isNavigating}
+                                title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
                                 style={{
-                                  background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6,
-                                  cursor: 'pointer', padding: '4px 8px', fontSize: '1rem', color: 'var(--secondary)', transition: 'all 0.15s', minWidth: 34,
+                                  background: 'none', border: '1px solid var(--border)', borderRadius: 6,
+                                  cursor: isNavigating ? 'wait' : 'pointer', padding: '4px 8px',
+                                  fontSize: '1rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
+                                  transition: 'all 0.15s', minWidth: 34, width: '100%',
+                                  borderColor: isNavigating ? 'var(--primary)' : undefined,
                                 }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
-                              >📋</button>
-                            )}
+                                onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; e.currentTarget.style.background = 'rgba(0,191,166,0.07)'; } }}
+                                onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.background = 'none'; } }}
+                              >
+                                {isNavigating
+                                  ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite', verticalAlign: 'middle' }} />
+                                  : '📄'}
+                              </button>
+                            </div>
+                            {/* Single-cert print */}
+                            <div>
+                              <button
+                                onClick={() => {
+                                  const html = buildBulkPrintHtml([r], workers, lang);
+                                  const win = window.open('', '_blank', 'width=900,height=700');
+                                  if (!win) return;
+                                  win.document.write(html);
+                                  win.document.close();
+                                }}
+                                title={bs ? 'Isprintaj ovo uvjerenje' : 'Print this certificate'}
+                                style={{
+                                  background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.25)', borderRadius: 6,
+                                  cursor: 'pointer', padding: '4px 8px', fontSize: '1rem', color: 'var(--primary)', transition: 'all 0.15s', minWidth: 34, width: '100%',
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.2)'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.08)'; }}
+                              >🖨️</button>
+                            </div>
+                            <div>
+                              {r.isExpired && (
+                                <button
+                                  onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}
+                                  title={bs ? 'Obnovi uvjerenje (nova serija)' : 'Renew certificate (new entry)'}
+                                  style={{
+                                    background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6,
+                                    cursor: 'pointer', padding: '4px 8px', fontSize: '1rem', color: 'var(--secondary)', transition: 'all 0.15s', minWidth: 34, width: '100%',
+                                  }}
+                                  onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
+                                  onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
+                                >📋</button>
+                              )}
+                            </div>
 
                             {actionMenuId === r.id && (
                               <>
