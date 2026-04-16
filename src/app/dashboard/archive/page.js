@@ -349,7 +349,7 @@ export default function ArchivePage() {
     };
 
     const handleAskZia = async (file) => {
-        const isPdf = file.name.toLowerCase().endsWith('.pdf');
+        const isPdf = typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.pdf');
         if (!isPdf) {
             alert(lang === 'bs' ? 'Zia trenutno može analizirati samo PDF datoteke iz arhive.' : 'Zia can currently only analyze PDF files from the archive.');
             return;
@@ -693,7 +693,7 @@ export default function ArchivePage() {
                                             </td>
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
-                                                    {file.name.toLowerCase().endsWith('.pdf') && (
+                                                    {typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.pdf') && (
                                                         <button className="btn btn-ghost btn-sm btn-icon" style={{color: 'transparent', textShadow: '0 0 0 var(--primary)'}} title={lang === 'bs' ? 'Analiziraj sa Zia' : 'Ask Zia'} onClick={() => handleAskZia(file)}>✨</button>
                                                     )}
                                                     <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'Open'} onClick={() => handleOpen(file)}>👁️</button>
