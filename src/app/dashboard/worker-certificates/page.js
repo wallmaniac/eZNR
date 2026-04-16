@@ -449,19 +449,19 @@ function WorkerCertificatesInner() {
                                 >📋</button>
                               )}
                             </div>
-                            {/* Delete icon that shows explanation on hover */}
+                            {/* Clone / Copy certificate */}
                             <div>
                               <button
-                                onClick={() => alert(bs ? 'Sigurnosno pravilo: Da biste obrisali uvjerenje, morate otići na "Meni > Radnici", ući u profil ovog radnika i tamo izbrisati certifikat.' : 'Security Rule: To delete a certificate, go to "Menu > Workers", open the worker profile, and delete it from there.')}
-                                title={bs ? 'Brisanje je onemogućeno ovdje radi sprječavanja grešaka. Brisanje se vrši unutar Profila Radnika.' : 'Deletion is disabled here to prevent mistakes. Go to the Worker Profile to delete.'}
+                                onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}`)}
+                                title={bs ? 'Kloniraj/kopiraj ovo uvjerenje' : 'Clone/copy this certificate'}
                                 style={{
-                                  background: 'none', border: '1px dotted rgba(239,68,68,0.4)', borderRadius: 6,
-                                  cursor: 'help', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: '0.85rem', color: 'var(--danger)', transition: 'all 0.15s', width: '100%', height: 28, opacity: 0.65
+                                  background: 'none', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 6,
+                                  cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                  fontSize: '0.85rem', color: '#10B981', transition: 'all 0.15s', width: '100%', height: 28, opacity: 0.8
                                 }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(239,68,68,0.08)'; e.currentTarget.style.opacity = '1'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.opacity = '0.65'; }}
-                              >🗑️</button>
+                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(16,185,129,0.08)'; e.currentTarget.style.opacity = '1'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.opacity = '0.8'; }}
+                              >📑</button>
                             </div>
 
                             {actionMenuId === r.id && (
