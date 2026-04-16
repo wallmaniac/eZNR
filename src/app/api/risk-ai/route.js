@@ -1,27 +1,23 @@
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-
 const SYSTEM_PROMPT = `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini (FBiH). Tvoj zadatak je da na osnovu naziva radnog mjesta i opisa poslova (ukoliko je dostupan) izradiš nacrt tabele Opasnosti i štetnosti (Procjena rizika) u skladu s metodologijom 5x5.
 Za svaku prepoznatu opasnost ili štetnost definiši tipičnu Vjerovatnoću (1-5), Posljedicu (1-5) i predložene mjere zaštite na radu.
 Fokusiraj se na realne, specifične opasnosti za to radno mjesto. Generiši između 8 i 15 najvažnijih opasnosti.`;
 
 const hazardSchema = {
-    type: SchemaType.OBJECT,
+    type: "OBJECT",
     properties: {
         items: {
-            type: SchemaType.ARRAY,
+            type: "ARRAY",
             description: "Lista opasnosti i štetnosti za radno mjesto",
             items: {
-                type: SchemaType.OBJECT,
+                type: "OBJECT",
                 properties: {
-                    opisOpasnosti: { type: SchemaType.STRING, description: "Konkretan opis opasnosti ili štetnosti" },
-                    vjerovatnoca: { type: SchemaType.INTEGER, description: "Vjerovatnoća 1-5" },
-                    posljedica: { type: SchemaType.INTEGER, description: "Posljedica 1-5" },
-                    postojeceMjere: { type: SchemaType.STRING, description: "Standardne postojeće mjere (ako ih obično ima na ovom poslu)" },
-                    predlozeneMjere: { type: SchemaType.STRING, description: "Predložene dodatne mjere prevencije" },
-                    vjerovatnocaNakon: { type: SchemaType.INTEGER, description: "Očekivana vjerovatnoća nakon primjene mjera (1-5)" },
-                    posljedlicaNakon: { type: SchemaType.INTEGER, description: "Očekivana posljedica nakon primjene mjera (1-5)" }
+                    opisOpasnosti: { type: "STRING", description: "Konkretan opis opasnosti ili štetnosti" },
+                    vjerovatnoca: { type: "INTEGER", description: "Vjerovatnoća 1-5" },
+                    posljedica: { type: "INTEGER", description: "Posljedica 1-5" },
+                    postojeceMjere: { type: "STRING", description: "Standardne postojeće mjere (ako ih obično ima na ovom poslu)" },
+                    predlozeneMjere: { type: "STRING", description: "Predložene dodatne mjere prevencije" },
+                    vjerovatnocaNakon: { type: "INTEGER", description: "Očekivana vjerovatnoća nakon primjene mjera (1-5)" },
+                    posljedlicaNakon: { type: "INTEGER", description: "Očekivana posljedica nakon primjene mjera (1-5)" }
                 },
                 required: ["opisOpasnosti", "vjerovatnoca", "posljedica", "postojeceMjere", "predlozeneMjere", "vjerovatnocaNakon", "posljedlicaNakon"]
             }
@@ -31,7 +27,8 @@ const hazardSchema = {
 };
 
 export async function POST(req) {
-    if (!process.env.GEMINI_API_KEY) {
+    const apiKey = process.env.GEMINI_API_KEY || process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+    if (!apiKey) {
         return new Response(JSON.stringify({ error: 'GEMINI_API_KEY is not configured on the server.' }), { status: 500 });
     }
 
@@ -43,18 +40,35 @@ export async function POST(req) {
         if (companyName) prompt += `Kompanija: ${companyName}\n`;
         if (industry) prompt += `Djelatnost: ${industry}\n`;
 
-        const model = genAI.getGenerativeModel({
-            model: 'gemini-2.5-flash',
-            systemInstruction: SYSTEM_PROMPT,
+        const model = 'gemini-2.5-flash';
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+        const geminiBody = {
+            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: {
                 responseMimeType: "application/json",
                 responseSchema: hazardSchema,
             }
+        };
+
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geminiBody),
         });
 
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        const jsonResponse = JSON.parse(text);
+        if (!res.ok) {
+            const errData = await res.json().catch(() => ({}));
+            throw new Error(errData.error?.message ?? `API error ${res.status}`);
+        }
+
+        const data = await res.json();
+        const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (!outputText) throw new Error("No output text from Gemini");
+
+        const jsonResponse = JSON.parse(outputText);
 
         return new Response(JSON.stringify(jsonResponse), {
             status: 200,
