@@ -734,15 +734,10 @@ export default function ConverterPage() {
                     })}
                 </div>
               )}
-                </div>
-              )}
             </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-}
     </div>
   );
 }

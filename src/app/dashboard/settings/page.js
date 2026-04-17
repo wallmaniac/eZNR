@@ -583,7 +583,6 @@ export default function SettingsPage() {
                       {lang === 'bs' ? 'Logo će biti prikazan na svim obukama i upitnicima koje radnici primaju.' : 'Logo will appear on all trainings and questionnaires sent to workers.'}<br />
                       {lang === 'bs' ? 'Preporučena veličina: PNG ili SVG, max 500KB.' : 'Recommended: PNG or SVG, max 500KB.'}
                     </div>
-                    </div>
                   </div>
                 </div>
                 <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
