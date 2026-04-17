@@ -451,7 +451,7 @@ export default function ImportPage() {
         const existingPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
 
         // 3. Import PPE
-        let pSkipped = 0;
+        pSkipped = 0;
         pRows.forEach(row => {
             if (!row.naziv) { pSkipped++; return; }
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
@@ -479,7 +479,7 @@ export default function ImportPage() {
         const existingEquip = getAll(COLLECTIONS.EQUIPMENT);
 
         // 4. Import Equipment
-        let eSkipped = 0;
+        eSkipped = 0;
         eRows.forEach(row => {
             if (!row.naziv) { eSkipped++; return; }
 
@@ -512,7 +512,7 @@ export default function ImportPage() {
         const existingMedExams = getAll(COLLECTIONS.MEDICAL_EXAMS);
 
         // 5. Import Medical Exams
-        let mSkipped = 0;
+        mSkipped = 0;
         mRows.forEach(row => {
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
             if (!worker) { mSkipped++; return; }
