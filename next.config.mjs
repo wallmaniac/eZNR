@@ -9,13 +9,14 @@ loadDotenv({ path: path.join(__dirname, '.env.local'), override: true });
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ['mupdf'],
   env: {
     NEXT_PUBLIC_EMAILJS_SERVICE_ID: process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID,
     NEXT_PUBLIC_EMAILJS_TEMPLATE_ID: process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID,
     NEXT_PUBLIC_EMAILJS_PUBLIC_KEY: process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY,
   },
   outputFileTracingIncludes: {
-    '/api/pdf-parse': ['./node_modules/mupdf/dist/*.wasm'],
+    '/api/firebase-proxy': ['./node_modules/mupdf/dist/*.wasm'],
   },
 };
 
