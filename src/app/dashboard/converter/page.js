@@ -224,38 +224,60 @@ async function buildDocxFromPages(pages) {
     const buildTable = (rows) => {
       const numCols = Math.max(...rows.map(r => r.length));
 
-      // Calculate column widths from x positions
-      // Col boundary: x position of second column (first unique x > first col x)
-      // Use consistent x across all rows
-      const col0xs = rows.map(r => r[0]?.x ?? 0);
-      const col1xs = rows.filter(r => r[1]).map(r => r[1]?.x ?? 0);
-      const col0x = Math.min(...col0xs);
-      const col1x = col1xs.length ? Math.min(...col1xs) : col0x + 100;
-      // Page content width from left col start to ~right margin
+      // Calculate dynamic column widths from strict x positions
+      const minLeft = Math.min(...rows.flatMap(r => r.map(l => l.x || 0)));
       const rightEdge = Math.max(...rows.flatMap(r => r.map(l => (l.x || 0) + (l.blockW || 0))));
-      const totalW = Math.max(rightEdge - col0x, 1);
-      const col0pct = numCols === 1 ? 100 : Math.max(Math.round((col1x - col0x) / totalW * 100), 10);
-      const col1pct = 100 - col0pct;
+      const totalW = Math.max(rightEdge - minLeft, 1);
+
+      const colStarts = [];
+      for (let ci = 0; ci < numCols; ci++) {
+        const xs = rows.map(r => r[ci]?.x).filter(x => x !== undefined);
+        colStarts.push(xs.length ? Math.min(...xs) : (colStarts[ci - 1] || minLeft) + 50);
+      }
+
+      const colWidthsPct = [];
+      let usedPct = 0;
+      for (let ci = 0; ci < numCols - 1; ci++) {
+        const cx = colStarts[ci];
+        const nx = colStarts[ci + 1];
+        const pct = Math.max(Math.round(((nx - cx) / totalW) * 100), 5); // At least 5% to avoid weird word wrapping
+        colWidthsPct.push(pct);
+        usedPct += pct;
+      }
+      colWidthsPct.push(Math.max(100 - usedPct, 5));
 
       const isSingle = rows.length === 1;
       const tableRows = rows.map(row => {
         const cells = Array.from({ length: numCols }, (_, ci) => {
           const ln = row[ci];
-          if (!ln) return new TableCell({ children: [new Paragraph({ children: [] })], width: { size: ci === 0 ? col0pct : col1pct, type: WidthType.PERCENTAGE }, borders: { top: none(), bottom: thin(), left: none(), right: none() }, margins: { top: 40, bottom: 40, left: 100, right: 100 } });
+          const widthSpec = { size: colWidthsPct[ci], type: WidthType.PERCENTAGE };
+          const borders = { top: none(), bottom: thin(), left: none(), right: none() };
+
+          if (!ln) {
+            return new TableCell({
+              children: [new Paragraph({ children: [] })],
+              width: widthSpec,
+              borders,
+              margins: { top: 40, bottom: 40, left: 100, right: 100 }
+            });
+          }
+
           const bold = ln.font.weight === 'bold' || (ln.font.name || '').toLowerCase().includes('bold') || (ln.font.name || '').toLowerCase().includes('semibold');
           const italic = ln.font.style === 'italic' || (ln.font.name || '').toLowerCase().includes('italic');
-          const size = Math.max(Math.round((ln.font.size || bodySize) * 2 * 0.75), 16);
-          const centered = isSingle && Math.abs((ln.x + ln.blockW / 2) - pageCenterX) < pageWidth * 0.1;
+          const size = Math.max(Math.round((ln.font.size || bodySize) * 2 * 0.75), 18);
+          const centered = isSingle && numCols === 1 && Math.abs((ln.x + ln.blockW / 2) - pageCenterX) < pageWidth * 0.1;
           const isSmall = (ln.font.size || bodySize) < bodySize * 0.85;
           const color = bold ? NAVY : (isSmall ? GRAY : DARK);
+          
           const runs = CB_RE.test(ln.text)
             ? [new TextRun({ text: ln.text, font: 'Segoe UI Symbol', size, color })]
             : [new TextRun({ text: ln.text, bold, italics: italic, size, color })];
+
           return new TableCell({
-            width: { size: ci === 0 ? col0pct : col1pct, type: WidthType.PERCENTAGE },
+            width: widthSpec,
             children: [new Paragraph({ children: runs, alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT })],
             margins: { top: 40, bottom: 40, left: 100, right: 100 },
-            borders: { top: none(), bottom: thin(), left: none(), right: none() },
+            borders,
           });
         });
         return new TableRow({ children: cells });
