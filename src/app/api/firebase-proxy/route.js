@@ -11,6 +11,7 @@
 import { Resend } from 'resend';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import docx from 'docx';
 
 export const maxDuration = 300;
 
@@ -547,6 +548,172 @@ async function handlePdfParse(data) {
     }
 }
 
+// ─── Native PDF → DOCX Conversion ───────────────────────────────────────────
+function pt2Twip(pt) {
+    return Math.max(1, Math.round(pt * 20));
+}
+
+async function handlePdfToWord(requestData) {
+    try {
+        const { base64Data, filename = 'document.pdf' } = requestData || {};
+        if (!base64Data) throw new Error('No base64Data provided in the request');
+
+        const buffer = Buffer.from(base64Data, 'base64');
+        const mupdf = (await import('mupdf')).default;
+        
+        const pdf = mupdf.Document.openDocument(new Uint8Array(buffer), 'application/pdf');
+        const numPages = pdf.countPages();
+
+        const children = [];
+
+        for (let pi = 0; pi < numPages; pi++) {
+            const page = pdf.loadPage(pi);
+            const bounds = page.getBounds();
+
+            // 1. Extract Widgets (Checkboxes)
+            const widgets = [];
+            try {
+                const pageWidgets = page.getWidgets ? page.getWidgets() : [];
+                for (const w of pageWidgets) {
+                    try {
+                        const rect = w.getRect ? w.getRect() : null;
+                        const fieldType = w.getFieldType ? w.getFieldType() : null;
+                        const value = w.getValue ? w.getValue() : null;
+                        if (rect && fieldType === 'checkbox') {
+                            widgets.push({
+                                rect,
+                                checked: value && value !== 'Off' && value !== '' && value !== '0',
+                            });
+                        }
+                    } catch { } // ignore individual widget issues
+                }
+            } catch { }
+
+            // 2. Add un-matched checkboxes explicitly as text boxes
+            for (let i = 0; i < widgets.length; i++) {
+                const w = widgets[i];
+                const cbChar = w.checked ? '☑' : '☐';
+                children.push(new docx.Paragraph({
+                    children: [new docx.TextRun({ text: cbChar, font: 'Segoe UI Symbol', size: 24, color: '000000' })],
+                    frame: {
+                        position: { x: pt2Twip(w.rect[0]), y: pt2Twip(w.rect[1]) },
+                        width: pt2Twip(40), height: pt2Twip(40),
+                        anchor: { horizontal: docx.FrameAnchorType.PAGE, vertical: docx.FrameAnchorType.PAGE }
+                    },
+                    pageBreakBefore: pi > 0 && i === 0
+                }));
+            }
+
+            // 3. Extract Structured Text
+            const stext = page.toStructuredText('preserve-whitespace,preserve-spans');
+            const parsed = JSON.parse(stext.asJSON());
+
+            let firstParagraphOfPage = true;
+
+            if (parsed.blocks) {
+                for (const block of parsed.blocks) {
+                    if (block.type !== 'text' || !block.lines) continue;
+                    
+                    for (const line of block.lines) {
+                        if (!line.spans) continue;
+                        
+                        const textRuns = [];
+                        let minX = 999999, minY = 999999, maxX = 0, maxY = 0;
+                        let lineHasPotpis = false;
+                        
+                        for (let s of line.spans) {
+                            if (!s.text) continue;
+                            const text = s.text;
+                            
+                            // Signature detection
+                            if (text.toLowerCase().includes('(potpis')) {
+                                lineHasPotpis = true;
+                            }
+
+                            let x0, y0, x1, y1;
+                            if (Array.isArray(s.bbox)) {
+                                [x0, y0, x1, y1] = s.bbox;
+                            } else if (s.bbox && typeof s.bbox === 'object') {
+                                x0 = s.bbox.x; y0 = s.bbox.y;
+                                x1 = s.bbox.x + s.bbox.w; y1 = s.bbox.y + s.bbox.h;
+                            } else {
+                                continue;
+                            }
+
+                            if (x0 < minX) minX = x0;
+                            if (y0 < minY) minY = y0;
+                            if (x1 > maxX) maxX = x1;
+                            if (y1 > maxY) maxY = y1;
+
+                            let fontName = s.font || 'Calibri';
+                            let isBold = fontName.toLowerCase().includes('bold');
+                            let isItalic = fontName.toLowerCase().includes('italic');
+                            let size = s.size || 11;
+                            let color = s.color ? s.color.toString(16).padStart(6, '0') : '000000';
+
+                            textRuns.push(new docx.TextRun({
+                                text,
+                                font: fontName,
+                                size: Math.max(1, Math.round(size * 2)), // docx size is half-points
+                                bold: isBold,
+                                italics: isItalic,
+                                color,
+                            }));
+                        }
+                        
+                        if (textRuns.length === 0) continue;
+
+                        const width = maxX - minX;
+                        const height = maxY - minY;
+
+                        const pOpts = {
+                            children: textRuns,
+                            frame: {
+                                position: { x: pt2Twip(minX), y: pt2Twip(minY) },
+                                width: Math.max(pt2Twip(width + 100), 1000), 
+                                height: Math.max(pt2Twip(height + 10), 400),
+                                anchor: { horizontal: docx.FrameAnchorType.PAGE, vertical: docx.FrameAnchorType.PAGE }
+                            }
+                        };
+                        
+                        if (lineHasPotpis) {
+                            pOpts.border = {
+                                top: { color: "000000", space: 1, style: docx.BorderStyle.SINGLE, size: 6 }
+                            };
+                            pOpts.frame.width = Math.max(pOpts.frame.width, pt2Twip(150));
+                        }
+
+                        if (pi > 0 && firstParagraphOfPage && widgets.length === 0) {
+                            pOpts.pageBreakBefore = true;
+                        }
+                        firstParagraphOfPage = false;
+
+                        children.push(new docx.Paragraph(pOpts));
+                    }
+                }
+            }
+            
+            if (pi > 0 && firstParagraphOfPage && widgets.length === 0) {
+                 children.push(new docx.Paragraph({ pageBreakBefore: true, children: [new docx.TextRun("")] }));
+            }
+        }
+
+        const doc = new docx.Document({
+            sections: [{ 
+                properties: { page: { margin: { top: 0, right: 0, bottom: 0, left: 0 } } },
+                children 
+            }]
+        });
+
+        const docxBase64 = await docx.Packer.toBase64String(doc);
+        return { success: true, base64Data: docxBase64, filename: filename.replace(/\.pdf$/i, '.docx') };
+
+    } catch (e) {
+        console.error('[handlePdfToWord]', e);
+        throw new Error(String(e?.message || e));
+    }
+}
+
 // ─── notifSettings handlers (real Firestore via Admin SDK) ───────────────────
 async function handleSaveNotifSettings(data) {
     const { companyId, settings } = data;
@@ -590,6 +757,7 @@ const HANDLERS = {
     parsePresentation: handleParsePresentation,
     sendEmail: handleSendEmail,
     pdfParse: handlePdfParse,
+    pdfToWord: handlePdfToWord,
     saveNotifSettings: handleSaveNotifSettings,
     getNotifSettings: handleGetNotifSettings,
 };
