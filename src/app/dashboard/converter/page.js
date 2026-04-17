@@ -158,67 +158,80 @@ async function buildDocxFromPages(pages) {
     }
 
 
-    // Each line: { text, font:{weight,style,size,name}, bbox, blockBbox, x, y }
+    // MuPDF asJSON returns bbox as [x0, y0, x1, y1] array
+    const bboxObj = (bb) => {
+      if (!bb) return { x: 0, y: 0, w: 0, h: 0 };
+      if (Array.isArray(bb)) return { x: bb[0], y: bb[1], w: bb[2] - bb[0], h: bb[3] - bb[1] };
+      return { x: bb.x ?? 0, y: bb.y ?? 0, w: bb.w ?? 0, h: bb.h ?? 0 }; // legacy object format
+    };
+
+    // Each line: { text, font, x, y, w, h, blockW }
     const allLines = [];
     for (const block of blocks) {
       if (block.type !== 'text') continue;
+      const blockBbox = bboxObj(block.bbox);
       for (const line of block.lines || []) {
-        const text = line.text || (line.spans || []).map(s => s.text).join('') || '';
+        const lineBbox = bboxObj(line.bbox);
+        // Collect full text and dominant font from spans
+        let text = '';
+        let font = line.font || {};
+        if (line.spans && line.spans.length > 0) {
+          text = line.spans.map(s => s.text || '').join('');
+          // Use font from largest/first span
+          const spanWithFont = line.spans.find(s => s.font) || line.spans[0];
+          if (spanWithFont?.font) font = spanWithFont.font;
+          else if (spanWithFont?.size) font = { size: spanWithFont.size, name: spanWithFont.family || '' };
+        } else {
+          text = line.text || '';
+        }
         if (!text.trim()) continue;
+
         allLines.push({
-          text:     text.trim(),
-          font:     line.font || {},
-          x:        line.x ?? block.bbox.x,
-          y:        Math.round(line.y ?? block.bbox.y),
-          bbox:     line.bbox || block.bbox,
-          blockW:   block.bbox.w,
+          text:   text.trim(),
+          font:   font,
+          x:      lineBbox.x || blockBbox.x,
+          y:      lineBbox.y || blockBbox.y,  // top of line (not baseline)
+          w:      lineBbox.w || blockBbox.w,
+          h:      Math.max(lineBbox.h, 1),
+          blockW: blockBbox.w,
         });
       }
     }
 
     // Skip header/footer lines (very top or very bottom of page)
-    const margin = 30;
-    const bodyLines = allLines.filter(l => l.y > margin && l.y < (pages[pi].pageHeight || 842) - margin);
+    const pageH = pages[pi].pageHeight || 842;
+    const margin = 20;
+    const bodyLines = allLines.filter(l => l.y > margin && l.y < pageH - margin);
 
-    // Body font size (mode)
-    const sizes = bodyLines.map(l => Math.round(l.font.size || 9)).filter(s => s > 0);
+    // Body font size (mode) — use 'size' from font object
+    const sizes = bodyLines.map(l => {
+      const s = l.font?.size || 0;
+      return Math.round(s);
+    }).filter(s => s > 0);
     const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
-    const bodySize = sizes.length ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 9;
+    const bodySize = sizes.length ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 10;
 
-    // ── Group lines by Y into rows ──────────────────────────────────────────
-    // Primary: Y-tolerance (bodySize-based). Secondary: safe bbox overlap check.
-    const tol = Math.max(bodySize * 0.7, 5);
-    const yGroups = []; // [{y, lines:[...]}]
+    // ── Group lines into visual rows by Y-overlap ───────────────────────────
+    // Since we now use lineBbox.y (top), overlap detection is robust.
+    const tol = Math.max(bodySize * 0.6, 4); // lines within half a line-height = same row
+    const yGroups = [];
     for (const line of bodyLines) {
+      const lineTop = line.y;
+      const lineBot = line.y + line.h;
       let placed = false;
       for (const g of yGroups) {
-        // Y-tolerance check (safe, always works)
-        if (Math.abs(g.y - line.y) <= tol) {
+        // Check if this line overlaps the group's vertical range
+        const overlapTop = Math.max(g.top, lineTop);
+        const overlapBot = Math.min(g.bot, lineBot);
+        if (overlapBot > overlapTop || Math.abs(g.y - lineTop) <= tol) {
           g.lines.push(line);
           g.y = g.lines.reduce((s, l) => s + l.y, 0) / g.lines.length;
+          g.top = Math.min(g.top, lineTop);
+          g.bot = Math.max(g.bot, lineBot);
           placed = true; break;
         }
-        // Secondary: bbox overlap check — only when heights are non-zero
-        const lH = (line.bbox?.h > 0) ? line.bbox.h : null;
-        const gH = (g.bboxH > 0) ? g.bboxH : null;
-        if (lH && gH) {
-          const minH = Math.min(gH, lH);
-          const overlapTop = Math.max(g.bboxY, line.bbox.y ?? line.y);
-          const overlapBottom = Math.min(g.bboxY + gH, (line.bbox.y ?? line.y) + lH);
-          const overlapH = overlapBottom - overlapTop;
-          if (overlapH / minH > 0.4) {
-            g.lines.push(line);
-            g.y = g.lines.reduce((s, l) => s + l.y, 0) / g.lines.length;
-            placed = true; break;
-          }
-        }
       }
-      if (!placed) yGroups.push({
-        y: line.y,
-        bboxY: line.bbox?.y ?? line.y,
-        bboxH: line.bbox?.h ?? 0,
-        lines: [line]
-      });
+      if (!placed) yGroups.push({ y: lineTop, top: lineTop, bot: lineBot, lines: [line] });
     }
     yGroups.sort((a, b) => a.y - b.y);
 
@@ -342,8 +355,8 @@ async function buildDocxFromPages(pages) {
       const isMuchLarger = size > bodySize * 1.5;
       const isHead = isHeading(text, bold, size, bodySize);
       const isSmall = size < bodySize * 0.85;
-      const blockCX = (ln.x || 0) + (ln.blockW || 0) / 2;
-      const blockWide = (ln.blockW || 0) > pageWidth * 0.55;
+      const blockCX = (ln.x || 0) + (ln.w || ln.blockW || 0) / 2;
+      const blockWide = (ln.w || ln.blockW || 0) > pageWidth * 0.55;
       const isCentered = !blockWide && Math.abs(blockCX - pageCenterX) < pageWidth * 0.08;
       const color = isHead || isMuchLarger ? NAVY : (isSmall ? GRAY : DARK);
 
