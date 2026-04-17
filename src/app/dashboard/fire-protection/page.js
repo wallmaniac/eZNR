@@ -7,7 +7,6 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
-import SwipeRow from '@/components/mobile/SwipeRow';
 
 // ── Fire Extinguisher ──
 const EMPTY_EXT = {
@@ -43,14 +42,6 @@ export default function FireProtectionPage() {
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
-
-    const [isMobile, setIsMobile] = useState(false);
-    useEffect(() => {
-        const check = () => setIsMobile(window.innerWidth < 768);
-        check();
-        window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
-    }, []);
 
     const [tab, setTab] = useState('extinguishers'); // 'extinguishers' | 'hydrants'
 
