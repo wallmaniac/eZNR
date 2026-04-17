@@ -123,8 +123,20 @@ async function buildDocxFromPages(pages) {
   const allChildren = [];
 
   for (let pi = 0; pi < pages.length; pi++) {
-    const { blocks = [], pageWidth = 595 } = pages[pi];
+    const { blocks = [], pageWidth = 595, widgets = [] } = pages[pi];
     const pageCenterX = pageWidth / 2;
+
+    // Build a fast lookup: is there a checked widget near (x, y)?
+    const isWidgetChecked = (x, y) => {
+      for (const w of widgets) {
+        const r = Array.isArray(w.rect) ? w.rect : [0,0,0,0];
+        // Expand hit-box by 10pt for tolerance
+        if (x >= r[0] - 10 && x <= r[2] + 10 && y >= r[1] - 10 && y <= r[3] + 10) {
+          return w.checked;
+        }
+      }
+      return null; // no widget found near this position
+    };
 
     // ── Gemini fallback: plain text per page (no MuPDF block data) ──────────
     // Gemini returns { pageNum, text } — no blocks/font metadata.
@@ -245,26 +257,28 @@ async function buildDocxFromPages(pages) {
     yGroups.sort((a, b) => a.y - b.y);
 
     // ── Classify each Y-group and build DOCX elements ───────────────────────
-    // A Y-group with 2+ lines at same Y = potential table row (label | value)
-    // A Y-group with 1 line = paragraph
+    // "Signature row" = a row with 2-3 columns where at least one cell contains (potpis)
+    const isSigRow = (lines) => lines.some(l => /\(potpis|\(pot\./i.test(l.text));
+    // Checkbox patterns: Unicode checkbox chars OR Zapf Dingbats chars (u+0067='g'=✓ in ZapfDingbats)
+    const CB_CHARS_RE = /^[✓✔☑☒☐□✗✘]/;
 
-    // Accumulate consecutive 2-col table rows
+    // Accumulate consecutive multi-column rows into tableAcc for table rendering
     let tableAcc = [];
     const flushTable = () => {
       if (!tableAcc.length) return;
-      if (tableAcc.length === 1 && tableAcc[0].length <= 3) {
-        // Single-row multi-col (signature) — emit as table
-        buildTable(tableAcc);
-      } else if (tableAcc.length >= 2) {
+      // ANY row with 2+ cols builds a table; even single-row (signature / multi-col)
+      if (tableAcc[0].length >= 2 || tableAcc.length >= 2) {
         buildTable(tableAcc);
       } else {
-        // Single-row, 1 col — emit as paragraph
+        // Truly single-col single-row → paragraph
         for (const row of tableAcc) for (const ln of row) emitLine(ln);
       }
       tableAcc = [];
     };
 
     const buildTable = (rows) => {
+      const hasSigLine = rows.some(r => isSigRow(r));
+
       // Find distinct X grid anchors across all rows in the table group
       let allXs = rows.flatMap(r => r.map(l => l.x || 0));
       allXs.sort((a, b) => a - b);
@@ -275,7 +289,6 @@ async function buildDocxFromPages(pages) {
            colStarts.push(x);
         }
       }
-      // Safety: if no columns detected, treat as single column
       if (!colStarts.length) colStarts.push(0);
       const numCols = colStarts.length;
 
@@ -286,57 +299,53 @@ async function buildDocxFromPages(pages) {
       const colWidthsPct = [];
       let usedPct = 0;
       for (let ci = 0; ci < numCols - 1; ci++) {
-        const cx = colStarts[ci];
-        const nx = colStarts[ci + 1];
-        const pct = Math.max(Math.round(((nx - cx) / totalW) * 100), 2);
+        const pct = Math.max(Math.round(((colStarts[ci + 1] - colStarts[ci]) / totalW) * 100), 2);
         colWidthsPct.push(pct);
         usedPct += pct;
       }
       colWidthsPct.push(Math.max(100 - usedPct, 2));
 
-      const isSingle = rows.length === 1;
       const tableRows = rows.map(row => {
-        // Map lines logically into calculated geographic grid cells
+        // Map lines into geographic grid cells
         const mappedLines = Array(numCols).fill(null);
         for (const ln of row) {
-           let bestCi = 0;
-           let bestDiff = Infinity;
-           for (let ci = 0; ci < numCols; ci++) {
-             const diff = Math.abs((ln.x || 0) - colStarts[ci]);
-             if (diff < bestDiff) { bestDiff = diff; bestCi = ci; }
-           }
-           if (mappedLines[bestCi]) mappedLines[bestCi].text += " " + ln.text;
-           else mappedLines[bestCi] = { ...ln };
+          let bestCi = 0, bestDiff = Infinity;
+          for (let ci = 0; ci < numCols; ci++) {
+            const diff = Math.abs((ln.x || 0) - colStarts[ci]);
+            if (diff < bestDiff) { bestDiff = diff; bestCi = ci; }
+          }
+          if (mappedLines[bestCi]) mappedLines[bestCi].text += ' ' + ln.text;
+          else mappedLines[bestCi] = { ...ln };
         }
+
+        // Is this row a signature-label row? (contains "(potpis")
+        const thisRowIsSig = isSigRow(row);
 
         const cells = Array.from({ length: numCols }, (_, ci) => {
           const ln = mappedLines[ci];
           const widthSpec = { size: colWidthsPct[ci], type: WidthType.PERCENTAGE };
-          const borders = { top: none(), bottom: thin(), left: none(), right: none() };
+          // Signature cells get a top border (the signature line drawn ABOVE the name in the PDF)
+          const borders = hasSigLine && !thisRowIsSig
+            ? { top: thin(), bottom: none(), left: none(), right: none() }
+            : { top: none(), bottom: thin(), left: none(), right: none() };
 
           if (!ln) {
-            return new TableCell({
-              children: [new Paragraph({ children: [] })],
-              width: widthSpec,
-              borders,
-              margins: { top: 40, bottom: 40, left: 100, right: 100 }
-            });
+            return new TableCell({ children: [new Paragraph({ children: [] })], width: widthSpec, borders, margins: { top: 40, bottom: 40, left: 100, right: 100 } });
           }
 
-          const bold = ln.font.weight === 'bold' || (ln.font.name || '').toLowerCase().includes('bold') || (ln.font.name || '').toLowerCase().includes('semibold');
-          const italic = ln.font.style === 'italic' || (ln.font.name || '').toLowerCase().includes('italic');
-          const size = Math.max(Math.round((ln.font.size || bodySize) * 2 * 0.75), 18);
-          const centered = isSingle && numCols === 1 && Math.abs((ln.x + ln.blockW / 2) - pageCenterX) < pageWidth * 0.1;
-          const isSmall = (ln.font.size || bodySize) < bodySize * 0.85;
+          const bold = (ln.font?.weight === 'bold') || (ln.font?.name || '').toLowerCase().includes('bold') || (ln.font?.name || '').toLowerCase().includes('semibold');
+          const italic = (ln.font?.style === 'italic') || (ln.font?.name || '').toLowerCase().includes('italic');
+          const size = Math.max(Math.round((ln.font?.size || bodySize) * 2 * 0.75), 18);
+          const isSmall = (ln.font?.size || bodySize) < bodySize * 0.85;
           const color = bold ? NAVY : (isSmall ? GRAY : DARK);
-          
-          const runs = CB_RE.test(ln.text)
+
+          const runs = CB_CHARS_RE.test(ln.text)
             ? [new TextRun({ text: ln.text, font: 'Segoe UI Symbol', size, color })]
             : [new TextRun({ text: ln.text, bold, italics: italic, size, color })];
 
           return new TableCell({
             width: widthSpec,
-            children: [new Paragraph({ children: runs, alignment: centered ? AlignmentType.CENTER : AlignmentType.LEFT })],
+            children: [new Paragraph({ children: runs })],
             margins: { top: 40, bottom: 40, left: 100, right: 100 },
             borders,
           });
@@ -409,21 +418,27 @@ async function buildDocxFromPages(pages) {
       // Sort lines within group by x
       lines.sort((a, b) => (a.x || 0) - (b.x || 0));
 
-      // Checkbox row: first line is solo checkbox, second is text
-      if (lines.length === 2 && CB_RE.test(lines[0].text)) {
+      // Checkbox row: first element is a checkbox character followed by text
+      // Check widget state to render ✓ or □ correctly
+      const firstIsCheckbox = lines.length >= 1 && CB_CHARS_RE.test(lines[0].text.trim()[0]);
+      if (firstIsCheckbox && lines.length >= 1) {
         flushTable();
-        const ln = lines[1];
-        const bold = (ln.font.name || '').toLowerCase().includes('bold') || (ln.font.name || '').toLowerCase().includes('semibold');
-        const italic = ln.font.style === 'italic' || (ln.font.name || '').toLowerCase().includes('italic');
-        const sz = Math.max(Math.round((ln.font.size || bodySize) * 2 * 0.75), 16);
-        allChildren.push(new Paragraph({
-          children: [
-            new TextRun({ text: lines[0].text + '  ', font: 'Segoe UI Symbol', size: sz }),
-            new TextRun({ text: ln.text, bold, italics: italic, size: sz, color: DARK }),
-          ],
-          spacing: { after: 40 },
-          indent: { left: 0 },
-        }));
+        const cbLine = lines[0];
+        const textLine = lines.length > 1 ? lines[1] : null;
+        // Determine if this checkbox is checked via widget data or by the extracted character
+        const widgetState = isWidgetChecked(cbLine.x, cbLine.y);
+        const checkedChar = (widgetState === true || /^[✓✔☑]/.test(cbLine.text)) ? '\u2611' : '\u2610'; // ☑ or ☐
+        
+        const sz = Math.max(Math.round((cbLine.font?.size || bodySize) * 2 * 0.75), 18);
+        const runs = [new TextRun({ text: checkedChar + '  ', font: 'Segoe UI Symbol', size: sz })];
+        if (textLine) {
+          const bold2 = (textLine.font?.name || '').toLowerCase().includes('bold');
+          runs.push(new TextRun({ text: textLine.text, bold: bold2, size: sz, color: DARK }));
+        } else if (cbLine.text.length > 1) {
+          // Checkbox char + text in same string
+          runs.push(new TextRun({ text: cbLine.text.replace(/^[✓✔☑☒☐□✗✘\u2610-\u2612]\s*/, ''), size: sz, color: DARK }));
+        }
+        allChildren.push(new Paragraph({ children: runs, spacing: { after: 40 } }));
         continue;
       }
 
