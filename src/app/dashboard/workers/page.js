@@ -379,6 +379,7 @@ function WorkersPageInner() {
     };
 
     const handleNew = () => {
+
         setFormData({ ...emptyWorker });
         setEditingWorker(null);
         editingWorkerRef.current = null;

@@ -30,11 +30,29 @@ const MEDEXAM_COLS = [
     'radnik_ime', 'radnik_prezime', 'radnik_jmbg',
     'tipPregleda', 'datum', 'vrijediDo', 'rezultat', 'napomena'
 ];
+const OU_COLS = ['naziv', 'opis'];
+const WP_COLS = ['naziv', 'opis'];
 
 function generateTemplate() {
     const wb = XLSX.utils.book_new();
 
-    // Sheet 1: Radnici
+    // Sheet 1: Org. Jedinice
+    const wsOU = XLSX.utils.aoa_to_sheet([
+        OU_COLS,
+        ['Produkcija', 'Glavni pogon za proizvodnju'],
+    ]);
+    wsOU['!cols'] = OU_COLS.map(() => ({ wch: 25 }));
+    XLSX.utils.book_append_sheet(wb, wsOU, 'OrgJedinice');
+
+    // Sheet 2: Radna Mjesta
+    const wsWP = XLSX.utils.aoa_to_sheet([
+        WP_COLS,
+        ['Serviser', 'Održavanje mašina i sistema'],
+    ]);
+    wsWP['!cols'] = WP_COLS.map(() => ({ wch: 25 }));
+    XLSX.utils.book_append_sheet(wb, wsWP, 'RadnaMjesta');
+
+    // Sheet 3: Radnici
     const wsW = XLSX.utils.aoa_to_sheet([
         WORKER_COLS,
         ['Pero', 'Perić', 'Ivanov', '0101123456789', '', 'M', '1985-01-01', 'Sarajevo',
@@ -111,6 +129,9 @@ function generateTemplate() {
         ['  - Povezi radnika s radnik_jmbg ILI radnik_ime + radnik_prezime'],
         ['  - tipPregleda: Prethodni / Periodični / Izvanredni / Kontrolni'],
         ['  - rezultat: Sposoban / Nesposoban / Uvjetno sposoban'],
+        [],
+        ['ORG JEDINICE & RADNA MJESTA:'],
+        ['  - naziv mora biti tacan kako bi se radnici uspjesno povezali'],
     ]);
     wsI['!cols'] = [{ wch: 60 }];
     XLSX.utils.book_append_sheet(wb, wsI, 'Upute');
@@ -122,6 +143,24 @@ function generateExport(companyId) {
     const wb = XLSX.utils.book_new();
     const allWp = getAll(COLLECTIONS.WORKPLACES);
     const allOU = getAll(COLLECTIONS.ORG_UNITS);
+
+    // 0a. Org Jedinice
+    const ouRows = [OU_COLS];
+    allOU.filter(ou => companyId === 'all' || ou.companyId === companyId).forEach(ou => {
+        ouRows.push([ou.naziv || '', ou.opis || '']);
+    });
+    const wsOU = XLSX.utils.aoa_to_sheet(ouRows);
+    wsOU['!cols'] = OU_COLS.map(() => ({ wch: 25 }));
+    XLSX.utils.book_append_sheet(wb, wsOU, 'OrgJedinice');
+
+    // 0b. Radna Mjesta
+    const wpRows = [WP_COLS];
+    allWp.filter(wp => companyId === 'all' || wp.companyId === companyId).forEach(wp => {
+        wpRows.push([wp.naziv || '', wp.opis || '']);
+    });
+    const wsWP = XLSX.utils.aoa_to_sheet(wpRows);
+    wsWP['!cols'] = WP_COLS.map(() => ({ wch: 25 }));
+    XLSX.utils.book_append_sheet(wb, wsWP, 'RadnaMjesta');
 
     // 1. Radnici
     const wRows = [WORKER_COLS];
@@ -243,12 +282,14 @@ export default function ImportPage() {
         reader.onload = (e) => {
             try {
                 const wb = XLSX.read(e.target.result, { type: 'binary', cellDates: true });
+                const ouRows = parseSheet(wb, 'OrgJedinice');
+                const wpRows = parseSheet(wb, 'RadnaMjesta');
                 const workers = parseSheet(wb, 'Radnici');
                 const certs = parseSheet(wb, 'Uvjerenja');
                 const ppe = parseSheet(wb, 'OZO');
                 const equip = parseSheet(wb, 'Oprema');
                 const medExams = parseSheet(wb, 'Ljekarski');
-                setPreview({ workers, certs, ppe, equip, medExams });
+                setPreview({ ouRows, wpRows, workers, certs, ppe, equip, medExams });
                 setStep('preview');
             } catch (err) {
                 setFileError('Greška pri čitanju dokumenta: ' + err.message);
@@ -271,18 +312,44 @@ export default function ImportPage() {
 
     const handleImport = () => {
         setImporting(true);
-        const { workers: wRows, certs: cRows, ppe: pRows, equip: eRows = [], medExams: mRows = [] } = preview;
-        let wCreated = 0, wSkipped = 0, cCreated = 0, cSkipped = 0, pCreated = 0, eCreated = 0, mCreated = 0;
+        const { workers: wRows = [], certs: cRows = [], ppe: pRows = [], equip: eRows = [], medExams: mRows = [], ouRows = [], wpRows = [] } = preview;
+        let wCreated = 0, wSkipped = 0, cCreated = 0, cSkipped = 0, pCreated = 0, pSkipped = 0, eCreated = 0, eSkipped = 0, mCreated = 0, mSkipped = 0;
+        let ouCreated = 0, ouSkipped = 0, wpCreated = 0, wpSkipped = 0;
         let wpLinked = 0, wpTotal = 0, ouLinked = 0, ouTotal = 0;
 
-        // Resolve helpers
+        // 0. Import Org Units and Workplaces FIRST
         const allWorkplaces = getAll(COLLECTIONS.WORKPLACES);
         const allOrgUnits = getAll(COLLECTIONS.ORG_UNITS);
+
+        ouRows.forEach(row => {
+            const naziv = String(row.naziv || '').trim();
+            if (!naziv) { ouSkipped++; return; }
+            if (allOrgUnits.find(o => o.companyId === companyId && o.naziv.toLowerCase() === naziv.toLowerCase())) {
+                ouSkipped++; return;
+            }
+            const newOU = create(COLLECTIONS.ORG_UNITS, { naziv, opis: String(row.opis || '').trim(), companyId });
+            allOrgUnits.push(newOU);
+            ouCreated++;
+        });
+
+        wpRows.forEach(row => {
+            const naziv = String(row.naziv || '').trim();
+            if (!naziv) { wpSkipped++; return; }
+            if (allWorkplaces.find(w => w.companyId === companyId && w.naziv.toLowerCase() === naziv.toLowerCase())) {
+                wpSkipped++; return;
+            }
+            const newWP = create(COLLECTIONS.WORKPLACES, { naziv, opis: String(row.opis || '').trim(), companyId });
+            allWorkplaces.push(newWP);
+            wpCreated++;
+        });
+
         const fuzzyMatch = (list, text, field = 'naziv') => {
             if (!text) return null;
             const t = String(text).toLowerCase().trim();
-            return list.find(item => (item[field] || '').toLowerCase().trim() === t)
-                || list.find(item => (item[field] || '').toLowerCase().trim().includes(t) || t.includes((item[field] || '').toLowerCase().trim()));
+            // Restrict fuzzy match to the same companyId or explicitly system-wide items
+            const filtered = list.filter(item => item.companyId === companyId || item.companyId === 'all');
+            return filtered.find(item => (item[field] || '').toLowerCase().trim() === t)
+                || filtered.find(item => (item[field] || '').toLowerCase().trim().includes(t) || t.includes((item[field] || '').toLowerCase().trim()));
         };
 
         // 1. Import workers
@@ -471,7 +538,7 @@ export default function ImportPage() {
             mCreated++;
         });
 
-        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped, wpLinked, wpTotal, ouLinked, ouTotal });
+        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped, wpLinked, wpTotal, ouLinked, ouTotal, ouCreated, ouSkipped, wpCreated, wpSkipped });
         setImporting(false);
         setStep('done');
     };
@@ -585,6 +652,8 @@ export default function ImportPage() {
                     {/* Summary cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
                         {[
+                            { label: lang === 'bs' ? 'Org. Jedinice' : 'Org Units', count: (preview.ouRows || []).length, icon: '🏢', color: '#3F51B5' },
+                            { label: lang === 'bs' ? 'Radna mjesta' : 'Workplaces', count: (preview.wpRows || []).length, icon: '📍', color: '#00BCD4' },
                             { label: lang === 'bs' ? 'Radnika' : 'Workers', count: preview.workers.length, icon: '👷', color: 'var(--primary)' },
                             { label: lang === 'bs' ? 'Uvjerenja' : 'Certificates', count: preview.certs.length, icon: '📜', color: '#9C27B0' },
                             { label: 'OZO / PPE', count: preview.ppe.length, icon: '🦺', color: '#FF9800' },
@@ -666,6 +735,8 @@ export default function ImportPage() {
                     <h2>{lang === 'bs' ? 'Import završen!' : 'Import complete!'}</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, width: '100%', maxWidth: 700 }}>
                         {[
+                            { label: lang === 'bs' ? 'Org. kreirano' : 'Org created', val: result.ouCreated || 0, color: '#3F51B5' },
+                            { label: lang === 'bs' ? 'Mjesta kreirano' : 'WP created', val: result.wpCreated || 0, color: '#00BCD4' },
                             { label: lang === 'bs' ? 'Radnika kreirano' : 'Workers created', val: result.wCreated, color: 'var(--primary)' },
                             { label: lang === 'bs' ? 'Radnika preskočeno' : 'Workers skipped', val: result.wSkipped, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'Uvjerenja kreirano' : 'Certs created', val: result.cCreated, color: '#9C27B0' },
