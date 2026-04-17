@@ -5,8 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, getRawAll, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-import app from '@/lib/firebase';
+import { callFirebaseFunction } from '@/lib/firebaseCallable';
 
 const FILE_ICONS = {
   pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗',
@@ -60,11 +59,8 @@ async function convertDocxToBlob(arrayBuffer, title) {
 // ─── Firebase Backend PDF → DOCX ─────────────────────────────────────────────
 async function convertPdfToDocxMuPDF(dataUri) {
   const base64Data = dataUri.split(',')[1];
-  const functions = getFunctions(app, 'europe-west1');
-  const pdfToWordFn = httpsCallable(functions, 'pdfToWord');
-  
-  const result = await pdfToWordFn({ base64Data, filename: 'document.pdf' });
-  const rawBase64 = result.data.base64Data;
+  const result = await callFirebaseFunction('pdfToWord', { base64Data, filename: 'document.pdf' });
+  const rawBase64 = result.base64Data;
   const binary = atob(rawBase64);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) {
