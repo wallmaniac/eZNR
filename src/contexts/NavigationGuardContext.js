@@ -16,6 +16,11 @@ export function NavigationGuardProvider({ children }) {
 
     // Keep ref in sync (for event listeners that close over stale state)
     useEffect(() => {
+        if (isDirty && !dirtyRef.current) {
+            // Transitioning clean -> dirty
+            // Push a sentinel so the browser back button doesn't actually change the URL
+            window.history.pushState({ _guardSentinel: true }, '', window.location.href);
+        }
         dirtyRef.current = isDirty;
     }, [isDirty]);
 
@@ -34,8 +39,9 @@ export function NavigationGuardProvider({ children }) {
     useEffect(() => {
         const handlePopState = (e) => {
             if (dirtyRef.current) {
-                // Push the full current URL back to restore it without stripping query params
-                window.history.pushState(null, '', window.location.href);
+                // The sentinel was just popped. The URL hasn't changed.
+                // We MUST push the sentinel back so future back clicks are caught.
+                window.history.pushState({ _guardSentinel: true }, '', window.location.href);
                 setPendingPath('__back__');
                 setShowPrompt(true);
             }
@@ -54,6 +60,34 @@ export function NavigationGuardProvider({ children }) {
         };
         window.addEventListener('beforeunload', handleBeforeUnload);
         return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }, []);
+
+    // Intercept Next.js <Link> clicks globally
+    useEffect(() => {
+        const handleLinkClick = (e) => {
+            if (!dirtyRef.current) return;
+            const a = e.target.closest('a[href]');
+            if (!a) return;
+            
+            const href = a.getAttribute('href');
+            if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return;
+            
+            try {
+                const targetUrl = new URL(a.href, window.location.origin);
+                const currentUrl = new URL(window.location.href);
+                // Only intercept actual cross-page routes, leave query parameters or hashes alone
+                if (targetUrl.pathname !== currentUrl.pathname) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPendingPath(href);
+                    setShowPrompt(true);
+                }
+            } catch (err) {
+                // Ignore parsing errors
+            }
+        };
+        document.addEventListener('click', handleLinkClick, true); // Capture phase is critical
+        return () => document.removeEventListener('click', handleLinkClick, true);
     }, []);
 
     const markDirty = useCallback((onSave) => {
@@ -91,9 +125,10 @@ export function NavigationGuardProvider({ children }) {
         if (pendingPath && pendingPath !== '__back__') {
             router.push(pendingPath);
         } else if (pendingPath === '__back__') {
-            router.back();
+            window.history.go(-2); // Skip the sentinel and navigate to the actual previous page
         }
         setPendingPath(null);
+        setSaveCallback(null);
     }, [saveCallback, pendingPath, router]);
 
     const handleDiscard = useCallback(() => {
@@ -103,7 +138,7 @@ export function NavigationGuardProvider({ children }) {
         if (pendingPath && pendingPath !== '__back__') {
             router.push(pendingPath);
         } else if (pendingPath === '__back__') {
-            router.back();
+            window.history.go(-2); // Skip the sentinel and navigate to the actual previous page
         }
         setPendingPath(null);
         setSaveCallback(null);
