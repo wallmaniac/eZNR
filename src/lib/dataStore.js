@@ -394,6 +394,58 @@ export function create(collection, data) {
     return newItem;
 }
 
+export async function createMass(collection, dataArray) {
+    if (!dataArray || dataArray.length === 0) return [];
+    if (typeof window === 'undefined') return dataArray;
+
+    const now = new Date().toISOString();
+    const companyId = _getActiveCompanyId();
+    const path = _getCollectionPath(collection);
+    
+    // Fallback if no path (e.g. no active company)
+    if (!path) return [];
+
+    const newItems = dataArray.map(data => {
+        let enrichedData = { ...data };
+        if (COMPANY_SCOPED.includes(collection) && !enrichedData.companyId && companyId && companyId !== 'all') {
+            enrichedData.companyId = companyId;
+        }
+        return {
+            ...enrichedData,
+            id: genId(),
+            createdAt: now,
+            updatedAt: now,
+        };
+    });
+
+    // Update cache immediately so subsequent operations in the same import cycle can read them
+    if (!_cache[collection]) _cache[collection] = [];
+    _cache[collection].push(...newItems);
+
+    // Write to Firestore in batches of 500
+    const CHUNK_SIZE = 500;
+    for (let i = 0; i < newItems.length; i += CHUNK_SIZE) {
+        const chunk = newItems.slice(i, i + CHUNK_SIZE);
+        const batch = writeBatch(db);
+        chunk.forEach(item => {
+            const docRef = doc(db, path, item.id);
+            batch.set(docRef, item);
+        });
+        try {
+            await batch.commit();
+        } catch(err) {
+            console.error('[createMass] Batch commit failed for', collection, err);
+        }
+    }
+
+    // Generic auto log to avoid activity log spam
+    if (newItems.length > 0) {
+        _autoLog('create', collection, { ...newItems[0], id: newItems[0].id, naziv: `Masovni uvoz: ${newItems.length} stavki`, ime: `Masovni uvoz (${newItems.length})`, opisPoslova: 'Masovni uvoz' });
+    }
+
+    return newItems;
+}
+
 export function update(collection, id, data) {
     const items = _cache[collection] || [];
     const idx = items.findIndex(item => item.id === id);
