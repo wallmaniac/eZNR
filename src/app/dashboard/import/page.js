@@ -32,7 +32,22 @@ const MEDEXAM_COLS = [
 ];
 const OU_COLS = ['naziv', 'opis'];
 const WP_COLS = ['naziv', 'opis'];
-
+const VEH_COLS = [
+    'registracija', 'marka', 'model', 'godinaProizvodnje', 'tip', 'vin', 'boja',
+    'datumRegistracije', 'registracijaIstice', 'datumTehnickogPregleda', 'tehnickiIstice',
+    'osiguranjeIstice', 'vatrogasniAparatDatum', 'prvaPomocIstice',
+    'radnik_ime', 'radnik_prezime', 'radnik_jmbg', 'status', 'napomena'
+];
+const EXT_COLS = [
+    'serijskiBroj', 'tip', 'tezina', 'lokacija',
+    'datumNabavke', 'zadnjiServis', 'sljedeciServis',
+    'odgovornaOsoba', 'status', 'napomena'
+];
+const HYD_COLS = [
+    'oznaka', 'tip', 'lokacija',
+    'datumZadnjegPregleda', 'sljedeciPregled',
+    'status', 'napomena'
+];
 function generateTemplate() {
     const wb = XLSX.utils.book_new();
 
@@ -98,7 +113,38 @@ function generateTemplate() {
     wsM['!cols'] = MEDEXAM_COLS.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, wsM, 'Ljekarski');
 
-    // Sheet 6: Upute
+    // Sheet 6: Vozila
+    const wsV = XLSX.utils.aoa_to_sheet([
+        VEH_COLS,
+        ['A12-B-345', 'VW', 'Golf 8', '2022', 'osobno', 'WVW123456789', 'Bijela',
+         '2022-05-10', '2024-05-10', '2023-05-10', '2024-05-10',
+         '2024-05-10', '2025-05-10', '2027-05-10',
+         'Pero', 'Perić', '0101123456789', 'aktivan', 'Službeno vozilo'],
+    ]);
+    wsV['!cols'] = VEH_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsV, 'Vozila');
+
+    // Sheet 7: PP Aparati
+    const wsF = XLSX.utils.aoa_to_sheet([
+        EXT_COLS,
+        ['PP-001', 'prah', '6', 'Hala 1 - Ulaz',
+         '2021-02-10', '2023-02-10', '2024-02-10',
+         'Mujo Mujić', 'ispravan', 'Redovni servis'],
+    ]);
+    wsF['!cols'] = EXT_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsF, 'PPAparati');
+
+    // Sheet 8: Hidranti
+    const wsH = XLSX.utils.aoa_to_sheet([
+        HYD_COLS,
+        ['H-01', 'unutarnji', 'Hala 1 - Sjever',
+         '2023-08-15', '2024-02-15',
+         'ispravan', 'Testiran pritisak'],
+    ]);
+    wsH['!cols'] = HYD_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsH, 'Hidranti');
+
+    // Sheet 9: Upute
     const wsI = XLSX.utils.aoa_to_sheet([
         ['UPUTE ZA POPUNJAVANJE'],
         [],
@@ -237,6 +283,53 @@ function generateExport(companyId) {
     wsM['!cols'] = MEDEXAM_COLS.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, wsM, 'Ljekarski');
 
+    // 6. Vozila
+    const vRows = [VEH_COLS];
+    const vehicles = getAll(COLLECTIONS.VEHICLES).filter(v => companyId === 'all' || v.companyId === companyId);
+    vehicles.forEach(v => {
+        vRows.push([
+            v.registracija || '', v.marka || '', v.model || '', v.godinaProizvodnje || '', v.tip || '', v.vin || '', v.boja || '',
+            v.datumRegistracije || '', v.registracijaIstice || '', v.datumTehnickogPregleda || '', v.tehnickiIstice || '',
+            v.osiguranjeIstice || '', v.vatrogasniAparatDatum || '', v.prvaPomocIstice || '',
+            // We only have vozacIme, but to link it back properly we might need the worker
+            (() => { const w = workers.find(x => x.id === v.vozacId); return w?.ime || v.vozacIme || ''; })(),
+            (() => { const w = workers.find(x => x.id === v.vozacId); return w?.prezime || ''; })(),
+            (() => { const w = workers.find(x => x.id === v.vozacId); return w?.jmbg || ''; })(),
+            v.status || 'aktivan', v.napomena || ''
+        ]);
+    });
+    const wsV = XLSX.utils.aoa_to_sheet(vRows);
+    wsV['!cols'] = VEH_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsV, 'Vozila');
+
+    // 7. PP Aparati
+    const fRows = [EXT_COLS];
+    const fireExts = getAll(COLLECTIONS.FIRE_EXTINGUISHERS).filter(f => companyId === 'all' || f.companyId === companyId);
+    fireExts.forEach(f => {
+        fRows.push([
+            f.serijskiBroj || '', f.tip || '', f.tezina || '', f.lokacija || '',
+            f.datumNabavke || '', f.zadnjiServis || '', f.sljedeciServis || '',
+            f.odgovornaOsoba || '', f.status || 'ispravan', f.napomena || ''
+        ]);
+    });
+    const wsF = XLSX.utils.aoa_to_sheet(fRows);
+    wsF['!cols'] = EXT_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsF, 'PPAparati');
+
+    // 8. Hidranti
+    const hRows = [HYD_COLS];
+    const hyds = getAll(COLLECTIONS.HYDRANTS).filter(h => companyId === 'all' || h.companyId === companyId);
+    hyds.forEach(h => {
+        hRows.push([
+            h.oznaka || '', h.tip || '', h.lokacija || '',
+            h.datumZadnjegPregleda || '', h.sljedeciPregled || '',
+            h.status || 'ispravan', h.napomena || ''
+        ]);
+    });
+    const wsH = XLSX.utils.aoa_to_sheet(hRows);
+    wsH['!cols'] = HYD_COLS.map(() => ({ wch: 18 }));
+    XLSX.utils.book_append_sheet(wb, wsH, 'Hidranti');
+
     let fileName = `eZNR_Export_${new Date().toISOString().split('T')[0]}.xlsx`;
     XLSX.writeFile(wb, fileName);
 }
@@ -289,7 +382,10 @@ export default function ImportPage() {
                 const ppe = parseSheet(wb, 'OZO');
                 const equip = parseSheet(wb, 'Oprema');
                 const medExams = parseSheet(wb, 'Ljekarski');
-                setPreview({ ouRows, wpRows, workers, certs, ppe, equip, medExams });
+                const vRows = parseSheet(wb, 'Vozila');
+                const fRows = parseSheet(wb, 'PPAparati');
+                const hRows = parseSheet(wb, 'Hidranti');
+                setPreview({ ouRows, wpRows, workers, certs, ppe, equip, medExams, vRows, fRows, hRows });
                 setStep('preview');
             } catch (err) {
                 setFileError('Greška pri čitanju dokumenta: ' + err.message);
@@ -312,10 +408,11 @@ export default function ImportPage() {
 
     const handleImport = () => {
         setImporting(true);
-        const { workers: wRows = [], certs: cRows = [], ppe: pRows = [], equip: eRows = [], medExams: mRows = [], ouRows = [], wpRows = [] } = preview;
+        const { workers: wRows = [], certs: cRows = [], ppe: pRows = [], equip: eRows = [], medExams: mRows = [], ouRows = [], wpRows = [], vRows = [], fRows = [], hRows = [] } = preview;
         let wCreated = 0, wSkipped = 0, cCreated = 0, cSkipped = 0, pCreated = 0, pSkipped = 0, eCreated = 0, eSkipped = 0, mCreated = 0, mSkipped = 0;
         let ouCreated = 0, ouSkipped = 0, wpCreated = 0, wpSkipped = 0;
         let wpLinked = 0, wpTotal = 0, ouLinked = 0, ouTotal = 0;
+        let vCreated = 0, vSkipped = 0, fCreated = 0, fSkipped = 0, hCreated = 0, hSkipped = 0;
 
         // 0. Import Org Units and Workplaces FIRST
         const allWorkplaces = getAll(COLLECTIONS.WORKPLACES);
@@ -538,7 +635,86 @@ export default function ImportPage() {
             mCreated++;
         });
 
-        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped, wpLinked, wpTotal, ouLinked, ouTotal, ouCreated, ouSkipped, wpCreated, wpSkipped });
+        // 6. Import Vehicles
+        const existingVehicles = getAll(COLLECTIONS.VEHICLES);
+        vRows.forEach(row => {
+            const registracija = String(row.registracija || '').trim();
+            if (!registracija) { vSkipped++; return; }
+            if (existingVehicles.some(v => v.companyId === companyId && v.registracija === registracija)) {
+                vSkipped++; return;
+            }
+            const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
+            create(COLLECTIONS.VEHICLES, {
+                companyId,
+                registracija,
+                marka: String(row.marka || '').trim(),
+                model: String(row.model || '').trim(),
+                godinaProizvodnje: String(row.godinaProizvodnje || '').trim(),
+                tip: String(row.tip || 'osobno').trim(),
+                vin: String(row.vin || '').trim(),
+                boja: String(row.boja || '').trim(),
+                datumRegistracije: String(row.datumRegistracije || '').trim(),
+                registracijaIstice: String(row.registracijaIstice || '').trim(),
+                datumTehnickogPregleda: String(row.datumTehnickogPregleda || '').trim(),
+                tehnickiIstice: String(row.tehnickiIstice || '').trim(),
+                osiguranjeIstice: String(row.osiguranjeIstice || '').trim(),
+                vatrogasniAparatDatum: String(row.vatrogasniAparatDatum || '').trim(),
+                prvaPomocIstice: String(row.prvaPomocIstice || '').trim(),
+                vozacId: worker ? worker.id : '',
+                vozacIme: worker ? `${worker.ime} ${worker.prezime}` : '',
+                orgJedinicaId: '',
+                status: String(row.status || 'aktivan').trim(),
+                napomena: String(row.napomena || '').trim()
+            });
+            vCreated++;
+        });
+
+        // 7. Import Fire Extinguishers
+        const existingExts = getAll(COLLECTIONS.FIRE_EXTINGUISHERS);
+        fRows.forEach(row => {
+            const serijskiBroj = String(row.serijskiBroj || '').trim();
+            if (!serijskiBroj) { fSkipped++; return; }
+            if (existingExts.some(f => f.companyId === companyId && f.serijskiBroj === serijskiBroj)) {
+                fSkipped++; return;
+            }
+            create(COLLECTIONS.FIRE_EXTINGUISHERS, {
+                companyId,
+                serijskiBroj,
+                tip: String(row.tip || 'prah').trim(),
+                tezina: String(row.tezina || '').trim(),
+                lokacija: String(row.lokacija || '').trim(),
+                datumNabavke: String(row.datumNabavke || '').trim(),
+                zadnjiServis: String(row.zadnjiServis || '').trim(),
+                sljedeciServis: String(row.sljedeciServis || '').trim(),
+                odgovornaOsoba: String(row.odgovornaOsoba || '').trim(),
+                status: String(row.status || 'ispravan').trim(),
+                napomena: String(row.napomena || '').trim()
+            });
+            fCreated++;
+        });
+
+        // 8. Import Hydrants
+        const existingHyds = getAll(COLLECTIONS.HYDRANTS);
+        hRows.forEach(row => {
+            const oznaka = String(row.oznaka || '').trim();
+            if (!oznaka) { hSkipped++; return; }
+            if (existingHyds.some(h => h.companyId === companyId && h.oznaka === oznaka)) {
+                hSkipped++; return;
+            }
+            create(COLLECTIONS.HYDRANTS, {
+                companyId,
+                oznaka,
+                tip: String(row.tip || 'unutarnji').trim(),
+                lokacija: String(row.lokacija || '').trim(),
+                datumZadnjegPregleda: String(row.datumZadnjegPregleda || '').trim(),
+                sljedeciPregled: String(row.sljedeciPregled || '').trim(),
+                status: String(row.status || 'ispravan').trim(),
+                napomena: String(row.napomena || '').trim()
+            });
+            hCreated++;
+        });
+
+        setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped, vCreated, vSkipped, fCreated, fSkipped, hCreated, hSkipped, wpLinked, wpTotal, ouLinked, ouTotal, ouCreated, ouSkipped, wpCreated, wpSkipped });
         setImporting(false);
         setStep('done');
     };
@@ -659,6 +835,9 @@ export default function ImportPage() {
                             { label: 'OZO / PPE', count: preview.ppe.length, icon: '🦺', color: '#FF9800' },
                             { label: lang === 'bs' ? 'Oprema' : 'Equipment', count: (preview.equip || []).length, icon: '⚙️', color: '#607D8B' },
                             { label: lang === 'bs' ? 'Ljekarski' : 'Medical', count: (preview.medExams || []).length, icon: '🩺', color: '#E91E63' },
+                            { label: lang === 'bs' ? 'Vozila' : 'Vehicles', count: (preview.vRows || []).length, icon: '🚗', color: '#F44336' },
+                            { label: lang === 'bs' ? 'PP Aparati' : 'Fire Extinguishers', count: (preview.fRows || []).length, icon: '🧯', color: '#E53935' },
+                            { label: lang === 'bs' ? 'Hidranti' : 'Hydrants', count: (preview.hRows || []).length, icon: '🚰', color: '#1E88E5' },
                         ].filter(x => x.count > 0).map(({ label, count, icon, color }) => (
                             <div key={label} className="card" style={{ textAlign: 'center', padding: 16 }}>
                                 <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{icon}</div>
@@ -747,6 +926,12 @@ export default function ImportPage() {
                             { label: lang === 'bs' ? 'Oprema preskočeno' : 'Equipment skipped', val: result.eSkipped || 0, color: 'var(--text-muted)' },
                             { label: lang === 'bs' ? 'Ljekarski kreirano' : 'Medical created', val: result.mCreated || 0, color: '#E91E63' },
                             { label: lang === 'bs' ? 'Ljekarski preskočeno' : 'Medical skipped', val: result.mSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang === 'bs' ? 'Vozila kreirano' : 'Vehicles created', val: result.vCreated || 0, color: '#F44336' },
+                            { label: lang === 'bs' ? 'Vozila preskočeno' : 'Vehicles skipped', val: result.vSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang === 'bs' ? 'PP Aparati kreirano' : 'Ext. created', val: result.fCreated || 0, color: '#E53935' },
+                            { label: lang === 'bs' ? 'PP Aparati preskočeno' : 'Ext. skipped', val: result.fSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang === 'bs' ? 'Hidranti kreirano' : 'Hydrants created', val: result.hCreated || 0, color: '#1E88E5' },
+                            { label: lang === 'bs' ? 'Hidranti preskočeno' : 'Hydrants skipped', val: result.hSkipped || 0, color: 'var(--text-muted)' },
                         ].filter(x => x.val > 0).map(({ label, val, color }) => (
                             <div key={label} className="card" style={{ padding: 14, textAlign: 'center' }}>
                                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color }}>{val}</div>
