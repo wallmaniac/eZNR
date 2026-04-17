@@ -11,7 +11,7 @@
 import { Resend } from 'resend';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import * as docx from 'docx';
+
 
 export const maxDuration = 300;
 
@@ -548,170 +548,183 @@ async function handlePdfParse(data) {
     }
 }
 
-// ─── Native PDF → DOCX Conversion ───────────────────────────────────────────
-function pt2Twip(pt) {
-    return Math.max(1, Math.round(pt * 20));
+// ─── PDF → DOCX via Gemini Vision ────────────────────────────────────────────
+async function handlePdfToWord(requestData) {
+    const { base64Data, filename = 'document.pdf' } = requestData || {};
+    if (!base64Data) throw new Error('No base64Data provided in the request');
+
+    const apiKey = getApiKey();
+
+    // 1. Ask Gemini to extract the full structure of the PDF
+    const prompt = `You are a precise document extraction engine.
+Analyze this PDF and extract its full content as structured JSON.
+
+Return ONLY valid JSON — no markdown, no explanation:
+{
+  "pages": [
+    {
+      "pageNum": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "text": "Full paragraph text here",
+          "bold": false,
+          "italic": false,
+          "fontSize": 11,
+          "alignment": "left"
+        },
+        {
+          "type": "heading",
+          "text": "Heading text",
+          "bold": true,
+          "italic": false,
+          "fontSize": 14,
+          "alignment": "center"
+        },
+        {
+          "type": "checkbox",
+          "label": "Checkbox label text",
+          "checked": true
+        },
+        {
+          "type": "signature_line",
+          "label": "(Potpis / Signature)"
+        },
+        {
+          "type": "table",
+          "rows": [
+            ["Cell 1", "Cell 2", "Cell 3"],
+            ["Cell 4", "Cell 5", "Cell 6"]
+          ]
+        }
+      ]
+    }
+  ]
 }
 
-async function handlePdfToWord(requestData) {
-    try {
-        const { base64Data, filename = 'document.pdf' } = requestData || {};
-        if (!base64Data) throw new Error('No base64Data provided in the request');
+Rules:
+- Preserve ALL text exactly as it appears
+- Detect checkboxes (☐ ☑ □ ✓ or form fields) and set checked: true/false
+- Detect signature lines (lines with "Potpis", "Signature", underscores, or blank lines under names)
+- Detect tables and preserve their structure in rows/columns
+- Detect headings (larger/bolder text at section starts)
+- Use alignment: left | center | right | justify
+- One page break between pages — preserve page order
+- Return ONLY raw JSON.`;
 
-        const buffer = Buffer.from(base64Data, 'base64');
-        const mupdf = (await import('mupdf')).default;
-        
-        const pdf = mupdf.Document.openDocument(new Uint8Array(buffer), 'application/pdf');
-        const numPages = pdf.countPages();
+    const { text } = await callGemini(apiKey, {
+        contents: [{
+            role: 'user',
+            parts: [
+                { inlineData: { data: base64Data, mimeType: 'application/pdf' } },
+                { text: prompt },
+            ]
+        }],
+        generationConfig: { temperature: 0, maxOutputTokens: 65536 },
+    });
 
-        const children = [];
+    const parsed = tryParseJson(text);
+    if (!parsed?.pages) throw new Error('Gemini did not return valid page structure');
 
-        for (let pi = 0; pi < numPages; pi++) {
-            const page = pdf.loadPage(pi);
-            const bounds = page.getBounds();
+    // 2. Build DOCX from Gemini output
+    const { Document, Paragraph, TextRun, Table, TableRow, TableCell, Packer,
+            AlignmentType, BorderStyle, WidthType, HeadingLevel } = await import('docx');
 
-            // 1. Extract Widgets (Checkboxes)
-            const widgets = [];
-            try {
-                const pageWidgets = page.getWidgets ? page.getWidgets() : [];
-                for (const w of pageWidgets) {
-                    try {
-                        const rect = w.getRect ? w.getRect() : null;
-                        const fieldType = w.getFieldType ? w.getFieldType() : null;
-                        const value = w.getValue ? w.getValue() : null;
-                        if (rect && fieldType === 'checkbox') {
-                            widgets.push({
-                                rect,
-                                checked: value && value !== 'Off' && value !== '' && value !== '0',
-                            });
-                        }
-                    } catch { } // ignore individual widget issues
-                }
-            } catch { }
+    const ALIGN = {
+        left: AlignmentType.LEFT,
+        center: AlignmentType.CENTER,
+        right: AlignmentType.RIGHT,
+        justify: AlignmentType.JUSTIFIED,
+    };
 
-            // 2. Add un-matched checkboxes explicitly as text boxes
-            for (let i = 0; i < widgets.length; i++) {
-                const w = widgets[i];
-                const cbChar = w.checked ? '☑' : '☐';
-                children.push(new docx.Paragraph({
-                    children: [new docx.TextRun({ text: cbChar, font: 'Segoe UI Symbol', size: 24, color: '000000' })],
-                    frame: {
-                        position: { x: pt2Twip(w.rect[0]), y: pt2Twip(w.rect[1]) },
-                        width: pt2Twip(40), height: pt2Twip(40),
-                        anchor: { horizontal: docx.FrameAnchorType.PAGE, vertical: docx.FrameAnchorType.PAGE }
-                    },
-                    pageBreakBefore: pi > 0 && i === 0
-                }));
-            }
+    const docChildren = [];
 
-            // 3. Extract Structured Text
-            const stext = page.toStructuredText('preserve-whitespace,preserve-spans');
-            const parsed = JSON.parse(stext.asJSON());
-
-            let firstParagraphOfPage = true;
-
-            if (parsed.blocks) {
-                for (const block of parsed.blocks) {
-                    if (block.type !== 'text' || !block.lines) continue;
-                    
-                    for (const line of block.lines) {
-                        if (!line.spans) continue;
-                        
-                        const textRuns = [];
-                        let minX = 999999, minY = 999999, maxX = 0, maxY = 0;
-                        let lineHasPotpis = false;
-                        
-                        for (let s of line.spans) {
-                            if (!s.text) continue;
-                            const text = s.text;
-                            
-                            // Signature detection
-                            if (text.toLowerCase().includes('(potpis')) {
-                                lineHasPotpis = true;
-                            }
-
-                            let x0, y0, x1, y1;
-                            if (Array.isArray(s.bbox)) {
-                                [x0, y0, x1, y1] = s.bbox;
-                            } else if (s.bbox && typeof s.bbox === 'object') {
-                                x0 = s.bbox.x; y0 = s.bbox.y;
-                                x1 = s.bbox.x + s.bbox.w; y1 = s.bbox.y + s.bbox.h;
-                            } else {
-                                continue;
-                            }
-
-                            if (x0 < minX) minX = x0;
-                            if (y0 < minY) minY = y0;
-                            if (x1 > maxX) maxX = x1;
-                            if (y1 > maxY) maxY = y1;
-
-                            let fontName = s.font || 'Calibri';
-                            let isBold = fontName.toLowerCase().includes('bold');
-                            let isItalic = fontName.toLowerCase().includes('italic');
-                            let size = s.size || 11;
-                            let color = s.color ? s.color.toString(16).padStart(6, '0') : '000000';
-
-                            textRuns.push(new docx.TextRun({
-                                text,
-                                font: fontName,
-                                size: Math.max(1, Math.round(size * 2)), // docx size is half-points
-                                bold: isBold,
-                                italics: isItalic,
-                                color,
-                            }));
-                        }
-                        
-                        if (textRuns.length === 0) continue;
-
-                        const width = maxX - minX;
-                        const height = maxY - minY;
-
-                        const pOpts = {
-                            children: textRuns,
-                            frame: {
-                                position: { x: pt2Twip(minX), y: pt2Twip(minY) },
-                                width: Math.max(pt2Twip(width + 100), 1000), 
-                                height: Math.max(pt2Twip(height + 10), 400),
-                                anchor: { horizontal: docx.FrameAnchorType.PAGE, vertical: docx.FrameAnchorType.PAGE }
-                            }
-                        };
-                        
-                        if (lineHasPotpis) {
-                            pOpts.border = {
-                                top: { color: "000000", space: 1, style: docx.BorderStyle.SINGLE, size: 6 }
-                            };
-                            pOpts.frame.width = Math.max(pOpts.frame.width, pt2Twip(150));
-                        }
-
-                        if (pi > 0 && firstParagraphOfPage && widgets.length === 0) {
-                            pOpts.pageBreakBefore = true;
-                        }
-                        firstParagraphOfPage = false;
-
-                        children.push(new docx.Paragraph(pOpts));
-                    }
-                }
-            }
-            
-            if (pi > 0 && firstParagraphOfPage && widgets.length === 0) {
-                 children.push(new docx.Paragraph({ pageBreakBefore: true, children: [new docx.TextRun("")] }));
-            }
+    for (let pi = 0; pi < parsed.pages.length; pi++) {
+        const page = parsed.pages[pi];
+        if (pi > 0) {
+            // page break between pages
+            docChildren.push(new Paragraph({ pageBreakBefore: true, children: [new TextRun('')] }));
         }
 
-        const doc = new docx.Document({
-            sections: [{ 
-                properties: { page: { margin: { top: 0, right: 0, bottom: 0, left: 0 } } },
-                children 
-            }]
-        });
+        for (const block of (page.blocks || [])) {
+            if (block.type === 'table') {
+                // Build a proper Word table
+                const rows = (block.rows || []).map(rowCells =>
+                    new TableRow({
+                        children: rowCells.map(cellText =>
+                            new TableCell({
+                                children: [new Paragraph({
+                                    children: [new TextRun({ text: String(cellText ?? ''), size: 20 })]
+                                })],
+                                borders: {
+                                    top:    { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                    bottom: { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                    left:   { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                    right:  { style: BorderStyle.SINGLE, size: 1, color: '000000' },
+                                },
+                            })
+                        )
+                    })
+                );
+                if (rows.length > 0) {
+                    docChildren.push(new Table({
+                        rows,
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                    }));
+                }
 
-        const docxBase64 = await docx.Packer.toBase64String(doc);
-        return { success: true, base64Data: docxBase64, filename: filename.replace(/\.pdf$/i, '.docx') };
+            } else if (block.type === 'checkbox') {
+                const icon = block.checked ? '☑' : '☐';
+                docChildren.push(new Paragraph({
+                    children: [
+                        new TextRun({ text: icon + '  ', font: 'Segoe UI Symbol', size: 22 }),
+                        new TextRun({ text: block.label || '', size: 22 }),
+                    ],
+                    spacing: { after: 60 },
+                }));
 
-    } catch (e) {
-        console.error('[handlePdfToWord]', e);
-        throw new Error(String(e?.message || e));
+            } else if (block.type === 'signature_line') {
+                // Signature: label above a horizontal line
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({ text: block.label || '', size: 20, italics: true })],
+                    spacing: { before: 400, after: 0 },
+                }));
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({ text: '' })],
+                    border: {
+                        top: { color: '000000', space: 1, style: BorderStyle.SINGLE, size: 6 },
+                    },
+                    spacing: { after: 200 },
+                }));
+
+            } else {
+                // paragraph or heading
+                const isHeading = block.type === 'heading';
+                const fontSize = block.fontSize ? Math.round(block.fontSize * 2) : (isHeading ? 28 : 22);
+                docChildren.push(new Paragraph({
+                    children: [new TextRun({
+                        text: block.text || '',
+                        bold: block.bold || isHeading,
+                        italics: block.italic || false,
+                        size: fontSize,
+                    })],
+                    alignment: ALIGN[block.alignment] || AlignmentType.LEFT,
+                    heading: isHeading ? HeadingLevel.HEADING_2 : undefined,
+                    spacing: { after: 120 },
+                }));
+            }
+        }
     }
+
+    const doc = new Document({
+        sections: [{
+            properties: {},
+            children: docChildren,
+        }]
+    });
+
+    const docxBase64 = await Packer.toBase64String(doc);
+    return { success: true, base64Data: docxBase64, filename: filename.replace(/\.pdf$/i, '.docx') };
 }
 
 // ─── notifSettings handlers (real Firestore via Admin SDK) ───────────────────
