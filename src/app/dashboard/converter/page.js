@@ -185,27 +185,40 @@ async function buildDocxFromPages(pages) {
     const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
     const bodySize = sizes.length ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 9;
 
-    // ── Group lines by vertical overlap (same row) ──────────────────────────
-    const yGroups = []; // [{y, bbox, lines:[...]}]
+    // ── Group lines by Y into rows ──────────────────────────────────────────
+    // Primary: Y-tolerance (bodySize-based). Secondary: safe bbox overlap check.
+    const tol = Math.max(bodySize * 0.7, 5);
+    const yGroups = []; // [{y, lines:[...]}]
     for (const line of bodyLines) {
       let placed = false;
       for (const g of yGroups) {
-        const minH = Math.min(g.bbox.h, line.bbox.h || 10);
-        const overlapTop = Math.max(g.bbox.y, line.bbox.y || line.y);
-        const overlapBottom = Math.min(g.bbox.y + g.bbox.h, (line.bbox.y || line.y) + (line.bbox.h || 10));
-        const overlapH = overlapBottom - overlapTop;
-        
-        // Group if they vertically overlap by >30% or top differs by <= 4 pts
-        if ((overlapH > 0 && overlapH / minH > 0.3) || Math.abs(g.y - line.y) <= 4) {
+        // Y-tolerance check (safe, always works)
+        if (Math.abs(g.y - line.y) <= tol) {
           g.lines.push(line);
           g.y = g.lines.reduce((s, l) => s + l.y, 0) / g.lines.length;
-          const newY = Math.min(g.bbox.y, line.bbox.y || line.y);
-          const newB = Math.max(g.bbox.y + g.bbox.h, (line.bbox.y || line.y) + (line.bbox.h || 10));
-          g.bbox = { x: g.bbox.x, y: newY, w: g.bbox.w, h: newB - newY };
           placed = true; break;
         }
+        // Secondary: bbox overlap check — only when heights are non-zero
+        const lH = (line.bbox?.h > 0) ? line.bbox.h : null;
+        const gH = (g.bboxH > 0) ? g.bboxH : null;
+        if (lH && gH) {
+          const minH = Math.min(gH, lH);
+          const overlapTop = Math.max(g.bboxY, line.bbox.y ?? line.y);
+          const overlapBottom = Math.min(g.bboxY + gH, (line.bbox.y ?? line.y) + lH);
+          const overlapH = overlapBottom - overlapTop;
+          if (overlapH / minH > 0.4) {
+            g.lines.push(line);
+            g.y = g.lines.reduce((s, l) => s + l.y, 0) / g.lines.length;
+            placed = true; break;
+          }
+        }
       }
-      if (!placed) yGroups.push({ y: line.y, bbox: { ...(line.bbox || {x: line.x, y: line.y, w: line.blockW, h: 10}) }, lines: [line] });
+      if (!placed) yGroups.push({
+        y: line.y,
+        bboxY: line.bbox?.y ?? line.y,
+        bboxH: line.bbox?.h ?? 0,
+        lines: [line]
+      });
     }
     yGroups.sort((a, b) => a.y - b.y);
 
@@ -240,10 +253,12 @@ async function buildDocxFromPages(pages) {
            colStarts.push(x);
         }
       }
+      // Safety: if no columns detected, treat as single column
+      if (!colStarts.length) colStarts.push(0);
       const numCols = colStarts.length;
 
       const minLeft = colStarts[0] || 0;
-      const rightEdge = Math.max(...rows.flatMap(r => r.map(l => (l.x || 0) + (l.blockW || 0))));
+      const rightEdge = Math.max(...rows.flatMap(r => r.map(l => (l.x || 0) + (l.blockW || 100))), minLeft + 100);
       const totalW = Math.max(rightEdge - minLeft, 1);
 
       const colWidthsPct = [];
