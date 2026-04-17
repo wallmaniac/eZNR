@@ -185,19 +185,27 @@ async function buildDocxFromPages(pages) {
     const sizeCounts = sizes.reduce((a, s) => { a[s] = (a[s] || 0) + 1; return a; }, {});
     const bodySize = sizes.length ? Number(Object.entries(sizeCounts).sort((a, b) => b[1] - a[1])[0][0]) : 9;
 
-    // ── Group lines by Y position (same Y = same table row) ─────────────────
-    const tol = Math.max(bodySize * 0.5, 4);
-    const yGroups = []; // [{y, lines:[...]}]
+    // ── Group lines by vertical overlap (same row) ──────────────────────────
+    const yGroups = []; // [{y, bbox, lines:[...]}]
     for (const line of bodyLines) {
       let placed = false;
       for (const g of yGroups) {
-        if (Math.abs(g.y - line.y) <= tol) {
+        const minH = Math.min(g.bbox.h, line.bbox.h || 10);
+        const overlapTop = Math.max(g.bbox.y, line.bbox.y || line.y);
+        const overlapBottom = Math.min(g.bbox.y + g.bbox.h, (line.bbox.y || line.y) + (line.bbox.h || 10));
+        const overlapH = overlapBottom - overlapTop;
+        
+        // Group if they vertically overlap by >30% or top differs by <= 4 pts
+        if ((overlapH > 0 && overlapH / minH > 0.3) || Math.abs(g.y - line.y) <= 4) {
           g.lines.push(line);
           g.y = g.lines.reduce((s, l) => s + l.y, 0) / g.lines.length;
+          const newY = Math.min(g.bbox.y, line.bbox.y || line.y);
+          const newB = Math.max(g.bbox.y + g.bbox.h, (line.bbox.y || line.y) + (line.bbox.h || 10));
+          g.bbox = { x: g.bbox.x, y: newY, w: g.bbox.w, h: newB - newY };
           placed = true; break;
         }
       }
-      if (!placed) yGroups.push({ y: line.y, lines: [line] });
+      if (!placed) yGroups.push({ y: line.y, bbox: { ...(line.bbox || {x: line.x, y: line.y, w: line.blockW, h: 10}) }, lines: [line] });
     }
     yGroups.sort((a, b) => a.y - b.y);
 
@@ -222,34 +230,50 @@ async function buildDocxFromPages(pages) {
     };
 
     const buildTable = (rows) => {
-      const numCols = Math.max(...rows.map(r => r.length));
+      // Find distinct X grid anchors across all rows in the table group
+      let allXs = rows.flatMap(r => r.map(l => l.x || 0));
+      allXs.sort((a, b) => a - b);
+      
+      const colStarts = [];
+      for (const x of allXs) {
+        if (!colStarts.length || x - colStarts[colStarts.length - 1] > 20) {
+           colStarts.push(x);
+        }
+      }
+      const numCols = colStarts.length;
 
-      // Calculate dynamic column widths from strict x positions
-      const minLeft = Math.min(...rows.flatMap(r => r.map(l => l.x || 0)));
+      const minLeft = colStarts[0] || 0;
       const rightEdge = Math.max(...rows.flatMap(r => r.map(l => (l.x || 0) + (l.blockW || 0))));
       const totalW = Math.max(rightEdge - minLeft, 1);
-
-      const colStarts = [];
-      for (let ci = 0; ci < numCols; ci++) {
-        const xs = rows.map(r => r[ci]?.x).filter(x => x !== undefined);
-        colStarts.push(xs.length ? Math.min(...xs) : (colStarts[ci - 1] || minLeft) + 50);
-      }
 
       const colWidthsPct = [];
       let usedPct = 0;
       for (let ci = 0; ci < numCols - 1; ci++) {
         const cx = colStarts[ci];
         const nx = colStarts[ci + 1];
-        const pct = Math.max(Math.round(((nx - cx) / totalW) * 100), 5); // At least 5% to avoid weird word wrapping
+        const pct = Math.max(Math.round(((nx - cx) / totalW) * 100), 2);
         colWidthsPct.push(pct);
         usedPct += pct;
       }
-      colWidthsPct.push(Math.max(100 - usedPct, 5));
+      colWidthsPct.push(Math.max(100 - usedPct, 2));
 
       const isSingle = rows.length === 1;
       const tableRows = rows.map(row => {
+        // Map lines logically into calculated geographic grid cells
+        const mappedLines = Array(numCols).fill(null);
+        for (const ln of row) {
+           let bestCi = 0;
+           let bestDiff = Infinity;
+           for (let ci = 0; ci < numCols; ci++) {
+             const diff = Math.abs((ln.x || 0) - colStarts[ci]);
+             if (diff < bestDiff) { bestDiff = diff; bestCi = ci; }
+           }
+           if (mappedLines[bestCi]) mappedLines[bestCi].text += " " + ln.text;
+           else mappedLines[bestCi] = { ...ln };
+        }
+
         const cells = Array.from({ length: numCols }, (_, ci) => {
-          const ln = row[ci];
+          const ln = mappedLines[ci];
           const widthSpec = { size: colWidthsPct[ci], type: WidthType.PERCENTAGE };
           const borders = { top: none(), bottom: thin(), left: none(), right: none() };
 
