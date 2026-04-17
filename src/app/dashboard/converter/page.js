@@ -165,6 +165,15 @@ async function buildDocxFromPages(pages) {
       return { x: bb.x ?? 0, y: bb.y ?? 0, w: bb.w ?? 0, h: bb.h ?? 0 }; // legacy object format
     };
 
+    // ── TEMPORARY DEBUG: log raw MuPDF structure to browser console ──────────
+    if (pi === 0) {
+      console.log('[PDF-DEBUG] Page keys:', Object.keys(pages[0]));
+      console.log('[PDF-DEBUG] blocks count:', blocks.length);
+      if (blocks[0]) console.log('[PDF-DEBUG] block[0]:', JSON.stringify(blocks[0]).slice(0, 1000));
+      if (blocks[1]) console.log('[PDF-DEBUG] block[1]:', JSON.stringify(blocks[1]).slice(0, 500));
+    }
+    // ─────────────────────────────────────────────────────────────────────────
+
     // Each line: { text, font, x, y, w, h, blockW }
     const allLines = [];
     for (const block of blocks) {
