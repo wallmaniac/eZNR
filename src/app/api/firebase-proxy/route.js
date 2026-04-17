@@ -11,7 +11,7 @@
 import { Resend } from 'resend';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
-import docx from 'docx';
+import * as docx from 'docx';
 
 export const maxDuration = 300;
 
