@@ -57,7 +57,13 @@ export default function SettingsPage() {
   const [appSettings, setAppSettings] = useState(getAppSettings());
 
   // Stats (admin only)
-  const stats = useMemo(() => isAdmin ? getSystemStats() : null, [isAdmin]);
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (isAdmin && activeTab === 'system') {
+      const timer = setTimeout(() => setStats(getSystemStats()), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isAdmin, activeTab]);
 
   // Activity log state
   const [logFilter, setLogFilter] = useState(null);
@@ -71,7 +77,13 @@ export default function SettingsPage() {
   const [syncStatus, setSyncStatus] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncResults, setSyncResults] = useState(null);
-  const syncStats = useMemo(() => isAdmin ? getSyncStats() : {}, [isAdmin]);
+  const [syncStats, setSyncStats] = useState({});
+  useEffect(() => {
+    if (isAdmin && activeTab === 'system') {
+      const timer = setTimeout(() => setSyncStats(getSyncStats()), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [isAdmin, activeTab]);
 
   // Load profile data
   useEffect(() => {

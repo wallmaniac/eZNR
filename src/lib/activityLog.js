@@ -312,11 +312,18 @@ export function logSystemAlert(title, detail, severity = 'warning') {
 // READ FUNCTIONS
 // ============================================================================
 
+import { getAll } from './dataStore';
+
 export function getUserLog(limit = 50, filterCategory = null, filterCompanyId = null) {
-    let logs = readLog(USER_LOG_KEY);
+    // Read from Firestore-synced cache instead of fragile localStorage
+    let logs = getAll('activityLog') || [];
+    
+    // Sort newest first
+    logs = [...logs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
     if (filterCompanyId && filterCompanyId !== 'all') {
         logs = logs.filter(l => {
-            if (!l.companyId) return l.category === 'auth'; // Only allow global login events to bleed
+            if (!l.companyId) return l.category === 'auth';
             return l.companyId === filterCompanyId;
         });
     }
@@ -327,8 +334,12 @@ export function getUserLog(limit = 50, filterCategory = null, filterCompanyId = 
 }
 
 export function getAdminLog(limit = 50, filterCategory = null, filterCompanyId = null) {
-    let logs = readLog(ADMIN_LOG_KEY);
-    // Allow admins to see everything, but if we want to filter per-company we can
+    // Admin events are typically mixed in activityLog if they have matching categories,
+    // or kept separate if needed. We'll read from synced cache.
+    let logs = getAll('activityLog') || [];
+    
+    logs = [...logs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
     if (filterCompanyId && filterCompanyId !== 'all') {
         logs = logs.filter(l => !l.companyId || l.companyId === filterCompanyId);
     }

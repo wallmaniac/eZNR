@@ -804,6 +804,7 @@ async function _firestoreWrite(colName, item) {
     const ref = _getDocRef(colName, item.id);
     if (!ref) {
         console.warn(`[dataStore] ⚠️ No doc ref for ${colName}/${item.id} — is a company selected?`);
+        if (typeof window !== 'undefined') alert(`Neuspjelo spremanje (${colName}). Niste odabrali kompaniju!`);
         return;
     }
     try {
@@ -813,6 +814,9 @@ async function _firestoreWrite(colName, item) {
         await setDoc(ref, clean, { merge: true });
     } catch (err) {
         console.error(`[dataStore] ❌ Write failed ${colName}/${item.id}:`, err.message);
+        if (typeof window !== 'undefined') {
+            alert(`Sistemska greška: Promjene nisu spremljene na server! (${err.message})`);
+        }
     }
 }
 

@@ -1,11 +1,11 @@
+import { Suspense } from 'react';
 import './globals.css';
 import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
 
-// Tell Next.js to never statically prerender any route (app uses auth + localStorage)
-export const dynamic = 'force-dynamic';
+// App completely relies on client-side state hooks, HTML is static skeleton
 
 
 export const metadata = {
@@ -46,7 +46,9 @@ export default function RootLayout({ children }) {
           <ThemeProvider>
             <LanguageProvider>
               <ToastProvider>
-                {children}
+                <Suspense fallback={null}>
+                  {children}
+                </Suspense>
               </ToastProvider>
             </LanguageProvider>
           </ThemeProvider>

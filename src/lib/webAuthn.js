@@ -114,7 +114,7 @@ export async function authenticateCredential() {
                 allowCredentials: [{
                     type: 'public-key',
                     id: rawId,
-                    transports: ['internal'],
+                    // Remove strict 'internal' transport requirement to support synced/hybrid passkeys from Google PM or iCloud
                 }],
                 userVerification: 'required',
                 timeout: 60000,
