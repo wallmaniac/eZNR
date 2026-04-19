@@ -321,7 +321,7 @@ function FleetInner() {
                             </div>
 
                             {/* TABS */}
-                            <div style={{ display: 'flex', gap: 24, padding: '0 32px', borderBottom: '1px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
+                            <div className="modal-tabs-container">
                                 <button 
                                     className={`tab-btn ${activeTab === 'osnovno' ? 'active' : ''}`}
                                     onClick={() => setActiveTab('osnovno')}

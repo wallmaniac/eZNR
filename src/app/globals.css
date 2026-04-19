@@ -2005,3 +2005,25 @@ a:hover {
   padding-top: 10px !important;
   padding-bottom: 10px !important;
 }
+
+/* ===== MODAL TABS ROW ====== */
+.modal-tabs-container {
+  display: flex;
+  gap: 24px;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border);
+}
+@media (max-width: 767px) {
+  .modal-tabs-container {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    padding: 12px 20px !important;
+  }
+  .tab-btn {
+    padding: 8px 12px !important;
+    flex: 1 1 45% !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+  }
+}
+
