@@ -69,7 +69,7 @@
 /* ===== DARK MODE ===== */
 [data-theme="dark"] {
   color-scheme: dark;
-  
+
   /* Brand colors stay the same — they pop on dark backgrounds */
   --primary: #00CDB5;
   --primary-light: #33d9c4;
@@ -442,7 +442,14 @@ body {
 }
 
 /* Prevent accidental text selection on interactive elements */
-button, .btn, .tab, .card-header, .sidebar-link, th, .modal-header, .app-header {
+button,
+.btn,
+.tab,
+.card-header,
+.sidebar-link,
+th,
+.modal-header,
+.app-header {
   -webkit-user-select: none;
   user-select: none;
 }
@@ -675,7 +682,8 @@ a:hover {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   border: 1px solid var(--border-light);
-  overflow: visible; /* FIXED: WAS HIDDEN AND CLIPPED DROPDOWNS */
+  overflow: visible;
+  /* FIXED: WAS HIDDEN AND CLIPPED DROPDOWNS */
   transition: all var(--transition-normal);
 }
 
@@ -1495,11 +1503,13 @@ a:hover {
   text-align: center;
   color: var(--text-muted);
 }
+
 .empty-state-icon {
   font-size: 3rem;
   margin-bottom: 12px;
   opacity: 0.7;
 }
+
 .empty-state-title {
   font-family: var(--font-heading);
   font-weight: 600;
@@ -1507,6 +1517,7 @@ a:hover {
   color: var(--text-light);
   margin-bottom: 4px;
 }
+
 .empty-state-subtitle {
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -1529,6 +1540,7 @@ a:hover {
   cursor: pointer;
   transition: all var(--transition-fast);
 }
+
 .print-export-btn:hover {
   border-color: var(--primary);
   color: var(--primary);
@@ -1550,29 +1562,45 @@ a:hover {
 
 /* ── Tablet: ≤ 1024px ────────────────────────────────────────────────────── */
 @media (max-width: 1024px) {
-  .modal { max-width: 90vw !important; }
+  .modal {
+    max-width: 90vw !important;
+  }
 
   /* Slightly tighter padding */
-  main { padding: 16px !important; padding-bottom: 80px !important; }
+  main {
+    padding: 16px !important;
+    padding-bottom: 80px !important;
+  }
 
   /* Stats: 3 columns on tablet */
-  .stats-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
 }
 
 /* ── Mobile: < 768px ─────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
 
   /* --- Typography ---------------------------------------------------------- */
-  h1 { font-size: 1.3rem !important; }
-  h2 { font-size: 1.1rem !important; }
-  h3 { font-size: 1rem !important; }
+  h1 {
+    font-size: 1.3rem !important;
+  }
+
+  h2 {
+    font-size: 1.1rem !important;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+  }
 
   /* --- Layout: main content full width, account for 48px header + 56px bottom nav */
   main {
     margin-left: 0 !important;
     padding: 12px !important;
     padding-top: 12px !important;
-    padding-bottom: calc(56px + 64px) !important; /* bottom nav + extra space */
+    padding-bottom: calc(56px + 64px) !important;
+    /* bottom nav + extra space */
     margin-top: 48px !important;
     min-height: calc(100vh - 48px - 56px) !important;
   }
@@ -1583,15 +1611,18 @@ a:hover {
     -webkit-overflow-scrolling: touch;
     margin: 0 -4px;
   }
+
   .data-table {
     min-width: 520px;
     font-size: 0.8rem;
   }
+
   .data-table th,
   .data-table td {
     padding: 10px 10px !important;
     white-space: nowrap;
   }
+
   /* Sticky table headers should not obscure content on scroll */
   .data-table thead th {
     position: relative !important;
@@ -1608,10 +1639,22 @@ a:hover {
   }
 
   /* --- Cards --------------------------------------------------------------- */
-  .card { overflow: visible !important; }
-  .card-body { padding: 12px !important; }
-  .card-header { padding: 10px 14px !important; }
-  .card-header h2, .card-header h3 { font-size: 1rem !important; }
+  .card {
+    overflow: visible !important;
+  }
+
+  .card-body {
+    padding: 12px !important;
+  }
+
+  .card-header {
+    padding: 10px 14px !important;
+  }
+
+  .card-header h2,
+  .card-header h3 {
+    font-size: 1rem !important;
+  }
 
   /* --- Grid forms → single column ----------------------------------------- */
   [style*="gridTemplateColumns: '1fr 1fr'"],
@@ -1652,8 +1695,10 @@ a:hover {
 
   /* --- Modals → Full-screen native-like sheets on mobile ----------------------------- */
   .modal-overlay {
-    padding: 0 !important; /* Remove padding entirely */
-    align-items: flex-end !important; /* Slide in from bottom */
+    padding: 0 !important;
+    /* Remove padding entirely */
+    align-items: flex-end !important;
+    /* Slide in from bottom */
   }
 
   .modal-overlay::before,
@@ -1667,15 +1712,17 @@ a:hover {
     margin: 0 !important;
     border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
     max-height: 95dvh !important;
-    height: 95dvh !important; /* Force near full height, anchored to bottom */
+    height: 95dvh !important;
+    /* Force near full height, anchored to bottom */
     display: flex !important;
     flex-direction: column !important;
-    overflow: hidden !important; /* Container prevents scroll, body handles it */
+    overflow: hidden !important;
+    /* Container prevents scroll, body handles it */
     overscroll-behavior: contain !important;
   }
-  
-  .modal-header { 
-    padding: 16px 20px !important; 
+
+  .modal-header {
+    padding: 16px 20px !important;
     flex-shrink: 0 !important;
     position: sticky;
     top: 0;
@@ -1694,17 +1741,18 @@ a:hover {
     z-index: 9;
     padding: 0 16px !important;
   }
-  
-  .modal-body { 
-    padding: 16px 20px 80px !important; /* Bottom padding for mobile nav clearance */
+
+  .modal-body {
+    padding: 16px 20px 80px !important;
+    /* Bottom padding for mobile nav clearance */
     overflow-y: auto !important;
     -webkit-overflow-scrolling: touch !important;
     flex: 1 1 auto !important;
   }
-  
-  .modal-footer { 
-    padding: 16px 20px !important; 
-    flex-shrink: 0 !important; 
+
+  .modal-footer {
+    padding: 16px 20px !important;
+    flex-shrink: 0 !important;
     background: inherit;
     border-top: 1px solid var(--border-light);
     position: sticky;
@@ -1727,25 +1775,49 @@ a:hover {
   }
 
   /* --- Action buttons row: ensure visible, don't overflow ------------------ */
-  [style*="display: flex"][style*="gap: 8"] > .btn,
-  [style*="display: flex"][style*="gap: 6"] > .btn {
+  [style*="display: flex"][style*="gap: 8"]>.btn,
+  [style*="display: flex"][style*="gap: 6"]>.btn {
     flex-shrink: 0;
   }
 
   /* --- Buttons slightly smaller on mobile ---------------------------------- */
-  .btn { padding: 8px 14px; font-size: 0.82rem; }
-  .btn-sm { padding: 5px 10px !important; font-size: 0.78rem !important; }
+  .btn {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+
+  .btn-sm {
+    padding: 5px 10px !important;
+    font-size: 0.78rem !important;
+  }
 
   /* --- Search bar ---------------------------------------------------------- */
-  .search-bar { min-width: 0 !important; flex: 1 !important; }
+  .search-bar {
+    min-width: 0 !important;
+    flex: 1 !important;
+  }
 
   /* --- Tabs wrap ----------------------------------------------------------- */
-  .tabs { flex-wrap: wrap; gap: 0; }
-  .tab { padding: 8px 12px; font-size: 0.8rem; }
-  .tab-btn { padding: 8px 10px !important; font-size: 0.8rem !important; }
+  .tabs {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .tab {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .tab-btn {
+    padding: 8px 10px !important;
+    font-size: 0.8rem !important;
+  }
 
   /* --- Badge + chip size --------------------------------------------------- */
-  .badge { font-size: 0.7rem !important; padding: 2px 6px !important; }
+  .badge {
+    font-size: 0.7rem !important;
+    padding: 2px 6px !important;
+  }
 
   /* --- Dropdown menus → fixed bottom sheet on mobile to prevent clipping --- */
   .dropdown-menu {
@@ -1761,12 +1833,12 @@ a:hover {
     overflow-y: auto !important;
     z-index: 9999 !important;
     border-radius: var(--radius-lg) !important;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.4) !important;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.4) !important;
     animation: slideUp 0.2s ease-out !important;
   }
 
   /* Submenus render inline on mobile (no hover fly-out) */
-  .dropdown-submenu > .dropdown-menu {
+  .dropdown-submenu>.dropdown-menu {
     position: relative !important;
     top: auto !important;
     left: auto !important;
@@ -1802,15 +1874,25 @@ a:hover {
   }
 
   /* --- Stat cards ---------------------------------------------------------- */
-  .stat-label { font-size: 0.7rem !important; white-space: normal !important; }
-  .stat-value { font-size: 1.4rem !important; }
+  .stat-label {
+    font-size: 0.7rem !important;
+    white-space: normal !important;
+  }
+
+  .stat-value {
+    font-size: 1.4rem !important;
+  }
 
   /* --- Calendar cells → smaller min-height for mobile ---------------------- */
-  .cal-cell, .cal-cell-pad {
+  .cal-cell,
+  .cal-cell-pad {
     min-height: 48px !important;
     padding: 4px 3px !important;
   }
-  .cal-cell .cal-event-label { font-size: 0.55rem !important; }
+
+  .cal-cell .cal-event-label {
+    font-size: 0.55rem !important;
+  }
 
   /* --- Page header row ----------------------------------------------------- */
   .page-header-row {
@@ -1820,20 +1902,34 @@ a:hover {
 
   /* --- Bulk action bars → above bottom nav -------------------------------- */
   [style*="position: fixed"][style*="bottom: 0"][style*="left: 0"][style*="right: 0"][style*="zIndex"] {
-    bottom: 56px !important; /* push above bottom nav */
+    bottom: 56px !important;
+    /* push above bottom nav */
   }
 
   /* --- Form inputs: spacing and sizes ------------------------------------- */
-  .form-group { margin-bottom: 10px !important; }
-  .form-input, .form-select, textarea {
-    font-size: 16px !important; /* prevents iOS zoom on focus */
+  .form-group {
+    margin-bottom: 10px !important;
   }
-  select { font-size: 16px !important; } /* prevent zoom */
+
+  .form-input,
+  .form-select,
+  textarea {
+    font-size: 16px !important;
+    /* prevents iOS zoom on focus */
+  }
+
+  select {
+    font-size: 16px !important;
+  }
+
+  /* prevent zoom */
 
   /* --- Zia assistant on mobile --------------------------------------------- */
   #ai-assistant-fab {
-    z-index: 450 !important; /* above bottom nav */
+    z-index: 450 !important;
+    /* above bottom nav */
   }
+
   #ai-assistant-window {
     z-index: 500 !important;
   }
@@ -1845,14 +1941,21 @@ a:hover {
   }
 
   /* --- Print button and export buttons: hide on very small screens --------- */
-  .hide-mobile { display: none !important; }
+  .hide-mobile {
+    display: none !important;
+  }
 }
 
 /* ── Small phone: ≤ 480px ─────────────────────────────────────────────────── */
 @media (max-width: 480px) {
-  h1 { font-size: 1.15rem !important; }
+  h1 {
+    font-size: 1.15rem !important;
+  }
 
-  main { padding: 8px !important; padding-bottom: 80px !important; }
+  main {
+    padding: 8px !important;
+    padding-bottom: 80px !important;
+  }
 
   /* Stats → single column */
   [style*="gridAutoFlow: 'column'"],
@@ -1860,12 +1963,24 @@ a:hover {
     grid-template-columns: 1fr !important;
   }
 
-  .stats-grid { grid-template-columns: 1fr !important; }
+  .stats-grid {
+    grid-template-columns: 1fr !important;
+  }
 
   /* Even tighter spacing */
-  .card-body { padding: 10px !important; }
-  .data-table { min-width: 460px; font-size: 0.75rem; }
-  .data-table th, .data-table td { padding: 8px 8px !important; }
+  .card-body {
+    padding: 10px !important;
+  }
+
+  .data-table {
+    min-width: 460px;
+    font-size: 0.75rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 8px 8px !important;
+  }
 
   /* Modals nearly full screen */
   .modal {
@@ -1876,18 +1991,27 @@ a:hover {
     margin: 0 !important;
   }
 
-  .btn { padding: 7px 12px; font-size: 0.78rem; }
-  .btn-sm { padding: 4px 8px !important; font-size: 0.72rem !important; }
+  .btn {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+
+  .btn-sm {
+    padding: 4px 8px !important;
+    font-size: 0.72rem !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
 /* PRINT STYLES — hides app shell, shows only main content as a clean doc    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 @media print {
+
   /* Print portal override - completely isolates print content */
-  body.is-printing-portal > *:not(.print-portal-root) {
+  body.is-printing-portal>*:not(.print-portal-root) {
     display: none !important;
   }
+
   body.is-printing-portal {
     background: white !important;
     margin: 0 !important;
@@ -1896,6 +2020,7 @@ a:hover {
     height: auto !important;
     min-height: auto !important;
   }
+
   .print-portal-root {
     display: block !important;
     position: static !important;
@@ -1906,14 +2031,22 @@ a:hover {
   }
 
   /* Hide app chrome */
-  aside, .sidebar, .app-header, #ai-assistant-bubble, #ai-assistant-window,
-  .no-print, .zia-fab, footer,
-  [class*="Header"], header {
+  aside,
+  .sidebar,
+  .app-header,
+  #ai-assistant-bubble,
+  #ai-assistant-window,
+  .no-print,
+  .zia-fab,
+  footer,
+  [class*="Header"],
+  header {
     display: none !important;
   }
 
   /* Reset page layout */
-  body, html {
+  body,
+  html {
     background: white !important;
     color: #000 !important;
     margin: 0 !important;
@@ -1923,7 +2056,9 @@ a:hover {
   }
 
   /* Main content fills the page */
-  main, .main-content, [class*="dashboard"] {
+  main,
+  .main-content,
+  [class*="dashboard"] {
     margin: 0 !important;
     margin-left: 0 !important;
     margin-top: 0 !important;
@@ -1946,7 +2081,9 @@ a:hover {
   }
 
   /* Tables */
-  .data-table, .data-table th, .data-table td {
+  .data-table,
+  .data-table th,
+  .data-table td {
     color: #000 !important;
     border-color: #999 !important;
     background: white !important;
@@ -1998,10 +2135,12 @@ a:hover {
   white-space: nowrap;
   flex-shrink: 0;
 }
+
 .tab-btn:hover {
   color: var(--text);
   border-bottom: 2px solid var(--border-light);
 }
+
 .tab-btn.active {
   color: var(--primary);
   border-bottom: 2px solid var(--primary);
@@ -2012,7 +2151,9 @@ a:hover {
   padding-top: 12px !important;
   padding-bottom: 12px !important;
 }
-.btn-primary.btn-sm, .btn-sm.btn-primary {
+
+.btn-primary.btn-sm,
+.btn-sm.btn-primary {
   padding-top: 10px !important;
   padding-bottom: 10px !important;
 }
@@ -2025,17 +2166,22 @@ a:hover {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--primary) transparent;
-  padding-bottom: 4px; /* Space for the scrollbar */
+  padding-bottom: 4px;
+  /* Space for the scrollbar */
 }
+
 /* Explicit scrollbar styles for WebKit browsers (mobile and desktop) */
 .scrollable-tabs-bar::-webkit-scrollbar {
   height: 4px;
   display: block !important;
 }
+
 .scrollable-tabs-bar::-webkit-scrollbar-track {
-  background: rgba(0,0,0,0.05); /* very light visible track */
+  background: rgba(0, 0, 0, 0.05);
+  /* very light visible track */
   border-radius: 4px;
 }
+
 .scrollable-tabs-bar::-webkit-scrollbar-thumb {
   background: var(--primary);
   border-radius: 4px;
@@ -2045,37 +2191,41 @@ a:hover {
 @media (max-width: 767px) {
   .settings-tabs-container {
     position: sticky;
-    top: 56px; /* Stick immediately below mobile app header */
+    top: 56px;
+    /* Stick immediately below mobile app header */
     z-index: 80;
     background: var(--bg-page);
-    margin: 0 -12px 24px -12px; /* Pull out of main container padding to stretch full width */
+    margin: 0 -12px 24px -12px;
+    /* Pull out of main container padding to stretch full width */
     display: flex;
     flex-wrap: nowrap !important;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; /* Hide scrollbar for a slicker look */
+    scrollbar-width: none;
+    /* Hide scrollbar for a slicker look */
     border-bottom: 2px solid var(--border) !important;
-    box-shadow: 0 6px 12px rgba(0,0,0,0.05); /* Adds an app-like shadow when sticking */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+    /* Adds an app-like shadow when sticking */
   }
+
   .settings-tabs-container::-webkit-scrollbar {
     display: none;
   }
-  
+
   .settings-tabs-container .tab-btn {
     flex: 0 0 auto;
-    padding: 12px 20px !important; /* Bigger padding for touch targets */
+    padding: 12px 20px !important;
+    /* Bigger padding for touch targets */
     font-size: 0.85rem !important;
-    border-right: 1px solid var(--border-light) !important; /* Subtle separator line between tabs */
+    border-right: 1px solid var(--border-light) !important;
+    /* Subtle separator line between tabs */
     border-bottom: 2px solid transparent !important;
     border-radius: 0 !important;
     margin-bottom: 0 !important;
   }
-  
+
   .settings-tabs-container .tab-btn.active {
     border-bottom: 2px solid var(--primary) !important;
-    background: rgba(0,0,0,0.02) !important;
+    background: rgba(0, 0, 0, 0.02) !important;
   }
 }
-
-
-

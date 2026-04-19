@@ -7,12 +7,24 @@ import { getUndoStack, undoLastDelete } from '@/lib/dataStore';
  * Appears at the bottom-center after any deletion.
  * Auto-dismisses after 12 seconds with a countdown ring.
  * Listens to the 'eznr:undo-stack-changed' CustomEvent.
+ * 
+ * Mobile: positioned above bottom nav (56px), with reduced padding
+ * and responsive width to prevent cutoff.
  */
 export default function UndoBar({ onUndo }) {
     const [entry, setEntry] = useState(null);      // current pending undo entry
     const [secondsLeft, setSecondsLeft] = useState(12);
+    const [isMobile, setIsMobile] = useState(false);
     const timerRef = useRef(null);
     const TIMEOUT = 12;
+
+    // Detect mobile
+    useEffect(() => {
+        const check = () => setIsMobile(window.innerWidth < 768);
+        check();
+        window.addEventListener('resize', check);
+        return () => window.removeEventListener('resize', check);
+    }, []);
 
     const dismiss = useCallback(() => {
         setEntry(null);
@@ -70,47 +82,51 @@ export default function UndoBar({ onUndo }) {
     return (
         <div style={{
             position: 'fixed',
-            bottom: 88,   // above Zia FAB
+            // Mobile: above bottom nav (56px) + safe margin; Desktop: above Zia FAB
+            bottom: isMobile ? 68 : 88,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10000,
             display: 'flex',
             alignItems: 'center',
-            gap: 10,
+            gap: isMobile ? 8 : 10,
             background: 'var(--bg-card)',
             border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: '10px 16px 10px 12px',
+            borderRadius: isMobile ? 12 : 14,
+            padding: isMobile ? '8px 10px 8px 8px' : '10px 16px 10px 12px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
             animation: 'slideUpIn 0.25s ease',
             backdropFilter: 'blur(8px)',
-            minWidth: 260,
-            maxWidth: 440,
+            // Mobile: fit within screen with margins; Desktop: normal
+            width: isMobile ? 'calc(100vw - 24px)' : 'auto',
+            minWidth: isMobile ? 0 : 260,
+            maxWidth: isMobile ? 'calc(100vw - 24px)' : 440,
+            boxSizing: 'border-box',
         }}>
             {/* Countdown ring */}
-            <svg width={28} height={28} style={{ flexShrink: 0 }}>
-                <circle cx={14} cy={14} r={10} fill="none" stroke="var(--border)" strokeWidth={2.5} />
+            <svg width={isMobile ? 24 : 28} height={isMobile ? 24 : 28} style={{ flexShrink: 0 }}>
+                <circle cx={isMobile ? 12 : 14} cy={isMobile ? 12 : 14} r={isMobile ? 8 : 10} fill="none" stroke="var(--border)" strokeWidth={2.5} />
                 <circle
-                    cx={14} cy={14} r={10}
+                    cx={isMobile ? 12 : 14} cy={isMobile ? 12 : 14} r={isMobile ? 8 : 10}
                     fill="none"
                     stroke="var(--danger, #f44336)"
                     strokeWidth={2.5}
-                    strokeDasharray={circumference}
-                    strokeDashoffset={circumference * (1 - progress / 100)}
+                    strokeDasharray={isMobile ? 2 * Math.PI * 8 : circumference}
+                    strokeDashoffset={(isMobile ? 2 * Math.PI * 8 : circumference) * (1 - progress / 100)}
                     strokeLinecap="round"
-                    transform="rotate(-90 14 14)"
+                    transform={`rotate(-90 ${isMobile ? 12 : 14} ${isMobile ? 12 : 14})`}
                     style={{ transition: 'stroke-dashoffset 0.9s linear' }}
                 />
-                <text x={14} y={18} textAnchor="middle" fontSize={9} fontWeight={700} fill="var(--text-muted)">{secondsLeft}</text>
+                <text x={isMobile ? 12 : 14} y={isMobile ? 15 : 18} textAnchor="middle" fontSize={isMobile ? 7 : 9} fontWeight={700} fill="var(--text-muted)">{secondsLeft}</text>
             </svg>
 
             {/* Message */}
             <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 2 }}>
+                <div style={{ fontSize: isMobile ? '0.72rem' : '0.78rem', color: 'var(--text-muted)', marginBottom: 1 }}>
                     🗑️ Obrisano
                 </div>
                 <div style={{
-                    fontSize: '0.9rem', fontWeight: 700, color: 'var(--text)',
+                    fontSize: isMobile ? '0.82rem' : '0.9rem', fontWeight: 700, color: 'var(--text)',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                     {entry.label}
@@ -128,9 +144,9 @@ export default function UndoBar({ onUndo }) {
                     color: 'white',
                     border: 'none',
                     borderRadius: 8,
-                    padding: '6px 14px',
+                    padding: isMobile ? '5px 10px' : '6px 14px',
                     fontWeight: 700,
-                    fontSize: '0.85rem',
+                    fontSize: isMobile ? '0.78rem' : '0.85rem',
                     cursor: 'pointer',
                     flexShrink: 0,
                     transition: 'opacity 0.15s',

@@ -310,43 +310,90 @@ export function logSystemAlert(title, detail, severity = 'warning') {
 
 // ============================================================================
 // READ FUNCTIONS
+// Merges Firestore cache (company-scoped CRUD events) with localStorage
+// (auth events like login/logout that don't go through _autoLog).
 // ============================================================================
 
 import { getAll } from './dataStore';
 
 export function getUserLog(limit = 50, filterCategory = null, filterCompanyId = null) {
-    // Read from Firestore-synced cache instead of fragile localStorage
-    let logs = getAll('activityLog') || [];
+    // 1. Read from Firestore-synced cache (CRUD events written by _autoLog)
+    let firestoreLogs = getAll('activityLog') || [];
     
-    // Sort newest first
-    logs = [...logs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // 2. Read localStorage logs (auth events, legacy entries)
+    let localLogs = readLog(USER_LOG_KEY);
+    
+    // 3. Merge & deduplicate by ID
+    const seenIds = new Set();
+    const merged = [];
+    
+    // Firestore logs take priority (they have companyId reliably set)
+    for (const entry of firestoreLogs) {
+        if (entry.id && !seenIds.has(entry.id)) {
+            seenIds.add(entry.id);
+            merged.push(entry);
+        }
+    }
+    // Add localStorage entries that aren't already present
+    for (const entry of localLogs) {
+        if (entry.id && !seenIds.has(entry.id)) {
+            seenIds.add(entry.id);
+            merged.push(entry);
+        }
+    }
+    
+    // 4. Sort newest first
+    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+    // 5. Apply filters
+    let filtered = merged;
     if (filterCompanyId && filterCompanyId !== 'all') {
-        logs = logs.filter(l => {
-            if (!l.companyId) return l.category === 'auth';
+        filtered = filtered.filter(l => {
+            // Auth events (login/logout) have no companyId — always show them
+            if (!l.companyId || l.category === 'auth') return true;
             return l.companyId === filterCompanyId;
         });
     }
     if (filterCategory) {
-        logs = logs.filter(l => l.category === filterCategory);
+        filtered = filtered.filter(l => l.category === filterCategory);
     }
-    return logs.slice(0, limit);
+    return filtered.slice(0, limit);
 }
 
 export function getAdminLog(limit = 50, filterCategory = null, filterCompanyId = null) {
-    // Admin events are typically mixed in activityLog if they have matching categories,
-    // or kept separate if needed. We'll read from synced cache.
-    let logs = getAll('activityLog') || [];
+    // Admin events from localStorage
+    let localAdminLogs = readLog(ADMIN_LOG_KEY);
     
-    logs = [...logs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    // Also pull from Firestore cache for admin-category entries
+    let firestoreLogs = getAll('activityLog') || [];
+    
+    // Merge
+    const seenIds = new Set();
+    const merged = [];
+    
+    for (const entry of firestoreLogs) {
+        if (entry.id && !seenIds.has(entry.id)) {
+            seenIds.add(entry.id);
+            merged.push(entry);
+        }
+    }
+    for (const entry of localAdminLogs) {
+        if (entry.id && !seenIds.has(entry.id)) {
+            seenIds.add(entry.id);
+            merged.push(entry);
+        }
+    }
+    
+    merged.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+    let filtered = merged;
     if (filterCompanyId && filterCompanyId !== 'all') {
-        logs = logs.filter(l => !l.companyId || l.companyId === filterCompanyId);
+        filtered = filtered.filter(l => !l.companyId || l.companyId === filterCompanyId);
     }
     if (filterCategory) {
-        logs = logs.filter(l => l.category === filterCategory);
+        filtered = filtered.filter(l => l.category === filterCategory);
     }
-    return logs.slice(0, limit);
+    return filtered.slice(0, limit);
 }
 
 export function clearUserLog() {

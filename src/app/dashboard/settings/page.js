@@ -1437,7 +1437,7 @@ export default function SettingsPage() {
                   onClick={() => setLogLimit(l => l + 20)} 
                   style={{ width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px dashed var(--border)', borderRadius: 8, cursor: 'pointer', marginTop: 12, color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}
                 >
-                  {lang === 'bs' ? 'Ucitaj starije aktivnosti' : 'Load older activities'}
+                  {lang === 'bs' ? 'Učitaj starije aktivnosti' : 'Load older activities'}
                 </button>
               )}
 

@@ -265,6 +265,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     const router = useRouter();
     const pathname = usePathname();
     const [openMenus, setOpenMenus] = useState({});
+    const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+    const [mobileProfileTab, setMobileProfileTab] = useState('profile');
 
     // Build menu: base items + admin items (if admin)
     const allMenuItems = useMemo(() => {
@@ -302,9 +304,12 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     };
 
     // ── Shared menu rendering (used by both sidebar and drawer) ──
-    const renderMenu = (isDrawerMode = false) => (
+    const renderMenu = (isDrawerMode = false) => {
+        // On mobile, filter out the admin menu group — it's accessed via profile modal instead
+        const itemsToRender = isDrawerMode ? allMenuItems.filter(i => i.key !== 'admin') : allMenuItems;
+        return (
         <nav style={{ ...sidebarStyles.nav, ...(isDrawerMode ? { padding: '8px 12px' } : {}) }}>
-            {allMenuItems.map((item) => {
+            {itemsToRender.map((item) => {
                 const hasChildren = item.children && item.children.length > 0;
                 const isOpen = openMenus[item.key];
                 const active = item.path && isActive(item.path);
@@ -437,6 +442,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             })}
         </nav>
     );
+    };
 
     // ═══════════════════════════════════════════════════════════════════════════
     // MOBILE: Bottom-sheet drawer (slides up from bottom, sits above bottom nav)
@@ -586,34 +592,164 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         {renderMenu(true)}
                     </div>
 
-                    {/* User footer */}
-                    <div style={{
-                        flexShrink: 0,
-                        padding: '10px 16px',
-                        borderTop: '1px solid rgba(255,255,255,0.08)',
-                        display: 'flex', alignItems: 'center', gap: 12,
-                    }}>
-                        <div style={sidebarStyles.userAvatar}>
+                    {/* User footer — clickable to open profile/admin modal */}
+                    <div
+                        onClick={() => setMobileProfileOpen(true)}
+                        style={{
+                            flexShrink: 0,
+                            padding: '10px 16px',
+                            borderTop: '1px solid rgba(255,255,255,0.08)',
+                            display: 'flex', alignItems: 'center', gap: 12,
+                            cursor: 'pointer',
+                            transition: 'background 0.15s',
+                        }}
+                    >
+                        <div style={{ ...sidebarStyles.userAvatar, boxShadow: isAdmin ? '0 0 0 2px var(--primary)' : 'none' }}>
                             {user?.firstName?.[0] || 'K'}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
-                            <div style={sidebarStyles.userCompany}>{user?.companyName}</div>
+                            <div style={sidebarStyles.userCompany}>
+                                {user?.companyName}
+                                {isAdmin && <span style={{ marginLeft: 6, fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 700 }}>ADMIN</span>}
+                            </div>
                         </div>
-                        <button onClick={handleLogout} style={{
-                            padding: '8px 16px',
-                            background: 'rgba(244,67,54,0.15)',
-                            border: '1px solid rgba(244,67,54,0.3)',
-                            borderRadius: 8,
-                            color: '#ef9a9a',
-                            cursor: 'pointer',
-                            fontSize: '0.78rem',
-                            fontWeight: 600,
-                            fontFamily: 'var(--font-body)',
-                            whiteSpace: 'nowrap',
-                        }}>🚪 {t('logout')}</button>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '1rem' }}>›</span>
                     </div>
                 </div>
+
+                {/* ═══ Mobile Profile / Admin Modal ═══ */}
+                {mobileProfileOpen && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        zIndex: 600,
+                        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                    }}>
+                        {/* Backdrop */}
+                        <div onClick={() => setMobileProfileOpen(false)} style={{
+                            position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                            background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                        }} />
+                        {/* Modal panel */}
+                        <div style={{
+                            position: 'relative', width: '100%', maxHeight: '85vh',
+                            background: 'var(--bg-card)', borderRadius: '20px 20px 0 0',
+                            display: 'flex', flexDirection: 'column',
+                            animation: 'slideUpIn 0.25s ease',
+                            boxShadow: '0 -8px 48px rgba(0,0,0,0.4)',
+                        }}>
+                            {/* Header with tabs */}
+                            <div style={{ padding: '16px 20px 0', flexShrink: 0 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                        <div style={{ ...sidebarStyles.userAvatar, width: 42, height: 42, fontSize: '1rem' }}>
+                                            {user?.firstName?.[0] || 'K'}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)' }}>{user?.firstName} {user?.lastName}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{user?.email || user?.username}</div>
+                                        </div>
+                                    </div>
+                                    <button onClick={() => setMobileProfileOpen(false)} style={{
+                                        width: 34, height: 34, borderRadius: 10, border: '1px solid var(--border)',
+                                        background: 'var(--bg-input)', color: 'var(--text-muted)', cursor: 'pointer',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
+                                    }}>✕</button>
+                                </div>
+                                {/* Tabs */}
+                                <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', paddingBottom: 0 }}>
+                                    <button onClick={() => setMobileProfileTab('profile')} style={{
+                                        padding: '8px 16px', border: 'none', background: 'transparent', cursor: 'pointer',
+                                        fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.85rem',
+                                        color: mobileProfileTab === 'profile' ? 'var(--primary)' : 'var(--text-muted)',
+                                        borderBottom: mobileProfileTab === 'profile' ? '2px solid var(--primary)' : '2px solid transparent',
+                                        marginBottom: -1,
+                                    }}>👤 {lang === 'bs' ? 'Profil' : 'Profile'}</button>
+                                    {isAdmin && (
+                                        <button onClick={() => setMobileProfileTab('admin')} style={{
+                                            padding: '8px 16px', border: 'none', background: 'transparent', cursor: 'pointer',
+                                            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.85rem',
+                                            color: mobileProfileTab === 'admin' ? 'var(--primary)' : 'var(--text-muted)',
+                                            borderBottom: mobileProfileTab === 'admin' ? '2px solid var(--primary)' : '2px solid transparent',
+                                            marginBottom: -1,
+                                        }}>👑 {lang === 'bs' ? 'Administracija' : 'Administration'}</button>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Content */}
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px 24px', WebkitOverflowScrolling: 'touch' }}>
+                                {mobileProfileTab === 'profile' && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Ime i prezime' : 'Full Name'}</div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.firstName} {user?.lastName}</div>
+                                        </div>
+                                        <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Email / Korisničko ime' : 'Email / Username'}</div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.email || user?.username || '—'}</div>
+                                        </div>
+                                        <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Uloga' : 'Role'}</div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
+                                                {user?.role === 'admin' || user?.role === 'superadmin' ? '👑 Administrator' : '👷 ' + (lang === 'bs' ? 'Stručnjak ZNR' : 'OSH Officer')}
+                                            </div>
+                                        </div>
+                                        <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Aktivna kompanija' : 'Active Company'}</div>
+                                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.companyName || '—'}</div>
+                                        </div>
+                                        <button onClick={() => { setMobileProfileOpen(false); onMobileClose?.(); router.push('/dashboard/settings'); }} style={{
+                                            width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--border)',
+                                            background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
+                                            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center',
+                                        }}>⚙️ {lang === 'bs' ? 'Sve postavke' : 'All Settings'}</button>
+                                        <button onClick={handleLogout} style={{
+                                            width: '100%', padding: '12px', borderRadius: 10,
+                                            background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.2)',
+                                            color: '#ef5350', cursor: 'pointer',
+                                            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center',
+                                        }}>🚪 {lang === 'bs' ? 'Odjavi se' : 'Log Out'}</button>
+                                    </div>
+                                )}
+                                {mobileProfileTab === 'admin' && isAdmin && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                                        <button onClick={() => { setMobileProfileOpen(false); onMobileClose?.(); router.push('/dashboard/admin/users'); }} style={{
+                                            display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                                            padding: '14px 16px', borderRadius: 12, border: '1px solid var(--border)',
+                                            background: 'var(--bg-page)', color: 'var(--text)', cursor: 'pointer',
+                                            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.9rem', textAlign: 'left',
+                                        }}>
+                                            <span style={{ fontSize: '1.3rem' }}>👥</span>
+                                            <div>
+                                                <div>{lang === 'bs' ? 'Upravljanje korisnicima' : 'User Management'}</div>
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{lang === 'bs' ? 'Dodaj, uredi ili obriši korisničke račune' : 'Add, edit or delete user accounts'}</div>
+                                            </div>
+                                        </button>
+                                        <button onClick={() => { setMobileProfileOpen(false); onMobileClose?.(); router.push('/dashboard/admin/companies'); }} style={{
+                                            display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+                                            padding: '14px 16px', borderRadius: 12, border: '1px solid var(--border)',
+                                            background: 'var(--bg-page)', color: 'var(--text)', cursor: 'pointer',
+                                            fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.9rem', textAlign: 'left',
+                                        }}>
+                                            <span style={{ fontSize: '1.3rem' }}>🏢</span>
+                                            <div>
+                                                <div>{lang === 'bs' ? 'Upravljanje firmama' : 'Company Management'}</div>
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{lang === 'bs' ? 'Dodaj, uredi ili obriši podatke o firmama' : 'Add, edit or delete company data'}</div>
+                                            </div>
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <style>{`
+                            @keyframes slideUpIn {
+                                from { opacity: 0; transform: translateY(32px); }
+                                to   { opacity: 1; transform: translateY(0); }
+                            }
+                        `}</style>
+                    </div>
+                )}
             </>
         );
     }
