@@ -1258,10 +1258,19 @@ export default function AIAssistant() {
 
         recognition.onstart = () => setIsRecording(true);
         recognition.onresult = (e) => {
-            const transcript = Array.from(e.results)
-                .map(res => res[0].transcript)
-                .join('');
-            setInputValue(startValue ? startValue + ' ' + transcript : transcript);
+            let finalTranscript = '';
+            let interimTranscript = '';
+            for (let i = 0; i < e.results.length; i++) {
+                if (e.results[i].isFinal) {
+                    finalTranscript += e.results[i][0].transcript + ' ';
+                } else {
+                    // Overwrite interim completely to avoid Android webview duplication bug
+                    interimTranscript = e.results[i][0].transcript;
+                }
+            }
+            
+            const fullTranscript = (finalTranscript + interimTranscript).trim().replace(/\s+/g, ' ');
+            setInputValue(startValue ? startValue + ' ' + fullTranscript : fullTranscript);
         };
         recognition.onerror = (e) => {
             console.error('Speech recognition error', e.error);
