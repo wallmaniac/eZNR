@@ -45,8 +45,8 @@ export default function MobileBottomNav({ onMenuOpen }) {
             <nav style={{
                 position: 'fixed',
                 bottom: 0, left: 0, right: 0,
-                height: 56,
-                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                minHeight: 56,
+                paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)',
                 zIndex: 400,
                 display: 'flex',
                 alignItems: 'stretch',

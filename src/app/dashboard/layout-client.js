@@ -113,7 +113,7 @@ export default function DashboardLayout({ children }) {
     if (!mounted || loading) {
         return (
             <div style={{
-                height: '100vh',
+                height: '100dvh',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -145,7 +145,7 @@ export default function DashboardLayout({ children }) {
             : 'var(--sidebar-width)';
 
     return (
-        <div style={{ minHeight: '100vh', background: 'var(--bg-page)' }}>
+        <div style={{ minHeight: '100dvh', background: 'var(--bg-page)' }}>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
             {/* Sidebar — on mobile it renders its own backdrop internally */}
@@ -171,7 +171,7 @@ export default function DashboardLayout({ children }) {
                 padding: isMobile ? 12 : 24,
                 paddingBottom: isMobile ? 120 : 96,
                 transition: 'margin-left var(--transition-normal)',
-                minHeight: 'calc(100vh - var(--header-height))',
+                minHeight: 'calc(100dvh - var(--header-height))',
             }}>
                 <NavigationGuardProvider key={undoKey}>
                     {children}

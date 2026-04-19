@@ -210,9 +210,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 }}>
                     {/* Back / Forward */}
                     <button onClick={handleBack} title={lang === 'bs' ? 'Nazad' : 'Back'}
-                        style={{ ...iBtn({ width: 42, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
+                        style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
                     <button onClick={() => router.forward?.() || window.history.forward()} title={lang === 'bs' ? 'Naprijed' : 'Forward'}
-                        style={{ ...iBtn({ width: 42, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
+                        style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip */}
                     <div ref={companyRef} style={{ position: 'relative', flex: '1 1 100px', minWidth: 0, display: 'flex' }}>
@@ -287,10 +287,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {lang === 'bs' ? 'EN' : 'BS'}
                     </button>
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
-                        style={{ position: 'relative', width: 46, height: 32, borderRadius: 8, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, overflow: 'hidden', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)' }}>
-                        <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 22 : 3, width: 20, height: 20, borderRadius: '50%', background: isDark ? 'radial-gradient(circle at 35% 35%,#d0e8ff,#a8c8f0)' : 'radial-gradient(circle at 35% 35%,#fff,#ffe780)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', transition: 'left 0.25s ease', pointerEvents: 'none' }}>
-                            {isDark ? '🌙' : '☀️'}
-                        </span>
+                        style={{ ...iBtn({ fontSize: '0.95rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
+                        {isDark ? '☀️' : '🌙'}
                     </button>
 
                     {/* Notifications bell — onMouseDown stops the document mousedown listener from closing it before click fires */}
@@ -338,6 +336,11 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             document.body
                         )}
                     </div>
+                    {/* Settings (Mobile only) */}
+                    <button onClick={() => router.push('/dashboard/settings')} title={lang === 'bs' ? 'Postavke' : 'Settings'}
+                        style={{ ...iBtn({ fontSize: '1.05rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
+                        ⚙️
+                    </button>
                 </div>
             )}
 
