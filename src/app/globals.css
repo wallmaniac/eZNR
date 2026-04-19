@@ -2041,5 +2041,41 @@ a:hover {
   border-radius: 4px;
 }
 
+/* ===== SETTINGS TABS (MOBILE STICKY) ===== */
+@media (max-width: 767px) {
+  .settings-tabs-container {
+    position: sticky;
+    top: 56px; /* Stick immediately below mobile app header */
+    z-index: 80;
+    background: var(--bg-page);
+    margin: 0 -12px 24px -12px; /* Pull out of main container padding to stretch full width */
+    display: flex;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; /* Hide scrollbar for a slicker look */
+    border-bottom: 2px solid var(--border) !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.05); /* Adds an app-like shadow when sticking */
+  }
+  .settings-tabs-container::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .settings-tabs-container .tab-btn {
+    flex: 0 0 auto;
+    padding: 12px 20px !important; /* Bigger padding for touch targets */
+    font-size: 0.85rem !important;
+    border-right: 1px solid var(--border-light) !important; /* Subtle separator line between tabs */
+    border-bottom: 2px solid transparent !important;
+    border-radius: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .settings-tabs-container .tab-btn.active {
+    border-bottom: 2px solid var(--primary) !important;
+    background: rgba(0,0,0,0.02) !important;
+  }
+}
+
 
 

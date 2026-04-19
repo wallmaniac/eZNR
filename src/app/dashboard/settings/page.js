@@ -394,7 +394,7 @@ export default function SettingsPage() {
       {/* Removed global Success toast */}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
+      <div className="settings-tabs-container" style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
         {tabs.map(tb => (
           <button key={tb.key}
             className={`tab-btn ${currentTab === tb.key ? 'active' : ''}`}
