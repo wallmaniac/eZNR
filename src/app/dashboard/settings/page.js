@@ -20,6 +20,7 @@ import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 import { seedMockDataConfig } from '@/lib/mockDataGenerator';
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/lib/webAuthn';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -479,6 +480,56 @@ export default function SettingsPage() {
             </div>
             <div style={{ marginTop: 16 }}>
               <button className="btn btn-primary" onClick={handleChangePassword}>🔐 {lang === 'bs' ? 'Promijeni lozinku' : 'Change Password'}</button>
+            </div>
+
+            <hr style={{ margin: '28px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+            <h4 style={{ marginBottom: 16 }}>👆 {lang === 'bs' ? 'Biometrijska prijava' : 'Biometric Login'}</h4>
+            <div style={{ padding: '16px', borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{lang === 'bs' ? 'Otisak prsta / Prepoznavanje lica' : 'Fingerprint / Face ID'}</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  {lang === 'bs' 
+                    ? 'Omogućite brzu prijavu na ovom uređaju bez unošenja šifre.' 
+                    : 'Enable quick login on this device without a password.'}
+                </div>
+              </div>
+              <div>
+                {(typeof window !== 'undefined' && hasStoredCredential()) ? (
+                  <button 
+                    className="btn" 
+                    onClick={async () => {
+                      const isConfirmed = await confirm(lang === 'bs' ? 'Da li ste sigurni da želite ukloniti sačuvani otisak s ovog uređaja?' : 'Remove saved fingerprint from device?');
+                      if (!isConfirmed) return;
+                      localStorage.removeItem('eznr_webauthn_cred');
+                      localStorage.removeItem('eznr_webauthn_user');
+                      window.dispatchEvent(new Event('storage')); // force react refresh if needed
+                      setPasswordSuccess(lang === 'bs' ? 'Otisak uspješno uklonjen' : 'Fingerprint removed');
+                    }}
+                    style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 600 }}
+                  >
+                    🗑️ {lang === 'bs' ? 'Ukloni otisak' : 'Remove fingerprint'}
+                  </button>
+                ) : (
+                  <button 
+                    className="btn btn-primary" 
+                    onClick={async () => {
+                      if (!isWebAuthnAvailable()) {
+                        alert(lang === 'bs' ? 'Biometrija nije podržana na ovom uređaju (potreban HTTPS).' : 'Biometrics not supported on this device/browser.');
+                        return;
+                      }
+                      try {
+                        const userData = { ...user, firstName: profileData.firstName, lastName: profileData.lastName };
+                        await registerCredential(user.id, user.email, userData);
+                        setPasswordSuccess(lang === 'bs' ? 'Otisak uspješno sačuvan!' : 'Fingerprint successfully saved!');
+                      } catch (err) {
+                        setPasswordError('Greška: ' + err.message);
+                      }
+                    }}
+                  >
+                    ➕ {lang === 'bs' ? 'Dodaj otisak' : 'Add fingerprint'}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

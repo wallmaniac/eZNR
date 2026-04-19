@@ -8,6 +8,7 @@ import {
     getOrgUnitName, formatDate, getActiveCompanyId
 } from '@/lib/dataStore';
 import { uploadDocument } from '@/lib/storageService';
+import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -45,6 +46,8 @@ function EquipmentPageInner() {
     const [selectedIds, setSelectedIds] = useState(new Set());
     const openItemHandledRef = useRef(false);
     const serviceDocRef = useRef(null);
+    const { activeCompanyId } = useAuth();
+    const [showPrintModal, setShowPrintModal] = useState(false);
 
     const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EQUIPMENT)); }, []);
     useEffect(() => {
@@ -291,6 +294,62 @@ function EquipmentPageInner() {
     return (
         <div className="animate-fadeIn">
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('equipment')}</h1>
+            
+            <style>{`
+                @media print {
+                    body * { visibility: hidden !important; }
+                    #qr-print-area, #qr-print-area * { visibility: visible !important; }
+                    #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
+                    .no-print { display: none !important; }
+                    @page { margin: 10mm; }
+                }
+            `}</style>
+            
+            {showPrintModal && (
+                <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
+                    <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🖨️ Isprintaj QR kodove</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowPrintModal(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ background: '#f5f5f5', padding: 20 }}>
+                            <div style={{ marginBottom: 16, fontSize: '0.85rem', color: '#555' }}>
+                                Pripremljeno <strong>{sortedEquipment.length}</strong> etiketa za print. 
+                                Koristite uobičajeni A4 papir ili formatirajte ladicu na samoljepljivi papir.
+                            </div>
+                            
+                            <div id="qr-print-area" style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(auto-fill, 60mm)', 
+                                gap: '4mm',
+                                alignContent: 'start',
+                                justifyContent: 'center'
+                            }}>
+                                {(() => {
+                                    const QRCodeLabel = require('@/components/QRCodeLabel').default;
+                                    const { getById } = require('@/lib/dataStore');
+                                    const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                    
+                                    return sortedEquipment.map((eq, i) => (
+                                        <QRCodeLabel 
+                                            key={i} 
+                                            type="eq" 
+                                            id={eq.id} 
+                                            title={eq.naziv.toUpperCase()} 
+                                            subtitle={eq.invBroj || eq.tvBroj || (lang==='bs'?'N/A':'N/A')} 
+                                            companyLogo={company?.logo} 
+                                        />
+                                    ));
+                                })()}
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-ghost" onClick={() => setShowPrintModal(false)}>{t('cancel')}</button>
+                            <button className="btn btn-primary" onClick={() => window.print()}>🖨️ Printaj stranicu</button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Equipment Edit Modal ── */}
             {showForm && (
@@ -574,6 +633,7 @@ function EquipmentPageInner() {
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+                        <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {lang === 'bs' ? 'QR Kodovi' : 'QR Codes'}</button>
                         <SavedFlash />
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}

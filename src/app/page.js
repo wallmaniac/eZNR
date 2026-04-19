@@ -36,10 +36,12 @@ export default function LoginPage() {
   const [forgotEmail, setForgotEmail] = useState('');
   const [forgotSent, setForgotSent] = useState(false);
 
-  // If already logged in, redirect to dashboard
+  // If already logged in, redirect to dashboard or deep link
   useEffect(() => {
     if (isAuthenticated && !showBiometricOffer) {
-      router.replace('/dashboard');
+      const qs = new URLSearchParams(window.location.search);
+      const redirectUrl = qs.get('redirect');
+      router.replace(redirectUrl || '/dashboard');
     }
   }, [isAuthenticated, router, showBiometricOffer]);
 
@@ -88,7 +90,8 @@ export default function LoginPage() {
           address: formData.address,
         });
         // onAuthStateChanged in AuthContext handles the rest
-        router.push('/dashboard');
+        const qs = new URLSearchParams(window.location.search);
+        router.push(qs.get('redirect') || '/dashboard');
       } else {
         // ── Login via Firebase Auth ──
         const emailToUse = formData.username.includes('@') ? formData.username : formData.username;
@@ -127,7 +130,8 @@ export default function LoginPage() {
         return;
       }
     }
-    router.push('/dashboard');
+    const qs = new URLSearchParams(window.location.search);
+    router.push(qs.get('redirect') || '/dashboard');
   };
 
   const handleBiometricLogin = async () => {
@@ -136,7 +140,8 @@ export default function LoginPage() {
       const userData = await authenticateCredential();
       if (userData) {
         login(userData);
-        router.push('/dashboard');
+        const qs = new URLSearchParams(window.location.search);
+        router.push(qs.get('redirect') || '/dashboard');
       } else {
         setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
       }
@@ -153,12 +158,14 @@ export default function LoginPage() {
       console.warn('WebAuthn registration failed:', e);
     }
     setShowBiometricOffer(false);
-    router.push('/dashboard');
+    const qs = new URLSearchParams(window.location.search);
+    router.push(qs.get('redirect') || '/dashboard');
   };
 
   const handleDeclineBiometric = () => {
     setShowBiometricOffer(false);
-    router.push('/dashboard');
+    const qs = new URLSearchParams(window.location.search);
+    router.push(qs.get('redirect') || '/dashboard');
   };
 
   return (
@@ -313,21 +320,38 @@ export default function LoginPage() {
 
           {/* Biometric login button */}
           {!isRegister && hasBiometric && (
-            <button
-              type="button"
-              onClick={handleBiometricLogin}
-              className="btn btn-lg"
-              disabled={isLoading}
-              style={{
-                width: '100%', justifyContent: 'center', marginTop: 8, minHeight: 48,
-                background: 'rgba(0,191,166,0.12)', border: '1.5px solid rgba(0,191,166,0.3)',
-                color: '#00BFA6', fontSize: '0.92rem', fontWeight: 700,
-                display: 'flex', alignItems: 'center', gap: 10, borderRadius: 12,
-                cursor: 'pointer', fontFamily: 'var(--font-heading)',
-              }}
-            >
-              🔐 {lang === 'bs' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={handleBiometricLogin}
+                className="btn btn-lg"
+                disabled={isLoading}
+                style={{
+                  width: '100%', justifyContent: 'center', minHeight: 48,
+                  background: 'rgba(0,191,166,0.12)', border: '1.5px solid rgba(0,191,166,0.3)',
+                  color: '#00BFA6', fontSize: '0.92rem', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: 10, borderRadius: 12,
+                  cursor: 'pointer', fontFamily: 'var(--font-heading)',
+                }}
+              >
+                🔐 {lang === 'bs' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('eznr_webauthn_cred');
+                  localStorage.removeItem('eznr_webauthn_user');
+                  setHasBiometric(false);
+                }}
+                style={{
+                  background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
+                  fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline',
+                  padding: '4px', textAlign: 'center', margin: '0 auto'
+                }}
+              >
+                {lang === 'bs' ? 'Ukloni sačuvani otisak s uređaja' : 'Remove saved fingerprint from device'}
+              </button>
+            </div>
           )}
 
           {/* Biometric enrollment offer modal */}

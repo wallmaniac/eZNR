@@ -2,7 +2,8 @@
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -42,6 +43,9 @@ export default function FireProtectionPage() {
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
+    const { activeCompanyId } = useAuth();
+    
+    const [showPrintModal, setShowPrintModal] = useState(false);
 
     const [tab, setTab] = useState('extinguishers'); // 'extinguishers' | 'hydrants'
 
@@ -193,6 +197,65 @@ export default function FireProtectionPage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
+            <style>{`
+                @media print {
+                    body * { visibility: hidden !important; }
+                    #qr-print-area, #qr-print-area * { visibility: visible !important; }
+                    #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
+                    .no-print { display: none !important; }
+                    @page { margin: 10mm; }
+                }
+            `}</style>
+            
+            {showPrintModal && (
+                <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
+                    <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🖨️ Isprintaj QR kodove</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowPrintModal(false)}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ background: '#f5f5f5', padding: 20 }}>
+                            <div style={{ marginBottom: 16, fontSize: '0.85rem', color: '#555' }}>
+                                Pripremljeno <strong>{tab === 'extinguishers' ? sortedExt.length : sortedHyd.length}</strong> etiketa za print. 
+                                Koristite uobičajeni A4 papir ili formatirajte ladicu na samoljepljivi papir.
+                            </div>
+                            
+                            {/* The actual printable area */}
+                            <div id="qr-print-area" style={{ 
+                                display: 'grid', 
+                                gridTemplateColumns: 'repeat(auto-fill, 60mm)', 
+                                gap: '4mm',
+                                alignContent: 'start',
+                                justifyContent: 'center'
+                            }}>
+                                {(() => {
+                                    const QRCodeLabel = require('@/components/QRCodeLabel').default;
+                                    const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                    const items = tab === 'extinguishers' 
+                                        ? sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))
+                                        : sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }));
+                                    
+                                    return items.map((item, i) => (
+                                        <QRCodeLabel 
+                                            key={i} 
+                                            type="fp" 
+                                            id={item.id} 
+                                            title={item.title} 
+                                            subtitle={item.sub} 
+                                            companyLogo={company?.logo} 
+                                        />
+                                    ));
+                                })()}
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-ghost" onClick={() => setShowPrintModal(false)}>{t('cancel')}</button>
+                            <button className="btn btn-primary" onClick={() => window.print()}>🖨️ Printaj stranicu</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                 <span style={{ fontSize: '1.6rem' }}>🧯</span>
@@ -300,6 +363,7 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewExt}>+ {bs ? 'Novi aparat' : 'New Extinguisher'}</button>
+                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {bs ? 'QR Kodovi' : 'QR Codes'}</button>
                                 <SavedFlash />
                                 <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)} />
                                 {extSelectedIds.size > 0 ? (
@@ -423,6 +487,7 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewHyd}>+ {bs ? 'Novi hidrant' : 'New Hydrant'}</button>
+                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {bs ? 'QR Kodovi' : 'QR Codes'}</button>
                                 <SavedFlash />
                                 <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={hydSearch} onChange={e => setHydSearch(e.target.value)} />
                                 {hydSelectedIds.size > 0 ? (
