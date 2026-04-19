@@ -4,17 +4,17 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function QRRedirect({ params }) {
-  const { type, id } = params;
+  const { token, id } = params;
   const router = useRouter();
 
   useEffect(() => {
     const moduleMap = {
       'fp': 'fire-protection',
       'eq': 'equipment',
-      'fl': 'fleet',
+      'fleet': 'fleet',
     };
 
-    const moduleName = moduleMap[type] || type;
+    const moduleName = moduleMap[token] || token;
     const targetPath = `/dashboard/${moduleName}?openItem=${id}`;
     
     // Checking auth state directly to preserve deep-link. 
@@ -27,7 +27,7 @@ export default function QRRedirect({ params }) {
       router.replace(`/?redirect=${encodeURIComponent(targetPath)}`);
     }
 
-  }, [type, id, router]);
+  }, [token, id, router]);
 
   return (
     <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center', background: '#0B2A3C', color: 'white' }}>
