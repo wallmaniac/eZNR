@@ -13,6 +13,8 @@ import {
     logoutUser,
     resetPassword,
     updateUserPassword,
+    updateUserEmail,
+    updateUserName,
     getUserProfile,
     getCompany,
     getUserCompanies,
@@ -208,6 +210,14 @@ export function AuthProvider({ children }) {
         await updateUserPassword(newPass);
     }, []);
 
+    const changeEmail = useCallback(async (newEmail) => {
+        await updateUserEmail(newEmail);
+    }, []);
+
+    const changeName = useCallback(async (first, last) => {
+        await updateUserName(first, last);
+    }, []);
+
     // ── Presence heartbeat ────────────────────────────────────────────────────
     useEffect(() => {
         if (!user?.id) return;
@@ -246,6 +256,8 @@ export function AuthProvider({ children }) {
             switchCompany,
             forgotPassword,
             changePassword,
+            changeEmail,
+            changeName,
         }}>
             {children}
         </AuthContext.Provider>

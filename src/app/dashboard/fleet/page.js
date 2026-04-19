@@ -10,6 +10,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
+import PrintPortal from '@/components/PrintPortal';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
@@ -66,6 +67,7 @@ function FleetInner() {
     const [statusMenuPos, setStatusMenuPos] = useState({ top: 0, left: 0 });
     const { activeCompanyId } = useAuth();
     const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printSelection, setPrintSelection] = useState([]);
 
     // Worker search dropdown
     const [workerSearch, setWorkerSearch] = useState('');
@@ -223,16 +225,24 @@ function FleetInner() {
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 
-                <style>{`
-                    @media print {
-                        body * { visibility: hidden !important; }
-                        #qr-print-area, #qr-print-area * { visibility: visible !important; }
-                        #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
-                        .no-print { display: none !important; }
-                        @page { margin: 10mm; }
-                    }
-                `}</style>
-                
+                <PrintPortal isPrinting={showPrintModal}>
+                    <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', padding: '10mm' }}>
+                        {(() => {
+                            const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                            return printSelection.map((v, i) => (
+                                <QRCodeLabel 
+                                    key={i} 
+                                    type="fleet" 
+                                    id={v.id} 
+                                    title={v.registracija || 'VOZILO'} 
+                                    subtitle={`${v.marka} ${v.model}`} 
+                                    companyLogo={company?.logo} 
+                                />
+                            ));
+                        })()}
+                    </div>
+                </PrintPortal>
+
                 {showPrintModal && (
                     <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
                         <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
@@ -242,14 +252,12 @@ function FleetInner() {
                             </div>
                             <div className="modal-body" style={{ background: '#f5f5f5', padding: 20 }}>
                                 <div style={{ marginBottom: 16, fontSize: '0.85rem', color: '#555' }}>
-                                    Pripremljeno <strong>{sorted.length}</strong> etiketa za print. 
+                                    Pripremljeno <strong>{printSelection.length}</strong> etiketa za print. 
                                 </div>
-                                
-                                <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', opacity: 0.5, pointerEvents: 'none' }}>
                                     {(() => {
                                         const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
-                                        
-                                        return sorted.map((v, i) => (
+                                        return printSelection.map((v, i) => (
                                             <QRCodeLabel 
                                                 key={i} 
                                                 type="fleet" 
@@ -509,12 +517,13 @@ function FleetInner() {
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" onClick={openNew}>+ {bs ? 'Novo vozilo' : 'New Vehicle'}</button>
-                            <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {bs ? 'QR Kodovi' : 'QR Codes'}</button>
+                            <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sorted); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                             <SavedFlash />
                             <input className="form-input" style={{ maxWidth: 280 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                             {selectedIds.size > 0 && (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
+                                    <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); }}>🖨️ {bs ? 'Printaj izabrane QR' : 'Print selected QR'}</button>
                                     <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                 </div>
                             )}
@@ -567,6 +576,7 @@ function FleetInner() {
                                                                 <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEdit(v); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...v }; delete copy.id; copy.registracija = ''; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.VEHICLES, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([v]); setShowPrintModal(true); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj QR kod' : 'Print QR code'}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDelete(v.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>

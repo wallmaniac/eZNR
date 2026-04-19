@@ -1873,6 +1873,27 @@ a:hover {
 /* PRINT STYLES — hides app shell, shows only main content as a clean doc    */
 /* ═══════════════════════════════════════════════════════════════════════════ */
 @media print {
+  /* Print portal override - completely isolates print content */
+  body.is-printing-portal > *:not(.print-portal-root) {
+    display: none !important;
+  }
+  body.is-printing-portal {
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+  .print-portal-root {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
   /* Hide app chrome */
   aside, .sidebar, .app-header, #ai-assistant-bubble, #ai-assistant-window,
   .no-print, .zia-fab, footer,

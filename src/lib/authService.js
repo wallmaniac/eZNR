@@ -14,6 +14,7 @@ import {
     onAuthStateChanged,
     updateProfile,
     updatePassword,
+    updateEmail,
 } from 'firebase/auth';
 import {
     doc, getDoc, setDoc, updateDoc, collection,
@@ -124,7 +125,17 @@ export async function updateUserPassword(newPassword) {
     await updatePassword(auth.currentUser, newPassword);
 }
 
-// ── Logout ────────────────────────────────────────────────────────────────────
+export async function updateUserEmail(newEmail) {
+    if (!auth.currentUser) throw new Error("No user is currently signed in to Firebase");
+    await updateEmail(auth.currentUser, newEmail);
+}
+
+export async function updateUserName(firstName, lastName) {
+    if (!auth.currentUser) throw new Error("No user is currently signed in to Firebase");
+    await updateProfile(auth.currentUser, { displayName: `${firstName} ${lastName}` });
+}
+
+// ── Profile Logic ────────────────────────────────────────────────────────────────────
 export async function logoutUser() {
     await signOut(auth);
 }

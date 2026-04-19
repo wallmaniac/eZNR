@@ -9,6 +9,7 @@ import {
 } from '@/lib/dataStore';
 import { uploadDocument } from '@/lib/storageService';
 import QRCodeLabel from '@/components/QRCodeLabel';
+import PrintPortal from '@/components/PrintPortal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -49,6 +50,7 @@ function EquipmentPageInner() {
     const serviceDocRef = useRef(null);
     const { activeCompanyId } = useAuth();
     const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printSelection, setPrintSelection] = useState([]);
 
     const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.EQUIPMENT)); }, []);
     useEffect(() => {
@@ -296,15 +298,23 @@ function EquipmentPageInner() {
         <div className="animate-fadeIn">
             <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('equipment')}</h1>
             
-            <style>{`
-                @media print {
-                    body * { visibility: hidden !important; }
-                    #qr-print-area, #qr-print-area * { visibility: visible !important; }
-                    #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
-                    .no-print { display: none !important; }
-                    @page { margin: 10mm; }
-                }
-            `}</style>
+            <PrintPortal isPrinting={showPrintModal}>
+                <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', padding: '10mm' }}>
+                    {(() => {
+                        const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                        return printSelection.map((eq, i) => (
+                            <QRCodeLabel 
+                                key={i} 
+                                type="eq" 
+                                id={eq.id} 
+                                title={eq.naziv.toUpperCase()} 
+                                subtitle={eq.invBroj || eq.tvBroj || (lang==='bs'?'N/A':'N/A')} 
+                                companyLogo={company?.logo} 
+                            />
+                        ));
+                    })()}
+                </div>
+            </PrintPortal>
             
             {showPrintModal && (
                 <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
@@ -315,21 +325,14 @@ function EquipmentPageInner() {
                         </div>
                         <div className="modal-body" style={{ background: '#f5f5f5', padding: 20 }}>
                             <div style={{ marginBottom: 16, fontSize: '0.85rem', color: '#555' }}>
-                                Pripremljeno <strong>{sortedEquipment.length}</strong> etiketa za print. 
+                                Pripremljeno <strong>{printSelection.length}</strong> etiketa za print. 
                                 Koristite uobičajeni A4 papir ili formatirajte ladicu na samoljepljivi papir.
                             </div>
                             
-                            <div id="qr-print-area" style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: 'repeat(auto-fill, 60mm)', 
-                                gap: '4mm',
-                                alignContent: 'start',
-                                justifyContent: 'center'
-                            }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', opacity: 0.5, pointerEvents: 'none' }}>
                                 {(() => {
                                     const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
-                                    
-                                    return sortedEquipment.map((eq, i) => (
+                                    return printSelection.map((eq, i) => (
                                         <QRCodeLabel 
                                             key={i} 
                                             type="eq" 
@@ -632,7 +635,7 @@ function EquipmentPageInner() {
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
-                        <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {lang === 'bs' ? 'QR Kodovi' : 'QR Codes'}</button>
+                        <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedEquipment); setShowPrintModal(true); }}>🖨️ {lang === 'bs' ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                         <SavedFlash />
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
@@ -648,7 +651,7 @@ function EquipmentPageInner() {
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                                 </span>
-                                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); }}>🖨️ {lang === 'bs' ? 'Isprintaj QR' : 'Print QR'}</button>
                                 <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                             </div>
                         )}
@@ -701,6 +704,7 @@ function EquipmentPageInner() {
                                                     <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(eq, 'podaci')} style={menuItemSt}>📂 {t('open')}</button>
                                                         <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); setPrintSelection([eq]); setShowPrintModal(true); }} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Printaj QR kod' : 'Print QR code'}</button>
                                                         {docLog && (
                                                             <>
                                                                 <button onClick={() => downloadDoc(docLog)} style={menuItemSt}>📎 {lang === 'bs' ? 'Preuzmi zapisnik' : 'Download log'}</button>

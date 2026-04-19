@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
+import PrintPortal from '@/components/PrintPortal';
 import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -47,6 +48,7 @@ export default function FireProtectionPage() {
     const { activeCompanyId } = useAuth();
     
     const [showPrintModal, setShowPrintModal] = useState(false);
+    const [printSelection, setPrintSelection] = useState([]);
 
     const [tab, setTab] = useState('extinguishers'); // 'extinguishers' | 'hydrants'
 
@@ -198,16 +200,25 @@ export default function FireProtectionPage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <style>{`
-                @media print {
-                    body * { visibility: hidden !important; }
-                    #qr-print-area, #qr-print-area * { visibility: visible !important; }
-                    #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
-                    .no-print { display: none !important; }
-                    @page { margin: 10mm; }
-                }
-            `}</style>
             
+            <PrintPortal isPrinting={showPrintModal}>
+                <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', padding: '10mm' }}>
+                    {(() => {
+                        const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                        return printSelection.map((item, i) => (
+                            <QRCodeLabel 
+                                key={i} 
+                                type="fp" 
+                                id={item.id} 
+                                title={item.title} 
+                                subtitle={item.sub} 
+                                companyLogo={company?.logo} 
+                            />
+                        ));
+                    })()}
+                </div>
+            </PrintPortal>
+
             {showPrintModal && (
                 <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
                     <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
@@ -217,25 +228,14 @@ export default function FireProtectionPage() {
                         </div>
                         <div className="modal-body" style={{ background: '#f5f5f5', padding: 20 }}>
                             <div style={{ marginBottom: 16, fontSize: '0.85rem', color: '#555' }}>
-                                Pripremljeno <strong>{tab === 'extinguishers' ? sortedExt.length : sortedHyd.length}</strong> etiketa za print. 
+                                Pripremljeno <strong>{printSelection.length}</strong> etiketa za print. 
                                 Koristite uobičajeni A4 papir ili formatirajte ladicu na samoljepljivi papir.
                             </div>
                             
-                            {/* The actual printable area */}
-                            <div id="qr-print-area" style={{ 
-                                display: 'grid', 
-                                gridTemplateColumns: 'repeat(auto-fill, 60mm)', 
-                                gap: '4mm',
-                                alignContent: 'start',
-                                justifyContent: 'center'
-                            }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', opacity: 0.5, pointerEvents: 'none' }}>
                                 {(() => {
                                     const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
-                                    const items = tab === 'extinguishers' 
-                                        ? sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))
-                                        : sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }));
-                                    
-                                    return items.map((item, i) => (
+                                    return printSelection.map((item, i) => (
                                         <QRCodeLabel 
                                             key={i} 
                                             type="fp" 
@@ -363,12 +363,13 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewExt}>+ {bs ? 'Novi aparat' : 'New Extinguisher'}</button>
-                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {bs ? 'QR Kodovi' : 'QR Codes'}</button>
+                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                                 <SavedFlash />
                                 <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)} />
                                 {extSelectedIds.size > 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                         <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{extSelectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
+                                        <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Printaj izabrane QR' : 'Print selected QR'}</button>
                                         <button className="btn btn-danger btn-sm" onClick={handleDeleteSelectedExt}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                     </div>
                                 ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedExt.length} {bs ? 'aparata' : 'extinguishers'}</span>}
@@ -403,6 +404,8 @@ export default function FireProtectionPage() {
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={ev => { ev.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEditExt(e); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([{ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }]); setShowPrintModal(true); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj QR kod' : 'Print QR code'}</button>
+                                                                    <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...e }; delete copy.id; copy.serijskiBroj = copy.serijskiBroj + '-COPY'; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.FIRE_EXTINGUISHERS, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const cycle = { ispravan: 'neispravan', neispravan: 'servis', servis: 'povucen', povucen: 'ispravan' }; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { status: cycle[e.status] || 'ispravan' }); loadData(); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>🔄 {bs ? `Status → ${STATUS_MAP[({ ispravan: 'neispravan', neispravan: 'servis', servis: 'povucen', povucen: 'ispravan' })[e.status]]?.bs || 'Ispravan'}` : `Status → ${STATUS_MAP[({ ispravan: 'neispravan', neispravan: 'servis', servis: 'povucen', povucen: 'ispravan' })[e.status]]?.en || 'OK'}`}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const nextYear = new Date(Date.now() + 365 * 86400000).toISOString().split('T')[0]; update(COLLECTIONS.FIRE_EXTINGUISHERS, e.id, { sljedeciServis: nextYear, zadnjiServis: today }); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>📅 {bs ? 'Zakaži servis (+1 god.)' : 'Schedule Service (+1yr)'}</button>
@@ -487,12 +490,13 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewHyd}>+ {bs ? 'Novi hidrant' : 'New Hydrant'}</button>
-                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {bs ? 'QR Kodovi' : 'QR Codes'}</button>
+                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                                 <SavedFlash />
                                 <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={hydSearch} onChange={e => setHydSearch(e.target.value)} />
                                 {hydSelectedIds.size > 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                         <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{hydSelectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
+                                        <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Printaj izabrane QR' : 'Print selected QR'}</button>
                                         <button className="btn btn-danger btn-sm" onClick={handleDeleteSelectedHyd}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                     </div>
                                 ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedHyd.length} {bs ? 'hidranata' : 'hydrants'}</span>}
@@ -526,6 +530,8 @@ export default function FireProtectionPage() {
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={ev => { ev.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEditHyd(h); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([{ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }]); setShowPrintModal(true); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj QR kod' : 'Print QR code'}</button>
+                                                                    <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...h }; delete copy.id; copy.oznaka = copy.oznaka + '-COPY'; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.HYDRANTS, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const cycle = { ispravan: 'neispravan', neispravan: 'servis', servis: 'ispravan' }; update(COLLECTIONS.HYDRANTS, h.id, { status: cycle[h.status] || 'ispravan' }); loadData(); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>🔄 {bs ? `Status → ${STATUS_MAP[({ ispravan: 'neispravan', neispravan: 'servis', servis: 'ispravan' })[h.status]]?.bs || 'Ispravan'}` : `Status → ${STATUS_MAP[({ ispravan: 'neispravan', neispravan: 'servis', servis: 'ispravan' })[h.status]]?.en || 'OK'}`}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const in6m = new Date(Date.now() + 182 * 86400000).toISOString().split('T')[0]; update(COLLECTIONS.HYDRANTS, h.id, { sljedeciPregled: in6m, datumZadnjegPregleda: today }); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={ev => ev.currentTarget.style.background = 'none'}>📅 {bs ? 'Zakaži pregled (+6 mj.)' : 'Schedule Inspection (+6mo)'}</button>

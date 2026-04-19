@@ -24,7 +24,7 @@ import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { user, isAdmin, activeCompanyId, login, changePassword } = useAuth();
+  const { user, isAdmin, activeCompanyId, login, changePassword, changeEmail, changeName } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -153,8 +153,21 @@ export default function SettingsPage() {
     markClean();
   };
 
-  const handleSaveProfile = () => {
+  const handleSaveProfile = async () => {
     if (!user?.id) return;
+    
+    try {
+      if (user.email !== profileData.email) {
+        await changeEmail(profileData.email);
+      }
+      if (user.firstName !== profileData.firstName || user.lastName !== profileData.lastName) {
+        await changeName(profileData.firstName, profileData.lastName);
+      }
+    } catch (e) {
+      alert(lang === 'bs' ? `Greška pri ažuriranju emaila/imena u Firebase: ${e.message}` : `Firebase update error: ${e.message}`);
+      return; 
+    }
+
     update(COLLECTIONS.USERS, user.id, {
       firstName: profileData.firstName,
       lastName: profileData.lastName,
