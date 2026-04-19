@@ -5,9 +5,10 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
     getAll, create, update, remove, COLLECTIONS,
-    getOrgUnitName, formatDate, getActiveCompanyId
+    getOrgUnitName, formatDate, getActiveCompanyId, getById
 } from '@/lib/dataStore';
 import { uploadDocument } from '@/lib/storageService';
+import QRCodeLabel from '@/components/QRCodeLabel';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -326,8 +327,6 @@ function EquipmentPageInner() {
                                 justifyContent: 'center'
                             }}>
                                 {(() => {
-                                    const QRCodeLabel = require('@/components/QRCodeLabel').default;
-                                    const { getById } = require('@/lib/dataStore');
                                     const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
                                     
                                     return sortedEquipment.map((eq, i) => (

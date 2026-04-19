@@ -3,12 +3,13 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
+import QRCodeLabel from '@/components/QRCodeLabel';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
@@ -246,8 +247,6 @@ function FleetInner() {
                                 
                                 <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center' }}>
                                     {(() => {
-                                        const QRCodeLabel = require('@/components/QRCodeLabel').default;
-                                        const { getById } = require('@/lib/dataStore');
                                         const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
                                         
                                         return sorted.map((v, i) => (

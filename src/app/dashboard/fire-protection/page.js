@@ -3,6 +3,7 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
+import QRCodeLabel from '@/components/QRCodeLabel';
 import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -229,7 +230,6 @@ export default function FireProtectionPage() {
                                 justifyContent: 'center'
                             }}>
                                 {(() => {
-                                    const QRCodeLabel = require('@/components/QRCodeLabel').default;
                                     const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
                                     const items = tab === 'extinguishers' 
                                         ? sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))
