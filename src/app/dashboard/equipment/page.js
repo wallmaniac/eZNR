@@ -310,6 +310,7 @@ function EquipmentPageInner() {
                                 title={eq.naziv.toUpperCase()} 
                                 subtitle={eq.invBroj || eq.tvBroj || (lang==='bs'?'N/A':'N/A')} 
                                 companyLogo={company?.logo} 
+                                companyId={activeCompanyId}
                             />
                         ));
                     })()}
@@ -340,6 +341,7 @@ function EquipmentPageInner() {
                                             title={eq.naziv.toUpperCase()} 
                                             subtitle={eq.invBroj || eq.tvBroj || (lang==='bs'?'N/A':'N/A')} 
                                             companyLogo={company?.logo} 
+                                            companyId={activeCompanyId}
                                         />
                                     ));
                                 })()}

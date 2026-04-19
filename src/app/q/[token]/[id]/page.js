@@ -18,16 +18,59 @@ export default function QRRedirect({ params }) {
 
     const mod = moduleMap[token] || { path: token, param: 'openItem' };
     const targetPath = `/dashboard/${mod.path}?${mod.param}=${id}`;
-    
-    // Checking auth state directly to preserve deep-link. 
-    // If we just pushed to dashboard, the layout component might drop the deep link when throwing to login.
+
+    // Extract ?c=companyId from this page's URL
+    const qs = new URLSearchParams(window.location.search);
+    const targetCompanyId = qs.get('c');
+
+    // Check auth state
     const isAuth = !!localStorage.getItem('eznr_user');
     
-    if (isAuth) {
-      router.replace(targetPath);
-    } else {
-      router.replace(`/?redirect=${encodeURIComponent(targetPath)}`);
+    if (!isAuth) {
+      // Not logged in — redirect to login with deep-link preserved
+      // Include company info in redirect so it can be handled post-login
+      const fullTarget = targetCompanyId
+        ? `${targetPath}&_qrc=${targetCompanyId}`
+        : targetPath;
+      router.replace(`/?redirect=${encodeURIComponent(fullTarget)}`);
+      return;
     }
+
+    // User is logged in — check if company switch is needed
+    if (targetCompanyId) {
+      const currentCompanyId = localStorage.getItem('eznr_activeCompany');
+      
+      if (currentCompanyId !== targetCompanyId) {
+        // Check if user has access to this company
+        try {
+          const userStr = localStorage.getItem('eznr_user');
+          const user = userStr ? JSON.parse(userStr) : null;
+          const isSuperAdmin = user?.role === 'superadmin';
+          const hasAccess = isSuperAdmin || (user?.companyIds || []).includes(targetCompanyId);
+          
+          if (hasAccess) {
+            // Switch company via localStorage — the AuthContext will pick it up
+            // We set the localStorage value and dispatch a storage event
+            localStorage.setItem('eznr_activeCompany', targetCompanyId);
+            localStorage.setItem('eznr_qr_company_switch', JSON.stringify({
+              companyId: targetCompanyId,
+              targetPath,
+              timestamp: Date.now(),
+            }));
+            // Force a full page navigation so AuthContext re-initializes with the new company
+            window.location.href = targetPath;
+            return;
+          }
+          // User doesn't have access — just redirect to current company's page
+          // (item won't be found, but that's expected)
+        } catch (e) {
+          console.warn('[QR] Error checking company access:', e);
+        }
+      }
+    }
+
+    // Same company or no company info — simple redirect
+    router.replace(targetPath);
 
   }, [token, id, router]);
 

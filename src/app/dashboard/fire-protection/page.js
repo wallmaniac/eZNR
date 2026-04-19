@@ -240,6 +240,7 @@ export default function FireProtectionPage() {
                                 title={item.title} 
                                 subtitle={item.sub} 
                                 companyLogo={company?.logo} 
+                                companyId={activeCompanyId}
                             />
                         ));
                     })()}
@@ -270,6 +271,7 @@ export default function FireProtectionPage() {
                                             title={item.title} 
                                             subtitle={item.sub} 
                                             companyLogo={company?.logo} 
+                                            companyId={activeCompanyId}
                                         />
                                     ));
                                 })()}

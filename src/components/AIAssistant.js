@@ -1185,6 +1185,13 @@ export default function AIAssistant() {
 
     const sendMessage = useCallback(async (text) => {
         if ((!text.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) return;
+        // Stop any active voice recording so it doesn't overwrite the cleared input
+        if (isRecording) {
+            wantRecordingRef.current = false;
+            recognitionRef.current?.stop();
+            setIsRecording(false);
+            accumulatedTranscriptRef.current = '';
+        }
         const attachedFiles = [...attachments];
         const displayText = text.trim() || (attachedFiles.length > 0 ? (lang === 'bs' ? '[Prilog]' : '[Attachment]') : '');
         const userMessage = {
@@ -1198,7 +1205,7 @@ export default function AIAssistant() {
         setAttachments([]);
         setShowSuggestions(false);
         await sendMessageInternal(text.trim(), undefined, false, attachedFiles);
-    }, [isLoading, retryCountdown, sendMessageInternal, attachments, lang]);
+    }, [isLoading, retryCountdown, sendMessageInternal, attachments, lang, isRecording]);
 
     const handleSuggestion = useCallback((suggestion) => {
         sendMessage(suggestion.text);

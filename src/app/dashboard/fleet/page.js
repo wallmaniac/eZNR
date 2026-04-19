@@ -237,6 +237,7 @@ function FleetInner() {
                                     title={v.registracija || 'VOZILO'} 
                                     subtitle={`${v.marka} ${v.model}`} 
                                     companyLogo={company?.logo} 
+                                    companyId={activeCompanyId}
                                 />
                             ));
                         })()}
@@ -265,6 +266,7 @@ function FleetInner() {
                                                 title={v.registracija || 'VOZILO'} 
                                                 subtitle={`${v.marka} ${v.model}`} 
                                                 companyLogo={company?.logo} 
+                                                companyId={activeCompanyId}
                                             />
                                         ));
                                     })()}
@@ -319,7 +321,7 @@ function FleetInner() {
                             </div>
 
                             {/* TABS */}
-                            <div style={{ display: 'flex', gap: 24, padding: '0 32px', borderBottom: '1px solid var(--border)' }}>
+                            <div style={{ display: 'flex', gap: 24, padding: '0 32px', borderBottom: '1px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch', msOverflowStyle: 'none', scrollbarWidth: 'none' }}>
                                 <button 
                                     className={`tab-btn ${activeTab === 'osnovno' ? 'active' : ''}`}
                                     onClick={() => setActiveTab('osnovno')}

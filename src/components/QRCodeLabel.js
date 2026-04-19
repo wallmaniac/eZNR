@@ -1,11 +1,13 @@
 'use client';
 import { QRCodeSVG } from 'qrcode.react';
 
-export default function QRCodeLabel({ type, id, title, subtitle, companyLogo }) {
-  // Format the deep-link URL (in production this would be standard https)
-  // We use standard host + /q/[type]/[id]
+export default function QRCodeLabel({ type, id, title, subtitle, companyLogo, companyId }) {
+  // Format the deep-link URL
+  // We include companyId so the redirect page can auto-switch companies
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://zastitanaradu.ba';
-  const qrUrl = `${baseUrl}/q/${type}/${id}`;
+  const qrUrl = companyId
+    ? `${baseUrl}/q/${type}/${id}?c=${companyId}`
+    : `${baseUrl}/q/${type}/${id}`;
 
   return (
     <div style={{
