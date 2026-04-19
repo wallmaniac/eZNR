@@ -337,8 +337,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
                     {/* Settings (Mobile only) */}
-                    <button onClick={() => router.push('/dashboard/settings')} title={lang === 'bs' ? 'Postavke' : 'Settings'}
-                        style={{ ...iBtn({ fontSize: '1.05rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
+                    <button onClick={() => router.push('/dashboard/settings?tab=app')} style={{ ...iBtn({ fontSize: '1.05rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
                         ⚙️
                     </button>
                 </div>

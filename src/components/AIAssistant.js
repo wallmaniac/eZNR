@@ -607,6 +607,8 @@ export default function AIAssistant() {
 
     // ── Draggable FAB state ─────────────────────────────────────────────────
     const [fabPos, setFabPos] = useState(null); // { x, y } or null = default
+    const fabPosRef = useRef(null);
+    const lastTouchEndRef = useRef(0);
     const dragRef = useRef({ dragging: false, startX: 0, startY: 0, totalDist: 0 });
     const fabRef = useRef(null);
 
@@ -722,6 +724,8 @@ export default function AIAssistant() {
 
     // Mouse drag
     const onFabMouseDown = useCallback((e) => {
+        // Prevent ghost mouse down events that fire right after touch end
+        if (Date.now() - lastTouchEndRef.current < 500) return;
         e.preventDefault();
         handleDragStart(e.clientX, e.clientY);
 
@@ -753,11 +757,13 @@ export default function AIAssistant() {
         handleDragMove(t.clientX, t.clientY);
     }, [handleDragMove]);
 
-    const onFabTouchEnd = useCallback(() => {
+    const onFabTouchEnd = useCallback((e) => {
+        lastTouchEndRef.current = Date.now();
         handleDragEnd();
         const d = dragRef.current;
         const dist = Math.abs(d.currentX - d.startX) + Math.abs(d.currentY - d.startY);
         if (dist <= 15) {
+            if (e && e.cancelable) e.preventDefault();
             if (isOpen) handleClose(); else handleOpen();
         }
     }, [handleDragEnd, isOpen]);
