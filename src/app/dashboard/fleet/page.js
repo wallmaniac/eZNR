@@ -8,6 +8,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useAuth } from '@/contexts/AuthContext';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
@@ -62,6 +63,8 @@ function FleetInner() {
     const [selectedIds, setSelectedIds] = useState(new Set());
     const [statusDropdownId, setStatusDropdownId] = useState(null);
     const [statusMenuPos, setStatusMenuPos] = useState({ top: 0, left: 0 });
+    const { activeCompanyId } = useAuth();
+    const [showPrintModal, setShowPrintModal] = useState(false);
 
     // Worker search dropdown
     const [workerSearch, setWorkerSearch] = useState('');
@@ -218,6 +221,56 @@ function FleetInner() {
         <>
             <div className="animate-fadeIn">
                 <DialogRenderer />
+                
+                <style>{`
+                    @media print {
+                        body * { visibility: hidden !important; }
+                        #qr-print-area, #qr-print-area * { visibility: visible !important; }
+                        #qr-print-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; background: white; }
+                        .no-print { display: none !important; }
+                        @page { margin: 10mm; }
+                    }
+                `}</style>
+                
+                {showPrintModal && (
+                    <div className="modal-overlay no-print" onClick={() => setShowPrintModal(false)}>
+                        <div className="modal" style={{ maxWidth: 800, maxHeight: '90vh', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                            <div className="modal-header">
+                                <h2>🖨️ Isprintaj QR kodove</h2>
+                                <button className="btn btn-ghost btn-icon" onClick={() => setShowPrintModal(false)}>✕</button>
+                            </div>
+                            <div className="modal-body" style={{ background: '#f5f5f5', padding: 20 }}>
+                                <div style={{ marginBottom: 16, fontSize: '0.85rem', color: '#555' }}>
+                                    Pripremljeno <strong>{sorted.length}</strong> etiketa za print. 
+                                </div>
+                                
+                                <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center' }}>
+                                    {(() => {
+                                        const QRCodeLabel = require('@/components/QRCodeLabel').default;
+                                        const { getById } = require('@/lib/dataStore');
+                                        const company = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+                                        
+                                        return sorted.map((v, i) => (
+                                            <QRCodeLabel 
+                                                key={i} 
+                                                type="fleet" 
+                                                id={v.id} 
+                                                title={v.registracija || 'VOZILO'} 
+                                                subtitle={`${v.marka} ${v.model}`} 
+                                                companyLogo={company?.logo} 
+                                            />
+                                        ));
+                                    })()}
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-ghost" onClick={() => setShowPrintModal(false)}>{t('cancel')}</button>
+                                <button className="btn btn-primary" onClick={() => window.print()}>🖨️ Printaj stranicu</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                     <span style={{ fontSize: '1.6rem' }}>🚗</span>
@@ -457,6 +510,7 @@ function FleetInner() {
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" onClick={openNew}>+ {bs ? 'Novo vozilo' : 'New Vehicle'}</button>
+                            <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => setShowPrintModal(true)}>🖨️ {bs ? 'QR Kodovi' : 'QR Codes'}</button>
                             <SavedFlash />
                             <input className="form-input" style={{ maxWidth: 280 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                             {selectedIds.size > 0 && (
