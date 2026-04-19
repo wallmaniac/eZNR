@@ -95,17 +95,16 @@ export async function POST(request) {
                 const data = await res.json();
                 const allParts = data.candidates?.[0]?.content?.parts ?? [];
 
-                const part = allParts.find(p =>
-                    !p.thought && (p.functionCall || p.function_call || (p.text != null && p.text !== ''))
-                ) ?? allParts.find(p => p.functionCall || p.function_call || p.text)
-                    ?? allParts[0];
+                // Always prioritize finding a function call first. If both text and functionCall are present, we MUST execute the function.
+                const functionCallPart = allParts.find(p => p.functionCall || p.function_call);
+                const textPart = allParts.find(p => !p.thought && !p.functionCall && !p.function_call && p.text != null && p.text.trim() !== '');
 
-                const fc = part?.functionCall ?? part?.function_call;
+                const fc = functionCallPart?.functionCall ?? functionCallPart?.function_call;
                 if (fc) {
                     return Response.json({ result: { function_call: fc, model } });
                 }
 
-                const text = part?.text ?? '';
+                const text = textPart?.text ?? '';
                 return Response.json({ result: { text, model } });
 
             } catch (err) {

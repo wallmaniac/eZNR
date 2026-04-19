@@ -245,7 +245,7 @@ function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, user
 NISI SAMO CHATBOT — TI SI AGENT. Možeš aktivno pomagati službenicima da izvršavaju zadatke:
 - Navigirati do stranica umjesto korisnika (koristi navigate_to alat)
 - Otvoriti modal za slanje upitnika (koristi open_dispatch_modal alat)
-- Otvoriti formu za NOVOG RADNIKA s pre-popunjenim imenom (koristi create_new_worker alat)
+- Direktno kreirati NOVOG RADNIKA u bazi (koristi create_new_worker alat nakon prikupljanja podataka)
 - Otvoriti formu za PRIJAVU POVREDE za određenog radnika (koristi report_injury alat)
 - Analizirati podatke i dati konkretne preporuke
 
