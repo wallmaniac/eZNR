@@ -212,7 +212,7 @@ export default function WorkerPPEPage() {
                   style={{ marginBottom: 6 }}
                 >
                   <option value="__custom__">{lang === 'bs' ? '— Odaberi iz kataloga ili unesi ručno —' : '— Select from catalogue or enter manually —'}</option>
-                  {ppeTypes.sort((a,b) => a.naziv.localeCompare(b.naziv)).map(p => (
+                  {ppeTypes.sort((a,b) => (a.naziv || '').localeCompare(b.naziv || '')).map(p => (
                     <option key={p.id} value={p.naziv}>{p.naziv}</option>
                   ))}
                 </select>

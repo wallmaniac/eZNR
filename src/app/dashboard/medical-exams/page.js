@@ -413,7 +413,7 @@ export default function MedicalExamsPage() {
                                 <label className="form-label">👷 {bs ? 'Radnik *' : 'Worker *'}</label>
                                 <select className="form-select" value={form.workerId} onChange={e => setField('workerId', e.target.value)}>
                                     <option value="">{bs ? '— Odaberite radnika —' : '— Select worker —'}</option>
-                                    {[...workers].filter(w => w.aktivan !== false).sort((a, b) => a.prezime.localeCompare(b.prezime)).map(w => (
+                                    {[...workers].filter(w => w.aktivan !== false).sort((a, b) => (a.prezime || '').localeCompare(b.prezime || '')).map(w => (
                                         <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                                     ))}
                                 </select>
