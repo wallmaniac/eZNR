@@ -122,9 +122,11 @@ export default function LoginPage() {
 
     setIsLoading(false);
     // If WebAuthn is available and no credential yet, offer to enroll
-    if (!isRegister && isWebAuthnAvailable() && !hasStoredCredential()) {
+    if (!isRegister && isWebAuthnAvailable() && !hasStoredCredential() && !localStorage.getItem('eznr_biometric_declined')) {
       const userData = JSON.parse(localStorage.getItem('eznr_user'));
       if (userData) {
+        // Temporarily stash password so we can authenticate against Firebase later!
+        userData.fsPassword = formData.password;
         setPendingLoginData(userData);
         setShowBiometricOffer(true);
         return;
@@ -138,12 +140,13 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       const userData = await authenticateCredential();
-      if (userData) {
-        login(userData);
+      if (userData && userData.fsPassword) {
+        // WebAuthn success! Now login to Firebase using the stored password
+        await login(userData.email, userData.fsPassword);
         const qs = new URLSearchParams(window.location.search);
         router.push(qs.get('redirect') || '/dashboard');
       } else {
-        setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
+        setLoginError(lang === 'bs' ? 'Biometrijska prijava otkazana ili neuspješna.' : 'Biometric login canceled or failed.');
       }
     } catch (e) {
       setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
@@ -163,6 +166,7 @@ export default function LoginPage() {
   };
 
   const handleDeclineBiometric = () => {
+    localStorage.setItem('eznr_biometric_declined', 'true');
     setShowBiometricOffer(false);
     const qs = new URLSearchParams(window.location.search);
     router.push(qs.get('redirect') || '/dashboard');
@@ -341,6 +345,7 @@ export default function LoginPage() {
                 onClick={() => {
                   localStorage.removeItem('eznr_webauthn_cred');
                   localStorage.removeItem('eznr_webauthn_user');
+                  localStorage.removeItem('eznr_biometric_declined');
                   setHasBiometric(false);
                 }}
                 style={{
@@ -372,8 +377,8 @@ export default function LoginPage() {
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 1.5 }}>
                   {lang === 'bs'
-                    ? 'Koristite otisak prsta ili prepoznavanje lica za brzu prijavu sljedeći put.'
-                    : 'Use fingerprint or face recognition for quick login next time.'}
+                    ? 'Koristite otisak prsta za brzu prijavu na ovom uređaju sljedeći put (izbjegnite stalno unošenje lozinke).'
+                    : 'Use fingerprint for quick login next time.'}
                 </div>
                 <div style={{ display: 'flex', gap: 10 }}>
                   <button onClick={handleDeclineBiometric}

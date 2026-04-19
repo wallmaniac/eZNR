@@ -13,6 +13,7 @@ import {
     sendPasswordResetEmail,
     onAuthStateChanged,
     updateProfile,
+    updatePassword,
 } from 'firebase/auth';
 import {
     doc, getDoc, setDoc, updateDoc, collection,
@@ -116,6 +117,11 @@ export async function updateUserProfile(uid, data) {
 // ── Password Reset ────────────────────────────────────────────────────────────
 export async function resetPassword(email) {
     await sendPasswordResetEmail(auth, email);
+}
+
+export async function updateUserPassword(newPassword) {
+    if (!auth.currentUser) throw new Error("No user is currently signed in to Firebase");
+    await updatePassword(auth.currentUser, newPassword);
 }
 
 // ── Logout ────────────────────────────────────────────────────────────────────

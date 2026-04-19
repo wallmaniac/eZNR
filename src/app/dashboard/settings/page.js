@@ -24,7 +24,7 @@ import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { user, isAdmin, activeCompanyId, login } = useAuth();
+  const { user, isAdmin, activeCompanyId, login, changePassword } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -165,7 +165,7 @@ export default function SettingsPage() {
     clearDirty(); showSaved();
   };
 
-  const handleChangePassword = () => {
+  const handleChangePassword = async () => {
     setPasswordError('');
     setPasswordSuccess('');
     if (!passwordData.current || !passwordData.newPass) {
@@ -185,9 +185,14 @@ export default function SettingsPage() {
       setPasswordError(lang === 'bs' ? 'Trenutna lozinka je netočna!' : 'Current password is incorrect!');
       return;
     }
-    update(COLLECTIONS.USERS, user.id, { password: passwordData.newPass });
-    setPasswordSuccess(lang === 'bs' ? 'Lozinka uspješno promijenjena!' : 'Password successfully changed!');
-    setPasswordData({ current: '', newPass: '', confirm: '' });
+    try {
+      await changePassword(passwordData.newPass);
+      update(COLLECTIONS.USERS, user.id, { password: passwordData.newPass });
+      setPasswordSuccess(lang === 'bs' ? 'Lozinka uspješno promijenjena!' : 'Password successfully changed!');
+      setPasswordData({ current: '', newPass: '', confirm: '' });
+    } catch (e) {
+      setPasswordError(lang === 'bs' ? 'Greška (možda se trebate ponovo prijaviti): ' + e.message : 'Error (requires recent login): ' + e.message);
+    }
   };
 
   const handleSaveCompany = () => {
@@ -486,7 +491,7 @@ export default function SettingsPage() {
             <h4 style={{ marginBottom: 16 }}>👆 {lang === 'bs' ? 'Biometrijska prijava' : 'Biometric Login'}</h4>
             <div style={{ padding: '16px', borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{lang === 'bs' ? 'Otisak prsta / Prepoznavanje lica' : 'Fingerprint / Face ID'}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{lang === 'bs' ? 'Otisak prsta' : 'Fingerprint'}</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                   {lang === 'bs' 
                     ? 'Omogućite brzu prijavu na ovom uređaju bez unošenja šifre.' 

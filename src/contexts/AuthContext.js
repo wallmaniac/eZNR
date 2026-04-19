@@ -12,6 +12,7 @@ import {
     registerCompanyAdmin,
     logoutUser,
     resetPassword,
+    updateUserPassword,
     getUserProfile,
     getCompany,
     getUserCompanies,
@@ -198,9 +199,13 @@ export function AuthProvider({ children }) {
         setLoading(false);
     }, [userCompanies]);
 
-    // ── Password Reset ────────────────────────────────────────────────────────
+    // ── Password Reset & Change ───────────────────────────────────────────────
     const forgotPassword = useCallback(async (email) => {
         await resetPassword(email);
+    }, []);
+
+    const changePassword = useCallback(async (newPass) => {
+        await updateUserPassword(newPass);
     }, []);
 
     // ── Presence heartbeat ────────────────────────────────────────────────────
@@ -240,6 +245,7 @@ export function AuthProvider({ children }) {
             register,
             switchCompany,
             forgotPassword,
+            changePassword,
         }}>
             {children}
         </AuthContext.Provider>
