@@ -36,13 +36,15 @@ export default function SettingsPage() {
   const [dirtyTab, setDirtyTab] = useState(null);
   const [logoError, setLogoError] = useState('');
 
-  const { choose, alert, confirm, DialogRenderer } = useDialog();
+  const { choose, alert, confirm, prompt, DialogRenderer } = useDialog();
 
   // Profile state
   const [profileData, setProfileData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [passwordData, setPasswordData] = useState({ current: '', newPass: '', confirm: '' });
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [biometricError, setBiometricError] = useState('');
+  const [biometricSuccess, setBiometricSuccess] = useState('');
 
   // Company state
   const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '' });
@@ -510,6 +512,8 @@ export default function SettingsPage() {
 
             <hr style={{ margin: '28px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
             <h4 style={{ marginBottom: 16 }}>👆 {lang === 'bs' ? 'Biometrijska prijava' : 'Biometric Login'}</h4>
+            {biometricError && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>⚠️ {biometricError}</div>}
+            {biometricSuccess && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(76,175,80,0.1)', color: 'var(--success)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>✅ {biometricSuccess}</div>}
             <div style={{ padding: '16px', borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{lang === 'bs' ? 'Otisak prsta' : 'Fingerprint'}</div>
@@ -529,7 +533,7 @@ export default function SettingsPage() {
                       localStorage.removeItem('eznr_webauthn_cred');
                       localStorage.removeItem('eznr_webauthn_user');
                       window.dispatchEvent(new Event('storage')); // force react refresh if needed
-                      setPasswordSuccess(lang === 'bs' ? 'Otisak uspješno uklonjen' : 'Fingerprint removed');
+                      setBiometricSuccess(lang === 'bs' ? 'Otisak uspješno uklonjen' : 'Fingerprint removed');
                     }}
                     style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 600 }}
                   >
@@ -539,17 +543,19 @@ export default function SettingsPage() {
                   <button 
                     className="btn btn-primary" 
                     onClick={async () => {
+                      setBiometricError('');
+                      setBiometricSuccess('');
                       if (!isWebAuthnAvailable()) {
                         await alert(lang === 'bs' ? 'Biometrija nije podržana na ovom uređaju (potreban HTTPS).' : 'Biometrics not supported on this device/browser.');
                         return;
                       }
                       // Prompt user for their current password so we can stash it for biometric login
-                      const pwdInput = await new Promise((resolve) => {
-                        const pw = window.prompt(lang === 'bs' ? 'Unesite vašu trenutnu lozinku za aktivaciju otiska prsta:' : 'Enter your current password to enable fingerprint:');
-                        resolve(pw);
-                      });
+                      const pwdInput = await prompt(
+                        lang === 'bs' ? 'Unesite vašu trenutnu lozinku za aktivaciju otiska prsta:' : 'Enter your current password to enable fingerprint:',
+                        lang === 'bs' ? 'Potvrda lozinke' : 'Confirm Password'
+                      );
                       if (!pwdInput) {
-                        setPasswordError(lang === 'bs' ? 'Lozinka je obavezna za aktivaciju otiska prsta.' : 'Password is required to enable fingerprint.');
+                        setBiometricError(lang === 'bs' ? 'Lozinka je obavezna za aktivaciju otiska prsta.' : 'Password is required to enable fingerprint.');
                         return;
                       }
                       // Verify password is correct by re-authenticating
@@ -558,9 +564,9 @@ export default function SettingsPage() {
                       } catch (err) {
                         const code = err?.code || err?.message || '';
                         if (code.includes('wrong-password') || code.includes('invalid-credential')) {
-                          setPasswordError(lang === 'bs' ? 'Pogrešna lozinka!' : 'Wrong password!');
+                          setBiometricError(lang === 'bs' ? 'Pogrešna lozinka!' : 'Wrong password!');
                         } else {
-                          setPasswordError(lang === 'bs' ? 'Greška pri provjeri: ' + err.message : 'Verification error: ' + err.message);
+                          setBiometricError(lang === 'bs' ? 'Greška pri provjeri: ' + err.message : 'Verification error: ' + err.message);
                         }
                         return;
                       }
@@ -575,9 +581,9 @@ export default function SettingsPage() {
                           fsPassword: pwdInput,
                         };
                         await registerCredential(user.id, user.email, userData);
-                        setPasswordSuccess(lang === 'bs' ? 'Otisak uspješno sačuvan! Na login ekranu ćete vidjeti opciju za brzu prijavu.' : 'Fingerprint saved! You will see quick login option on the login screen.');
+                        setBiometricSuccess(lang === 'bs' ? 'Otisak uspješno sačuvan! Na login ekranu ćete vidjeti opciju za brzu prijavu.' : 'Fingerprint saved! You will see quick login option on the login screen.');
                       } catch (err) {
-                        setPasswordError('Greška: ' + err.message);
+                        setBiometricError('Greška: ' + err.message);
                       }
                     }}
                   >
