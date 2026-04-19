@@ -1,21 +1,23 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function QRRedirect({ params }) {
-  const { token, id } = params;
+  const resolvedParams = use(params);
+  const token = resolvedParams.token;
+  const id = resolvedParams.id;
   const router = useRouter();
 
   useEffect(() => {
     const moduleMap = {
-      'fp': 'fire-protection',
-      'eq': 'equipment',
-      'fleet': 'fleet',
+      'fp': { path: 'fire-protection', param: 'openItem' },
+      'eq': { path: 'equipment', param: 'openItem' },
+      'fleet': { path: 'fleet', param: 'openId' },
     };
 
-    const moduleName = moduleMap[token] || token;
-    const targetPath = `/dashboard/${moduleName}?openItem=${id}`;
+    const mod = moduleMap[token] || { path: token, param: 'openItem' };
+    const targetPath = `/dashboard/${mod.path}?${mod.param}=${id}`;
     
     // Checking auth state directly to preserve deep-link. 
     // If we just pushed to dashboard, the layout component might drop the deep link when throwing to login.

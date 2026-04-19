@@ -1,6 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
@@ -78,6 +78,33 @@ export default function FireProtectionPage() {
         window.addEventListener('eznr:data-synced', loadData);
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
+
+    // ── Deep-link: open specific item from QR code scan ──
+    const openItemHandledRef = useRef(false);
+    useEffect(() => {
+        if (openItemHandledRef.current) return;
+        const qs = new URLSearchParams(window.location.search);
+        const openId = qs.get('openItem');
+        if (!openId) return;
+        // Try extinguishers first
+        const ext = extinguishers.find(e => e.id === openId);
+        if (ext) {
+            openItemHandledRef.current = true;
+            setTab('extinguishers');
+            openEditExt(ext);
+            window.history.replaceState(null, '', '/dashboard/fire-protection');
+            return;
+        }
+        // Try hydrants
+        const hyd = hydrants.find(h => h.id === openId);
+        if (hyd) {
+            openItemHandledRef.current = true;
+            setTab('hydrants');
+            openEditHyd(hyd);
+            window.history.replaceState(null, '', '/dashboard/fire-protection');
+            return;
+        }
+    }, [extinguishers, hydrants]);
 
     const today = new Date().toISOString().split('T')[0];
     const in30 = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0];

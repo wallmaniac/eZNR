@@ -1236,8 +1236,15 @@ export default function AIAssistant() {
     }, [inputValue, sendMessage]);
 
     // ── Microphone recording (Speech-to-Text) ─────────────────────────────────
+    // We use single-shot mode (continuous=false) to avoid Android Chrome's
+    // duplication bug where interim results stack in continuous mode.
+    // A ref accumulates final transcripts across recognition restarts.
+    const accumulatedTranscriptRef = useRef('');
+    const wantRecordingRef = useRef(false);
+
     const handleMicClick = useCallback(() => {
         if (isRecording) {
+            wantRecordingRef.current = false;
             recognitionRef.current?.stop();
             setIsRecording(false);
             return;
@@ -1249,37 +1256,53 @@ export default function AIAssistant() {
             return;
         }
 
-        const recognition = new SpeechRecognition();
-        recognition.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
-        recognition.interimResults = true;
-        recognition.continuous = true;
-        
+        // Capture current input as the prefix
         const startValue = inputValue;
+        accumulatedTranscriptRef.current = '';
+        wantRecordingRef.current = true;
 
-        recognition.onstart = () => setIsRecording(true);
-        recognition.onresult = (e) => {
-            let finalTranscript = '';
-            let interimTranscript = '';
-            for (let i = 0; i < e.results.length; i++) {
-                if (e.results[i].isFinal) {
-                    finalTranscript += e.results[i][0].transcript + ' ';
-                } else {
-                    // Overwrite interim completely to avoid Android webview duplication bug
-                    interimTranscript = e.results[i][0].transcript;
+        const startRecognition = () => {
+            const recognition = new SpeechRecognition();
+            recognition.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
+            recognition.interimResults = true;
+            recognition.continuous = false; // single-shot prevents Android duplication
+            recognition.maxAlternatives = 1;
+
+            recognition.onstart = () => setIsRecording(true);
+            recognition.onresult = (e) => {
+                // In single-shot mode there is only one result
+                const result = e.results[0];
+                const transcript = result[0].transcript;
+                if (result.isFinal) {
+                    // Accumulate final text
+                    accumulatedTranscriptRef.current = (accumulatedTranscriptRef.current + ' ' + transcript).trim();
                 }
-            }
-            
-            const fullTranscript = (finalTranscript + interimTranscript).trim().replace(/\s+/g, ' ');
-            setInputValue(startValue ? startValue + ' ' + fullTranscript : fullTranscript);
-        };
-        recognition.onerror = (e) => {
-            console.error('Speech recognition error', e.error);
-            setIsRecording(false);
-        };
-        recognition.onend = () => setIsRecording(false);
+                // Show accumulated finals + current interim
+                const display = result.isFinal
+                    ? accumulatedTranscriptRef.current
+                    : (accumulatedTranscriptRef.current + ' ' + transcript).trim();
+                setInputValue(startValue ? (startValue + ' ' + display).replace(/\s+/g, ' ') : display);
+            };
+            recognition.onerror = (e) => {
+                if (e.error === 'no-speech' || e.error === 'aborted') return; // not fatal
+                console.error('Speech recognition error', e.error);
+                wantRecordingRef.current = false;
+                setIsRecording(false);
+            };
+            recognition.onend = () => {
+                // Auto-restart if user hasn't pressed stop
+                if (wantRecordingRef.current) {
+                    try { startRecognition(); } catch { setIsRecording(false); }
+                } else {
+                    setIsRecording(false);
+                }
+            };
 
-        recognitionRef.current = recognition;
-        recognition.start();
+            recognitionRef.current = recognition;
+            recognition.start();
+        };
+
+        startRecognition();
     }, [isRecording, inputValue, lang]);
 
     const handleNavLink = useCallback((path) => {
