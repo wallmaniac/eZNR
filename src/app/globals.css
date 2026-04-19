@@ -2015,15 +2015,37 @@ a:hover {
 }
 @media (max-width: 767px) {
   .modal-tabs-container {
-    flex-wrap: wrap !important;
-    gap: 8px !important;
-    padding: 12px 20px !important;
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+    margin: 0 -20px !important; /* Bleed out of the modal side padding */
+    padding: 0px 20px 16px 20px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important; /* Hide scrollbar visually */
+    border-bottom: none !important;
   }
-  .tab-btn {
-    padding: 8px 12px !important;
-    flex: 1 1 45% !important;
-    justify-content: center !important;
-    font-size: 0.85rem !important;
+  .modal-tabs-container::-webkit-scrollbar {
+    display: none !important;
+  }
+  .modal-tabs-container .tab-btn {
+    flex: 0 0 auto !important;
+    padding: 8px 16px !important;
+    font-size: 0.82rem !important;
+    white-space: nowrap !important;
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+    color: var(--text) !important;
+    transition: all 0.2s ease !important;
+  }
+  .modal-tabs-container .tab-btn:hover {
+    border: 1px solid var(--border-light) !important;
+  }
+  .modal-tabs-container .tab-btn.active {
+    background: var(--primary) !important;
+    color: white !important;
+    border: 1px solid var(--primary) !important;
+    font-weight: 700 !important;
   }
 }
 
