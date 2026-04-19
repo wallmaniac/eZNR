@@ -314,7 +314,7 @@ function FleetInner() {
                 {/* Form Modal */}
                 {showForm && (
                     <div className="modal-overlay" onClick={closeForm}>
-                        <div className="modal" style={{ width: '100%', maxWidth: 850, minHeight: 650, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+                        <div className="modal" style={{ width: '100%', maxWidth: 850, minHeight: 650, padding: 0, display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ borderBottom: '1px solid var(--border-light)', padding: '24px 32px 16px 32px' }}>
                                 <h2>{editingId ? '✏️' : '+'} {bs ? 'Vozilo: ' : 'Vehicle: '} {formData.registracija || ''}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={closeForm}>✕</button>

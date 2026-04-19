@@ -1683,6 +1683,17 @@ a:hover {
     background: inherit;
     border-bottom: 1px solid var(--border-light);
   }
+
+  /* Tab row: flex-shrink:0 so it takes space before modal-body, overflow-x:auto for scrolling */
+  .scrollable-tabs-bar {
+    flex-shrink: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    -webkit-overflow-scrolling: touch !important;
+    background: inherit;
+    z-index: 9;
+    padding: 0 16px !important;
+  }
   
   .modal-body { 
     padding: 16px 20px 80px !important; /* Bottom padding for mobile nav clearance */
