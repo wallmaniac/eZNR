@@ -365,7 +365,7 @@ function EquipmentPageInner() {
                         </div>
 
                         {/* Tab bar */}
-                        <div style={{ display: 'flex', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
+                        <div className="scrollable-tabs-bar" style={{ gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
                             {[
                                 { key: 'podaci', icon: '📋', label: lang === 'bs' ? 'Podaci' : 'Details' },
                                 { key: 'servis', icon: '🔧', label: lang === 'bs' ? 'Servisni zapisnici' : 'Service Log' },

@@ -321,7 +321,7 @@ function FleetInner() {
                             </div>
 
                             {/* Tab bar */}
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
+                            <div className="scrollable-tabs-bar" style={{ gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
                                 {[
                                     { key: 'osnovno', icon: '📄', label: bs ? 'Osnovni podaci' : 'Basic Info', show: true },
                                     { key: 'istorija', icon: '🔄', label: bs ? 'Zaduženja' : 'Assignments', show: !!editingId },

@@ -2006,5 +2006,29 @@ a:hover {
   padding-bottom: 10px !important;
 }
 
+/* ===== SCROLLABLE TABS BAR ===== */
+.scrollable-tabs-bar {
+  display: flex;
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+  padding-bottom: 4px; /* Space for the scrollbar */
+}
+/* Explicit scrollbar styles for WebKit browsers (mobile and desktop) */
+.scrollable-tabs-bar::-webkit-scrollbar {
+  height: 4px;
+  display: block !important;
+}
+.scrollable-tabs-bar::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.05); /* very light visible track */
+  border-radius: 4px;
+}
+.scrollable-tabs-bar::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
 
 
