@@ -320,36 +320,25 @@ function FleetInner() {
                                 <button className="btn btn-ghost btn-icon" onClick={closeForm}>✕</button>
                             </div>
 
-                            {/* TABS */}
-                            <div className="modal-tabs-container">
-                                <button 
-                                    className={`tab-btn ${activeTab === 'osnovno' ? 'active' : ''}`}
-                                    onClick={() => setActiveTab('osnovno')}
-                                >
-                                    📄 {bs ? 'Osnovni podaci' : 'Basic Info'}
-                                </button>
-                                {editingId && (
-                                    <>
-                                        <button 
-                                            className={`tab-btn ${activeTab === 'istorija' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('istorija')}
-                                        >
-                                            🔄 {bs ? 'Zaduženja' : 'Assignments'}
-                                        </button>
-                                        <button 
-                                            className={`tab-btn ${activeTab === 'arhiva' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('arhiva')}
-                                        >
-                                            📁 {bs ? 'Arhiva dokumenata' : 'Documents'}
-                                        </button>
-                                        <button 
-                                            className={`tab-btn ${activeTab === 'nalozi' ? 'active' : ''}`}
-                                            onClick={() => setActiveTab('nalozi')}
-                                        >
-                                            📝 {bs ? 'Putni nalozi' : 'Travel Orders'}
-                                        </button>
-                                    </>
-                                )}
+                            {/* Tab bar */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
+                                {[
+                                    { key: 'osnovno', icon: '📄', label: bs ? 'Osnovni podaci' : 'Basic Info', show: true },
+                                    { key: 'istorija', icon: '🔄', label: bs ? 'Zaduženja' : 'Assignments', show: !!editingId },
+                                    { key: 'arhiva', icon: '📁', label: bs ? 'Arhiva dokumenata' : 'Documents', show: !!editingId },
+                                    { key: 'nalozi', icon: '📝', label: bs ? 'Putni nalozi' : 'Travel Orders', show: !!editingId }
+                                ].filter(t => t.show).map(tab => (
+                                    <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                                        padding: '9px 16px', border: 'none', cursor: 'pointer',
+                                        fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: activeTab === tab.key ? 700 : 500,
+                                        background: 'transparent', borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
+                                        color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
+                                        marginBottom: -2, transition: 'all 0.15s',
+                                        display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
+                                    }}>
+                                        {tab.icon} {tab.label}
+                                    </button>
+                                ))}
                             </div>
 
                             <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
