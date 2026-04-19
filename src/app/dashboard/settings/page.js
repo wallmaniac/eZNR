@@ -68,8 +68,9 @@ export default function SettingsPage() {
   // Activity log state
   const [logFilter, setLogFilter] = useState(null);
   const [logRefresh, setLogRefresh] = useState(0);
-  const userLog = useMemo(() => getUserLog(100, logFilter, activeCompanyId), [logFilter, logRefresh, activeCompanyId]);
-  const adminLog = useMemo(() => getAdminLog(100, logFilter, activeCompanyId), [logFilter, logRefresh, activeCompanyId]);
+  const [logLimit, setLogLimit] = useState(15);
+  const userLog = useMemo(() => getUserLog(logLimit, logFilter, activeCompanyId), [logLimit, logFilter, logRefresh, activeCompanyId]);
+  const adminLog = useMemo(() => getAdminLog(logLimit, logFilter, activeCompanyId), [logLimit, logFilter, logRefresh, activeCompanyId]);
   const onlineUsers = useMemo(() => getOnlineUsers(), [logRefresh]);
 
 
@@ -1430,6 +1431,15 @@ export default function SettingsPage() {
                   </div>
                 );
               })}
+
+              {(userLog.length >= logLimit || (isAdmin && adminLog.length >= logLimit)) && (
+                <button 
+                  onClick={() => setLogLimit(l => l + 20)} 
+                  style={{ width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px dashed var(--border)', borderRadius: 8, cursor: 'pointer', marginTop: 12, color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}
+                >
+                  {lang === 'bs' ? '?? Ucitaj starije aktivnosti' : '?? Load older activities'}
+                </button>
+              )}
 
               {userLog.length === 0 && isAdmin && adminLog.length === 0 && (
                 <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: '0.8rem' }}>
