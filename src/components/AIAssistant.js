@@ -511,16 +511,16 @@ const ZIA_TOOLS = [
     },
     {
         name: 'create_new_worker',
-        description: 'Create and save a new worker directly to the database. You MUST collect all required parameters from the user first.',
+        description: 'Create and save a new worker directly to the database. Ime (first name) is required. OIB and datumZaposlenja are completely OPTIONAL — do NOT ask the user for them if not provided, just leave them empty.',
         parameters: {
             type: 'object',
             properties: {
                 ime: { type: 'string', description: 'First name (ime)' },
                 prezime: { type: 'string', description: 'Last name (prezime)' },
-                oib: { type: 'string', description: 'OIB or JMBG number. Must be provided by user.' },
-                datumZaposlenja: { type: 'string', description: 'Employment start date (YYYY-MM-DD).' },
+                oib: { type: 'string', description: 'OIB or JMBG number. Optional, leave blank if not provided.' },
+                datumZaposlenja: { type: 'string', description: 'Employment start date (YYYY-MM-DD). Optional, leave blank if not provided.' },
             },
-            required: ['ime', 'prezime', 'oib', 'datumZaposlenja']
+            required: ['ime']
         },
     },
     {
