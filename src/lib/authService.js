@@ -15,6 +15,8 @@ import {
     updateProfile,
     updatePassword,
     updateEmail,
+    reauthenticateWithCredential,
+    EmailAuthProvider,
 } from 'firebase/auth';
 import {
     doc, getDoc, setDoc, updateDoc, collection,
@@ -120,18 +122,25 @@ export async function resetPassword(email) {
     await sendPasswordResetEmail(auth, email);
 }
 
+// ── Re-authentication (required before sensitive operations) ──────────────────
+export async function reauthenticateUser(currentPassword) {
+    if (!auth.currentUser) throw new Error('No user is currently signed in to Firebase');
+    const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
+    await reauthenticateWithCredential(auth.currentUser, credential);
+}
+
 export async function updateUserPassword(newPassword) {
-    if (!auth.currentUser) throw new Error("No user is currently signed in to Firebase");
+    if (!auth.currentUser) throw new Error('No user is currently signed in to Firebase');
     await updatePassword(auth.currentUser, newPassword);
 }
 
 export async function updateUserEmail(newEmail) {
-    if (!auth.currentUser) throw new Error("No user is currently signed in to Firebase");
+    if (!auth.currentUser) throw new Error('No user is currently signed in to Firebase');
     await updateEmail(auth.currentUser, newEmail);
 }
 
 export async function updateUserName(firstName, lastName) {
-    if (!auth.currentUser) throw new Error("No user is currently signed in to Firebase");
+    if (!auth.currentUser) throw new Error('No user is currently signed in to Firebase');
     await updateProfile(auth.currentUser, { displayName: `${firstName} ${lastName}` });
 }
 

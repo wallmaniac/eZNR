@@ -21,10 +21,11 @@ import { seedMockDataConfig } from '@/lib/mockDataGenerator';
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/lib/webAuthn';
+import { uploadSecureFile } from '@/lib/storageService';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { user, isAdmin, activeCompanyId, login, changePassword, changeEmail, changeName } = useAuth();
+  const { user, isAdmin, activeCompanyId, login, changePassword, reauthenticate, changeEmail, changeName } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -193,18 +194,25 @@ export default function SettingsPage() {
       setPasswordError(lang === 'bs' ? `Lozinka mora imati barem ${appSettings.minPasswordLength} znakova!` : `Password must be at least ${appSettings.minPasswordLength} characters!`);
       return;
     }
-    const dbUser = getAll(COLLECTIONS.USERS).find(u => u.id === user.id);
-    if (!dbUser || dbUser.password !== passwordData.current) {
-      setPasswordError(lang === 'bs' ? 'Trenutna lozinka je netočna!' : 'Current password is incorrect!');
+    try {
+      // Step 1: Re-authenticate with Firebase using the current password
+      await reauthenticate(passwordData.current);
+    } catch (e) {
+      const code = e?.code || e?.message || '';
+      if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+        setPasswordError(lang === 'bs' ? 'Trenutna lozinka je netočna!' : 'Current password is incorrect!');
+      } else {
+        setPasswordError(lang === 'bs' ? 'Greška pri provjeri lozinke: ' + e.message : 'Password verification error: ' + e.message);
+      }
       return;
     }
     try {
+      // Step 2: Update password in Firebase Auth (the only source of truth)
       await changePassword(passwordData.newPass);
-      update(COLLECTIONS.USERS, user.id, { password: passwordData.newPass });
       setPasswordSuccess(lang === 'bs' ? 'Lozinka uspješno promijenjena!' : 'Password successfully changed!');
       setPasswordData({ current: '', newPass: '', confirm: '' });
     } catch (e) {
-      setPasswordError(lang === 'bs' ? 'Greška (možda se trebate ponovo prijaviti): ' + e.message : 'Error (requires recent login): ' + e.message);
+      setPasswordError(lang === 'bs' ? 'Greška pri promjeni lozinke: ' + e.message : 'Error changing password: ' + e.message);
     }
   };
 
@@ -532,13 +540,42 @@ export default function SettingsPage() {
                     className="btn btn-primary" 
                     onClick={async () => {
                       if (!isWebAuthnAvailable()) {
-                        alert(lang === 'bs' ? 'Biometrija nije podržana na ovom uređaju (potreban HTTPS).' : 'Biometrics not supported on this device/browser.');
+                        await alert(lang === 'bs' ? 'Biometrija nije podržana na ovom uređaju (potreban HTTPS).' : 'Biometrics not supported on this device/browser.');
+                        return;
+                      }
+                      // Prompt user for their current password so we can stash it for biometric login
+                      const pwdInput = await new Promise((resolve) => {
+                        const pw = window.prompt(lang === 'bs' ? 'Unesite vašu trenutnu lozinku za aktivaciju otiska prsta:' : 'Enter your current password to enable fingerprint:');
+                        resolve(pw);
+                      });
+                      if (!pwdInput) {
+                        setPasswordError(lang === 'bs' ? 'Lozinka je obavezna za aktivaciju otiska prsta.' : 'Password is required to enable fingerprint.');
+                        return;
+                      }
+                      // Verify password is correct by re-authenticating
+                      try {
+                        await reauthenticate(pwdInput);
+                      } catch (err) {
+                        const code = err?.code || err?.message || '';
+                        if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+                          setPasswordError(lang === 'bs' ? 'Pogrešna lozinka!' : 'Wrong password!');
+                        } else {
+                          setPasswordError(lang === 'bs' ? 'Greška pri provjeri: ' + err.message : 'Verification error: ' + err.message);
+                        }
                         return;
                       }
                       try {
-                        const userData = { ...user, firstName: profileData.firstName, lastName: profileData.lastName };
+                        const userData = {
+                          id: user.id,
+                          email: user.email,
+                          firstName: profileData.firstName,
+                          lastName: profileData.lastName,
+                          role: user.role,
+                          companyIds: user.companyIds || [],
+                          fsPassword: pwdInput,
+                        };
                         await registerCredential(user.id, user.email, userData);
-                        setPasswordSuccess(lang === 'bs' ? 'Otisak uspješno sačuvan!' : 'Fingerprint successfully saved!');
+                        setPasswordSuccess(lang === 'bs' ? 'Otisak uspješno sačuvan! Na login ekranu ćete vidjeti opciju za brzu prijavu.' : 'Fingerprint saved! You will see quick login option on the login screen.');
                       } catch (err) {
                         setPasswordError('Greška: ' + err.message);
                       }

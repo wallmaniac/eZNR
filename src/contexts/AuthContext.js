@@ -12,6 +12,7 @@ import {
     registerCompanyAdmin,
     logoutUser,
     resetPassword,
+    reauthenticateUser,
     updateUserPassword,
     updateUserEmail,
     updateUserName,
@@ -210,6 +211,10 @@ export function AuthProvider({ children }) {
         await updateUserPassword(newPass);
     }, []);
 
+    const reauthenticate = useCallback(async (currentPassword) => {
+        await reauthenticateUser(currentPassword);
+    }, []);
+
     const changeEmail = useCallback(async (newEmail) => {
         await updateUserEmail(newEmail);
     }, []);
@@ -256,6 +261,7 @@ export function AuthProvider({ children }) {
             switchCompany,
             forgotPassword,
             changePassword,
+            reauthenticate,
             changeEmail,
             changeName,
         }}>
