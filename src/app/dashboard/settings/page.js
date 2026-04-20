@@ -289,29 +289,36 @@ export default function SettingsPage() {
     if (!activeCompanyId) return;
     
     // Save standard and branding structure back to the company
-    const currentBranding = companyData.branding || {};
     const newBranding = {
-      pdf: { 
-        ...currentBranding.pdf, 
         accentColor: pdfAccentColor,
-        watermark: {
-          enabled: wmEnabled, position: wmPosition, opacity: wmOpacity, size: wmSize, content: wmContent
-        },
-        logo: { position: logoPosition, size: logoSize },
-        headerText: { text: headerText, fontSize: headerFontSize, bold: headerBold, italic: headerItalic, underline: headerUnderline, color: headerColor }
-      },
-      ui: { 
-        ...currentBranding.ui, 
+        watermarkEnabled: wmEnabled, 
+        watermarkPosition: wmPosition, 
+        watermarkOpacity: wmOpacity, 
+        watermarkSize: wmSize, 
+        watermarkContent: wmContent,
+        logoPosition: logoPosition, 
+        logoSize: logoSize,
+        headerText: headerText, 
+        headerFontSize: headerFontSize, 
+        headerBold: headerBold, 
+        headerItalic: headerItalic, 
+        headerUnderline: headerUnderline, 
+        headerColor: headerColor,
         primaryColor: uiPrimaryColor, 
         sidebarColor: uiSidebarColor,
         sidebarLogoEnabled: sidebarLogoEnabled,
         sidebarText: sidebarText
-      }
     };
     
-    update(COLLECTIONS.COMPANIES, activeCompanyId, { ...companyData, branding: newBranding });
-    applyUIBranding(activeCompanyId);
-    clearDirty(); showSaved();
+    try {
+      const payload = { ...companyData, branding: newBranding };
+      update(COLLECTIONS.COMPANIES, activeCompanyId, payload);
+      applyUIBranding(activeCompanyId);
+      clearDirty(); showSaved();
+    } catch(err) {
+      console.error('Save failed:', err);
+      alert('Error: ' + err.message);
+    }
   };
 
   const handleSaveNotifSettings = async () => {
@@ -966,7 +973,7 @@ export default function SettingsPage() {
                           {/* Position grid */}
                           <div>
                             <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600 }}>{lang === 'bs' ? 'Pozicija:' : 'Position:'}</div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', width: 120, gap: 4 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', width: '130px' }}>
                               {WATERMARK_POSITIONS.map(pos => (
                                 <button key={pos.id} title={pos.id}
                                   onClick={()=>{setWmPosition(pos.id);setDirty('company');}}
@@ -1049,7 +1056,7 @@ export default function SettingsPage() {
                 </div>{/* end pdf card */}
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 30 }}>
-                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                  
                   <button onClick={()=>{
                     setPdfAccentColor(EZNR_DEFAULTS.accentColor);
                     setWmEnabled(PDF_DEFAULTS.watermarkEnabled); setWmPosition(PDF_DEFAULTS.watermarkPosition); 
@@ -1189,7 +1196,7 @@ export default function SettingsPage() {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14 }}>
-                      <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                      
                       {(uiPrimaryColor || uiSidebarColor || sidebarLogoEnabled) && (
                         <button onClick={()=>{
                           setUiPrimaryColor(''); setUiSidebarColor(''); setSidebarLogoEnabled(false); setSidebarText(UI_DEFAULTS.sidebarText); setDirty('company');

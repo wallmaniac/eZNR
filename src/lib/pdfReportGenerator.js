@@ -238,7 +238,7 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
     watermarkHtml = `
     <div class="watermark-container" style="align-items:${wmPos.ai};justify-content:${wmPos.jc};">
       <div class="watermark" style="opacity:${wmOpacity};text-align:${wmPos.ta};align-items:${wmPos.ai};">
-        ${showLogo && company.logo ? `<img src="${company.logo}" alt="" style="max-width:${wmSize}px;max-height:${Math.round(wmSize * 0.6)}px;margin:${imgMargin}" />` : ''}
+        ${showLogo && company.logo ? `<img src="${company.logo}" alt="" style="width:${wmSize}px;height:auto;max-width:100%;margin:${imgMargin};object-fit:contain" />` : ''}
         ${showName && companyName ? `<div class="wm-name" style="font-size:${Math.round(wmSize / 10)}pt">${companyName}</div>` : ''}
       </div>
     </div>`;
