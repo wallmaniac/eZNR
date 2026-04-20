@@ -1,0 +1,513 @@
+'use client';
+import { useState, useEffect } from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential } from '@/lib/webAuthn';
+
+export default function LoginPage() {
+  const { t, lang, toggleLang } = useLanguage();
+  const { login, register, isAuthenticated, forgotPassword } = useAuth();
+  const router = useRouter();
+
+  const [isRegister, setIsRegister] = useState(false);
+  const [loginError, setLoginError] = useState('');
+  const [formData, setFormData] = useState({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    email: '',
+    firstName: '',
+    lastName: '',
+    companyName: '',
+    companyId: '',
+    phone: '',
+    city: '',
+    address: '',
+    acceptTerms: false,
+    rememberMe: false,
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [showBiometricOffer, setShowBiometricOffer] = useState(false);
+  const [pendingLoginData, setPendingLoginData] = useState(null);
+  const [hasBiometric, setHasBiometric] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotSent, setForgotSent] = useState(false);
+
+  // If already logged in, redirect to dashboard or deep link
+  useEffect(() => {
+    if (isAuthenticated && !showBiometricOffer) {
+      const qs = new URLSearchParams(window.location.search);
+      const redirectUrl = qs.get('redirect');
+      router.replace(redirectUrl || '/dashboard');
+    }
+  }, [isAuthenticated, router, showBiometricOffer]);
+
+  // Check if biometric login is available
+  useEffect(() => {
+    if (isWebAuthnAvailable() && hasStoredCredential()) {
+      setHasBiometric(true);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
+    if (loginError) setLoginError('');
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setLoginError('');
+
+    try {
+      if (isRegister) {
+        // ── Registration via Firebase Auth ──
+        if (formData.password !== formData.confirmPassword) {
+          setLoginError(lang === 'bs' ? 'Lozinke se ne poklapaju!' : 'Passwords do not match!');
+          setIsLoading(false);
+          return;
+        }
+        if (formData.password.length < 6) {
+          setLoginError(lang === 'bs' ? 'Lozinka mora imati najmanje 6 znakova!' : 'Password must be at least 6 characters!');
+          setIsLoading(false);
+          return;
+        }
+        await register({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          companyName: formData.companyName,
+          phone: formData.phone,
+          city: formData.city,
+          address: formData.address,
+        });
+        // onAuthStateChanged in AuthContext handles the rest
+        const qs = new URLSearchParams(window.location.search);
+        router.push(qs.get('redirect') || '/dashboard');
+      } else {
+        // ── Login via Firebase Auth ──
+        const emailToUse = formData.username.includes('@') ? formData.username : formData.username;
+        await login(emailToUse, formData.password);
+        // onAuthStateChanged in AuthContext handles the rest
+      }
+    } catch (err) {
+      console.error('Auth error:', err);
+      const code = err?.code || err?.message || '';
+      if (code.includes('user-not-found') || code === 'USER_PROFILE_NOT_FOUND') {
+        setLoginError(lang === 'bs' ? 'Korisnik nije pronađen.' : 'User not found.');
+      } else if (code.includes('wrong-password') || code.includes('invalid-credential')) {
+        setLoginError(lang === 'bs' ? 'Pogrešna lozinka!' : 'Wrong password!');
+      } else if (code.includes('email-already-in-use')) {
+        setLoginError(lang === 'bs' ? 'Email je već registriran!' : 'Email already registered!');
+      } else if (code.includes('invalid-email')) {
+        setLoginError(lang === 'bs' ? 'Neispravan email format!' : 'Invalid email format!');
+      } else if (code.includes('weak-password')) {
+        setLoginError(lang === 'bs' ? 'Lozinka je preslaba (min 6 znakova)!' : 'Password too weak (min 6 chars)!');
+      } else if (code === 'ACCOUNT_DEACTIVATED') {
+        setLoginError(lang === 'bs' ? 'Račun je deaktiviran. Kontaktirajte administratora.' : 'Account deactivated. Contact admin.');
+      } else {
+        setLoginError(lang === 'bs' ? 'Greška pri prijavi. Pokušajte ponovo.' : 'Login failed. Please try again.');
+      }
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(false);
+    // If WebAuthn is available and no credential yet, offer to enroll
+    if (!isRegister && isWebAuthnAvailable() && !hasStoredCredential() && !localStorage.getItem('eznr_biometric_declined')) {
+      const userData = JSON.parse(localStorage.getItem('eznr_user'));
+      if (userData) {
+        // Temporarily stash password so we can authenticate against Firebase later!
+        userData.fsPassword = formData.password;
+        setPendingLoginData(userData);
+        setShowBiometricOffer(true);
+        return;
+      }
+    }
+    const qs = new URLSearchParams(window.location.search);
+    router.push(qs.get('redirect') || '/dashboard');
+  };
+
+  const handleBiometricLogin = async () => {
+    setIsLoading(true);
+    try {
+      const userData = await authenticateCredential();
+      if (userData && userData.fsPassword) {
+        // WebAuthn success! Now login to Firebase using the stored password
+        await login(userData.email, userData.fsPassword);
+        const qs = new URLSearchParams(window.location.search);
+        router.push(qs.get('redirect') || '/dashboard');
+      } else {
+        setLoginError(lang === 'bs' ? 'Biometrijska prijava otkazana ili neuspješna.' : 'Biometric login canceled or failed.');
+      }
+    } catch (e) {
+      setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
+    }
+    setIsLoading(false);
+  };
+
+  const handleAcceptBiometric = async () => {
+    try {
+      await registerCredential(pendingLoginData.id, pendingLoginData.username, pendingLoginData);
+    } catch (e) {
+      console.warn('WebAuthn registration failed:', e);
+    }
+    setShowBiometricOffer(false);
+    const qs = new URLSearchParams(window.location.search);
+    router.push(qs.get('redirect') || '/dashboard');
+  };
+
+  const handleDeclineBiometric = () => {
+    localStorage.setItem('eznr_biometric_declined', 'true');
+    setShowBiometricOffer(false);
+    const qs = new URLSearchParams(window.location.search);
+    router.push(qs.get('redirect') || '/dashboard');
+  };
+
+  return (
+    <div style={styles.page}>
+      {/* Animated background */}
+      <div style={styles.bgPattern} />
+      <div style={styles.bgGlow1} />
+      <div style={styles.bgGlow2} />
+
+      {/* Language switcher */}
+      <button onClick={toggleLang} style={styles.langSwitcher}>
+        <span style={styles.langIcon}>🌐</span>
+        {lang === 'bs' ? 'EN' : 'BS'}
+      </button>
+
+      {/* ── Single centered card ── */}
+      <div style={styles.card}>
+        {/* Full logo banner — same as email header */}
+        <div style={styles.logoHeader}>
+          <Image
+            src="/email-header.png"
+            alt="eZNR – Digitalna platforma zaštite na radu"
+            width={840}
+            height={240}
+            style={{ width: '100%', height: 'auto', display: 'block' }}
+            priority
+          />
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={styles.form}>
+          {isRegister && (
+            <>
+              <div style={styles.formRow}>
+                <div className="form-group" style={styles.formGroup}>
+                  <label className="form-label" style={styles.label}>{t('firstName')}</label>
+                  <input className="form-input" style={styles.input} name="firstName" value={formData.firstName} onChange={handleChange} placeholder={t('mandatory')} required />
+                </div>
+                <div className="form-group" style={styles.formGroup}>
+                  <label className="form-label" style={styles.label}>{t('lastName')}</label>
+                  <input className="form-input" style={styles.input} name="lastName" value={formData.lastName} onChange={handleChange} placeholder={t('mandatory')} required />
+                </div>
+              </div>
+              <div className="form-group" style={styles.formGroup}>
+                <label className="form-label" style={styles.label}>{t('companyName')}</label>
+                <input className="form-input" style={styles.input} name="companyName" value={formData.companyName} onChange={handleChange} placeholder={t('mandatory')} required />
+              </div>
+              <div className="form-group" style={styles.formGroup}>
+                <label className="form-label" style={styles.label}>{t('email')}</label>
+                <input className="form-input" style={styles.input} type="email" name="email" value={formData.email} onChange={handleChange} placeholder={t('mandatory')} required />
+              </div>
+            </>
+          )}
+
+          <div className="form-group" style={styles.formGroup}>
+            <label className="form-label" style={styles.label}>{isRegister ? t('email') : t('username')}</label>
+            <input
+              className="form-input" style={styles.input}
+              name="username" value={formData.username} onChange={handleChange}
+              placeholder={isRegister ? 'email@example.com' : (lang === 'bs' ? 'Email adresa' : 'Email address')}
+              type={isRegister ? 'email' : 'text'}
+              required autoComplete="username"
+            />
+          </div>
+
+          <div className="form-group" style={styles.formGroup}>
+            <label className="form-label" style={styles.label}>{t('password')}</label>
+            <input
+              className="form-input" style={styles.input}
+              type="password" name="password" value={formData.password} onChange={handleChange}
+              placeholder="••••••••" required autoComplete="current-password"
+            />
+          </div>
+
+          {isRegister && (
+            <>
+              <div className="form-group" style={styles.formGroup}>
+                <label className="form-label" style={styles.label}>{t('confirmPassword')}</label>
+                <input className="form-input" style={styles.input} type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} placeholder="••••••••" required />
+              </div>
+              <div className="form-checkbox-wrapper">
+                <input className="form-checkbox" type="checkbox" name="acceptTerms" checked={formData.acceptTerms} onChange={handleChange} required />
+                <label style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>{t('acceptTerms')}</label>
+              </div>
+            </>
+          )}
+
+          {!isRegister && (
+            <div style={styles.formOptions}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', color: 'rgba(255,255,255,0.55)', cursor: 'pointer' }}>
+                <input type="checkbox" name="rememberMe" checked={formData.rememberMe} onChange={handleChange} style={{ accentColor: 'var(--primary)' }} />
+                {t('rememberMe')}
+              </label>
+              <a href="#" onClick={(e) => { e.preventDefault(); setShowForgotPassword(true); }} style={styles.forgotLink}>{t('forgotPassword')}</a>
+            </div>
+          )}
+
+          {/* Forgot password modal */}
+          {showForgotPassword && (
+            <div style={{ padding: '14px', background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 12 }}>
+              {forgotSent ? (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
+                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
+                    {lang === 'bs' ? 'Email za resetiranje lozinke je poslan!' : 'Password reset email sent!'}
+                  </div>
+                  <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowForgotPassword(false); setForgotSent(false); setForgotEmail(''); }}>
+                    {lang === 'bs' ? 'Zatvori' : 'Close'}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontWeight: 600 }}>
+                    {lang === 'bs' ? 'Unesite email za resetiranje lozinke:' : 'Enter email to reset password:'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <input
+                      className="form-input" style={{ ...styles.input, flex: 1 }}
+                      type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)}
+                      placeholder="email@example.com"
+                    />
+                    <button type="button" className="btn btn-primary btn-sm" onClick={async () => {
+                      if (!forgotEmail) return;
+                      try {
+                        await forgotPassword(forgotEmail);
+                        setForgotSent(true);
+                      } catch (err) {
+                        setLoginError(lang === 'bs' ? 'Email nije pronađen.' : 'Email not found.');
+                        setShowForgotPassword(false);
+                      }
+                    }}>
+                      {lang === 'bs' ? 'Pošalji' : 'Send'}
+                    </button>
+                  </div>
+                  <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '0.75rem' }}
+                    onClick={() => setShowForgotPassword(false)}>
+                    {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', justifyContent: 'center', marginTop: 4, minHeight: 52, fontSize: '1rem' }}
+            disabled={isLoading}
+          >
+            {isLoading ? <span style={styles.spinner} /> : (isRegister ? t('registerButton') : t('loginButton'))}
+          </button>
+
+          {/* Biometric login button */}
+          {!isRegister && hasBiometric && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
+              <button
+                type="button"
+                onClick={handleBiometricLogin}
+                className="btn btn-lg"
+                disabled={isLoading}
+                style={{
+                  width: '100%', justifyContent: 'center', minHeight: 48,
+                  background: 'rgba(0,191,166,0.12)', border: '1.5px solid rgba(0,191,166,0.3)',
+                  color: '#00BFA6', fontSize: '0.92rem', fontWeight: 700,
+                  display: 'flex', alignItems: 'center', gap: 10, borderRadius: 12,
+                  cursor: 'pointer', fontFamily: 'var(--font-heading)',
+                }}
+              >
+                🔐 {lang === 'bs' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  localStorage.removeItem('eznr_webauthn_cred');
+                  localStorage.removeItem('eznr_webauthn_user');
+                  localStorage.removeItem('eznr_biometric_declined');
+                  setHasBiometric(false);
+                }}
+                style={{
+                  background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.4)',
+                  fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline',
+                  padding: '4px', textAlign: 'center', margin: '0 auto'
+                }}
+              >
+                {lang === 'bs' ? 'Ukloni sačuvani otisak s uređaja' : 'Remove saved fingerprint from device'}
+              </button>
+            </div>
+          )}
+
+          {/* Biometric enrollment offer modal */}
+          {showBiometricOffer && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 9999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+            }}>
+              <div style={{
+                background: 'var(--bg-card, #1a2332)', border: '1px solid rgba(0,191,166,0.2)',
+                borderRadius: 20, padding: '28px 24px', maxWidth: 340, width: '90%',
+                textAlign: 'center', boxShadow: '0 24px 64px rgba(0,0,0,0.4)',
+              }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔐</div>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: 8, fontFamily: 'var(--font-heading)' }}>
+                  {lang === 'bs' ? 'Omogući brzu prijavu?' : 'Enable quick login?'}
+                </div>
+                <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 1.5 }}>
+                  {lang === 'bs'
+                    ? 'Koristite otisak prsta za brzu prijavu na ovom uređaju sljedeći put (izbjegnite stalno unošenje lozinke).'
+                    : 'Use fingerprint for quick login next time.'}
+                </div>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button onClick={handleDeclineBiometric}
+                    style={{
+                      flex: 1, padding: '12px', borderRadius: 12, border: '1px solid rgba(255,255,255,0.15)',
+                      background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                      fontSize: '0.85rem', fontWeight: 600, fontFamily: 'var(--font-heading)',
+                    }}>
+                    {lang === 'bs' ? 'Ne sada' : 'Not now'}
+                  </button>
+                  <button onClick={handleAcceptBiometric}
+                    className="btn btn-primary"
+                    style={{
+                      flex: 1, padding: '12px', borderRadius: 12,
+                      fontSize: '0.85rem', fontWeight: 700, justifyContent: 'center',
+                    }}>
+                    ✅ {lang === 'bs' ? 'Omogući' : 'Enable'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {loginError && (
+            <div style={{
+              padding: '10px 14px', borderRadius: 10, marginTop: 4,
+              background: 'rgba(244,67,54,0.15)', border: '1px solid rgba(244,67,54,0.35)',
+              color: '#ffcdd2', fontSize: '0.84rem', fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              ⚠️ {loginError}
+            </div>
+          )}
+        </form>
+        <div style={styles.footer}>
+          <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '0.75rem' }}>
+            ©2026 <strong style={{ color: 'rgba(255,255,255,0.4)' }}>eZNR</strong> · zastitanaradu.ba
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const styles = {
+  page: {
+    minHeight: '100vh',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(135deg, #0B2A3C 0%, #143d54 50%, #0B2A3C 100%)',
+    position: 'relative',
+    overflow: 'hidden',
+    padding: '20px 16px',
+  },
+  bgPattern: {
+    position: 'absolute', inset: 0,
+    backgroundImage: `radial-gradient(circle at 2px 2px, rgba(0,191,166,0.07) 1px, transparent 0)`,
+    backgroundSize: '40px 40px',
+  },
+  bgGlow1: {
+    position: 'absolute', width: 600, height: 600, borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(0,191,166,0.15) 0%, transparent 70%)',
+    top: -200, right: -100,
+  },
+  bgGlow2: {
+    position: 'absolute', width: 500, height: 500, borderRadius: '50%',
+    background: 'radial-gradient(circle, rgba(76,175,80,0.1) 0%, transparent 70%)',
+    bottom: -150, left: -100,
+  },
+  langSwitcher: {
+    position: 'fixed', top: 16, right: 16,
+    display: 'flex', alignItems: 'center', gap: 6,
+    padding: '7px 14px',
+    background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
+    borderRadius: 50, color: 'white', cursor: 'pointer',
+    fontSize: '0.82rem', fontWeight: 600, fontFamily: 'var(--font-heading)',
+    backdropFilter: 'blur(10px)', transition: 'all 0.2s', zIndex: 10,
+  },
+  langIcon: { fontSize: '1rem' },
+  card: {
+    position: 'relative', zIndex: 1,
+    width: '100%', maxWidth: 460,
+    background: 'rgba(255,255,255,0.04)',
+    backdropFilter: 'blur(24px)',
+    borderRadius: 24,
+    border: '1px solid rgba(255,255,255,0.1)',
+    boxShadow: '0 30px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(0,191,166,0.1)',
+    overflow: 'hidden',
+  },
+  logoHeader: {
+    overflow: 'hidden',
+    borderRadius: '24px 24px 0 0',
+    lineHeight: 0,
+    borderBottom: '1px solid rgba(255,255,255,0.07)',
+  },
+  brandTitle: {
+    fontSize: '2rem', fontWeight: 900, color: 'white',
+    fontFamily: 'var(--font-heading)', margin: 0, letterSpacing: '-1px',
+  },
+  brandTagline: {
+    fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)',
+    margin: '3px 0 0', lineHeight: 1.4,
+  },
+  form: {
+    display: 'flex', flexDirection: 'column', gap: 14,
+    padding: '24px 32px 20px',
+  },
+  formGroup: { display: 'flex', flexDirection: 'column', gap: 6 },
+  label: { fontSize: '0.82rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)' },
+  input: {
+    background: 'rgba(255,255,255,0.07)',
+    border: '1px solid rgba(255,255,255,0.12)',
+    color: 'white',
+    borderRadius: 10,
+  },
+  formRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 },
+  formOptions: {
+    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  },
+  forgotLink: { fontSize: '0.8rem', color: 'rgba(0,191,166,0.85)', fontWeight: 500, textDecoration: 'none' },
+  footer: {
+    padding: '14px 32px',
+    borderTop: '1px solid rgba(255,255,255,0.07)',
+    textAlign: 'center',
+  },
+  spinner: {
+    display: 'inline-block', width: 20, height: 20,
+    border: '3px solid rgba(255,255,255,0.3)', borderTopColor: 'white',
+    borderRadius: '50%', animation: 'spin 0.6s linear infinite',
+  },
+};

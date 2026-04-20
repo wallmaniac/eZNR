@@ -118,7 +118,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     };
     const handleProfileNav = (path) => { setShowProfile(false); router.push(path); };
     const handleNotifNav = (path) => { setShowNotifs(false); router.push(path); };
-    const handleLogout = () => { setShowProfile(false); logout(); router.push('/'); };
+    const handleLogout = () => { setShowProfile(false); logout(); router.push('/login'); };
 
     const handleCreateCompany = async () => {
         if (!newCompanyData.naziv.trim()) return;

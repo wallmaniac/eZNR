@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }) {
         if (!loading) {
             initializeData();
             if (!isAuthenticated) {
-                router.push('/');
+                router.push('/login');
             }
         }
     }, [loading, isAuthenticated, router]);

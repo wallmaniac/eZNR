@@ -295,7 +295,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
 
     const handleLogout = () => {
         logout();
-        router.push('/');
+        router.push('/login');
     };
 
     // Auto-close mobile drawer on navigation
@@ -622,7 +622,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         </div>
                         {/* Odjava button — always visible, framed so it's clearly clickable */}
                         <button
-                            onClick={() => { onMobileClose?.(); logout(); router.push('/'); }}
+                            onClick={() => { onMobileClose?.(); logout(); router.push('/login'); }}
                             style={{
                                 flexShrink: 0,
                                 margin: '8px 12px',
