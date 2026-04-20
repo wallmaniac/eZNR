@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { getUIBranding, UI_DEFAULTS } from '@/lib/brandingService';
 
 const menuItems = [
     // ── Top-level standalone ───────────────────────────────────────────────────
@@ -267,6 +268,11 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     const [openMenus, setOpenMenus] = useState({});
     const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
     const [mobileProfileTab, setMobileProfileTab] = useState('profile');
+
+    // UI Branding — read sidebar logo/text settings from company
+    const uiBranding = useMemo(() => {
+        try { return getUIBranding(user?.activeCompanyId); } catch { return { sidebarLogoEnabled: false, sidebarText: UI_DEFAULTS.sidebarText, logo: '' }; }
+    }, [user?.activeCompanyId]);
 
     // Build menu: base items + admin items (if admin)
     const allMenuItems = useMemo(() => {
@@ -570,10 +576,12 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         flexShrink: 0,
                     }}>
                         <Link href="/dashboard" onClick={handleNavClick} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-                            <Image src="/logo-icon.png" alt="eZNR" width={36} height={36} style={{ borderRadius: 8 }} />
+                            {uiBranding.sidebarLogoEnabled && uiBranding.logo
+                              ? <img src={uiBranding.logo} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', background: '#fff', padding: 2 }} />
+                              : <Image src="/logo-icon.png" alt="eZNR" width={36} height={36} style={{ borderRadius: 8 }} />}
                             <div>
                                 <div style={sidebarStyles.logoTitle}>eZNR</div>
-                                <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
+                                {(uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText) && <div style={sidebarStyles.logoSub}>{uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText}</div>}
                             </div>
                         </Link>
                     </div>
@@ -798,10 +806,12 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             }}>
                 {!collapsed && (
                     <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
-                        <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
+                        {uiBranding.sidebarLogoEnabled && uiBranding.logo
+                          ? <img src={uiBranding.logo} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'contain', background: '#fff', padding: 3, marginLeft: -10, marginTop: 4 }} />
+                          : <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />}
                         <div style={{ marginLeft: -8 }}>
                             <div style={sidebarStyles.logoTitle}>eZNR</div>
-                            <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
+                            {(uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText) && <div style={sidebarStyles.logoSub}>{uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText}</div>}
                         </div>
                     </Link>
                 )}

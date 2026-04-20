@@ -4,8 +4,8 @@
  * brandingService.js — Company Branding Engine for eZNR
  *
  * Provides two branding tiers:
- *   1. PDF Branding: custom logo + accent color for printed reports
- *   2. UI  Branding: custom primary color + sidebar color for the dashboard
+ *   1. PDF Branding: accent color, watermark, logo position/size, header text formatting
+ *   2. UI  Branding: primary color, sidebar color, sidebar logo, sidebar text
  *
  * All branding data is stored on the company record under `branding: { ... }`
  * and is company-scoped (NOT per-user).
@@ -21,8 +21,38 @@ export const EZNR_DEFAULTS = {
   sidebarColor: '#0B2A3C',
 };
 
+// ─── Default PDF branding settings ───────────────────────────────────────────
+
+export const PDF_DEFAULTS = {
+  accentColor: '#00BFA6',
+  // Watermark
+  watermarkEnabled: true,
+  watermarkPosition: 'center',       // top-left, top-center, top-right, center-left, center, center-right, bottom-left, bottom-center, bottom-right
+  watermarkOpacity: 5,               // Percentage 0-100
+  watermarkSize: 280,                // px
+  watermarkContent: 'both',          // 'logo', 'name', 'both'
+  // Logo in header
+  logoPosition: 'left',             // left, center, right
+  logoSize: 40,                     // px (height)
+  // Header text formatting
+  headerText: '',                   // Custom text (empty = use default report titles)
+  headerFontSize: 12,              // pt
+  headerBold: false,
+  headerItalic: false,
+  headerUnderline: false,
+  headerColor: '#1a1a2e',
+};
+
+// ─── Default UI branding settings ────────────────────────────────────────────
+
+export const UI_DEFAULTS = {
+  primaryColor: '',
+  sidebarColor: '',
+  sidebarLogoEnabled: false,        // Use company logo in sidebar
+  sidebarText: 'zastitanaradu.ba',  // Text under logo in sidebar
+};
+
 // ─── Preset Accent Color Palette ─────────────────────────────────────────────
-// Curated professional colors that work well in both print and screen contexts
 
 export const ACCENT_PRESETS = [
   { color: '#00BFA6', name: 'eZNR Teal' },
@@ -46,6 +76,28 @@ export const SIDEBAR_PRESETS = [
   { color: '#263238', name: 'Blue Grey' },
   { color: '#1a237e', name: 'Deep Blue' },
   { color: '#311b92', name: 'Deep Purple' },
+];
+
+// ─── Watermark position options ──────────────────────────────────────────────
+
+export const WATERMARK_POSITIONS = [
+  { id: 'top-left',      label: '↖', row: 0, col: 0 },
+  { id: 'top-center',    label: '↑', row: 0, col: 1 },
+  { id: 'top-right',     label: '↗', row: 0, col: 2 },
+  { id: 'center-left',   label: '←', row: 1, col: 0 },
+  { id: 'center',        label: '●', row: 1, col: 1 },
+  { id: 'center-right',  label: '→', row: 1, col: 2 },
+  { id: 'bottom-left',   label: '↙', row: 2, col: 0 },
+  { id: 'bottom-center', label: '↓', row: 2, col: 1 },
+  { id: 'bottom-right',  label: '↘', row: 2, col: 2 },
+];
+
+// ─── Logo position options ───────────────────────────────────────────────────
+
+export const LOGO_POSITIONS = [
+  { id: 'left',   label: '← Lijevo / Left' },
+  { id: 'center', label: '● Centar / Center' },
+  { id: 'right',  label: '→ Desno / Right' },
 ];
 
 // ─── Color Utility: HSL manipulation ─────────────────────────────────────────
@@ -110,36 +162,44 @@ function deriveSidebarColors(sidebarHex) {
 // ─── PDF Branding API ────────────────────────────────────────────────────────
 
 /**
- * Get branding for PDF reports.
- * Returns: { logo, accentColor, companyName, address, jib }
+ * Get full PDF branding config for a company.
  */
-export function getCompanyBranding(companyId) {
+export function getPdfBranding(companyId) {
   const cId = companyId || getActiveCompanyId();
-  if (!cId || cId === 'all') return { logo: '', accentColor: EZNR_DEFAULTS.accentColor, companyName: '' };
+  if (!cId || cId === 'all') return { ...PDF_DEFAULTS, logo: '', companyName: '' };
 
   const company = getById(COLLECTIONS.COMPANIES, cId);
-  if (!company) return { logo: '', accentColor: EZNR_DEFAULTS.accentColor, companyName: '' };
+  if (!company) return { ...PDF_DEFAULTS, logo: '', companyName: '' };
 
   const branding = company.branding || {};
 
   return {
+    ...PDF_DEFAULTS,
+    ...branding,
     logo: company.logo || branding.logo || '',
-    accentColor: branding.accentColor || EZNR_DEFAULTS.accentColor,
     companyName: company.naziv || company.name || '',
     address: company.adresa || company.address || '',
     jib: company.oib || company.jib || '',
+    telefon: company.telefon || '',
+    mjesto: company.mjesto || '',
+    postanskiBroj: company.postanskiBroj || '',
   };
+}
+
+// Backward-compat alias
+export function getCompanyBranding(companyId) {
+  return getPdfBranding(companyId);
 }
 
 /**
  * Save PDF branding settings to the company record.
  */
-export function savePdfBranding(companyId, { accentColor }) {
+export function savePdfBranding(companyId, pdfSettings) {
   if (!companyId) return;
   const company = getById(COLLECTIONS.COMPANIES, companyId);
   const existing = company?.branding || {};
   update(COLLECTIONS.COMPANIES, companyId, {
-    branding: { ...existing, accentColor },
+    branding: { ...existing, ...pdfSettings },
   });
 }
 
@@ -147,19 +207,21 @@ export function savePdfBranding(companyId, { accentColor }) {
 
 /**
  * Get UI branding for dashboard theming.
- * Returns: { primaryColor, sidebarColor, enabled }
  */
 export function getUIBranding(companyId) {
   const cId = companyId || getActiveCompanyId();
-  if (!cId || cId === 'all') return { primaryColor: '', sidebarColor: '', enabled: false };
+  if (!cId || cId === 'all') return { ...UI_DEFAULTS, enabled: false };
 
   const company = getById(COLLECTIONS.COMPANIES, cId);
-  if (!company) return { primaryColor: '', sidebarColor: '', enabled: false };
+  if (!company) return { ...UI_DEFAULTS, enabled: false };
 
   const branding = company.branding || {};
   return {
     primaryColor: branding.primaryColor || '',
     sidebarColor: branding.sidebarColor || '',
+    sidebarLogoEnabled: branding.sidebarLogoEnabled ?? false,
+    sidebarText: branding.sidebarText ?? UI_DEFAULTS.sidebarText,
+    logo: company.logo || '',
     enabled: !!branding.primaryColor || !!branding.sidebarColor,
   };
 }
@@ -167,29 +229,26 @@ export function getUIBranding(companyId) {
 /**
  * Save UI branding settings to the company record.
  */
-export function saveUIBranding(companyId, { primaryColor, sidebarColor }) {
+export function saveUIBranding(companyId, uiSettings) {
   if (!companyId) return;
   const company = getById(COLLECTIONS.COMPANIES, companyId);
   const existing = company?.branding || {};
   update(COLLECTIONS.COMPANIES, companyId, {
-    branding: { ...existing, primaryColor, sidebarColor },
+    branding: { ...existing, ...uiSettings },
   });
 }
 
 /**
  * Apply UI branding by overriding CSS custom properties on <html>.
- * Call this on company switch or page load.
  */
 export function applyUIBranding(companyId) {
   if (typeof document === 'undefined') return;
 
   const branding = getUIBranding(companyId);
   const root = document.documentElement;
-  const isDark = root.getAttribute('data-theme') === 'dark';
 
   if (branding.primaryColor) {
     const colors = deriveColors(branding.primaryColor);
-    // Light mode overrides
     root.style.setProperty('--primary', colors.primary);
     root.style.setProperty('--primary-light', colors.primaryLight);
     root.style.setProperty('--primary-dark', colors.primaryDark);
@@ -200,7 +259,6 @@ export function applyUIBranding(companyId) {
     root.style.setProperty('--bg-sidebar-active', colors.primaryGlow);
     root.style.setProperty('--bg-badge', `${colors.primaryGlow}`);
   } else {
-    // Reset primary to CSS default
     ['--primary', '--primary-light', '--primary-dark', '--primary-glow',
      '--primary-glow-strong', '--border-focus', '--shadow-glow',
      '--bg-sidebar-active', '--bg-badge'].forEach(prop => root.style.removeProperty(prop));
@@ -216,7 +274,7 @@ export function applyUIBranding(companyId) {
 }
 
 /**
- * Reset all UI branding overrides — back to eZNR defaults.
+ * Reset all UI branding overrides.
  */
 export function resetUIBranding() {
   if (typeof document === 'undefined') return;
@@ -225,4 +283,22 @@ export function resetUIBranding() {
    '--primary-glow-strong', '--border-focus', '--shadow-glow',
    '--bg-sidebar-active', '--bg-badge',
    '--bg-sidebar', '--bg-sidebar-hover'].forEach(prop => root.style.removeProperty(prop));
+}
+
+/**
+ * Get CSS positioning for watermark based on position ID.
+ */
+export function getWatermarkCSS(position) {
+  const map = {
+    'top-left':      { top: '8%',  left: '15%', transform: 'translate(-50%,-50%)' },
+    'top-center':    { top: '8%',  left: '50%', transform: 'translate(-50%,-50%)' },
+    'top-right':     { top: '8%',  left: '85%', transform: 'translate(-50%,-50%)' },
+    'center-left':   { top: '50%', left: '15%', transform: 'translate(-50%,-50%)' },
+    'center':        { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' },
+    'center-right':  { top: '50%', left: '85%', transform: 'translate(-50%,-50%)' },
+    'bottom-left':   { top: '88%', left: '15%', transform: 'translate(-50%,-50%)' },
+    'bottom-center': { top: '88%', left: '50%', transform: 'translate(-50%,-50%)' },
+    'bottom-right':  { top: '88%', left: '85%', transform: 'translate(-50%,-50%)' },
+  };
+  return map[position] || map['center'];
 }

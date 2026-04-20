@@ -15,7 +15,7 @@
  */
 
 import { getAll, getById, getActiveCompanyId, formatDate, COLLECTIONS } from './dataStore';
-import { getCompanyBranding, EZNR_DEFAULTS } from './brandingService';
+import { getPdfBranding, EZNR_DEFAULTS, PDF_DEFAULTS, getWatermarkCSS } from './brandingService';
 
 // ─── Shared CSS for all reports ──────────────────────────────────────────────
 const SHARED_CSS = `
@@ -96,14 +96,27 @@ const SHARED_CSS_LANDSCAPE = SHARED_CSS.replace(
 
 // ─── Helper: get current company info ────────────────────────────────────────
 function getCompanyInfo() {
-  const branding = getCompanyBranding();
+  const branding = getPdfBranding();
   const companyId = getActiveCompanyId();
-  if (!companyId || companyId === 'all') return { naziv: '', adresa: '', jib: '', logo: '', accentColor: EZNR_DEFAULTS.accentColor };
+  if (!companyId || companyId === 'all') return { naziv: '', adresa: '', jib: '', logo: '', accentColor: EZNR_DEFAULTS.accentColor, ...PDF_DEFAULTS };
   const company = getById('companies', companyId);
   return {
     ...(company || { naziv: '', adresa: '', jib: '' }),
     logo: branding.logo,
-    accentColor: branding.accentColor,
+    accentColor: branding.accentColor || EZNR_DEFAULTS.accentColor,
+    watermarkEnabled: branding.watermarkEnabled ?? PDF_DEFAULTS.watermarkEnabled,
+    watermarkPosition: branding.watermarkPosition || PDF_DEFAULTS.watermarkPosition,
+    watermarkOpacity: branding.watermarkOpacity ?? PDF_DEFAULTS.watermarkOpacity,
+    watermarkSize: branding.watermarkSize || PDF_DEFAULTS.watermarkSize,
+    watermarkContent: branding.watermarkContent || PDF_DEFAULTS.watermarkContent,
+    logoPosition: branding.logoPosition || PDF_DEFAULTS.logoPosition,
+    logoSize: branding.logoSize || PDF_DEFAULTS.logoSize,
+    headerText: branding.headerText || '',
+    headerFontSize: branding.headerFontSize || PDF_DEFAULTS.headerFontSize,
+    headerBold: branding.headerBold ?? false,
+    headerItalic: branding.headerItalic ?? false,
+    headerUnderline: branding.headerUnderline ?? false,
+    headerColor: branding.headerColor || PDF_DEFAULTS.headerColor,
   };
 }
 
@@ -131,24 +144,49 @@ function statusBadge(days, bs) {
 // ─── Build the branded header ────────────────────────────────────────────────
 function buildHeader(title, subtitle, company) {
   const companyName = company.naziv || company.name || '';
-  const logoHtml = company.logo
-    ? `<img class="brand-logo" src="${company.logo}" alt="${companyName}" />`
-    : (companyName ? `<span class="brand-name">${companyName}</span>` : '');
+  const logoSize = company.logoSize || 40;
+  const logoPos = company.logoPosition || 'left';
+
+  // Build logo HTML
+  let logoHtml = '';
+  if (company.logo) {
+    logoHtml = `<img class="brand-logo" src="${company.logo}" alt="${companyName}" style="height:${logoSize}px;max-width:${logoSize * 4}px" />`;
+  } else if (companyName) {
+    logoHtml = `<span class="brand-name">${companyName}</span>`;
+  }
+
+  // Header alignment based on logo position
+  const headerJustify = logoPos === 'center' ? 'center' : (logoPos === 'right' ? 'flex-end' : 'flex-start');
+  const headerFlex = logoPos === 'center' ? 'center' : 'space-between';
+
+  // Custom header text formatting
+  let customHeaderHtml = '';
+  if (company.headerText) {
+    const fs = company.headerFontSize || 12;
+    const fw = company.headerBold ? 'font-weight:800;' : '';
+    const fi = company.headerItalic ? 'font-style:italic;' : '';
+    const fu = company.headerUnderline ? 'text-decoration:underline;' : '';
+    const fc = company.headerColor || '#1a1a2e';
+    customHeaderHtml = `<div style="font-size:${fs}pt;${fw}${fi}${fu}color:${fc};margin-top:8px">${company.headerText}</div>`;
+  }
+
   return `
-    <div class="report-header">
-      <div>
-        <div class="brand">
+    <div class="report-header" style="justify-content:${headerFlex}">
+      <div style="text-align:${logoPos === 'center' ? 'center' : 'left'}">
+        <div class="brand" style="justify-content:${headerJustify}">
           ${logoHtml}
         </div>
-        ${company.logo && companyName ? `<div style="font-size:8pt;font-weight:600;color:#555;margin-top:3px">${companyName}</div>` : ''}
+        ${company.logo && companyName ? `<div style="font-size:8pt;font-weight:600;color:#555;margin-top:3px;text-align:${logoPos === 'center' ? 'center' : 'left'}">${companyName}</div>` : ''}
       </div>
+      ${logoPos !== 'center' ? `
       <div class="company-info">
         ${company.adresa || company.address ? `<div>${company.adresa || company.address}</div>` : ''}
         ${company.mjesto ? `<div>${company.mjesto}${company.postanskiBroj ? ` ${company.postanskiBroj}` : ''}</div>` : ''}
         ${company.jib || company.oib || company.id_number ? `<div>JIB: ${company.jib || company.oib || company.id_number}</div>` : ''}
         ${company.telefon ? `<div>Tel: ${company.telefon}</div>` : ''}
-      </div>
+      </div>` : ''}
     </div>
+    ${customHeaderHtml}
     <div class="report-title">${title}</div>
     <div class="report-subtitle">${subtitle}</div>
   `;
@@ -181,12 +219,23 @@ function openPrintWindow(html, title) {
 function wrapDocument(content, title, landscape = false, bs = true, accentColor = EZNR_DEFAULTS.accentColor, company = {}) {
   const accentVar = `--accent: ${accentColor};`;
   const companyName = company.naziv || company.name || '';
-  const watermarkHtml = company.logo || companyName ? `
-    <div class="watermark">
-      ${company.logo ? `<img src="${company.logo}" alt="" />` : ''}
-      ${companyName ? `<div class="wm-name">${companyName}</div>` : ''}
-    </div>
-  ` : '';
+  const wmEnabled = company.watermarkEnabled ?? true;
+  const wmPos = getWatermarkCSS(company.watermarkPosition || 'center');
+  const wmOpacity = (company.watermarkOpacity ?? 5) / 100;
+  const wmSize = company.watermarkSize || 280;
+  const wmContent = company.watermarkContent || 'both';
+
+  let watermarkHtml = '';
+  if (wmEnabled && (company.logo || companyName)) {
+    const showLogo = wmContent === 'logo' || wmContent === 'both';
+    const showName = wmContent === 'name' || wmContent === 'both';
+    watermarkHtml = `
+    <div class="watermark" style="top:${wmPos.top};left:${wmPos.left};transform:${wmPos.transform};opacity:${wmOpacity}">
+      ${showLogo && company.logo ? `<img src="${company.logo}" alt="" style="max-width:${wmSize}px;max-height:${Math.round(wmSize * 0.6)}px" />` : ''}
+      ${showName && companyName ? `<div class="wm-name" style="font-size:${Math.round(wmSize / 10)}pt">${companyName}</div>` : ''}
+    </div>`;
+  }
+
   return `<!DOCTYPE html>
 <html lang="${bs ? 'bs' : 'en'}">
 <head>

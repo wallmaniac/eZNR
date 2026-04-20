@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,8 +23,9 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/lib/webAuthn';
 import { uploadSecureFile } from '@/lib/storageService';
 import {
-  ACCENT_PRESETS, SIDEBAR_PRESETS, EZNR_DEFAULTS,
-  getCompanyBranding, savePdfBranding,
+  ACCENT_PRESETS, SIDEBAR_PRESETS, EZNR_DEFAULTS, PDF_DEFAULTS, UI_DEFAULTS,
+  WATERMARK_POSITIONS, LOGO_POSITIONS,
+  getPdfBranding, savePdfBranding,
   getUIBranding, saveUIBranding, applyUIBranding, resetUIBranding,
 } from '@/lib/brandingService';
 
@@ -54,10 +55,26 @@ export default function SettingsPage() {
   // Company state
   const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '' });
   const [assignedOfficers, setAssignedOfficers] = useState([]);
-  // Branding state
+  // Branding state — PDF
   const [pdfAccentColor, setPdfAccentColor] = useState(EZNR_DEFAULTS.accentColor);
+  const [wmEnabled, setWmEnabled] = useState(PDF_DEFAULTS.watermarkEnabled);
+  const [wmPosition, setWmPosition] = useState(PDF_DEFAULTS.watermarkPosition);
+  const [wmOpacity, setWmOpacity] = useState(PDF_DEFAULTS.watermarkOpacity);
+  const [wmSize, setWmSize] = useState(PDF_DEFAULTS.watermarkSize);
+  const [wmContent, setWmContent] = useState(PDF_DEFAULTS.watermarkContent);
+  const [logoPosition, setLogoPosition] = useState(PDF_DEFAULTS.logoPosition);
+  const [logoSize, setLogoSize] = useState(PDF_DEFAULTS.logoSize);
+  const [headerText, setHeaderText] = useState('');
+  const [headerFontSize, setHeaderFontSize] = useState(PDF_DEFAULTS.headerFontSize);
+  const [headerBold, setHeaderBold] = useState(false);
+  const [headerItalic, setHeaderItalic] = useState(false);
+  const [headerUnderline, setHeaderUnderline] = useState(false);
+  const [headerColor, setHeaderColor] = useState(PDF_DEFAULTS.headerColor);
+  // Branding state — UI
   const [uiPrimaryColor, setUiPrimaryColor] = useState('');
   const [uiSidebarColor, setUiSidebarColor] = useState('');
+  const [sidebarLogoEnabled, setSidebarLogoEnabled] = useState(false);
+  const [sidebarText, setSidebarText] = useState(UI_DEFAULTS.sidebarText);
 
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
@@ -129,11 +146,26 @@ export default function SettingsPage() {
         setAssignedOfficers(hasAccess.map(o => o.id));
       }
       // Load branding
-      const pdfBrand = getCompanyBranding(activeCompanyId);
+      const pdfBrand = getPdfBranding(activeCompanyId);
       setPdfAccentColor(pdfBrand.accentColor || EZNR_DEFAULTS.accentColor);
+      setWmEnabled(pdfBrand.watermarkEnabled ?? PDF_DEFAULTS.watermarkEnabled);
+      setWmPosition(pdfBrand.watermarkPosition || PDF_DEFAULTS.watermarkPosition);
+      setWmOpacity(pdfBrand.watermarkOpacity ?? PDF_DEFAULTS.watermarkOpacity);
+      setWmSize(pdfBrand.watermarkSize || PDF_DEFAULTS.watermarkSize);
+      setWmContent(pdfBrand.watermarkContent || PDF_DEFAULTS.watermarkContent);
+      setLogoPosition(pdfBrand.logoPosition || PDF_DEFAULTS.logoPosition);
+      setLogoSize(pdfBrand.logoSize || PDF_DEFAULTS.logoSize);
+      setHeaderText(pdfBrand.headerText || '');
+      setHeaderFontSize(pdfBrand.headerFontSize || PDF_DEFAULTS.headerFontSize);
+      setHeaderBold(pdfBrand.headerBold ?? false);
+      setHeaderItalic(pdfBrand.headerItalic ?? false);
+      setHeaderUnderline(pdfBrand.headerUnderline ?? false);
+      setHeaderColor(pdfBrand.headerColor || PDF_DEFAULTS.headerColor);
       const uiBrand = getUIBranding(activeCompanyId);
       setUiPrimaryColor(uiBrand.primaryColor || '');
       setUiSidebarColor(uiBrand.sidebarColor || '');
+      setSidebarLogoEnabled(uiBrand.sidebarLogoEnabled ?? false);
+      setSidebarText(uiBrand.sidebarText ?? UI_DEFAULTS.sidebarText);
     }
   }, [activeCompanyId, isAdmin]);
 
@@ -250,8 +282,23 @@ export default function SettingsPage() {
     if (!activeCompanyId) return;
     update(COLLECTIONS.COMPANIES, activeCompanyId, companyData);
     // Save branding
-    savePdfBranding(activeCompanyId, { accentColor: pdfAccentColor });
-    saveUIBranding(activeCompanyId, { primaryColor: uiPrimaryColor, sidebarColor: uiSidebarColor });
+    savePdfBranding(activeCompanyId, {
+      accentColor: pdfAccentColor,
+      watermarkEnabled: wmEnabled,
+      watermarkPosition: wmPosition,
+      watermarkOpacity: wmOpacity,
+      watermarkSize: wmSize,
+      watermarkContent: wmContent,
+      logoPosition,
+      logoSize,
+      headerText,
+      headerFontSize,
+      headerBold,
+      headerItalic,
+      headerUnderline,
+      headerColor,
+    });
+    saveUIBranding(activeCompanyId, { primaryColor: uiPrimaryColor, sidebarColor: uiSidebarColor, sidebarLogoEnabled, sidebarText });
     applyUIBranding(activeCompanyId);
     clearDirty(); showSaved();
   };
@@ -741,7 +788,7 @@ export default function SettingsPage() {
                   {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
                 </div>
 
-                {/* ══ BRANDING SECTION ══ */}
+                {/* â•â• BRANDING SECTION â•â• */}
                 <hr style={{ margin: '28px 0', border: 'none', borderTop: '2px solid var(--border)' }} />
                 <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="url(#brand-grad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -753,194 +800,243 @@ export default function SettingsPage() {
                 </h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 20 }}>
                   {lang === 'bs'
-                    ? 'Prilagodite boje PDF izvještaja i korisničkog sučelja prema vizualnom identitetu vaše firme.'
+                    ? 'Prilagodite boje PDF izvjeÅ¡taja i korisniÄkog suÄelja prema vizualnom identitetu vaÅ¡e firme.'
                     : 'Customize PDF report colors and dashboard UI to match your corporate identity.'}
                 </p>
 
-                {/* ── PDF Accent Color ── */}
+                {/* â•â•â• PDF BRANDING â•â•â• */}
                 <div style={{ padding: 20, borderRadius: 'var(--radius-lg)', background: 'var(--bg-input)', border: '1px solid var(--border)', marginBottom: 20 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <span style={{ fontSize: '1rem' }}>📄</span>
-                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{lang === 'bs' ? 'Boja PDF izvještaja' : 'PDF Report Accent Color'}</span>
+                    <span style={{ fontSize: '1rem' }}>ðŸ“„</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{lang === 'bs' ? 'PDF Branding' : 'PDF Report Branding'}</span>
                   </div>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 14 }}>
-                    {lang === 'bs' ? 'Ova boja se koristi za zaglavlje, gumbe i naglašene elemente u generisanim PDF izvještajima.' : 'This color is used for headers, buttons, and highlights in generated PDF reports.'}
-                  </p>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
-                    {ACCENT_PRESETS.map(p => (
-                      <button key={p.color}
-                        title={p.name}
-                        onClick={() => { setPdfAccentColor(p.color); setDirty('company'); }}
-                        style={{
-                          width: 36, height: 36, borderRadius: 10, border: pdfAccentColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)',
-                          background: p.color, cursor: 'pointer', transition: 'all 0.15s',
-                          boxShadow: pdfAccentColor === p.color ? `0 0 0 3px ${p.color}40` : 'none',
-                          transform: pdfAccentColor === p.color ? 'scale(1.15)' : 'scale(1)',
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-light)' }}>{lang === 'bs' ? 'Ili unesite hex:' : 'Or enter hex:'}</label>
-                    <input
-                      type="color" value={pdfAccentColor}
-                      onChange={e => { setPdfAccentColor(e.target.value); setDirty('company'); }}
-                      style={{ width: 36, height: 36, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
-                    />
-                    <code style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: 6 }}>{pdfAccentColor}</code>
-                  </div>
-                  {/* Mini PDF preview */}
-                  <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: '#fff', border: '1px solid #e0e0e0', maxWidth: 340 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: `3px solid ${pdfAccentColor}`, paddingBottom: 8, marginBottom: 8 }}>
-                      <div>
-                        {companyData.logo
-                          ? <img src={companyData.logo} alt="" style={{ height: 24, maxWidth: 100, objectFit: 'contain' }} />
-                          : <span style={{ fontSize: '10pt', fontWeight: 800, color: pdfAccentColor }}>{companyData.naziv || (lang === 'bs' ? 'Naziv firme' : 'Company Name')}</span>
-                        }
-                        {companyData.logo && <div style={{ fontSize: '5pt', color: '#555', fontWeight: 600, marginTop: 2 }}>{companyData.naziv || ''}</div>}
-                      </div>
-                      <div style={{ textAlign: 'right', fontSize: '6pt', color: '#555' }}>
-                        <div>{companyData.adresa || (lang === 'bs' ? 'Adresa' : 'Address')}</div>
-                        {companyData.oib && <div>JIB: {companyData.oib}</div>}
-                      </div>
-                    </div>
-                    <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2, color: '#1a1a2e' }}>EVIDENCIJA RADNIKA</div>
-                    <div style={{ fontSize: '5pt', color: '#888' }}>Preview · {new Date().toLocaleDateString('bs-BA')}</div>
-                  </div>
-                </div>
 
-                {/* ── UI Branding ── */}
-                <div style={{ padding: 20, borderRadius: 'var(--radius-lg)', background: 'var(--bg-input)', border: '1px solid var(--border)', marginBottom: 20 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                    <span style={{ fontSize: '1rem' }}>🖥️</span>
-                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{lang === 'bs' ? 'Boje korisničkog sučelja' : 'Dashboard UI Colors'}</span>
-                    <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: '#fff', marginLeft: 4 }}>ENTERPRISE</span>
-                  </div>
-                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                    {lang === 'bs'
-                      ? 'Prilagodite primarnu boju aplikacije i boju bočne trake. Promjene se odmah primjenjuju za sve korisnike ove firme.'
-                      : 'Customize the app primary color and sidebar color. Changes apply immediately for all users in this company.'}
-                  </p>
-
-                  {/* Primary Color */}
+                  {/* Accent Color */}
                   <div style={{ marginBottom: 18 }}>
-                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 8, display: 'block' }}>
-                      {lang === 'bs' ? '🎯 Primarna boja (gumbi, akcenti, linkovi)' : '🎯 Primary color (buttons, accents, links)'}
-                    </label>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 6, display: 'block' }}>{lang === 'bs' ? 'ðŸŽ¨ Boja naglaska' : 'ðŸŽ¨ Accent Color'}</label>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8 }}>{lang === 'bs' ? 'Koristi se za zaglavlje, linije i naglaÅ¡ene elemente.' : 'Used for header lines, badges and accents.'}</p>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                      <button
-                        title={lang === 'bs' ? 'Zadano (eZNR Teal)' : 'Default (eZNR Teal)'}
-                        onClick={() => { setUiPrimaryColor(''); setDirty('company'); }}
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          border: !uiPrimaryColor ? '3px solid var(--text)' : '2px solid var(--border)',
-                          background: `linear-gradient(135deg, #ccc, #eee)`, cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.7rem', fontWeight: 800, color: '#888',
-                          transform: !uiPrimaryColor ? 'scale(1.15)' : 'scale(1)',
-                        }}
-                      >↺</button>
                       {ACCENT_PRESETS.map(p => (
-                        <button key={`ui-${p.color}`}
-                          title={p.name}
-                          onClick={() => { setUiPrimaryColor(p.color); setDirty('company'); }}
-                          style={{
-                            width: 36, height: 36, borderRadius: 10,
-                            border: uiPrimaryColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)',
-                            background: p.color, cursor: 'pointer', transition: 'all 0.15s',
-                            boxShadow: uiPrimaryColor === p.color ? `0 0 0 3px ${p.color}40` : 'none',
-                            transform: uiPrimaryColor === p.color ? 'scale(1.15)' : 'scale(1)',
-                          }}
-                        />
+                        <button key={p.color} title={p.name} onClick={() => { setPdfAccentColor(p.color); setDirty('company'); }}
+                          style={{ width: 32, height: 32, borderRadius: 8, border: pdfAccentColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)', background: p.color, cursor: 'pointer', transition: 'all 0.15s', boxShadow: pdfAccentColor === p.color ? `0 0 0 3px ${p.color}40` : 'none', transform: pdfAccentColor === p.color ? 'scale(1.15)' : 'scale(1)' }} />
                       ))}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <input type="color" value={uiPrimaryColor || EZNR_DEFAULTS.primaryColor} onChange={e => { setUiPrimaryColor(e.target.value); setDirty('company'); }}
-                        style={{ width: 36, height: 36, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
-                      />
-                      <code style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: 6 }}>
-                        {uiPrimaryColor || `${EZNR_DEFAULTS.primaryColor} (${lang === 'bs' ? 'zadano' : 'default'})`}
-                      </code>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-light)' }}>{lang === 'bs' ? 'Ili otvorite paletu boja:' : 'Or pick a color:'}</label>
+                      <input type="color" value={pdfAccentColor} onChange={e => { setPdfAccentColor(e.target.value); setDirty('company'); }} style={{ width: 32, height: 32, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }} />
+                      <code style={{ fontSize: '0.78rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '3px 8px', borderRadius: 6 }}>{pdfAccentColor}</code>
+                    </div>
+                  </div>
+
+                  {/* Logo Position & Size */}
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 6, display: 'block' }}>{lang === 'bs' ? 'ðŸ·ï¸ Logo â€“ pozicija i veliÄina' : 'ðŸ·ï¸ Logo Position & Size'}</label>
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                      {LOGO_POSITIONS.map(p => (
+                        <button key={p.id} title={p.label} onClick={() => { setLogoPosition(p.id); setDirty('company'); }}
+                          style={{ padding: '5px 14px', borderRadius: 8, fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer', border: logoPosition === p.id ? '2px solid var(--primary)' : '1px solid var(--border)', background: logoPosition === p.id ? 'var(--primary-glow)' : 'transparent', color: logoPosition === p.id ? 'var(--primary)' : 'var(--text-muted)' }}
+                        >{p.label}</button>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'VeliÄina:' : 'Size:'}</label>
+                      <input type="range" min={20} max={80} value={logoSize} onChange={e => { setLogoSize(+e.target.value); setDirty('company'); }} style={{ flex: 1, accentColor: 'var(--primary)' }} />
+                      <code style={{ fontSize: '0.75rem', color: 'var(--text-muted)', minWidth: 40 }}>{logoSize}px</code>
+                    </div>
+                  </div>
+
+                  {/* Header Text */}
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 6, display: 'block' }}>{lang === 'bs' ? 'âœï¸ Tekst zaglavlja' : 'âœï¸ Header Text'}</label>
+                    <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>{lang === 'bs' ? 'Opcionalni tekst ispod zaglavlja na svim PDF izvjeÅ¡tajima.' : 'Optional text below the header on all PDF reports.'}</p>
+                    <input type="text" value={headerText} onChange={e => { setHeaderText(e.target.value); setDirty('company'); }}
+                      placeholder={lang === 'bs' ? 'Npr. "ZaÅ¡tita na radu i poÅ¾aru"' : 'e.g. "Safety & Health Division"'}
+                      style={{ width: '100%', padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', fontSize: '0.85rem', marginBottom: 8 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <button title={lang === 'bs' ? 'Podebljano' : 'Bold'} onClick={() => { setHeaderBold(b => !b); setDirty('company'); }}
+                        style={{ padding: '4px 10px', borderRadius: 6, border: headerBold ? '2px solid var(--primary)' : '1px solid var(--border)', background: headerBold ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontWeight: 900, fontSize: '0.85rem', color: 'var(--text)' }}>B</button>
+                      <button title={lang === 'bs' ? 'Kurziv' : 'Italic'} onClick={() => { setHeaderItalic(i => !i); setDirty('company'); }}
+                        style={{ padding: '4px 10px', borderRadius: 6, border: headerItalic ? '2px solid var(--primary)' : '1px solid var(--border)', background: headerItalic ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontStyle: 'italic', fontSize: '0.85rem', color: 'var(--text)' }}>I</button>
+                      <button title={lang === 'bs' ? 'Podcrtano' : 'Underline'} onClick={() => { setHeaderUnderline(u => !u); setDirty('company'); }}
+                        style={{ padding: '4px 10px', borderRadius: 6, border: headerUnderline ? '2px solid var(--primary)' : '1px solid var(--border)', background: headerUnderline ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', textDecoration: 'underline', fontSize: '0.85rem', color: 'var(--text)' }}>U</button>
+                      <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 2px' }} />
+                      <label title={lang === 'bs' ? 'VeliÄina fonta' : 'Font size'} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <span>Aa</span>
+                        <select value={headerFontSize} onChange={e => { setHeaderFontSize(+e.target.value); setDirty('company'); }}
+                          style={{ padding: '3px 6px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', fontSize: '0.8rem' }}>
+                          {[8,9,10,11,12,14,16,18,20,24].map(s => <option key={s} value={s}>{s}pt</option>)}
+                        </select>
+                      </label>
+                      <div style={{ width: 1, height: 20, background: 'var(--border)', margin: '0 2px' }} />
+                      <label title={lang === 'bs' ? 'Boja teksta' : 'Text color'} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        <span>A</span>
+                        <input type="color" value={headerColor} onChange={e => { setHeaderColor(e.target.value); setDirty('company'); }}
+                          style={{ width: 22, height: 22, border: '1px solid var(--border)', borderRadius: 4, cursor: 'pointer', padding: 1 }} />
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Watermark */}
+                  <div style={{ marginBottom: 18 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                      <label style={{ fontWeight: 600, fontSize: '0.82rem' }}>{lang === 'bs' ? 'ðŸ’§ Vodeni Å¾ig' : 'ðŸ’§ Watermark'}</label>
+                      <button onClick={() => { setWmEnabled(e => !e); setDirty('company'); }}
+                        style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', border: 'none', background: wmEnabled ? 'var(--primary)' : 'var(--border)', color: wmEnabled ? '#fff' : 'var(--text-muted)', transition: 'all 0.2s' }}>
+                        {wmEnabled ? (lang === 'bs' ? 'UkljuÄen' : 'ON') : (lang === 'bs' ? 'IskljuÄen' : 'OFF')}
+                      </button>
+                    </div>
+                    {wmEnabled && (<>
+                      <div style={{ marginBottom: 8, display: 'flex', gap: 6 }}>
+                        {[{id:'logo',lbl:'ðŸ–¼ï¸ Logo'},{id:'name',lbl:lang==='bs'?'ðŸ“ Naziv':'ðŸ“ Name'},{id:'both',lbl:lang==='bs'?'ðŸ“‹ Oboje':'ðŸ“‹ Both'}].map(o=>(
+                          <button key={o.id} onClick={()=>{setWmContent(o.id);setDirty('company');}}
+                            style={{padding:'4px 12px',borderRadius:8,fontSize:'0.75rem',fontWeight:600,cursor:'pointer',border:wmContent===o.id?'2px solid var(--primary)':'1px solid var(--border)',background:wmContent===o.id?'var(--primary-glow)':'transparent',color:wmContent===o.id?'var(--primary)':'var(--text-muted)'}}>{o.lbl}</button>
+                        ))}
+                      </div>
+                      <div style={{ marginBottom: 10 }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>{lang === 'bs' ? 'Pozicija:' : 'Position:'}</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 30px)', gap: 3, width: 'fit-content' }}>
+                          {WATERMARK_POSITIONS.map(pos => (
+                            <button key={pos.id} title={pos.id} onClick={()=>{setWmPosition(pos.id);setDirty('company');}}
+                              style={{ width: 30, height: 30, borderRadius: 6, fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', border: wmPosition === pos.id ? '2px solid var(--primary)' : '1px solid var(--border)', background: wmPosition === pos.id ? 'var(--primary)' : 'var(--bg-card)', color: wmPosition === pos.id ? '#fff' : 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pos.label}</button>
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'Transparentnost:' : 'Opacity:'}</label>
+                        <input type="range" min={1} max={30} value={wmOpacity} onChange={e=>{setWmOpacity(+e.target.value);setDirty('company');}} style={{flex:1,accentColor:'var(--primary)'}} />
+                        <code style={{fontSize:'0.75rem',color:'var(--text-muted)',minWidth:32}}>{wmOpacity}%</code>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'VeliÄina:' : 'Size:'}</label>
+                        <input type="range" min={80} max={500} value={wmSize} onChange={e=>{setWmSize(+e.target.value);setDirty('company');}} style={{flex:1,accentColor:'var(--primary)'}} />
+                        <code style={{fontSize:'0.75rem',color:'var(--text-muted)',minWidth:42}}>{wmSize}px</code>
+                      </div>
+                    </>)}
+                  </div>
+
+                  {/* Live PDF Preview */}
+                  <div>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>{lang === 'bs' ? 'ðŸ“º PDF Pregled uÅ¾ivo' : 'ðŸ“º Live PDF Preview'}</div>
+                    <div style={{ background: '#fff', border: '1px solid #d0d0d0', borderRadius: 10, padding: 14, position: 'relative', overflow: 'hidden', minHeight: 180, aspectRatio: '210/297', maxWidth: 320 }}>
+                      {/* Watermark layer */}
+                      {wmEnabled && (<div style={{
+                        position: 'absolute', pointerEvents: 'none', zIndex: 0, textAlign: 'center',
+                        top: wmPosition.includes('top')?'12%':wmPosition.includes('bottom')?'85%':'50%',
+                        left: wmPosition.includes('left')?'18%':wmPosition.includes('right')?'82%':'50%',
+                        transform: 'translate(-50%,-50%)', opacity: wmOpacity / 100,
+                      }}>
+                        {(wmContent==='logo'||wmContent==='both')&&companyData.logo&&<img src={companyData.logo} alt="" style={{maxWidth:wmSize*0.45,maxHeight:wmSize*0.28,objectFit:'contain',display:'block',margin:'0 auto 3px'}} />}
+                        {(wmContent==='name'||wmContent==='both')&&<div style={{fontSize:`${Math.max(5,Math.round(wmSize/22))}pt`,fontWeight:900,letterSpacing:1,textTransform:'uppercase',color:'#000'}}>{companyData.naziv||(lang==='bs'?'Naziv firme':'Company')}</div>}
+                      </div>)}
+                      {/* Header */}
+                      <div style={{display:'flex',justifyContent:logoPosition==='center'?'center':'space-between',alignItems:'flex-start',borderBottom:`2px solid ${pdfAccentColor}`,paddingBottom:5,marginBottom:5,position:'relative',zIndex:1}}>
+                        <div style={{textAlign:logoPosition==='center'?'center':'left'}}>
+                          {companyData.logo?<img src={companyData.logo} alt="" style={{height:logoSize*0.45,maxWidth:90,objectFit:'contain'}} />:<span style={{fontSize:'7pt',fontWeight:800,color:pdfAccentColor}}>{companyData.naziv||(lang==='bs'?'Naziv firme':'Company')}</span>}
+                          {companyData.logo&&companyData.naziv&&<div style={{fontSize:'3.5pt',color:'#555',fontWeight:600,marginTop:1}}>{companyData.naziv}</div>}
+                        </div>
+                        {logoPosition!=='center'&&<div style={{textAlign:'right',fontSize:'3.5pt',color:'#555'}}><div>{companyData.adresa||(lang==='bs'?'Adresa':'Address')}</div>{companyData.oib&&<div>JIB: {companyData.oib}</div>}</div>}
+                      </div>
+                      {headerText&&<div style={{fontSize:`${Math.max(4,headerFontSize*0.45)}pt`,fontWeight:headerBold?800:400,fontStyle:headerItalic?'italic':'normal',textDecoration:headerUnderline?'underline':'none',color:headerColor,marginBottom:3,position:'relative',zIndex:1}}>{headerText}</div>}
+                      <div style={{fontSize:'5pt',fontWeight:800,textTransform:'uppercase',letterSpacing:0.4,color:'#1a1a2e',position:'relative',zIndex:1}}>EVIDENCIJA RADNIKA</div>
+                      <div style={{fontSize:'3pt',color:'#888',marginBottom:5,position:'relative',zIndex:1}}>Preview Â· {new Date().toLocaleDateString('bs-BA')}</div>
+                      <div style={{position:'relative',zIndex:1}}>{[1,2,3,4].map(i=>(<div key={i} style={{display:'flex',gap:4,marginBottom:2}}><div style={{width:'25%',height:3,background:i===1?'#eee':'#f5f5f5',borderRadius:1}}/><div style={{width:'45%',height:3,background:i===1?'#eee':'#f5f5f5',borderRadius:1}}/><div style={{width:'30%',height:3,background:i===1?'#eee':'#f5f5f5',borderRadius:1}}/></div>))}</div>
+                      <div style={{position:'absolute',bottom:8,left:14,right:14,borderTop:'1px solid #e0e0e0',paddingTop:3,display:'flex',justifyContent:'space-between',fontSize:'3pt',color:'#aaa',zIndex:1}}><span>{companyData.naziv||''}</span><span>{new Date().toLocaleDateString('bs-BA')}</span></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* â•â•â• UI BRANDING â•â•â• */}
+                <div style={{ padding: 20, borderRadius: 'var(--radius-lg)', background: 'var(--bg-input)', border: '1px solid var(--border)', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <span style={{ fontSize: '1rem' }}>ðŸ–¥ï¸</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{lang === 'bs' ? 'Branding aplikacije' : 'App Branding'}</span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: '#fff', marginLeft: 4 }}>ENTERPRISE</span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16 }}>{lang === 'bs' ? 'Prilagodite primarnu boju aplikacije i boju boÄne trake. Promjene se odmah primjenjuju za sve korisnike ove firme.' : 'Customize the app primary color and sidebar color. Changes apply immediately for all users in this company.'}</p>
+
+                  {/* Primary Color */}
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 8, display: 'block' }}>{lang === 'bs' ? 'ðŸŽ¯ Primarna boja (gumbi, akcenti, linkovi)' : 'ðŸŽ¯ Primary color (buttons, accents, links)'}</label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      <button title={lang==='bs'?'Zadano (eZNR Teal)':'Default (eZNR Teal)'} onClick={()=>{setUiPrimaryColor('');setDirty('company');}}
+                        style={{width:32,height:32,borderRadius:8,border:!uiPrimaryColor?'3px solid var(--text)':'2px solid var(--border)',background:'linear-gradient(135deg,#ccc,#eee)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.7rem',fontWeight:800,color:'#888',transform:!uiPrimaryColor?'scale(1.15)':'scale(1)'}}>â†º</button>
+                      {ACCENT_PRESETS.map(p=>(<button key={`ui-${p.color}`} title={p.name} onClick={()=>{setUiPrimaryColor(p.color);setDirty('company');}}
+                        style={{width:32,height:32,borderRadius:8,border:uiPrimaryColor===p.color?'3px solid var(--text)':'2px solid var(--border)',background:p.color,cursor:'pointer',transition:'all 0.15s',boxShadow:uiPrimaryColor===p.color?`0 0 0 3px ${p.color}40`:'none',transform:uiPrimaryColor===p.color?'scale(1.15)':'scale(1)'}} />))}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-light)' }}>{lang === 'bs' ? 'Ili otvorite paletu boja:' : 'Or pick a color:'}</label>
+                      <input type="color" value={uiPrimaryColor || EZNR_DEFAULTS.primaryColor} onChange={e=>{setUiPrimaryColor(e.target.value);setDirty('company');}} style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',padding:2}} />
+                      <code style={{fontSize:'0.78rem',color:'var(--text-muted)',background:'var(--bg-card)',padding:'3px 8px',borderRadius:6}}>{uiPrimaryColor || `${EZNR_DEFAULTS.primaryColor} (${lang==='bs'?'zadano':'default'})`}</code>
                     </div>
                   </div>
 
                   {/* Sidebar Color */}
                   <div style={{ marginBottom: 18 }}>
-                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 8, display: 'block' }}>
-                      {lang === 'bs' ? '📐 Boja bočne trake' : '📐 Sidebar color'}
-                    </label>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 8, display: 'block' }}>{lang === 'bs' ? 'ðŸ“ Boja boÄne trake' : 'ðŸ“ Sidebar color'}</label>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                      <button
-                        title={lang === 'bs' ? 'Zadano (eZNR Navy)' : 'Default (eZNR Navy)'}
-                        onClick={() => { setUiSidebarColor(''); setDirty('company'); }}
-                        style={{
-                          width: 36, height: 36, borderRadius: 10,
-                          border: !uiSidebarColor ? '3px solid var(--text)' : '2px solid var(--border)',
-                          background: `linear-gradient(135deg, #ccc, #eee)`, cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '0.7rem', fontWeight: 800, color: '#888',
-                          transform: !uiSidebarColor ? 'scale(1.15)' : 'scale(1)',
-                        }}
-                      >↺</button>
-                      {SIDEBAR_PRESETS.map(p => (
-                        <button key={`sb-${p.color}`}
-                          title={p.name}
-                          onClick={() => { setUiSidebarColor(p.color); setDirty('company'); }}
-                          style={{
-                            width: 36, height: 36, borderRadius: 10,
-                            border: uiSidebarColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)',
-                            background: p.color, cursor: 'pointer', transition: 'all 0.15s',
-                            boxShadow: uiSidebarColor === p.color ? `0 0 0 3px ${p.color}40` : 'none',
-                            transform: uiSidebarColor === p.color ? 'scale(1.15)' : 'scale(1)',
-                          }}
-                        />
-                      ))}
+                      <button title={lang==='bs'?'Zadano (eZNR Navy)':'Default (eZNR Navy)'} onClick={()=>{setUiSidebarColor('');setDirty('company');}}
+                        style={{width:32,height:32,borderRadius:8,border:!uiSidebarColor?'3px solid var(--text)':'2px solid var(--border)',background:'linear-gradient(135deg,#ccc,#eee)',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.7rem',fontWeight:800,color:'#888',transform:!uiSidebarColor?'scale(1.15)':'scale(1)'}}>â†º</button>
+                      {SIDEBAR_PRESETS.map(p=>(<button key={`sb-${p.color}`} title={p.name} onClick={()=>{setUiSidebarColor(p.color);setDirty('company');}}
+                        style={{width:32,height:32,borderRadius:8,border:uiSidebarColor===p.color?'3px solid var(--text)':'2px solid var(--border)',background:p.color,cursor:'pointer',transition:'all 0.15s',boxShadow:uiSidebarColor===p.color?`0 0 0 3px ${p.color}40`:'none',transform:uiSidebarColor===p.color?'scale(1.15)':'scale(1)'}} />))}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <input type="color" value={uiSidebarColor || EZNR_DEFAULTS.sidebarColor} onChange={e => { setUiSidebarColor(e.target.value); setDirty('company'); }}
-                        style={{ width: 36, height: 36, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
-                      />
-                      <code style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: 6 }}>
-                        {uiSidebarColor || `${EZNR_DEFAULTS.sidebarColor} (${lang === 'bs' ? 'zadano' : 'default'})`}
-                      </code>
+                      <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-light)' }}>{lang === 'bs' ? 'Ili otvorite paletu boja:' : 'Or pick a color:'}</label>
+                      <input type="color" value={uiSidebarColor || EZNR_DEFAULTS.sidebarColor} onChange={e=>{setUiSidebarColor(e.target.value);setDirty('company');}} style={{width:32,height:32,border:'1px solid var(--border)',borderRadius:8,cursor:'pointer',padding:2}} />
+                      <code style={{fontSize:'0.78rem',color:'var(--text-muted)',background:'var(--bg-card)',padding:'3px 8px',borderRadius:6}}>{uiSidebarColor || `${EZNR_DEFAULTS.sidebarColor} (${lang==='bs'?'zadano':'default'})`}</code>
                     </div>
                   </div>
 
-                  {/* Live Preview */}
-                  <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
-                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10 }}>
-                      {lang === 'bs' ? '📺 Pregled uživo' : '📺 Live Preview'}
+                  {/* Sidebar Logo & Text */}
+                  <div style={{ marginBottom: 18, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10, display: 'block' }}>{lang === 'bs' ? 'ðŸ–¼ï¸ Logo i tekst u boÄnoj traci' : 'ðŸ–¼ï¸ Sidebar Logo & Text'}</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                      <button onClick={()=>{setSidebarLogoEnabled(e=>!e);setDirty('company');}}
+                        style={{width:44,height:24,borderRadius:12,border:'none',cursor:'pointer',position:'relative',background:sidebarLogoEnabled?'var(--primary)':'var(--border)',transition:'background 0.2s'}}>
+                        <div style={{width:18,height:18,borderRadius:'50%',background:'#fff',position:'absolute',top:3,left:sidebarLogoEnabled?23:3,transition:'left 0.2s',boxShadow:'0 1px 3px rgba(0,0,0,0.2)'}} />
+                      </button>
+                      <span style={{ fontSize: '0.82rem', color: 'var(--text)' }}>{lang === 'bs' ? 'Koristi logo firme u boÄnoj traci' : 'Use company logo in sidebar'}</span>
                     </div>
-                    <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', height: 80, border: '1px solid var(--border)' }}>
-                      {/* Mini sidebar */}
-                      <div style={{ width: 60, background: uiSidebarColor || EZNR_DEFAULTS.sidebarColor, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0', gap: 6 }}>
-                        <div style={{ width: 28, height: 28, borderRadius: 8, background: (uiPrimaryColor || EZNR_DEFAULTS.primaryColor) + '25', border: `1px solid ${uiPrimaryColor || EZNR_DEFAULTS.primaryColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: '#fff' }}>📊</div>
-                        <div style={{ width: 28, height: 4, borderRadius: 2, background: '#ffffff20' }} />
-                        <div style={{ width: 28, height: 4, borderRadius: 2, background: '#ffffff20' }} />
-                        <div style={{ width: 28, height: 4, borderRadius: 2, background: '#ffffff20' }} />
+                    {!companyData.logo && sidebarLogoEnabled && <div style={{fontSize:'0.75rem',color:'var(--danger)',fontWeight:600,marginBottom:8,padding:'6px 12px',borderRadius:8,background:'rgba(220,53,69,0.08)',border:'1px solid rgba(220,53,69,0.15)'}}>âš ï¸ {lang==='bs'?'Potrebno je prvo postaviti logo firme iznad.':'Upload a company logo first above.'}</div>}
+                    <div>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>{lang === 'bs' ? 'Tekst ispod loga (prazno = sakriveno):' : 'Text below logo (empty = hidden):'}</label>
+                      <input type="text" value={sidebarText} onChange={e=>{setSidebarText(e.target.value);setDirty('company');}}
+                        placeholder={lang==='bs'?'Npr. zastitanaradu.ba':'e.g. yourdomain.com'}
+                        style={{width:'100%',maxWidth:300,padding:'8px 12px',borderRadius:8,border:'1px solid var(--border)',background:'var(--bg-card)',color:'var(--text)',fontSize:'0.82rem'}} />
+                    </div>
+                  </div>
+
+                  {/* Live UI Preview */}
+                  <div style={{ padding: 14, borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 8 }}>{lang === 'bs' ? 'ðŸ“º Pregled uÅ¾ivo' : 'ðŸ“º Live Preview'}</div>
+                    <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', height: 88, border: '1px solid var(--border)' }}>
+                      <div style={{ width: 62, background: uiSidebarColor || EZNR_DEFAULTS.sidebarColor, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '6px 0', gap: 3 }}>
+                        {sidebarLogoEnabled&&companyData.logo
+                          ?<img src={companyData.logo} alt="" style={{width:26,height:26,borderRadius:6,objectFit:'contain',background:'#fff',padding:2}} />
+                          :<div style={{width:26,height:26,borderRadius:8,background:(uiPrimaryColor||EZNR_DEFAULTS.primaryColor)+'25',border:`1px solid ${uiPrimaryColor||EZNR_DEFAULTS.primaryColor}40`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'0.5rem',color:'#fff'}}>ðŸ“Š</div>}
+                        {sidebarText&&<div style={{fontSize:'2.5pt',color:'#ffffff60',textAlign:'center',lineHeight:1,maxWidth:50,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{sidebarText}</div>}
+                        <div style={{width:26,height:3,borderRadius:2,background:'#ffffff20'}} />
+                        <div style={{width:26,height:3,borderRadius:2,background:'#ffffff20'}} />
+                        <div style={{width:26,height:3,borderRadius:2,background:'#ffffff20'}} />
                       </div>
-                      {/* Mini content */}
-                      <div style={{ flex: 1, background: 'var(--bg-page)', padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ flex: 1, background: 'var(--bg-page)', padding: 10, display: 'flex', flexDirection: 'column', gap: 5 }}>
                         <div style={{ display: 'flex', gap: 6 }}>
-                          <div style={{ padding: '3px 10px', borderRadius: 5, background: uiPrimaryColor || EZNR_DEFAULTS.primaryColor, color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>+ {lang === 'bs' ? 'Dodaj' : 'Add'}</div>
-                          <div style={{ padding: '3px 10px', borderRadius: 5, background: (uiPrimaryColor || EZNR_DEFAULTS.primaryColor) + '15', color: uiPrimaryColor || EZNR_DEFAULTS.primaryColor, fontSize: '0.6rem', fontWeight: 600, border: `1px solid ${(uiPrimaryColor || EZNR_DEFAULTS.primaryColor)}30` }}>📄 PDF</div>
+                          <div style={{padding:'3px 10px',borderRadius:5,background:uiPrimaryColor||EZNR_DEFAULTS.primaryColor,color:'#fff',fontSize:'0.6rem',fontWeight:700}}>+ {lang==='bs'?'Dodaj':'Add'}</div>
+                          <div style={{padding:'3px 10px',borderRadius:5,background:(uiPrimaryColor||EZNR_DEFAULTS.primaryColor)+'15',color:uiPrimaryColor||EZNR_DEFAULTS.primaryColor,fontSize:'0.6rem',fontWeight:600,border:`1px solid ${(uiPrimaryColor||EZNR_DEFAULTS.primaryColor)}30`}}>ðŸ“„ PDF</div>
                         </div>
-                        <div style={{ height: 4, borderRadius: 2, background: 'var(--border)', width: '80%' }} />
-                        <div style={{ height: 4, borderRadius: 2, background: 'var(--border)', width: '60%' }} />
+                        <div style={{height:3,borderRadius:2,background:'var(--border)',width:'80%'}} />
+                        <div style={{height:3,borderRadius:2,background:'var(--border)',width:'60%'}} />
                       </div>
                     </div>
                   </div>
 
-                  {/* Reset button */}
-                  {(uiPrimaryColor || uiSidebarColor) && (
-                    <button
-                      onClick={() => { setUiPrimaryColor(''); setUiSidebarColor(''); setDirty('company'); }}
-                      style={{ marginTop: 14, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
-                    >
-                      ↺ {lang === 'bs' ? 'Vrati na eZNR zadane boje' : 'Reset to eZNR defaults'}
+                  {(uiPrimaryColor||uiSidebarColor||sidebarLogoEnabled)&&(
+                    <button onClick={()=>{setUiPrimaryColor('');setUiSidebarColor('');setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setDirty('company');}}
+                      style={{marginTop:14,padding:'8px 16px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text-muted)',cursor:'pointer',fontSize:'0.8rem',fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+                      â†º {lang==='bs'?'Vrati na eZNR zadane boje':'Reset to eZNR defaults'}
                     </button>
                   )}
                 </div>
+
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Spremi branding i firmu' : 'Save branding & company'}</button>
