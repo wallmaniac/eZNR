@@ -22,33 +22,45 @@ const SHARED_CSS = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Segoe UI', Arial, Helvetica, sans-serif; font-size: 9pt; color: #1a1a2e; background: #fff; }
 
-  .page { width: 100%; padding: 12mm 14mm; }
+  .page { width: 100%; padding: 12mm 14mm; position: relative; }
+
+  /* Watermark behind content */
+  .watermark {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.045;
+    text-align: center;
+  }
+  .watermark img { max-width: 280px; max-height: 160px; object-fit: contain; display: block; margin: 0 auto 12px; }
+  .watermark .wm-name { font-size: 28pt; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #000; }
 
   /* Header bar */
-  .report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid var(--accent); padding-bottom: 12px; margin-bottom: 16px; }
+  .report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid var(--accent); padding-bottom: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
   .report-header .brand { display: flex; align-items: center; gap: 10px; }
   .report-header .brand-logo { height: 40px; max-width: 160px; object-fit: contain; }
-  .report-header .brand-name { font-size: 16pt; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
-  .report-header .brand-sub { font-size: 7pt; color: #888; margin-top: 2px; }
+  .report-header .brand-name { font-size: 14pt; font-weight: 800; color: var(--accent); letter-spacing: -0.3px; }
   .report-header .company-info { text-align: right; font-size: 8pt; color: #555; line-height: 1.5; }
   .report-header .company-name { font-size: 10pt; font-weight: 700; color: #1a1a2e; }
 
   /* Report title */
-  .report-title { font-size: 13pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #1a1a2e; margin-bottom: 4px; }
-  .report-subtitle { font-size: 8pt; color: #888; margin-bottom: 16px; }
+  .report-title { font-size: 13pt; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #1a1a2e; margin-bottom: 4px; position: relative; z-index: 1; }
+  .report-subtitle { font-size: 8pt; color: #888; margin-bottom: 16px; position: relative; z-index: 1; }
 
   /* Stat boxes */
-  .stat-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-  .stat-box { flex: 1; min-width: 100px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; text-align: center; }
+  .stat-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; position: relative; z-index: 1; }
+  .stat-box { flex: 1; min-width: 100px; border: 1px solid #e0e0e0; border-radius: 6px; padding: 8px 10px; text-align: center; background: #fff; }
   .stat-box .stat-val { font-size: 16pt; font-weight: 800; }
   .stat-box .stat-lbl { font-size: 7pt; text-transform: uppercase; color: #888; letter-spacing: 0.5px; margin-top: 2px; }
 
   /* Tables */
-  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 16px; position: relative; z-index: 1; }
   th { background: #f5f6fa; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #555; padding: 7px 8px; text-align: left; border-bottom: 2px solid #e0e0e0; }
-  td { padding: 6px 8px; border-bottom: 1px solid #eee; font-size: 8.5pt; vertical-align: top; }
+  td { padding: 6px 8px; border-bottom: 1px solid #eee; font-size: 8.5pt; vertical-align: top; background: #fff; }
   tr:last-child td { border-bottom: 1px solid #ccc; }
-  tbody tr:nth-child(even) { background: #fafbfd; }
+  tbody tr:nth-child(even) td { background: #fafbfd; }
 
   /* Status badges */
   .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 7pt; font-weight: 700; letter-spacing: 0.3px; }
@@ -58,7 +70,7 @@ const SHARED_CSS = `
   .badge-neutral { background: #f5f5f5; color: #666; }
 
   /* Footer */
-  .report-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 7pt; color: #aaa; }
+  .report-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 7pt; color: #aaa; position: relative; z-index: 1; }
 
   /* Print button */
   .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 11pt; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 999; display: flex; align-items: center; gap: 8px; }
@@ -73,6 +85,7 @@ const SHARED_CSS = `
     table { page-break-inside: auto; }
     tr { page-break-inside: avoid; }
     thead { display: table-header-group; }
+    .watermark { position: fixed; }
   }
 `;
 
@@ -117,21 +130,23 @@ function statusBadge(days, bs) {
 
 // ─── Build the branded header ────────────────────────────────────────────────
 function buildHeader(title, subtitle, company) {
+  const companyName = company.naziv || company.name || '';
   const logoHtml = company.logo
-    ? `<img class="brand-logo" src="${company.logo}" alt="${company.naziv || 'Logo'}" />`
-    : `<span class="brand-name">eZNR</span>`;
+    ? `<img class="brand-logo" src="${company.logo}" alt="${companyName}" />`
+    : (companyName ? `<span class="brand-name">${companyName}</span>` : '');
   return `
     <div class="report-header">
       <div>
         <div class="brand">
           ${logoHtml}
         </div>
-        <div class="brand-sub">Digitalna Platforma za Zaštitu na Radu</div>
+        ${company.logo && companyName ? `<div style="font-size:8pt;font-weight:600;color:#555;margin-top:3px">${companyName}</div>` : ''}
       </div>
       <div class="company-info">
-        <div class="company-name">${company.naziv || company.name || ''}</div>
         ${company.adresa || company.address ? `<div>${company.adresa || company.address}</div>` : ''}
+        ${company.mjesto ? `<div>${company.mjesto}${company.postanskiBroj ? ` ${company.postanskiBroj}` : ''}</div>` : ''}
         ${company.jib || company.oib || company.id_number ? `<div>JIB: ${company.jib || company.oib || company.id_number}</div>` : ''}
+        ${company.telefon ? `<div>Tel: ${company.telefon}</div>` : ''}
       </div>
     </div>
     <div class="report-title">${title}</div>
@@ -140,10 +155,11 @@ function buildHeader(title, subtitle, company) {
 }
 
 // ─── Build footer ────────────────────────────────────────────────────────────
-function buildFooter(bs) {
+function buildFooter(bs, company) {
+  const companyName = company?.naziv || company?.name || '';
   return `
     <div class="report-footer">
-      <span>${bs ? 'Generisano putem' : 'Generated via'} eZNR · zastitanaradu.ba</span>
+      <span>${companyName}</span>
       <span>${new Date().toLocaleDateString('bs-BA')} · ${new Date().toLocaleTimeString('bs-BA', { hour: '2-digit', minute: '2-digit' })}</span>
     </div>
   `;
@@ -162,19 +178,27 @@ function openPrintWindow(html, title) {
 }
 
 // ─── Wrap content in full HTML document ──────────────────────────────────────
-function wrapDocument(content, title, landscape = false, bs = true, accentColor = EZNR_DEFAULTS.accentColor) {
+function wrapDocument(content, title, landscape = false, bs = true, accentColor = EZNR_DEFAULTS.accentColor, company = {}) {
   const accentVar = `--accent: ${accentColor};`;
+  const companyName = company.naziv || company.name || '';
+  const watermarkHtml = company.logo || companyName ? `
+    <div class="watermark">
+      ${company.logo ? `<img src="${company.logo}" alt="" />` : ''}
+      ${companyName ? `<div class="wm-name">${companyName}</div>` : ''}
+    </div>
+  ` : '';
   return `<!DOCTYPE html>
 <html lang="${bs ? 'bs' : 'en'}">
 <head>
   <meta charset="UTF-8"/>
-  <title>${title} — eZNR</title>
+  <title>${title} — ${companyName || 'Report'}</title>
   <style>
     :root { ${accentVar} }
     ${landscape ? SHARED_CSS_LANDSCAPE : SHARED_CSS}
   </style>
 </head>
 <body>
+  ${watermarkHtml}
   <div class="page">
     ${content}
   </div>
@@ -255,9 +279,9 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs);
+  html += buildFooter(bs, company);
 
-  const doc = wrapDocument(html, title, false, bs, company.accentColor);
+  const doc = wrapDocument(html, title, false, bs, company.accentColor, company);
   openPrintWindow(doc, title);
 }
 
@@ -324,9 +348,9 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs);
+  html += buildFooter(bs, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
 }
 
 /**
@@ -377,9 +401,9 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs);
+  html += buildFooter(bs, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
 }
 
 /**
@@ -430,9 +454,9 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs);
+  html += buildFooter(bs, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
 }
 
 /**
@@ -481,9 +505,9 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs);
+  html += buildFooter(bs, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
 }
 
 /**
@@ -545,7 +569,7 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
   });
 
   html += '</tbody></table>';
-  html += buildFooter(bs);
+  html += buildFooter(bs, company);
 
-  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
 }

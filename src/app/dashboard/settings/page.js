@@ -709,8 +709,15 @@ export default function SettingsPage() {
                           }
                           setLogoError('');
                           try {
-                            const url = await uploadSecureFile(activeCompanyId, 'company_logo', file);
-                            setCompanyData(p => ({ ...p, logo: url }));
+                            // Convert to base64 data URL (bypasses Firebase Storage permissions)
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                              setCompanyData(p => ({ ...p, logo: reader.result }));
+                            };
+                            reader.onerror = () => {
+                              setLogoError(lang === 'bs' ? 'Greška pri čitanju fajla' : 'Error reading file');
+                            };
+                            reader.readAsDataURL(file);
                           } catch (err) {
                             setLogoError(lang === 'bs' ? 'Greška pri uploadu loga' : 'Error uploading logo');
                           }
@@ -737,7 +744,11 @@ export default function SettingsPage() {
                 {/* ══ BRANDING SECTION ══ */}
                 <hr style={{ margin: '28px 0', border: 'none', borderTop: '2px solid var(--border)' }} />
                 <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <span style={{ fontSize: '1.3rem', background: 'linear-gradient(135deg, var(--primary), #7C4DFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>🎨</span>
+                  <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="url(#brand-grad)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <defs><linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stopColor="var(--primary)" /><stop offset="100%" stopColor="#7C4DFF" /></linearGradient></defs>
+                    <circle cx="13.5" cy="6.5" r=".5" fill="#FF5252"/><circle cx="17.5" cy="10.5" r=".5" fill="#FFAB40"/><circle cx="8.5" cy="7.5" r=".5" fill="#69F0AE"/><circle cx="6.5" cy="12" r=".5" fill="#448AFF"/>
+                    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.1-.7-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/>
+                  </svg>
                   {lang === 'bs' ? 'Branding kompanije' : 'Company Branding'}
                 </h3>
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 20 }}>
@@ -784,13 +795,13 @@ export default function SettingsPage() {
                       <div>
                         {companyData.logo
                           ? <img src={companyData.logo} alt="" style={{ height: 24, maxWidth: 100, objectFit: 'contain' }} />
-                          : <span style={{ fontSize: '11pt', fontWeight: 900, color: pdfAccentColor }}>eZNR</span>
+                          : <span style={{ fontSize: '10pt', fontWeight: 800, color: pdfAccentColor }}>{companyData.naziv || (lang === 'bs' ? 'Naziv firme' : 'Company Name')}</span>
                         }
-                        <div style={{ fontSize: '5pt', color: '#888' }}>Digitalna Platforma za ZNR</div>
+                        {companyData.logo && <div style={{ fontSize: '5pt', color: '#555', fontWeight: 600, marginTop: 2 }}>{companyData.naziv || ''}</div>}
                       </div>
                       <div style={{ textAlign: 'right', fontSize: '6pt', color: '#555' }}>
-                        <div style={{ fontWeight: 700, fontSize: '7pt' }}>{companyData.naziv || 'Naziv firme'}</div>
-                        <div>{companyData.adresa || 'Adresa'}</div>
+                        <div>{companyData.adresa || (lang === 'bs' ? 'Adresa' : 'Address')}</div>
+                        {companyData.oib && <div>JIB: {companyData.oib}</div>}
                       </div>
                     </div>
                     <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2, color: '#1a1a2e' }}>EVIDENCIJA RADNIKA</div>
