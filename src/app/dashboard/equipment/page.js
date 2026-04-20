@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
+import PDFExportButton from '@/components/PDFExportButton';
+import { generateEquipmentReport } from '@/lib/pdfReportGenerator';
 
 const emptyEQ = {
     naziv: '', vrsta: '', tip: '', tvBroj: '', invBroj: '',
@@ -637,6 +639,10 @@ function EquipmentPageInner() {
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+                        <PDFExportButton options={[
+                            { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport([], lang) },
+                            ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport([...selectedIds], lang) }] : []),
+                        ]} />
                         <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedEquipment); setShowPrintModal(true); }}>🖨️ {lang === 'bs' ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                         <SavedFlash />
                         <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>

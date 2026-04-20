@@ -8,6 +8,8 @@ import { logPPEAssigned } from '@/lib/activityLog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
+import PDFExportButton from '@/components/PDFExportButton';
+import { generatePPEReport } from '@/lib/pdfReportGenerator';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
@@ -101,6 +103,10 @@ export default function WorkerPPEPage() {
             <button className="btn btn-primary btn-sm" onClick={openModal}>
               + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
             </button>
+            <PDFExportButton options={[
+                { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport([], lang) },
+                ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport([...selectedIds], lang) }] : []),
+            ]} />
             <SavedFlash />
             <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>

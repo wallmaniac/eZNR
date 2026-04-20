@@ -12,6 +12,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
 import PrintPortal from '@/components/PrintPortal';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import PDFExportButton from '@/components/PDFExportButton';
+import { generateFleetReport } from '@/lib/pdfReportGenerator';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
 import VehicleTravelOrdersTab from './VehicleTravelOrdersTab';
@@ -508,6 +510,10 @@ function FleetInner() {
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" onClick={openNew}>+ {bs ? 'Novo vozilo' : 'New Vehicle'}</button>
+                            <PDFExportButton options={[
+                                { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚗', onClick: () => generateFleetReport([], lang) },
+                                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport([...selectedIds], lang) }] : []),
+                            ]} />
                             <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sorted); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                             <SavedFlash />
                             <input className="form-input" style={{ maxWidth: 280 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />

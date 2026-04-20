@@ -10,6 +10,8 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import PDFExportButton from '@/components/PDFExportButton';
+import { generateFireProtectionReport } from '@/lib/pdfReportGenerator';
 
 // ── Fire Extinguisher ──
 const EMPTY_EXT = {
@@ -392,6 +394,10 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewExt}>+ {bs ? 'Novi aparat' : 'New Extinguisher'}</button>
+                                <PDFExportButton options={[
+                                    { label: bs ? 'Svi PP aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport([], lang) },
+                                    ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport([...extSelectedIds], lang) }] : []),
+                                ]} />
                                 <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
                                 <SavedFlash />
                                 <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)} />

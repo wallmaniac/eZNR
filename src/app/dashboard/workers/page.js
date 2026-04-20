@@ -13,6 +13,8 @@ import {
 import { uploadSecureFile } from '@/lib/storageService';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import PDFExportButton from '@/components/PDFExportButton';
+import { generateWorkersReport, generateCertificatesReport } from '@/lib/pdfReportGenerator';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
@@ -1591,6 +1593,11 @@ function WorkersPageInner() {
                             <button className="btn btn-primary btn-sm" onClick={handleNew}>
                                 + {t('add')}
                             </button>
+                            <PDFExportButton options={[
+                                { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport([], lang) },
+                                ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport([...selectedIds], lang) }] : []),
+                                { label: lang === 'bs' ? 'Pregled uvjerenja' : 'Certificate report', icon: '📋', onClick: () => generateCertificatesReport([], lang) },
+                            ]} />
                             <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
                                 <input
                                     placeholder={t('searchBtn') + '...'}
