@@ -290,15 +290,15 @@ export function resetUIBranding() {
  */
 export function getWatermarkCSS(position) {
   const map = {
-    'top-left':      { top: '8%',  left: '15%', transform: 'translate(-50%,-50%)' },
-    'top-center':    { top: '8%',  left: '50%', transform: 'translate(-50%,-50%)' },
-    'top-right':     { top: '8%',  left: '85%', transform: 'translate(-50%,-50%)' },
-    'center-left':   { top: '50%', left: '15%', transform: 'translate(-50%,-50%)' },
-    'center':        { top: '50%', left: '50%', transform: 'translate(-50%,-50%)' },
-    'center-right':  { top: '50%', left: '85%', transform: 'translate(-50%,-50%)' },
-    'bottom-left':   { top: '88%', left: '15%', transform: 'translate(-50%,-50%)' },
-    'bottom-center': { top: '88%', left: '50%', transform: 'translate(-50%,-50%)' },
-    'bottom-right':  { top: '88%', left: '85%', transform: 'translate(-50%,-50%)' },
+    'top-left':      { ai: 'flex-start', jc: 'flex-start', ta: 'left' },
+    'top-center':    { ai: 'flex-start', jc: 'center', ta: 'center' },
+    'top-right':     { ai: 'flex-start', jc: 'flex-end', ta: 'right' },
+    'center-left':   { ai: 'center', jc: 'flex-start', ta: 'left' },
+    'center':        { ai: 'center', jc: 'center', ta: 'center' },
+    'center-right':  { ai: 'center', jc: 'flex-end', ta: 'right' },
+    'bottom-left':   { ai: 'flex-end', jc: 'flex-start', ta: 'left' },
+    'bottom-center': { ai: 'flex-end', jc: 'center', ta: 'center' },
+    'bottom-right':  { ai: 'flex-end', jc: 'flex-end', ta: 'right' },
   };
   return map[position] || map['center'];
 }

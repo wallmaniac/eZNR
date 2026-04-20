@@ -25,16 +25,20 @@ const SHARED_CSS = `
   .page { width: 100%; padding: 12mm 14mm; position: relative; }
 
   /* Watermark behind content */
-  .watermark {
+  .watermark-container {
     position: fixed;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    top: 0; left: 0; right: 0; bottom: 0;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.045;
-    text-align: center;
+    display: flex;
+    padding: 10mm;
   }
-  .watermark img { max-width: 280px; max-height: 160px; object-fit: contain; display: block; margin: 0 auto 12px; }
+  .watermark {
+    opacity: 0.045;
+    display: flex;
+    flex-direction: column;
+  }
+  .watermark img { max-width: 280px; max-height: 160px; object-fit: contain; display: block; margin-bottom: 12px; }
   .watermark .wm-name { font-size: 28pt; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #000; }
 
   /* Header bar */
@@ -229,10 +233,14 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
   if (wmEnabled && (company.logo || companyName)) {
     const showLogo = wmContent === 'logo' || wmContent === 'both';
     const showName = wmContent === 'name' || wmContent === 'both';
+    // Calculate margin auto overrides based on ta
+    const imgMargin = wmPos.ta === 'center' ? '0 auto 12px' : wmPos.ta === 'left' ? '0 auto 12px 0' : '0 0 12px auto';
     watermarkHtml = `
-    <div class="watermark" style="top:${wmPos.top};left:${wmPos.left};transform:${wmPos.transform};opacity:${wmOpacity}">
-      ${showLogo && company.logo ? `<img src="${company.logo}" alt="" style="max-width:${wmSize}px;max-height:${Math.round(wmSize * 0.6)}px" />` : ''}
-      ${showName && companyName ? `<div class="wm-name" style="font-size:${Math.round(wmSize / 10)}pt">${companyName}</div>` : ''}
+    <div class="watermark-container" style="align-items:${wmPos.ai};justify-content:${wmPos.jc};">
+      <div class="watermark" style="opacity:${wmOpacity};text-align:${wmPos.ta};align-items:${wmPos.ai};">
+        ${showLogo && company.logo ? `<img src="${company.logo}" alt="" style="max-width:${wmSize}px;max-height:${Math.round(wmSize * 0.6)}px;margin:${imgMargin}" />` : ''}
+        ${showName && companyName ? `<div class="wm-name" style="font-size:${Math.round(wmSize / 10)}pt">${companyName}</div>` : ''}
+      </div>
     </div>`;
   }
 

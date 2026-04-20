@@ -153,10 +153,26 @@ export default function SettingsPage() {
       }
       // Load branding
       const pdfBrand = getCompanyBranding(activeCompanyId);
-      setPdfAccentColor(pdfBrand.accentColor || EZNR_DEFAULTS.accentColor);
+      setPdfAccentColor(pdfBrand.accentColor);
+      setWmEnabled(pdfBrand.watermarkEnabled);
+      setWmPosition(pdfBrand.watermarkPosition);
+      setWmOpacity(pdfBrand.watermarkOpacity);
+      setWmSize(pdfBrand.watermarkSize);
+      setWmContent(pdfBrand.watermarkContent);
+      setLogoPosition(pdfBrand.logoPosition);
+      setLogoSize(pdfBrand.logoSize);
+      setHeaderText(pdfBrand.headerText);
+      setHeaderFontSize(pdfBrand.headerFontSize);
+      setHeaderBold(pdfBrand.headerBold);
+      setHeaderItalic(pdfBrand.headerItalic);
+      setHeaderUnderline(pdfBrand.headerUnderline);
+      setHeaderColor(pdfBrand.headerColor);
+
       const uiBrand = getUIBranding(activeCompanyId);
-      setUiPrimaryColor(uiBrand.primaryColor || '');
-      setUiSidebarColor(uiBrand.sidebarColor || '');
+      setUiPrimaryColor(uiBrand.primaryColor);
+      setUiSidebarColor(uiBrand.sidebarColor);
+      setSidebarLogoEnabled(uiBrand.sidebarLogoEnabled);
+      setSidebarText(uiBrand.sidebarText);
     }
   }, [activeCompanyId, isAdmin]);
 
@@ -271,10 +287,29 @@ export default function SettingsPage() {
 
   const handleSaveCompany = () => {
     if (!activeCompanyId) return;
-    update(COLLECTIONS.COMPANIES, activeCompanyId, companyData);
-    // Save branding
-    savePdfBranding(activeCompanyId, { accentColor: pdfAccentColor });
-    saveUIBranding(activeCompanyId, { primaryColor: uiPrimaryColor, sidebarColor: uiSidebarColor });
+    
+    // Save standard and branding structure back to the company
+    const currentBranding = companyData.branding || {};
+    const newBranding = {
+      pdf: { 
+        ...currentBranding.pdf, 
+        accentColor: pdfAccentColor,
+        watermark: {
+          enabled: wmEnabled, position: wmPosition, opacity: wmOpacity, size: wmSize, content: wmContent
+        },
+        logo: { position: logoPosition, size: logoSize },
+        headerText: { text: headerText, fontSize: headerFontSize, bold: headerBold, italic: headerItalic, underline: headerUnderline, color: headerColor }
+      },
+      ui: { 
+        ...currentBranding.ui, 
+        primaryColor: uiPrimaryColor, 
+        sidebarColor: uiSidebarColor,
+        sidebarLogoEnabled: sidebarLogoEnabled,
+        sidebarText: sidebarText
+      }
+    };
+    
+    update(COLLECTIONS.COMPANIES, activeCompanyId, { ...companyData, branding: newBranding });
     applyUIBranding(activeCompanyId);
     clearDirty(); showSaved();
   };
@@ -931,7 +966,7 @@ export default function SettingsPage() {
                           {/* Position grid */}
                           <div>
                             <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600 }}>{lang === 'bs' ? 'Pozicija:' : 'Position:'}</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,36px)', gap: 4 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', width: 120, gap: 4 }}>
                               {WATERMARK_POSITIONS.map(pos => (
                                 <button key={pos.id} title={pos.id}
                                   onClick={()=>{setWmPosition(pos.id);setDirty('company');}}
@@ -1012,6 +1047,19 @@ export default function SettingsPage() {
 
                   </div>{/* end pdf card body */}
                 </div>{/* end pdf card */}
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 30 }}>
+                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                  <button onClick={()=>{
+                    setPdfAccentColor(EZNR_DEFAULTS.accentColor);
+                    setWmEnabled(PDF_DEFAULTS.watermarkEnabled); setWmPosition(PDF_DEFAULTS.watermarkPosition); 
+                    setWmOpacity(PDF_DEFAULTS.watermarkOpacity); setWmSize(PDF_DEFAULTS.watermarkSize); setWmContent(PDF_DEFAULTS.watermarkContent);
+                    setLogoPosition(PDF_DEFAULTS.logoPosition); setLogoSize(PDF_DEFAULTS.logoSize);
+                    setHeaderText(''); setHeaderFontSize(PDF_DEFAULTS.headerFontSize); setHeaderBold(false); setHeaderItalic(false); setHeaderUnderline(false); setHeaderColor(PDF_DEFAULTS.headerColor);
+                    setDirty('company');
+                  }} style={{padding:'7px 16px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text-muted)',cursor:'pointer',fontSize:'0.8rem',fontWeight:600}}>⟲ {lang==='bs'?'Vrati zadane vrijednosti':'Reset to defaults'}</button>
+                </div>
+
 
                 {/* UI BRANDING CARD */}
                 <div style={{ borderRadius: 16, background: 'var(--bg-input)', border: '1px solid var(--border)', overflow: 'hidden', marginBottom: 16 }}>
@@ -1140,18 +1188,22 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    {(uiPrimaryColor||uiSidebarColor||sidebarLogoEnabled)&&(
-                      <button onClick={()=>{setUiPrimaryColor('');setUiSidebarColor('');setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setDirty('company');}}
-                        style={{padding:'7px 16px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text-muted)',cursor:'pointer',fontSize:'0.8rem',fontWeight:600,display:'flex',alignItems:'center',gap:6,width:'fit-content',marginTop:14}}>
-                        ⟲ {lang==='bs'?'Vrati zadane vrijednosti':'Reset to defaults'}
-                      </button>
-                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14 }}>
+                      <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                      {(uiPrimaryColor || uiSidebarColor || sidebarLogoEnabled) && (
+                        <button onClick={()=>{
+                          setUiPrimaryColor(''); setUiSidebarColor(''); setSidebarLogoEnabled(false); setSidebarText(UI_DEFAULTS.sidebarText); setDirty('company');
+                        }} style={{padding:'7px 16px',borderRadius:8,border:'1px solid var(--border)',background:'transparent',color:'var(--text-muted)',cursor:'pointer',fontSize:'0.8rem',fontWeight:600,display:'flex',alignItems:'center',gap:6}}>
+                          ⟲ {lang==='bs'?'Vrati zadane vrijednosti':'Reset to defaults'}
+                        </button>
+                      )}
+                    </div>
 
                   </div>{/* end ui card body */}
                 </div>{/* end ui card */}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Spremi branding i firmu' : 'Save branding & company'}</button>
+                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
 
                   {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
                 </div>
