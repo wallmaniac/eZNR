@@ -620,15 +620,15 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 </div>
                             </div>
                         </div>
-                        {/* Odjava button — always visible */}
+                        {/* Odjava button — always visible, framed so it's clearly clickable */}
                         <button
-                            onClick={() => { setMobileDrawerOpen(false); logout(); router.push('/'); }}
+                            onClick={() => { onMobileClose?.(); logout(); router.push('/'); }}
                             style={{
                                 flexShrink: 0,
                                 margin: '8px 12px',
                                 padding: '7px 14px',
                                 borderRadius: 10,
-                                border: 'none',
+                                border: '1px solid rgba(239,68,68,0.45)',
                                 background: 'rgba(239,68,68,0.18)',
                                 color: '#f87171',
                                 fontWeight: 700,
@@ -782,56 +782,77 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     // ═══════════════════════════════════════════════════════════════════════════
     // DESKTOP / TABLET: Traditional left sidebar
     // ═══════════════════════════════════════════════════════════════════════════
+    // The collapse toggle button is rendered OUTSIDE the <aside> so it is NOT
+    // clipped by the sidebar's overflowX:hidden. position:fixed lets it always
+    // sit at exactly the right edge of the sidebar regardless of scroll state.
     return (
-        <aside style={{
-            ...sidebarStyles.sidebar,
-            width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
-            borderRight: '1px solid rgba(255,255,255,0.05)',
-        }}>
-            {/* Logo */}
-            <div style={{ ...sidebarStyles.logoArea, position: 'relative' }}>
-                {!collapsed && (
-                    <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
-                        <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
-                        <div style={{ marginLeft: -8 }}>
-                            <div style={sidebarStyles.logoTitle}>eZNR</div>
-                            <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
-                        </div>
-                    </Link>
-                )}
-                {collapsed && (
-                    <Link href="/dashboard">
-                        <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
-                    </Link>
-                )}
-                <button onClick={onToggle} style={sidebarStyles.collapseBtn}>
-                    {collapsed ? '▶' : '◀'}
-                </button>
-            </div>
-
-            {/* Menu */}
-            {renderMenu(false)}
-
-            {/* User area */}
-            {!collapsed && (
-                <div style={sidebarStyles.userArea}>
-                    <div style={{ ...sidebarStyles.userInfo, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
-                            <div style={sidebarStyles.userAvatar}>
-                                {user?.firstName?.[0] || 'K'}
+        <>
+            <aside style={{
+                ...sidebarStyles.sidebar,
+                width: collapsed ? 'var(--sidebar-collapsed-width)' : 'var(--sidebar-width)',
+                borderRight: '1px solid rgba(255,255,255,0.05)',
+            }}>
+                {/* Logo — collapse button removed from here */}
+                <div style={{ ...sidebarStyles.logoArea }}>
+                    {!collapsed && (
+                        <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
+                            <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
+                            <div style={{ marginLeft: -8 }}>
+                                <div style={sidebarStyles.logoTitle}>eZNR</div>
+                                <div style={sidebarStyles.logoSub}>zastitanaradu.ba</div>
                             </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                                <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
-                                <div style={sidebarStyles.userCompany}>{user?.companyName}</div>
-                            </div>
-                        </div>
-                    </div>
-                    <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
-                        🚪 {t('logout')}
-                    </button>
+                        </Link>
+                    )}
+                    {collapsed && (
+                        <Link href="/dashboard">
+                            <Image src="/logo-icon.png" alt="eZNR" width={58} height={58} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />
+                        </Link>
+                    )}
                 </div>
-            )}
-        </aside>
+
+                {/* Menu */}
+                {renderMenu(false)}
+
+                {/* User area */}
+                {!collapsed && (
+                    <div style={sidebarStyles.userArea}>
+                        <div style={{ ...sidebarStyles.userInfo, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%' }}>
+                                <div style={sidebarStyles.userAvatar}>
+                                    {user?.firstName?.[0] || 'K'}
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
+                                    <div style={sidebarStyles.userCompany}>{user?.companyName}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <button onClick={handleLogout} style={sidebarStyles.logoutBtn}>
+                            🚪 {t('logout')}
+                        </button>
+                    </div>
+                )}
+            </aside>
+
+            {/* Collapse toggle — fixed position, always fully visible outside the sidebar */}
+            <button
+                onClick={onToggle}
+                title={collapsed ? 'Proširi meni' : 'Smanji meni'}
+                style={{
+                    ...sidebarStyles.collapseBtn,
+                    position: 'fixed',
+                    left: collapsed
+                        ? 'calc(var(--sidebar-collapsed-width) - 14px)'
+                        : 'calc(var(--sidebar-width) - 14px)',
+                    top: 18,
+                    zIndex: 200,
+                    transition: 'left var(--transition-normal), background 0.2s, color 0.2s',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.35)',
+                }}
+            >
+                {collapsed ? '▶' : '◀'}
+            </button>
+        </>
     );
 }
 

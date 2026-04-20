@@ -258,6 +258,7 @@ NISI SAMO CHATBOT — TI SI AGENT. Možeš aktivno pomagati službenicima da izv
 - Ako korisnik kaže "dodaj uvjerenje", "novi pregled" → prikupi obavezne podatke (radnik, tip, datum, vrijediDo), zatim koristi add_certificate alat da SNIMIŠ u bazu.
 - Ako korisnik navede trajanje (npr. "2 godine"), izračunaj vrijediDo = datum + trajanje i proslijeđi u alat
 - Ako korisnik kaže da je radnik dobio opremu, zaštitna sredstva, kaciga, rukavice, prsluk, cipele ili slično (OZO) → koristi assign_ppe s worker_id iz ŽIVIH PODATAKA. Podrazumijevano: datum = danas, kolicina = 1, osim ako korisnik ne navede drugačije. Snima DIREKTNO — nije potrebna forma.
+- Ako korisnik kaže da je radnik VRATIO, izgubio ili više nema OZO opremu → koristi remove_ppe s worker_id iz ŽIVIH PODATAKA. Alat će pronaći i obrisati zadnju aktivnu OZO stavku tog naziva.
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 - Ako korisnik traži izmjenu svih povreda na radu za neku godinu → koristi alat bulk_update_injuries
 - VAŽNO O FIRMAMA: Ako je u kontekstu vidljivo da radnik pripada određenoj firmi, a trenutni kontekst je "Sve firme", obavezno u odgovorima spomeni i naziv firme radnika kako bi korisnik znao o kome se radi.
@@ -347,6 +348,7 @@ YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers 
 - If the user says "add certificate" → collect required data (worker, type, date, validUntil) via chat, then use add_certificate to SAVE to database.
 - If user specifies duration (e.g. "2 years"), calculate vrijediDo = datum + duration and pass it to the tool
 - If the user mentions assigning PPE (equipment, gloves, helmet, vest, boots, etc.) to a worker → use assign_ppe with worker_id from LIVE DATA. Default datum = today, default kolicina = 1 unless user specifies otherwise. This saves DIRECTLY — no form needed.
+- If the user says a worker RETURNED, lost, or no longer has a PPE item → use remove_ppe with worker_id from LIVE DATA. The tool will find and delete the most recent active assignment matching the name.
 - If the user asks about data you already have → answer directly without tools
 - If the user asks to change the year for all work injuries → use bulk_update_injuries tool
 
@@ -565,6 +567,19 @@ const ZIA_TOOLS = [
                 ppe_name: { type: 'string', description: 'Name of the PPE item in the local language (e.g. Zaštitne rukavice, Kaska, Zaštitne cipele, Prsluk, Naočale).' },
                 datum: { type: 'string', description: 'Assignment date in YYYY-MM-DD format. Default: today if not specified by user.' },
                 kolicina: { type: 'number', description: 'Quantity assigned. Default: 1 if not specified.' },
+            },
+            required: ['worker_id', 'worker_name', 'ppe_name'],
+        },
+    },
+    {
+        name: 'remove_ppe',
+        description: 'Remove / unassign a PPE (OZO) item that was previously assigned to a worker. Use when the user says a worker returned, lost, or no longer has a piece of equipment. Looks up the exact assignment by worker and item name and deletes it.',
+        parameters: {
+            type: 'object',
+            properties: {
+                worker_id: { type: 'string', description: 'ID of the worker from LIVE DATA.' },
+                worker_name: { type: 'string', description: 'Full name of the worker for the confirmation message.' },
+                ppe_name: { type: 'string', description: 'Name of the PPE item to remove (partial match is fine, e.g. "rukavice", "kaska").' },
             },
             required: ['worker_id', 'worker_name', 'ppe_name'],
         },
@@ -1044,6 +1059,30 @@ export default function AIAssistant() {
                 return { success: true, message: `Uspješno izmijenjeno ${updatedCount} zapisa o povredama na godinu ${args.target_year}. Osvježite stranicu za prikaz promjena.` };
             } catch (err) {
                 return { error: `Failed to update injuries: ${err.message}` };
+            }
+        }
+        if (name === 'remove_ppe') {
+            try {
+                const { getAll: getRecords, remove: removeRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
+                const allPpe = getRecords(COLS.PPE_ASSIGNMENTS);
+                const needle = (args.ppe_name || '').toLowerCase();
+                // Find assignments for this worker whose name partially matches
+                const matches = allPpe.filter(p =>
+                    p.workerId === args.worker_id &&
+                    (p.naziv || '').toLowerCase().includes(needle) &&
+                    !p.datumRazduzenja // only unretired items
+                );
+                if (matches.length === 0) {
+                    return { error: `Nije prona\u0111ena aktivna OZO stavka "${args.ppe_name}" za radnika "${args.worker_name}". Provjeri naziv OZO i ime radnika.` };
+                }
+                // Remove the most recent one
+                const target = matches.sort((a, b) => (b.datumZaduzenja || '').localeCompare(a.datumZaduzenja || ''))[0];
+                removeRecord(COLS.PPE_ASSIGNMENTS, target.id);
+                router.push(`/dashboard/workers?openWorker=${args.worker_id}&section=ozo`);
+                setIsMinimized(true);
+                return { success: true, message: `OZO "${target.naziv}" uspješno uklonjen od radnika "${args.worker_name}".` };
+            } catch (err) {
+                return { error: `Failed to remove PPE: ${err.message}` };
             }
         }
         return { error: 'unknown_tool' };
