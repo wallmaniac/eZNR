@@ -108,7 +108,6 @@ const T = {
 function generateParticles(count) {
   return Array.from({ length: count }, () => ({
     x: Math.random() * 100,
-    y: Math.random() * 100 + 100,
     size: Math.random() * 3 + 1.5,
     delay: Math.random() * 25,
     duration: Math.random() * 18 + 12,
