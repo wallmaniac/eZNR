@@ -1,5 +1,7 @@
 'use client';
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { applyUIBranding } from '@/lib/brandingService';
+import { getActiveCompanyId } from '@/lib/dataStore';
 
 const ThemeContext = createContext({});
 
@@ -14,6 +16,8 @@ export function ThemeProvider({ children }) {
         const dark = saved ? saved === 'dark' : prefersDark;
         setIsDark(dark);
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+        // Apply company branding after theme is set
+        try { applyUIBranding(getActiveCompanyId()); } catch { /* ignore on first load */ }
     }, []);
 
     const toggleTheme = useCallback(() => {
@@ -21,6 +25,8 @@ export function ThemeProvider({ children }) {
             const next = !prev;
             document.documentElement.setAttribute('data-theme', next ? 'dark' : 'light');
             localStorage.setItem('eznr_theme', next ? 'dark' : 'light');
+            // Re-apply branding after theme change so CSS overrides stay correct
+            try { applyUIBranding(getActiveCompanyId()); } catch { /* ignore */ }
             return next;
         });
     }, []);
@@ -29,6 +35,7 @@ export function ThemeProvider({ children }) {
         setIsDark(dark);
         document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
         localStorage.setItem('eznr_theme', dark ? 'dark' : 'light');
+        try { applyUIBranding(getActiveCompanyId()); } catch { /* ignore */ }
     }, []);
 
     return (
@@ -43,3 +50,4 @@ export function useTheme() {
     if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
     return ctx;
 }
+

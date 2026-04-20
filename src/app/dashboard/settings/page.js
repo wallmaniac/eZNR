@@ -22,6 +22,11 @@ import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/lib/webAuthn';
 import { uploadSecureFile } from '@/lib/storageService';
+import {
+  ACCENT_PRESETS, SIDEBAR_PRESETS, EZNR_DEFAULTS,
+  getCompanyBranding, savePdfBranding,
+  getUIBranding, saveUIBranding, applyUIBranding, resetUIBranding,
+} from '@/lib/brandingService';
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -49,6 +54,10 @@ export default function SettingsPage() {
   // Company state
   const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '' });
   const [assignedOfficers, setAssignedOfficers] = useState([]);
+  // Branding state
+  const [pdfAccentColor, setPdfAccentColor] = useState(EZNR_DEFAULTS.accentColor);
+  const [uiPrimaryColor, setUiPrimaryColor] = useState('');
+  const [uiSidebarColor, setUiSidebarColor] = useState('');
 
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
@@ -119,6 +128,12 @@ export default function SettingsPage() {
         const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => u.role === 'officer' && (u.companyIds || []).includes(activeCompanyId));
         setAssignedOfficers(hasAccess.map(o => o.id));
       }
+      // Load branding
+      const pdfBrand = getCompanyBranding(activeCompanyId);
+      setPdfAccentColor(pdfBrand.accentColor || EZNR_DEFAULTS.accentColor);
+      const uiBrand = getUIBranding(activeCompanyId);
+      setUiPrimaryColor(uiBrand.primaryColor || '');
+      setUiSidebarColor(uiBrand.sidebarColor || '');
     }
   }, [activeCompanyId, isAdmin]);
 
@@ -234,6 +249,10 @@ export default function SettingsPage() {
   const handleSaveCompany = () => {
     if (!activeCompanyId) return;
     update(COLLECTIONS.COMPANIES, activeCompanyId, companyData);
+    // Save branding
+    savePdfBranding(activeCompanyId, { accentColor: pdfAccentColor });
+    saveUIBranding(activeCompanyId, { primaryColor: uiPrimaryColor, sidebarColor: uiSidebarColor });
+    applyUIBranding(activeCompanyId);
     clearDirty(); showSaved();
   };
 
@@ -712,6 +731,208 @@ export default function SettingsPage() {
                 </div>
                 <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
                   <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
+                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
+                </div>
+
+                {/* ══ BRANDING SECTION ══ */}
+                <hr style={{ margin: '28px 0', border: 'none', borderTop: '2px solid var(--border)' }} />
+                <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '1.3rem', background: 'linear-gradient(135deg, var(--primary), #7C4DFF)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 900 }}>🎨</span>
+                  {lang === 'bs' ? 'Branding kompanije' : 'Company Branding'}
+                </h3>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 20 }}>
+                  {lang === 'bs'
+                    ? 'Prilagodite boje PDF izvještaja i korisničkog sučelja prema vizualnom identitetu vaše firme.'
+                    : 'Customize PDF report colors and dashboard UI to match your corporate identity.'}
+                </p>
+
+                {/* ── PDF Accent Color ── */}
+                <div style={{ padding: 20, borderRadius: 'var(--radius-lg)', background: 'var(--bg-input)', border: '1px solid var(--border)', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <span style={{ fontSize: '1rem' }}>📄</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{lang === 'bs' ? 'Boja PDF izvještaja' : 'PDF Report Accent Color'}</span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 14 }}>
+                    {lang === 'bs' ? 'Ova boja se koristi za zaglavlje, gumbe i naglašene elemente u generisanim PDF izvještajima.' : 'This color is used for headers, buttons, and highlights in generated PDF reports.'}
+                  </p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                    {ACCENT_PRESETS.map(p => (
+                      <button key={p.color}
+                        title={p.name}
+                        onClick={() => { setPdfAccentColor(p.color); setDirty('company'); }}
+                        style={{
+                          width: 36, height: 36, borderRadius: 10, border: pdfAccentColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)',
+                          background: p.color, cursor: 'pointer', transition: 'all 0.15s',
+                          boxShadow: pdfAccentColor === p.color ? `0 0 0 3px ${p.color}40` : 'none',
+                          transform: pdfAccentColor === p.color ? 'scale(1.15)' : 'scale(1)',
+                        }}
+                      />
+                    ))}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-light)' }}>{lang === 'bs' ? 'Ili unesite hex:' : 'Or enter hex:'}</label>
+                    <input
+                      type="color" value={pdfAccentColor}
+                      onChange={e => { setPdfAccentColor(e.target.value); setDirty('company'); }}
+                      style={{ width: 36, height: 36, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
+                    />
+                    <code style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: 6 }}>{pdfAccentColor}</code>
+                  </div>
+                  {/* Mini PDF preview */}
+                  <div style={{ marginTop: 14, padding: 12, borderRadius: 10, background: '#fff', border: '1px solid #e0e0e0', maxWidth: 340 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: `3px solid ${pdfAccentColor}`, paddingBottom: 8, marginBottom: 8 }}>
+                      <div>
+                        {companyData.logo
+                          ? <img src={companyData.logo} alt="" style={{ height: 24, maxWidth: 100, objectFit: 'contain' }} />
+                          : <span style={{ fontSize: '11pt', fontWeight: 900, color: pdfAccentColor }}>eZNR</span>
+                        }
+                        <div style={{ fontSize: '5pt', color: '#888' }}>Digitalna Platforma za ZNR</div>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '6pt', color: '#555' }}>
+                        <div style={{ fontWeight: 700, fontSize: '7pt' }}>{companyData.naziv || 'Naziv firme'}</div>
+                        <div>{companyData.adresa || 'Adresa'}</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '7pt', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 2, color: '#1a1a2e' }}>EVIDENCIJA RADNIKA</div>
+                    <div style={{ fontSize: '5pt', color: '#888' }}>Preview · {new Date().toLocaleDateString('bs-BA')}</div>
+                  </div>
+                </div>
+
+                {/* ── UI Branding ── */}
+                <div style={{ padding: 20, borderRadius: 'var(--radius-lg)', background: 'var(--bg-input)', border: '1px solid var(--border)', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <span style={{ fontSize: '1rem' }}>🖥️</span>
+                    <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>{lang === 'bs' ? 'Boje korisničkog sučelja' : 'Dashboard UI Colors'}</span>
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: '#fff', marginLeft: 4 }}>ENTERPRISE</span>
+                  </div>
+                  <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                    {lang === 'bs'
+                      ? 'Prilagodite primarnu boju aplikacije i boju bočne trake. Promjene se odmah primjenjuju za sve korisnike ove firme.'
+                      : 'Customize the app primary color and sidebar color. Changes apply immediately for all users in this company.'}
+                  </p>
+
+                  {/* Primary Color */}
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 8, display: 'block' }}>
+                      {lang === 'bs' ? '🎯 Primarna boja (gumbi, akcenti, linkovi)' : '🎯 Primary color (buttons, accents, links)'}
+                    </label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      <button
+                        title={lang === 'bs' ? 'Zadano (eZNR Teal)' : 'Default (eZNR Teal)'}
+                        onClick={() => { setUiPrimaryColor(''); setDirty('company'); }}
+                        style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          border: !uiPrimaryColor ? '3px solid var(--text)' : '2px solid var(--border)',
+                          background: `linear-gradient(135deg, #ccc, #eee)`, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.7rem', fontWeight: 800, color: '#888',
+                          transform: !uiPrimaryColor ? 'scale(1.15)' : 'scale(1)',
+                        }}
+                      >↺</button>
+                      {ACCENT_PRESETS.map(p => (
+                        <button key={`ui-${p.color}`}
+                          title={p.name}
+                          onClick={() => { setUiPrimaryColor(p.color); setDirty('company'); }}
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            border: uiPrimaryColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)',
+                            background: p.color, cursor: 'pointer', transition: 'all 0.15s',
+                            boxShadow: uiPrimaryColor === p.color ? `0 0 0 3px ${p.color}40` : 'none',
+                            transform: uiPrimaryColor === p.color ? 'scale(1.15)' : 'scale(1)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input type="color" value={uiPrimaryColor || EZNR_DEFAULTS.primaryColor} onChange={e => { setUiPrimaryColor(e.target.value); setDirty('company'); }}
+                        style={{ width: 36, height: 36, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
+                      />
+                      <code style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: 6 }}>
+                        {uiPrimaryColor || `${EZNR_DEFAULTS.primaryColor} (${lang === 'bs' ? 'zadano' : 'default'})`}
+                      </code>
+                    </div>
+                  </div>
+
+                  {/* Sidebar Color */}
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 8, display: 'block' }}>
+                      {lang === 'bs' ? '📐 Boja bočne trake' : '📐 Sidebar color'}
+                    </label>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                      <button
+                        title={lang === 'bs' ? 'Zadano (eZNR Navy)' : 'Default (eZNR Navy)'}
+                        onClick={() => { setUiSidebarColor(''); setDirty('company'); }}
+                        style={{
+                          width: 36, height: 36, borderRadius: 10,
+                          border: !uiSidebarColor ? '3px solid var(--text)' : '2px solid var(--border)',
+                          background: `linear-gradient(135deg, #ccc, #eee)`, cursor: 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: '0.7rem', fontWeight: 800, color: '#888',
+                          transform: !uiSidebarColor ? 'scale(1.15)' : 'scale(1)',
+                        }}
+                      >↺</button>
+                      {SIDEBAR_PRESETS.map(p => (
+                        <button key={`sb-${p.color}`}
+                          title={p.name}
+                          onClick={() => { setUiSidebarColor(p.color); setDirty('company'); }}
+                          style={{
+                            width: 36, height: 36, borderRadius: 10,
+                            border: uiSidebarColor === p.color ? '3px solid var(--text)' : '2px solid var(--border)',
+                            background: p.color, cursor: 'pointer', transition: 'all 0.15s',
+                            boxShadow: uiSidebarColor === p.color ? `0 0 0 3px ${p.color}40` : 'none',
+                            transform: uiSidebarColor === p.color ? 'scale(1.15)' : 'scale(1)',
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input type="color" value={uiSidebarColor || EZNR_DEFAULTS.sidebarColor} onChange={e => { setUiSidebarColor(e.target.value); setDirty('company'); }}
+                        style={{ width: 36, height: 36, border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', padding: 2 }}
+                      />
+                      <code style={{ fontSize: '0.8rem', color: 'var(--text-muted)', background: 'var(--bg-card)', padding: '4px 8px', borderRadius: 6 }}>
+                        {uiSidebarColor || `${EZNR_DEFAULTS.sidebarColor} (${lang === 'bs' ? 'zadano' : 'default'})`}
+                      </code>
+                    </div>
+                  </div>
+
+                  {/* Live Preview */}
+                  <div style={{ marginTop: 10, padding: 14, borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 10 }}>
+                      {lang === 'bs' ? '📺 Pregled uživo' : '📺 Live Preview'}
+                    </div>
+                    <div style={{ display: 'flex', borderRadius: 8, overflow: 'hidden', height: 80, border: '1px solid var(--border)' }}>
+                      {/* Mini sidebar */}
+                      <div style={{ width: 60, background: uiSidebarColor || EZNR_DEFAULTS.sidebarColor, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0', gap: 6 }}>
+                        <div style={{ width: 28, height: 28, borderRadius: 8, background: (uiPrimaryColor || EZNR_DEFAULTS.primaryColor) + '25', border: `1px solid ${uiPrimaryColor || EZNR_DEFAULTS.primaryColor}40`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: '#fff' }}>📊</div>
+                        <div style={{ width: 28, height: 4, borderRadius: 2, background: '#ffffff20' }} />
+                        <div style={{ width: 28, height: 4, borderRadius: 2, background: '#ffffff20' }} />
+                        <div style={{ width: 28, height: 4, borderRadius: 2, background: '#ffffff20' }} />
+                      </div>
+                      {/* Mini content */}
+                      <div style={{ flex: 1, background: 'var(--bg-page)', padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <div style={{ padding: '3px 10px', borderRadius: 5, background: uiPrimaryColor || EZNR_DEFAULTS.primaryColor, color: '#fff', fontSize: '0.6rem', fontWeight: 700 }}>+ {lang === 'bs' ? 'Dodaj' : 'Add'}</div>
+                          <div style={{ padding: '3px 10px', borderRadius: 5, background: (uiPrimaryColor || EZNR_DEFAULTS.primaryColor) + '15', color: uiPrimaryColor || EZNR_DEFAULTS.primaryColor, fontSize: '0.6rem', fontWeight: 600, border: `1px solid ${(uiPrimaryColor || EZNR_DEFAULTS.primaryColor)}30` }}>📄 PDF</div>
+                        </div>
+                        <div style={{ height: 4, borderRadius: 2, background: 'var(--border)', width: '80%' }} />
+                        <div style={{ height: 4, borderRadius: 2, background: 'var(--border)', width: '60%' }} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Reset button */}
+                  {(uiPrimaryColor || uiSidebarColor) && (
+                    <button
+                      onClick={() => { setUiPrimaryColor(''); setUiSidebarColor(''); setDirty('company'); }}
+                      style={{ marginTop: 14, padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}
+                    >
+                      ↺ {lang === 'bs' ? 'Vrati na eZNR zadane boje' : 'Reset to eZNR defaults'}
+                    </button>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Spremi branding i firmu' : 'Save branding & company'}</button>
                   {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
                 </div>
               </>

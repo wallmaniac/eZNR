@@ -15,6 +15,7 @@
  */
 
 import { getAll, getById, getActiveCompanyId, formatDate, COLLECTIONS } from './dataStore';
+import { getCompanyBranding, EZNR_DEFAULTS } from './brandingService';
 
 // ─── Shared CSS for all reports ──────────────────────────────────────────────
 const SHARED_CSS = `
@@ -24,9 +25,10 @@ const SHARED_CSS = `
   .page { width: 100%; padding: 12mm 14mm; }
 
   /* Header bar */
-  .report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #00BFA6; padding-bottom: 12px; margin-bottom: 16px; }
-  .report-header .brand { display: flex; align-items: center; gap: 8px; }
-  .report-header .brand-name { font-size: 16pt; font-weight: 900; color: #00BFA6; letter-spacing: -0.5px; }
+  .report-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid var(--accent); padding-bottom: 12px; margin-bottom: 16px; }
+  .report-header .brand { display: flex; align-items: center; gap: 10px; }
+  .report-header .brand-logo { height: 40px; max-width: 160px; object-fit: contain; }
+  .report-header .brand-name { font-size: 16pt; font-weight: 900; color: var(--accent); letter-spacing: -0.5px; }
   .report-header .brand-sub { font-size: 7pt; color: #888; margin-top: 2px; }
   .report-header .company-info { text-align: right; font-size: 8pt; color: #555; line-height: 1.5; }
   .report-header .company-name { font-size: 10pt; font-weight: 700; color: #1a1a2e; }
@@ -59,8 +61,8 @@ const SHARED_CSS = `
   .report-footer { margin-top: 20px; padding-top: 10px; border-top: 1px solid #e0e0e0; display: flex; justify-content: space-between; align-items: center; font-size: 7pt; color: #aaa; }
 
   /* Print button */
-  .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 12px 28px; background: #00BFA6; color: #fff; border: none; border-radius: 10px; font-size: 11pt; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(0,191,166,0.3); z-index: 999; display: flex; align-items: center; gap: 8px; }
-  .print-btn:hover { background: #00a896; }
+  .print-btn { position: fixed; bottom: 20px; right: 20px; padding: 12px 28px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 11pt; font-weight: 700; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 999; display: flex; align-items: center; gap: 8px; }
+  .print-btn:hover { filter: brightness(0.9); }
 
   /* Print overrides */
   @media print {
@@ -81,10 +83,15 @@ const SHARED_CSS_LANDSCAPE = SHARED_CSS.replace(
 
 // ─── Helper: get current company info ────────────────────────────────────────
 function getCompanyInfo() {
+  const branding = getCompanyBranding();
   const companyId = getActiveCompanyId();
-  if (!companyId || companyId === 'all') return { naziv: '', adresa: '', jib: '' };
+  if (!companyId || companyId === 'all') return { naziv: '', adresa: '', jib: '', logo: '', accentColor: EZNR_DEFAULTS.accentColor };
   const company = getById('companies', companyId);
-  return company || { naziv: '', adresa: '', jib: '' };
+  return {
+    ...(company || { naziv: '', adresa: '', jib: '' }),
+    logo: branding.logo,
+    accentColor: branding.accentColor,
+  };
 }
 
 // ─── Helper: format date safely ──────────────────────────────────────────────
@@ -110,18 +117,21 @@ function statusBadge(days, bs) {
 
 // ─── Build the branded header ────────────────────────────────────────────────
 function buildHeader(title, subtitle, company) {
+  const logoHtml = company.logo
+    ? `<img class="brand-logo" src="${company.logo}" alt="${company.naziv || 'Logo'}" />`
+    : `<span class="brand-name">eZNR</span>`;
   return `
     <div class="report-header">
       <div>
         <div class="brand">
-          <span class="brand-name">eZNR</span>
+          ${logoHtml}
         </div>
         <div class="brand-sub">Digitalna Platforma za Zaštitu na Radu</div>
       </div>
       <div class="company-info">
         <div class="company-name">${company.naziv || company.name || ''}</div>
         ${company.adresa || company.address ? `<div>${company.adresa || company.address}</div>` : ''}
-        ${company.jib || company.id_number ? `<div>JIB: ${company.jib || company.id_number}</div>` : ''}
+        ${company.jib || company.oib || company.id_number ? `<div>JIB: ${company.jib || company.oib || company.id_number}</div>` : ''}
       </div>
     </div>
     <div class="report-title">${title}</div>
@@ -152,13 +162,17 @@ function openPrintWindow(html, title) {
 }
 
 // ─── Wrap content in full HTML document ──────────────────────────────────────
-function wrapDocument(content, title, landscape = false, bs = true) {
+function wrapDocument(content, title, landscape = false, bs = true, accentColor = EZNR_DEFAULTS.accentColor) {
+  const accentVar = `--accent: ${accentColor};`;
   return `<!DOCTYPE html>
 <html lang="${bs ? 'bs' : 'en'}">
 <head>
   <meta charset="UTF-8"/>
   <title>${title} — eZNR</title>
-  <style>${landscape ? SHARED_CSS_LANDSCAPE : SHARED_CSS}</style>
+  <style>
+    :root { ${accentVar} }
+    ${landscape ? SHARED_CSS_LANDSCAPE : SHARED_CSS}
+  </style>
 </head>
 <body>
   <div class="page">
@@ -204,7 +218,7 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   // Stats
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:#00BFA6">${workers.length}</div><div class="stat-lbl">${bs ? 'Ukupno radnika' : 'Total workers'}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${workers.length}</div><div class="stat-lbl">${bs ? 'Ukupno radnika' : 'Total workers'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${activeCount}</div><div class="stat-lbl">${bs ? 'Aktivni' : 'Active'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#e65100">${certsExpiring}</div><div class="stat-lbl">${bs ? 'Uvjerenja ističu' : 'Certs expiring'}</div></div>
     </div>
@@ -243,7 +257,7 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   html += '</tbody></table>';
   html += buildFooter(bs);
 
-  const doc = wrapDocument(html, title, false, bs);
+  const doc = wrapDocument(html, title, false, bs, company.accentColor);
   openPrintWindow(doc, title);
 }
 
@@ -272,7 +286,7 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
 
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:#00BFA6">${certs.length}</div><div class="stat-lbl">${bs ? 'Ukupno' : 'Total'}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${certs.length}</div><div class="stat-lbl">${bs ? 'Ukupno' : 'Total'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${valid}</div><div class="stat-lbl">${bs ? 'Važeća' : 'Valid'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#e65100">${expiring}</div><div class="stat-lbl">${bs ? 'Ističu ≤30d' : 'Expiring ≤30d'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${bs ? 'Istekla' : 'Expired'}</div></div>
@@ -312,7 +326,7 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
   html += '</tbody></table>';
   html += buildFooter(bs);
 
-  openPrintWindow(wrapDocument(html, title, false, bs), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
 }
 
 /**
@@ -365,7 +379,7 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
   html += '</tbody></table>';
   html += buildFooter(bs);
 
-  openPrintWindow(wrapDocument(html, title, false, bs), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
 }
 
 /**
@@ -418,7 +432,7 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
   html += '</tbody></table>';
   html += buildFooter(bs);
 
-  openPrintWindow(wrapDocument(html, title, false, bs), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
 }
 
 /**
@@ -458,7 +472,7 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${v.marka || ''} ${v.model || ''}</td>
-      <td style="font-weight:700;color:#00BFA6">${v.registracija || '—'}</td>
+      <td style="font-weight:700;color:var(--accent)">${v.registracija || '—'}</td>
       <td>${v.godinaProizvodnje || v.godina || '—'}</td>
       <td style="font-weight:600">${fmtDate(v.registracijaDo || v.istekRegistracije)}</td>
       <td>${fmtDate(v.tehnickiPregled || v.datumTehnPregleda)}</td>
@@ -469,7 +483,7 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
   html += '</tbody></table>';
   html += buildFooter(bs);
 
-  openPrintWindow(wrapDocument(html, title, false, bs), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
 }
 
 /**
@@ -495,7 +509,7 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
 
   html += `
     <div class="stat-row">
-      <div class="stat-box"><div class="stat-val" style="color:#00BFA6">${items.length}</div><div class="stat-lbl">${bs ? 'Ukupno' : 'Total'}</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--accent)">${items.length}</div><div class="stat-lbl">${bs ? 'Ukupno' : 'Total'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#2e7d32">${items.length - expired}</div><div class="stat-lbl">${bs ? 'Ispravno' : 'Serviced'}</div></div>
       <div class="stat-box"><div class="stat-val" style="color:#c62828">${expired}</div><div class="stat-lbl">${bs ? 'Istekao servis' : 'Overdue'}</div></div>
     </div>
@@ -533,5 +547,5 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
   html += '</tbody></table>';
   html += buildFooter(bs);
 
-  openPrintWindow(wrapDocument(html, title, false, bs), title);
+  openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor), title);
 }
