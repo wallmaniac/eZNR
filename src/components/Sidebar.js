@@ -592,29 +592,54 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                         {renderMenu(true)}
                     </div>
 
-                    {/* User footer — clickable to open profile/admin modal */}
-                    <div
-                        onClick={() => setMobileProfileOpen(true)}
-                        style={{
-                            flexShrink: 0,
-                            padding: '10px 16px',
-                            borderTop: '1px solid rgba(255,255,255,0.08)',
-                            display: 'flex', alignItems: 'center', gap: 12,
-                            cursor: 'pointer',
-                            transition: 'background 0.15s',
-                        }}
-                    >
-                        <div style={{ ...sidebarStyles.userAvatar, boxShadow: isAdmin ? '0 0 0 2px var(--primary)' : 'none' }}>
-                            {user?.firstName?.[0] || 'K'}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
-                            <div style={sidebarStyles.userCompany}>
-                                {user?.companyName}
-                                {isAdmin && <span style={{ marginLeft: 6, fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 700 }}>ADMIN</span>}
+                    {/* User footer — user info (opens profile modal) + Odjava button */}
+                    <div style={{
+                        flexShrink: 0,
+                        borderTop: '1px solid rgba(255,255,255,0.08)',
+                        display: 'flex', alignItems: 'center',
+                    }}>
+                        {/* Clickable user info → profile modal */}
+                        <div
+                            onClick={() => setMobileProfileOpen(true)}
+                            style={{
+                                flex: 1, minWidth: 0,
+                                padding: '10px 12px',
+                                display: 'flex', alignItems: 'center', gap: 10,
+                                cursor: 'pointer',
+                                transition: 'background 0.15s',
+                            }}
+                        >
+                            <div style={{ ...sidebarStyles.userAvatar, boxShadow: isAdmin ? '0 0 0 2px var(--primary)' : 'none' }}>
+                                {user?.firstName?.[0] || 'K'}
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                                <div style={sidebarStyles.userName}>{user?.firstName} {user?.lastName}</div>
+                                <div style={sidebarStyles.userCompany}>
+                                    {user?.companyName}
+                                    {isAdmin && <span style={{ marginLeft: 6, fontSize: '0.6rem', color: 'var(--primary)', fontWeight: 700 }}>ADMIN</span>}
+                                </div>
                             </div>
                         </div>
-                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '1rem' }}>›</span>
+                        {/* Odjava button — always visible */}
+                        <button
+                            onClick={() => { setMobileDrawerOpen(false); logout(); router.push('/'); }}
+                            style={{
+                                flexShrink: 0,
+                                margin: '8px 12px',
+                                padding: '7px 14px',
+                                borderRadius: 10,
+                                border: 'none',
+                                background: 'rgba(239,68,68,0.18)',
+                                color: '#f87171',
+                                fontWeight: 700,
+                                fontSize: '0.82rem',
+                                cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: 5,
+                                whiteSpace: 'nowrap',
+                            }}
+                        >
+                            🚪 Odjava
+                        </button>
                     </div>
                 </div>
 

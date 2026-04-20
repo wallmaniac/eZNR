@@ -1415,12 +1415,21 @@ export default function AIAssistant() {
             {isOpen && (
                 <div id="ai-assistant-window" style={{
                     ...chatStyles.window,
-                    // Mobile: full-screen overlay
-                    ...(isMobileScreen ? {
-                        position: 'fixed', top: 52, left: 0, right: 0, bottom: 60,
-                        width: 'auto', height: 'auto',
-                        borderRadius: 0,
-                    } : {
+                    // Mobile: full-screen when open, compact header bar when minimized
+                    ...(isMobileScreen ? (
+                        isMinimized ? {
+                            // Minimized on mobile: small bar at bottom-right (above nav)
+                            position: 'fixed', bottom: 70, right: 12, left: 'auto',
+                            width: 220, height: 'auto',
+                            borderRadius: 14,
+                            boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+                        } : {
+                            // Expanded on mobile: full-screen
+                            position: 'fixed', top: 52, left: 0, right: 0, bottom: 60,
+                            width: 'auto', height: 'auto',
+                            borderRadius: 0,
+                        }
+                    ) : {
                         height: isMinimized ? 'auto' : 580,
                         // Position relative to FAB or default
                         ...(isFabLeft

@@ -112,22 +112,23 @@ export default function AdminUsersPage() {
 
     return (
         <div className="animate-fadeIn">
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-                <div>
-                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-dark)' }}>
+            {/* Header — stack on mobile */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
+                <div style={{ minWidth: 0 }}>
+                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-dark)', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         👑 {lang === 'bs' ? 'Upravljanje korisnicima' : 'User Management'}
                     </h1>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
                         {lang === 'bs' ? 'Kreirajte, uređujte i upravljajte korisničkim računima' : 'Create, edit and manage user accounts'}
                     </p>
                 </div>
-                <button className="btn btn-primary" onClick={openNew}>
+                <button className="btn btn-primary btn-sm" onClick={openNew} style={{ flexShrink: 0 }}>
                     ➕ {lang === 'bs' ? 'Novi korisnik' : 'New User'}
                 </button>
             </div>
 
-            {/* Stats */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+            {/* Stats — 2x2 on mobile */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
                 {[
                     { label: lang === 'bs' ? 'Ukupno' : 'Total', value: users.length, icon: '👥', color: 'var(--primary)' },
                     { label: 'Superadmin', value: users.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' },
@@ -146,18 +147,17 @@ export default function AdminUsersPage() {
                 ))}
             </div>
 
-            {/* Search & Filter Bar */}
-            <div className="card" style={{ marginBottom: 16 }}>
-                <div className="card-body" style={{ padding: '12px 16px', display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-                    {/* Search */}
-                    <div style={{ flex: 1, minWidth: 220, position: 'relative' }}>
-                        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.9rem' }}>🔍</span>
+            {/* Search & Filter Bar — stacked on mobile */}
+            <div className="card" style={{ marginBottom: 14 }}>
+                <div className="card-body" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div style={{ position: 'relative' }}>
+                        <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem' }}>🔍</span>
                         <input
                             className="form-input"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            placeholder={lang === 'bs' ? 'Pretraži korisnike (ime, prezime, email, username)...' : 'Search users (name, email, username)...'}
-                            style={{ paddingLeft: 36, borderRadius: 'var(--radius-full)' }}
+                            placeholder={lang === 'bs' ? 'Pretraži korisnike (ime, prezime, email)...' : 'Search users...'}
+                            style={{ paddingLeft: 34, borderRadius: 'var(--radius-full)', width: '100%', boxSizing: 'border-box' }}
                         />
                         {searchTerm && (
                             <button onClick={() => setSearchTerm('')} style={{
@@ -166,130 +166,109 @@ export default function AdminUsersPage() {
                             }}>✕</button>
                         )}
                     </div>
-                    {/* Company filter */}
-                    <select className="form-input" value={filterCompany} onChange={e => setFilterCompany(e.target.value)}
-                        style={{ width: 200, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }}>
-                        <option value="all">🏢 {lang === 'bs' ? 'Sve firme' : 'All companies'}</option>
-                        {companies.map(c => (
-                            <option key={c.id} value={c.id}>{c.naziv}</option>
-                        ))}
-                    </select>
-                    {/* Role filter */}
-                    <select className="form-input" value={filterRole} onChange={e => setFilterRole(e.target.value)}
-                        style={{ width: 180, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }}>
-                        <option value="all">👥 {lang === 'bs' ? 'Sve uloge' : 'All roles'}</option>
-                        <option value="superadmin">👑 Superadmin</option>
-                        <option value="officer">🛡️ {lang === 'bs' ? 'Stručnjak ZNR' : 'Officer'}</option>
-                        <option value="admin">⚙️ Admin</option>
-                    </select>
-                    {/* Result count */}
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        {filteredUsers.length} / {users.length}
-                    </span>
-                </div>
-            </div>
-
-            {/* Users Table */}
-            <div className="card">
-                <div className="card-body">
-                    <div className="table-responsive">
-                        <table className="table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>{lang === 'bs' ? 'Korisnik' : 'User'}</th>
-                                    <th>{lang === 'bs' ? 'Korisničko ime' : 'Username'}</th>
-                                    <th>Email</th>
-                                    <th>{lang === 'bs' ? 'Uloga' : 'Role'}</th>
-                                    <th>{lang === 'bs' ? 'Firme' : 'Companies'}</th>
-                                    <th>{lang === 'bs' ? 'Status' : 'Status'}</th>
-                                    <th>{t('actions')}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredUsers.length === 0 ? (
-                                    <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                                        {searchTerm ? (lang === 'bs' ? 'Nema rezultata pretrage' : 'No search results') : t('noRecords')}
-                                    </td></tr>
-                                ) : filteredUsers.map((u, idx) => (
-                                    <tr key={u.id} style={{ opacity: u.aktivan === false ? 0.5 : 1 }}>
-                                        <td>{idx + 1}</td>
-                                        <td>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                                <div style={{
-                                                    width: 32, height: 32, borderRadius: '50%',
-                                                    background: u.role === 'admin' ? 'linear-gradient(135deg, #7B1FA2, #E040FB)' : 'linear-gradient(135deg, var(--primary), var(--secondary))',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    color: 'white', fontWeight: 700, fontSize: '0.75rem',
-                                                }}>
-                                                    {u.firstName?.[0]}{u.lastName?.[0]}
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{u.firstName} {u.lastName}</div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td><code style={{ fontSize: '0.82rem' }}>{u.username}</code></td>
-                                        <td style={{ fontSize: '0.82rem' }}>{u.email || '—'}</td>
-                                        <td>
-                                            {(() => {
-                                                const roleMap = {
-                                                    superadmin: { label: '👑 Superadmin', bg: 'linear-gradient(135deg, #E65100, #FF6D00)' },
-                                                    admin:      { label: '⚙️ Admin',      bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)' },
-                                                    officer:    { label: '🛡️ Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))' },
-                                                    companyadmin: { label: '🛡️ Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))' },
-                                                };
-                                                const r = roleMap[u.role] || roleMap.officer;
-                                                return (
-                                                    <span style={{
-                                                        padding: '3px 10px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 700,
-                                                        background: r.bg, color: 'white',
-                                                    }}>{r.label}</span>
-                                                );
-                                            })()}
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                                {(u.companyIds || []).map(cid => (
-                                                    <button key={cid} onClick={() => setShowCompanyDetail(getCompanyById(cid))} style={{
-                                                        padding: '2px 8px', borderRadius: 8, fontSize: '0.7rem',
-                                                        background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600,
-                                                        border: '1px solid transparent', cursor: 'pointer', transition: 'all 0.15s',
-                                                    }}
-                                                        onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--info)'; e.currentTarget.style.background = '#BBDEFB'; }}
-                                                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.background = 'rgba(33,150,243,0.12)'; }}
-                                                    >
-                                                        🏢 {getCompanyName(cid)}
-                                                    </button>
-                                                ))}
-                                                {(u.companyIds || []).length === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>—</span>}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <button onClick={() => handleToggleActive(u)} style={{
-                                                padding: '3px 10px', borderRadius: 12, fontSize: '0.72rem', fontWeight: 600,
-                                                border: 'none', cursor: 'pointer',
-                                                background: u.aktivan !== false ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
-                                                color: u.aktivan !== false ? 'var(--success)' : 'var(--danger)',
-                                            }}>
-                                                {u.aktivan !== false ? '✅ Aktivan' : '⛔ Neaktivan'}
-                                            </button>
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: 4 }}>
-                                                <button className="btn btn-ghost btn-sm" onClick={() => openEdit(u)} title="Edit">✏️</button>
-                                                {u.id !== user?.id && (
-                                                    <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(u)} title="Delete" style={{ color: 'var(--danger)' }}>🗑️</button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <select className="form-input" value={filterCompany} onChange={e => setFilterCompany(e.target.value)}
+                            style={{ flex: 1, minWidth: 120, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
+                            <option value="all">🏢 {lang === 'bs' ? 'Sve firme' : 'All companies'}</option>
+                            {companies.map(c => (
+                                <option key={c.id} value={c.id}>{c.naziv}</option>
+                            ))}
+                        </select>
+                        <select className="form-input" value={filterRole} onChange={e => setFilterRole(e.target.value)}
+                            style={{ flex: 1, minWidth: 110, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
+                            <option value="all">👥 {lang === 'bs' ? 'Sve uloge' : 'All roles'}</option>
+                            <option value="superadmin">👑 Superadmin</option>
+                            <option value="officer">🛡️ {lang === 'bs' ? 'Stručnjak ZNR' : 'Officer'}</option>
+                            <option value="admin">⚙️ Admin</option>
+                        </select>
+                        <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
+                            {filteredUsers.length} / {users.length}
+                        </span>
                     </div>
                 </div>
             </div>
+
+            {/* Users — card-based layout (works on all screen sizes) */}
+            {filteredUsers.length === 0 ? (
+                <div className="card">
+                    <div className="card-body" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                        {searchTerm ? (lang === 'bs' ? 'Nema rezultata pretrage' : 'No search results') : t('noRecords')}
+                    </div>
+                </div>
+            ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {filteredUsers.map((u) => {
+                        const roleMap = {
+                            superadmin: { label: '👑 Superadmin', bg: 'linear-gradient(135deg, #E65100, #FF6D00)' },
+                            admin:      { label: '⚙️ Admin',      bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)' },
+                            officer:    { label: '🛡️ Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))' },
+                            companyadmin: { label: '🛡️ Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))' },
+                        };
+                        const role = roleMap[u.role] || roleMap.officer;
+                        return (
+                            <div key={u.id} className="card" style={{ opacity: u.aktivan === false ? 0.55 : 1 }}>
+                                <div className="card-body" style={{ padding: '12px 14px' }}>
+                                    {/* Top: avatar + name + edit/delete */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                                        <div style={{
+                                            width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+                                            background: u.role === 'admin' || u.role === 'superadmin' ? 'linear-gradient(135deg, #7B1FA2, #E040FB)' : 'linear-gradient(135deg, var(--primary), var(--secondary))',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            color: 'white', fontWeight: 700, fontSize: '0.85rem',
+                                        }}>
+                                            {u.firstName?.[0]}{u.lastName?.[0]}
+                                        </div>
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{u.firstName} {u.lastName}</div>
+                                            {u.username && <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)' }}>{u.username}</div>}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => openEdit(u)}>✏️</button>
+                                            {u.id !== user?.id && (
+                                                <button className="btn btn-ghost btn-sm" onClick={() => handleDelete(u)} style={{ color: 'var(--danger)' }}>🗑️</button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {/* Role + status badges */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                                        <span style={{ padding: '3px 10px', borderRadius: 12, fontSize: '0.7rem', fontWeight: 700, background: role.bg, color: 'white' }}>
+                                            {role.label}
+                                        </span>
+                                        <button onClick={() => handleToggleActive(u)} style={{
+                                            padding: '3px 10px', borderRadius: 12, fontSize: '0.7rem', fontWeight: 600,
+                                            border: 'none', cursor: 'pointer',
+                                            background: u.aktivan !== false ? 'rgba(76,175,80,0.12)' : 'rgba(244,67,54,0.12)',
+                                            color: u.aktivan !== false ? 'var(--success)' : 'var(--danger)',
+                                        }}>
+                                            {u.aktivan !== false ? '✅ Aktivan' : '⛔ Neaktivan'}
+                                        </button>
+                                    </div>
+                                    {/* Email */}
+                                    {u.email && (
+                                        <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 6, wordBreak: 'break-all' }}>
+                                            📧 {u.email}
+                                        </div>
+                                    )}
+                                    {/* Companies */}
+                                    {(u.companyIds || []).length > 0 && (
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                            {(u.companyIds || []).map(cid => (
+                                                <button key={cid} onClick={() => setShowCompanyDetail(getCompanyById(cid))} style={{
+                                                    padding: '2px 8px', borderRadius: 8, fontSize: '0.7rem',
+                                                    background: 'rgba(33,150,243,0.10)', color: 'var(--info)', fontWeight: 600,
+                                                    border: '1px solid transparent', cursor: 'pointer',
+                                                }}>
+                                                    🏢 {getCompanyName(cid)}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* User Modal */}
             {showModal && (

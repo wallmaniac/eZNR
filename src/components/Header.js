@@ -336,10 +336,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             document.body
                         )}
                     </div>
-                    {/* Settings (Mobile only) */}
-                    <a href="/dashboard/settings?tab=app" style={{ ...iBtn({ fontSize: '1.05rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0, textDecoration: 'none' }}>
+                    {/* Settings (Mobile only) — use router.push for SPA navigation, no full reload */}
+                    <button onClick={() => router.push('/dashboard/settings?tab=app')} style={{ ...iBtn({ fontSize: '1.05rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
                         ⚙️
-                    </a>
+                    </button>
                 </div>
             )}
 
