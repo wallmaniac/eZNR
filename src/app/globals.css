@@ -2229,3 +2229,99 @@ a:hover {
     background: rgba(0, 0, 0, 0.02) !important;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+/* LANDING PAGE — Spectacular animations & interactions                      */
+/* ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes landing-float {
+  0%   { transform: translateY(0) scale(1); opacity: 0; }
+  8%   { opacity: 0.8; }
+  90%  { opacity: 0.6; }
+  100% { transform: translateY(-100vh) scale(0.3); opacity: 0; }
+}
+
+@keyframes landing-pulse-glow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50%      { opacity: 0.8; transform: scale(1.15); }
+}
+
+@keyframes landing-orbit {
+  0%   { transform: rotate(0deg) translateX(140px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(140px) rotate(-360deg); }
+}
+
+@keyframes landing-orbit-reverse {
+  0%   { transform: rotate(360deg) translateX(100px) rotate(-360deg); }
+  100% { transform: rotate(0deg) translateX(100px) rotate(0deg); }
+}
+
+@keyframes landing-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes landing-fade-up {
+  0%   { opacity: 0; transform: translateY(40px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes landing-ring-pulse {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
+  50%      { transform: translate(-50%, -50%) scale(1.08); opacity: 0.25; }
+}
+
+@keyframes landing-grid-fade {
+  0%, 100% { opacity: 0.03; }
+  50%      { opacity: 0.06; }
+}
+
+.landing-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: landing-float linear infinite;
+}
+
+.landing-card {
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.35s ease,
+              box-shadow 0.35s ease;
+}
+
+.landing-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(0, 191, 166, 0.25) !important;
+  box-shadow: 0 20px 60px rgba(0, 191, 166, 0.1),
+              0 0 0 1px rgba(0, 191, 166, 0.15);
+}
+
+.landing-section-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.landing-section-reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Landing page mobile overrides */
+@media (max-width: 767px) {
+  .landing-nav-links-desktop { display: none !important; }
+  .landing-nav-mobile { display: flex !important; }
+  .landing-hero-title { font-size: 2.2rem !important; }
+  .landing-hero-subtitle { font-size: 1rem !important; }
+  .landing-section-title { font-size: 1.6rem !important; }
+  .landing-cta-group { flex-direction: column !important; }
+  .landing-grid-2 { grid-template-columns: 1fr !important; }
+  .landing-grid-3 { grid-template-columns: 1fr !important; }
+  .landing-nav { padding: 0 16px !important; }
+  .landing-container-card { padding: 30px 20px !important; }
+  .landing-footer-container { flex-direction: column !important; text-align: center !important; }
+}
+
+@media (min-width: 768px) {
+  .landing-nav-mobile { display: none !important; }
+}
