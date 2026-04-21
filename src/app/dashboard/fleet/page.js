@@ -284,7 +284,7 @@ function FleetInner() {
                 )}
 
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 8 }}>
                     <Icon3D name="Vozni park.png" size={64} />
                     <div>
                         <h1 style={{ margin: 0 }}>{bs ? 'Vozni park' : 'Fleet Management'}</h1>
