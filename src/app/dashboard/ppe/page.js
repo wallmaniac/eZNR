@@ -63,7 +63,7 @@ export default function PPEPage() {
       <DialogRenderer />
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <Icon3D name="OZO.png" size={32} />
+          <Icon3D name="OZO.png" size={64} />
           <h1 style={{ margin: 0 }}>{t('ppe')}</h1>
         </div>
         {showForm && (

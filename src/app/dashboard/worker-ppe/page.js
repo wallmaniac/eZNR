@@ -99,7 +99,7 @@ export default function WorkerPPEPage() {
       <DialogRenderer />
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <Icon3D name="OZO.png" size={32} />
+          <Icon3D name="OZO.png" size={64} />
           <h1 style={{ margin: 0 }}>{t('workerPPE')}</h1>
         </div>
         <div className="card"><div className="card-body">
@@ -197,7 +197,7 @@ export default function WorkerPPEPage() {
           <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Icon3D name="OZO.png" size={28} />
+                <Icon3D name="OZO.png" size={56} />
                 <h2 style={{ color: 'white', margin: 0 }}>{lang === 'bs' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment'}</h2>
               </div>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowAddModal(false)}>✕</button>

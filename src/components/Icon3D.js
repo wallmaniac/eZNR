@@ -37,6 +37,13 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
   // Ensure absolute path from public
   const src = `/icons3d/${name}`;
 
+  let appliedScale = 1;
+  // The Uvjerenja icon has significant transparent padding in its PNG file.
+  // We apply a 1.9 scale globally so it visually matches other icons at the same bounding box size.
+  if (name === 'Uvjerenja.png') {
+    appliedScale = 1.9;
+  }
+
   return (
     <Image
       src={src}
@@ -47,6 +54,7 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
       style={{ 
         objectFit: 'contain', 
         flexShrink: 0,
+        transform: appliedScale !== 1 ? `scale(${appliedScale})` : undefined,
         ...style 
       }}
       priority={size > 40} // Priority load for large header icons

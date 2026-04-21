@@ -526,7 +526,7 @@ function WorkersPageInner() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
                     <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Icon3D name="Radnici.png" size={32} />
+                        <Icon3D name="Radnici.png" size={64} />
                         {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
                 </div>
@@ -1472,7 +1472,7 @@ function WorkersPageInner() {
                 <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
 
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <Icon3D name="Radnici.png" size={32} />
+                    <Icon3D name="Radnici.png" size={64} />
                     {t('workers')}
                 </h1>
                 <DialogRenderer />
