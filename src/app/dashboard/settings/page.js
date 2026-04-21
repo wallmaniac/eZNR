@@ -58,6 +58,7 @@ export default function SettingsPage() {
   // Branding state
   const [pdfAccentColor, setPdfAccentColor] = useState(EZNR_DEFAULTS.accentColor);
   const [wmEnabled, setWmEnabled] = useState(PDF_DEFAULTS.watermarkEnabled);
+  const [showCompanyInfo, setShowCompanyInfo] = useState(true);
   const [wmPosition, setWmPosition] = useState(PDF_DEFAULTS.watermarkPosition); // fallback if I typo'd
   const [wmOpacity, setWmOpacity] = useState(PDF_DEFAULTS.watermarkOpacity);
   const [wmSize, setWmSize] = useState(PDF_DEFAULTS.watermarkSize);
@@ -304,6 +305,7 @@ export default function SettingsPage() {
         headerItalic: headerItalic, 
         headerUnderline: headerUnderline, 
         headerColor: headerColor,
+        showCompanyInfo: showCompanyInfo,
         primaryColor: uiPrimaryColor, 
         sidebarColor: uiSidebarColor,
         sidebarLogoEnabled: sidebarLogoEnabled,
@@ -973,7 +975,7 @@ export default function SettingsPage() {
                           {/* Position grid */}
                           <div>
                             <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600 }}>{lang === 'bs' ? 'Pozicija:' : 'Position:'}</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px', width: '130px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 38px)', gap: '4px', width: '130px', minWidth: '130px', flexShrink: 0 }}>
                               {WATERMARK_POSITIONS.map(pos => (
                                 <button key={pos.id} title={pos.id}
                                   onClick={()=>{setWmPosition(pos.id);setDirty('company');}}

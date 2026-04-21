@@ -25,20 +25,14 @@ const SHARED_CSS = `
   .page { width: 100%; padding: 12mm 14mm; position: relative; }
 
   /* Watermark behind content */
-  .watermark-container {
+  .watermark {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
     z-index: 0;
     pointer-events: none;
-    display: flex;
+    opacity: 0.045;
     padding: 10mm;
   }
-  .watermark {
-    opacity: 0.045;
-    display: flex;
-    flex-direction: column;
-  }
-  .watermark img { max-width: 280px; max-height: 160px; object-fit: contain; display: block; margin-bottom: 12px; }
+  .watermark img { object-fit: contain; display: block; }
   .watermark .wm-name { font-size: 28pt; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; color: #000; }
 
   /* Header bar */
@@ -180,9 +174,9 @@ function buildHeader(title, subtitle, company) {
         <div class="brand" style="justify-content:${headerJustify}">
           ${logoHtml}
         </div>
-        ${company.logo && companyName ? `<div style="font-size:8pt;font-weight:600;color:#555;margin-top:3px;text-align:${logoPos === 'center' ? 'center' : 'left'}">${companyName}</div>` : ''}
+        ${company.logo && companyName ? `<div style="font-size:9pt;font-weight:800;color:#222;margin-top:3px;text-align:${logoPos === 'center' ? 'center' : 'left'}">${companyName}</div>` : ''}
       </div>
-      ${logoPos !== 'center' ? `
+      ${logoPos !== 'center' && (company.showCompanyInfo !== false) ? `
       <div class="company-info">
         ${company.adresa || company.address ? `<div>${company.adresa || company.address}</div>` : ''}
         ${company.mjesto ? `<div>${company.mjesto}${company.postanskiBroj ? ` ${company.postanskiBroj}` : ''}</div>` : ''}
@@ -236,12 +230,10 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
     // Calculate margin auto overrides based on ta
     const imgMargin = wmPos.ta === 'center' ? '0 auto 12px' : wmPos.ta === 'left' ? '0 auto 12px 0' : '0 0 12px auto';
     watermarkHtml = `
-    <div class="watermark-container" style="align-items:${wmPos.ai};justify-content:${wmPos.jc};">
-      <div class="watermark" style="opacity:${wmOpacity};text-align:${wmPos.ta};align-items:${wmPos.ai};">
+      <div class="watermark" style="opacity:${wmOpacity}; text-align:${wmPos.ta}; top:${wmPos.top || 'auto'}; bottom:${wmPos.bottom || 'auto'}; left:${wmPos.left || 'auto'}; right:${wmPos.right || 'auto'}; transform:${wmPos.transform};">
         ${showLogo && company.logo ? `<img src="${company.logo}" alt="" style="width:${wmSize}px;height:auto;max-width:100%;margin:${imgMargin};object-fit:contain" />` : ''}
         ${showName && companyName ? `<div class="wm-name" style="font-size:${Math.round(wmSize / 10)}pt">${companyName}</div>` : ''}
-      </div>
-    </div>`;
+      </div>`;
   }
 
   return `<!DOCTYPE html>
