@@ -40,7 +40,7 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
   let appliedScale = 1;
   // Some icons have significant transparent padding in their PNG files.
   // We apply a 1.9 scale globally so they visually match other icons at the same bounding box size.
-  const paddedIcons = ['Uvjerenja.png', 'Ljekarska uputnica.png', 'Ljekarski pregledi.png', 'Doktori.png', 'Poduke.png'];
+  const paddedIcons = ['Uvjerenja.png', 'Ljekarska uputnica.png', 'Ljekarski pregledi.png'];
   if (paddedIcons.includes(name)) {
     appliedScale = 1.9;
   }

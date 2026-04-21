@@ -23,7 +23,7 @@ const menuItems = [
             { key: 'medicalExams',       icon: 'Ljekarski pregledi.png', path: '/dashboard/medical-exams' },
             { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
             { key: 'ekPPE',             icon: 'OZO.png', path: '/dashboard/ek-ppe' },
-            { key: 'trainingMasterBook', icon: 'Poduke.png', path: '/dashboard/training-book' },
+            { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
         ],
     },
 
