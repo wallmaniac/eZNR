@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>3D Icon Test</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0f1117;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: -apple-system, 'Inter', sans-serif;
+    color: #fff;
+    gap: 40px;
+    flex-wrap: wrap;
+    padding: 40px;
+  }
+
+  /* ── Dark sidebar item ── */
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 12px 20px;
+    width: 240px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .sidebar-item:hover { background: rgba(255,255,255,0.1); }
+  .sidebar-item img { width: 36px; height: 36px; }
+  .sidebar-item span { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.85); }
+
+  /* ── Page header ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 20px;
+    padding: 20px 28px;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .page-header img { width: 56px; height: 56px; }
+  .page-header h1 { font-size: 1.6rem; font-weight: 800; color: #fff; }
+
+  /* ── Standalone icon sizes ── */
+  .icon-sizes {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+    padding: 20px 28px;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .icon-sizes img:nth-child(1) { width: 24px; height: 24px; }
+  .icon-sizes img:nth-child(2) { width: 36px; height: 36px; }
+  .icon-sizes img:nth-child(3) { width: 48px; height: 48px; }
+  .icon-sizes img:nth-child(4) { width: 64px; height: 64px; }
+  .icon-sizes img:nth-child(5) { width: 96px; height: 96px; }
+
+  .label {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .group { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+
+  <div class="group">
+    <div class="label">Page Header</div>
+    <div class="page-header">
+      <img src="/icons3d/test-workers.svg" alt="Workers">
+      <h1>Radnici</h1>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label">Sidebar Menu Item</div>
+    <div class="sidebar-item">
+      <img src="/icons3d/test-workers.svg" alt="">
+      <span>Radnici</span>
+    </div>
+    <br>
+    <div class="sidebar-item" style="background:rgba(99,130,255,0.15); border-color:rgba(99,130,255,0.3)">
+      <img src="/icons3d/test-workers.svg" alt="">
+      <span style="color:#fff">Radnici (active)</span>
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label">All Sizes (24px → 96px)</div>
+    <div class="icon-sizes">
+      <img src="/icons3d/test-workers.svg" alt="">
+      <img src="/icons3d/test-workers.svg" alt="">
+      <img src="/icons3d/test-workers.svg" alt="">
+      <img src="/icons3d/test-workers.svg" alt="">
+      <img src="/icons3d/test-workers.svg" alt="">
+    </div>
+  </div>
+
+  <div class="group">
+    <div class="label">Light Background (Card)</div>
+    <div class="page-header" style="background:#fff; border-color:#eee">
+      <img src="/icons3d/test-workers.svg" alt="Workers">
+      <h1 style="color:#1a1a2e">Radnici</h1>
+    </div>
+  </div>
+
+</body>
+</html>

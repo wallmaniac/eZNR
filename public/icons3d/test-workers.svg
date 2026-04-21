@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <!-- Background tile gradient (soft blue-purple like IconScout backdrop) -->
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5B73F5"/>
+      <stop offset="100%" stop-color="#9356E8"/>
+    </linearGradient>
+    <!-- Hat brim bottom gradient -->
+    <linearGradient id="brimGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="100%" stop-color="#E6A800"/>
+    </linearGradient>
+    <!-- Hat dome gradient - main body -->
+    <linearGradient id="domeGrad" x1="10%" y1="0%" x2="90%" y2="100%">
+      <stop offset="0%" stop-color="#FFE066"/>
+      <stop offset="40%" stop-color="#FFC800"/>
+      <stop offset="100%" stop-color="#CC8800"/>
+    </linearGradient>
+    <!-- Shine highlight on dome -->
+    <radialGradient id="shine" cx="35%" cy="30%" r="45%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.75)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <!-- White band gradient -->
+    <linearGradient id="bandGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#D8D8D8"/>
+    </linearGradient>
+    <!-- Drop shadow filter -->
+    <filter id="shadow" x="-20%" y="-10%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="rgba(80,40,160,0.35)"/>
+    </filter>
+    <!-- Inner shadow on brim edge -->
+    <filter id="innerGlow">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Rounded square background -->
+  <rect x="5" y="5" width="90" height="90" rx="22" ry="22" fill="url(#bg)"/>
+
+  <!-- Subtle inner highlight on bg top edge -->
+  <rect x="5" y="5" width="90" height="42" rx="22" ry="22" fill="rgba(255,255,255,0.08)"/>
+
+  <!-- GROUP: hard hat with drop shadow -->
+  <g filter="url(#shadow)">
+
+    <!-- ── BRIM (flat ellipse bottom) ── -->
+    <ellipse cx="50" cy="68" rx="27" ry="5.5" fill="url(#brimGrad)"/>
+    <!-- Brim underside darker edge -->
+    <ellipse cx="50" cy="69.5" rx="27" ry="4" fill="#B87800" opacity="0.5"/>
+
+    <!-- ── DOME (main hat body) ── -->
+    <!-- Shadow side of dome (right/bottom) -->
+    <ellipse cx="53" cy="54" rx="23" ry="17" fill="#B87800" opacity="0.4"/>
+    <!-- Main dome shape -->
+    <path d="M23,65 Q24,44 50,40 Q76,44 77,65 Z" fill="url(#domeGrad)"/>
+    <!-- Shine overlay on dome -->
+    <path d="M23,65 Q24,44 50,40 Q76,44 77,65 Z" fill="url(#shine)"/>
+
+    <!-- ── WHITE SAFETY BAND ── -->
+    <path d="M27,64 Q28,56 50,54 Q72,56 73,64 Z" fill="url(#bandGrad)" opacity="0.95"/>
+    <!-- Band bottom reflection -->
+    <path d="M27,64 Q28,60 50,58 Q72,60 73,64 Z" fill="rgba(255,255,255,0.4)"/>
+
+    <!-- ── BRIM TOP FACE (lighter top of the flat brim) ── -->
+    <ellipse cx="50" cy="66" rx="27" ry="5" fill="#FFD633" opacity="0.9"/>
+    <!-- Brim top shine -->
+    <ellipse cx="44" cy="64.5" rx="10" ry="2" fill="rgba(255,255,255,0.45)" opacity="0.8"/>
+
+    <!-- ── VENTILATION RIDGE (small ridge on dome) ── -->
+    <path d="M38,54 Q50,51 62,54" stroke="rgba(255,255,255,0.6)" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+
+  </g>
+
+  <!-- Bottom reflection/floor shadow under brim -->
+  <ellipse cx="50" cy="73" rx="22" ry="3" fill="rgba(80,40,160,0.2)"/>
+</svg>

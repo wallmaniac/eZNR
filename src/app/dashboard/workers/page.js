@@ -442,9 +442,9 @@ function WorkersPageInner() {
             await alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
             return null;
         }
-        
+
         let finalFormData = { ...formData };
-        
+
         let savedId = editingWorker;
         if (editingWorker) {
             update(COLLECTIONS.WORKERS, editingWorker, finalFormData);
@@ -454,7 +454,7 @@ function WorkersPageInner() {
             setEditingWorker(savedId);
             editingWorkerRef.current = savedId;
         }
-        
+
         // Keep formData in sync with the new cloud URL
         setFormData(finalFormData);
 
@@ -524,8 +524,9 @@ function WorkersPageInner() {
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
-                    <h1 style={{ margin: 0 }}>
-                        👷 {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
+                    <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <img src="/icons3d/Radnici.jpeg" alt="" style={{ width: 36, height: 36, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }} />
+                        {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
                 </div>
                 <DialogRenderer />
@@ -906,7 +907,7 @@ function WorkersPageInner() {
                                                                         setCertificates(getWorkerCertificates(editingWorker));
                                                                         setCertMenuId(null);
                                                                         showFlash();
-                                                                    } catch(err) {
+                                                                    } catch (err) {
                                                                         alert('Upload failed: ' + err.message);
                                                                     }
                                                                     e.target.value = '';
@@ -1201,7 +1202,7 @@ function WorkersPageInner() {
                                         </div>
                                     ) : (
                                         <div style={{ display: 'grid', gap: 8 }}>
-                                        {workerDocs.map(doc => {
+                                            {workerDocs.map(doc => {
                                                 const isUrl = !!doc.url;
                                                 const isPdf = isUrl ? doc.type?.includes('pdf') : doc.data?.startsWith('data:application/pdf');
                                                 const isImg = isUrl ? doc.type?.startsWith('image/') : doc.data?.startsWith('data:image/');
@@ -1470,7 +1471,8 @@ function WorkersPageInner() {
                 <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
 
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    👷 {t('workers')}
+                    <img src="/icons3d/Radnici.jpeg" alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                    {t('workers')}
                 </h1>
                 <DialogRenderer />
 
