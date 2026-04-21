@@ -47,6 +47,17 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
     appliedScale = 1.9;
   }
 
+  // Exact sizing requests from the user to perfectly align with sidebar texts
+  if (name === 'Oprema.png') {
+    appliedScale = 1.98; // ~4% bigger than standard 1.9 match
+    transformY = '2px';  // drop down to align level with title
+  }
+  
+  if (name === 'Vozni park.png') {
+    appliedScale = 2.02; // ~6% bigger than standard 1.9 match
+    transformY = '2px';  // drop down to align level with title
+  }
+
   // Construct transform rule safely
   const transformConfig = [];
   if (transformY !== '0px') transformConfig.push(`translateY(${transformY})`);
