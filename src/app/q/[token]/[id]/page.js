@@ -32,7 +32,7 @@ export default function QRRedirect({ params }) {
       const fullTarget = targetCompanyId
         ? `${targetPath}&_qrc=${targetCompanyId}`
         : targetPath;
-      router.replace(`/?redirect=${encodeURIComponent(fullTarget)}`);
+      router.replace(`/login?redirect=${encodeURIComponent(fullTarget)}`);
       return;
     }
 
