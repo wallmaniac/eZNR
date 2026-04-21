@@ -47,12 +47,6 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
     appliedScale = 1.9;
   }
 
-  // Very specific overrides requested by user
-  if (name === 'Oprema.png') {
-    appliedScale = 2.03; // 7% larger than 1.9
-    transformY = '2px'; // drop it down slightly so the tools align visually with the text
-  }
-
   // Construct transform rule safely
   const transformConfig = [];
   if (transformY !== '0px') transformConfig.push(`translateY(${transformY})`);
