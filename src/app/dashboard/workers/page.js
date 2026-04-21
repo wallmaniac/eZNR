@@ -1785,28 +1785,28 @@ function WorkersPageInner() {
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => setViewWorkerId(w.id)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                                                         title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.ime}</button>
                                                 </td>
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => setViewWorkerId(w.id)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                                                         title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.prezime}</button>
                                                 </td>
                                                 <td><code style={{ fontSize: '0.85rem' }}>{w.oib || w.jmbg}</code></td>
                                                 <td>
                                                     {w.orgJedinicaId ? (
-                                                        <button onClick={() => router.push('/dashboard/org-units')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }} title={lang === 'bs' ? 'Otvori organizacijsku jedinicu' : 'Open org unit'}>
+                                                        <button onClick={() => router.push('/dashboard/org-units')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={lang === 'bs' ? 'Otvori organizacijsku jedinicu' : 'Open org unit'}>
                                                             {getOrgUnitName(w.orgJedinicaId)}
                                                         </button>
                                                     ) : '—'}
                                                 </td>
                                                 <td>
                                                     {w.radnoMjestoId ? (
-                                                        <button onClick={() => router.push('/dashboard/workplaces')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }} title={lang === 'bs' ? 'Otvori radno mjesto' : 'Open workplace'}>
+                                                        <button onClick={() => router.push('/dashboard/workplaces')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={lang === 'bs' ? 'Otvori radno mjesto' : 'Open workplace'}>
                                                             {getWorkplaceName(w.radnoMjestoId)}
                                                         </button>
                                                     ) : '—'}

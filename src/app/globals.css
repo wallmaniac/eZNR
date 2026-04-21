@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Open+Sans:wght@300;400;500;600;700&family=Noto+Color+Emoji&display=swap');
 
 :root {
   /* Brand Colors from Logo sheet */
@@ -58,8 +58,8 @@
   --danger: #F44336;
   --info: #2196F3;
 
-  --font-heading: 'Montserrat', -apple-system, sans-serif;
-  --font-body: 'Open Sans', -apple-system, sans-serif;
+  --font-heading: 'Montserrat', 'Noto Color Emoji', -apple-system, sans-serif;
+  --font-body: 'Open Sans', 'Noto Color Emoji', -apple-system, sans-serif;
 
   --sidebar-width: 280px;
   --sidebar-collapsed-width: 72px;

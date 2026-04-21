@@ -262,7 +262,7 @@ const SIDEBAR_TOOLTIPS = {
 
 export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
     const { t, lang } = useLanguage();
-    const { user, logout, isAdmin } = useAuth();
+    const { user, logout, isAdmin, activeCompanyId } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [openMenus, setOpenMenus] = useState({});
@@ -271,8 +271,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
 
     // UI Branding — read sidebar logo/text settings from company
     const uiBranding = useMemo(() => {
-        try { return getUIBranding(user?.activeCompanyId); } catch { return { sidebarLogoEnabled: false, sidebarText: UI_DEFAULTS.sidebarText, logo: '' }; }
-    }, [user?.activeCompanyId]);
+        try { return getUIBranding(activeCompanyId); } catch { return { sidebarLogoEnabled: false, sidebarText: UI_DEFAULTS.sidebarText, logo: '' }; }
+    }, [activeCompanyId]);
 
     // Build menu: base items + admin items (if admin)
     const allMenuItems = useMemo(() => {
