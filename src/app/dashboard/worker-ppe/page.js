@@ -10,6 +10,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generatePPEReport } from '@/lib/pdfReportGenerator';
+import Icon3D from '@/components/Icon3D';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
@@ -97,7 +98,10 @@ export default function WorkerPPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🥽 {t('workerPPE')}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <Icon3D name="OZO.png" size={32} />
+          <h1 style={{ margin: 0 }}>{t('workerPPE')}</h1>
+        </div>
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <button className="btn btn-primary btn-sm" onClick={openModal}>
@@ -192,7 +196,10 @@ export default function WorkerPPEPage() {
         <div className="modal-overlay" onClick={() => setShowAddModal(false)} style={{ zIndex: 200 }}>
           <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-              <h2 style={{ color: 'white' }}>🦺 {lang === 'bs' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment'}</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Icon3D name="OZO.png" size={28} />
+                <h2 style={{ color: 'white', margin: 0 }}>{lang === 'bs' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment'}</h2>
+              </div>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowAddModal(false)}>✕</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

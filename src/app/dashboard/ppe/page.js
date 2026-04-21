@@ -5,6 +5,7 @@ import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import Icon3D from '@/components/Icon3D';
 
 export default function PPEPage() {
   const { t, lang } = useLanguage();
@@ -61,7 +62,10 @@ export default function PPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🦺 {t('ppe')}</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <Icon3D name="OZO.png" size={32} />
+          <h1 style={{ margin: 0 }}>{t('ppe')}</h1>
+        </div>
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>

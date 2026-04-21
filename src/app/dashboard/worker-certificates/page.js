@@ -5,6 +5,7 @@ import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSortedList } from '@/hooks/useSortedList';
+import Icon3D from '@/components/Icon3D';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
 function buildBulkPrintHtml(selectedRows, workers, lang) {
@@ -201,7 +202,7 @@ function WorkerCertificatesInner() {
       <div className="animate-fadeIn">
         {/* ── Page header ───────────────────────────────────────────────── */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '1.6rem' }}>📜</span>
+          <Icon3D name="Uvjerenja.png" size={32} />
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>

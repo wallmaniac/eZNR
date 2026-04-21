@@ -12,6 +12,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import { uploadSecureFile } from '@/lib/storageService';
 import HelpTip from '@/components/HelpTip';
+import Icon3D from '@/components/Icon3D';
 
 const EMPTY_CERT = {
     workerId: '',
@@ -342,7 +343,8 @@ export function UvjerenjeFormPage() {
         <div className="animate-fadeIn">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
-                <h1 style={{ margin: 0 }}>📜 {lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
+                <Icon3D name="Uvjerenja.png" size={32} />
+                <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
             </div>
             <DialogRenderer />
 

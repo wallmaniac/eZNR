@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, todayISO } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import Icon3D from '@/components/Icon3D';
 
 export default function EKPPEPage() {
   const { lang } = useLanguage();
@@ -82,7 +83,10 @@ export default function EKPPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🧤 EK — Osobna zaštitna oprema</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <Icon3D name="OZO.png" size={32} />
+          <h1 style={{ margin: 0 }}>EK — Osobna zaštitna oprema</h1>
+        </div>
 
         {/* Toolbar */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
