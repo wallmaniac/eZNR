@@ -325,7 +325,7 @@ function FleetOrdersInner() {
                                         <td style={{ fontWeight: 600 }}>{o.vehicleReg}</td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <button onClick={() => { if (o.vozacId) setViewWorkerId(o.vozacId); }}
-                                                style={{ background: 'none', border: 'none', cursor: o.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: o.vozacId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                style={{ background: 'none', border: 'none', cursor: o.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: o.vozacId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>
                                                 {o.workerName}
                                             </button>
                                         </td>

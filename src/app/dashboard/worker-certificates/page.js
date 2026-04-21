@@ -373,7 +373,7 @@ function WorkerCertificatesInner() {
                         <td style={{ fontWeight: 600 }}>
                           <button
                             onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
-                            style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                            style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                             title={r.workerId ? (bs ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
                           >{r.workerName}</button>
                         </td>
@@ -381,7 +381,7 @@ function WorkerCertificatesInner() {
                           <button
                             onClick={() => handleEdit(r.id)}
                             disabled={isNavigating}
-                            style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
+                            style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
                             title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
                           >{r.naziv || r.ime || '—'}</button>
                         </td>

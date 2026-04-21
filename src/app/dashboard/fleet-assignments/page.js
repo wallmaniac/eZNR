@@ -295,7 +295,7 @@ function FleetAssignmentsInner() {
                                         <td style={{ fontWeight: 600 }}>{a.vehicleReg}</td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <button onClick={() => { const w = workers.find(x => x.id === a.workerId); if (w) setViewWorkerId(w.id); }}
-                                                style={{ background: 'none', border: 'none', cursor: a.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: a.workerId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                style={{ background: 'none', border: 'none', cursor: a.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: a.workerId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>
                                                 {a.workerName}
                                             </button>
                                         </td>

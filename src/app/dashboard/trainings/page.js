@@ -663,7 +663,7 @@ export default function TrainingsPage() {
                                                     {matchedWorker ? (
                                                         <button
                                                             onClick={() => setViewWorkerId(matchedWorker.id)}
-                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted' }}
+                                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'solid' }}
                                                             title="Klikni za pregled profila"
                                                         >{s.recipientName || '—'}</button>
                                                     ) : (

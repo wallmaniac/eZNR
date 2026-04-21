@@ -37,6 +37,7 @@ export const PDF_DEFAULTS = {
   // Header text formatting
   headerEnabled: true,              // Entire document header feature
   showCompanyInfo: true,            // Show textual details block
+  showCompanyName: true,             // Show company name under logo
   headerText: '',                   // Custom text (empty = use default report titles)
   headerFontSize: 12,              // pt
   headerBold: false,

@@ -367,7 +367,7 @@ export default function MedicalExamsPage() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }}>{exam._workerName}</button></td>
+                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }}>{exam._workerName}</button></td>
                                             <td style={{ fontSize: '0.82rem' }}>{examTypeLabel(exam.tipPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem' }}>{formatDate(exam.datumPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem', fontWeight: days !== null && days < 0 ? 700 : 400, color: days !== null && days < 0 ? 'var(--danger)' : days !== null && days <= 90 ? 'var(--warning)' : 'inherit' }}>{exam.vrijediDo ? formatDate(exam.vrijediDo) : '—'}</td>

@@ -467,7 +467,7 @@ export default function ReferralRA1Page() {
                           </div>
                         </td>
                         <td>
-                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }} title={lang === 'bs' ? 'Otvori profil radnika' : 'Open worker profile'}>
+                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }} title={lang === 'bs' ? 'Otvori profil radnika' : 'Open worker profile'}>
                             {wName}
                           </button>
                         </td>
@@ -475,7 +475,7 @@ export default function ReferralRA1Page() {
                         <td><span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{examType}</span></td>
                         <td>
                           {r.ustanovaNaziv
-                            ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                            ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                                 title={lang === 'bs' ? 'Filtriraj po ustanovi' : 'Filter by institution'}
                                 onClick={e => { e.stopPropagation(); setFilterEstab(f => f === r.ustanovaNaziv ? '' : r.ustanovaNaziv); }}>
                                 {r.ustanovaNaziv}
@@ -484,7 +484,7 @@ export default function ReferralRA1Page() {
                         </td>
                         <td>
                           {r.doktorIme
-                            ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                            ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                                 title={lang === 'bs' ? 'Filtriraj po doktoru' : 'Filter by doctor'}
                                 onClick={e => { e.stopPropagation(); setFilterDoctor(f => f === r.doktorIme ? '' : r.doktorIme); }}>
                                 {r.doktorIme}
@@ -841,7 +841,7 @@ export default function ReferralRA1Page() {
               <label className="form-label">📎 {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
-                      <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'dotted' }}>📎 {formData.docName}</button>
+                      <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }}>📎 {formData.docName}</button>
                       <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
                         <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
                         <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>

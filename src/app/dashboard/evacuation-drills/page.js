@@ -349,7 +349,7 @@ export default function EvacuationDrillsPage() {
                                                 <td><span style={{ fontWeight: 600 }}>{getPlanName(d.planId)}</span></td>
                                                 <td>
                                                     <button onClick={e => { e.stopPropagation(); if (d.odgovornaOsobaId) setViewWorkerId(d.odgovornaOsobaId); }}
-                                                        style={{ background: 'none', border: 'none', cursor: d.odgovornaOsobaId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: d.odgovornaOsobaId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                        style={{ background: 'none', border: 'none', cursor: d.odgovornaOsobaId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: d.odgovornaOsobaId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>
                                                         {d.odgovornaOsobaIme || '—'}
                                                     </button>
                                                 </td>

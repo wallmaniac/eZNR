@@ -963,7 +963,7 @@ export default function AnnualInjuriesPage() {
                             <td style={{ fontWeight: 600 }}>
                               <button
                                 onClick={() => { if (inj.radnikId) setViewWorkerId(inj.radnikId); }}
-                                style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                               >{inj.radnikIme || '—'}</button>
                             </td>
                             <td>{inj.datum ? fmtDate(inj.datum) : '—'}</td>

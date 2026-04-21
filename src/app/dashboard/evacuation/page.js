@@ -324,7 +324,7 @@ export default function EvacuationPage() {
                                                 <td style={{ fontWeight: 700 }}>{p.lokacija}</td>
                                                 <td>
                                                     <button onClick={e => { e.stopPropagation(); if (p.odgovornaOsobaId) setViewWorkerId(p.odgovornaOsobaId); }}
-                                                        style={{ background: 'none', border: 'none', cursor: p.odgovornaOsobaId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: p.odgovornaOsobaId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                        style={{ background: 'none', border: 'none', cursor: p.odgovornaOsobaId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: p.odgovornaOsobaId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>
                                                         {p.odgovornaOsobaIme || '—'}
                                                     </button>
                                                 </td>

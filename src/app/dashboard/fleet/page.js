@@ -586,7 +586,7 @@ function FleetInner() {
                                                 <td style={{ textAlign: 'center' }}><span className="badge badge-info" style={{ display: 'inline-block', textAlign: 'center', minWidth: 80 }}>{bs ? TYPE_MAP[v.tip]?.bs : TYPE_MAP[v.tip]?.en || v.tip}</span></td>
                                                 <td>
                                                     <button onClick={e => { e.stopPropagation(); if (v.vozacId) setViewWorkerId(v.vozacId); }}
-                                                        style={{ background: 'none', border: 'none', cursor: v.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: v.vozacId ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}>
+                                                        style={{ background: 'none', border: 'none', cursor: v.vozacId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: v.vozacId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>
                                                         {v.vozacIme || '—'}
                                                     </button>
                                                 </td>

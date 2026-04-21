@@ -1473,14 +1473,14 @@ export default function DashboardPage() {
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
-                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                                                         title={worker ? (lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
                                                     >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                 </td>
                                                 <td>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
-                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
                                                         title={worker ? (lang === 'bs' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}
                                                     >{c.naziv || c.ime || '—'}</button>
                                                 </td>
@@ -1532,14 +1532,14 @@ export default function DashboardPage() {
                                                 <td style={{ fontWeight: 600 }}>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
-                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--text-muted)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
                                                         title={worker ? (lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
                                                     >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                 </td>
                                                 <td>
                                                     <button
                                                         onClick={() => { if (worker) setViewWorkerId(worker.id); }}
-                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'dotted', textDecorationColor: 'var(--primary)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
                                                         title={worker ? (lang === 'bs' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}
                                                     >{p.naziv || '—'}</button>
                                                 </td>

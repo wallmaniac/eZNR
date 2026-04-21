@@ -13,16 +13,20 @@
  * The hook wires itself into the NavigationGuardContext so the user
  * is automatically prompted if they try to navigate away.
  */
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useNavigationGuard } from '@/contexts/NavigationGuardContext';
 
 export function useUnsavedChanges(onSave) {
     const { markDirty, markClean, isDirty } = useNavigationGuard();
+    
+    // Keep a ref to the latest onSave so we never hand a stale closure to the guard
+    const onSaveRef = useRef(onSave);
+    useEffect(() => { onSaveRef.current = onSave; }, [onSave]);
 
-    // Allow passing an onSave so the guard can offer "Save & continue"
+    // Always pass a wrapper that reads the ref — never closes over onSave directly
     const markDirtyWithSave = useCallback(() => {
-        markDirty(onSave || null);
-    }, [markDirty, onSave]);
+        markDirty(onSaveRef.current ? (() => onSaveRef.current()) : null);
+    }, [markDirty]);
 
     // Auto-clean on unmount
     useEffect(() => {

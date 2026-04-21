@@ -10,7 +10,7 @@ export function NavigationGuardProvider({ children }) {
     const [isDirty, setIsDirty] = useState(false);
     const [pendingPath, setPendingPath] = useState(null);
     const [showPrompt, setShowPrompt] = useState(false);
-    const [saveCallback, setSaveCallback] = useState(null);
+    const saveCallbackRef = useRef(null);
     const dirtyRef = useRef(false);
     const pathnameRef = useRef(pathname);
 
@@ -31,7 +31,7 @@ export function NavigationGuardProvider({ children }) {
             setIsDirty(false);
             dirtyRef.current = false;
             setPendingPath(null);
-            setSaveCallback(null);
+            saveCallbackRef.current = null;
         }
     }, [pathname]);
 
@@ -92,12 +92,12 @@ export function NavigationGuardProvider({ children }) {
 
     const markDirty = useCallback((onSave) => {
         setIsDirty(true);
-        if (onSave) setSaveCallback(() => onSave);
+        if (onSave) saveCallbackRef.current = onSave;
     }, []);
 
     const markClean = useCallback(() => {
         setIsDirty(false);
-        setSaveCallback(null);
+        saveCallbackRef.current = null;
     }, []);
 
     // Call this instead of router.push when navigating from a dirty page
@@ -111,9 +111,10 @@ export function NavigationGuardProvider({ children }) {
     }, [router]);
 
     const handleSave = useCallback(async () => {
-        if (saveCallback) {
+        const cb = saveCallbackRef.current;
+        if (cb) {
             try {
-                await saveCallback();
+                await cb();
             } catch (e) {
                 console.error('Save failed:', e);
                 return; // stay on page if save failed
@@ -128,8 +129,8 @@ export function NavigationGuardProvider({ children }) {
             window.history.go(-2); // Skip the sentinel and navigate to the actual previous page
         }
         setPendingPath(null);
-        setSaveCallback(null);
-    }, [saveCallback, pendingPath, router]);
+        saveCallbackRef.current = null;
+    }, [pendingPath, router]);
 
     const handleDiscard = useCallback(() => {
         setIsDirty(false);
@@ -141,12 +142,13 @@ export function NavigationGuardProvider({ children }) {
             window.history.go(-2); // Skip the sentinel and navigate to the actual previous page
         }
         setPendingPath(null);
-        setSaveCallback(null);
+        saveCallbackRef.current = null;
     }, [pendingPath, router]);
 
     const handleStay = useCallback(() => {
         setShowPrompt(false);
         setPendingPath(null);
+        saveCallbackRef.current = null;
     }, []);
 
     return (
@@ -187,7 +189,7 @@ export function NavigationGuardProvider({ children }) {
                             Šta želite raditi?
                         </p>
                         <div style={{ display: 'flex', gap: 10, flexDirection: 'column' }}>
-                            {saveCallback && (
+                            {saveCallbackRef.current && (
                                 <button
                                     style={{
                                         padding: '12px 20px', borderRadius: 'var(--radius-md)',

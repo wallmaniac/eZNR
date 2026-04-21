@@ -60,6 +60,7 @@ export default function SettingsPage() {
   const [wmEnabled, setWmEnabled] = useState(PDF_DEFAULTS.watermarkEnabled);
   const [headerEnabled, setHeaderEnabled] = useState(PDF_DEFAULTS.headerEnabled);
   const [showCompanyInfo, setShowCompanyInfo] = useState(true);
+  const [showCompanyName, setShowCompanyName] = useState(true);
   const [wmPosition, setWmPosition] = useState(PDF_DEFAULTS.watermarkPosition); // fallback if I typo'd
   const [wmOpacity, setWmOpacity] = useState(PDF_DEFAULTS.watermarkOpacity);
   const [wmSize, setWmSize] = useState(PDF_DEFAULTS.watermarkSize);
@@ -165,6 +166,7 @@ export default function SettingsPage() {
       setLogoSize(pdfBrand.logoSize);
       setHeaderEnabled(pdfBrand.headerEnabled ?? true);
       setShowCompanyInfo(pdfBrand.showCompanyInfo ?? true);
+      setShowCompanyName(pdfBrand.showCompanyName ?? true);
       setHeaderText(pdfBrand.headerText);
       setHeaderFontSize(pdfBrand.headerFontSize);
       setHeaderBold(pdfBrand.headerBold);
@@ -310,6 +312,7 @@ export default function SettingsPage() {
         headerUnderline: headerUnderline, 
         headerColor: headerColor,
         showCompanyInfo: showCompanyInfo,
+        showCompanyName: showCompanyName,
         primaryColor: uiPrimaryColor, 
         sidebarColor: uiSidebarColor,
         sidebarLogoEnabled: sidebarLogoEnabled,
@@ -827,7 +830,7 @@ export default function SettingsPage() {
                       </div>
                     </div>
                     {/* Add back Default Settings Reset entirely */}
-                    <button type="button" onClick={() => { if(confirm(lang==='bs'?'Poništi sve na početne EZNR vrijednosti?':'Reset to EZNR defaults?')){setUiPrimaryColor(EZNR_DEFAULTS.primaryColor);setUiSidebarColor(EZNR_DEFAULTS.sidebarColor);setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setWmOpacity(5);setWmSize(280);setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>{lang === 'bs' ? 'Vrati zadane postavke' : 'Reset to Defaults'}</button>
+                    <button type="button" onClick={() => { if(confirm(lang==='bs'?'Poništi sve na početne EZNR vrijednosti?':'Reset to EZNR defaults?')){setUiPrimaryColor(EZNR_DEFAULTS.primaryColor);setUiSidebarColor(EZNR_DEFAULTS.sidebarColor);setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setShowCompanyName(true);setWmOpacity(5);setWmSize(280);setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>{lang === 'bs' ? 'Vrati zadane postavke' : 'Reset to Defaults'}</button>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 32 }}>
@@ -835,7 +838,7 @@ export default function SettingsPage() {
                     {/* === APP BRANDING CARD ( PREMIUM ) === */}
                     <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(150,150,150,0.15)', boxShadow: '0 12px 30px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
                       <div style={{ padding: '20px 24px', background: 'linear-gradient(to right, rgba(150,150,150,0.03), transparent)', borderBottom: '1px solid rgba(150,150,150,0.1)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 10, border: '1px solid var(--border)' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 18h8"/><path d="M2 18h4"/><path d="M16 2v6"/><path d="M8 2v6"/><rect width="20" height="12" x="2" y="4" rx="2"/></svg></div>
+                        <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 10, border: '1px solid var(--border)' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{lang === 'bs' ? 'Izgled Aplikacije' : 'Application Appereance'}</div>
                         </div>
@@ -915,10 +918,11 @@ export default function SettingsPage() {
                     {/* === PDF BRANDING CARD ( PREMIUM ) === */}
                     <div style={{ borderRadius: 20, background: 'var(--bg-card)', border: '1px solid rgba(150,150,150,0.15)', boxShadow: '0 12px 30px rgba(0,0,0,0.04)', overflow: 'hidden' }}>
                       <div style={{ padding: '20px 24px', background: 'linear-gradient(to right, rgba(150,150,150,0.03), transparent)', borderBottom: '1px solid rgba(150,150,150,0.1)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 10, border: '1px solid var(--border)' }}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M10 18H8"/><path d="M16 18h-2"/></svg></div>
+                        <div style={{ padding: 8, background: 'var(--bg-input)', borderRadius: 10, border: '1px solid var(--border)' }}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
                         <div>
                           <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{lang === 'bs' ? 'PDF Branding' : 'PDF Report Branding'}</div>
                         </div>
+                        <button type="button" onClick={() => { if(confirm(lang==='bs'?'Poništi PDF postavke na početne EZNR vrijednosti?':'Reset PDF settings to EZNR defaults?')){setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setShowCompanyName(true);setWmPosition('center');setWmOpacity(5);setWmSize(280);setWmContent('both');setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderFontSize(12);setHeaderBold(false);setHeaderItalic(false);setHeaderUnderline(false);setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', color: 'var(--text-muted)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>↺ {lang === 'bs' ? 'Vrati zadane' : 'Reset'}</button>
                       </div>
 
                       <div style={{ padding: '20px', display: 'flex', flexWrap: 'wrap', gap: 24 }}>
@@ -941,6 +945,13 @@ export default function SettingsPage() {
                                 <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Podaci Firme':'Company Info'}</div>
                                 <div onClick={()=>{setShowCompanyInfo(e=>!e);setDirty('company');}} style={{ width: 42, height: 24, background: showCompanyInfo !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 12, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
                                   <div style={{ width: 20, height: 20, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: showCompanyInfo !== false ? 20 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                                </div>
+                            </div>
+
+                            <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Naziv Firme':'Company Name'}</div>
+                                <div onClick={()=>{setShowCompanyName(e=>!e);setDirty('company');}} style={{ width: 42, height: 24, background: showCompanyName !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 12, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                  <div style={{ width: 20, height: 20, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: showCompanyName !== false ? 20 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                                 </div>
                             </div>
                           </div>
@@ -1070,8 +1081,9 @@ export default function SettingsPage() {
                                 <div style={{display:'flex',justifyContent:logoPosition==='center'?'center':'space-between',alignItems:'flex-start',borderBottom:'3px solid '+pdfAccentColor,paddingBottom:8,marginBottom:12,position:'relative',zIndex:1, transition: 'border-color 0.3s'}}>
                                   <div style={{textAlign:logoPosition==='center'?'center':'left'}}>
                                     {companyData.logo
-                                      ?<img src={companyData.logo} alt="" style={{height:Math.max(logoSize*0.45, 30),maxWidth:120,objectFit:'contain'}}/>
+                                      ?<img src={companyData.logo} alt="" style={{height:Math.max(logoSize*0.45, 30),maxWidth:120,objectFit:'contain',display:'block'}}/>
                                       :<div style={{fontSize:'8pt',fontWeight:800,color:pdfAccentColor}}>{companyData.naziv||'Company'}</div>}
+                                    {showCompanyName !== false && companyData.logo && <div style={{fontSize:'5pt',fontWeight:800,color:'#333',textAlign:'center',width:Math.max(logoSize*0.45*4, 120),maxWidth:120,marginTop:2}}>{companyData.naziv}</div>}
                                   </div>
                                   {logoPosition!=='center' && showCompanyInfo !== false && (
                                     <div style={{textAlign:'right',fontSize:'3.5pt',color:'#666', lineHeight: 1.4}}>

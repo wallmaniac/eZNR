@@ -427,7 +427,7 @@ export default function OrgUnitsPage() {
                                                 <td>{u.mjesto}</td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     {u.odgovornaOsoba ? (
-                                                        <span style={{ cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'dotted' }} onClick={() => {
+                                                        <span style={{ cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'solid' }} onClick={() => {
                                                             const w = workers.find(x => `${x.ime} ${x.prezime}` === u.odgovornaOsoba);
                                                             if (w) setViewWorkerId(w.id);
                                                             else alert(lang === 'bs' ? 'Radnik nije pronađen u bazi.' : 'Worker not found in database.');

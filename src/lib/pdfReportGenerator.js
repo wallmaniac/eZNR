@@ -111,6 +111,7 @@ function getCompanyInfo() {
     logoSize: branding.logoSize || PDF_DEFAULTS.logoSize,
     headerEnabled: branding.headerEnabled ?? PDF_DEFAULTS.headerEnabled,
     showCompanyInfo: branding.showCompanyInfo ?? PDF_DEFAULTS.showCompanyInfo,
+    showCompanyName: branding.showCompanyName ?? true,
     headerText: branding.headerText || '',
     headerFontSize: branding.headerFontSize || PDF_DEFAULTS.headerFontSize,
     headerBold: branding.headerBold ?? false,
@@ -183,7 +184,7 @@ function buildHeader(title, subtitle, company) {
         <div class="brand" style="justify-content:${headerJustify}">
           ${logoHtml}
         </div>
-        ${company.logo && companyName ? `<div style="font-size:9pt;font-weight:800;color:#222;margin-top:3px;text-align:${logoPos === 'center' ? 'center' : 'left'}">${companyName}</div>` : ''}
+        ${(company.showCompanyName !== false && company.logo && companyName) ? `<div style="font-size:9pt;font-weight:800;color:#222;margin-top:3px;text-align:center;max-width:${logoSize * 4}px">${companyName}</div>` : ''}
       </div>
       ${logoPos !== 'center' && company.showCompanyInfo !== false ? `
       <div class="company-info">
