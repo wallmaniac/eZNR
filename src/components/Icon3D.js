@@ -54,7 +54,11 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
   }
   
   if (name === 'Vozni park.png') {
-    appliedScale = 1.08; // visually 8% larger so user can actually see the difference
+    if (size <= 30) {
+      appliedScale = 1.11; // 1.08 + 3%
+    } else {
+      appliedScale = 1.13; // 1.08 + 5%
+    }
     transformY = '3px'; // drop down to level bottom of icon everywhere
   }
 
