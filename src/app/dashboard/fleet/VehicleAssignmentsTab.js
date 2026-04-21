@@ -128,11 +128,9 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                             <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                         </div>
                     )}
-                    {!activeAssig && (
-                        <button className="btn btn-primary btn-sm" onClick={() => { setEditingId(null); setShowForm(true); setForm({ workerId: '', workerIme: '', datumZaduzenja: new Date().toISOString().split('T')[0], pocetnaKilometraza: '', datumRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(''); }}>
-                            + {bs ? 'Novo zaduženje' : 'New Assignment'}
-                        </button>
-                    )}
+                    <button className="btn btn-primary btn-sm" onClick={() => { setEditingId(null); setShowForm(true); setForm({ workerId: '', workerIme: '', datumZaduzenja: new Date().toISOString().split('T')[0], pocetnaKilometraza: '', datumRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(''); }}>
+                        + {bs ? 'Novo zaduženje' : 'New Assignment'}
+                    </button>
                 </div>
             </div>
 

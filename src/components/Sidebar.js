@@ -9,11 +9,8 @@ import Icon3D from '@/components/Icon3D';
 import { getUIBranding, UI_DEFAULTS } from '@/lib/brandingService';
 
 const menuItems = [
-    // ── Top-level standalone ───────────────────────────────────────────────────
     { key: 'dashboard', icon: '📊', path: '/dashboard' },
     { key: 'home',      icon: '🏠', path: '/dashboard/news' },
-
-    // ── 👷 RADNICI — everything about people ──────────────────────────────────
     {
         key: 'grpWorkers', icon: 'Radnici.png',
         children: [
@@ -21,44 +18,30 @@ const menuItems = [
             { key: 'workerCertificates', icon: 'Uvjerenja.png', path: '/dashboard/worker-certificates' },
             { key: 'workerPPE',          icon: 'OZO.png', path: '/dashboard/worker-ppe' },
             { key: 'medicalExams',       icon: 'Ljekarski pregledi.png', path: '/dashboard/medical-exams' },
-            { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
-            { key: 'ekPPE',             icon: 'OZO.png', path: '/dashboard/ek-ppe' },
-            { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
         ],
     },
-
-    // ── 🏢 ORGANIZACIJA — company structure ───────────────────────────────────
     {
         key: 'grpOrganization', icon: '🏢',
         children: [
-            { key: 'orgUnits',       icon: '🏢', path: '/dashboard/org-units' },
-            { key: 'workplaces',     icon: '🔧', path: '/dashboard/workplaces' },
-            { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
-            { key: 'sistematizacija', icon: '📑', path: '/dashboard/sistematizacija' },
+            { key: 'companyProfile', icon: '🏢', path: '/dashboard/company-profile', label_bs: 'Profil kompanije', label_en: 'Company Profile' },
             { key: 'addressBook',    icon: '📒', path: '/dashboard/address-book' },
         ],
     },
-
-    // ── ⚙️ OPREMA — equipment lifecycle ──────────────────────────────────────
     {
         key: 'grpEquipment', icon: 'Oprema.png',
         children: [
             { key: 'equipment',          icon: 'Oprema.png', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
-            { key: 'ekEquipment',        icon: 'Oprema.png', path: '/dashboard/ek-equipment' },
+            { key: 'serviceRecords',     icon: '🔧', path: '/dashboard/service-records', label_bs: 'Servisni zapisnici', label_en: 'Service Records' },
         ],
     },
-
-    // ── 🩹 SIGURNOST — incidents & diseases ───────────────────────────────────
     {
         key: 'grpSafety', icon: '🩹',
         children: [
             { key: 'injuryReport',       icon: '🩹', path: '/dashboard/injuries' },
-            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
             { key: 'diseaseReport',      icon: '🏥', path: '/dashboard/diseases' },
+            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
         ],
     },
-
-    // ── 🎓 OSPOSOBLJAVANJE — training & assessments ───────────────────────────
     {
         key: 'grpTraining', icon: '🎓',
         children: [
@@ -68,41 +51,12 @@ const menuItems = [
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
         ],
     },
-
-    // ── 📑 DOKUMENTI — all documents & forms ─────────────────────────────────
     {
         key: 'grpDocuments', icon: '📑',
         children: [
-            { key: 'employerDocs',   icon: '📑', path: '/dashboard/employer-docs' },
-            { key: 'requests',       icon: '📝', path: '/dashboard/requests' },
-            {
-                key: 'obrasciIUputnice', icon: '📋',
-                label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
-                children: [
-                    { key: 'formOIR1',          icon: '📄', path: '/dashboard/form-oir1' },
-                    { key: 'medicalReferralRA1', icon: 'Ljekarska uputnica.png', path: '/dashboard/referral-ra1' },
-                    { key: 'formRO1',            icon: '📄', path: '/dashboard/form-ro1' },
-                    { key: 'formRO2',            icon: '📄', path: '/dashboard/form-ro2' },
-                    { key: 'nightWorkReferral',  icon: '🌙', path: '/dashboard/night-work' },
-                ],
-            },
-            {
-                key: 'grpISZNR', icon: '🏛️',
-                label_bs: 'Interni akti ZNR', label_en: 'Internal OSH Acts',
-                children: [
-                    { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
-                    { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
-                    { key: 'documentTypes',   icon: '📋', path: '/dashboard/isznr-doc-types' },
-                    { key: 'digitalSigning',  icon: '✍️', path: '/dashboard/isznr-signing' },
-                    { key: 'examiners',       icon: '🔍', path: '/dashboard/isznr-examiners' },
-                    { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
-                ],
-            },
-            { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Zapisnici' },
+            { key: 'documentationArchive', icon: '📂', path: '/dashboard/archives-hub', label_bs: 'Dokumentacija / Arhiva', label_en: 'Documentation / Archive' },
         ],
     },
-
-    // ── 🚗 VOZNI PARK — fleet management ─────────────────────────────────────
     {
         key: 'grpFleet', icon: 'Vozni park.png',
         children: [
@@ -112,16 +66,12 @@ const menuItems = [
             { key: 'fleetOrders', icon: '📝', path: '/dashboard/fleet-orders', label_bs: 'Putni nalozi', label_en: 'Travel Orders' },
         ],
     },
-
-    // ── 🧯 ZAŠTITA OD POŽARA — fire protection ──────────────────────────────
     {
         key: 'grpFireProtection', icon: '🧯',
         children: [
             { key: 'fireExtinguishers', icon: '🧯', path: '/dashboard/fire-protection', label_bs: 'Protupožarna oprema', label_en: 'Fire Equipment' },
         ],
     },
-
-    // ── 🚨 EVAKUACIJA — evacuation planning ─────────────────────────────────
     {
         key: 'grpEvacuation', icon: '🚨',
         children: [
@@ -129,28 +79,6 @@ const menuItems = [
             { key: 'evacuationDrills', icon: '🏃', path: '/dashboard/evacuation-drills', label_bs: 'Vježbe evakuacije', label_en: 'Evacuation Drills' },
         ],
     },
-
-    // ── 🔗 ŠIFARNICI — reference / setup data (formerly "Zajednički elementi") ─
-    {
-        key: 'grpCodebooks', icon: '🔗',
-        children: [
-            { key: 'countries',          icon: '🌍', path: '/dashboard/countries' },
-            { key: 'counties',           icon: '📍', path: '/dashboard/counties' },
-            { key: 'places',             icon: '🏘️', path: '/dashboard/places' },
-            { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
-            { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
-            { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
-            { key: 'doctors',            icon: 'Doktori.png', path: '/dashboard/doctors' },
-            { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
-            { key: 'certTypes',          icon: 'Uvjerenja.png', path: '/dashboard/cert-types' },
-            { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },
-            { key: 'ppe',               icon: 'OZO.png', path: '/dashboard/ppe' },
-            { key: 'fileTypes',         icon: '📂', path: '/dashboard/file-types' },
-            { key: 'extraFields',       icon: '➕', path: '/dashboard/extra-fields' },
-        ],
-    },
-
-    // ── 🛠️ ALATI — tools ────────────────────────────────────────────────────
     {
         key: 'alati', icon: '🛠️',
         children: [
@@ -159,8 +87,6 @@ const menuItems = [
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
         ],
     },
-
-    // ── Bottom standalone ──────────────────────────────────────────────────────
     { key: 'settings',    icon: '⚙️', path: '/dashboard/settings' },
 ];
 
@@ -295,9 +221,47 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
             items.push({
                 key: 'admin',
                 icon: '👑',
+                label_bs: 'Superadmin / Napredno',
+                label_en: 'Superadmin / Advanced',
                 children: [
                     { key: 'adminUsers', icon: '👥', path: '/dashboard/admin/users' },
                     { key: 'adminCompanies', icon: '🏢', path: '/dashboard/admin/companies' },
+                    { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
+                    { key: 'ekWorkers',      icon: '📇', path: '/dashboard/ek-workers' },
+                    { key: 'ekPPE',          icon: 'OZO.png', path: '/dashboard/ek-ppe' },
+                    { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
+                    { key: 'ekEquipment',    icon: 'Oprema.png', path: '/dashboard/ek-equipment' },
+                    {
+                        key: 'grpISZNR', icon: '🏛️',
+                        label_bs: 'Interni akti ZNR', label_en: 'Internal OSH Acts',
+                        children: [
+                            { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
+                            { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
+                            { key: 'documentTypes',   icon: '📋', path: '/dashboard/isznr-doc-types' },
+                            { key: 'digitalSigning',  icon: '✍️', path: '/dashboard/isznr-signing' },
+                            { key: 'examiners',       icon: '🔍', path: '/dashboard/isznr-examiners' },
+                            { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
+                        ],
+                    },
+                    {
+                        key: 'grpCodebooks', icon: '🔗',
+                        label_bs: 'Šifarnici', label_en: 'Codebooks',
+                        children: [
+                            { key: 'countries',          icon: '🌍', path: '/dashboard/countries' },
+                            { key: 'counties',           icon: '📍', path: '/dashboard/counties' },
+                            { key: 'places',             icon: '🏘️', path: '/dashboard/places' },
+                            { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
+                            { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
+                            { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
+                            { key: 'doctors',            icon: 'Doktori.png', path: '/dashboard/doctors' },
+                            { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
+                            { key: 'certTypes',          icon: 'Uvjerenja.png', path: '/dashboard/cert-types' },
+                            { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },
+                            { key: 'ppe',               icon: 'OZO.png', path: '/dashboard/ppe' },
+                            { key: 'fileTypes',         icon: '📂', path: '/dashboard/file-types' },
+                            { key: 'extraFields',       icon: '➕', path: '/dashboard/extra-fields' },
+                        ],
+                    }
                 ],
             });
         }
