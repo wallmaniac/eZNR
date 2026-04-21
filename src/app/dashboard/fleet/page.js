@@ -17,6 +17,7 @@ import { generateFleetReport } from '@/lib/pdfReportGenerator';
 import VehicleAssignmentsTab from './VehicleAssignmentsTab';
 import VehicleDocumentsTab from './VehicleDocumentsTab';
 import VehicleTravelOrdersTab from './VehicleTravelOrdersTab';
+import Icon3D from '@/components/Icon3D';
 import { getNotificationSettings } from '@/lib/systemMonitor';
 
 const EMPTY = {
@@ -284,7 +285,7 @@ function FleetInner() {
 
                 {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                    <span style={{ fontSize: '1.6rem' }}>🚗</span>
+                    <Icon3D name="Vozni park.png" size={64} />
                     <div>
                         <h1 style={{ margin: 0 }}>{bs ? 'Vozni park' : 'Fleet Management'}</h1>
                         <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>

@@ -299,7 +299,7 @@ function EquipmentPageInner() {
 
     return (
         <div className="animate-fadeIn">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 28, marginBottom: 24 }}>
                 <Icon3D name="Oprema.png" size={64} />
                 <h1 style={{ margin: 0 }}>{t('equipment')}</h1>
             </div>

@@ -38,12 +38,25 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
   const src = `/icons3d/${name}`;
 
   let appliedScale = 1;
+  let transformY = '0px';
+
   // Some icons have significant transparent padding in their PNG files.
   // We apply a 1.9 scale globally so they visually match other icons at the same bounding box size.
-  const paddedIcons = ['Uvjerenja.png', 'Oprema.png'];
+  const paddedIcons = ['Uvjerenja.png'];
   if (paddedIcons.includes(name)) {
     appliedScale = 1.9;
   }
+
+  // Very specific overrides requested by user
+  if (name === 'Oprema.png') {
+    appliedScale = 2.03; // 7% larger than 1.9
+    transformY = '2px'; // drop it down slightly so the tools align visually with the text
+  }
+
+  // Construct transform rule safely
+  const transformConfig = [];
+  if (transformY !== '0px') transformConfig.push(`translateY(${transformY})`);
+  if (appliedScale !== 1) transformConfig.push(`scale(${appliedScale})`);
 
   return (
     <Image
@@ -55,7 +68,7 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
       style={{ 
         objectFit: 'contain', 
         flexShrink: 0,
-        transform: appliedScale !== 1 ? `scale(${appliedScale})` : undefined,
+        transform: transformConfig.length > 0 ? transformConfig.join(' ') : undefined,
         ...style 
       }}
       priority={size > 40} // Priority load for large header icons
