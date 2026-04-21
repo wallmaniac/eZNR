@@ -60,6 +60,7 @@ export default function MobileBottomNav({ onMenuOpen }) {
                     return (
                         <button
                             key={tab.key}
+                            aria-label={tab.label}
                             onClick={() => handleTap(tab)}
                             style={{
                                 flex: 1,

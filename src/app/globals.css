@@ -718,6 +718,29 @@ a:hover {
 @media (max-width: 1024px) {
   .data-table-wrapper {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    
+    background: 
+      linear-gradient(to right, white 30%, rgba(255,255,255,0)),
+      linear-gradient(to right, rgba(255,255,255,0), white 70%) 100% 0,
+      radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,0.15), rgba(0,0,0,0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.15), rgba(0,0,0,0)) 100% 0;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
+  }
+  
+  [data-theme="dark"] .data-table-wrapper {
+    background: 
+      linear-gradient(to right, var(--bg-card) 30%, rgba(0,0,0,0)),
+      linear-gradient(to right, rgba(0,0,0,0), var(--bg-card) 70%) 100% 0,
+      radial-gradient(farthest-side at 0% 50%, rgba(0,0,0,0.4), rgba(0,0,0,0)),
+      radial-gradient(farthest-side at 100% 50%, rgba(0,0,0,0.4), rgba(0,0,0,0)) 100% 0;
+    background-repeat: no-repeat;
+    background-color: transparent;
+    background-size: 40px 100%, 40px 100%, 14px 100%, 14px 100%;
+    background-attachment: local, local, scroll, scroll;
   }
 }
 
@@ -2359,4 +2382,11 @@ a:hover {
 
 @media (min-width: 768px) {
   .landing-nav-mobile { display: none !important; }
+}
+
+/* Mobile Typographical Scaling */
+@media (max-width: 768px) {
+  h1 { font-size: 1.6rem !important; }
+  h2 { font-size: 1.35rem !important; }
+  h3 { font-size: 1.15rem !important; }
 }
