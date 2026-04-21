@@ -9,16 +9,17 @@ export default function FirebasePenTest() {
     const [isRunning, setIsRunning] = useState(false);
     const [isStorming, setIsStorming] = useState(false);
 
-    const [simulateCount, setSimulateCount] = useState(100);
+    const [simulateCount, setSimulateCount] = useState('100');
 
     const log = (msg, type = 'info') => {
         setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg, type }]);
     };
 
     const runStormTest = async () => {
+        const parsedCount = Math.max(1, parseInt(simulateCount) || 1);
         setIsStorming(true);
         setLogs([]);
-        log(`Starting ${simulateCount}-User Background Storm Simulation...`, 'warning');
+        log(`Starting ${parsedCount}-User Background Storm Simulation...`, 'warning');
         
         let activeCompanyId = localStorage.getItem('eznr_activeCompany');
         const userStr = localStorage.getItem('eznr_user');
@@ -35,13 +36,13 @@ export default function FirebasePenTest() {
             return;
         }
 
-        log(`Continuously spamming 'storm_events' simulating ${simulateCount} users for 15 seconds in background... Please TEST YOUR UI NOW!`, 'info');
+        log(`Continuously spamming 'storm_events' simulating ${parsedCount} users for 15 seconds in background... Please TEST YOUR UI NOW!`, 'info');
         
         try {
             const startTime = Date.now();
             let count = 0;
             // Calibrate batch size based on simulated user count (approx 10 ticks per second)
-            const batchSize = Math.max(1, Math.floor(simulateCount / 10));
+            const batchSize = Math.max(1, Math.floor(parsedCount / 10));
             
             while (Date.now() - startTime < 15000) {
                 const batchPromises = [];
@@ -53,7 +54,7 @@ export default function FirebasePenTest() {
                 // Pause for 100ms to allow React to render the UI before the next blast
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-            log(`✅ Sustained 15-second storm finished. Simulating ${simulateCount} users generated ${count} updates. If your dashboard remained snappy, you passed the stress test!`, 'success');
+            log(`✅ Sustained 15-second storm finished. Simulating ${parsedCount} users generated ${count} updates. If your dashboard remained snappy, you passed the stress test!`, 'success');
         } catch (err) {
             log(`❌ Storm failed: ${err.message}`, 'error');
         }
@@ -61,9 +62,10 @@ export default function FirebasePenTest() {
     };
 
     const runTests = async () => {
+        const parsedCount = Math.max(1, parseInt(simulateCount) || 1);
         setIsRunning(true);
         setLogs([]);
-        log(`Starting Firebase PenTest with ${simulateCount} overlapping requests...`, 'info');
+        log(`Starting Firebase PenTest with ${parsedCount} overlapping requests...`, 'info');
 
         let activeCompanyId = localStorage.getItem('eznr_activeCompany');
         const userStr = localStorage.getItem('eznr_user');
@@ -96,14 +98,14 @@ export default function FirebasePenTest() {
 
         // TEST 2: Multi-threaded Read Foreign Company
         try {
-            log(`[TEST 2] Attempting to read FOREIGN company workers ${simulateCount} times simultaneously...`, 'info');
+            log(`[TEST 2] Attempting to read FOREIGN company workers ${parsedCount} times simultaneously...`, 'info');
             const foreignRef = collection(db, 'companies', dummyTargetId, 'workers');
-            const parallelReads = Array.from({ length: simulateCount }).map(() => getDocs(foreignRef));
+            const parallelReads = Array.from({ length: parsedCount }).map(() => getDocs(foreignRef));
             await Promise.all(parallelReads);
             log('❌ TEST 2 FAILED: SECURITY BREACH! Successfully read foreign company data.', 'error');
         } catch (err) {
             if (err.code === 'permission-denied') {
-                log(`✅ TEST 2 PASSED: Permission strictly denied for ALL ${simulateCount} foreign reads.`, 'success');
+                log(`✅ TEST 2 PASSED: Permission strictly denied for ALL ${parsedCount} foreign reads.`, 'success');
             } else {
                 log(`🤔 TEST 2 UNKNOWN: Failed, but not with permission-denied. Error: ${err.message}`, 'warning');
             }
@@ -111,14 +113,14 @@ export default function FirebasePenTest() {
 
         // TEST 3: Multi-threaded Write Foreign Company
         try {
-            log(`[TEST 3] Attempting to write FOREIGN company document ${simulateCount} times simultaneously...`, 'info');
+            log(`[TEST 3] Attempting to write FOREIGN company document ${parsedCount} times simultaneously...`, 'info');
             const foreignDoc = doc(db, 'companies', dummyTargetId, 'workers', 'hack');
-            const parallelWrites = Array.from({ length: simulateCount }).map(() => setDoc(foreignDoc, { hacked: true }));
+            const parallelWrites = Array.from({ length: parsedCount }).map(() => setDoc(foreignDoc, { hacked: true }));
             await Promise.all(parallelWrites);
             log('❌ TEST 3 FAILED: SECURITY BREACH! Successfully wrote to foreign company.', 'error');
         } catch (err) {
             if (err.code === 'permission-denied') {
-                log(`✅ TEST 3 PASSED: Permission strictly denied for ALL ${simulateCount} foreign writes.`, 'success');
+                log(`✅ TEST 3 PASSED: Permission strictly denied for ALL ${parsedCount} foreign writes.`, 'success');
             } else {
                 log(`🤔 TEST 3 UNKNOWN: Failed, but not with permission-denied. Error: ${err.message}`, 'warning');
             }
@@ -143,7 +145,7 @@ export default function FirebasePenTest() {
                 <input 
                     type="number" 
                     value={simulateCount} 
-                    onChange={e => setSimulateCount(Math.max(1, parseInt(e.target.value) || 1))} 
+                    onChange={e => setSimulateCount(e.target.value)} 
                     style={{ padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'white', borderRadius: 8, width: 200 }} 
                 />
             </div>
