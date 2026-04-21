@@ -63,7 +63,9 @@ export default function DashboardLayout({ children }) {
         if (!loading) {
             initializeData();
             if (!isAuthenticated) {
-                router.push('/login');
+                // Use window.location directly to avoid Next.js static de-optimization from useSearchParams
+                const currentUrl = typeof window !== 'undefined' ? encodeURIComponent(window.location.pathname + window.location.search) : '';
+                router.push(`/login${currentUrl ? `?redirect=${currentUrl}` : ''}`);
             }
         }
     }, [loading, isAuthenticated, router]);

@@ -44,6 +44,27 @@ export default function SettingsPage() {
 
   const { choose, alert, confirm, prompt, DialogRenderer } = useDialog();
 
+  // Mobile Tabs scroll indicator state
+  const tabsWrapperRef = useRef(null);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  useEffect(() => {
+    const handleScrollOrResize = () => {
+      if (tabsWrapperRef.current) {
+        const { scrollLeft, scrollWidth, clientWidth } = tabsWrapperRef.current;
+        setCanScrollRight(scrollLeft + clientWidth < scrollWidth - 5);
+      }
+    };
+    handleScrollOrResize();
+    const el = tabsWrapperRef.current;
+    if (el) el.addEventListener('scroll', handleScrollOrResize);
+    window.addEventListener('resize', handleScrollOrResize);
+    return () => {
+      if (el) el.removeEventListener('scroll', handleScrollOrResize);
+      window.removeEventListener('resize', handleScrollOrResize);
+    };
+  }, [activeTab]);
+
   // Profile state
   const [profileData, setProfileData] = useState({ firstName: '', lastName: '', email: '', phone: '' });
   const [passwordData, setPasswordData] = useState({ current: '', newPass: '', confirm: '' });
@@ -495,12 +516,25 @@ export default function SettingsPage() {
   return (
     <div className="animate-fadeIn">
       <DialogRenderer />
-      <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('settings')}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, marginTop: typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 0 }}>
+        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>⚙️ {t('settings')}</h1>
+        <button className="btn" onClick={logout} style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 700, padding: '8px 16px', fontSize: '0.85rem' }}>
+          🚪 {lang === 'bs' ? 'Odjava' : 'Logout'}
+        </button>
+      </div>
 
       {/* Removed global Success toast */}
 
       {/* Tabs */}
-      <div className="settings-tabs-container" style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
+      <div style={{ position: 'relative', margin: '0 -16px 24px -16px', padding: '0 16px' }}>
+        <div 
+          className="settings-tabs-container" 
+          ref={tabsWrapperRef}
+          style={{ 
+            display: 'flex', gap: 6, paddingBottom: 6, borderBottom: '2px solid var(--border)', 
+            flexWrap: 'nowrap', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', msOverflowStyle: 'none'
+          }}>
+          <style>{`.settings-tabs-container::-webkit-scrollbar { display: none; }`}</style>
         {tabs.map(tb => (
           <button key={tb.key}
             className={`tab-btn ${currentTab === tb.key ? 'active' : ''}`}
@@ -536,7 +570,21 @@ export default function SettingsPage() {
             {tb.icon} {tb.label}
             {dirtyTab === tb.key && <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--warning)', marginLeft: 6, verticalAlign: 'middle', boxShadow: '0 0 4px var(--warning)' }} title="Nesačuvane promjene" />}
           </button>
+          </button>
         ))}
+        </div>
+        {canScrollRight && (
+          <div style={{
+            position: 'absolute', right: 0, top: 0, bottom: 6, width: 64,
+            background: 'linear-gradient(to left, var(--bg-page) 30%, transparent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'flex-end',
+            paddingRight: 10, pointerEvents: 'none', color: 'var(--text-muted)'
+          }}>
+            <span style={{ fontSize: '1.8rem', fontWeight: 900, opacity: 0.9, animation: 'pulse-x 1.5s infinite alternate' }}>›</span>
+          </div>
+        )}
+      </div>
+      <style>{`@keyframes pulse-x { 0% { transform: translateX(0); } 100% { transform: translateX(5px); opacity: 1; } }`}</style>
       </div>
 
       {/* ══════════════════════════════════════════════════ */}

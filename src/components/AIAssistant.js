@@ -86,6 +86,13 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         const certificates = get('certificates');
         const equipment = get('equipment');
         const questionnaires = get('questionnaires');
+        const vehicles = get('vehicles');
+        const fireExtinguishers = get('fireExtinguishers');
+        const calendarEvents = get('calendarEvents');
+        const medicalExams = get('medicalExams');
+        const employerDocs = get('employerDocs');
+        const riskAssessments = get('riskAssessments');
+        const riskItems = get('riskItems');
 
         const lines = [];
         
@@ -112,6 +119,15 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             : `\nWORKERS ON SICK LEAVE (${allBol.length}): ${allBol.length === 0 ? 'None.' : allBol.map(b => `${b.name} (${b.src === 'injury' ? 'injury' : 'disease'})`).join(', ')}`
         );
 
+        // Calendar Events
+        const upcomingEvents = calendarEvents.filter(e => e.datum && new Date(e.datum) >= today).sort((a,b) => new Date(a.datum) - new Date(b.datum));
+        if (upcomingEvents.length > 0) {
+            lines.push(lang === 'bs'
+                ? `\nPREDSTOJEĆI DOGAĐAJI U KALENDARU (${upcomingEvents.length}): ${upcomingEvents.slice(0, 5).map(e => `${e.datum}: ${e.opis || e.tip}`).join('; ')}`
+                : `\nUPCOMING CALENDAR EVENTS (${upcomingEvents.length}): ${upcomingEvents.slice(0, 5).map(e => `${e.datum}: ${e.opis || e.tip}`).join('; ')}`
+            );
+        }
+
         // Expired certificates
         const expiredCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today);
         const soonCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30);
@@ -129,6 +145,43 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             );
         }
 
+        // Medical Exams
+        const overdueMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today);
+        const soonMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) >= today && new Date(m.vrijediDo) <= in60);
+        if (overdueMed.length > 0) lines.push(lang === 'bs'
+            ? `PREKORAČENI LJEKARSKI PREGLEDI (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Nepoznato'} (isteklo: ${m.vrijediDo})`).join('; ')}`
+            : `OVERDUE MEDICAL EXAMS (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Unknown'} (expired: ${m.vrijediDo})`).join('; ')}`
+        );
+        if (soonMed.length > 0) lines.push(lang === 'bs'
+            ? `LJEKARSKI PREGLEDI USKORO (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Nepoznato'} (ističe: ${m.vrijediDo})`).join('; ')}`
+            : `MEDICAL EXAMS DUE SOON (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Unknown'} (expires: ${m.vrijediDo})`).join('; ')}`
+        );
+
+        // Employer Docs
+        const docsObj = employerDocs.map(d => `${d.naziv} (Vrijedi do: ${d.datumIsteka || 'Nema roka'})`);
+        if (docsObj.length > 0) {
+            lines.push(lang === 'bs'
+                ? `\nNORMATIVNI AKTI POSLODAVCA: ${docsObj.join('; ')}`
+                : `\nEMPLOYER DOCUMENTATION: ${docsObj.join('; ')}`
+            );
+        }
+
+        // Risk Assessments
+        const activeAssessments = riskAssessments.filter(r => r.nazivProcjene);
+        if (activeAssessments.length > 0) {
+            lines.push(lang === 'bs' 
+                ? `\nAKTIVNE PROCJENE RIZIKA (${activeAssessments.length}): ${activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', ')}`
+                : `\nACTIVE RISK ASSESSMENTS (${activeAssessments.length}): ${activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', ')}`
+            );
+            const highRisks = riskItems.filter(ri => ri.rizik >= 16); // 16-20 Znatan, 21-25 Nedopustiv
+            if (highRisks.length > 0) {
+                lines.push(lang === 'bs'
+                    ? `KRITIČNI RIZICI (Znatan i Nedopustiv) (${highRisks.length}): ${highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; ')}`
+                    : `CRITICAL RISKS (High and Unacceptable) (${highRisks.length}): ${highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; ')}`
+                );
+            }
+        }
+
         // Overdue equipment
         const overdueEquip = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
         const soonEquip = equipment.filter(e => e.iduci && new Date(e.iduci) >= today && new Date(e.iduci) <= in60);
@@ -139,6 +192,27 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         if (soonEquip.length > 0) lines.push(lang === 'bs'
             ? `OPREMA ČIJI PREGLED USKORO DOSPIJEVA - 60 DANA (${soonEquip.length}): ${soonEquip.slice(0, 6).map(e => `${e.naziv} (do: ${e.iduci})`).join('; ')}`
             : `EQUIPMENT INSPECTION DUE SOON - 60 DAYS (${soonEquip.length}): ${soonEquip.slice(0, 6).map(e => `${e.naziv} (due: ${e.iduci})`).join('; ')}`
+        );
+
+        // Fleet
+        const activeVehicles = vehicles.filter(v => v.status === 'aktivan' || v.status === 'servis');
+        if (activeVehicles.length > 0) {
+            lines.push(lang === 'bs' 
+                ? `\nVOZNI PARK (${activeVehicles.length} vozila): ${activeVehicles.map(v => `[ID:${v.id}] ${v.marka} ${v.model} (${v.registracija}, Vozač: ${v.vozacIme || 'Nema'})`).join('; ')}`
+                : `\nFLEET (${activeVehicles.length} vehicles): ${activeVehicles.map(v => `[ID:${v.id}] ${v.marka} ${v.model} (${v.registracija}, Driver: ${v.vozacIme || 'None'})`).join('; ')}`
+            );
+            const expiredReg = activeVehicles.filter(v => v.registracijaIstice && new Date(v.registracijaIstice) < today);
+            if (expiredReg.length > 0) lines.push(lang === 'bs' 
+                ? `ISTEKLE REGISTRACIJE VOZILA (${expiredReg.length}): ${expiredReg.map(v => `${v.registracija} (isteklo: ${v.registracijaIstice})`).join('; ')}`
+                : `EXPIRED VECHICLE REGISTRATIONS (${expiredReg.length}): ${expiredReg.map(v => `${v.registracija} (expired: ${v.registracijaIstice})`).join('; ')}`
+            );
+        }
+
+        // Fire Extinguishers
+        const overdueFire = fireExtinguishers.filter(f => f.datumSljedecegIspitivanja && new Date(f.datumSljedecegIspitivanja) < today);
+        if (overdueFire.length > 0) lines.push(lang === 'bs'
+            ? `VATROGASNI APARATI PREKORAČEN PREGLED (${overdueFire.length}): ${overdueFire.slice(0, 6).map(f => `${f.serijskiBroj} na lokaciji ${f.lokacija || 'Nepoznato'}`).join('; ')}`
+            : `OVERDUE FIRE EXTINGUISHERS (${overdueFire.length}): ${overdueFire.slice(0, 6).map(f => `${f.serijskiBroj} at ${f.lokacija || 'Unknown'}`).join('; ')}`
         );
 
         // Recent injuries
@@ -261,6 +335,12 @@ NISI SAMO CHATBOT — TI SI AGENT. Možeš aktivno pomagati službenicima da izv
 - Ako korisnik kaže da je radnik VRATIO, izgubio ili više nema OZO opremu → koristi remove_ppe s worker_id iz ŽIVIH PODATAKA. Alat će pronaći i obrisati zadnju aktivnu OZO stavku tog naziva.
 - Ako korisnik pita za podatke koje već imaš → odgovori direktno bez alata
 - Ako korisnik traži izmjenu svih povreda na radu za neku godinu → koristi alat bulk_update_injuries
+- Ako korisnik kaže "dodaj vozilo", "novo vozilo", "napravi vozilo" → prikupi osnovne podatke (marka, model, registracija), zatim koristi create_vehicle alat da SNIMIŠ.
+- Ako korisnik kaže da "zadužiš vozilo" nekom radniku, "prebaci auto", "daj vozilo" → koristi assign_vehicle sa vehicle_id (iz VOZNI PARK) i worker_id (iz SVI AKTIVNI RADNICI). Snima DIREKTNO, forma nije potrebna.
+- Ako korisnik kaže "napravi događaj", "dodaj u kalendar" ili "podsjeti me" → prikupi datum i opis, pa koristi create_calendar_event. Ako kaže "idući ponedjeljak", preračunaj u YYYY-MM-DD.
+- Ako korisnik kaže "dodaj ljekarski", "obavio ljekarski" → prikupi worker_id (iz SVI AKTIVNI RADNICI), tip pregleda (prethodni, periodični, vanredni), datum, rezultat (Sposoban/Nesposoban), pa koristi add_medical_exam.
+- Ako korisnik kaže "vratio se sa bolovanja", "zatvori bolovanje" → koristi close_sick_leave sa worker_id. Pronalazi i zatvara otvoreno bolovanje u ŽIVIM PODACIMA.
+- Ako korisnik pita "imamo li akt XYZ" ili pita za dokumente firme → prvo provjeri NORMATIVNI AKTI POSLODAVCA u svom kontekstu.
 - VAŽNO O FIRMAMA: Ako je u kontekstu vidljivo da radnik pripada određenoj firmi, a trenutni kontekst je "Sve firme", obavezno u odgovorima spomeni i naziv firme radnika kako bi korisnik znao o kome se radi.
 
 RJEČNIK POJMOVA (koristi kad korisnik pita "šta znači...?" ili kad nešto nije jasno):
@@ -351,6 +431,12 @@ YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers 
 - If the user says a worker RETURNED, lost, or no longer has a PPE item → use remove_ppe with worker_id from LIVE DATA. The tool will find and delete the most recent active assignment matching the name.
 - If the user asks about data you already have → answer directly without tools
 - If the user asks to change the year for all work injuries → use bulk_update_injuries tool
+- If the user says "add vehicle" or "new vehicle" → collect required data (marka, model, registracija) via chat, then use create_vehicle tool.
+- If the user says to "assign vehicle" or "give car" to a worker → use assign_vehicle with vehicle_id (from FLEET) and worker_id (from LIVE DATA). Saves DIRECTLY.
+- If the user says "add to calendar", "create event" or "remind me" → collect date and description, then use create_calendar_event. Calculate exact YYYY-MM-DD if they say "next Monday".
+- If the user says "add medical exam", "did medical exam" → collect worker_id, type (prethodni, periodični, vanredni), date, result, and use add_medical_exam.
+- If the user says "returned from sick leave", "close sick leave" → use close_sick_leave with worker_id.
+- If the user asks about an employer document → check EMPLOYER DOCUMENTATION in your context.
 
 DOMAIN GLOSSARY (use when user asks "what does X mean?" or needs clarification):
 
@@ -439,6 +525,7 @@ function buildDynamicSuggestions(lang, pathname) {
             chips.push(lang === 'bs' ? { label: '📅 Idući pregledi', text: 'Kojoj opremi najprije ističe pregled?' } : { label: '📅 Upcoming exams', text: 'Which equipment needs inspection next?' });
         } else if (pathname === '/dashboard/injuries') {
             chips.push(lang === 'bs' ? { label: '🚑 Prijavi tešku povredu', text: 'Želim prijaviti tešku povredu na radu.' } : { label: '🚑 Report severe injury', text: 'I want to report a severe injury.' });
+            chips.push(lang === 'bs' ? { label: '✅ Zatvori bolovanje', text: 'Radnik se vratio, zatvori mu bolovanje.' } : { label: '✅ Close sick leave', text: 'Worker returned, close their sick leave.' });
             chips.push(lang === 'bs' ? { label: '📅 Promijeni godinu svima', text: 'Želim prebaciti sve povrede u 2026. godinu.' } : { label: '📅 Change all years', text: 'Set all injuries to year 2026.' });
         } else if (pathname === '/dashboard/worker-ppe' || pathname === '/dashboard/ppe') {
             chips.push(lang === 'bs' ? { label: '🦺 Zaduži šljem', text: 'Želim zadužiti zaštitni šljem radniku.' } : { label: '🦺 Assign helmet', text: 'I want to assign a safety helmet to a worker.' });
@@ -447,6 +534,23 @@ function buildDynamicSuggestions(lang, pathname) {
             chips.push(lang === 'bs' ? { label: '📧 Pošalji anketu', text: 'Želim poslati upitnik radnicima.' } : { label: '📧 Send survey', text: 'I want to send a questionnaire to workers.' });
         } else if (pathname === '/dashboard/archive') {
             chips.push(lang === 'bs' ? { label: '📄 Analiza PDF-a', text: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.' } : { label: '📄 PDF Analysis', text: 'Analyze the contents of a document I upload.' });
+        } else if (pathname === '/dashboard/medical-exams') {
+            chips.push(lang === 'bs' ? { label: '⚕️ Dodaj pregled', text: 'Želim upisati novi periodični ljekarski pregled.' } : { label: '⚕️ Add exam', text: 'I want to record a new periodic medical exam.' });
+            chips.push(lang === 'bs' ? { label: '📅 Kome ističe?', text: 'Kome sve ljekarski pregled ističe u narednih mjesec dana?' } : { label: '📅 Expiring soon', text: 'Whose medical exams are expiring in the next month?' });
+        } else if (pathname === '/dashboard/fleet') {
+            chips.push(lang === 'bs' ? { label: '🚗 Novo vozilo', text: 'Želim dodati novo vozilo u vozni park.' } : { label: '🚗 New vehicle', text: 'I want to add a new vehicle to the fleet.' });
+            chips.push(lang === 'bs' ? { label: '🔑 Zaduži vozilo', text: 'Želim zadužiti vozilo određenom radniku.' } : { label: '🔑 Assign vehicle', text: 'I want to assign a vehicle to a worker.' });
+        } else if (pathname === '/dashboard/fire-protection') {
+            chips.push(lang === 'bs' ? { label: '🧯 Zaostali servisi', text: 'Koji protupožarni aparati već kasne sa servisom?' } : { label: '🧯 Overdue services', text: 'Which fire extinguishers are overdue for service?' });
+        } else if (pathname === '/dashboard/employer-docs') {
+            chips.push(lang === 'bs' ? { label: '📄 Traženje akta', text: 'Da li imamo važeći Pravilnik o zaštiti od požara?' } : { label: '📄 Find document', text: 'Do we have a valid Fire Protection Rulebook?' });
+        } else if (pathname === '/dashboard/risk-assessment') {
+            chips.push(lang === 'bs' ? { label: '⚠️ Kritični rizici', text: 'Koja radna mjesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?' } : { label: '⚠️ Critical risks', text: 'Which workplaces have High or Unacceptable risks (R ≥ 16)?' });
+            chips.push(lang === 'bs' ? { label: '📋 Propisane mjere', text: 'Koje su propisane mjere za smanjenje znatnih rizika?' } : { label: '📋 Prescribed measures', text: 'What are the prescribed measures to reduce high risks?' });
+        } else if (pathname === '/dashboard/zapisnici') {
+            chips.push(lang === 'bs' ? { label: '📝 Novi zapisnik', text: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.' } : { label: '📝 Draft minute', text: 'Draft a new meeting minute for today regarding the purchase of helmets.' });
+        } else if (pathname === '/dashboard') {
+            chips.push(lang === 'bs' ? { label: '📅 Novi podsjetnik', text: 'Dodaj podsjetnik u kalendar za idući ponedjeljak.' } : { label: '📅 New reminder', text: 'Add a calendar reminder for next Monday.' });
         }
 
     } catch { /* ignore */ }
@@ -594,6 +698,90 @@ const ZIA_TOOLS = [
             },
             required: ['target_year'],
         },
+    },
+    {
+        name: 'create_vehicle',
+        description: 'Creates a new vehicle in the Fleet (Vozni park) module. Use when the user asks to add a vehicle, providing basic details.',
+        parameters: {
+            type: 'object',
+            properties: {
+                marka: { type: 'string', description: 'Brand of the vehicle (e.g. VW, Mercedes).' },
+                model: { type: 'string', description: 'Model of the vehicle (e.g. Golf 8, Sprinter).' },
+                registracija: { type: 'string', description: 'License plate number (registarske oznake).' },
+            },
+            required: ['marka', 'model', 'registracija'],
+        },
+    },
+    {
+        name: 'assign_vehicle',
+        description: 'Assigns a vehicle to a driver/worker. Creates a record in the Vehicle Assignments history and updates the vehicle. Use when user says to give a car to someone.',
+        parameters: {
+            type: 'object',
+            properties: {
+                vehicle_id: { type: 'string', description: 'ID of the vehicle from the VOZNI PARK list in LIVE DATA.' },
+                worker_id: { type: 'string', description: 'ID of the worker from the ACTIVE WORKERS list in LIVE DATA.' },
+                worker_name: { type: 'string', description: 'Full name of the worker for confirmation message.' },
+                napomena: { type: 'string', description: 'Any optional note.' },
+            },
+            required: ['vehicle_id', 'worker_id', 'worker_name'],
+        },
+    },
+    {
+        name: 'create_calendar_event',
+        description: 'Creates a new manual reminder or event in the Calendar. Use when user says to remind them of something, schedule a meeting, or add an event.',
+        parameters: {
+            type: 'object',
+            properties: {
+                datum: { type: 'string', description: 'Date of the event in YYYY-MM-DD format.' },
+                opis: { type: 'string', description: 'Description or title of the reminder/event.' },
+                tip: { type: 'string', description: 'Type of event. Default to "other". Allowed: cert, ppe, equip, doc, service, risk, med, fleet, other.' }
+            },
+            required: ['datum', 'opis'],
+        },
+    },
+    {
+        name: 'add_medical_exam',
+        description: 'Record a new medical examination (ljekarski pregled) for a worker.',
+        parameters: {
+            type: 'object',
+            properties: {
+                worker_id: { type: 'string', description: 'ID of the worker.' },
+                worker_name: { type: 'string', description: 'Name of worker.' },
+                datum: { type: 'string', description: 'Date of exam (YYYY-MM-DD).' },
+                tip: { type: 'string', description: 'Type of exam.', enum: ['prethodni', 'periodični', 'vanredni', 'nocniRad', 'ostalo'] },
+                vrijedi_do: { type: 'string', description: 'Next exam deadline (YYYY-MM-DD).' },
+                rezultat: { type: 'string', description: 'Result.', enum: ['Sposoban', 'Uvjetno Sposoban', 'Nesposoban'] },
+                ustanova: { type: 'string', description: 'Optional medical institution.' }
+            },
+            required: ['worker_id', 'worker_name', 'datum', 'tip', 'rezultat'],
+        },
+    },
+    {
+        name: 'close_sick_leave',
+        description: 'Closes an active sick leave (bolovanje) for a worker. Sets the status of the open injury or disease to "zatvorena".',
+        parameters: {
+            type: 'object',
+            properties: {
+                worker_id: { type: 'string', description: 'ID of the worker.' },
+                worker_name: { type: 'string', description: 'Name of worker.' }
+            },
+            required: ['worker_id', 'worker_name'],
+        },
+    },
+    {
+        name: 'draft_meeting_minutes',
+        description: 'CREATE a new meeting minute (Zapisnik db record). Use when a user describes what was agreed upon in a meeting or says "kreiraj zapisnik".',
+        parameters: {
+            type: 'object',
+            properties: {
+                naziv: { type: 'string', description: 'Name of the meeting minute (e.g. "Sastanak odbora za ZNR").' },
+                broj: { type: 'string', description: 'Reference number, if provided.' },
+                datum: { type: 'string', description: 'Date in YYYY-MM-DD.' },
+                vrsta: { type: 'string', description: 'Type: "Zapisnik o ispitivanju", "Zapisnik o osposobljenosti", "Zapisnik o pregledu", "Zapisnik o vježbi", "Ostalo". Default to "Ostalo".' },
+                napomena: { type: 'string', description: 'Body text or summary of conclusions.' }
+            },
+            required: ['naziv', 'datum', 'vrsta']
+        }
     },
 ];
 
@@ -1084,6 +1272,113 @@ export default function AIAssistant() {
             } catch (err) {
                 return { error: `Failed to remove PPE: ${err.message}` };
             }
+        }
+        if (name === 'create_vehicle') {
+            try {
+                const { create, COLLECTIONS } = await import('@/lib/dataStore');
+                const newVeh = create(COLLECTIONS.VEHICLES, {
+                    marka: args.marka,
+                    model: args.model,
+                    registracija: args.registracija,
+                    tip: 'osobno',
+                    status: 'aktivan'
+                });
+                return { success: true, message: `Vozilo "${args.marka} ${args.model} (${args.registracija})" uspješno dodano. [Otvori Vozni Park](/dashboard/fleet?openVozilo=${newVeh.id})` };
+            } catch (err) {
+                return { error: `Failed to create vehicle: ${err.message}` };
+            }
+        }
+        if (name === 'assign_vehicle') {
+            try {
+                const { create, update, COLLECTIONS } = await import('@/lib/dataStore');
+                const today = new Date().toISOString().split('T')[0];
+                create(COLLECTIONS.VEHICLE_ASSIGNMENTS, {
+                    vehicleId: args.vehicle_id,
+                    workerId: args.worker_id,
+                    workerIme: args.worker_name,
+                    datumZaduzenja: today,
+                    datumRazduzenja: '',
+                    napomena: args.napomena || ''
+                });
+                update(COLLECTIONS.VEHICLES, args.vehicle_id, {
+                    vozacId: args.worker_id,
+                    vozacIme: args.worker_name
+                });
+                return { success: true, message: `Vozilo uspješno zaduženo radniku "${args.worker_name}". [Otvori Vozni Park](/dashboard/fleet?openVozilo=${args.vehicle_id}&tab=zaduzenja)` };
+            } catch (err) {
+                return { error: `Failed to assign vehicle: ${err.message}` };
+            }
+        }
+        if (name === 'create_calendar_event') {
+            try {
+                const { create, COLLECTIONS } = await import('@/lib/dataStore');
+                create(COLLECTIONS.CALENDAR_EVENTS, {
+                    datum: args.datum,
+                    opis: args.opis,
+                    tip: args.tip || 'other',
+                    auto: false
+                });
+                return { success: true, message: `Događaj / podsjetnik uspješno kreiran za datum ${args.datum}. [Otvori Kalendar](/dashboard)` };
+            } catch (err) {
+                return { error: `Failed to create calendar event: ${err.message}` };
+            }
+        }
+        if (name === 'add_medical_exam') {
+            try {
+                const { create, COLLECTIONS } = await import('@/lib/dataStore');
+                create(COLLECTIONS.MEDICAL_EXAMS, {
+                    workerId: args.worker_id,
+                    tipPregleda: args.tip,
+                    datumPregleda: args.datum,
+                    vrijediDo: args.vrijedi_do || '',
+                    rezultat: args.rezultat,
+                    zdravstvenaUstanova: args.ustanova || ''
+                });
+                return { success: true, message: `Ljekarski pregled za radnika "${args.worker_name}" uspješno snimljen. [Dodatno uredi](/dashboard/medical-exams)` };
+            } catch (err) {
+                return { error: `Failed to add medical exam: ${err.message}` };
+            }
+        }
+        if (name === 'close_sick_leave') {
+            try {
+                const { getAll, update, COLLECTIONS } = await import('@/lib/dataStore');
+                const pInj = getAll(COLLECTIONS.INJURIES);
+                const pDis = getAll(COLLECTIONS.DISEASES);
+                
+                let foundAny = false;
+                
+                pInj.forEach(i => {
+                    if (i.radnikId === args.worker_id && i.bolovanje && i.status !== 'zatvorena') {
+                        update(COLLECTIONS.INJURIES, i.id, { status: 'zatvorena' });
+                        foundAny = true;
+                    }
+                });
+                pDis.forEach(d => {
+                    if (d.radnikId === args.worker_id && d.bolovanje && d.status !== 'zatvorena') {
+                        update(COLLECTIONS.DISEASES, d.id, { status: 'zatvorena' });
+                        foundAny = true;
+                    }
+                });
+                
+                if (!foundAny) return { error: `Nije pronađeno otvoreno bolovanje za radnika ${args.worker_name}.` };
+                return { success: true, message: `Bolovanje za radnika "${args.worker_name}" je uspješno zaključeno.` };
+            } catch (err) {
+                return { error: `Failed to close sick leave: ${err.message}` };
+            }
+        }
+        if (name === 'draft_meeting_minutes') {
+            try {
+                const { create, COLLECTIONS } = await import('@/lib/dataStore');
+                const nova = create(COLLECTIONS.ZAPISNICI, {
+                    naziv: args.naziv,
+                    broj: args.broj || '',
+                    datum: args.datum,
+                    vrsta: args.vrsta || 'Ostalo',
+                    napomena: args.napomena || '',
+                    attachedFileName: '', attachedFileSize: 0, attachedFileType: ''
+                });
+                return { success: true, message: `Zapisnik "${args.naziv}" uspješno kreiran. [Otvori](/dashboard/zapisnici)` };
+            } catch (err) { return { error: err.message }; }
         }
         return { error: 'unknown_tool' };
     }, [router, pathname]);

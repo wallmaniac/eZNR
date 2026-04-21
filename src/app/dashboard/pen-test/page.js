@@ -9,6 +9,8 @@ export default function FirebasePenTest() {
     const [isRunning, setIsRunning] = useState(false);
     const [isStorming, setIsStorming] = useState(false);
 
+    const [simulateCount, setSimulateCount] = useState(100);
+
     const log = (msg, type = 'info') => {
         setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), msg, type }]);
     };
@@ -16,7 +18,7 @@ export default function FirebasePenTest() {
     const runStormTest = async () => {
         setIsStorming(true);
         setLogs([]);
-        log('Starting 100-User Background Storm Simulation...', 'warning');
+        log(`Starting ${simulateCount}-User Background Storm Simulation...`, 'warning');
         
         let activeCompanyId = localStorage.getItem('eznr_activeCompany');
         const userStr = localStorage.getItem('eznr_user');
@@ -33,16 +35,17 @@ export default function FirebasePenTest() {
             return;
         }
 
-        log(`Continuously spamming 'storm_events' for 15 seconds in background... Please TEST YOUR UI NOW!`, 'info');
+        log(`Continuously spamming 'storm_events' simulating ${simulateCount} users for 15 seconds in background... Please TEST YOUR UI NOW!`, 'info');
         
         try {
             const startTime = Date.now();
             let count = 0;
+            // Calibrate batch size based on simulated user count (approx 10 ticks per second)
+            const batchSize = Math.max(1, Math.floor(simulateCount / 10));
             
             while (Date.now() - startTime < 15000) {
                 const batchPromises = [];
-                // Fire 4 writes per batch (approx 40 concurrent writes a second)
-                for(let i = 0; i < 4; i++) {
+                for(let i = 0; i < batchSize; i++) {
                     const stormDoc = doc(db, 'companies', activeCompanyId, 'storm_events', `event_${count++}`);
                     batchPromises.push(setDoc(stormDoc, { timestamp: Date.now(), rand: Math.random() }));
                 }
@@ -50,7 +53,7 @@ export default function FirebasePenTest() {
                 // Pause for 100ms to allow React to render the UI before the next blast
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
-            log(`✅ Sustained 15-second storm finished. Total background updates: ${count}. If your dashboard remained snappy, you passed the stress test!`, 'success');
+            log(`✅ Sustained 15-second storm finished. Simulating ${simulateCount} users generated ${count} updates. If your dashboard remained snappy, you passed the stress test!`, 'success');
         } catch (err) {
             log(`❌ Storm failed: ${err.message}`, 'error');
         }
@@ -60,7 +63,7 @@ export default function FirebasePenTest() {
     const runTests = async () => {
         setIsRunning(true);
         setLogs([]);
-        log('Starting Firebase Multi-Tenancy Penetration Test...', 'info');
+        log(`Starting Firebase PenTest with ${simulateCount} overlapping requests...`, 'info');
 
         let activeCompanyId = localStorage.getItem('eznr_activeCompany');
         const userStr = localStorage.getItem('eznr_user');
@@ -91,29 +94,31 @@ export default function FirebasePenTest() {
             log(`❌ TEST 1 FAILED: Could not read own data. Error: ${err.message}`, 'error');
         }
 
-        // TEST 2: Read Foreign Company
+        // TEST 2: Multi-threaded Read Foreign Company
         try {
-            log(`[TEST 2] Attempting to read FOREIGN company workers (/companies/${dummyTargetId}/workers)...`, 'info');
+            log(`[TEST 2] Attempting to read FOREIGN company workers ${simulateCount} times simultaneously...`, 'info');
             const foreignRef = collection(db, 'companies', dummyTargetId, 'workers');
-            await getDocs(foreignRef);
+            const parallelReads = Array.from({ length: simulateCount }).map(() => getDocs(foreignRef));
+            await Promise.all(parallelReads);
             log('❌ TEST 2 FAILED: SECURITY BREACH! Successfully read foreign company data.', 'error');
         } catch (err) {
             if (err.code === 'permission-denied') {
-                log('✅ TEST 2 PASSED: Permission strictly denied for foreign read.', 'success');
+                log(`✅ TEST 2 PASSED: Permission strictly denied for ALL ${simulateCount} foreign reads.`, 'success');
             } else {
                 log(`🤔 TEST 2 UNKNOWN: Failed, but not with permission-denied. Error: ${err.message}`, 'warning');
             }
         }
 
-        // TEST 3: Write Foreign Company
+        // TEST 3: Multi-threaded Write Foreign Company
         try {
-            log(`[TEST 3] Attempting to write FOREIGN company document (/companies/${dummyTargetId}/workers/hack)...`, 'info');
+            log(`[TEST 3] Attempting to write FOREIGN company document ${simulateCount} times simultaneously...`, 'info');
             const foreignDoc = doc(db, 'companies', dummyTargetId, 'workers', 'hack');
-            await setDoc(foreignDoc, { hacked: true });
+            const parallelWrites = Array.from({ length: simulateCount }).map(() => setDoc(foreignDoc, { hacked: true }));
+            await Promise.all(parallelWrites);
             log('❌ TEST 3 FAILED: SECURITY BREACH! Successfully wrote to foreign company.', 'error');
         } catch (err) {
             if (err.code === 'permission-denied') {
-                log('✅ TEST 3 PASSED: Permission strictly denied for foreign write.', 'success');
+                log(`✅ TEST 3 PASSED: Permission strictly denied for ALL ${simulateCount} foreign writes.`, 'success');
             } else {
                 log(`🤔 TEST 3 UNKNOWN: Failed, but not with permission-denied. Error: ${err.message}`, 'warning');
             }
@@ -128,11 +133,21 @@ export default function FirebasePenTest() {
             <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 16 }}>Firebase PenTest</h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>
                 This tool attempts to read and write to Firestore directly, bypassing localStorage. 
-                It verifies that <code>firestore.rules</code> actively blocks requests to foreign <code>companyId</code> partitions.
+                It verifies that <code>firestore.rules</code> actively blocks requests to foreign partitions even under high load.
                 <br /><br />
                 <strong>Important:</strong> You must log in as a regular <code>officer</code>, NOT an <code>admin</code>, to test isolation properly, because admins have unrestricted access.
             </p>
             
+            <div style={{ marginBottom: 24, background: 'var(--bg-card)', padding: 16, borderRadius: 12, border: '1px solid var(--border)' }}>
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, fontSize: '0.9rem' }}>Broj korisnika za simulaciju (Users to Simulate):</label>
+                <input 
+                    type="number" 
+                    value={simulateCount} 
+                    onChange={e => setSimulateCount(Math.max(1, parseInt(e.target.value) || 1))} 
+                    style={{ padding: '8px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'white', borderRadius: 8, width: 200 }} 
+                />
+            </div>
+
             <button 
                 onClick={runTests} 
                 disabled={isRunning}
@@ -146,7 +161,7 @@ export default function FirebasePenTest() {
                     fontWeight: 700,
                     marginBottom: 24
                 }}>
-                {isRunning ? 'Running Tests...' : 'Execute Pen Test'}
+                {isRunning ? 'Running Tests...' : `Execute Pen Test (${simulateCount}x)`}
             </button>
             <button 
                 onClick={runStormTest} 
@@ -162,7 +177,7 @@ export default function FirebasePenTest() {
                     fontWeight: 700,
                     marginBottom: 24
                 }}>
-                {isStorming ? 'Storming...' : 'Simulate 100-User Background Storm'}
+                {isStorming ? 'Storming...' : `Simulate ${simulateCount}-User Storm`}
             </button>
 
             <div style={{ 
