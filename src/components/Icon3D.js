@@ -49,15 +49,19 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
 
   // Final optical tweaks requested by user
   if (name === 'Oprema.png') {
-    appliedScale = 1.05; // visually 5% larger so it's noticeably bigger
+    if (size <= 30) {
+      appliedScale = 1.09; // Sidebar (+4% from 1.05)
+    } else {
+      appliedScale = 1.10; // Page (+5% from 1.05)
+    }
     transformY = '3px'; // drop down to level bottom of icon
   }
   
   if (name === 'Vozni park.png') {
     if (size <= 30) {
-      appliedScale = 1.11; // 1.08 + 3%
+      appliedScale = 1.15; // Sidebar (+4% from 1.11)
     } else {
-      appliedScale = 1.13; // 1.08 + 5%
+      appliedScale = 1.18; // Page (+5% from 1.13)
     }
     transformY = '3px'; // drop down to level bottom of icon everywhere
   }
