@@ -8,8 +8,8 @@ let sLine = -1;
 let eLine = -1;
 
 for(let i=0; i<lines.length; i++) {
-  if (lines[i].includes('{/* ── BRANDING SECTION ── */}')) sLine = i;
-  if (sLine !== -1 && lines[i].includes('</div>{/* end ui card */}')) eLine = i;
+  if (lines[i].includes('{/* ── SUPER PREMIUM BRANDING SECTION ── */}')) sLine = i;
+  if (sLine !== -1 && lines[i].includes('</div>{/* end super premium wrapper */}')) eLine = i;
   if(eLine !== -1) break;
 }
 

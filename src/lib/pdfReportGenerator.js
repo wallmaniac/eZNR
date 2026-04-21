@@ -76,7 +76,7 @@ const SHARED_CSS = `
 
   /* Print overrides */
   @media print {
-    body { margin: 0; }
+    body { margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     .page { padding: 8mm 10mm; }
     .print-btn { display: none !important; }
     @page { size: A4; margin: 10mm; }
@@ -109,6 +109,8 @@ function getCompanyInfo() {
     watermarkContent: branding.watermarkContent || PDF_DEFAULTS.watermarkContent,
     logoPosition: branding.logoPosition || PDF_DEFAULTS.logoPosition,
     logoSize: branding.logoSize || PDF_DEFAULTS.logoSize,
+    headerEnabled: branding.headerEnabled ?? PDF_DEFAULTS.headerEnabled,
+    showCompanyInfo: branding.showCompanyInfo ?? PDF_DEFAULTS.showCompanyInfo,
     headerText: branding.headerText || '',
     headerFontSize: branding.headerFontSize || PDF_DEFAULTS.headerFontSize,
     headerBold: branding.headerBold ?? false,
@@ -141,6 +143,13 @@ function statusBadge(days, bs) {
 
 // ─── Build the branded header ────────────────────────────────────────────────
 function buildHeader(title, subtitle, company) {
+  if (company.headerEnabled === false) {
+    return `
+      <div class="report-title">${title}</div>
+      <div class="report-subtitle">${subtitle}</div>
+    `;
+  }
+
   const companyName = company.naziv || company.name || '';
   const logoSize = company.logoSize || 40;
   const logoPos = company.logoPosition || 'left';
@@ -176,7 +185,7 @@ function buildHeader(title, subtitle, company) {
         </div>
         ${company.logo && companyName ? `<div style="font-size:9pt;font-weight:800;color:#222;margin-top:3px;text-align:${logoPos === 'center' ? 'center' : 'left'}">${companyName}</div>` : ''}
       </div>
-      ${logoPos !== 'center' && (company.showCompanyInfo !== false) ? `
+      ${logoPos !== 'center' && company.showCompanyInfo !== false ? `
       <div class="company-info">
         ${company.adresa || company.address ? `<div>${company.adresa || company.address}</div>` : ''}
         ${company.mjesto ? `<div>${company.mjesto}${company.postanskiBroj ? ` ${company.postanskiBroj}` : ''}</div>` : ''}

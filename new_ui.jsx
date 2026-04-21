@@ -1,13 +1,17 @@
                 {/* ── SUPER PREMIUM BRANDING SECTION ── */}
                 <div style={{ marginTop: 40, borderTop: '1px solid rgba(150,150,150,0.1)', paddingTop: 36 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8 }}>
-                    <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg, var(--primary), var(--primary-dark, #059669))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}>
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.1-.7-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/></svg>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, marginBottom: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div style={{ width: 46, height: 46, borderRadius: 12, background: 'linear-gradient(135deg, var(--primary), var(--primary-dark, #059669))', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.1-.7-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/></svg>
+                      </div>
+                      <div>
+                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.3px' }}>{lang === 'bs' ? 'Branding & Identitet' : 'Brand Identity'}</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, marginTop: 4 }}>{lang === 'bs' ? 'Vrhunski dizajn za vašu aplikaciju i tiskane PDF izvještaje.' : 'Premium design elements for your dashboard and reports.'}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.3px' }}>{lang === 'bs' ? 'Branding & Identitet' : 'Brand Identity'}</h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, marginTop: 4 }}>{lang === 'bs' ? 'Vrhunski dizajn za vašu aplikaciju i tiskane PDF izvještaje.' : 'Premium design elements for your dashboard and reports.'}</p>
-                    </div>
+                    {/* Add back Default Settings Reset entirely */}
+                    <button type="button" onClick={() => { if(confirm(lang==='bs'?'Poništi sve na početne EZNR vrijednosti?':'Reset to EZNR defaults?')){setUiPrimaryColor(EZNR_DEFAULTS.primaryColor);setUiSidebarColor(EZNR_DEFAULTS.sidebarColor);setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setWmOpacity(5);setWmSize(280);setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>{lang === 'bs' ? 'Vrati zadane postavke' : 'Reset to Defaults'}</button>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 32 }}>
@@ -22,7 +26,7 @@
                         <span style={{ fontSize: '0.62rem', fontWeight: 800, padding: '4px 10px', borderRadius: 12, background: 'linear-gradient(135deg,#1f2937,#111827)', color: '#fff', marginLeft: 'auto', letterSpacing: 0.5 }}>ENTERPRISE</span>
                       </div>
                       
-                      <div style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 32 }}>
+                      <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 24 }}>
                           {/* SMART THEMES */}
                           <div>
                             <div style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: 14, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -52,11 +56,11 @@
                           </div>
 
                           {/* MANUAL COLORS & SIDEBAR LOGO ROW */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24, padding: 24, background: 'var(--bg-input)', borderRadius: 20, border: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 24, padding: '20px', background: 'var(--bg-input)', borderRadius: 20, border: '1px solid var(--border)' }}>
                             {/* Primary */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flex: '1 1 200px' }}>
                               <div>
-                                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{lang === 'bs' ? 'Primarna Web Boja' : 'Primary Color'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{lang === 'bs' ? 'Primarna Web Boja' : 'Primary Color'}</div>
                               </div>
                               <label style={{ display: 'inline-block', width: 42, height: 42, borderRadius: 12, border: '2px solid rgba(150,150,150,0.2)', overflow: 'hidden', cursor: 'pointer', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
                                 <input type="color" value={uiPrimaryColor || EZNR_DEFAULTS.primaryColor} onChange={e=>{setUiPrimaryColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 80, height: 80, cursor: 'pointer', opacity: 0 }} />
@@ -64,9 +68,9 @@
                               </label>
                             </div>
                             {/* Sidebar */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flex: '1 1 200px' }}>
                               <div>
-                                <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{lang === 'bs' ? 'Boja Bočne Trake' : 'Sidebar Color'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{lang === 'bs' ? 'Boja Bočne Trake' : 'Sidebar Color'}</div>
                               </div>
                               <label style={{ display: 'inline-block', width: 42, height: 42, borderRadius: 12, border: '2px solid rgba(150,150,150,0.2)', overflow: 'hidden', cursor: 'pointer', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
                                 <input type="color" value={uiSidebarColor || EZNR_DEFAULTS.sidebarColor} onChange={e=>{setUiSidebarColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 80, height: 80, cursor: 'pointer', opacity: 0 }} />
@@ -74,13 +78,15 @@
                               </label>
                             </div>
                             {/* Logo Replace */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, gridColumn: '1 / -1', paddingTop: 16, borderTop: '1px solid rgba(150,150,150,0.1)' }}>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
-                                <div onClick={()=>{setSidebarLogoEnabled(e=>!e);setDirty('company');}} className={`eznr-switch ${sidebarLogoEnabled ? 'active' : ''}`} style={{ transform: 'scale(1.1)', transformOrigin: 'left' }}><div className="eznr-switch-knob"></div></div>
-                                <div style={{ fontSize: '0.85rem', fontWeight: 600, color: sidebarLogoEnabled ? 'var(--text)' : 'var(--text-muted)' }}>{lang === 'bs' ? 'Zamijeni logo mojim logom u bočnoj traci' : 'Replace logo with mine in sidebar'}</div>
-                              </label>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 4 }}>
-                                <input type="text" value={sidebarText || ''} onChange={e=>{setSidebarText(e.target.value);setDirty('company');}} placeholder={lang==='bs'?'Tekst ispod loga... (opcionalno)':'Text below logo... (optional)'} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', fontSize: '0.82rem', width: 260 }} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', paddingTop: 16, borderTop: '1px solid rgba(150,150,150,0.1)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: sidebarLogoEnabled ? 'var(--text)' : 'var(--text-muted)' }}>{lang === 'bs' ? 'Zamijeni logo mojim logom u bočnoj traci' : 'Replace logo with mine in sidebar'}</div>
+                                  <div onClick={()=>{setSidebarLogoEnabled(e=>!e);setDirty('company');}} style={{ width: 46, height: 26, background: sidebarLogoEnabled ? 'var(--primary)' : 'var(--border)', borderRadius: 13, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                    <div style={{ width: 22, height: 22, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: sidebarLogoEnabled ? 22 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                                  </div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <input type="text" value={sidebarText || ''} onChange={e=>{setSidebarText(e.target.value);setDirty('company');}} placeholder={lang==='bs'?'Tekst ispod loga... (opcionalno)':'Text below logo... (optional)'} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', fontSize: '0.82rem', width: '100%', maxWidth: 400 }} />
                               </div>
                             </div>
                           </div>
@@ -99,83 +105,90 @@
                         </div>
                       </div>
 
-                      <div style={{ padding: '24px 30px', display: 'flex', flexWrap: 'wrap', gap: 32 }}>
+                      <div style={{ padding: '20px', display: 'flex', flexWrap: 'wrap', gap: 24 }}>
                         
-                        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: 30 }}>
+                        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: 24 }}>
                           
                           {/* Top Row Base settings */}
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
-                            <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 12 }}>{lang==='bs'?'Akcent Boja':'Accent Color'}</div>
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                            <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Akcent Boja':'Accent Color'}</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <label style={{ display: 'inline-block', width: 34, height: 34, borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
                                     <input type="color" value={pdfAccentColor || EZNR_DEFAULTS.accentColor} onChange={e=>{setPdfAccentColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', opacity: 0 }} />
                                     <div style={{ width: '100%', height: '100%', background: pdfAccentColor || EZNR_DEFAULTS.accentColor, pointerEvents: 'none' }} />
                                   </label>
-                                  <code style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>{pdfAccentColor}</code>
                                 </div>
                             </div>
 
-                            <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)' }}>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 16 }}>{lang==='bs'?'Podaci Firme':'Company Info'}</div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                                  <div onClick={()=>{setShowCompanyInfo(e=>!e);setDirty('company');}} className={`eznr-switch ${showCompanyInfo !== false ? 'active' : ''}`}><div className="eznr-switch-knob"></div></div>
-                                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: showCompanyInfo !== false ? 'var(--text)' : 'var(--text-muted)' }}>{lang === 'bs' ? 'Prikaz na zaglavlju' : 'Show on report'}</div>
-                                </label>
+                            <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Podaci Firme':'Company Info'}</div>
+                                <div onClick={()=>{setShowCompanyInfo(e=>!e);setDirty('company');}} style={{ width: 42, height: 24, background: showCompanyInfo !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 12, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                  <div style={{ width: 20, height: 20, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: showCompanyInfo !== false ? 20 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                                </div>
                             </div>
                           </div>
 
-                          {/* Logo Position / Custom Header Grid */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 14, background: 'var(--bg-input)', padding: 20, borderRadius: 16, border: '1px solid var(--border)' }}>
-                             <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{lang === 'bs' ? 'Zaglavlje Dokumenta' : 'Document Header'}</div>
-                             
-                             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, auto) 1fr', gap: 16, alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>{lang==='bs'?'Pozicija Loga:':'Logo Position:'}</span>
-                                <div style={{ display: 'flex', gap: 6 }}>
-                                  {LOGO_POSITIONS.map(p => (
-                                    <button key={p.id} onClick={() => { setLogoPosition(p.id); setDirty('company'); }} style={{ padding: '6px 12px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', border: logoPosition === p.id ? '2px solid var(--primary)' : '1px solid var(--border)', background: logoPosition === p.id ? 'var(--primary-glow)' : 'var(--bg-card)', color: logoPosition === p.id ? 'var(--primary)' : 'var(--text-muted)' }}>{p.label}</button>
-                                  ))}
+                          {/* Header / Zaglavlje */}
+                          <div style={{ background: 'var(--bg-input)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
+                              <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{lang === 'bs' ? 'Zaglavlje Dokumenta' : 'Document Header'}</div>
+                              <div onClick={()=>{setHeaderEnabled(e=>!e);setDirty('company');}} style={{ width: 46, height: 26, background: headerEnabled !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 13, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                <div style={{ width: 22, height: 22, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: headerEnabled !== false ? 22 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                              </div>
+                            </div>
+                            
+                            {headerEnabled !== false && (
+                              <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>{lang==='bs'?'Pozicija Loga:':'Logo Position:'}</span>
+                                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                                      {LOGO_POSITIONS.map(p => (
+                                        <button key={p.id} onClick={() => { setLogoPosition(p.id); setDirty('company'); }} style={{ padding: '6px 12px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', border: logoPosition === p.id ? '2px solid var(--primary)' : '1px solid var(--border)', background: logoPosition === p.id ? 'var(--primary-glow)' : 'var(--bg-card)', color: logoPosition === p.id ? 'var(--primary)' : 'var(--text-muted)' }}>{p.label}</button>
+                                      ))}
+                                    </div>
                                 </div>
-                             </div>
 
-                             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(120px, auto) 1fr', gap: 16, alignItems: 'center' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>{lang==='bs'?'Veličina Loga:':'Logo Size:'}</span>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <input type="range" min={20} max={80} value={logoSize} onChange={e => { setLogoSize(+e.target.value); setDirty('company'); }} style={{ flex: 1, accentColor: 'var(--primary)' }} />
-                                  <code style={{ fontSize: '0.75rem', color: 'var(--text-muted)', width: 40, textAlign: 'right' }}>{logoSize}px</code>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', minWidth: 100 }}>{lang==='bs'?'Veličina Loga:':'Logo Size:'}</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
+                                      <input type="range" min={20} max={80} value={logoSize} onChange={e => { setLogoSize(+e.target.value); setDirty('company'); }} style={{ flex: 1, accentColor: 'var(--primary)' }} />
+                                      <code style={{ fontSize: '0.75rem', color: 'var(--text-muted)', width: 40, textAlign: 'right' }}>{logoSize}px</code>
+                                    </div>
                                 </div>
-                             </div>
 
-                             <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+                                <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
 
-                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                                <input type="text" value={headerText} onChange={e => { setHeaderText(e.target.value); setDirty('company'); }} placeholder={lang === 'bs' ? 'Dodatni tekst... (opcionalno)' : 'Header text... (optional)'} style={{ flex: 1, minWidth: 200, padding: '8px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.85rem', fontWeight: 600 }} />
-                                
-                                <div style={{ display: 'flex', gap: 4, background: 'var(--bg-card)', padding: '3px', borderRadius: 8, border: '1px solid var(--border)' }}>
-                                  <button onClick={() => { setHeaderBold(b => !b); setDirty('company'); }} style={{ width: 30, height: 30, borderRadius: 6, border: 'none', background: headerBold ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontWeight: 900, color: headerBold ? 'var(--primary)' : 'var(--text-muted)' }}>B</button>
-                                  <button onClick={() => { setHeaderItalic(i => !i); setDirty('company'); }} style={{ width: 30, height: 30, borderRadius: 6, border: 'none', background: headerItalic ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontStyle: 'italic', fontWeight: 700, color: headerItalic ? 'var(--primary)' : 'var(--text-muted)' }}>I</button>
-                                  <button onClick={() => { setHeaderUnderline(u => !u); setDirty('company'); }} style={{ width: 30, height: 30, borderRadius: 6, border: 'none', background: headerUnderline ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', textDecoration: 'underline', fontWeight: 700, color: headerUnderline ? 'var(--primary)' : 'var(--text-muted)' }}>U</button>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input type="text" value={headerText} onChange={e => { setHeaderText(e.target.value); setDirty('company'); }} placeholder={lang === 'bs' ? 'Dodatni tekst... (opcionalno)' : 'Header text... (optional)'} style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.85rem', fontWeight: 600 }} />
+                                    
+                                    <div style={{ display: 'flex', gap: 4, background: 'var(--bg-card)', padding: '3px', borderRadius: 8, border: '1px solid var(--border)' }}>
+                                      <button onClick={() => { setHeaderBold(b => !b); setDirty('company'); }} style={{ width: 34, height: 34, borderRadius: 6, border: 'none', background: headerBold ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontWeight: 900, color: headerBold ? 'var(--primary)' : 'var(--text-muted)' }}>B</button>
+                                      <button onClick={() => { setHeaderItalic(i => !i); setDirty('company'); }} style={{ width: 34, height: 34, borderRadius: 6, border: 'none', background: headerItalic ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontStyle: 'italic', fontWeight: 700, color: headerItalic ? 'var(--primary)' : 'var(--text-muted)' }}>I</button>
+                                      <button onClick={() => { setHeaderUnderline(u => !u); setDirty('company'); }} style={{ width: 34, height: 34, borderRadius: 6, border: 'none', background: headerUnderline ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', textDecoration: 'underline', fontWeight: 700, color: headerUnderline ? 'var(--primary)' : 'var(--text-muted)' }}>U</button>
+                                    </div>
+                                    <select value={headerFontSize} onChange={e => { setHeaderFontSize(+e.target.value); setDirty('company'); }} style={{ height: 40, padding: '0 8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.8rem' }}>
+                                      {[8,9,10,11,12,14,16,18,20].map(s => <option key={s} value={s}>{s}pt</option>)}
+                                    </select>
+                                    <label style={{ display: 'inline-block', width: 40, height: 40, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', position: 'relative', border: '1px solid var(--border)' }}>
+                                      <input type="color" value={headerColor || '#000000'} onChange={e=>{setHeaderColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', opacity: 0 }} />
+                                      <div style={{ width: '100%', height: '100%', background: headerColor || '#000000', pointerEvents: 'none' }} />
+                                    </label>
                                 </div>
-                                <select value={headerFontSize} onChange={e => { setHeaderFontSize(+e.target.value); setDirty('company'); }} style={{ height: 36, padding: '0 8px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.8rem' }}>
-                                  {[8,9,10,11,12,14,16,18,20].map(s => <option key={s} value={s}>{s}pt</option>)}
-                                </select>
-                                <label style={{ display: 'inline-block', width: 36, height: 36, borderRadius: 8, overflow: 'hidden', cursor: 'pointer', position: 'relative', border: '1px solid var(--border)' }}>
-                                  <input type="color" value={headerColor || '#000000'} onChange={e=>{setHeaderColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', opacity: 0 }} />
-                                  <div style={{ width: '100%', height: '100%', background: headerColor || '#000000', pointerEvents: 'none' }} />
-                                </label>
-                             </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* WATERMARK MODULE */}
                           <div style={{ background: 'var(--bg-input)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(150,150,150,0.1)' }}>
                               <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{lang === 'bs' ? 'Vodeni Žig / Pečat' : 'Watermark'}</div>
-                              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                                  <div onClick={()=>{setWmEnabled(e=>!e);setDirty('company');}} className={`eznr-switch ${wmEnabled ? 'active' : ''}`}><div className="eznr-switch-knob"></div></div>
-                              </label>
+                              <div onClick={()=>{setWmEnabled(e=>!e);setDirty('company');}} style={{ width: 46, height: 26, background: wmEnabled !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 13, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                <div style={{ width: 22, height: 22, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: wmEnabled !== false ? 22 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+                              </div>
                             </div>
                             
-                            {wmEnabled && (
+                            {wmEnabled !== false && (
                               <div style={{ padding: '20px', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                                 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1, minWidth: 200 }}>
@@ -183,7 +196,7 @@
                                     <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>{lang === 'bs' ? 'Sadržaj:' : 'Content:'}</div>
                                     <div style={{ display: 'flex', gap: 6 }}>
                                       {[{id:'logo',lbl:'Logo'},{id:'name',lbl:lang==='bs'?'Naziv':'Name'},{id:'both',lbl:lang==='bs'?'Oboje':'Both'}].map(o => (
-                                        <button key={o.id} onClick={()=>{setWmContent(o.id);setDirty('company');}} style={{flex: 1, padding:'6px',borderRadius:8,fontSize:'0.75rem',fontWeight:700,cursor:'pointer',border:wmContent===o.id?'2px solid var(--primary)':'1px solid var(--border)',background:wmContent===o.id?'var(--primary-glow)':'var(--bg-card)',color:wmContent===o.id?'var(--primary)':'var(--text-muted)'}}>{o.lbl}</button>
+                                        <button key={o.id} onClick={()=>{setWmContent(o.id);setDirty('company');}} style={{flex: 1, padding:'8px 6px',borderRadius:8,fontSize:'0.75rem',fontWeight:700,cursor:'pointer',border:wmContent===o.id?'2px solid var(--primary)':'1px solid var(--border)',background:wmContent===o.id?'var(--primary-glow)':'var(--bg-card)',color:wmContent===o.id?'var(--primary)':'var(--text-muted)'}}>{o.lbl}</button>
                                       ))}
                                     </div>
                                   </div>
@@ -229,7 +242,7 @@
                            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>{lang === 'bs' ? 'PDF simulacija' : 'Live Report Simulation'}</div>
                            <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 14, padding: '24px 24px 60px', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', height: '100%', minHeight: 400 }}>
                               {/* Watermark Rendering */}
-                              {wmEnabled && (
+                              {wmEnabled !== false && (
                                 <div style={{ position:'absolute', pointerEvents:'none', zIndex:0, textAlign:'center', top:wmPosition.includes('top')?'15%':wmPosition.includes('bottom')?'90%':'50%', left:wmPosition.includes('left')?'15%':wmPosition.includes('right')?'85%':'50%', transform:'translate(-50%,-50%)', opacity:wmOpacity/100, transition: 'all 0.4s ease' }}>
                                   {(wmContent==='logo'||wmContent==='both') && companyData.logo && <img src={companyData.logo} alt="" style={{maxWidth:wmSize*0.5,maxHeight:wmSize*0.3,objectFit:'contain',display:'block',margin:'0 auto'}} />}
                                   {(wmContent==='name'||wmContent==='both') && <div style={{fontSize:Math.max(6,Math.round(wmSize/16))+'pt',fontWeight:900,letterSpacing:1,textTransform:'uppercase',color:'#000',marginTop:4}}>{companyData.naziv||'NAZIV'}</div>}
@@ -237,23 +250,27 @@
                               )}
 
                               {/* Header Rendering */}
-                              <div style={{display:'flex',justifyContent:logoPosition==='center'?'center':'space-between',alignItems:'flex-start',borderBottom:'3px solid '+pdfAccentColor,paddingBottom:8,marginBottom:12,position:'relative',zIndex:1, transition: 'border-color 0.3s'}}>
-                                <div style={{textAlign:logoPosition==='center'?'center':'left'}}>
-                                  {companyData.logo
-                                    ?<img src={companyData.logo} alt="" style={{height:Math.max(logoSize*0.45, 30),maxWidth:120,objectFit:'contain'}}/>
-                                    :<div style={{fontSize:'8pt',fontWeight:800,color:pdfAccentColor}}>{companyData.naziv||'Company'}</div>}
-                                </div>
-                                {logoPosition!=='center' && showCompanyInfo !== false && (
-                                  <div style={{textAlign:'right',fontSize:'3.5pt',color:'#666', lineHeight: 1.4}}>
-                                    <div style={{fontWeight: 700, color: '#333', fontSize: '4.5pt'}}>{companyData.naziv}</div>
-                                    <div>{companyData.adresa}</div>
-                                    {companyData.jib && <div>JIB: {companyData.jib}</div>}
+                              {headerEnabled !== false && (
+                                <div style={{display:'flex',justifyContent:logoPosition==='center'?'center':'space-between',alignItems:'flex-start',borderBottom:'3px solid '+pdfAccentColor,paddingBottom:8,marginBottom:12,position:'relative',zIndex:1, transition: 'border-color 0.3s'}}>
+                                  <div style={{textAlign:logoPosition==='center'?'center':'left'}}>
+                                    {companyData.logo
+                                      ?<img src={companyData.logo} alt="" style={{height:Math.max(logoSize*0.45, 30),maxWidth:120,objectFit:'contain'}}/>
+                                      :<div style={{fontSize:'8pt',fontWeight:800,color:pdfAccentColor}}>{companyData.naziv||'Company'}</div>}
                                   </div>
-                                )}
-                              </div>
+                                  {logoPosition!=='center' && showCompanyInfo !== false && (
+                                    <div style={{textAlign:'right',fontSize:'3.5pt',color:'#666', lineHeight: 1.4}}>
+                                      <div style={{fontWeight: 700, color: '#333', fontSize: '4.5pt'}}>{companyData.naziv}</div>
+                                      <div>{companyData.adresa}</div>
+                                      {companyData.jib && <div>JIB: {companyData.jib}</div>}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                               
                               {/* Custom text */}
-                              <div style={{fontSize:Math.max(5,headerFontSize*0.5)+'pt',fontWeight:headerBold?800:500,fontStyle:headerItalic?'italic':'normal',textDecoration:headerUnderline?'underline':'none',color:headerColor,marginBottom:15,position:'relative',zIndex:1}}>{headerText || (lang==='bs'?'Prazno...':'Empty...')}</div>
+                              {headerEnabled !== false && (
+                                <div style={{fontSize:Math.max(5,headerFontSize*0.5)+'pt',fontWeight:headerBold?800:500,fontStyle:headerItalic?'italic':'normal',textDecoration:headerUnderline?'underline':'none',color:headerColor,marginBottom:15,position:'relative',zIndex:1}}>{headerText || (lang==='bs'?'Prazno...':'Empty...')}</div>
+                              )}
                               
                               {/* Mock Content */}
                               <div style={{fontSize:'6pt',fontWeight:800,textTransform:'uppercase',letterSpacing:0.5,color:'#1e293b',position:'relative',zIndex:1, marginBottom: 8}}>{lang==='bs'?'IZVJEŠTAJ O PROCJENI':'ASSESSMENT REPORT'}</div>

@@ -35,6 +35,8 @@ export const PDF_DEFAULTS = {
   logoPosition: 'left',             // left, center, right
   logoSize: 40,                     // px (height)
   // Header text formatting
+  headerEnabled: true,              // Entire document header feature
+  showCompanyInfo: true,            // Show textual details block
   headerText: '',                   // Custom text (empty = use default report titles)
   headerFontSize: 12,              // pt
   headerBold: false,
