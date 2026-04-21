@@ -975,15 +975,27 @@ export default function SettingsPage() {
                           {/* Position grid */}
                           <div>
                             <div style={{ fontSize: '0.73rem', color: 'var(--text-muted)', marginBottom: 6, fontWeight: 600 }}>{lang === 'bs' ? 'Pozicija:' : 'Position:'}</div>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 38px)', gap: '4px', width: '130px', minWidth: '130px', flexShrink: 0 }}>
-                              {WATERMARK_POSITIONS.map(pos => (
-                                <button key={pos.id} title={pos.id}
-                                  onClick={()=>{setWmPosition(pos.id);setDirty('company');}}
-                                  style={{ width:36,height:36,borderRadius:8,fontSize:'0.85rem',cursor:'pointer', border:wmPosition===pos.id?'2px solid var(--primary)':'1px solid var(--border)', background:wmPosition===pos.id?'var(--primary)':'var(--bg-card)', color:wmPosition===pos.id?'#fff':'var(--text-muted)', display:'flex',alignItems:'center',justifyContent:'center' }}>
-                                  {pos.label}
-                                </button>
-                              ))}
-                            </div>
+                            <table style={{ borderCollapse: 'separate', borderSpacing: '4px', width: 'max-content' }}>
+                              <tbody>
+                                {[0,1,2].map(r => (
+                                  <tr key={r}>
+                                    {[0,1,2].map(c => {
+                                      const pos = WATERMARK_POSITIONS.find(p => p.row === r && p.col === c);
+                                      if(!pos) return <td key={c}></td>;
+                                      return (
+                                        <td key={c} style={{ padding: 0 }}>
+                                          <button type="button" title={pos.id}
+                                            onClick={()=>{setWmPosition(pos.id);setDirty('company');}}
+                                            style={{ width:36, height:36, borderRadius:8, fontSize:'0.85rem', cursor:'pointer', border:wmPosition===pos.id?'2px solid var(--primary)':'1px solid var(--border)', background:wmPosition===pos.id?'var(--primary)':'var(--bg-card)', color:wmPosition===pos.id?'#fff':'var(--text-muted)' }}>
+                                            {pos.label}
+                                          </button>
+                                        </td>
+                                      )
+                                    })}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
 
                           {/* Opacity */}
@@ -1094,23 +1106,14 @@ export default function SettingsPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Paleta boja:' : 'Color picker:'}</span>
-                        <div style={{ position: 'relative' }}>
-                          <button onClick={()=>setUiPrimaryPickerOpen(v=>!v)}
-                            style={{width:34,height:34,borderRadius:8,border:'2px solid var(--border)',background:uiPrimaryColor||EZNR_DEFAULTS.primaryColor,cursor:'pointer',padding:0}} />
-                          {uiPrimaryPickerOpen && (
-                            <>
-                              <div onClick={() => setUiPrimaryPickerOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:199 }} />
-                              <div style={{position:'absolute',top:42,left:0,zIndex:200,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:12,boxShadow:'0 8px 32px rgba(0,0,0,0.35)'}}>
-                                <div style={{display:'flex',justifyContent:'flex-end',marginBottom:6}}>
-                                  <button onClick={()=>setUiPrimaryPickerOpen(false)} style={{border:'none',background:'var(--bg-input)',color:'var(--text-muted)',borderRadius:6,width:24,height:24,cursor:'pointer',fontSize:'0.8rem',display:'flex',alignItems:'center',justifyContent:'center'}}>x</button>
-                                </div>
-                                <input type="color" value={uiPrimaryColor||EZNR_DEFAULTS.primaryColor}
-                                  onChange={e=>{setUiPrimaryColor(e.target.value);setDirty('company');}}
-                                  style={{width:200,height:180,border:'none',background:'transparent',cursor:'pointer',padding:0}} />
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <label style={{ display: 'inline-block', width: 34, height: 34, borderRadius: 8, border: '2px solid var(--border)', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
+                          <input type="color" 
+                            value={uiPrimaryColor || EZNR_DEFAULTS.primaryColor}
+                            onChange={e=>{setUiPrimaryColor(e.target.value);setDirty('company');}}
+                            style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', opacity: 0 }} 
+                          />
+                          <div style={{ width: '100%', height: '100%', background: uiPrimaryColor || EZNR_DEFAULTS.primaryColor, pointerEvents: 'none' }} />
+                        </label>
                         <code style={{fontSize:'0.78rem',color:'var(--text-muted)',background:'var(--bg-card)',padding:'3px 8px',borderRadius:6}}>{uiPrimaryColor||EZNR_DEFAULTS.primaryColor}</code>
                       </div>
                     </div>
@@ -1128,23 +1131,14 @@ export default function SettingsPage() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Paleta boja:' : 'Color picker:'}</span>
-                        <div style={{ position: 'relative' }}>
-                          <button onClick={()=>setUiSidebarPickerOpen(v=>!v)}
-                            style={{width:34,height:34,borderRadius:8,border:'2px solid var(--border)',background:uiSidebarColor||EZNR_DEFAULTS.sidebarColor,cursor:'pointer',padding:0}} />
-                          {uiSidebarPickerOpen && (
-                            <>
-                              <div onClick={() => setUiSidebarPickerOpen(false)} style={{ position:'fixed', top:0, left:0, right:0, bottom:0, zIndex:199 }} />
-                              <div style={{position:'absolute',top:42,left:0,zIndex:200,background:'var(--bg-card)',border:'1px solid var(--border)',borderRadius:12,padding:12,boxShadow:'0 8px 32px rgba(0,0,0,0.35)'}}>
-                                <div style={{display:'flex',justifyContent:'flex-end',marginBottom:6}}>
-                                  <button onClick={()=>setUiSidebarPickerOpen(false)} style={{border:'none',background:'var(--bg-input)',color:'var(--text-muted)',borderRadius:6,width:24,height:24,cursor:'pointer',fontSize:'0.8rem',display:'flex',alignItems:'center',justifyContent:'center'}}>x</button>
-                                </div>
-                                <input type="color" value={uiSidebarColor||EZNR_DEFAULTS.sidebarColor}
-                                  onChange={e=>{setUiSidebarColor(e.target.value);setDirty('company');}}
-                                  style={{width:200,height:180,border:'none',background:'transparent',cursor:'pointer',padding:0}} />
-                              </div>
-                            </>
-                          )}
-                        </div>
+                        <label style={{ display: 'inline-block', width: 34, height: 34, borderRadius: 8, border: '2px solid var(--border)', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
+                          <input type="color" 
+                            value={uiSidebarColor || EZNR_DEFAULTS.sidebarColor}
+                            onChange={e=>{setUiSidebarColor(e.target.value);setDirty('company');}}
+                            style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', opacity: 0 }} 
+                          />
+                          <div style={{ width: '100%', height: '100%', background: uiSidebarColor || EZNR_DEFAULTS.sidebarColor, pointerEvents: 'none' }} />
+                        </label>
                         <code style={{fontSize:'0.78rem',color:'var(--text-muted)',background:'var(--bg-card)',padding:'3px 8px',borderRadius:6}}>{uiSidebarColor||EZNR_DEFAULTS.sidebarColor}</code>
                       </div>
                     </div>
