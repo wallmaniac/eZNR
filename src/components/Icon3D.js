@@ -61,7 +61,7 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
     if (size <= 30) {
       appliedScale = 1.15; // Sidebar (+4% from 1.11)
     } else {
-      appliedScale = 1.18; // Page (+5% from 1.13)
+      appliedScale = 1.28; // Page (+10% from 1.18)
     }
     transformY = '3px'; // drop down to level bottom of icon everywhere
   }
