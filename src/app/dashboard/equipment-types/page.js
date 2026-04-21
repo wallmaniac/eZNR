@@ -61,7 +61,7 @@ export default function EquipmentTypesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>⚙️ {t('equipmentTypes')}</h1>
+        <h1 style={{ marginBottom: 24 }}>🏭 {t('equipmentTypes')}</h1>
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>

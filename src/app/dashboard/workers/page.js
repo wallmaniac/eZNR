@@ -285,7 +285,8 @@ function WorkersPageInner() {
                 }, 350);
             }
             // Strip the param from the URL immediately so this effect never re-fires
-            router.replace('/dashboard/workers', { scroll: false });
+            // Use replaceState instead of router.replace to preserve back-navigation history
+            window.history.replaceState(null, '', '/dashboard/workers');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);

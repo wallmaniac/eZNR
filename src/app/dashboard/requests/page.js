@@ -292,7 +292,7 @@ export default function RequestsPage() {
     return (
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>📝 {t('requests')}</h1>
+          <h1 style={{ margin: 0 }}>📨 {t('requests')}</h1>
         </div>
         <DialogRenderer />
 

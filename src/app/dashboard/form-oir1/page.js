@@ -245,7 +245,7 @@ export default function FormOIR1Page() {
     return (
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>📄 {t('formOIR1')}</h1>
+          <h1 style={{ margin: 0 }}>📑 {t('formOIR1')}</h1>
         </div>
         <DialogRenderer />
 

@@ -82,7 +82,7 @@ export default function EKPPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🦺 EK — Osobna zaštitna oprema</h1>
+        <h1 style={{ marginBottom: 24 }}>🧤 EK — Osobna zaštitna oprema</h1>
 
         {/* Toolbar */}
         <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>

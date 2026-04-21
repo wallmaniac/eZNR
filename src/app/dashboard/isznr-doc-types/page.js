@@ -30,7 +30,7 @@ export default function ISZNRDocTypesPage() {
 
   return (
     <><DialogRenderer /><div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>📋 {t('documentTypes')}</h1>
+      <h1 style={{ marginBottom: 24 }}>🗃️ {t('documentTypes')}</h1>
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>

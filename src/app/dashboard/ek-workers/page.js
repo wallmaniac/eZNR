@@ -13,7 +13,7 @@ export default function EKWorkersPage() {
 
   return (
     <div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>📇 {t('ekWorkers')}</h1>
+      <h1 style={{ marginBottom: 24 }}>🪪 {t('ekWorkers')}</h1>
       <div className="card"><div className="card-body">
         <div style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{workers.length} {t('records')}</div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>

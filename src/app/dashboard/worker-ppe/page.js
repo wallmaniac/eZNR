@@ -97,7 +97,7 @@ export default function WorkerPPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🦺 {t('workerPPE')}</h1>
+        <h1 style={{ marginBottom: 24 }}>🥽 {t('workerPPE')}</h1>
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             <button className="btn btn-primary btn-sm" onClick={openModal}>

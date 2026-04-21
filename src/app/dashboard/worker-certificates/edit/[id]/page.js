@@ -136,7 +136,7 @@ function EditCertPageInner() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={() => { if (returnTo) router.push(returnTo); else router.back(); }}>←</button>
                 <div>
-                    <h1 style={{ margin: 0 }}>📄 {lang === 'bs' ? 'Uredi uvjerenje' : 'Edit Certificate'}</h1>
+                    <h1 style={{ margin: 0 }}>✏️ {lang === 'bs' ? 'Uredi uvjerenje' : 'Edit Certificate'}</h1>
                     {worker && (
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
                             👤 {worker.ime} {worker.prezime}

@@ -264,7 +264,7 @@ function EquipmentPageInner() {
         const orgName = getOrgUnitName(eq.orgJedinicaId);
         const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${eq.naziv}</title>
 <style>body{font-family:'Segoe UI',Arial,sans-serif;font-size:11pt;color:#1a1a1a;padding:20px}h1{font-size:18pt;color:#1a237e}table{width:100%;border-collapse:collapse;margin:10px 0;font-size:10pt}th,td{border:1px solid #ccc;padding:8px;text-align:left}th{background:#e8eaf6;font-weight:700;color:#283593;width:200px}@media print{button{display:none!important}}</style></head><body>
-<h1>⚙️ ${eq.naziv}</h1>
+<h1>🔩 ${eq.naziv}</h1>
 <table>
 <tr><th>Vrsta</th><td>${eq.vrsta || '—'}</td></tr>
 <tr><th>Tip</th><td>${eq.tip || '—'}</td></tr>
