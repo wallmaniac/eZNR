@@ -201,7 +201,7 @@ function WorkerCertificatesInner() {
     <>
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8, flexWrap: 'wrap' }}>
-          <Icon3D name="Uvjerenja.png" size={96} />
+          <Icon3D name="Uvjerenja.png" size={64} />
           <div style={{ flex: 1 }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>

@@ -9,6 +9,8 @@ import {
 import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import Icon3D from '@/components/Icon3D';
+
 
 const EMPTY_RA1 = {
   // Worker info (auto-filled from worker selection)
@@ -370,7 +372,8 @@ export default function ReferralRA1Page() {
     return (
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>🩺 {t('medicalReferralRA1')}</h1>
+          <Icon3D name="Ljekarska uputnica.png" size={64} />
+          <h1 style={{ margin: 0 }}>{t('medicalReferralRA1')}</h1>
         </div>
         <DialogRenderer />
 
@@ -511,7 +514,8 @@ export default function ReferralRA1Page() {
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
-        <h1 style={{ margin: 0 }}>🩺 {editingId ? (lang === 'bs' ? 'Uredi uputnicu RA-1' : 'Edit RA-1 referral') : (lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 referral')}</h1>
+        <Icon3D name="Ljekarska uputnica.png" size={64} />
+        <h1 style={{ margin: 0 }}>{editingId ? (lang === 'bs' ? 'Uredi uputnicu RA-1' : 'Edit RA-1 referral') : (lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 referral')}</h1>
       </div>
       <DialogRenderer />
 

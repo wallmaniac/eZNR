@@ -20,7 +20,7 @@ const menuItems = [
             { key: 'workers',            icon: 'Radnici.png', path: '/dashboard/workers' },
             { key: 'workerCertificates', icon: 'Uvjerenja.png', path: '/dashboard/worker-certificates' },
             { key: 'workerPPE',          icon: 'OZO.png', path: '/dashboard/worker-ppe' },
-            { key: 'medicalExams',       icon: '👨‍⚕️', path: '/dashboard/medical-exams' },
+            { key: 'medicalExams',       icon: 'Ljekarski pregledi.png', path: '/dashboard/medical-exams' },
             { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
             { key: 'ekPPE',             icon: 'OZO.png', path: '/dashboard/ek-ppe' },
             { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
@@ -80,7 +80,7 @@ const menuItems = [
                 label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
                 children: [
                     { key: 'formOIR1',          icon: '📄', path: '/dashboard/form-oir1' },
-                    { key: 'medicalReferralRA1', icon: '🩺', path: '/dashboard/referral-ra1' },
+                    { key: 'medicalReferralRA1', icon: 'Ljekarska uputnica.png', path: '/dashboard/referral-ra1' },
                     { key: 'formRO1',            icon: '📄', path: '/dashboard/form-ro1' },
                     { key: 'formRO2',            icon: '📄', path: '/dashboard/form-ro2' },
                     { key: 'nightWorkReferral',  icon: '🌙', path: '/dashboard/night-work' },

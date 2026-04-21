@@ -343,7 +343,7 @@ export function UvjerenjeFormPage() {
         <div className="animate-fadeIn">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
-                <Icon3D name="Uvjerenja.png" size={96} />
+                <Icon3D name="Uvjerenja.png" size={64} />
                 <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
             </div>
             <DialogRenderer />

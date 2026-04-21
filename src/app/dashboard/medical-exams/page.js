@@ -7,6 +7,7 @@ import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/d
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import Icon3D from '@/components/Icon3D';
 
 // ── Legal basis ────────────────────────────────────────────────────────────────
 // Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)
@@ -237,7 +238,7 @@ export default function MedicalExamsPage() {
 
             {/* ── Page header — emoji + title only, NO button here ── */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                <span style={{ fontSize: '1.6rem' }}>👨‍⚕️</span>
+                <Icon3D name="Ljekarski pregledi.png" size={64} />
                 <div>
                     <h1 style={{ margin: 0 }}>{bs ? 'Ljekarski pregledi' : 'Medical Examinations'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -399,7 +400,7 @@ export default function MedicalExamsPage() {
                     <div className="modal" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
                             <h2 style={{ color: 'white', margin: 0 }}>
-                                👨‍⚕️ {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
+                                <Icon3D name="Ljekarski pregledi.png" size={48} /> {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
                             </h2>
                             <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={handleClose}>✕</button>
                         </div>
