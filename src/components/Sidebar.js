@@ -23,7 +23,7 @@ const menuItems = [
             { key: 'medicalExams',       icon: 'Ljekarski pregledi.png', path: '/dashboard/medical-exams' },
             { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
             { key: 'ekPPE',             icon: 'OZO.png', path: '/dashboard/ek-ppe' },
-            { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
+            { key: 'trainingMasterBook', icon: 'Poduke.png', path: '/dashboard/training-book' },
         ],
     },
 
@@ -140,7 +140,7 @@ const menuItems = [
             { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
             { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
             { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
-            { key: 'doctors',            icon: '👨‍⚕️', path: '/dashboard/doctors' },
+            { key: 'doctors',            icon: 'Doktori.png', path: '/dashboard/doctors' },
             { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
             { key: 'certTypes',          icon: 'Uvjerenja.png', path: '/dashboard/cert-types' },
             { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },

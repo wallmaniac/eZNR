@@ -38,9 +38,10 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
   const src = `/icons3d/${name}`;
 
   let appliedScale = 1;
-  // The Uvjerenja icon has significant transparent padding in its PNG file.
-  // We apply a 1.9 scale globally so it visually matches other icons at the same bounding box size.
-  if (name === 'Uvjerenja.png') {
+  // Some icons have significant transparent padding in their PNG files.
+  // We apply a 1.9 scale globally so they visually match other icons at the same bounding box size.
+  const paddedIcons = ['Uvjerenja.png', 'Ljekarska uputnica.png', 'Ljekarski pregledi.png', 'Doktori.png', 'Poduke.png'];
+  if (paddedIcons.includes(name)) {
     appliedScale = 1.9;
   }
 

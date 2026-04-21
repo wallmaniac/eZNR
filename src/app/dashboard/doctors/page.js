@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import Icon3D from '@/components/Icon3D';
 
 export default function DoctorsPage() {
   const { t, lang } = useLanguage();
@@ -30,11 +31,14 @@ export default function DoctorsPage() {
 
   return (
     <><DialogRenderer /><div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>👨‍⚕️ {t('doctors')}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <Icon3D name="Doktori.png" size={64} />
+        <h1 style={{ margin: 0 }}>{t('doctors')}</h1>
+      </div>
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal" style={{ maxWidth: 550 }} onClick={e => e.stopPropagation()}>
-            <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('doctors')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
+            <div className="modal-header"><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><Icon3D name="Doktori.png" size={48} /><h2 style={{ margin: 0 }}>{t('doctors')}</h2></div><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
             <div className="modal-body">
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.ime} onChange={e => setFormData({ ...formData, ime: e.target.value })} /></div>
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{lang === 'bs' ? 'Specijalizacija' : 'Specialization'}</label><input className="form-input" value={formData.specijalizacija} onChange={e => setFormData({ ...formData, specijalizacija: e.target.value })} /></div>
