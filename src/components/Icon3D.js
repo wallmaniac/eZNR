@@ -50,12 +50,12 @@ export default function Icon3D({ name, size = 24, className = '', style = {} }) 
   // Final optical tweaks requested by user
   if (name === 'Oprema.png') {
     appliedScale = 1.02; // visually 2% larger
-    transformY = '3px';  // drop down to level bottom of icon with text
+    if (size <= 30) transformY = '3px'; // drop down beautifully to level bottom of icon with text in sidebar
   }
   
   if (name === 'Vozni park.png') {
-    appliedScale = 1.03; // visually 3% larger
-    transformY = '2px';  // drop down to level bottom of icon with text
+    appliedScale = 1.03; // visually ~3% larger
+    if (size <= 30) transformY = '2px'; // drop down gently to level bottom of icon with text in sidebar
   }
 
   // Construct transform rule safely
