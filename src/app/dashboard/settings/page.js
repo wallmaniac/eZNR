@@ -570,7 +570,6 @@ export default function SettingsPage() {
             {tb.icon} {tb.label}
             {dirtyTab === tb.key && <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--warning)', marginLeft: 6, verticalAlign: 'middle', boxShadow: '0 0 4px var(--warning)' }} title="Nesačuvane promjene" />}
           </button>
-          </button>
         ))}
         </div>
         {canScrollRight && (
@@ -584,9 +583,6 @@ export default function SettingsPage() {
           </div>
         )}
       </div>
-      <style>{`@keyframes pulse-x { 0% { transform: translateX(0); } 100% { transform: translateX(5px); opacity: 1; } }`}</style>
-      </div>
-
       {/* ══════════════════════════════════════════════════ */}
       {/* TAB 1: PROFILE                                    */}
       {/* ══════════════════════════════════════════════════ */}
