@@ -270,6 +270,19 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
     const [mobileProfileTab, setMobileProfileTab] = useState('profile');
 
+    // ── Mobile Drawer Hooks (moved out of conditional to prevent React #310 crashes) ──
+    const mobileScrollRef = useRef(null);
+    const mobileSwipeRef = useRef({ startY: 0, active: false });
+
+    // Lock background scroll when drawer is open
+    useEffect(() => {
+        if (isMobile && mobileOpen) {
+            const prev = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+            return () => { document.body.style.overflow = prev; };
+        }
+    }, [isMobile, mobileOpen]);
+
     // UI Branding — read sidebar logo/text settings from company
     const uiBranding = useMemo(() => {
         try { return getUIBranding(activeCompanyId); } catch { return { sidebarLogoEnabled: false, sidebarText: UI_DEFAULTS.sidebarText, logo: '' }; }
@@ -459,38 +472,20 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
     // MOBILE: Bottom-sheet drawer (slides up from bottom, sits above bottom nav)
     // ═══════════════════════════════════════════════════════════════════════════
     if (isMobile) {
-        // Lock background scroll when drawer is open
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        useEffect(() => {
-            if (mobileOpen) {
-                const prev = document.body.style.overflow;
-                document.body.style.overflow = 'hidden';
-                return () => { document.body.style.overflow = prev; };
-            }
-        }, [mobileOpen]);
-
-        // Ref for the scrollable menu body
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const scrollRef = useRef(null);
-
-        // Swipe-down-to-close tracking
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const swipeRef = useRef({ startY: 0, active: false });
-
         const handleDrawerTouchStart = (e) => {
-            const scrollEl = scrollRef.current;
+            const scrollEl = mobileScrollRef.current;
             // Only allow swipe-to-close if scroll is at top (or touch is above the scroll area)
             const atTop = !scrollEl || scrollEl.scrollTop <= 0;
             const touchInScroll = scrollEl && scrollEl.contains(e.target);
             if (atTop || !touchInScroll) {
-                swipeRef.current = { startY: e.touches[0].clientY, active: true };
+                mobileSwipeRef.current = { startY: e.touches[0].clientY, active: true };
             } else {
-                swipeRef.current.active = false;
+                mobileSwipeRef.current.active = false;
             }
         };
 
         const handleDrawerTouchMove = (e) => {
-            const el = scrollRef.current;
+            const el = mobileScrollRef.current;
             // Prevent background page scroll
             if (el && el.contains(e.target)) {
                 e.stopPropagation();
@@ -498,14 +493,14 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
         };
 
         const handleDrawerTouchEnd = (e) => {
-            if (!swipeRef.current.active) return;
+            if (!mobileSwipeRef.current.active) return;
             const endY = e.changedTouches[0].clientY;
-            const dist = endY - swipeRef.current.startY;
+            const dist = endY - mobileSwipeRef.current.startY;
             // If swiped down more than 80px → close
             if (dist > 80) {
                 onMobileClose();
             }
-            swipeRef.current.active = false;
+            mobileSwipeRef.current.active = false;
         };
 
         return (
@@ -593,7 +588,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
 
                     {/* Scrollable menu body — overscrollBehavior: contain prevents scroll chaining */}
                     <div
-                        ref={scrollRef}
+                        ref={mobileScrollRef}
                         style={{
                             flex: 1,
                             overflowY: 'auto',
