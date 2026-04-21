@@ -41,10 +41,10 @@ const menuItems = [
 
     // ── ⚙️ OPREMA — equipment lifecycle ──────────────────────────────────────
     {
-        key: 'grpEquipment', icon: '⚙️',
+        key: 'grpEquipment', icon: 'Oprema.png',
         children: [
-            { key: 'equipment',          icon: '⚙️', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
-            { key: 'ekEquipment',        icon: '📇', path: '/dashboard/ek-equipment' },
+            { key: 'equipment',          icon: 'Oprema.png', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
+            { key: 'ekEquipment',        icon: 'Oprema.png', path: '/dashboard/ek-equipment' },
         ],
     },
 

@@ -16,6 +16,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateEquipmentReport } from '@/lib/pdfReportGenerator';
+import Icon3D from '@/components/Icon3D';
 
 const emptyEQ = {
     naziv: '', vrsta: '', tip: '', tvBroj: '', invBroj: '',
@@ -298,7 +299,10 @@ function EquipmentPageInner() {
 
     return (
         <div className="animate-fadeIn">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>⚙️ {t('equipment')}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                <Icon3D name="Oprema.png" size={64} />
+                <h1 style={{ margin: 0 }}>{t('equipment')}</h1>
+            </div>
             
             <PrintPortal isPrinting={showPrintModal}>
                 <div id="qr-print-area" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, 60mm)', gap: '4mm', alignContent: 'start', justifyContent: 'center', padding: '10mm' }}>
@@ -361,8 +365,11 @@ function EquipmentPageInner() {
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ width: '100%', maxWidth: 860, minHeight: 650, display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'} {formData.naziv && `— ${formData.naziv}`}</h2>
+                            <div className="modal-header">
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                    <Icon3D name="Oprema.png" size={48} />
+                                    <h2 style={{ margin: 0 }}>{lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'} {formData.naziv && `— ${formData.naziv}`}</h2>
+                                </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
 
