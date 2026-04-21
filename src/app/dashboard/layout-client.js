@@ -23,38 +23,33 @@ export default function DashboardLayout({ children }) {
     const [isTablet, setIsTablet] = useState(false);
     const [mobileOpen, setMobileOpen] = useState(false); // mobile drawer open/closed
 
-    // Detect mobile + tablet
+    // Unified Responsive Logic (Mobile + Tablet + Desktop)
     useEffect(() => {
-        const check = () => {
+        const handleResize = () => {
             const w = window.innerWidth;
             const mobile = w < 768;
             const tablet = w >= 768 && w <= 1024;
+            const desktop = w > 1024;
+
             setIsMobile(mobile);
             setIsTablet(tablet);
+
+            // Responsive auto-collapse/expand logic
             if (mobile) {
                 setSidebarCollapsed(true);
-                setMobileOpen(false);
+                setMobileOpen(false); // Close drawer if switching from desktop to mobile
             } else if (tablet) {
-                setSidebarCollapsed(true); // auto-collapse on tablet
-            }
-        };
-        check();
-        window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
-    }, []);
-
-    // Tablet auto-collapse
-    useEffect(() => {
-        const checkTablet = () => {
-            if (window.innerWidth >= 768 && window.innerWidth <= 1024) {
                 setSidebarCollapsed(true);
-            } else if (window.innerWidth > 1024) {
+            } else if (desktop) {
+                // On desktop, we prefer expanded but allow user to collapse
+                // For zoom safety: only expand automatically if switching TO desktop
                 setSidebarCollapsed(false);
             }
         };
-        checkTablet();
-        window.addEventListener('resize', checkTablet);
-        return () => window.removeEventListener('resize', checkTablet);
+
+        handleResize();
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     useEffect(() => {

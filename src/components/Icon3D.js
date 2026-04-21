@@ -8,11 +8,30 @@ import Image from 'next/image';
  * @param {object} style - Optional inline styles
  */
 export default function Icon3D({ name, size = 24, className = '', style = {} }) {
-  // Check if it's a 3D icon or fall back to emoji if name is just an emoji
-  const isEmoji = !name.includes('.') && name.length <= 4;
+  if (!name) return null;
+
+  // Check if it's a 3D icon or fall back to emoji.
+  // We determine it's a file if it contains a dot (extension). Emojis don't have dots.
+  const isEmoji = !name.includes('.');
   
   if (isEmoji) {
-    return <span style={{ fontSize: size * 0.8, ...style }} className={className}>{name}</span>;
+    return (
+      <span 
+        style={{ 
+          fontSize: size * 0.85, 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          justifyContent: 'center', 
+          width: size, 
+          height: size,
+          lineHeight: 1,
+          ...style 
+        }} 
+        className={className}
+      >
+        {name}
+      </span>
+    );
   }
 
   // Ensure absolute path from public

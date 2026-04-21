@@ -791,7 +791,7 @@ export default function AIAssistant() {
         : { position: 'fixed', bottom: 80, right: 16 };
 
     // Is FAB on the left side of the screen?
-    const isFabLeft = fabPos ? fabPos.x < window.innerWidth / 2 : false;
+    const isFabLeft = (typeof window !== 'undefined' && fabPos) ? fabPos.x < window.innerWidth / 2 : false;
 
     // Is the screen mobile-sized?
     const isMobileScreen = typeof window !== 'undefined' && window.innerWidth < 768;
