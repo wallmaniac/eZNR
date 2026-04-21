@@ -2,46 +2,48 @@
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, update, COLLECTIONS, formatDate, genId } from '@/lib/dataStore';
+import { getAll, create, update, remove, COLLECTIONS, formatDate, getActiveCompanyId } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
-import { uploadSecureFile, deleteSecureFile } from '@/lib/storageService';
+import { uploadDocument } from '@/lib/storageService';
+
+const emptyServiceEntry = {
+    datum: '', tip: 'pregled', servisirao: '', napomena: '', iduciServis: '', docName: '', docData: '', fileObj: null, equipmentId: ''
+};
 
 function ServiceRecordsInner() {
     const { t, lang } = useLanguage();
-    const { activeCompanyId } = useAuth();
     const bs = lang === 'bs';
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
-
-    const [equipmentItems, setEquipmentItems] = useState([]);
+    const { activeCompanyId } = useAuth();
+    
+    const [logs, setLogs] = useState([]);
+    const [equipmentList, setEquipmentList] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
 
     // Modal state
     const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({ equipmentId: '', naziv: '', kategorija: 'Ostalo', datumIzdavanja: '', datumIsteka: '' });
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [equipmentSearch, setEquipmentSearch] = useState('');
-    const [showESearch, setShowESearch] = useState(false);
-    const eRef = useRef(null);
+    const [formData, setFormData] = useState({ ...emptyServiceEntry });
+    const [editingId, setEditingId] = useState(null);
+    const serviceDocRef = useRef(null);
 
-    // Action menu
+    // Equipment Search Dropdown in modal
+    const [eqSearch, setEqSearch] = useState('');
+    const [showEqSearch, setShowEqSearch] = useState(false);
+    const eqRef = useRef(null);
+
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({});
     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
-    // Upload progress
-    const [uploadProgress, setUploadProgress] = useState(null);
-
-    // Bulk selection
-    const [selectedIds, setSelectedIds] = useState(new Set());
-
     const loadData = useCallback(() => {
-        setEquipmentItems(getAll(COLLECTIONS.EQUIPMENT));
+        setLogs(getAll(COLLECTIONS.SERVICE_LOG).sort((a,b) => new Date(b.datum) - new Date(a.datum)));
+        setEquipmentList(getAll(COLLECTIONS.EQUIPMENT));
     }, []);
 
     useEffect(() => {
@@ -52,223 +54,174 @@ function ServiceRecordsInner() {
 
     useEffect(() => {
         const handler = (e) => {
-            if (eRef.current && !eRef.current.contains(e.target)) setShowESearch(false);
+            if (eqRef.current && !eqRef.current.contains(e.target)) setShowEqSearch(false);
         };
         document.addEventListener('mousedown', handler);
         return () => document.removeEventListener('mousedown', handler);
     }, []);
 
-    const docs = [];
-    equipmentItems.forEach(v => {
-        if (Array.isArray(v.dokumenti)) {
-            v.dokumenti.forEach(d => {
-                docs.push({ ...d, equipmentId: v.id, equipmentName: v.naziv || 'Nepoznato' });
-            });
-        }
+    const enrichedLogs = logs.map(l => {
+        const eq = equipmentList.find(e => e.id === l.equipmentId);
+        return { ...l, equipmentName: eq ? eq.naziv : 'Nepoznato', equipmentInv: eq ? eq.invBroj : '' };
     });
 
-    const filtered = docs.filter(item => {
+    const filtered = enrichedLogs.filter(item => {
         if (!searchTerm) return true;
         const q = searchTerm.toLowerCase();
         return (item.equipmentName || '').toLowerCase().includes(q) ||
-               (item.naziv || '').toLowerCase().includes(q) ||
-               (item.kategorija || '').toLowerCase().includes(q);
+               (item.equipmentInv || '').toLowerCase().includes(q) ||
+               (item.servisirao || '').toLowerCase().includes(q) ||
+               (item.napomena || '').toLowerCase().includes(q);
     });
 
-    const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datumIzdavanja', 'desc');
+    const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
 
-    const openInEquipment = (equipmentId) => {
-        router.push(`/dashboard/equipment?openId=${equipmentId}&tab=arhiva&returnTo=${encodeURIComponent('/dashboard/service-records')}`);
+    const openInEquipment = (eqId) => {
+        router.push(`/dashboard/equipment?openItem=${eqId}&tab=servis`);
     };
 
-    const openMenu = (id, e) => {
-        e.stopPropagation();
-        if (actionMenuId === id) { setActionMenuId(null); return; }
-        const rect = e.currentTarget.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom - 8;
-        const flipUp = spaceBelow < 220;
-        setMenuPos(flipUp
-            ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
-            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow) });
-        setActionMenuId(id);
+    const handleNewService = () => {
+        const today = new Date().toISOString().slice(0, 10);
+        setFormData({ ...emptyServiceEntry, datum: today });
+        setEditingId(null);
+        setEqSearch('');
+        setShowForm(true);
     };
 
-    const handleDownload = (doc) => {
-        const url = doc.fileUrl || doc.docData;
-        if (!url) return;
-        if (doc.fileUrl) {
-            // Firebase Storage URL — open directly, browser handles download
-            window.open(doc.fileUrl, '_blank');
-        } else {
-            // Legacy base64 fallback
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = doc.docName || doc.naziv;
-            a.click();
-        }
-    };
-
-    const handlePrint = (doc) => {
-        const url = doc.fileUrl || doc.docData;
-        if (!url) return;
-        window.open(url, '_blank');
-    };
-
-    const handleCopy = (doc) => {
-        const v = equipmentItems.find(x => x.id === doc.equipmentId);
-        if (!v) return;
-        const newDoc = {
-            id: genId(),
-            naziv: (doc.naziv || 'Dokument') + ' (Kopija)',
-            kategorija: doc.kategorija || 'Ostalo',
-            datumIzdavanja: doc.datumIzdavanja || '',
-            datumIsteka: doc.datumIsteka || '',
-            velicina: doc.velicina || '',
-            datumUpisa: new Date().toISOString(),
-            docData: doc.docData || null,
-        };
-        const updatedDocs = [...(v.dokumenti || []), newDoc];
-        update(COLLECTIONS.EQUIPMENT, v.id, { dokumenti: updatedDocs });
+    const handleEditService = (log) => {
+        setFormData({ ...log });
+        setEditingId(log.id);
+        const eq = equipmentList.find(e => e.id === log.equipmentId);
+        if(eq) setEqSearch(eq.naziv);
+        setShowForm(true);
         setActionMenuId(null);
+    };
+
+    const handleSaveService = async () => {
+        if (!formData.datum) { await alert(bs ? 'Datum servisa je obavezan!' : 'Service date is required!'); return; }
+        if (!formData.equipmentId) { await alert(bs ? 'Odaberite radnu opremu!' : 'Select equipment!'); return; }
+
+        let uploadedUrl = formData.docData;
+        if (formData.fileObj) {
+            try {
+                const res = await uploadDocument(formData.fileObj, activeCompanyId, 'service-logs');
+                uploadedUrl = res.url;
+            } catch (e) {
+                await alert('Upload failed: ' + e.message); return;
+            }
+        }
+
+        const data = { ...formData, docData: uploadedUrl };
+        delete data.fileObj;
+        
+        if (editingId) {
+            update(COLLECTIONS.SERVICE_LOG, editingId, data);
+        } else {
+            create(COLLECTIONS.SERVICE_LOG, data);
+        }
+        
+        // Auto-update posljednji/iduci dates on equipment
+        const eq = equipmentList.find(e => e.id === formData.equipmentId);
+        if (eq && formData.datum) {
+            const updates = { posljednji: formData.datum };
+            if (formData.iduciServis) updates.iduci = formData.iduciServis;
+            update(COLLECTIONS.EQUIPMENT, eq.id, { ...eq, ...updates });
+        }
+
+        setShowForm(false);
         loadData();
         showFlash();
     };
 
-    const handleDelete = async (doc) => {
-        if (await confirm(bs ? 'Obrisati ovaj dokument?' : 'Delete this document?')) {
-            const v = equipmentItems.find(x => x.id === doc.equipmentId);
-            if (v && v.dokumenti) {
-                // Delete from Firebase Storage if it was uploaded there
-                if (doc.storagePath) await deleteSecureFile(activeCompanyId, doc.storagePath, doc.fileSize || 0);
-                const newDocs = v.dokumenti.filter(d => d.id !== doc.id);
-                update(COLLECTIONS.EQUIPMENT, doc.equipmentId, { dokumenti: newDocs });
-                setActionMenuId(null);
-                loadData();
-            }
-        }
-    };
-
-    const handleDeleteSelected = async () => {
-        if (selectedIds.size === 0) return;
-        if (await confirm(bs ? `Obrisati ${selectedIds.size} dokumenata?` : `Delete ${selectedIds.size} documents?`)) {
-            const equipmentUpdates = {};
-            for (const doc of docs) {
-                if (selectedIds.has(doc.id)) {
-                    if (!equipmentUpdates[doc.equipmentId]) {
-                        const v = equipmentItems.find(x => x.id === doc.equipmentId);
-                        equipmentUpdates[doc.equipmentId] = [...(v?.dokumenti || [])];
-                    }
-                    equipmentUpdates[doc.equipmentId] = equipmentUpdates[doc.equipmentId].filter(d => d.id !== doc.id);
-                }
-            }
-            for (const [vid, updatedDocs] of Object.entries(equipmentUpdates)) {
-                update(COLLECTIONS.EQUIPMENT, vid, { dokumenti: updatedDocs });
-            }
-            setSelectedIds(new Set());
+    const handleDeleteService = async (id) => {
+        setActionMenuId(null);
+        if (await confirm(bs ? 'Obrisati servisni zapis?' : 'Delete service record?')) {
+            remove(COLLECTIONS.SERVICE_LOG, id);
             loadData();
         }
     };
 
-    const toggleAll = (e) => {
-        if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id)));
-        else setSelectedIds(new Set());
-    };
-    const toggleOne = (id) => {
-        const n = new Set(selectedIds);
-        if (n.has(id)) n.delete(id); else n.add(id);
-        setSelectedIds(n);
+    const handleDocUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 15 * 1024 * 1024) {
+            await alert(bs ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
+            return;
+        }
+        setFormData(prev => ({ ...prev, fileObj: file, docName: file.name }));
     };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            if (!formData.naziv) setFormData(f => ({...f, naziv: file.name}));
+    const openDocInTab = (log) => {
+        setActionMenuId(null);
+        if (!log.docData) return;
+        if (log.docData.startsWith('http')) {
+            window.open(log.docData, '_blank');
+            return;
+        }
+        const isPdf = log.docData.startsWith('data:application/pdf');
+        const isImage = log.docData.startsWith('data:image/');
+        if (isPdf || isImage) {
+            const byteString = atob(log.docData.split(',')[1]);
+            const mimeString = log.docData.split(',')[0].split(':')[1].split(';')[0];
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+            const blob = new Blob([ab], { type: mimeString });
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+            setTimeout(() => URL.revokeObjectURL(url), 30000);
+        } else {
+            const a = document.createElement('a');
+            a.href = log.docData;
+            a.download = log.docName || 'servisni_dokument';
+            a.click();
         }
     };
 
-    const handleSave = async () => {
-        if (!formData.equipmentId) { await alert(bs ? 'Odaberite vozilo!' : 'Select vehicle!'); return; }
-        if (!selectedFile && !formData.naziv) { await alert(bs ? 'Odaberite datoteku i unesite naziv!' : 'Select file and enter name!'); return; }
+    const fEq = equipmentList.filter(e => !eqSearch || e.naziv.toLowerCase().includes(eqSearch.toLowerCase()) || (e.invBroj || '').toLowerCase().includes(eqSearch.toLowerCase()));
 
-        const v = equipmentItems.find(x => x.id === formData.equipmentId);
-        if (!v) return;
-
-        const newDoc = {
-            id: genId(),
-            naziv: formData.naziv || (selectedFile ? selectedFile.name : 'Dokument'),
-            kategorija: formData.kategorija,
-            datumIzdavanja: formData.datumIzdavanja,
-            datumIsteka: formData.datumIsteka,
-            velicina: selectedFile ? (selectedFile.size / 1024).toFixed(1) + ' KB' : '',
-            datumUpisa: new Date().toISOString(),
-        };
-
-        if (selectedFile) {
-            try {
-                setUploadProgress(0);
-                const { url, storagePath } = await uploadSecureFile(
-                    activeCompanyId,
-                    'service-records',
-                    selectedFile,
-                    (pct) => setUploadProgress(pct)
-                );
-                newDoc.fileUrl = url;
-                newDoc.storagePath = storagePath;
-                newDoc.docName = selectedFile.name;
-            } catch (err) {
-                setUploadProgress(null);
-                await alert(bs ? `Greška pri uploadu: ${err.message}` : `Upload error: ${err.message}`);
-                return;
-            }
-            setUploadProgress(null);
-        }
-
-        const updatedDocs = [...(v.dokumenti || []), newDoc];
-        update(COLLECTIONS.EQUIPMENT, v.id, { dokumenti: updatedDocs });
-        setShowForm(false);
-        setSelectedFile(null);
-        loadData();
-        showFlash();
-    };
-
-    const fv = equipmentItems.filter(v => !equipmentSearch || `${v.naziv} ${v.inventarniBroj}`.toLowerCase().includes(equipmentSearch.toLowerCase()));
+    const tipLabel = (tip) => ({
+        pregled: bs ? '🔍 Pregled' : '🔍 Inspection',
+        servis: bs ? '🔧 Servis' : '🔧 Service',
+        popravak: bs ? '🛠️ Popravak' : '🛠️ Repair',
+        kalibracija: bs ? '📏 Kalibracija' : '📏 Calibration',
+        zamjena: bs ? '🔄 Zamjena dijela' : '🔄 Part replacement',
+    }[tip] || tip);
 
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <span style={{ fontSize: '1.6rem' }}>📁</span>
+                <span style={{ fontSize: '1.6rem' }}>🔧</span>
                 <div>
                     <h1 style={{ margin: 0 }}>{bs ? 'Servisni Zapisnici' : 'Service Records'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {bs ? 'Pregled svih servisnih zapisnika za radnu opremu.' : 'Central archive of service records for equipment.'}
+                        {bs ? 'Pregled svih servisnih zapisnika za kompletnu radnu opremu.' : 'Overview of all service records across all equipment.'}
                     </p>
                 </div>
             </div>
 
-            {/* Modal */}
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
-                    <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
+                    <div className="modal" style={{ maxWidth: 560, zIndex: 1100 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>+ {bs ? 'Novi dokument' : 'New Document'}</h2>
+                            <h2>🔧 {editingId ? (bs ? 'Uredi servisni zapis' : 'Edit service record') : (bs ? 'Novi servisni zapis' : 'New service record')}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                                 
-                                <div className="form-group" ref={eRef} style={{ position: 'relative' }}>
-                                    <label className="form-label">{bs ? 'Radna oprema' : 'Equipment'} <span style={{color: 'var(--danger)'}}>*</span></label>
-                                    <input className="form-input" placeholder="🔍 Pretraži opremu..." value={equipmentSearch} 
-                                        onChange={e => { setEquipmentSearch(e.target.value); setShowESearch(true); setFormData(f => ({...f, equipmentId: ''})); }} 
-                                        onFocus={() => setShowESearch(true)} />
-                                    {showESearch && (
+                                <div className="form-group" ref={eqRef} style={{ gridColumn: '1 / -1', position: 'relative' }}>
+                                    <label className="form-label">{bs ? 'Radna oprema / Objekt' : 'Equipment'} <span style={{color: 'var(--danger)'}}>*</span></label>
+                                    <input className="form-input" placeholder={bs ? '🔍 Pretraži opremu...' : '🔍 Search equipment...'} value={eqSearch} 
+                                        onChange={e => { setEqSearch(e.target.value); setShowEqSearch(true); setFormData(f => ({...f, equipmentId: ''})); }} 
+                                        onFocus={() => setShowEqSearch(true)} />
+                                    {showEqSearch && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 150, overflowY: 'auto', boxShadow: 'var(--shadow-lg)' }}>
-                                            {fv.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fv.slice(0, 10).map(v => (
-                                                <div key={v.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
-                                                    onClick={() => { setFormData(f => ({...f, equipmentId: v.id})); setEquipmentSearch(`${v.naziv} - ${v.inventarniBroj || ''}`); setShowESearch(false); }}>
-                                                    <strong>{v.naziv}</strong> - {v.inventarniBroj} {""}
+                                            {fEq.length === 0 ? <div style={{ padding: 8 }}>Nema rezultata</div> : fEq.slice(0, 10).map(e => (
+                                                <div key={e.id} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border-light)' }} 
+                                                    onClick={() => { setFormData(f => ({...f, equipmentId: e.id})); setEqSearch(e.naziv); setShowEqSearch(false); }}>
+                                                    <strong>{e.naziv}</strong> {e.invBroj ? `- ${e.invBroj}` : ''}
                                                 </div>
                                             ))}
                                         </div>
@@ -277,51 +230,60 @@ function ServiceRecordsInner() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Datoteka' : 'File'} <span style={{color: 'var(--danger)'}}>*</span></label>
-                                    <input type="file" className="form-input" onChange={handleFileChange} />
-                                    {uploadProgress !== null && (
-                                        <div style={{ marginTop: 8 }}>
-                                            <div style={{ height: 6, borderRadius: 4, background: 'var(--border)', overflow: 'hidden' }}>
-                                                <div style={{ height: '100%', width: `${uploadProgress}%`, background: 'var(--primary)', transition: 'width 0.2s', borderRadius: 4 }} />
-                                            </div>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>{bs ? 'Učitavanje' : 'Uploading'} {uploadProgress}%...</div>
-                                        </div>
-                                    )}
+                                    <label className="form-label" style={{ fontWeight: 700 }}>📅 {bs ? 'Datum servisa' : 'Service date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <DateInput value={formData.datum} onChange={v => setFormData(p => ({ ...p, datum: v }))} />
                                 </div>
-
                                 <div className="form-group">
-                                    <label className="form-label">{bs ? 'Naziv dokumenta' : 'Document Name'} <span style={{color: 'var(--danger)'}}>*</span></label>
-                                    <input className="form-input" value={formData.naziv} onChange={e => setFormData(f => ({...f, naziv: e.target.value}))} />
-                                </div>
-
-                                <div className="form-group">
-                                    <label className="form-label">{bs ? 'Kategorija' : 'Category'}</label>
-                                    <select className="form-select" value={formData.kategorija} onChange={e => setFormData(f => ({...f, kategorija: e.target.value}))}>
-                                        <option value="Osiguranje">Osiguranje / Insurance</option>
-                                        <option value="Saobraćajna / Prometna">Saobraćajna / Registration</option>
-                                        <option value="Tehnički pregled">Tehnički pregled / Technical</option>
-                                        <option value="Zeleni karton">Zeleni karton / Green Card</option>
-                                        <option value="Ostalo">Ostalo / Other</option>
+                                    <label className="form-label">{bs ? 'Tip servisa' : 'Service type'}</label>
+                                    <select className="form-select" value={formData.tip} onChange={e => setFormData(p => ({ ...p, tip: e.target.value }))}>
+                                        <option value="pregled">{bs ? '🔍 Pregled' : '🔍 Inspection'}</option>
+                                        <option value="servis">{bs ? '🔧 Servis' : '🔧 Service'}</option>
+                                        <option value="popravak">{bs ? '🛠️ Popravak' : '🛠️ Repair'}</option>
+                                        <option value="kalibracija">{bs ? '📏 Kalibracija' : '📏 Calibration'}</option>
+                                        <option value="zamjena">{bs ? '🔄 Zamjena dijela' : '🔄 Part replacement'}</option>
                                     </select>
                                 </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                    <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum izdavanja' : 'Issue Date'}</label>
-                                        <DateInput value={formData.datumIzdavanja} onChange={v => setFormData(f => ({...f, datumIzdavanja: v}))} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label className="form-label">{bs ? 'Datum isteka' : 'Expiry Date'}</label>
-                                        <DateInput value={formData.datumIsteka} onChange={v => setFormData(f => ({...f, datumIsteka: v}))} />
-                                    </div>
+                                <div className="form-group">
+                                    <label className="form-label">👤 {bs ? 'Servisirao / Ovlaštena firma' : 'Serviced by'}</label>
+                                    <input className="form-input" value={formData.servisirao} onChange={e => setFormData(p => ({ ...p, servisirao: e.target.value }))} placeholder={bs ? 'Ime ili naziv firme...' : 'Name or company...'} />
                                 </div>
+                                <div className="form-group">
+                                    <label className="form-label">📅 {bs ? 'Idući servis' : 'Next service date'}</label>
+                                    <DateInput value={formData.iduciServis} onChange={v => setFormData(p => ({ ...p, iduciServis: v }))} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">📝 {bs ? 'Napomena / Opis radova' : 'Notes / Description'}</label>
+                                    <textarea className="form-textarea" rows={3} value={formData.napomena} onChange={e => setFormData(p => ({ ...p, napomena: e.target.value }))} placeholder={bs ? 'Opis obavljenih radova, zamijenjeni dijelovi...' : 'Describe work done, replaced parts...'} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">📎 {bs ? 'Prilog (dokaz servisa, maks. 2MB)' : 'Attachment (proof of service, max 2MB)'}</label>
+                                    {formData.docName ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
+                                            <span style={{ fontSize: '0.85rem', color: 'var(--info)' }}>📎 {formData.docName}</span>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => setFormData(p => ({ ...p, docName: '', docData: '' }))} style={{ marginLeft: 'auto', color: 'var(--danger)' }}>✕ {bs ? 'Ukloni' : 'Remove'}</button>
+                                        </div>
+                                    ) : (
+                                        <div onClick={() => serviceDocRef.current?.click()} style={{
+                                            border: '2px dashed var(--border)', borderRadius: 8, padding: '16px',
+                                            textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)',
+                                            transition: 'all 0.15s',
+                                        }}
+                                            onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                                        >
+                                            📂 {bs ? 'Kliknite za upload dokumenta (PDF, slike)' : 'Click to upload document (PDF, images)'}
+                                        </div>
+                                    )}
+                                    <input ref={serviceDocRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
+                                </div>
+                            </div>
+                            <div style={{ marginTop: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.04)', borderRadius: 6, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                                💡 {bs ? 'Datum posljednjeg i idućeg pregleda na opremi biće automatski ažurirani.' : "Equipment's last/next examination dates will be updated automatically."}
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setShowForm(false)} disabled={uploadProgress !== null}>{t('cancel')}</button>
-                            <button className="btn btn-primary" onClick={handleSave} disabled={uploadProgress !== null}>
-                                {uploadProgress !== null ? `${bs ? 'Učitavanje' : 'Uploading'} ${uploadProgress}%...` : `💾 ${t('save')}`}
-                            </button>
+                            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                            <button className="btn btn-primary" onClick={handleSaveService}>💾 {t('save')}</button>
                         </div>
                     </div>
                 </div>
@@ -330,30 +292,21 @@ function ServiceRecordsInner() {
             <div className="card">
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={() => { 
-                            setFormData({ equipmentId: '', naziv: '', kategorija: 'Ostalo', datumIzdavanja: '', datumIsteka: '' }); 
-                            setEquipmentSearch(''); setSelectedFile(null); setShowForm(true); 
-                        }}>+ {bs ? 'Novi dokument' : 'New Document'}</button>
+                        <button className="btn btn-primary btn-sm" onClick={handleNewService}>+ {bs ? 'Novi servisni zapis' : 'New Service Record'}</button>
                         <SavedFlash />
-                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži dokumente...' : '🔍 Search documents...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                        {selectedIds.size > 0 ? (
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
-                            </div>
-                        ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {bs ? 'dokumenata' : 'documents'}</span>}
+                        <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži zapise...' : '🔍 Search records...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
                     </div>
                     <div className="data-table-wrapper">
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('equipmentName')} style={thStyle('equipmentName')}>{bs ? 'Radna oprema' : 'Equipment'}{sortIcon('equipmentName')}</th>
-                                    <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{bs ? 'Naziv dokumenta' : 'Document Name'}{sortIcon('naziv')}</th>
-                                    <th onClick={() => toggleSort('kategorija')} style={thStyle('kategorija')}>{bs ? 'Kategorija' : 'Category'}{sortIcon('kategorija')}</th>
-                                    <th onClick={() => toggleSort('datumIzdavanja')} style={thStyle('datumIzdavanja')}>{bs ? 'Datum Izdavanja' : 'Date Issued'}{sortIcon('datumIzdavanja')}</th>
-                                    <th onClick={() => toggleSort('datumIsteka')} style={thStyle('datumIsteka')}>{bs ? 'Datum Isteka' : 'Expiry Date'}{sortIcon('datumIsteka')}</th>
+                                    <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{bs ? 'Tip servisa' : 'Service Type'}{sortIcon('tip')}</th>
+                                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{bs ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
+                                    <th onClick={() => toggleSort('servisirao')} style={thStyle('servisirao')}>{bs ? 'Servisirao' : 'Serviced By'}{sortIcon('servisirao')}</th>
+                                    <th onClick={() => toggleSort('iduciServis')} style={thStyle('iduciServis')}>{bs ? 'Idući servis' : 'Next Service'}{sortIcon('iduciServis')}</th>
+                                    <th>{bs ? 'Prilog' : 'Attachment'}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -363,30 +316,46 @@ function ServiceRecordsInner() {
                                     <tr key={d.id} onClick={() => openInEquipment(d.equipmentId)} style={{ cursor: 'pointer' }}
                                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                                         onMouseLeave={e => e.currentTarget.style.background = ''}>
-                                        <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-                                            <input type="checkbox" checked={selectedIds.has(d.id)} onChange={() => toggleOne(d.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
-                                        </td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                <button className="btn btn-primary btn-sm" onClick={e => {
+                                                    e.stopPropagation();
+                                                    if (actionMenuId === d.id) { setActionMenuId(null); return; }
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                    const flipUp = spaceBelow < 120;
+                                                    setMenuPos(flipUp
+                                                        ? { bottom: window.innerHeight - rect.top + 4, left: rect.left }
+                                                        : { top: rect.bottom + 4, left: rect.left });
+                                                    setActionMenuId(d.id);
+                                                }}>{bs ? 'Akcije' : 'Actions'} ▼</button>
                                                 {actionMenuId === d.id && (<>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
-                                                    <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => { setActionMenuId(null); openInEquipment(d.equipmentId); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                        {d.docData && <button onClick={() => { setActionMenuId(null); handleDownload(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📑 {bs ? 'Preuzmi dokument' : 'Download'}</button>}
-                                                        {d.docData && <button onClick={() => { setActionMenuId(null); handlePrint(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj' : 'Print'}</button>}
-                                                        <button onClick={() => { setActionMenuId(null); handleCopy(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                    <div style={{ position: 'fixed', ...menuPos, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, overflowY: 'auto' }}>
+                                                        <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEditService(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                                                        {d.docData && <button onClick={(e) => { e.stopPropagation(); openDocInTab(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📎 {bs ? 'Otvori prilog' : 'Open Attachment'}</button>}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => { setActionMenuId(null); handleDelete(d); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteService(d.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                     </div>
                                                 </>)}
                                             </div>
                                         </td>
                                         <td style={{ fontWeight: 600 }}>{d.equipmentName}</td>
-                                        <td>{d.naziv}</td>
-                                        <td>{d.kategorija}</td>
-                                        <td>{formatDate(d.datumIzdavanja) || '—'}</td>
-                                        <td>{formatDate(d.datumIsteka) || '—'}</td>
+                                        <td>{tipLabel(d.tip)}</td>
+                                        <td>{formatDate(d.datum)}</td>
+                                        <td>{d.servisirao || '—'}</td>
+                                        <td style={{ color: (d.iduciServis && new Date(d.iduciServis) < new Date()) ? 'var(--danger)' : undefined, fontWeight: (d.iduciServis && new Date(d.iduciServis) < new Date()) ? 700 : undefined }}>
+                                            {d.iduciServis ? formatDate(d.iduciServis) : '—'} {(d.iduciServis && new Date(d.iduciServis) < new Date()) && '⚠️'}
+                                        </td>
+                                        <td onClick={e => e.stopPropagation()}>
+                                            {d.docData ? (
+                                                <button onClick={(e) => { e.stopPropagation(); openDocInTab(d); }} style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                                                    background: 'rgba(33,150,243,0.08)', border: '1px solid rgba(33,150,243,0.2)',
+                                                    borderRadius: 6, padding: '3px 10px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--info)'
+                                                }}>📎 {d.docName || 'Dokument'}</button>
+                                            ) : '—'}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
