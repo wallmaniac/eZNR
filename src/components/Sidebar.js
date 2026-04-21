@@ -14,9 +14,9 @@ const menuItems = [
 
     // ── 👷 RADNICI — everything about people ──────────────────────────────────
     {
-        key: 'grpWorkers', icon: '/icons3d/Radnici.jpeg',
+        key: 'grpWorkers', icon: '/icons3d/Radnici.png',
         children: [
-            { key: 'workers', icon: '/icons3d/Radnici.jpeg', path: '/dashboard/workers' },
+            { key: 'workers', icon: '/icons3d/Radnici.png', path: '/dashboard/workers' },
             { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
             { key: 'workerPPE', icon: '🦺', path: '/dashboard/worker-ppe' },
             { key: 'medicalExams', icon: '👨‍⚕️', path: '/dashboard/medical-exams' },

@@ -525,7 +525,7 @@ function WorkersPageInner() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
                     <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <img src="/icons3d/Radnici.jpeg" alt="" style={{ width: 36, height: 36, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }} />
+                        <img src="/icons3d/Radnici.png" alt="" style={{ width: 36, height: 36, borderRadius: 9, objectFit: 'cover', flexShrink: 0 }} />
                         {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
                 </div>
@@ -1471,7 +1471,7 @@ function WorkersPageInner() {
                 <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
 
                 <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <img src="/icons3d/Radnici.jpeg" alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                    <img src="/icons3d/Radnici.png" alt="" style={{ width: 40, height: 40, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
                     {t('workers')}
                 </h1>
                 <DialogRenderer />
