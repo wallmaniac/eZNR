@@ -5,23 +5,24 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import Icon3D from '@/components/Icon3D';
 import { getUIBranding, UI_DEFAULTS } from '@/lib/brandingService';
 
 const menuItems = [
     // ── Top-level standalone ───────────────────────────────────────────────────
     { key: 'dashboard', icon: '📊', path: '/dashboard' },
-    { key: 'home', icon: '🏠', path: '/dashboard/news' },
+    { key: 'home',      icon: '🏠', path: '/dashboard/news' },
 
     // ── 👷 RADNICI — everything about people ──────────────────────────────────
     {
-        key: 'grpWorkers', icon: '/icons3d/Radnici.png',
+        key: 'grpWorkers', icon: 'Radnici.png',
         children: [
-            { key: 'workers', icon: '/icons3d/Radnici.png', path: '/dashboard/workers' },
+            { key: 'workers',            icon: 'Radnici.png', path: '/dashboard/workers' },
             { key: 'workerCertificates', icon: '📜', path: '/dashboard/worker-certificates' },
-            { key: 'workerPPE', icon: '🦺', path: '/dashboard/worker-ppe' },
-            { key: 'medicalExams', icon: '👨‍⚕️', path: '/dashboard/medical-exams' },
-            { key: 'ekWorkers', icon: '📇', path: '/dashboard/ek-workers' },
-            { key: 'ekPPE', icon: '🦺', path: '/dashboard/ek-ppe' },
+            { key: 'workerPPE',          icon: '🦺', path: '/dashboard/worker-ppe' },
+            { key: 'medicalExams',       icon: '👨‍⚕️', path: '/dashboard/medical-exams' },
+            { key: 'ekWorkers',          icon: '📇', path: '/dashboard/ek-workers' },
+            { key: 'ekPPE',             icon: '🦺', path: '/dashboard/ek-ppe' },
             { key: 'trainingMasterBook', icon: '📚', path: '/dashboard/training-book' },
         ],
     },
@@ -30,11 +31,11 @@ const menuItems = [
     {
         key: 'grpOrganization', icon: '🏢',
         children: [
-            { key: 'orgUnits', icon: '🏢', path: '/dashboard/org-units' },
-            { key: 'workplaces', icon: '🔧', path: '/dashboard/workplaces' },
-            { key: 'workplaceList', icon: '📋', path: '/dashboard/workplace-list' },
+            { key: 'orgUnits',       icon: '🏢', path: '/dashboard/org-units' },
+            { key: 'workplaces',     icon: '🔧', path: '/dashboard/workplaces' },
+            { key: 'workplaceList',  icon: '📋', path: '/dashboard/workplace-list' },
             { key: 'sistematizacija', icon: '📑', path: '/dashboard/sistematizacija' },
-            { key: 'addressBook', icon: '📒', path: '/dashboard/address-book' },
+            { key: 'addressBook',    icon: '📒', path: '/dashboard/address-book' },
         ],
     },
 
@@ -42,8 +43,8 @@ const menuItems = [
     {
         key: 'grpEquipment', icon: '⚙️',
         children: [
-            { key: 'equipment', icon: '⚙️', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
-            { key: 'ekEquipment', icon: '📇', path: '/dashboard/ek-equipment' },
+            { key: 'equipment',          icon: '⚙️', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
+            { key: 'ekEquipment',        icon: '📇', path: '/dashboard/ek-equipment' },
         ],
     },
 
@@ -51,9 +52,9 @@ const menuItems = [
     {
         key: 'grpSafety', icon: '🩹',
         children: [
-            { key: 'injuryReport', icon: '🩹', path: '/dashboard/injuries' },
+            { key: 'injuryReport',       icon: '🩹', path: '/dashboard/injuries' },
             { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
-            { key: 'diseaseReport', icon: '🏥', path: '/dashboard/diseases' },
+            { key: 'diseaseReport',      icon: '🏥', path: '/dashboard/diseases' },
         ],
     },
 
@@ -61,8 +62,8 @@ const menuItems = [
     {
         key: 'grpTraining', icon: '🎓',
         children: [
-            { key: 'trainings', icon: '🎬', path: '/dashboard/trainings' },
-            { key: 'testoviZopZnr', icon: '📝', path: '/dashboard/tests-zop-znr', label_bs: 'Testovi ZOP i ZNR', label_en: 'ZOP & ZNR Tests' },
+            { key: 'trainings',      icon: '🎬', path: '/dashboard/trainings' },
+            { key: 'testoviZopZnr',  icon: '📝', path: '/dashboard/tests-zop-znr', label_bs: 'Testovi ZOP i ZNR', label_en: 'ZOP & ZNR Tests' },
             { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
         ],
@@ -72,29 +73,29 @@ const menuItems = [
     {
         key: 'grpDocuments', icon: '📑',
         children: [
-            { key: 'employerDocs', icon: '📑', path: '/dashboard/employer-docs' },
-            { key: 'requests', icon: '📝', path: '/dashboard/requests' },
+            { key: 'employerDocs',   icon: '📑', path: '/dashboard/employer-docs' },
+            { key: 'requests',       icon: '📝', path: '/dashboard/requests' },
             {
                 key: 'obrasciIUputnice', icon: '📋',
                 label_bs: 'Obrasci i uputnice', label_en: 'Forms & Referrals',
                 children: [
-                    { key: 'formOIR1', icon: '📄', path: '/dashboard/form-oir1' },
+                    { key: 'formOIR1',          icon: '📄', path: '/dashboard/form-oir1' },
                     { key: 'medicalReferralRA1', icon: '🩺', path: '/dashboard/referral-ra1' },
-                    { key: 'formRO1', icon: '📄', path: '/dashboard/form-ro1' },
-                    { key: 'formRO2', icon: '📄', path: '/dashboard/form-ro2' },
-                    { key: 'nightWorkReferral', icon: '🌙', path: '/dashboard/night-work' },
+                    { key: 'formRO1',            icon: '📄', path: '/dashboard/form-ro1' },
+                    { key: 'formRO2',            icon: '📄', path: '/dashboard/form-ro2' },
+                    { key: 'nightWorkReferral',  icon: '🌙', path: '/dashboard/night-work' },
                 ],
             },
             {
                 key: 'grpISZNR', icon: '🏛️',
                 label_bs: 'Interni akti ZNR', label_en: 'Internal OSH Acts',
                 children: [
-                    { key: 'documents', icon: '📄', path: '/dashboard/isznr-documents' },
-                    { key: 'parties', icon: '👥', path: '/dashboard/isznr-parties' },
-                    { key: 'documentTypes', icon: '📋', path: '/dashboard/isznr-doc-types' },
-                    { key: 'digitalSigning', icon: '✍️', path: '/dashboard/isznr-signing' },
-                    { key: 'examiners', icon: '🔍', path: '/dashboard/isznr-examiners' },
-                    { key: 'measureEquipment', icon: '📏', path: '/dashboard/isznr-measure-equipment' },
+                    { key: 'documents',       icon: '📄', path: '/dashboard/isznr-documents' },
+                    { key: 'parties',         icon: '👥', path: '/dashboard/isznr-parties' },
+                    { key: 'documentTypes',   icon: '📋', path: '/dashboard/isznr-doc-types' },
+                    { key: 'digitalSigning',  icon: '✍️', path: '/dashboard/isznr-signing' },
+                    { key: 'examiners',       icon: '🔍', path: '/dashboard/isznr-examiners' },
+                    { key: 'measureEquipment',icon: '📏', path: '/dashboard/isznr-measure-equipment' },
                 ],
             },
             { key: 'zapisniciAlat', icon: '📋', path: '/dashboard/zapisnici', label_bs: 'Zapisnici', label_en: 'Zapisnici' },
@@ -124,7 +125,7 @@ const menuItems = [
     {
         key: 'grpEvacuation', icon: '🚨',
         children: [
-            { key: 'evacuationPlans', icon: '🗺️', path: '/dashboard/evacuation', label_bs: 'Planovi evakuacije', label_en: 'Evacuation Plans' },
+            { key: 'evacuationPlans',  icon: '🗺️', path: '/dashboard/evacuation', label_bs: 'Planovi evakuacije', label_en: 'Evacuation Plans' },
             { key: 'evacuationDrills', icon: '🏃', path: '/dashboard/evacuation-drills', label_bs: 'Vježbe evakuacije', label_en: 'Evacuation Drills' },
         ],
     },
@@ -133,19 +134,19 @@ const menuItems = [
     {
         key: 'grpCodebooks', icon: '🔗',
         children: [
-            { key: 'countries', icon: '🌍', path: '/dashboard/countries' },
-            { key: 'counties', icon: '📍', path: '/dashboard/counties' },
-            { key: 'places', icon: '🏘️', path: '/dashboard/places' },
-            { key: 'orgUnitGroups', icon: '📁', path: '/dashboard/org-groups' },
-            { key: 'authorizedCompanies', icon: '✅', path: '/dashboard/authorized-companies' },
-            { key: 'examiners', icon: '🔍', path: '/dashboard/examiners' },
-            { key: 'doctors', icon: '👨‍⚕️', path: '/dashboard/doctors' },
-            { key: 'examTypes', icon: '📋', path: '/dashboard/exam-types' },
-            { key: 'certTypes', icon: '📜', path: '/dashboard/cert-types' },
-            { key: 'equipmentTypes', icon: '🔩', path: '/dashboard/equipment-types' },
-            { key: 'ppe', icon: '🦺', path: '/dashboard/ppe' },
-            { key: 'fileTypes', icon: '📂', path: '/dashboard/file-types' },
-            { key: 'extraFields', icon: '➕', path: '/dashboard/extra-fields' },
+            { key: 'countries',          icon: '🌍', path: '/dashboard/countries' },
+            { key: 'counties',           icon: '📍', path: '/dashboard/counties' },
+            { key: 'places',             icon: '🏘️', path: '/dashboard/places' },
+            { key: 'orgUnitGroups',      icon: '📁', path: '/dashboard/org-groups' },
+            { key: 'authorizedCompanies',icon: '✅', path: '/dashboard/authorized-companies' },
+            { key: 'examiners',          icon: '🔍', path: '/dashboard/examiners' },
+            { key: 'doctors',            icon: '👨‍⚕️', path: '/dashboard/doctors' },
+            { key: 'examTypes',          icon: '📋', path: '/dashboard/exam-types' },
+            { key: 'certTypes',          icon: '📜', path: '/dashboard/cert-types' },
+            { key: 'equipmentTypes',     icon: '🔩', path: '/dashboard/equipment-types' },
+            { key: 'ppe',               icon: '🦺', path: '/dashboard/ppe' },
+            { key: 'fileTypes',         icon: '📂', path: '/dashboard/file-types' },
+            { key: 'extraFields',       icon: '➕', path: '/dashboard/extra-fields' },
         ],
     },
 
@@ -153,29 +154,15 @@ const menuItems = [
     {
         key: 'alati', icon: '🛠️',
         children: [
-            { key: 'excelImport', icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export' },
-            { key: 'converter', icon: '🔄', path: '/dashboard/converter' },
+            { key: 'excelImport',    icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export' },
+            { key: 'converter',      icon: '🔄', path: '/dashboard/converter' },
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
         ],
     },
 
     // ── Bottom standalone ──────────────────────────────────────────────────────
-    { key: 'settings', icon: '⚙️', path: '/dashboard/settings' },
+    { key: 'settings',    icon: '⚙️', path: '/dashboard/settings' },
 ];
-
-// ── Icon renderer — supports emoji strings AND image paths ─────────────────
-const renderIcon = (icon, size = '1.1rem') => {
-    if (!icon) return null;
-    if (typeof icon === 'string' && icon.startsWith('/')) {
-        // It's an image path
-        const px = typeof size === 'string' && size.includes('rem')
-            ? Math.round(parseFloat(size) * 16)
-            : (typeof size === 'number' ? size : 20);
-        return <img src={icon} alt="" style={{ width: px, height: px, borderRadius: Math.round(px * 0.22), objectFit: 'cover', flexShrink: 0, display: 'block' }} />;
-    }
-    // It's an emoji or text
-    return <span style={{ fontSize: size, lineHeight: 1 }}>{icon}</span>;
-};
 
 // ── Tooltip explanations for sidebar items ──────────────────────────────────
 // Shows on hover to help non-technical users understand abbreviations & features.
@@ -328,140 +315,144 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
         // On mobile, filter out the admin menu group — it's accessed via profile modal instead
         const itemsToRender = isDrawerMode ? allMenuItems.filter(i => i.key !== 'admin') : allMenuItems;
         return (
-            <nav style={{ ...sidebarStyles.nav, ...(isDrawerMode ? { padding: '8px 12px' } : {}) }}>
-                {itemsToRender.map((item) => {
-                    const hasChildren = item.children && item.children.length > 0;
-                    const isOpen = openMenus[item.key];
-                    const active = item.path && isActive(item.path);
-                    const childActive = hasChildren && item.children.some((c) => {
-                        if (c.children) return c.children.some(gc => isActive(gc.path));
-                        return isActive(c.path);
-                    });
+        <nav style={{ ...sidebarStyles.nav, ...(isDrawerMode ? { padding: '8px 12px' } : {}) }}>
+            {itemsToRender.map((item) => {
+                const hasChildren = item.children && item.children.length > 0;
+                const isOpen = openMenus[item.key];
+                const active = item.path && isActive(item.path);
+                const childActive = hasChildren && item.children.some((c) => {
+                    if (c.children) return c.children.some(gc => isActive(gc.path));
+                    return isActive(c.path);
+                });
 
-                    return (
-                        <div key={item.key}>
-                            {hasChildren ? (
-                                <button
-                                    onClick={() => toggleMenu(item.key)}
-                                    style={{
-                                        ...sidebarStyles.menuItem,
-                                        ...(childActive ? sidebarStyles.menuItemActive : {}),
-                                        justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
-                                        padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
-                                    }}
-                                    title={(!isDrawerMode && collapsed) ? t(item.key) : tip(item.key)}
-                                >
-                                    <span style={sidebarStyles.menuIcon}>{renderIcon(item.icon, (!isDrawerMode && collapsed) ? '1.3rem' : '1.1rem')}</span>
-                                    {(isDrawerMode || !collapsed) && (
-                                        <>
-                                            <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
-                                            <span style={{
-                                                ...sidebarStyles.arrow,
-                                                transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
-                                            }}>
-                                                ›
-                                            </span>
-                                        </>
-                                    )}
-                                </button>
-                            ) : (
-                                <Link
-                                    href={item.path}
-                                    prefetch={true}
-                                    onClick={handleNavClick}
-                                    style={{
-                                        ...sidebarStyles.menuItem,
-                                        ...(active ? sidebarStyles.menuItemActive : {}),
-                                        justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
-                                        padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
-                                        textDecoration: 'none',
-                                    }}
-                                    title={(!isDrawerMode && collapsed) ? t(item.key) : tip(item.key)}
-                                >
-                                    <span style={sidebarStyles.menuIcon}>{renderIcon(item.icon, (!isDrawerMode && collapsed) ? '1.3rem' : '1.1rem')}</span>
-                                    {(isDrawerMode || !collapsed) && (
+                return (
+                    <div key={item.key}>
+                        {hasChildren ? (
+                            <button
+                                onClick={() => toggleMenu(item.key)}
+                                style={{
+                                    ...sidebarStyles.menuItem,
+                                    ...(childActive ? sidebarStyles.menuItemActive : {}),
+                                    justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
+                                    padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
+                                }}
+                                title={(!isDrawerMode && collapsed) ? t(item.key) : tip(item.key)}
+                            >
+                                <span style={sidebarStyles.menuIcon}>
+                                    <Icon3D name={item.icon} size={(!isDrawerMode && collapsed) ? 24 : 20} />
+                                </span>
+                                {(isDrawerMode || !collapsed) && (
+                                    <>
                                         <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
-                                    )}
-                                </Link>
-                            )}
+                                        <span style={{
+                                            ...sidebarStyles.arrow,
+                                            transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)',
+                                        }}>
+                                            ›
+                                        </span>
+                                    </>
+                                )}
+                            </button>
+                        ) : (
+                            <Link
+                                href={item.path}
+                                prefetch={true}
+                                onClick={handleNavClick}
+                                style={{
+                                    ...sidebarStyles.menuItem,
+                                    ...(active ? sidebarStyles.menuItemActive : {}),
+                                    justifyContent: (!isDrawerMode && collapsed) ? 'center' : 'flex-start',
+                                    padding: (!isDrawerMode && collapsed) ? '12px' : '10px 16px',
+                                    textDecoration: 'none',
+                                }}
+                                title={(!isDrawerMode && collapsed) ? t(item.key) : tip(item.key)}
+                            >
+                                <span style={sidebarStyles.menuIcon}>
+                                    <Icon3D name={item.icon} size={(!isDrawerMode && collapsed) ? 24 : 20} />
+                                </span>
+                                {(isDrawerMode || !collapsed) && (
+                                    <span style={sidebarStyles.menuLabel}>{t(item.key)}</span>
+                                )}
+                            </Link>
+                        )}
 
-                            {/* Submenu */}
-                            {hasChildren && isOpen && (isDrawerMode || !collapsed) && (
-                                <div style={sidebarStyles.submenu}>
-                                    {item.children.map((child) => {
-                                        // Nested group (e.g. Obrasci i uputnice)
-                                        if (child.children) {
-                                            const childGroupOpen = openMenus[child.key];
-                                            const childGroupActive = child.children.some(gc => isActive(gc.path));
-                                            const childLabel = lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
-                                            return (
-                                                <div key={child.key}>
-                                                    <button
-                                                        onClick={() => toggleMenu(child.key)}
-                                                        title={tip(child.key)}
-                                                        style={{
-                                                            ...sidebarStyles.submenuItem,
-                                                            width: '100%',
-                                                            justifyContent: 'space-between',
-                                                            ...(childGroupActive ? sidebarStyles.submenuItemActive : {}),
-                                                        }}
-                                                    >
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                                        <span style={{ fontSize: '0.85rem' }}>{renderIcon(child.icon, '0.9rem')}</span>
-                                                            <span>{childLabel}</span>
-                                                        </span>
-                                                        <span style={{ fontSize: '0.7rem', opacity: 0.5, transition: 'transform 0.2s', transform: childGroupOpen ? 'rotate(90deg)' : 'none' }}>›</span>
-                                                    </button>
-                                                    {childGroupOpen && (
-                                                        <div style={{ ...sidebarStyles.submenu, marginLeft: 12 }}>
-                                                            {child.children.map(gc => (
-                                                                <Link
-                                                                    key={gc.key}
-                                                                    href={gc.path}
-                                                                    prefetch={true}
-                                                                    onClick={handleNavClick}
-                                                                    title={tip(gc.key)}
-                                                                    style={{
-                                                                        ...sidebarStyles.submenuItem,
-                                                                        ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
-                                                                        textDecoration: 'none',
-                                                                    }}
-                                                                >
-                                                                    <span style={{ fontSize: '0.85rem' }}>{renderIcon(gc.icon, '0.9rem')}</span>
-                                                                    <span>{t(gc.key)}</span>
-                                                                </Link>
-                                                            ))}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        }
-                                        // Normal child link
+                        {/* Submenu */}
+                        {hasChildren && isOpen && (isDrawerMode || !collapsed) && (
+                            <div style={sidebarStyles.submenu}>
+                                {item.children.map((child) => {
+                                    // Nested group (e.g. Obrasci i uputnice)
+                                    if (child.children) {
+                                        const childGroupOpen = openMenus[child.key];
+                                        const childGroupActive = child.children.some(gc => isActive(gc.path));
+                                        const childLabel = lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
                                         return (
-                                            <Link
-                                                key={child.key}
-                                                href={child.path}
-                                                prefetch={true}
-                                                onClick={handleNavClick}
-                                                title={tip(child.key)}
-                                                style={{
-                                                    ...sidebarStyles.submenuItem,
-                                                    ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
-                                                    textDecoration: 'none',
-                                                }}
-                                            >
-                                                <span style={{ fontSize: '0.85rem' }}>{renderIcon(child.icon, '0.9rem')}</span>
-                                                <span>{lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
-                                            </Link>
+                                            <div key={child.key}>
+                                                <button
+                                                    onClick={() => toggleMenu(child.key)}
+                                                    title={tip(child.key)}
+                                                    style={{
+                                                        ...sidebarStyles.submenuItem,
+                                                        width: '100%',
+                                                        justifyContent: 'space-between',
+                                                        ...(childGroupActive ? sidebarStyles.submenuItemActive : {}),
+                                                    }}
+                                                >
+                                                    <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                                        <Icon3D name={child.icon} size={18} />
+                                                        <span>{childLabel}</span>
+                                                    </span>
+                                                    <span style={{ fontSize: '0.7rem', opacity: 0.5, transition: 'transform 0.2s', transform: childGroupOpen ? 'rotate(90deg)' : 'none' }}>›</span>
+                                                </button>
+                                                {childGroupOpen && (
+                                                    <div style={{ ...sidebarStyles.submenu, marginLeft: 12 }}>
+                                                        {child.children.map(gc => (
+                                                            <Link
+                                                                key={gc.key}
+                                                                href={gc.path}
+                                                                prefetch={true}
+                                                                onClick={handleNavClick}
+                                                                title={tip(gc.key)}
+                                                                style={{
+                                                                    ...sidebarStyles.submenuItem,
+                                                                    ...(isActive(gc.path) ? sidebarStyles.submenuItemActive : {}),
+                                                                    textDecoration: 'none',
+                                                                }}
+                                                            >
+                                                                <Icon3D name={gc.icon} size={18} />
+                                                                <span>{t(gc.key)}</span>
+                                                            </Link>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         );
-                                    })}
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </nav>
-        );
+                                    }
+                                    // Normal child link
+                                    return (
+                                        <Link
+                                            key={child.key}
+                                            href={child.path}
+                                            prefetch={true}
+                                            onClick={handleNavClick}
+                                            title={tip(child.key)}
+                                            style={{
+                                                ...sidebarStyles.submenuItem,
+                                                ...(isActive(child.path) ? sidebarStyles.submenuItemActive : {}),
+                                                textDecoration: 'none',
+                                            }}
+                                        >
+                                            <Icon3D name={child.icon} size={18} />
+                                            <span>{lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
+                                        </Link>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                );
+            })}
+        </nav>
+    );
     };
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -591,8 +582,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                     }}>
                         <Link href="/dashboard" onClick={handleNavClick} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
                             {uiBranding.sidebarLogoEnabled && uiBranding.logo
-                                ? <img src={uiBranding.logo} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', background: '#fff', padding: 2 }} />
-                                : <Image src="/logo-icon.png" alt="eZNR" width={36} height={36} style={{ borderRadius: 8 }} />}
+                              ? <img src={uiBranding.logo} alt="" style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', background: '#fff', padding: 2 }} />
+                              : <Image src="/logo-icon.png" alt="eZNR" width={36} height={36} style={{ borderRadius: 8 }} />}
                             <div>
                                 <div style={sidebarStyles.logoTitle}>eZNR</div>
                                 {(uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText) && <div style={sidebarStyles.logoSub}>{uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText}</div>}
@@ -821,8 +812,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                 {!collapsed && (
                     <Link href="/dashboard" style={{ ...sidebarStyles.logoContent, textDecoration: 'none' }}>
                         {uiBranding.sidebarLogoEnabled && uiBranding.logo
-                            ? <img src={uiBranding.logo} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'contain', background: '#fff', padding: 3, marginLeft: -10, marginTop: 4 }} />
-                            : <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />}
+                          ? <img src={uiBranding.logo} alt="" style={{ width: 52, height: 52, borderRadius: 10, objectFit: 'contain', background: '#fff', padding: 3, marginLeft: -10, marginTop: 4 }} />
+                          : <Image src="/logo-icon.png" alt="eZNR" width={66} height={66} style={{ borderRadius: 10, marginLeft: -15, marginTop: 4 }} />}
                         <div style={{ marginLeft: -8 }}>
                             <div style={sidebarStyles.logoTitle}>eZNR</div>
                             {(uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText) && <div style={sidebarStyles.logoSub}>{uiBranding.sidebarText ?? UI_DEFAULTS.sidebarText}</div>}

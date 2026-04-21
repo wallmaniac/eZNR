@@ -1,5 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
+import Icon3D from '@/components/Icon3D';
 import { fmtDate } from '@/lib/dateUtils';
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -208,8 +209,10 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                                     className="btn btn-primary btn-sm"
                                     onClick={openFullEdit}
                                     title={lang === 'bs' ? 'Otvori potpuni profil radnika (uvjerenja, OZO, dokumenti...)' : 'Open full worker profile'}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
                                 >
-                                    👤 {lang === 'bs' ? 'Otvori potpuno' : 'Open full'}
+                                    <Icon3D name="Radnici.png" size={18} />
+                                    {lang === 'bs' ? 'Otvori potpuno' : 'Open full'}
                                 </button>
                             </>
                         )}
