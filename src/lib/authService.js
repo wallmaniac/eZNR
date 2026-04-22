@@ -98,13 +98,19 @@ export async function registerCompanyAdmin({ email, password, firstName, lastNam
 }
 
 // ── User Profile ──────────────────────────────────────────────────────────────
-export async function getUserProfile(uid) {
+export async function getUserProfile(uid, retries = 2) {
     if (!uid) return null;
     try {
         const snap = await getDoc(doc(db, 'users', uid));
         if (!snap.exists()) return null;
         return { id: snap.id, ...snap.data() };
     } catch (err) {
+        // Firebase V9+ persistent cache / multi-tab auth-sync race condition fallback
+        if (err.message && err.message.toLowerCase().includes('permissions') && retries > 0) {
+            console.warn(`[authService] Permission denied reading profile, retrying (${retries} left)...`);
+            await new Promise(r => setTimeout(r, 600));
+            return getUserProfile(uid, retries - 1);
+        }
         console.error('[authService] Failed to get user profile:', err);
         return null;
     }
