@@ -376,6 +376,41 @@ export default function SettingsPage() {
   const setProfileDirty = (updater) => { setProfileData(updater); setDirty('profile'); };
   const setCompanyDirty = (updater) => { setCompanyData(updater); setDirty('company'); };
 
+  
+  const [wiping, setWiping] = useState(false);
+  const handleWipeDev = async () => {
+    if (!isAdmin) return;
+    if (activeCompanyId === 'all' || !activeCompanyId) {
+        alert('MORA BITI ODABRANA KONKRETNA KOMPANIJA!');
+        return;
+    }
+    const pwd = prompt('Type "WIPE" to confirm deleting ALL DATA for ' + activeCompanyId);
+    if(pwd !== 'WIPE') return;
+
+    setWiping(true);
+    try {
+        let totalD = 0;
+        const allCols = Object.values(COLLECTIONS).filter(c => COMPANY_SCOPED.includes(c));
+        
+        for(let c of allCols) {
+            const ref = collection(db, `companies/${activeCompanyId}/${c}`);
+            const snap = await getDocs(ref);
+            if(snap.empty) continue;
+            for(let i=0; i<snap.docs.length; i+=400) {
+                const chunk = snap.docs.slice(i, i+400);
+                const batch = writeBatch(db);
+                chunk.forEach(d => batch.delete(d.ref));
+                await batch.commit();
+                totalD += chunk.length;
+            }
+        }
+        await alert('WIPE GOTOV! Obrisano zapisa: ' + totalD);
+    } catch(e) {
+        await alert('GRESKA: ' + e.message);
+    }
+    setWiping(false);
+  };
+
   const handleRunSync = async () => {
     if (!activeCompanyId) return;
     const isConfirmed = await confirm(lang === 'bs' 
@@ -1614,6 +1649,31 @@ export default function SettingsPage() {
                 )}
               </div>
               
+
+            {isAdmin && (
+              <>
+                <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+                <SectionHeader icon="☠️" title={lang === 'bs' ? 'Opasna zona (Super Admin)' : 'Danger Zone'} />
+                <div style={{ padding: 16, borderRadius: 12, background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.3)' }}>
+                  <div style={{ fontSize: '0.85rem', color: '#D32F2F', marginBottom: 16, fontWeight: 500 }}>
+                    {lang === 'bs' 
+                      ? 'PAŽNJA: Hard Wipe briše sve podatke za trenutno aktivnu kompaniju direktno sa Firebase Clouda. Ovo je nepovratno.' 
+                      : 'WARNING: Hard Wipe completely deletes all data for the currently active company directly from Firebase. This cannot be undone.'}
+                  </div>
+                  <button 
+                    type="button" 
+                    className="btn btn-primary" 
+                    onClick={handleWipeDev}
+                    disabled={wiping || !activeCompanyId}
+                    style={{ background: '#D32F2F', borderColor: '#D32F2F' }}
+                  >
+                    {wiping ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☠️'} 
+                    {lang === 'bs' ? 'HARD WIPE DSC' : 'HARD WIPE COMPANY'}
+                  </button>
+                </div>
+              </>
+            )}
+
               {syncResults && (
                 <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.15)', borderRadius: 8, fontSize: '0.7rem' }}>
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>Detalji sinkronizacije:</div>

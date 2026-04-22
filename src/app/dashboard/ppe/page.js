@@ -1,6 +1,9 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { collection, doc, writeBatch } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -9,6 +12,7 @@ import Icon3D from '@/components/Icon3D';
 
 export default function PPEPage() {
   const { t, lang } = useLanguage();
+  const { user, isAdmin } = useAuth();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const [items, setItems] = useState([]);
@@ -47,6 +51,51 @@ export default function PPEPage() {
     }
   };
 
+  
+  const handleSeedOZO = async () => {
+    if(!isAdmin) return;
+    setFormData({ naziv: 'Sijanje u toku...' });
+    try {
+        const novaOp = [
+            { id: 'ozo_sljem', naziv: 'Zaštitni šljem (kaciga)', kategorija: 'Zaštita glave', norm: 'EN 397' },
+            { id: 'ozo_kapa', naziv: 'Zaštitna kapa', kategorija: 'Zaštita glave', norm: 'EN 812' },
+            { id: 'ozo_potkapa', naziv: 'Potkapa (termo/vatrootporna)', kategorija: 'Zaštita glave', norm: '' },
+            { id: 'ozo_vizir', naziv: 'Vizir od polikarbonata', kategorija: 'Zaštita očiju i lica', norm: 'EN 166' },
+            { id: 'ozo_naocale_b', naziv: 'Zaštitne naočale s bočnom zaštitom', kategorija: 'Zaštita očiju i lica', norm: 'EN 166' },
+            { id: 'ozo_maska_zav', naziv: 'Maska za zavarivanje', kategorija: 'Zaštita očiju i lica', norm: 'EN 175' },
+            { id: 'ozo_antifoni', naziv: 'Antifoni (štitnici za uši)', kategorija: 'Zaštita sluha', norm: 'EN 352-1' },
+            { id: 'ozo_cepici', naziv: 'Čepići za uši', kategorija: 'Zaštita sluha', norm: 'EN 352-2' },
+            { id: 'ozo_ffp2', naziv: 'FFP2/FFP3 respirator', kategorija: 'Zaštita dišnih organa', norm: 'EN 149' },
+            { id: 'ozo_polumaska', naziv: 'Polumaska s filterom', kategorija: 'Zaštita dišnih organa', norm: 'EN 140' },
+            { id: 'ozo_ruk_koz', naziv: 'Kožne radne rukavice', kategorija: 'Zaštita ruku', norm: 'EN 388' },
+            { id: 'ozo_ruk_kem', naziv: 'Rukavice za kemikalije (nitril)', kategorija: 'Zaštita ruku', norm: 'EN 374' },
+            { id: 'ozo_ruk_kevlar', naziv: 'Rukavice protiv prosijecanja (Kevlar)', kategorija: 'Zaštita ruku', norm: 'EN 388' },
+            { id: 'ozo_cipele_s3', naziv: 'Radne cipele S3 (čelična kapica)', kategorija: 'Zaštita nogu', norm: 'EN ISO 20345' },
+            { id: 'ozo_cizme_pvc', naziv: 'Zaštitne čizme (PVC)', kategorija: 'Zaštita nogu', norm: 'EN ISO 20345' },
+            { id: 'ozo_koljen', naziv: 'Štitnici za koljena', kategorija: 'Zaštita nogu', norm: 'EN 14404' },
+            { id: 'ozo_prsluk', naziv: 'Reflektirajući prsluk', kategorija: 'Zaštita trupa', norm: 'EN ISO 20471' },
+            { id: 'ozo_kombinezon', naziv: 'Vatrootporni kombinezon', kategorija: 'Zaštita trupa', norm: 'EN ISO 11612' },
+            { id: 'ozo_radno', naziv: 'Radno odijelo (dvodijelno)', kategorija: 'Zaštita trupa', norm: '' },
+            { id: 'ozo_pregaca', naziv: 'Kožna pregača za zavarivanje', kategorija: 'Zaštita trupa', norm: 'EN ISO 11611' },
+            { id: 'ozo_uprtac', naziv: 'Sigurnosni uprtač', kategorija: 'Zaštita od pada', norm: 'EN 361' }
+        ];
+        
+        const batch = writeBatch(db);
+        novaOp.forEach(d => {
+            const ref = doc(collection(db, COLLECTIONS.PPE_TYPES), d.id);
+            batch.set(ref, d, { merge: true });
+        });
+        await batch.commit();
+
+        await alert('OZO baza uspjesno dopunjena sa 20+ novih artikala!');
+        setFormData({ naziv: '' });
+        loadData();
+    } catch(e) {
+        setFormData({ naziv: '' });
+        alert('GRESKA (OZO): ' + e.message);
+    }
+  };
+
   const handleNew = () => { setFormData({ naziv: '' }); setEditingId(null); setShowForm(true); };
   const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); };
   const handleSave = async () => {
@@ -80,6 +129,8 @@ export default function PPEPage() {
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+            {isAdmin && <button className="btn btn-primary btn-sm" onClick={handleSeedOZO} style={{ background: '#FF9800', borderColor: '#FF9800' }}>🦺 SEED OZO LIST</button>}
+
             <SavedFlash />
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
