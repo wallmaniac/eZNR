@@ -21,7 +21,7 @@ export default function AdminCompaniesPage() {
     const [formData, setFormData] = useState({
         naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '',
         postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '',
-        aktivan: true, logo: '',
+        aktivan: true, logo: '', parentId: '',
     });
 
     useEffect(() => {
@@ -35,7 +35,7 @@ export default function AdminCompaniesPage() {
         setUsers(getAllUsers());
     };
 
-    const emptyForm = { naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '' };
+    const emptyForm = { naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '', parentId: '' };
 
     const openNew = () => {
         setEditCompany(null);
@@ -50,7 +50,7 @@ export default function AdminCompaniesPage() {
             naziv: c.naziv || '', skraceniNaziv: c.skraceniNaziv || '', oib: c.oib || '',
             adresa: c.adresa || '', mjesto: c.mjesto || '', postanskiBroj: c.postanskiBroj || '',
             telefon: c.telefon || '', email: c.email || '', direktor: c.direktor || '',
-            strucnoLice: c.strucnoLice || '', aktivan: c.aktivan !== false, logo: c.logo || '',
+            strucnoLice: c.strucnoLice || '', aktivan: c.aktivan !== false, logo: c.logo || '', parentId: c.parentId || '',
         });
         setLogoError('');
         setShowModal(true);
@@ -205,6 +205,19 @@ export default function AdminCompaniesPage() {
                                 <label className="form-label">{lang === 'bs' ? 'Puni naziv' : 'Full name'} *</label>
                                 <input className="form-input" value={formData.naziv} onChange={e => setFormData(p => ({ ...p, naziv: e.target.value }))} required />
                             </div>
+
+                            
+                            {/* Parent Company */}
+                            <div className="form-group" style={{ marginTop: 12 }}>
+                                <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 700 }}>🔗 {lang === 'bs' ? 'Pripada Holdingu (Kćerka firma)' : 'Parent Company (Subsidiary)'}</label>
+                                <select className="form-select" value={formData.parentId} onChange={e => setFormData(p => ({ ...p, parentId: e.target.value }))}>
+                                    <option value="">- Nema (Nezavisna firma / Holding) -</option>
+                                    {companies.filter(c => c.id !== editCompany?.id && !c.parentId).map(c => (
+                                        <option key={c.id} value={c.id}>🏢 {c.naziv}</option>
+                                    ))}
+                                </select>
+                            </div>
+
 
                             {/* Skraćeni naziv + OIB */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>

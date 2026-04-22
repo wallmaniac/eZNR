@@ -175,12 +175,32 @@ export async function getCompany(companyId) {
 
 export async function getUserCompanies(companyIds) {
     if (!companyIds || companyIds.length === 0) return [];
-    const companies = [];
+    
+    // 1. Fetch direct companies
+    const directCompanies = [];
     for (const cid of companyIds) {
         const c = await getCompany(cid);
-        if (c) companies.push(c);
+        if (c) directCompanies.push(c);
     }
-    return companies;
+    
+    // 2. Fetch all companies to check for subsidiaries
+    const allComps = await getAllCompanies();
+    
+    // 3. Find subsidiaries where parentId is one of the direct companies
+    const subsidiaries = allComps.filter(c => c.parentId && companyIds.includes(c.parentId));
+    
+    // 4. Combine and deduplicate
+    const combined = [...directCompanies, ...subsidiaries];
+    const unique = [];
+    const seen = new Set();
+    for (const c of combined) {
+        if (!seen.has(c.id)) {
+            seen.add(c.id);
+            unique.push(c);
+        }
+    }
+    
+    return unique;
 }
 
 // ── Super Admin Helpers ───────────────────────────────────────────────────────

@@ -45,6 +45,7 @@ function WorkersPageInner() {
     const isDirtyRef = useRef(false);
     const [workers, setWorkers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterOrgUnit, setFilterOrgUnit] = useState('');
     const [allCerts, setAllCerts] = useState(() => getAll(COLLECTIONS.CERTIFICATES));
     const [allMedExamsList, setAllMedExamsList] = useState(() => getAll(COLLECTIONS.MEDICAL_EXAMS));
     const [showFormer, setShowFormer] = useState(false);
@@ -1629,6 +1630,15 @@ function WorkersPageInner() {
                                 />
                                 <button className="btn btn-ghost btn-sm" onClick={() => setPage(1)}>{t('searchBtn')}</button>
                             </div>
+                            <select 
+                                className="form-select" 
+                                style={{ height: 38, width: 220, fontSize: '0.85rem' }}
+                                value={filterOrgUnit}
+                                onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
+                            >
+                                <option value="">Svi odjeli (Sektori)</option>
+                                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                            </select>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer' }}>
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}

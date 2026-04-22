@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { getAll, getRawAll, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { getAll, getRawAll, update, remove, COLLECTIONS, getOrgUnitName } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -167,7 +167,10 @@ export default function ObservationsPage() {
                                     <td style={{ color: 'var(--text-muted)' }}>
                                         {item.datum ? new Date(item.datum).toLocaleDateString() : ''}
                                     </td>
-                                    <td style={{ fontWeight: 600 }}>{item.lokacija}</td>
+                                    <td style={{ fontWeight: 600 }}>
+                                        {item.lokacija}
+                                        {item.orgJedinicaId && <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>{getOrgUnitName(item.orgJedinicaId)}</div>}
+                                    </td>
                                     <td>{item.opis}</td>
                                     <td>{item.ime}</td>
                                     <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center', position: 'relative' }}>
@@ -274,6 +277,7 @@ export default function ObservationsPage() {
                                 </div>
                                 <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                                     <div>📍 <strong>Lokacija:</strong> {viewingItem.lokacija}</div>
+                                    {viewingItem.orgJedinicaId && <div>🏢 <strong>Odjel:</strong> {getOrgUnitName(viewingItem.orgJedinicaId)}</div>}
                                     <div>👤 <strong>Prijavio:</strong> <span style={{ color: 'var(--text)' }}>{viewingItem.ime || 'Anonimno'}</span></div>
                                     <div>🏷️ <strong>Status:</strong> {getStatusBadge(viewingItem.status)}</div>
                                 </div>

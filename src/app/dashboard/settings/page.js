@@ -170,7 +170,7 @@ export default function SettingsPage() {
           mjesto: company.mjesto || '', postanskiBroj: company.postanskiBroj || '',
           telefon: company.telefon || '', email: company.email || '',
           direktor: company.direktor || '', strucnoLice: company.strucnoLice || '',
-          logo: company.logo || '',
+          logo: company.logo || '', parentId: company.parentId || '',
         });
       }
       if (isAdmin) {
@@ -808,6 +808,18 @@ export default function SettingsPage() {
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Direktor' : 'Director'}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyDirty(p => ({ ...p, direktor: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyDirty(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
                 </div>
+
+                
+                {companyData.parentId && (
+                    <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'rgba(0,191,166,0.05)', border: '1px solid var(--primary)' }}>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4, color: 'var(--primary)' }}>🔗 {lang === 'bs' ? 'Dio Holdinga' : 'Part of Holding'}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                            {lang === 'bs' ? 'Ova firma je kćerka firma i pripada holdingu: ' : 'This is a subsidiary company belonging to: '}
+                            <strong style={{ color: 'var(--text)' }}>{getById(COLLECTIONS.COMPANIES, companyData.parentId)?.naziv || 'Nepoznato'}</strong>
+                        </div>
+                    </div>
+                )}
+
 
                 {isAdmin && allOfficersList.length > 0 && (
                   <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>

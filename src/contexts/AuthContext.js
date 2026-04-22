@@ -83,6 +83,7 @@ export function AuthProvider({ children }) {
                             await loadCompanyData(companyId);
                         }
 
+                        let resolvedCompanyIds = profile.companyIds || [];
                         // Load user's companies list
                         if (profile.role === ROLES.SUPER_ADMIN) {
                             // Super admin: load ALL companies from Firestore eagerly
@@ -90,6 +91,7 @@ export function AuthProvider({ children }) {
                                 const { getAllCompaniesFromFirestore } = await import('@/lib/authService');
                                 const allComps = await getAllCompaniesFromFirestore();
                                 setUserCompanies(allComps);
+                                resolvedCompanyIds = allComps.map(c => c.id);
                                 // Super admin always picks a SPECIFIC company — never 'all'
                                 // Use the first company if the saved one was 'all' or invalid
                                 if (!companyId || companyId === 'all') {
@@ -110,6 +112,7 @@ export function AuthProvider({ children }) {
                         } else if (profile.companyIds?.length) {
                             const companies = await getUserCompanies(profile.companyIds);
                             setUserCompanies(companies);
+                            resolvedCompanyIds = companies.map(c => c.id);
                             if (companyId && companyId !== 'all') {
                                 const ac = companies.find(c => c.id === companyId);
                                 setActiveCompany(ac || null);
@@ -124,7 +127,7 @@ export function AuthProvider({ children }) {
                             firstName: profile.firstName,
                             lastName: profile.lastName,
                             role: profile.role,
-                            companyIds: profile.companyIds || [],
+                            companyIds: resolvedCompanyIds,
                         }));
                     } else {
                         // Profile missing or deactivated

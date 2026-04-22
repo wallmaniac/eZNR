@@ -791,6 +791,20 @@ async function handleGetNotifSettings(data) {
 }
 
 // ─── saveHazard handler (real Firestore via Admin SDK) ─────────────────────
+
+async function handleGetOrgUnits(data) {
+    const { companyId } = data;
+    if (!companyId) return { success: false, error: 'Missing companyId' };
+    try {
+        const db = getAdminDb();
+        const snap = await db.collection('companies').doc(String(companyId)).collection('orgUnits').get();
+        const orgUnits = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+        return { success: true, orgUnits };
+    } catch (err) {
+        return { success: false, error: err.message };
+    }
+}
+
 async function handleSaveHazard(data) {
     const { companyId, payload, base64Image, mimeType } = data;
     if (!companyId || !payload) return { success: false, error: 'Missing companyId or payload' };
@@ -845,6 +859,7 @@ const HANDLERS = {
     saveNotifSettings: handleSaveNotifSettings,
     getNotifSettings: handleGetNotifSettings,
     saveHazard: handleSaveHazard,
+    getOrgUnits: handleGetOrgUnits,
 };
 
 export async function POST(req) {

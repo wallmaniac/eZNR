@@ -46,6 +46,7 @@ function EquipmentPageInner() {
     const [serviceFormData, setServiceFormData] = useState({ ...emptyServiceEntry });
     const [editingServiceId, setEditingServiceId] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterOrgUnit, setFilterOrgUnit] = useState('');
     const [showOutOfUse, setShowOutOfUse] = useState(false);
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
@@ -665,6 +666,10 @@ function EquipmentPageInner() {
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
                         </div>
+                        <select className="form-select" style={{ height: 38, width: 220, fontSize: '0.85rem' }} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
+                            <option value="">Svi odjeli (Sektori)</option>
+                            {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                        </select>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
                             <input type="checkbox" checked={showOutOfUse} onChange={e => setShowOutOfUse(e.target.checked)} />
                             {lang === 'bs' ? 'Radna oprema izvan upotrebe' : 'Out of use equipment'}

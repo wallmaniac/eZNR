@@ -21,6 +21,7 @@ export default function PublicObservationForm() {
         opis: '',
         lokacija: '',
         ime: '',
+        orgJedinicaId: '',
     });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
@@ -29,6 +30,7 @@ export default function PublicObservationForm() {
     
     // UI Branding (read-only, public)
     const [companyInfo, setCompanyInfo] = useState({ name: 'Kompanija', logo: '' });
+    const [orgUnits, setOrgUnits] = useState([]);
     
     useEffect(() => {
         const fetchBrand = async () => {
@@ -38,6 +40,15 @@ export default function PublicObservationForm() {
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
+                    // Fetch org units via proxy since this is a public page
+                    fetch('/api/firebase-proxy', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ functionName: 'getOrgUnits', data: { companyId } })
+                    }).then(r => r.json()).then(res => {
+                        const d = res.result || res;
+                        if (d && d.success && d.orgUnits) setOrgUnits(d.orgUnits);
+                    }).catch(console.error);
                     setCompanyInfo({ 
                         name: data.skraceniNaziv || data.naziv || 'Kompanija', 
                         logo: data.logo || data.branding?.logo || '' 
@@ -142,6 +153,7 @@ export default function PublicObservationForm() {
                             payload: {
                                 opis: formData.opis,
                                 lokacija: formData.lokacija,
+                                orgJedinicaId: formData.orgJedinicaId,
                                 ime: formData.ime || 'Anonimno',
                                 status: 'Novo',
                                 datum: new Date().toISOString(),
@@ -278,7 +290,19 @@ export default function PublicObservationForm() {
                             />
                         </div>
 
-                        <div className="form-group">
+                        <div className="form-group" style={{ display: orgUnits.length > 0 ? 'block' : 'none' }}>
+                                <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Odjel / Sektor (opcionalno)' : 'Department (optional)'}</label>
+                                <select 
+                                    className="form-select" 
+                                    value={formData.orgJedinicaId}
+                                    onChange={e => setFormData({...formData, orgJedinicaId: e.target.value})}
+                                >
+                                    <option value="">-</option>
+                                    {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                                </select>
+                            </div>
+
+                            <div className="form-group">
                             <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
                             <div 
                                 style={{ 
