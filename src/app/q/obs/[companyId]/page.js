@@ -140,9 +140,12 @@ export default function PublicObservationForm() {
                     })
                 });
                 proxyDbData = await proxyDbRes.json();
-                if (!proxyDbData.success) {
-                    throw new Error(proxyDbData.error || 'Server rejected saveHazard');
+                const proxyDbResult = proxyDbData.result || proxyDbData; // Handle both wrapped and unwrapped safely
+                if (!proxyDbResult.success) {
+                    throw new Error(proxyDbResult.error || 'Server rejected saveHazard');
                 }
+                // Overwrite proxyDbData to be the actual result for the email step below
+                proxyDbData = proxyDbResult;
             } catch(dbErr) {
                 console.error('Firestore save via proxy failed:', dbErr);
                 throw new Error('Database locked or unavailable');
@@ -156,7 +159,8 @@ export default function PublicObservationForm() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ functionName: 'getNotifSettings', data: { companyId } })
                 });
-                const nsData = await nsRes.json();
+                const nsDataRaw = await nsRes.json();
+                const nsData = nsDataRaw.result || nsDataRaw;
                 if (nsData?.success && nsData.settings?.obsNotifEmail) {
                     targetEmail = nsData.settings.obsNotifEmail;
                 }
@@ -285,7 +289,7 @@ export default function PublicObservationForm() {
                                                 type="button" 
                                                 className="btn btn-primary btn-sm" 
                                                 onClick={() => fileInputCameraRef.current?.click()} 
-                                                style={{ flex: 1, padding: '8px 12px' }}
+                                                style={{ flex: 1, padding: '8px 4px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             >
                                                 {lang === 'bs' ? 'Slikaj Kamerom' : 'Take Photo'}
                                             </button>
@@ -293,7 +297,7 @@ export default function PublicObservationForm() {
                                                 type="button" 
                                                 className="btn btn-outline btn-sm" 
                                                 onClick={() => fileInputGalleryRef.current?.click()} 
-                                                style={{ flex: 1, padding: '8px 12px' }}
+                                                style={{ flex: 1, padding: '8px 4px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             >
                                                 {lang === 'bs' ? 'Iz Galerije' : 'From Gallery'}
                                             </button>
