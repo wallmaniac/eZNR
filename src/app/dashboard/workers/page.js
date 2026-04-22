@@ -175,7 +175,7 @@ function WorkersPageInner() {
             ...stored,
             ...DEFAULT_CT.filter(n => !storedNames.includes(n.toLowerCase())).map(n => ({ id: `default_${n}`, naziv: n, oznaka: n })),
         ]);
-        setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+        setPpeTypes([...getAll(COLLECTIONS.PPE_TYPES)]);
             window.dispatchEvent(new CustomEvent('eznr:data-synced'));
         setPlaces(getAll(COLLECTIONS.PLACES));
     }, []);
@@ -1418,7 +1418,7 @@ function WorkersPageInner() {
                                             if (newName && newName.trim()) {
                                                 const finalName = newName.trim();
                                                 create(COLLECTIONS.PPE_TYPES, { naziv: finalName });
-                                                setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+                                                setPpeTypes([...getAll(COLLECTIONS.PPE_TYPES)]);
                                                 setPpeFormData({ ...ppeFormData, naziv: finalName });
                                             } else {
                                                 setPpeFormData({ ...ppeFormData, naziv: '' });

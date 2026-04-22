@@ -670,12 +670,12 @@ export const COLLECTIONS = {
 
 // ── getAll — returns cached data (synchronous, instant) ──
 export function getAll(collection) {
-    return _cache[collection] || [];
+    return [...(_cache[collection] || [])];
 }
 
 // ── getRawAll — same as getAll now (cache is already company-scoped) ──
 export function getRawAll(collection) {
-    return _cache[collection] || [];
+    return [...(_cache[collection] || [])];
 }
 
 // Deduplicate a collection in cache (and persist)

@@ -24,7 +24,7 @@ export default function PPEPage() {
   const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
   const [selectedIds, setSelectedIds] = useState(new Set());
 
-  const loadData = useCallback(() => { setItems(getAll(COLLECTIONS.PPE_TYPES)); }, []);
+  const loadData = useCallback(() => { setItems([...getAll(COLLECTIONS.PPE_TYPES)]); }, []);
   useEffect(() => {
       loadData();
       window.addEventListener('eznr:data-synced', loadData);
