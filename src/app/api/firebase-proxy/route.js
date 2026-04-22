@@ -520,7 +520,7 @@ async function handleParsePresentation(data) {
 // ─── sendEmail handler ───────────────────────────────────────────────────────
 async function handleSendEmail(data) {
     const { toEmail, toName, questionnaireName, fillLink, deadline, senderName, companyName, isTraining, isReminder, isHazard, location, description, reporterName, imageLink, dashboardLink } = data;
-    if (!toEmail || !fillLink) throw new Error('Missing required fields: toEmail or fillLink');
+    if (!toEmail || (!fillLink && !isHazard)) throw new Error('Missing required fields: toEmail or fillLink');
     const resend = getResend();
     const FROM = process.env.RESEND_FROM_EMAIL || 'noreply@mail.zastitanaradu.ba';
     const senderDisplay = companyName ? `${senderName || 'eZNR'} (${companyName}) via eZNR` : `${senderName || 'eZNR'} via eZNR`;
@@ -791,11 +791,15 @@ async function handleSaveHazard(data) {
             // remove "data:image/webp;base64," if present
             const base64Data = base64Image.split(',')[1] || base64Image;
             
+            const uuid = require('crypto').randomUUID();
             await fileObj.save(Buffer.from(base64Data, 'base64'), {
-                metadata: { contentType: mimeType || 'image/webp' }
+                metadata: { 
+                    contentType: mimeType || 'image/webp',
+                    metadata: { firebaseStorageDownloadTokens: uuid }
+                }
             });
-            // Construct public URL
-            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+            // Construct public URL with token
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media&token=${uuid}`;
             payload.slika = { url: imageUrl, storagePath: fileName, type: mimeType || 'image/webp', size: base64Data.length };
         }
 
