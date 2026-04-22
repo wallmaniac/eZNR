@@ -50,6 +50,7 @@ const menuItems = [
         children: [
             { key: 'injuryReport',       icon: '🩹', path: '/dashboard/injuries' },
             { key: 'diseaseReport',      icon: '🏥', path: '/dashboard/diseases' },
+            { key: 'observations',       icon: '🚨', path: '/dashboard/observations', label_bs: 'Prijave opasnosti', label_en: 'Hazard Reports' },
             { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
         ],
     },
@@ -61,7 +62,6 @@ const menuItems = [
             { key: 'trainings',      icon: '🎬', path: '/dashboard/trainings' },
             { key: 'testoviZopZnr',  icon: '📝', path: '/dashboard/tests-zop-znr', label_bs: 'Testovi ZOP i ZNR', label_en: 'ZOP & ZNR Tests' },
             { key: 'questionnaires', icon: '❓', path: '/dashboard/questionnaires' },
-            { key: 'observations',   icon: '🚨', path: '/dashboard/observations', label_bs: 'Prijave opasnosti', label_en: 'Hazard Reports' },
             { key: 'riskAssessment', icon: '⚠️', path: '/dashboard/risk-assessment' },
         ],
     },

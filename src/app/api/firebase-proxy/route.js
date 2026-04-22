@@ -768,6 +768,20 @@ async function handleGetNotifSettings(data) {
     }
 }
 
+// ─── saveHazard handler (real Firestore via Admin SDK) ─────────────────────
+async function handleSaveHazard(data) {
+    const { companyId, payload } = data;
+    if (!companyId || !payload) return { success: false, error: 'Missing companyId or payload' };
+    try {
+        const db = getAdminDb();
+        const docRef = await db.collection('companies').doc(String(companyId)).collection('safety_observations').add(payload);
+        return { success: true, id: docRef.id };
+    } catch (err) {
+        console.error('[saveHazard] Error:', err.message);
+        return { success: false, error: err.message };
+    }
+}
+
 // ─── Main Router ──────────────────────────────────────────────────────────────
 
 const HANDLERS = {
@@ -787,6 +801,7 @@ const HANDLERS = {
     pdfToWord: handlePdfToWord,
     saveNotifSettings: handleSaveNotifSettings,
     getNotifSettings: handleGetNotifSettings,
+    saveHazard: handleSaveHazard,
 };
 
 export async function POST(req) {

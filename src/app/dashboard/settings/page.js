@@ -1453,6 +1453,32 @@ export default function SettingsPage() {
               </div>
             </>)}
 
+            {/* ── ALARMI SA TERENA (Real-time) ── */}
+            <SectionHeader icon="🚨" title={lang === 'bs' ? 'Hitni Alarmi / Terenske Prijave' : 'Instant Alerts / Hazard Reports'} />
+            <div className="card" style={{ marginBottom: 24 }}>
+                <div className="card-body">
+                    <div style={{ display: 'flex', gap: 16 }}>
+                        <div style={{ flex: 1 }}>
+                            <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>
+                                {lang === 'bs' ? 'Email za obavijesti sa terena' : 'Field Alert Email'}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                                {lang === 'bs' 
+                                    ? 'Ovo je email adresa na koju se šalju trenutačni alarmi čim neko skenira javni QR kod i prijavi opasnu situaciju.' 
+                                    : 'Immediate alerts will be sent here as soon as someone scans the public QR code and reports a hazard.'}
+                            </div>
+                            <input 
+                                className="form-input" 
+                                style={{ maxWidth: 300, background: 'var(--bg-page)', borderColor: 'var(--danger)', borderWidth: 1 }}
+                                placeholder={lang === 'bs' ? 'Npr. sigurnost@firma.ba' : 'E.g. safety@company.com'}
+                                value={notifSettings.obsNotifEmail || ''} 
+                                onChange={e => updateNotif('obsNotifEmail', e.target.value)} 
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
               <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
               {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}

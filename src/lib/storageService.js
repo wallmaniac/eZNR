@@ -36,17 +36,21 @@ export async function uploadSecureFile(companyId, moduleName, file, onProgress) 
         else if (type.includes('pdf')) fileName += '.pdf';
     }
 
-    // 1. Quota Check
+    // 1. Quota Check (Wrap in try-catch because public anonymous routes will fail Firestore read rules)
     const companyRef = doc(db, 'companies', companyId);
-    const companySnap = await getDoc(companyRef);
-    if (companySnap.exists()) {
-        const data = companySnap.data();
-        const used = data.storageUsed || 0;
-        const quota = data.storageQuota || (1024 * 1024 * 1024 * 2); // Default 2GB if not set
+    try {
+        const companySnap = await getDoc(companyRef);
+        if (companySnap.exists()) {
+            const data = companySnap.data();
+            const used = data.storageUsed || 0;
+            const quota = data.storageQuota || (1024 * 1024 * 1024 * 2); // Default 2GB if not set
 
-        if (used + fileBlob.size > quota) {
-            console.warn(`[Storage] ⚠️ QUOTA EXCEEDED for ${companyId}. Used: ${used}, Quota: ${quota}`);
+            if (used + fileBlob.size > quota) {
+                console.warn(`[Storage] ⚠️ QUOTA EXCEEDED for ${companyId}. Used: ${used}, Quota: ${quota}`);
+            }
         }
+    } catch (quotaCheckErr) {
+        console.warn('[Storage] Quota check skipped (likely public unauthenticated route):', quotaCheckErr.code || quotaCheckErr.message);
     }
 
     // 2. Upload
