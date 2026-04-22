@@ -99,7 +99,7 @@ function WorkersPageInner() {
     const medExamsRef = useRef(null);
 
     // EXCEL EXPORT
-    const [showExportModal, setShowExportModal] = useState(false);
+    const [excelExportMode, setExcelExportMode] = useState(null);
     const [exportColumns, setExportColumns] = useState({
         ime: true, prezime: true, imeRoditelja: false, jmbg: true, oib: true, datumRodenja: true, spol: false,
         miestoRodenja: false, zivotnaDob: false, orgJedinicaId: true, radnoMjestoId: true, datumZaposlenja: true,
@@ -1479,18 +1479,18 @@ function WorkersPageInner() {
                 <DialogRenderer />
 
                 {/* ── EXCEL EXPORT MODAL ── */}
-                {showExportModal && (
-                    <div className="modal-overlay" onClick={() => setShowExportModal(false)} style={{ zIndex: 9999 }}>
+                {excelExportMode && (
+                    <div className="modal-overlay" onClick={() => setExcelExportMode(null)} style={{ zIndex: 9999 }}>
                         <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #107c41, #185c37)' }}>
                                 <h2 style={{ color: 'white', margin: 0 }}>📊 {lang === 'bs' ? 'Izvoz liste radnika (Excel)' : 'Export Worker List (Excel)'}</h2>
-                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowExportModal(false)}>✕</button>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setExcelExportMode(null)}>✕</button>
                             </div>
                             <div className="modal-body">
                                 <p style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--text-light)' }}>
                                     {lang === 'bs'
-                                        ? `Odaberite koje podatke želite uključiti u Excel tablicu (${selectedIds.size > 0 ? 'odabrano ' + selectedIds.size : 'svih ' + filteredWorkers.length} radnika):`
-                                        : `Select which data to include in the Excel table (${selectedIds.size > 0 ? selectedIds.size + ' workers selected' : 'all ' + filteredWorkers.length + ' workers'}):`}
+                                        ? `Odaberite koje podatke želite uključiti u Excel tablicu (${excelExportMode === 'selected' ? 'odabrano ' + selectedIds.size : 'SVIH ' + filteredWorkers.length} radnika):`
+                                        : `Select which data to include in the Excel table (${excelExportMode === 'selected' ? selectedIds.size + ' workers selected' : 'ALL ' + filteredWorkers.length + ' workers'}):`}
                                 </p>
                                 <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                                     <button className="btn btn-outline btn-sm" onClick={() => {
@@ -1532,9 +1532,9 @@ function WorkersPageInner() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button className="btn btn-ghost" onClick={() => setShowExportModal(false)}>{t('cancel')}</button>
+                                <button className="btn btn-ghost" onClick={() => setExcelExportMode(null)}>{t('cancel')}</button>
                                 <button className="btn btn-primary" style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }} onClick={() => {
-                                    const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
+                                    const selectedWorkers = excelExportMode === 'selected' ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
                                     const allPpeList = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
                                     const dataRows = selectedWorkers.map(w => {
                                         const row = {};
@@ -1606,9 +1606,14 @@ function WorkersPageInner() {
                             <button className="btn btn-primary btn-sm" onClick={handleNew}>
                                 + {t('add')}
                             </button>
-                            <button className="btn btn-sm" style={{ background: '#107c41', color: 'white', border: 'none', height: 38 }} onClick={() => setShowExportModal(true)}>
-                                📊 {lang === 'bs' ? 'Excel Export' : 'Excel Export'}
-                            </button>
+                            <PDFExportButton
+                                label={lang === 'bs' ? '📊 Excel Export' : '📊 Excel Export'}
+                                buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
+                                options={[
+                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },
+                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
+                                ]}
+                            />
                             <PDFExportButton options={[
                                 { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport([], lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport([...selectedIds], lang) }] : []),

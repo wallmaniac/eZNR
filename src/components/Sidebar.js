@@ -49,8 +49,8 @@ const menuItems = [
         key: 'grpSafety', icon: '🩹',
         children: [
             { key: 'injuryReport',       icon: '🩹', path: '/dashboard/injuries' },
-            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
             { key: 'diseaseReport',      icon: '🏥', path: '/dashboard/diseases' },
+            { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
         ],
     },
 

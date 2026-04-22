@@ -744,7 +744,7 @@ export default function ImportPage() {
                                 <button className="btn btn-outline" onClick={generateTemplate} style={{ whiteSpace: 'nowrap' }}>
                                     ⬇️ {lang === 'bs' ? 'Prazan template' : 'Empty template'}
                                 </button>
-                                <button className="btn btn-primary" onClick={() => generateExport(companyId)} style={{ whiteSpace: 'nowrap' }}>
+                                <button className="btn btn-primary" onClick={() => generateExport(activeCompanyId)} style={{ whiteSpace: 'nowrap' }}>
                                     📤 {lang === 'bs' ? 'Export podataka' : 'Export data'}
                                 </button>
                             </div>
