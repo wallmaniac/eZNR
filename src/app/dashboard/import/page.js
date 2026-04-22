@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { create, createMass, getAll, COLLECTIONS } from '@/lib/dataStore';
 import * as XLSX from 'xlsx';
 import { collection, getDocs, doc, deleteDoc, writeBatch } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/lib/firebase';
 
 // ── Template column definitions ───────────────────────────────
 const WORKER_COLS = [
