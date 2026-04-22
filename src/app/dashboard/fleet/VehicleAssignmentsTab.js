@@ -7,7 +7,7 @@ import DateInput from '@/components/DateInput';
 export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments, workers, reloadData }) {
     const { t, lang } = useLanguage();
     const bs = lang === 'bs';
-    const { confirm, prompt } = useDialog();
+    const { confirm, prompt, DialogRenderer } = useDialog();
 
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
     const history = assignments.filter(a => a.vehicleId === vehicleId).sort((a,b) => new Date(b.datumZaduzenja) - new Date(a.datumZaduzenja));
@@ -114,6 +114,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <DialogRenderer />
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                     <h3 style={{ margin: '0 0 4px 0' }}>{bs ? 'Historija zaduženja' : 'Assignment History'}</h3>

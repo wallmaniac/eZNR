@@ -563,7 +563,11 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=profile')}>👤 {t('profile')}</button>
                                     <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=company')}>🏢 {t('company')}</button>
                                     <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=app')}>⚙️ {t('settings')}</button>
-                                    {isAdmin && (<><div className="dropdown-divider" /><button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {lang === 'bs' ? 'Administracija' : 'Admin Panel'}</button></>)}
+                                    {isAdmin && (<>
+                                        <div className="dropdown-divider" />
+                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {lang === 'bs' ? 'Upravljanje korisnicima' : 'User Management'}</button>
+                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/companies')} style={{ color: '#0288D1', fontWeight: 600 }}>🏢 {lang === 'bs' ? 'Upravljanje firmama' : 'Company Management'}</button>
+                                    </>)}
                                     <div className="dropdown-divider" />
                                     <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 {t('logout')}</button>
                                 </div>

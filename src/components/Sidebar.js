@@ -40,7 +40,8 @@ const menuItems = [
         key: 'grpEquipment', icon: 'Oprema.png',
         children: [
             { key: 'equipment',          icon: 'Oprema.png', path: '/dashboard/equipment', label_bs: 'Popis radne opreme i objekata', label_en: 'Equipment & Facilities List' },
-            ],
+            { key: 'serviceRecords',     icon: '🔧', path: '/dashboard/service-records', label_bs: 'Servisni zapisnici', label_en: 'Service records' },
+        ],
     },
 
     // ── 🩹 SIGURNOST — incidents & diseases ───────────────────────────────────
