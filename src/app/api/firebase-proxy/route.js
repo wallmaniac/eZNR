@@ -519,22 +519,32 @@ async function handleParsePresentation(data) {
 
 // ─── sendEmail handler ───────────────────────────────────────────────────────
 async function handleSendEmail(data) {
-    const { toEmail, toName, questionnaireName, fillLink, deadline, senderName, companyName, isTraining, isReminder, isHazard, location, description, reporterName, imageLink, dashboardLink } = data;
+    const { toEmail, toName, questionnaireName, fillLink, deadline, senderName, companyId, companyName, isTraining, isReminder, isHazard, location, description, reporterName, imageLink, dashboardLink } = data;
     if (!toEmail || (!fillLink && !isHazard)) throw new Error('Missing required fields: toEmail or fillLink');
+
+    let finalCompanyName = companyName;
+    if (companyId && (!companyName || companyName === 'Kompanija')) {
+        try {
+            const db = getAdminDb();
+            const compDoc = await db.collection('companies').doc(String(companyId)).get();
+            if (compDoc.exists) finalCompanyName = compDoc.data().naziv || finalCompanyName;
+        } catch(e) {}
+    }
+
     const resend = getResend();
     const FROM = process.env.RESEND_FROM_EMAIL || 'noreply@mail.zastitanaradu.ba';
-    const senderDisplay = companyName ? `${senderName || 'eZNR'} (${companyName}) via eZNR` : `${senderName || 'eZNR'} via eZNR`;
+    const senderDisplay = finalCompanyName ? `${senderName || 'eZNR'} (${finalCompanyName}) via eZNR` : `${senderName || 'eZNR'} via eZNR`;
     
     let html;
     let subjectPrefix;
     if (isHazard) {
-        html = buildHazardEmail({ companyName, location, description, reporterName, imageLink, dashboardLink });
+        html = buildHazardEmail({ companyName: finalCompanyName, location, description, reporterName, imageLink, dashboardLink });
         subjectPrefix = '🚨 Alarm';
     } else if (isReminder) {
-        html = buildReminderEmail({ toName: toName || toEmail, questionnaireName, fillLink, deadline, senderName, companyName, isTraining });
+        html = buildReminderEmail({ toName: toName || toEmail, questionnaireName, fillLink, deadline, senderName, companyName: finalCompanyName, isTraining });
         subjectPrefix = '⏰ Podsjetnik';
     } else {
-        html = buildHtmlEmail({ toName: toName || toEmail, questionnaireName, fillLink, deadline, senderName, companyName, isTraining });
+        html = buildHtmlEmail({ toName: toName || toEmail, questionnaireName, fillLink, deadline, senderName, companyName: finalCompanyName, isTraining });
         subjectPrefix = isTraining ? '🎬 Obuka' : '📝 Upitnik';
     }
 

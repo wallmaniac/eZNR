@@ -176,6 +176,7 @@ export default function PublicObservationForm() {
                         data: {
                             isHazard: true,
                             toEmail: targetEmail,
+                            companyId,
                             companyName: companyInfo.name,
                             location: formData.lokacija,
                             description: formData.opis,
