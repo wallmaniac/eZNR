@@ -324,7 +324,7 @@ function FleetInner() {
                             </div>
 
                             {/* Tab bar */}
-                            <div className="scrollable-tabs-bar" style={{ gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', marginBottom: 20 }}>
                                 {[
                                     { key: 'osnovno', icon: '📄', label: bs ? 'Osnovni podaci' : 'Basic Info', show: true },
                                     { key: 'istorija', icon: '🔄', label: bs ? 'Zaduženja' : 'Assignments', show: !!editingId },
@@ -333,13 +333,15 @@ function FleetInner() {
                                 ].filter(t => t.show).map(tab => (
                                     <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                                         padding: '9px 16px', border: 'none', cursor: 'pointer',
-                                        fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: activeTab === tab.key ? 700 : 500,
-                                        background: 'transparent', borderBottom: activeTab === tab.key ? '2px solid var(--primary)' : '2px solid transparent',
+                                        fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
+                                        background: 'transparent',
+                                        borderBottom: '2px solid',
+                                        borderBottomColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
                                         color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
                                         marginBottom: -2, transition: 'all 0.15s',
                                         display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
                                     }}>
-                                        {tab.icon} {tab.label}
+                                        {tab.icon} <span style={{ opacity: activeTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
                                     </button>
                                 ))}
                             </div>
