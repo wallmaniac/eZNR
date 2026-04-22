@@ -34,21 +34,26 @@ export default function ObservationsPage() {
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
 
+    // Capture initial deep link ID safely to survive Next.js router soft-navigation lifecycle
+    const [deepLinkId, setDeepLinkId] = useState(() => {
+        if (typeof window !== 'undefined') {
+             return new URLSearchParams(window.location.search).get('id');
+        }
+        return null;
+    });
+
     // Handle deep link to open specific hazard observation from Email
     useEffect(() => {
-        if (items.length > 0 && !viewingItem) {
-            const urlParams = new URLSearchParams(window.location.search);
-            const hazardIdQuery = urlParams.get('id');
-            if (hazardIdQuery) {
-                const h = items.find(i => i.id === hazardIdQuery);
-                if (h) {
-                    setViewingItem(h);
-                    // Remove ?id= from URL so it doesn't persistently re-open on refresh
-                    window.history.replaceState({}, '', '/dashboard/observations');
-                }
+        if (deepLinkId && items.length > 0 && !viewingItem) {
+            const h = items.find(i => i.id === deepLinkId);
+            if (h) {
+                setViewingItem(h);
+                setDeepLinkId(null);
+                // Remove ?id= from URL so it doesn't persistently re-open on refresh
+                window.history.replaceState({}, '', window.location.pathname);
             }
         }
-    }, [items, viewingItem]);
+    }, [items, viewingItem, deepLinkId]);
 
     const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(items, 'datum', 'desc');
 
