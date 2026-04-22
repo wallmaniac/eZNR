@@ -24,7 +24,7 @@ import {
     isCompanyAdmin as checkCompanyAdmin,
     ROLES,
 } from '@/lib/authService';
-import { loadCompanyData, switchCompanyData } from '@/lib/dataStore';
+import { loadCompanyData, switchCompanyData, resetDataStore } from '@/lib/dataStore';
 import { logLogin, updatePresence } from '@/lib/activityLog';
 
 const AuthContext = createContext({});
@@ -148,6 +148,9 @@ export function AuthProvider({ children }) {
     }, []);
 
     function _clearState() {
+        // Detach all Firestore onSnapshot listeners immediately to prevent
+        // "Missing or insufficient permissions" errors after logout
+        resetDataStore();
         setFirebaseUser(null);
         setUser(null);
         setIsAuthenticated(false);

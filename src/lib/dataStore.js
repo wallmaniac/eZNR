@@ -336,6 +336,22 @@ function _detachListeners() {
     _snapshotUnsubs.length = 0;
 }
 
+/**
+ * Call this on logout to stop all real-time Firestore listeners.
+ * Without this, onSnapshot callbacks keep firing and produce
+ * "Missing or insufficient permissions" errors for the signed-out user.
+ */
+export function resetDataStore() {
+    _detachListeners();
+    _activeCompanyId = null;
+    _isLoaded = false;
+    _isLoading = false;
+    _loadPromise = null;
+    // Clear company-scoped data from cache — global reference data can stay
+    COMPANY_SCOPED.forEach(col => { _cache[col] = []; });
+    console.log('[dataStore] 🔒 Listeners detached and cache cleared (logout).');
+}
+
 // ============================================================================
 // FIRESTORE PATH HELPERS
 // ============================================================================
