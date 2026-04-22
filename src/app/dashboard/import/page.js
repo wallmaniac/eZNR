@@ -228,29 +228,47 @@ function generateExport(companyId) {
     wsW['!cols'] = WORKER_COLS.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, wsW, 'Radnici');
 
-    // 2. Uvjerenja
+        // 2. Uvjerenja
     const cRows = [CERT_COLS];
     const certs = getAll(COLLECTIONS.CERTIFICATES).filter(c => companyId === 'all' || c.companyId === companyId);
-    certs.forEach(c => {
-        const worker = workers.find(w => w.id === c.workerId);
-        cRows.push([
-            worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
-            c.naziv || '', c.oznaka || '', c.tipUvjerenja || '', c.datum || '', c.vrijediDo || '', c.sposobnost || '', c.ogranicenje || ''
-        ]);
+    workers.forEach(w => {
+        const wCerts = certs.filter(c => c.workerId === w.id);
+        if (wCerts.length > 0) {
+            wCerts.forEach(c => {
+                cRows.push([
+                    w.ime || '', w.prezime || '', w.jmbg || '',
+                    c.naziv || '', c.oznaka || '', c.tipUvjerenja || '', c.datum || '', c.vrijediDo || '', c.sposobnost || '', c.ogranicenje || ''
+                ]);
+            });
+        } else {
+            cRows.push([
+                w.ime || '', w.prezime || '', w.jmbg || '',
+                '', '', '', '', '', '', ''
+            ]);
+        }
     });
     const wsC = XLSX.utils.aoa_to_sheet(cRows);
     wsC['!cols'] = CERT_COLS.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, wsC, 'Uvjerenja');
 
-    // 3. OZO
+        // 3. OZO
     const pRows = [PPE_COLS];
     const ppe = getAll(COLLECTIONS.PPE_ASSIGNMENTS).filter(p => companyId === 'all' || p.companyId === companyId);
-    ppe.forEach(p => {
-        const worker = workers.find(w => w.id === p.workerId);
-        pRows.push([
-            worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
-            p.naziv || '', p.datumZaduzenja || '', p.datumRazduzenja || '', p.kolicina || ''
-        ]);
+    workers.forEach(w => {
+        const wPpe = ppe.filter(p => p.workerId === w.id);
+        if (wPpe.length > 0) {
+            wPpe.forEach(p => {
+                pRows.push([
+                    w.ime || '', w.prezime || '', w.jmbg || '',
+                    p.naziv || '', p.datumZaduzenja || '', p.datumRazduzenja || '', p.kolicina || ''
+                ]);
+            });
+        } else {
+            pRows.push([
+                w.ime || '', w.prezime || '', w.jmbg || '',
+                '', '', '', ''
+            ]);
+        }
     });
     const wsP = XLSX.utils.aoa_to_sheet(pRows);
     wsP['!cols'] = PPE_COLS.map(() => ({ wch: 18 }));
@@ -269,15 +287,24 @@ function generateExport(companyId) {
     wsE['!cols'] = EQUIP_COLS.map(() => ({ wch: 18 }));
     XLSX.utils.book_append_sheet(wb, wsE, 'Oprema');
 
-    // 5. Ljekarski
+        // 5. Ljekarski
     const mRows = [MEDEXAM_COLS];
     const medExams = getAll(COLLECTIONS.MEDICAL_EXAMS).filter(m => companyId === 'all' || m.companyId === companyId);
-    medExams.forEach(m => {
-        const worker = workers.find(w => w.id === m.workerId);
-        mRows.push([
-            worker?.ime || '', worker?.prezime || '', worker?.jmbg || '',
-            m.tipPregleda || '', m.datumPregleda || m.datum || '', m.vrijediDo || '', m.rezultat || '', m.napomena || ''
-        ]);
+    workers.forEach(w => {
+        const wExams = medExams.filter(m => m.workerId === w.id);
+        if (wExams.length > 0) {
+            wExams.forEach(m => {
+                mRows.push([
+                    w.ime || '', w.prezime || '', w.jmbg || '',
+                    m.tipPregleda || '', m.datumPregleda || m.datum || '', m.vrijediDo || '', m.rezultat || '', m.napomena || ''
+                ]);
+            });
+        } else {
+            mRows.push([
+                w.ime || '', w.prezime || '', w.jmbg || '',
+                '', '', '', '', ''
+            ]);
+        }
     });
     const wsM = XLSX.utils.aoa_to_sheet(mRows);
     wsM['!cols'] = MEDEXAM_COLS.map(() => ({ wch: 18 }));
