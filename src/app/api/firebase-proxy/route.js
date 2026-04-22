@@ -792,8 +792,7 @@ async function handleSaveHazard(data) {
             const base64Data = base64Image.split(',')[1] || base64Image;
             
             await fileObj.save(Buffer.from(base64Data, 'base64'), {
-                metadata: { contentType: mimeType || 'image/webp' },
-                public: true
+                metadata: { contentType: mimeType || 'image/webp' }
             });
             // Construct public URL
             const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;

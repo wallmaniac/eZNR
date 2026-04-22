@@ -24,7 +24,8 @@ export default function PublicObservationForm() {
     });
     const [imageFile, setImageFile] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
-    const fileInputRef = useRef(null);
+    const fileInputCameraRef = useRef(null);
+    const fileInputGalleryRef = useRef(null);
     
     // UI Branding (read-only, public)
     const [companyInfo, setCompanyInfo] = useState({ name: 'Kompanija', logo: '' });
@@ -265,13 +266,11 @@ export default function PublicObservationForm() {
                         <div className="form-group">
                             <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
                             <div 
-                                onClick={() => fileInputRef.current?.click()}
                                 style={{ 
                                     border: '2px dashed var(--primary)', 
                                     borderRadius: 'var(--radius-md)', 
-                                    padding: '30px 20px', 
+                                    padding: '24px 20px', 
                                     textAlign: 'center',
-                                    cursor: 'pointer',
                                     background: 'rgba(0,191,166,0.03)',
                                     position: 'relative',
                                     overflow: 'hidden'
@@ -280,8 +279,25 @@ export default function PublicObservationForm() {
                                     <img src={imagePreview} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" />
                                 ) : (
                                     <div>
-                                        <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-                                        <div style={{ color: 'var(--primary)', fontWeight: 600 }}>{lang === 'bs' ? 'Dodaj sliku sa kamere ili iz galerije' : 'Add photo from camera or gallery'}</div>
+                                        <div style={{ fontSize: 32, marginBottom: 12 }}>📷</div>
+                                        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-primary btn-sm" 
+                                                onClick={() => fileInputCameraRef.current?.click()} 
+                                                style={{ flex: 1, padding: '8px 12px' }}
+                                            >
+                                                {lang === 'bs' ? 'Slikaj Kamerom' : 'Take Photo'}
+                                            </button>
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-outline btn-sm" 
+                                                onClick={() => fileInputGalleryRef.current?.click()} 
+                                                style={{ flex: 1, padding: '8px 12px' }}
+                                            >
+                                                {lang === 'bs' ? 'Iz Galerije' : 'From Gallery'}
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -292,9 +308,16 @@ export default function PublicObservationForm() {
                             )}
                             <input 
                                 type="file" 
-                                accept="image/png, image/jpeg, image/jpg, image/webp"
-                                 
-                                ref={fileInputRef} 
+                                accept="image/*"
+                                capture="environment" 
+                                ref={fileInputCameraRef} 
+                                style={{ display: 'none' }} 
+                                onChange={handleFileSelect}
+                            />
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                ref={fileInputGalleryRef} 
                                 style={{ display: 'none' }} 
                                 onChange={handleFileSelect}
                             />
