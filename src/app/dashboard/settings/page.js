@@ -110,6 +110,36 @@ export default function SettingsPage() {
 
   // Notification settings state
   const [notifSettings, setNotifSettings] = useState(getNotificationSettings());
+  const [notifSyncError, setNotifSyncError] = useState(false);
+
+  // Load notif settings from Firestore whenever notifications tab is opened
+  useEffect(() => {
+    if (activeTab !== 'notifications' || !activeCompanyId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/firebase-proxy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ functionName: 'getNotifSettings', data: { companyId: String(activeCompanyId) } }),
+        });
+        const json = await res.json();
+        const fsSettings = (json.result || json)?.settings;
+        if (!cancelled && fsSettings) {
+          // Merge: Firestore is source of truth for server-side keys; localStorage wins for UI toggles
+          setNotifSettings(prev => ({ ...prev, ...fsSettings }));
+          // Also keep localStorage in sync
+          saveNotificationSettings({ ...getNotificationSettings(), ...fsSettings });
+          console.log('[Settings] Loaded notif settings from Firestore:', fsSettings);
+        } else if (!cancelled && fsSettings === null) {
+          console.warn('[Settings] No Firestore notif_settings doc found — will create on save.');
+        }
+      } catch (e) {
+        console.error('[Settings] Failed to load notif settings from Firestore:', e);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [activeTab, activeCompanyId]);
 
   // App settings state
   const [appSettings, setAppSettings] = useState(getAppSettings());
@@ -358,10 +388,18 @@ export default function SettingsPage() {
     saveNotificationSettings(notifSettings);
 
     // 2) Persist to Firestore via server API (Admin SDK bypasses auth rules)
-    //    The client SDK cannot write directly — app uses localStorage auth, not Firebase Auth
     const cId = activeCompanyId;
+    setNotifSyncError(false);
     if (cId) {
-      await apiSaveNotifSettings(cId, notifSettings);
+      const ok = await apiSaveNotifSettings(String(cId), notifSettings);
+      if (!ok) {
+        setNotifSyncError(true);
+        console.error('[Settings] Firestore save failed for notif_settings. CompanyId:', cId);
+      } else {
+        console.log('[Settings] notif_settings saved to Firestore for company:', cId);
+      }
+    } else {
+      console.warn('[Settings] No activeCompanyId — Firestore save skipped.');
     }
 
     clearDirty(); showSaved();
@@ -1491,10 +1529,22 @@ export default function SettingsPage() {
                 </div>
             </div>
 
-            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
               <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
-              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
+              {saved && !notifSyncError && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
+              {notifSyncError && (
+                <span className="animate-fadeIn" style={{ color: 'var(--danger)', fontWeight: 600, fontSize: '0.85rem' }}>
+                  ⚠️ {lang === 'bs' ? 'Greška pri snimanju na server. Provjerite konzolu.' : 'Failed to save to server. Check the console.'}
+                </span>
+              )}
             </div>
+            {notifSyncError && (
+              <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', fontSize: '0.8rem', color: 'var(--danger)' }}>
+                {lang === 'bs'
+                  ? '⚠️ Postavke su sačuvane lokalno ali nisu sinhronizovane sa serverom. Email obavijesti s terena neće raditi dok se ovo ne ispravi. Provjerite da ste prijavljeni i pokušajte ponovo.'
+                  : '⚠️ Settings saved locally but failed to sync to server. Field alert emails will not work until this is resolved. Make sure you are logged in and try again.'}
+              </div>
+            )}
           </div>
         </div>
       )}
