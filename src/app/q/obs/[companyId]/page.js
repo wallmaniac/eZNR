@@ -106,13 +106,18 @@ export default function PublicObservationForm() {
 
         setSubmitting(true);
         try {
-            // 1. Upload File to Firebase Storage (Only if file is selected)
-            let uploaded = null;
+            // 1. Convert Image to Base64 (Bypass Client Storage Rules)
+            let base64Image = null;
             if (imageFile) {
-                uploaded = await uploadSecureFile(companyId, 'safety_observations', imageFile);
+                base64Image = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(imageFile);
+                });
             }
 
-            // 2. Save to Firestore via Firebase Proxy to bypass Client Security Rules
+            // 2. Save to Firestore & Storage via Firebase Proxy
+            let proxyDbData = null;
             try {
                 const proxyDbRes = await fetch('/api/firebase-proxy', {
                     method: 'POST',
@@ -121,18 +126,19 @@ export default function PublicObservationForm() {
                         functionName: 'saveHazard',
                         data: {
                             companyId,
+                            base64Image,
+                            mimeType: imageFile ? imageFile.type : null,
                             payload: {
                                 opis: formData.opis,
                                 lokacija: formData.lokacija,
                                 ime: formData.ime || 'Anonimno',
-                                ...(uploaded ? { slika: uploaded } : {}),
                                 status: 'Novo',
                                 datum: new Date().toISOString(),
                             }
                         }
                     })
                 });
-                const proxyDbData = await proxyDbRes.json();
+                proxyDbData = await proxyDbRes.json();
                 if (!proxyDbData.success) {
                     throw new Error(proxyDbData.error || 'Server rejected saveHazard');
                 }
@@ -169,7 +175,7 @@ export default function PublicObservationForm() {
                             location: formData.lokacija,
                             description: formData.opis,
                             reporterName: formData.ime || 'Anonimno',
-                            imageLink: uploaded ? uploaded.url : null,
+                            imageLink: proxyDbData?.payload?.slika?.url || null,
                             dashboardLink: window.location.origin + '/dashboard/observations'
                         }
                     })

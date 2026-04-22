@@ -11,6 +11,7 @@
 import { Resend } from 'resend';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+import { getStorage } from 'firebase-admin/storage';
 
 
 export const maxDuration = 300;
@@ -34,7 +35,7 @@ function checkRate(ip) {
 }
 
 // ─── Firebase Admin (for Firestore server-side access) ────────────────────────
-function getAdminDb() {
+function setupAdmin() {
     if (!getApps().length) {
         initializeApp({
             credential: cert({
@@ -42,9 +43,17 @@ function getAdminDb() {
                 clientEmail: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
                 privateKey: process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n'),
             }),
+            storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
         });
     }
+}
+function getAdminDb() {
+    setupAdmin();
     return getFirestore();
+}
+function getAdminStorage() {
+    setupAdmin();
+    return getStorage().bucket();
 }
 
 // ─── Resend email client ──────────────────────────────────────────────────────
@@ -770,12 +779,30 @@ async function handleGetNotifSettings(data) {
 
 // ─── saveHazard handler (real Firestore via Admin SDK) ─────────────────────
 async function handleSaveHazard(data) {
-    const { companyId, payload } = data;
+    const { companyId, payload, base64Image, mimeType } = data;
     if (!companyId || !payload) return { success: false, error: 'Missing companyId or payload' };
     try {
+        if (base64Image) {
+            const bucket = getAdminStorage();
+            const timestamp = Date.now();
+            const ext = (mimeType || '').includes('jpeg') ? 'jpg' : (mimeType || '').includes('png') ? 'png' : 'webp';
+            const fileName = `companies/${companyId}/safety_observations/${timestamp}_hazard.${ext}`;
+            const fileObj = bucket.file(fileName);
+            // remove "data:image/webp;base64," if present
+            const base64Data = base64Image.split(',')[1] || base64Image;
+            
+            await fileObj.save(Buffer.from(base64Data, 'base64'), {
+                metadata: { contentType: mimeType || 'image/webp' },
+                public: true
+            });
+            // Construct public URL
+            const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o/${encodeURIComponent(fileName)}?alt=media`;
+            payload.slika = { url: imageUrl, storagePath: fileName, type: mimeType || 'image/webp', size: base64Data.length };
+        }
+
         const db = getAdminDb();
         const docRef = await db.collection('companies').doc(String(companyId)).collection('safety_observations').add(payload);
-        return { success: true, id: docRef.id };
+        return { success: true, id: docRef.id, payload };
     } catch (err) {
         console.error('[saveHazard] Error:', err.message);
         return { success: false, error: err.message };
