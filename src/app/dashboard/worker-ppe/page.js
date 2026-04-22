@@ -24,7 +24,7 @@ export default function WorkerPPEPage() {
 
   const [assignments, setAssignments] = useState(() => getAll(COLLECTIONS.PPE_ASSIGNMENTS));
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
-  const ppeTypes = useMemo(() => getAll(COLLECTIONS.PPE_TYPES), []);
+  const [ppeTypes, setPpeTypes] = useState(() => getAll(COLLECTIONS.PPE_TYPES));
 
   const rows = useMemo(() => {
     return assignments.map(a => {

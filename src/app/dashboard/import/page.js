@@ -391,6 +391,7 @@ export default function ImportPage() {
     const [step, setStep] = useState('upload'); // upload | preview | done
     const [preview, setPreview] = useState(null);
     const [importing, setImporting] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [result, setResult] = useState(null);
     const [dragOver, setDragOver] = useState(false);
     const [fileError, setFileError] = useState('');
@@ -806,7 +807,7 @@ export default function ImportPage() {
                             {lang === 'bs' ? 'Korak 2: Uploadajte popunjeni Excel' : 'Step 2: Upload your filled Excel'}
                         </div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                            {lang === 'bs' ? 'Kliknite ili prevucite .xlsx dokument ovdje' : 'Click or drag & drop .xlsx file here'}
+                            {isUploading ? (lang === 'bs' ? '⚙️ Učitavanje u toku...' : '⚙️ Processing file...') : (lang === 'bs' ? 'Kliknite ili prevucite .xlsx dokument ovdje' : 'Click or drag & drop .xlsx file here')}
                         </div>
                         <input
                             ref={fileRef}
