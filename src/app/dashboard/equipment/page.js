@@ -37,6 +37,7 @@ function EquipmentPageInner() {
     const { showFlash, SavedFlash } = useSavedFlash();
     const [items, setItems] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [returnPath, setReturnPath] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyEQ });
     const [activeTab, setActiveTab] = useState('podaci'); // 'podaci' | 'servis'
@@ -91,6 +92,8 @@ function EquipmentPageInner() {
         if (openItemHandledRef.current) return;
         if (items.length === 0) return;
         const openId = searchParams?.get('openItem');
+        const retParam = searchParams?.get('returnTo');
+        if (retParam) setReturnPath(retParam);
         const openTab = searchParams?.get('tab'); // e.g. ?tab=servis
         if (openId) {
             const found = items.find(x => x.id === openId);
@@ -132,7 +135,7 @@ function EquipmentPageInner() {
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
         if (editingId) { update(COLLECTIONS.EQUIPMENT, editingId, formData); } else { create(COLLECTIONS.EQUIPMENT, formData); }
-        setShowForm(false); loadData(); showFlash();
+        setShowForm(false); loadData(); showFlash(); if(returnPath) { router.push(returnPath); setReturnPath(null); }
     };
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
 
@@ -363,14 +366,14 @@ function EquipmentPageInner() {
 
             {/* ── Equipment Edit Modal ── */}
             {showForm && (
-                <div className="modal-overlay" onClick={() => setShowForm(false)}>
+                <div className="modal-overlay" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>
                     <div className="modal" style={{ width: '100%', maxWidth: 860, minHeight: 650, display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     <Icon3D name="Oprema.png" size={48} />
                                     <h2 style={{ margin: 0 }}>{lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'} {formData.naziv && `— ${formData.naziv}`}</h2>
                                 </div>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                            <button className="btn btn-ghost btn-icon" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>✕</button>
                         </div>
 
                         {/* Tab bar */}
@@ -564,7 +567,7 @@ function EquipmentPageInner() {
                         </div>
 
                         <div className="modal-footer" style={{ marginTop: 'auto' }}>
-                            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                            <button className="btn btn-ghost" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                         </div>
                     </div>

@@ -160,7 +160,7 @@ export default function ArchivePage() {
                     uploadedAt: sl.datum || null,
                     _readonly: true,
                     _sourceLabel: 'Popis radne opreme i objekata',
-                    _sourceLink: `/dashboard/equipment?openItem=${sl.equipmentId}&tab=servis`,
+                    _sourceLink: `/dashboard/equipment?openItem=${sl.equipmentId}&tab=servis&returnTo=/dashboard/archive`,
                 });
             }
         });

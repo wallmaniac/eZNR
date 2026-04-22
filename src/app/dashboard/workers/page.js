@@ -50,6 +50,7 @@ function WorkersPageInner() {
     const [showFormer, setShowFormer] = useState(false);
     const [editingWorker, setEditingWorker] = useState(null);
     const [showForm, setShowForm] = useState(false);
+    const [returnPath, setReturnPath] = useState(null);
     const [formData, setFormData] = useState({ ...emptyWorker });
     const [openSections, setOpenSections] = useState({ kontakt: false, osobni: false, posebni: false, uvjerenja: true, ozo: false, medExams: false, mjestoRada: false, dodatniPoslovi: false, dokumenti: false });
     const [orgUnits, setOrgUnits] = useState([]);

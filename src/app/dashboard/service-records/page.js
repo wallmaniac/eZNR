@@ -77,7 +77,7 @@ function ServiceRecordsInner() {
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
 
     const openInEquipment = (eqId) => {
-        router.push(`/dashboard/equipment?openItem=${eqId}&tab=servis`);
+        router.push(`/dashboard/equipment?openItem=${eqId}&tab=servis&returnTo=/dashboard/service-records`);
     };
 
     const handleNewService = () => {

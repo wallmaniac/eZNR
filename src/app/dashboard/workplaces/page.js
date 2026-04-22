@@ -34,6 +34,7 @@ export default function WorkplacesPage() {
     const [items, setItems] = useState([]);
     const [workers, setWorkers] = useState([]);
     const [showForm, setShowForm] = useState(false);
+    const [returnPath, setReturnPath] = useState(null);
     const [editingId, setEditingId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyWP });
     const [searchTerm, setSearchTerm] = useState('');
@@ -238,11 +239,11 @@ export default function WorkplacesPage() {
 
             {/* Form Modal */}
             {showForm && (
-                <div className="modal-overlay" onClick={() => setShowForm(false)}>
+                <div className="modal-overlay" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>
                     <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Radno mjesto' : 'Workplace'}</h2>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                            <button className="btn btn-ghost btn-icon" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
@@ -326,7 +327,7 @@ export default function WorkplacesPage() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                            <button className="btn btn-ghost" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                         </div>
                     </div>

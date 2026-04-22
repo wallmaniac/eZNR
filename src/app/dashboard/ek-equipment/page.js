@@ -36,7 +36,7 @@ export default function EKEquipmentPage() {
               const isOverdue = e.sljedeciPregled && new Date(e.sljedeciPregled) < new Date();
               return (
                 <tr key={e.id}
-                  onClick={() => router.push(`/dashboard/equipment?openItem=${e.id}`)}
+                  onClick={() => router.push(`/dashboard/equipment?openItem=${e.id}&returnTo=/dashboard/ek-equipment`)}
                   style={{ cursor: 'pointer', transition: 'background 0.12s' }}
                   onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                   onMouseLeave={ev => ev.currentTarget.style.background = ''}
