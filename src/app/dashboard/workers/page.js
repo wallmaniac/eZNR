@@ -101,10 +101,10 @@ function WorkersPageInner() {
     // EXCEL EXPORT
     const [showExportModal, setShowExportModal] = useState(false);
     const [exportColumns, setExportColumns] = useState({
-        ime: true, prezime: true, jmbg: true, oib: true, datumRodenja: true, spol: false,
-        zivotnaDob: false, orgJedinicaId: true, radnoMjestoId: true, datumZaposlenja: true,
-        stazDoDolaska: false, ukupniStaz: false, lokacija: false, ulica: false, kucniBroj: false,
-        mjestoId: false, opcina: false, telefonTvrtki: false, mobitel: false, email: false, aktivan: true, evidencijskiBroj: false,
+        ime: true, prezime: true, imeRoditelja: false, jmbg: true, oib: true, datumRodenja: true, spol: false,
+        miestoRodenja: false, zivotnaDob: false, orgJedinicaId: true, radnoMjestoId: true, datumZaposlenja: true,
+        datumOdlaska: false, stazDoDolaska: false, ukupniStaz: false, koef: false, lokacija: false, ulica: false, kucniBroj: false,
+        mjestoId: false, opcina: false, telefonTvrtki: false, mobitel: false, email: false, napomena: false, aktivan: true, vanjskiSuradnik: false, evidencijskiBroj: false,
         uvjerenja: false, ljekarski: false, ozo: false
     });
 
@@ -1489,8 +1489,8 @@ function WorkersPageInner() {
                             <div className="modal-body">
                                 <p style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--text-light)' }}>
                                     {lang === 'bs'
-                                        ? `Odaberite koje podatke želite uključiti u Excel tablicu (odabrano ${selectedIds.size} radnika):`
-                                        : `Select which data to include in the Excel table (${selectedIds.size} workers selected):`}
+                                        ? `Odaberite koje podatke želite uključiti u Excel tablicu (${selectedIds.size > 0 ? 'odabrano ' + selectedIds.size : 'svih ' + filteredWorkers.length} radnika):`
+                                        : `Select which data to include in the Excel table (${selectedIds.size > 0 ? selectedIds.size + ' workers selected' : 'all ' + filteredWorkers.length + ' workers'}):`}
                                 </p>
                                 <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
                                     <button className="btn btn-outline btn-sm" onClick={() => {
@@ -1506,19 +1506,21 @@ function WorkersPageInner() {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px 16px', background: 'var(--bg-card)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                                     {[
-                                        { key: 'ime', label: 'Ime' }, { key: 'prezime', label: 'Prezime' },
+                                        { key: 'ime', label: 'Ime' }, { key: 'prezime', label: 'Prezime' }, { key: 'imeRoditelja', label: 'Ime roditelja' },
                                         { key: 'jmbg', label: 'JMBG' }, { key: 'oib', label: 'OIB' },
                                         { key: 'evidencijskiBroj', label: 'Evid. br.' },
-                                        { key: 'datumRodenja', label: 'Datum rođenja' }, { key: 'spol', label: 'Spol' },
-                                        { key: 'zivotnaDob', label: 'Životna dob' },
+                                        { key: 'datumRodenja', label: 'Datum rođenja' }, { key: 'miestoRodenja', label: 'Mjesto rođenja' },
+                                        { key: 'spol', label: 'Spol' }, { key: 'zivotnaDob', label: 'Životna dob' },
                                         { key: 'orgJedinicaId', label: 'Organizacijska jed.' }, { key: 'radnoMjestoId', label: 'Radno mjesto' },
                                         { key: 'lokacija', label: 'Lokacija' },
                                         { key: 'datumZaposlenja', label: 'Datum zapošlj.' }, { key: 'stazDoDolaska', label: 'Staž do dolaska' },
-                                        { key: 'ukupniStaz', label: 'Ukupni staž' },
+                                        { key: 'datumOdlaska', label: 'Datum odlaska' }, { key: 'ukupniStaz', label: 'Ukupni staž' },
+                                        { key: 'koef', label: 'Koeficijent' },
                                         { key: 'ulica', label: 'Ulica' }, { key: 'kucniBroj', label: 'Kućni broj' },
                                         { key: 'mjestoId', label: 'Mjesto' }, { key: 'opcina', label: 'Općina' },
                                         { key: 'telefonTvrtki', label: 'Tel (Firma)' }, { key: 'mobitel', label: 'Mobitel' },
-                                        { key: 'email', label: 'Email' }, { key: 'aktivan', label: 'Status (Aktivan)' },
+                                        { key: 'email', label: 'Email' }, { key: 'napomena', label: 'Napomena' },
+                                        { key: 'vanjskiSuradnik', label: 'Vanjski saradnik' }, { key: 'aktivan', label: 'Status (Aktivan)' },
                                         { key: 'uvjerenja', label: 'Uvjerenja ZNR..' }, { key: 'ljekarski', label: 'Ljekarski pregledi' },
                                         { key: 'ozo', label: 'Zadužena OZO' }
                                     ].map(col => (
@@ -1532,24 +1534,28 @@ function WorkersPageInner() {
                             <div className="modal-footer">
                                 <button className="btn btn-ghost" onClick={() => setShowExportModal(false)}>{t('cancel')}</button>
                                 <button className="btn btn-primary" style={{ background: '#107c41', color: 'white', borderColor: '#107c41' }} onClick={() => {
-                                    const selectedWorkers = workers.filter(w => selectedIds.has(w.id));
+                                    const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
                                     const allPpeList = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
                                     const dataRows = selectedWorkers.map(w => {
                                         const row = {};
                                         if (exportColumns.ime) row['Ime'] = w.ime;
                                         if (exportColumns.prezime) row['Prezime'] = w.prezime;
+                                        if (exportColumns.imeRoditelja) row['Ime roditelja'] = w.imeRoditelja;
                                         if (exportColumns.jmbg) row['JMBG'] = w.jmbg;
                                         if (exportColumns.oib) row['OIB/Osobni br.'] = w.oib;
                                         if (exportColumns.evidencijskiBroj) row['Evidencijski broj'] = w.evidencijskiBroj;
                                         if (exportColumns.datumRodenja) row['Datum rođenja'] = w.datumRodenja ? formatDate(w.datumRodenja) : '';
+                                        if (exportColumns.miestoRodenja) row['Mjesto rođenja'] = w.miestoRodenja || w.miestoRodenja_;
                                         if (exportColumns.spol) row['Spol'] = w.spol;
                                         if (exportColumns.zivotnaDob) row['Životna dob'] = w.zivotnaDob;
                                         if (exportColumns.orgJedinicaId) row['Organizacijska jedinica'] = getOrgUnitName(w.orgJedinicaId);
                                         if (exportColumns.radnoMjestoId) row['Radno mjesto'] = getWorkplaceName(w.radnoMjestoId);
                                         if (exportColumns.lokacija) row['Lokacija'] = w.lokacija;
                                         if (exportColumns.datumZaposlenja) row['Datum zaposlenja'] = w.datumZaposlenja ? formatDate(w.datumZaposlenja) : '';
+                                        if (exportColumns.datumOdlaska) row['Datum odlaska'] = w.datumOdlaska ? formatDate(w.datumOdlaska) : '';
                                         if (exportColumns.stazDoDolaska) row['Staž do dolaska'] = w.stazDoDolaska;
                                         if (exportColumns.ukupniStaz) row['Ukupni radni staž'] = w.ukupniStaz;
+                                        if (exportColumns.koef) row['Koeficijent'] = w.koef;
                                         if (exportColumns.ulica) row['Ulica'] = w.ulica;
                                         if (exportColumns.kucniBroj) row['Kućni broj'] = w.kucniBroj;
                                         if (exportColumns.mjestoId) row['Mjesto'] = places.find(p => p.id === w.mjestoId)?.naziv || '';
@@ -1557,6 +1563,8 @@ function WorkersPageInner() {
                                         if (exportColumns.telefonTvrtki) row['Telefon (Firma)'] = w.telefonTvrtki;
                                         if (exportColumns.mobitel) row['Mobitel'] = w.mobitel;
                                         if (exportColumns.email) row['Email'] = w.email;
+                                        if (exportColumns.napomena) row['Napomena'] = w.napomena;
+                                        if (exportColumns.vanjskiSuradnik) row['Vanjski saradnik'] = w.vanjskiSuradnik ? 'DA' : 'NE';
                                         if (exportColumns.aktivan) row['Status'] = w.aktivan ? 'Aktivan' : 'Bivši radnik';
 
                                         if (exportColumns.uvjerenja) {
@@ -1598,6 +1606,9 @@ function WorkersPageInner() {
                             <button className="btn btn-primary btn-sm" onClick={handleNew}>
                                 + {t('add')}
                             </button>
+                            <button className="btn btn-sm" style={{ background: '#107c41', color: 'white', border: 'none', height: 38 }} onClick={() => setShowExportModal(true)}>
+                                📊 {lang === 'bs' ? 'Excel Export' : 'Excel Export'}
+                            </button>
                             <PDFExportButton options={[
                                 { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport([], lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport([...selectedIds], lang) }] : []),
@@ -1622,11 +1633,9 @@ function WorkersPageInner() {
                                         <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
                                             {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
                                         </span>
-                                        <button className="btn btn-sm" style={{ background: '#107c41', color: 'white', border: 'none' }} onClick={() => setShowExportModal(true)}>
-                                            📊 Excel
-                                        </button>
+                                        
                                         <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none' }} onClick={() => {
-                                            const selectedWorkers = workers.filter(w => selectedIds.has(w.id));
+                                            const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
                                             const emails = selectedWorkers.map(w => w.email).filter(Boolean);
                                             if (emails.length === 0) {
                                                 alert(lang === 'bs' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
