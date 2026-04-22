@@ -106,7 +106,7 @@ function EquipmentPageInner() {
         if (found) {
             openItemHandledRef.current = true;
             handleEdit(found, openTab || 'servis'); // default to servis tab when from calendar or qr
-            // Strip from URL so it doesn't re-trigger on reload
+            // Strip from URL so it doesn't re-trigger on reload
             window.history.replaceState({}, '', window.location.pathname);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -115,7 +115,8 @@ function EquipmentPageInner() {
     const filtered = items.filter(eq => {
         const matchSearch = !searchTerm || eq.naziv.toLowerCase().includes(searchTerm.toLowerCase());
         const matchStatus = showOutOfUse ? !!eq.izvanUpotrebeOd : !eq.izvanUpotrebeOd;
-        return matchSearch && matchStatus;
+        const matchOrgUnit = !filterOrgUnit || eq.orgJedinicaId === filterOrgUnit || eq.orgJedinica === filterOrgUnit;
+        return matchSearch && matchStatus && matchOrgUnit;
     });
 
     const equipmentTypes = getAll(COLLECTIONS.EQUIPMENT_TYPES);
@@ -666,8 +667,8 @@ function EquipmentPageInner() {
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
                         </div>
-                        <select className="form-select" style={{ height: 38, width: 220, fontSize: '0.85rem' }} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
-                            <option value="">Svi odjeli (Sektori)</option>
+                        <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 260, flex: 1, maxWidth: '100%', fontSize: '0.85rem' }} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
+                            <option value="">{lang === 'bs' ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
                             {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                         </select>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>

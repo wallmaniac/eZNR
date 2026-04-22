@@ -269,7 +269,7 @@ export default function OrgUnitsPage() {
                                     <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} placeholder={t('mandatory')} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Skraćeni naziv' : 'Short name'}</label>
+                                    <label className="form-label">{lang === 'bs' ? 'Skraćeni naziv (opcionalno)' : 'Short name (optional)'}</label>
                                     <input className="form-input" value={formData.skraceniNaziv} onChange={e => updateField('skraceniNaziv', e.target.value)} />
                                 </div>
                                 <div className="form-group">

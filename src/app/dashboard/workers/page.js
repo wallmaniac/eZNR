@@ -298,6 +298,127 @@ function WorkersPageInner() {
     // ── Zia agent: auto-open new worker form with pre-filled name ─────────────
     useEffect(() => {
         if (searchParams?.get('zia_new') !== '1') return;
+            window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+        setPlaces(getAll(COLLECTIONS.PLACES));
+    }, []);
+
+    useEffect(() => {
+        loadData();
+        window.addEventListener('eznr:data-synced', loadData);
+        return () => window.removeEventListener('eznr:data-synced', loadData);
+    }, [loadData]);
+
+    // ── Auto-calculate Ukupni staž ──────────────────────────────────────────
+    useEffect(() => {
+        const { stazDoDolaska, datumZaposlenja, datumOdlaska } = formData;
+        if (!datumZaposlenja) return;
+
+        // Parse stazDoDolaska (formats: '5g2mj4d', '050204', '5 2 4')
+        let pg = 0, pm = 0, pd = 0;
+        if (stazDoDolaska) {
+            const m1 = stazDoDolaska.match(/(\d+)g(\d+)mj(\d+)d/i);
+            if (m1) { pg = +m1[1]; pm = +m1[2]; pd = +m1[3]; }
+            else {
+                const m2 = stazDoDolaska.match(/^(\d{2})(\d{2})(\d{2})$/);
+                if (m2) { pg = +m2[1]; pm = +m2[2]; pd = +m2[3]; }
+            }
+        }
+
+        const start = new Date(datumZaposlenja);
+        const end = datumOdlaska ? new Date(datumOdlaska) : new Date();
+        if (isNaN(start) || isNaN(end) || end < start) return;
+
+        let yy = end.getFullYear() - start.getFullYear();
+        let mm = end.getMonth() - start.getMonth();
+        let dd = end.getDate() - start.getDate();
+        if (dd < 0) { mm--; dd += 30; }
+        if (mm < 0) { yy--; mm += 12; }
+
+        // Add prior experience
+        dd += pd; if (dd >= 30) { mm++; dd -= 30; }
+        mm += pm; if (mm >= 12) { yy++; mm -= 12; }
+        yy += pg;
+
+        const result = `${yy}g${mm}mj${dd}d`;
+        setFormData(prev => ({ ...prev, ukupniStaz: result }));
+    }, [formData.stazDoDolaska, formData.datumZaposlenja, formData.datumOdlaska]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-calculate Zivotna dob from Datum rodenja
+    useEffect(() => {
+        if (!formData.datumRodenja) return;
+        const birth = new Date(formData.datumRodenja);
+        if (isNaN(birth)) return;
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const mth = today.getMonth() - birth.getMonth();
+        if (mth < 0 || (mth === 0 && today.getDate() < birth.getDate())) age--;
+        setFormData(prev => ({ ...prev, zivotnaDob: age }));
+    }, [formData.datumRodenja]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
+            // Cert menu: skip if clicking the button that opened it (its onClick will toggle)
+            if (certOpenBtnRef.current && certOpenBtnRef.current.contains(e.target)) return;
+            if (certMenuRef.current && !certMenuRef.current.contains(e.target)) {
+                setCertMenuId(null);
+                certMenuIdRef.current = null;
+                certOpenBtnRef.current = null;
+            }
+            if (groupMenuRef.current && !groupMenuRef.current.contains(e.target)) {
+                setGroupMenuOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClick);
+        return () => document.removeEventListener('mousedown', handleClick);
+    }, []);
+
+    // Auto-open from WorkerProfileModal "Otvori potpuno" or cert-return via ?openWorker=ID
+    useEffect(() => {
+        if (workers.length === 0) return;
+        const openId = searchParams?.get('openWorker');
+        if (!openId) return;
+        // Only skip if we already handled THIS exact ID (prevents refiring on loadData rerenders)
+        if (openWorkerHandledRef.current === openId) return;
+        const found = workers.find(x => x.id === openId);
+        if (found) {
+            openWorkerHandledRef.current = openId;
+            openedViaUrlRef.current = true; // remember we came via URL — back/save must navigate
+            handleEdit(found);
+            markClean();
+            isDirtyRef.current = false;
+            const section = searchParams?.get('section');
+            if (section === 'ozo') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
+                    ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'uvjerenja') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, uvjerenja: true }));
+                    uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'medExams' || section === 'zdravstvo') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, medExams: true, uvjerenja: false }));
+                    medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'dokumenti') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false }));
+                    dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            }
+            // Strip the param from the URL immediately so this effect never re-fires
+            // Use replaceState instead of router.replace to preserve back-navigation history
+            window.history.replaceState(null, '', '/dashboard/workers');
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [workers, searchParams]);
+
+    // ── Zia agent: auto-open new worker form with pre-filled name ─────────────
+    useEffect(() => {
+        if (searchParams?.get('zia_new') !== '1') return;
         const ime = searchParams.get('ime') || '';
         const prezime = searchParams.get('prezime') || '';
         setFormData({ ...emptyWorker, ime, prezime });
@@ -314,7 +435,8 @@ function WorkersPageInner() {
             searchTerm
         );
         const matchStatus = showFormer ? !w.aktivan : w.aktivan;
-        return matchSearch && matchStatus;
+        const matchOrgUnit = !filterOrgUnit || w.orgJedinicaId === filterOrgUnit || w.orgJedinica === filterOrgUnit;
+        return matchSearch && matchStatus && matchOrgUnit;
     });
 
     const { sorted: sortedWorkers, toggleSort: tW, sortIcon: siW, thStyle: tsW } = useSortedList(filteredWorkers, 'prezime');
@@ -530,7 +652,7 @@ function WorkersPageInner() {
                     <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
                     <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
                         <Icon3D name="Radnici.png" size={64} />
-                        {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
+                        {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'ni' ? 'Novi radnik' : 'New Worker')}
                     </h1>
                 </div>
                 <DialogRenderer />
@@ -883,7 +1005,7 @@ function WorkersPageInner() {
                                                                             setCertMenuId(null);
                                                                             const wk = getAll(COLLECTIONS.WORKERS).find(x => x.id === editingWorker);
                                                                             if (!wk) return;
-                                                                            const wps = getAll(COLLECTIONS.WORKPLACES);
+                                                                            const wps = getAll(COLLECTIONS.ORG_UNITS);
                                                                             const wpN = wps.find(wp => wp.id === wk.radnoMjestoId)?.naziv || c.izdanoZaRadnoMjesto || '';
                                                                             const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
                                                                             printZosPdf({ company: companyFull, worker: wk, workplaceName: wpN, training: { naziv: c.izdanoIzObuke || c.ime }, officer: c.strucnjakZNR || c.upisao || '', date: c.datum || new Date().toISOString(), certOznaka: c.oznaka, testResult: c.rezultatTesta || '' });
@@ -1608,6 +1730,15 @@ function WorkersPageInner() {
                             <button className="btn btn-primary btn-sm" onClick={handleNew}>
                                 + {t('add')}
                             </button>
+                            <select
+                                className="form-select"
+                                style={{ height: 38, padding: '0 12px', minWidth: 260, flex: 1, maxWidth: '100%', fontSize: '0.85rem' }}
+                                value={filterOrgUnit}
+                                onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
+                            >
+                                <option value="">{lang === 'bs' ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
+                                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                            </select>
                             <PDFExportButton
                                 label={lang === 'bs' ? '📊 Excel Export' : '📊 Excel Export'}
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
@@ -1616,29 +1747,9 @@ function WorkersPageInner() {
                                     ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
                                 ]}
                             />
-                            <PDFExportButton options={[
-                                { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport([], lang) },
-                                ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport([...selectedIds], lang) }] : []),
-                                { label: lang === 'bs' ? 'Pregled uvjerenja' : 'Certificate report', icon: '📋', onClick: () => generateCertificatesReport([], lang) },
-                            ]} />
-                            <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
-                                <input
-                                    placeholder={t('searchBtn') + '...'}
-                                    value={searchTerm}
-                                    onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
-                                />
-                                <button className="btn btn-ghost btn-sm" onClick={() => setPage(1)}>{t('searchBtn')}</button>
-                            </div>
-                            <select 
-                                className="form-select" 
-                                style={{ height: 38, width: 220, fontSize: '0.85rem' }}
-                                value={filterOrgUnit}
-                                onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
-                            >
-                                <option value="">Svi odjeli (Sektori)</option>
-                                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                            </select>
+
+
+
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer' }}>
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}
