@@ -6,8 +6,11 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { uploadSecureFile } from '@/lib/storageService';
 import { getCompanyBranding } from '@/lib/brandingService';
 
-export default function PublicObservationForm({ params }) {
-    const { companyId } = params;
+import { useParams } from 'next/navigation';
+
+export default function PublicObservationForm() {
+    const params = useParams();
+    const companyId = params?.companyId;
     const { lang } = useLanguage();
     
     const [submitting, setSubmitting] = useState(false);
@@ -96,15 +99,18 @@ export default function PublicObservationForm({ params }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setErrorMsg('');
-        if (!formData.opis.trim() || !formData.lokacija.trim() || !imageFile) {
-            setErrorMsg(lang === 'bs' ? 'Popunite opis, lokaciju i obavezno uslikajte problem.' : 'Description, location and photo are mandatory.');
+        if (!formData.opis.trim() || !formData.lokacija.trim()) {
+            setErrorMsg(lang === 'bs' ? 'Popunite obavezna polja: Kratki opis i Tačna lokacija.' : 'Description and location are mandatory.');
             return;
         }
 
         setSubmitting(true);
         try {
-            // 1. Upload File to Firebase Storage
-            const uploaded = await uploadSecureFile(companyId, 'safety_observations', imageFile);
+            // 1. Upload File to Firebase Storage (Only if file is selected)
+            let uploaded = null;
+            if (imageFile) {
+                uploaded = await uploadSecureFile(companyId, 'safety_observations', imageFile);
+            }
 
             // 2. Save to Firestore via Firebase Proxy to bypass Client Security Rules
             try {
@@ -119,7 +125,7 @@ export default function PublicObservationForm({ params }) {
                                 opis: formData.opis,
                                 lokacija: formData.lokacija,
                                 ime: formData.ime || 'Anonimno',
-                                slika: uploaded,
+                                ...(uploaded ? { slika: uploaded } : {}),
                                 status: 'Novo',
                                 datum: new Date().toISOString(),
                             }
@@ -163,7 +169,7 @@ export default function PublicObservationForm({ params }) {
                             location: formData.lokacija,
                             description: formData.opis,
                             reporterName: formData.ime || 'Anonimno',
-                            imageLink: uploaded.url,
+                            imageLink: uploaded ? uploaded.url : null,
                             dashboardLink: window.location.origin + '/dashboard/observations'
                         }
                     })
@@ -251,7 +257,7 @@ export default function PublicObservationForm({ params }) {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Fotografija *' : 'Photo *'}</label>
+                            <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
                             <div 
                                 onClick={() => fileInputRef.current?.click()}
                                 style={{ 
@@ -269,7 +275,7 @@ export default function PublicObservationForm({ params }) {
                                 ) : (
                                     <div>
                                         <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
-                                        <div style={{ color: 'var(--primary)', fontWeight: 600 }}>{lang === 'bs' ? 'Klikni da slikaš' : 'Tap to take a photo'}</div>
+                                        <div style={{ color: 'var(--primary)', fontWeight: 600 }}>{lang === 'bs' ? 'Dodaj sliku sa kamere ili iz galerije' : 'Add photo from camera or gallery'}</div>
                                     </div>
                                 )}
                             </div>
@@ -280,7 +286,7 @@ export default function PublicObservationForm({ params }) {
                             )}
                             <input 
                                 type="file" 
-                                accept="image/*" 
+                                accept="image/png, image/jpeg, image/jpg, image/webp"
                                  
                                 ref={fileInputRef} 
                                 style={{ display: 'none' }} 
