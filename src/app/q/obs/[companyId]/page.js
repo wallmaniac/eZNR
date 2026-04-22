@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { uploadSecureFile } from '@/lib/storageService';
 import { getCompanyBranding } from '@/lib/brandingService';
 
@@ -32,10 +32,20 @@ export default function PublicObservationForm() {
     
     useEffect(() => {
         const fetchBrand = async () => {
+            if (!companyId || companyId === 'all') return;
             try {
-                const b = await getCompanyBranding(companyId);
-                if (b) setCompanyInfo({ name: b.skraceniNaziv || b.naziv || 'Kompanija', logo: b.logo });
-            } catch(e) {}
+                const docRef = doc(db, 'companies', companyId);
+                const docSnap = await getDoc(docRef);
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    setCompanyInfo({ 
+                        name: data.skraceniNaziv || data.naziv || 'Kompanija', 
+                        logo: data.logo || data.branding?.logo || '' 
+                    });
+                }
+            } catch(e) {
+                console.error("Failed fetching company brand:", e);
+            }
         };
         fetchBrand();
     }, [companyId]);
@@ -182,7 +192,7 @@ export default function PublicObservationForm() {
                             description: formData.opis,
                             reporterName: formData.ime || 'Anonimno',
                             imageLink: proxyDbData?.payload?.slika?.url || null,
-                            dashboardLink: window.location.origin + '/dashboard/observations' + (proxyDbData?.id ? '?id=' + proxyDbData.id : '')
+                            dashboardLink: window.location.origin + '/dashboard/observations' + (proxyDbData?.id ? `?id=${proxyDbData.id}&c=${companyId}` : `?c=${companyId}`)
                         }
                     })
                 });

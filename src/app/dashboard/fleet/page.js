@@ -101,11 +101,18 @@ function FleetInner() {
     // Track return-to path for navigation back to originating page
     const returnTo = searchParams?.get('returnTo');
 
+    // Safely capture initial deep link
+    const [deepLinkId] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return new URLSearchParams(window.location.search).get('openId');
+        }
+        return null;
+    });
+
     useEffect(() => {
-        const openId = searchParams?.get('openId');
-        const openTab = searchParams?.get('tab');
-        if (openId && vehicles.length > 0 && !showForm) {
-            const rec = vehicles.find(v => v.id === openId);
+        if (deepLinkId && vehicles.length > 0 && !showForm) {
+            const openTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
+            const rec = vehicles.find(v => v.id === deepLinkId);
             if (rec) {
                 setEditingId(rec.id);
                 setActiveTab(openTab || 'osnovno');
@@ -114,7 +121,7 @@ function FleetInner() {
                 setShowForm(true);
             }
         }
-    }, [searchParams, vehicles]);
+    }, [deepLinkId, vehicles, showForm]);
 
     const closeForm = () => {
         setShowForm(false);

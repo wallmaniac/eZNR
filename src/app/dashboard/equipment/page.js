@@ -87,24 +87,29 @@ function EquipmentPageInner() {
         setServiceLogs(all.filter(l => l.equipmentId === equipmentId).sort((a, b) => new Date(b.datum) - new Date(a.datum)));
     }, []);
 
-    // Auto-open item from URL param (calendar event click)
+    const [deepLinkId] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return new URLSearchParams(window.location.search).get('openItem');
+        }
+        return null;
+    });
+
+    // Auto-open item from URL param (calendar event click or QR code)
     useEffect(() => {
-        if (openItemHandledRef.current) return;
-        if (items.length === 0) return;
-        const openId = searchParams?.get('openItem');
-        const retParam = searchParams?.get('returnTo');
+        if (openItemHandledRef.current || !deepLinkId || items.length === 0) return;
+        const retParam = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('returnTo') : null;
         if (retParam) setReturnPath(retParam);
-        const openTab = searchParams?.get('tab'); // e.g. ?tab=servis
-        if (openId) {
-            const found = items.find(x => x.id === openId);
-            if (found) {
-                openItemHandledRef.current = true;
-                handleEdit(found, openTab || 'servis'); // default to servis tab when from calendar
-                router.replace('/dashboard/equipment', { scroll: false });
-            }
+        const openTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null; // e.g. ?tab=servis
+        
+        const found = items.find(x => x.id === deepLinkId);
+        if (found) {
+            openItemHandledRef.current = true;
+            handleEdit(found, openTab || 'servis'); // default to servis tab when from calendar or qr
+            // Strip from URL so it doesn't re-trigger on reload
+            window.history.replaceState({}, '', window.location.pathname);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [items, searchParams]);
+    }, [items, deepLinkId]);
 
     const filtered = items.filter(eq => {
         const matchSearch = !searchTerm || eq.naziv.toLowerCase().includes(searchTerm.toLowerCase());

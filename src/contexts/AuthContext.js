@@ -52,8 +52,12 @@ export function AuthProvider({ children }) {
                         setUser(profile);
                         setIsAuthenticated(true);
 
-                        // Restore active company from localStorage or use first company
-                        const savedCompany = localStorage.getItem('eznr_activeCompany');
+                        // Check if URL forces a company switch (deep link / QR code)
+                        const qs = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+                        const urlTarget = qs ? (qs.get('_qrc') || qs.get('c')) : null;
+
+                        // Restore active company from URL, then localStorage, or use first company
+                        const savedCompany = urlTarget || localStorage.getItem('eznr_activeCompany');
                         let companyId = null;
 
                         if (profile.role === ROLES.SUPER_ADMIN) {

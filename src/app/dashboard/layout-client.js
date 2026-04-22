@@ -14,7 +14,7 @@ import GlobalLongPress from '@/components/mobile/GlobalLongPress';
 import GlobalSwipeNav from '@/components/mobile/GlobalSwipeNav';
 
 export default function DashboardLayout({ children }) {
-    const { isAuthenticated, loading } = useAuth();
+    const { isAuthenticated, loading, activeCompanyId, switchCompany } = useAuth();
     const router = useRouter();
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mounted, setMounted] = useState(false);
@@ -57,6 +57,24 @@ export default function DashboardLayout({ children }) {
         window.addEventListener('eznr:undo', handleUndo);
         return () => window.removeEventListener('eznr:undo', handleUndo);
     }, []);
+
+    // ── Global auto-company switcher (for Deep links / QR codes) ──
+    useEffect(() => {
+        if (!isAuthenticated || loading || typeof window === 'undefined') return;
+        const qs = new URLSearchParams(window.location.search);
+        const target = qs.get('_qrc') || qs.get('c');
+        if (target) {
+            // Remove the param so we don't loop
+            qs.delete('_qrc');
+            qs.delete('c');
+            const newUrl = window.location.pathname + (qs.toString() ? '?' + qs.toString() : '');
+            window.history.replaceState({}, '', newUrl);
+            
+            if (target !== activeCompanyId) {
+                switchCompany(target).catch(console.error);
+            }
+        }
+    }, [isAuthenticated, loading, activeCompanyId, switchCompany]);
 
     useEffect(() => {
         setMounted(true);

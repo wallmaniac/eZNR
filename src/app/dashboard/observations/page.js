@@ -20,6 +20,10 @@ export default function ObservationsPage() {
     // View Modal
     const [viewingItem, setViewingItem] = useState(null);
     const [showQR, setShowQR] = useState(false);
+    
+    // Status Dropdown State
+    const [statusDropdownId, setStatusDropdownId] = useState(null);
+    const [statusMenuPos, setStatusMenuPos] = useState({ top: 0, left: 0 });
 
     const loadData = useCallback(() => {
         const obs = getAll(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations');
@@ -81,10 +85,22 @@ export default function ObservationsPage() {
         }
     };
 
+    const STATUS_MAP = {
+        'Novo': { label: lang === 'bs' ? 'Novo' : 'New', color: '#EF4444', bg: 'rgba(239,68,68,0.1)' },
+        'U obradi': { label: lang === 'bs' ? 'U obradi' : 'In Progress', color: '#F59E0B', bg: 'rgba(245,158,11,0.1)' },
+        'Riješeno': { label: lang === 'bs' ? 'Riješeno' : 'Resolved', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' },
+    };
+
     const getStatusBadge = (status) => {
-        if (status === 'Riješeno') return <span className="badge badge-success">Riješeno</span>;
-        if (status === 'U obradi') return <span className="badge badge-warning">U obradi</span>;
-        return <span className="badge badge-danger">Novo</span>;
+        const s = STATUS_MAP[status] || STATUS_MAP['Novo'];
+        return (
+            <span style={{
+                background: s.bg, color: s.color, border: `1px solid ${s.color}40`,
+                padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600
+            }}>
+                {s.label}
+            </span>
+        );
     };
 
     return (
@@ -154,20 +170,43 @@ export default function ObservationsPage() {
                                     <td style={{ fontWeight: 600 }}>{item.lokacija}</td>
                                     <td>{item.opis}</td>
                                     <td>{item.ime}</td>
-                                    <td style={{ textAlign: 'center' }}>
-                                        <select 
-                                            value={item.status || 'Novo'} 
-                                            onChange={e => handleStatusChange(item, e.target.value)}
-                                            style={{
-                                                fontSize: '0.75rem', fontWeight: 700, padding: '4px 8px',
-                                                borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-primary)',
-                                                border: '1px solid var(--border)', outline: 'none', cursor: 'pointer'
-                                            }}
-                                        >
-                                            <option value="Novo">Novo</option>
-                                            <option value="U obradi">U obradi</option>
-                                            <option value="Riješeno">Riješeno</option>
-                                        </select>
+                                    <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center', position: 'relative' }}>
+                                        {(() => {
+                                            const st = STATUS_MAP[item.status] || STATUS_MAP['Novo'];
+                                            return (
+                                                <button onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    if (statusDropdownId === item.id) { setStatusDropdownId(null); return; }
+                                                    const rect = e.currentTarget.getBoundingClientRect();
+                                                    const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                    const flipUp = spaceBelow < 120;
+                                                    setStatusMenuPos(flipUp
+                                                        ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 20 }
+                                                        : { top: rect.bottom + 4, left: rect.left - 20 });
+                                                    setStatusDropdownId(item.id);
+                                                }}
+                                                    style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.color}33`, cursor: 'pointer', transition: 'all 0.15s', minWidth: 90 }}
+                                                    onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.transform = 'scale(1.05)'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
+                                                    title={lang === 'bs' ? 'Kliknite za izmjenu' : 'Click to edit'}
+                                                >{st.label} ▾</button>
+                                            );
+                                        })()}
+                                        {statusDropdownId === item.id && (<>
+                                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setStatusDropdownId(null); }} />
+                                            <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 140, padding: '4px 0' }}>
+                                                {Object.entries(STATUS_MAP).map(([key, s]) => (
+                                                    <button key={key} onClick={(e) => { e.stopPropagation(); handleStatusChange(item, key); setStatusDropdownId(null); loadData(); }}
+                                                        style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: item.status === key ? s.bg : 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.82rem', fontWeight: item.status === key ? 700 : 500, color: item.status === key ? s.color : 'var(--text)', textAlign: 'left', transition: 'background 0.12s' }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = s.bg}
+                                                        onMouseLeave={e => e.currentTarget.style.background = item.status === key ? s.bg : 'none'}>
+                                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+                                                        {s.label}
+                                                        {item.status === key && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>)}
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
                                         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6 }}>
