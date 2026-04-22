@@ -548,10 +548,13 @@ async function handleSendEmail(data) {
         subjectPrefix = isTraining ? '🎬 Obuka' : '📝 Upitnik';
     }
 
+    // Support multiple comma-separated emails
+    const toArray = toEmail.split(',').map(e => e.trim()).filter(Boolean);
+
     const { error } = await resend.emails.send({
         from: `${senderDisplay} <${FROM}>`,
-        to: [toEmail],
-        subject: isHazard ? `🚨 Prijava Opasnosti: ${location || companyName}` : `${subjectPrefix}: ${questionnaireName}`,
+        to: toArray,
+        subject: isHazard ? `🚨 Prijava Opasnosti: ${location || finalCompanyName}` : `${subjectPrefix}: ${questionnaireName}`,
         html,
     });
     if (error) throw new Error(error.message || 'Resend API error');

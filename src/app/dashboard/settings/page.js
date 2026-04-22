@@ -1464,13 +1464,13 @@ export default function SettingsPage() {
                             </div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
                                 {lang === 'bs' 
-                                    ? 'Ovo je email adresa na koju se šalju trenutačni alarmi čim neko skenira javni QR kod i prijavi opasnu situaciju.' 
-                                    : 'Immediate alerts will be sent here as soon as someone scans the public QR code and reports a hazard.'}
+                                    ? 'Ovo je email adresa na koju se šalju trenutačni alarmi čim neko skenira javni QR kod i prijavi opasnu situaciju. Možete unijeti više emailova odvojenih zarezom (,).' 
+                                    : 'Immediate alerts will be sent here as soon as someone scans the public QR code and reports a hazard. You can enter multiple emails separated by commas (,).'}
                             </div>
                             <input 
                                 className="form-input" 
-                                style={{ maxWidth: 300, background: 'var(--bg-page)', borderColor: 'var(--danger)', borderWidth: 1 }}
-                                placeholder={lang === 'bs' ? 'Npr. sigurnost@firma.ba' : 'E.g. safety@company.com'}
+                                style={{ maxWidth: 500, background: 'var(--bg-page)', borderColor: 'var(--danger)', borderWidth: 1 }}
+                                placeholder={lang === 'bs' ? 'Npr. sigurnost@firma.ba, direktor@firma.ba' : 'E.g. safety@company.com, ceo@company.com'}
                                 value={notifSettings.obsNotifEmail || ''} 
                                 onChange={e => updateNotif('obsNotifEmail', e.target.value)} 
                             />
