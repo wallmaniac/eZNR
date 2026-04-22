@@ -99,7 +99,30 @@ export default function AdminCompaniesPage() {
         reader.readAsDataURL(file);
     };
 
-    const getUsersForCompany = (compId) => users.filter(u => (u.companyIds || []).includes(compId));
+    const getUsersForCompany = (compId) => {
+        const c = companies.find(comp => comp.id === compId);
+        return users.filter(u => {
+            if ((u.companyIds || []).includes(compId)) return true;
+            if (c && c.parentId && (u.companyIds || []).includes(c.parentId)) return true;
+            return false;
+        });
+    };
+
+    const toggleOfficerAssignment = (officerId) => {
+        if (!editCompany) return;
+        const officer = users.find(u => u.id === officerId);
+        if (!officer) return;
+        const assigned = officer.companyIds || [];
+        const isAssigned = assigned.includes(editCompany.id);
+        const newIds = isAssigned 
+            ? assigned.filter(id => id !== editCompany.id)
+            : [...assigned, editCompany.id];
+            
+        update(COLLECTIONS.USERS, officer.id, { companyIds: newIds });
+        refreshData();
+    };
+
+    const assignableUsers = users.filter(u => (u.role === 'officer' || u.role === 'admin') && u.aktivan !== false);
 
     if (!isAdmin) return null;
 
@@ -133,12 +156,17 @@ export default function AdminCompaniesPage() {
                                             <img src={c.logo} alt="Logo" style={{ height: 36, width: 36, objectFit: 'contain', borderRadius: 6, background: '#fff', padding: 2, border: '1px solid var(--border-light)', flexShrink: 0 }} />
                                         )}
                                         <div style={{ minWidth: 0 }}>
-                                            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '0.95rem', fontWeight: 700, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            <h3 style={{ fontFamily: 'var(--font-heading)', fontSize: '0.95rem', fontWeight: 700, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>
                                                 {!c.logo && '🏢 '}{c.naziv}
+                                                {companies.some(sub => sub.parentId === c.id) && <span style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, background: 'rgba(0,191,166,0.1)', color: 'var(--primary)', fontWeight: 800 }}>HOLDING</span>}
                                             </h3>
                                             {c.skraceniNaziv && c.skraceniNaziv !== c.naziv && (
-                                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{c.skraceniNaziv}</span>
+                                                <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block' }}>{c.skraceniNaziv}</span>
                                             )}
+                                            {c.parentId && (() => {
+                                                const p = companies.find(comp => comp.id === c.parentId);
+                                                return p ? <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>🔗 {lang === 'bs' ? 'Dio Holdinga:' : 'Part of Holding:'} {p.naziv}</div> : null;
+                                            })()}
                                         </div>
                                     </div>
                                     <span style={{
@@ -165,15 +193,19 @@ export default function AdminCompaniesPage() {
                                         👥 {lang === 'bs' ? 'Korisnici' : 'Users'} ({companyUsers.length})
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                        {companyUsers.map(u => (
-                                            <span key={u.id} style={{
-                                                padding: '2px 8px', borderRadius: 8, fontSize: '0.7rem', fontWeight: 600,
-                                                background: u.role === 'admin' ? 'rgba(123,31,162,0.15)' : 'rgba(33,150,243,0.12)',
-                                                color: u.role === 'admin' ? '#7B1FA2' : 'var(--info)',
-                                            }}>
-                                                {u.role === 'admin' ? '👑' : '🛡️'} {u.firstName} {u.lastName}
-                                            </span>
-                                        ))}
+                                        {companyUsers.map(u => {
+                                            const isInherited = !(u.companyIds || []).includes(c.id);
+                                            return (
+                                                <span key={u.id} style={{
+                                                    padding: '2px 8px', borderRadius: 8, fontSize: '0.7rem', fontWeight: 600,
+                                                    background: isInherited ? 'rgba(0,191,166,0.1)' : (u.role === 'admin' ? 'rgba(123,31,162,0.15)' : 'rgba(33,150,243,0.12)'),
+                                                    color: isInherited ? 'var(--primary)' : (u.role === 'admin' ? '#7B1FA2' : 'var(--info)'),
+                                                    border: isInherited ? '1px dashed var(--primary)' : '1px solid transparent'
+                                                }}>
+                                                    {u.role === 'admin' ? '👑' : '🛡️'} {u.firstName} {u.lastName} {isInherited && '🔗'}
+                                                </span>
+                                            );
+                                        })}
                                         {companyUsers.length === 0 && <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>—</span>}
                                     </div>
                                 </div>
@@ -299,6 +331,44 @@ export default function AdminCompaniesPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {editCompany && assignableUsers.length > 0 && (
+                              <div style={{ marginTop: 20, padding: 14, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                                <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12 }}>👮 {lang === 'bs' ? 'Dodijeljeni korisnici (Admini i Stručnjaci)' : 'Assigned Users (Admins and Officers)'}</div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                                  {assignableUsers.map(officer => {
+                                    const isDirectlyAssigned = (officer.companyIds || []).includes(editCompany.id);
+                                    const isInherited = editCompany.parentId && (officer.companyIds || []).includes(editCompany.parentId);
+                                    const isAssigned = isDirectlyAssigned || isInherited;
+                                    return (
+                                      <button
+                                        key={officer.id}
+                                        type="button"
+                                        onClick={() => {
+                                            if (isInherited) return; // Cannot toggle inherited assignment directly here
+                                            toggleOfficerAssignment(officer.id);
+                                        }}
+                                        disabled={isInherited}
+                                        title={isInherited ? (lang === 'bs' ? 'Naslijeđen pristup preko holdinga' : 'Inherited access via holding') : ''}
+                                        style={{
+                                          display: 'flex', alignItems: 'center', gap: 6,
+                                          padding: '4px 10px', borderRadius: 20, cursor: isInherited ? 'default' : 'pointer',
+                                          border: `1px solid ${isAssigned ? 'var(--primary)' : 'var(--border)'}`,
+                                          background: isAssigned ? 'rgba(0,191,166,0.1)' : 'transparent',
+                                          color: isAssigned ? 'var(--primary)' : 'var(--text-muted)',
+                                          fontWeight: isAssigned ? 700 : 600, fontSize: '0.75rem',
+                                          transition: 'all 0.2s',
+                                          opacity: isInherited ? 0.75 : 1
+                                        }}
+                                      >
+                                        <span>{isInherited ? '🔗' : (isDirectlyAssigned ? '✅' : '➕')}</span>
+                                        {officer.firstName} {officer.lastName}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
 
                             {/* Aktivna firma */}
                             <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>

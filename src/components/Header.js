@@ -417,16 +417,27 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                         </div>
                                     )}
                                     <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
-                                        {filteredCompaniesForMenu.map(c => (
-                                            <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
-                                                <span>{c.id === activeCompanyId ? '✅' : '🏛️'}</span>
-                                                <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
-                                                    <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{c.naziv || c.skraceniNaziv}</div>
-                                                    {c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>}
-                                                </div>
-                                                {isSuperAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flexShrink: 0 }}>👁️</span>}
-                                            </button>
-                                        ))}
+                                        {filteredCompaniesForMenu.map(c => {
+                                            const parent = c.parentId ? companies.find(p => p.id === c.parentId) : null;
+                                            const isHolding = companies.some(sub => sub.parentId === c.id);
+                                            return (
+                                                <button key={c.id} className="dropdown-item" onClick={async () => { setShowCompanyMenu(false); await switchCompany(c.id); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
+                                                    <span>{c.id === activeCompanyId ? '✅' : (isHolding ? '🏢' : (parent ? '🔗' : '🏛️'))}</span>
+                                                    <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                                                        <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            {c.naziv || c.skraceniNaziv}
+                                                            {isHolding && <span style={{ fontSize: '0.6rem', padding: '1px 4px', borderRadius: 4, background: 'rgba(0,191,166,0.1)', color: 'var(--primary)', fontWeight: 800 }}>HOLDING</span>}
+                                                        </div>
+                                                        {parent ? (
+                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>↳ {lang === 'bs' ? 'Dio od' : 'Sub of'}: {parent.naziv || parent.skraceniNaziv}</div>
+                                                        ) : (
+                                                            c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>
+                                                        )}
+                                                    </div>
+                                                    {isSuperAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', flexShrink: 0 }}>👁️</span>}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Add new company - Available for all roles */}
