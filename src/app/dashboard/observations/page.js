@@ -34,6 +34,22 @@ export default function ObservationsPage() {
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
 
+    // Handle deep link to open specific hazard observation from Email
+    useEffect(() => {
+        if (items.length > 0 && !viewingItem) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hazardIdQuery = urlParams.get('id');
+            if (hazardIdQuery) {
+                const h = items.find(i => i.id === hazardIdQuery);
+                if (h) {
+                    setViewingItem(h);
+                    // Remove ?id= from URL so it doesn't persistently re-open on refresh
+                    window.history.replaceState({}, '', '/dashboard/observations');
+                }
+            }
+        }
+    }, [items, viewingItem]);
+
     const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(items, 'datum', 'desc');
 
     const handleStatusChange = async (item, novistatus) => {
@@ -139,7 +155,7 @@ export default function ObservationsPage() {
                                             onChange={e => handleStatusChange(item, e.target.value)}
                                             style={{
                                                 fontSize: '0.75rem', fontWeight: 700, padding: '4px 8px',
-                                                borderRadius: '3px', background: 'transparent', 
+                                                borderRadius: '3px', background: 'var(--bg-secondary)', color: 'var(--text-primary)',
                                                 border: '1px solid var(--border)', outline: 'none', cursor: 'pointer'
                                             }}
                                         >
@@ -203,17 +219,19 @@ export default function ObservationsPage() {
                     <div className="card animate-fadeIn" style={{ width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-page)' }}>
                         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
                             <div style={{ fontWeight: 700 }}>
-                                🚨 {viewingItem.lokacija} <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: 12 }}>{new Date(viewingItem.datum).toLocaleString()}</span>
+                                🚨 Prijava Opasnosti <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: 12 }}>{new Date(viewingItem.datum).toLocaleString()}</span>
                             </div>
                             <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setViewingItem(null)}>✕</button>
                         </div>
                         <div className="card-body" style={{ overflowY: 'auto', padding: 0 }}>
-                            <div style={{ padding: 20 }}>
-                                <div style={{ fontSize: '1.1rem', marginBottom: 16 }}>
+                            <div style={{ padding: 24 }}>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: 12, color: 'var(--text-primary)' }}>
                                     {viewingItem.opis}
                                 </div>
-                                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
-                                    Prijavio: <strong style={{ color: 'var(--text)' }}>{viewingItem.ime}</strong> | Status: {getStatusBadge(viewingItem.status)}
+                                <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                    <div>📍 <strong>Lokacija:</strong> {viewingItem.lokacija}</div>
+                                    <div>👤 <strong>Prijavio:</strong> <span style={{ color: 'var(--text)' }}>{viewingItem.ime || 'Anonimno'}</span></div>
+                                    <div>🏷️ <strong>Status:</strong> {getStatusBadge(viewingItem.status)}</div>
                                 </div>
                             </div>
                             <div style={{ background: '#000', textAlign: 'center', padding: 20 }}>

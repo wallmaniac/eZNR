@@ -181,7 +181,7 @@ export default function PublicObservationForm() {
                             description: formData.opis,
                             reporterName: formData.ime || 'Anonimno',
                             imageLink: proxyDbData?.payload?.slika?.url || null,
-                            dashboardLink: window.location.origin + '/dashboard/observations'
+                            dashboardLink: window.location.origin + '/dashboard/observations' + (proxyDbData?.id ? '?id=' + proxyDbData.id : '')
                         }
                     })
                 });
