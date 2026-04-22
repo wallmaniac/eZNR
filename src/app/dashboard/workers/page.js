@@ -176,6 +176,7 @@ function WorkersPageInner() {
             ...DEFAULT_CT.filter(n => !storedNames.includes(n.toLowerCase())).map(n => ({ id: `default_${n}`, naziv: n, oznaka: n })),
         ]);
         setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+            window.dispatchEvent(new CustomEvent('eznr:data-synced'));
         setPlaces(getAll(COLLECTIONS.PLACES));
     }, []);
 

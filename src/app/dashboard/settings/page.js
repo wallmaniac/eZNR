@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
-  getAll, getById, update, getRawAll, COLLECTIONS,
+  getAll, getById, update, getRawAll, COLLECTIONS, COMPANY_SCOPED,
 } from '@/lib/dataStore';
 import {
   getNotificationSettings, saveNotificationSettings, apiSaveNotifSettings,
