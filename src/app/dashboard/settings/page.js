@@ -384,7 +384,7 @@ export default function SettingsPage() {
         alert('MORA BITI ODABRANA KONKRETNA KOMPANIJA!');
         return;
     }
-    const pwd = prompt('Type "WIPE" to confirm deleting ALL DATA for ' + activeCompanyId);
+    const pwd = await prompt('Type "WIPE" to confirm deleting ALL DATA for ' + activeCompanyId);
     if(pwd !== 'WIPE') return;
 
     setWiping(true);
