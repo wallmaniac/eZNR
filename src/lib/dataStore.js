@@ -143,7 +143,7 @@ export const COMPANY_SCOPED = [
     'authorizedCompanies', 'examiners', 'personTypes', 'hazards', 'questionnaires',
     'trainings', 'annualReports', 'medicalExams', 'sistematizacije',
     'vehicles', 'vehicleAssignments', 'travelOrders', 'fireExtinguishers', 'hydrants', 'evacuationPlans', 'evacuationDrills',
-    'zapisnici', 'serviceLog', 'activityLog', 'nightWork',
+    'zapisnici', 'serviceLog', 'activityLog', 'nightWork', 'safety_observations',
 ];
 
 // Global collections (shared reference data, at root level)
@@ -666,6 +666,7 @@ export const COLLECTIONS = {
     EVACUATION_PLANS: 'evacuationPlans',
     EVACUATION_DRILLS: 'evacuationDrills',
     ZAPISNICI: 'zapisnici',
+    SAFETY_OBSERVATIONS: 'safety_observations',
 };
 
 // ── getAll — returns cached data (synchronous, instant) ──
