@@ -140,8 +140,8 @@ export default function OrgUnitsPage() {
     };
 
     const handleSave = async () => {
-        if (!formData.naziv || !formData.skraceniNaziv) {
-            await alert(lang === 'bs' ? 'Naziv i skraćeni naziv su obavezna polja!' : 'Name and short name are required!');
+        if (!formData.naziv) {
+            await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is a required field!');
             return;
         }
         if (editingId) {
@@ -269,7 +269,7 @@ export default function OrgUnitsPage() {
                                     <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} placeholder={t('mandatory')} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label" style={{ fontWeight: 700 }}>{lang === 'bs' ? 'Skraćeni naziv' : 'Short name'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <label className="form-label">{lang === 'bs' ? 'Skraćeni naziv' : 'Short name'}</label>
                                     <input className="form-input" value={formData.skraceniNaziv} onChange={e => updateField('skraceniNaziv', e.target.value)} />
                                 </div>
                                 <div className="form-group">
