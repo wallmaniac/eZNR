@@ -106,18 +106,32 @@ export default function PublicObservationForm({ params }) {
             // 1. Upload File to Firebase Storage
             const uploaded = await uploadSecureFile(companyId, 'safety_observations', imageFile);
 
-            // 2. Save directly to Firestore using Client SDK
+            // 2. Save to Firestore via Firebase Proxy to bypass Client Security Rules
             try {
-                const docRef = await addDoc(collection(db, `companies/${companyId}/safety_observations`), {
-                    opis: formData.opis,
-                    lokacija: formData.lokacija,
-                    ime: formData.ime || 'Anonimno',
-                    slika: uploaded,
-                    status: 'Novo',
-                    datum: new Date().toISOString(),
+                const proxyDbRes = await fetch('/api/firebase-proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        functionName: 'saveHazard',
+                        data: {
+                            companyId,
+                            payload: {
+                                opis: formData.opis,
+                                lokacija: formData.lokacija,
+                                ime: formData.ime || 'Anonimno',
+                                slika: uploaded,
+                                status: 'Novo',
+                                datum: new Date().toISOString(),
+                            }
+                        }
+                    })
                 });
+                const proxyDbData = await proxyDbRes.json();
+                if (!proxyDbData.success) {
+                    throw new Error(proxyDbData.error || 'Server rejected saveHazard');
+                }
             } catch(dbErr) {
-                console.error('Firestore save failed:', dbErr);
+                console.error('Firestore save via proxy failed:', dbErr);
                 throw new Error('Database locked or unavailable');
             }
 
@@ -267,7 +281,7 @@ export default function PublicObservationForm({ params }) {
                             <input 
                                 type="file" 
                                 accept="image/*" 
-                                capture="environment" 
+                                 
                                 ref={fileInputRef} 
                                 style={{ display: 'none' }} 
                                 onChange={handleFileSelect}
