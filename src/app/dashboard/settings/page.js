@@ -1,4 +1,6 @@
 'use client';
+import { collection, getDocs, writeBatch } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
