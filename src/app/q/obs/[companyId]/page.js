@@ -179,35 +179,53 @@ export default function PublicObservationForm() {
                 const nsRes = await fetch('/api/firebase-proxy', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ functionName: 'getNotifSettings', data: { companyId } })
+                    body: JSON.stringify({ functionName: 'getNotifSettings', data: { companyId: String(companyId) } })
                 });
                 const nsDataRaw = await nsRes.json();
                 const nsData = nsDataRaw.result || nsDataRaw;
+                console.log('[Hazard] notif settings response:', nsData);
                 if (nsData?.success && nsData.settings?.obsNotifEmail) {
-                    targetEmail = nsData.settings.obsNotifEmail;
+                    targetEmail = nsData.settings.obsNotifEmail.trim();
+                } else {
+                    console.warn('[Hazard] obsNotifEmail not found in settings. Full settings:', nsData?.settings);
                 }
-            } catch(e) { }
+            } catch(e) {
+                console.error('[Hazard] Failed to fetch notification settings:', e);
+            }
 
             if (targetEmail) {
                 // Send hazard email
-                await fetch('/api/firebase-proxy', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        functionName: 'sendEmail',
-                        data: {
-                            isHazard: true,
-                            toEmail: targetEmail,
-                            companyId,
-                            companyName: companyInfo.name,
-                            location: formData.lokacija,
-                            description: formData.opis,
-                            reporterName: formData.ime || 'Anonimno',
-                            imageLink: proxyDbData?.payload?.slika?.url || null,
-                            dashboardLink: window.location.origin + '/dashboard/observations' + (proxyDbData?.id ? `?id=${proxyDbData.id}&c=${companyId}` : `?c=${companyId}`)
-                        }
-                    })
-                });
+                try {
+                    const emailRes = await fetch('/api/firebase-proxy', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            functionName: 'sendEmail',
+                            data: {
+                                isHazard: true,
+                                toEmail: targetEmail,
+                                companyId: String(companyId),
+                                companyName: companyInfo.name,
+                                location: formData.lokacija,
+                                description: formData.opis,
+                                reporterName: formData.ime || 'Anonimno',
+                                imageLink: proxyDbData?.payload?.slika?.url || null,
+                                dashboardLink: window.location.origin + '/dashboard/observations' + (proxyDbData?.id ? `?id=${proxyDbData.id}&c=${companyId}` : `?c=${companyId}`)
+                            }
+                        })
+                    });
+                    const emailData = await emailRes.json();
+                    const emailResult = emailData.result || emailData;
+                    if (!emailResult.success) {
+                        console.error('[Hazard] Email dispatch failed:', emailResult.error || emailData);
+                    } else {
+                        console.log('[Hazard] Email sent successfully to:', targetEmail);
+                    }
+                } catch(emailErr) {
+                    console.error('[Hazard] Exception during email send:', emailErr);
+                }
+            } else {
+                console.warn('[Hazard] No target email found — email not sent.');
             }
 
             setSuccess(true);
@@ -365,7 +383,7 @@ export default function PublicObservationForm() {
                         <button 
                             type="submit" 
                             className="btn btn-primary" 
-                            style={{ width: '100%', padding: '16px', fontSize: '1rem', marginTop: 12, background: 'var(--primary)', color: 'white' }}
+                            style={{ width: '100%', padding: '16px', fontSize: '1rem', marginTop: 12, background: 'var(--primary)', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             disabled={submitting}
                         >
                             {submitting ? (lang === 'bs' ? 'Slanje u toku...' : 'Sending...') : (lang === 'bs' ? 'Pošalji Prijavu' : 'Submit Report')}
