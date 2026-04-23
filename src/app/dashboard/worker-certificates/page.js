@@ -108,6 +108,8 @@ function WorkerCertificatesInner() {
 
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
   const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), []);
+  const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
+  const [filterOrgUnit, setFilterOrgUnit] = useState('');
 
   const filteredRows = useMemo(() => {
     return certs.map(c => {
@@ -121,6 +123,9 @@ function WorkerCertificatesInner() {
         statusText: isExpired ? 'Isteklo' : 'Važeće',
       };
     }).filter(r => {
+      const w = workers.find(x => x.id === r.workerId);
+      if (filterOrgUnit && (!w || w.orgJedinicaId !== filterOrgUnit)) return false;
+
       const expDate = r.vrijediDo ? new Date(r.vrijediDo) : null;
       const now = new Date();
       if (showOnlyValid && expDate && expDate < now) return false;
@@ -136,7 +141,7 @@ function WorkerCertificatesInner() {
         (r.oznaka || '').toLowerCase().includes(term) ||
         (r.tipUvjerenjaIme || r.tipUvjerenja || '').toLowerCase().includes(term);
     });
-  }, [certs, workers, searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays]);
+  }, [certs, workers, searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays, filterOrgUnit]);
 
   const { sorted: rows, toggleSort: tS, sortIcon: siS, thStyle: tsS } = useSortedList(
     filteredRows,
@@ -208,19 +213,17 @@ function WorkerCertificatesInner() {
               {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
             </p>
           </div>
-          <div className="header-top-btn">
-            <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates/create')}>
-              + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
-            </button>
-          </div>
         </div>
 
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="uvjerenja-toolbar">
+              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
+                + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
+              </button>
 
-              <div className="search-bar search-full">
+              <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px' }}>
                 <span style={{ fontSize: '1rem' }}>🔍</span>
                 <input
                   placeholder={bs ? 'Pretraži po imenu, oznaci, tipu...' : 'Search by name, code, type...'}
@@ -231,43 +234,52 @@ function WorkerCertificatesInner() {
                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
               </div>
 
-              <div className="filters-row">
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} style={{ accentColor: 'var(--primary)' }} />
-                  {t('showOnlyValid')}
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)' }} />
-                  {bs ? 'Ističe u' : 'Expiring in'}
-                  <select
-                    value={expiringSoonDays}
-                    onChange={e => setExpiringSoonDays(Number(e.target.value))}
-                    disabled={!showExpiringSoon}
-                    style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', fontSize: '0.82rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
-                  >
-                    <option value={30}>30 {bs ? 'dana' : 'days'}</option>
-                    <option value={60}>60 {bs ? 'dana' : 'days'}</option>
-                    <option value={90}>90 {bs ? 'dana' : 'days'}</option>
-                    <option value={180}>180 {bs ? 'dana' : 'days'}</option>
-                  </select>
-                </label>
-              </div>
+              <select
+                className="form-select"
+                style={{ height: 38, padding: '0 12px', minWidth: 160, maxWidth: 220, fontSize: '0.85rem' }}
+                value={filterOrgUnit}
+                onChange={(e) => setFilterOrgUnit(e.target.value)}
+              >
+                <option value="">{bs ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
+                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+              </select>
 
-              <div className="btn-dodaj-mobile">
-                <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/worker-certificates/create')}>
-                  + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
-                </button>
-              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} style={{ accentColor: 'var(--primary)' }} />
+                {t('showOnlyValid')}
+              </label>
 
-              <div className="record-buttons" style={{ display: 'flex', gap: 8 }}>
-                <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>
-                  🖨️ {bs ? 'Zapisnik ZOS' : 'ZOS'}
-                </button>
-                <button className="btn btn-sm" style={{ background: '#d32f2f', color: 'white', border: 'none' }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>
-                  🔥 {bs ? 'Zapisnik ZOP' : 'ZOP'}
-                </button>
-              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)' }} />
+                {bs ? 'Ističe u' : 'Expiring in'}
+                <select
+                  value={expiringSoonDays}
+                  onChange={e => setExpiringSoonDays(Number(e.target.value))}
+                  disabled={!showExpiringSoon}
+                  style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', fontSize: '0.82rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
+                >
+                  <option value={30}>30 {bs ? 'dana' : 'days'}</option>
+                  <option value={60}>60 {bs ? 'dana' : 'days'}</option>
+                  <option value={90}>90 {bs ? 'dana' : 'days'}</option>
+                  <option value={180}>180 {bs ? 'dana' : 'days'}</option>
+                </select>
+              </label>
 
+              <button className="btn btn-sm" style={{ background: '#db2777', color: 'white', border: 'none', height: 38 }} onClick={() => {
+                import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang));
+              }}>
+                📄 {bs ? 'PDF Izvještaj' : 'PDF Report'}
+              </button>
+
+              <div style={{ position: 'relative' }}>
+                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 16px' }} onClick={() => { const el = document.getElementById('zapisnici-menu'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }}>
+                    🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
+                 </button>
+                 <div id="zapisnici-menu" style={{ display: 'none', position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 99, minWidth: 150 }}>
+                    <div onClick={() => { document.getElementById('zapisnici-menu').style.display='none'; window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem' }}>🖨️ {bs ? 'Zapisnik ZOS' : 'ZOS'}</div>
+                    <div onClick={() => { document.getElementById('zapisnici-menu').style.display='none'; window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '8px 12px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem' }}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP'}</div>
+                 </div>
+              </div>
             </div>
 
             {/* ── Bulk Action Bar ────────────────────────────────────────── */}

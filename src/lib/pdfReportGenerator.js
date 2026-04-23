@@ -278,6 +278,8 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   const bs = lang === 'bs';
   const company = getCompanyInfo();
   const allWorkers = getAll(COLLECTIONS.WORKERS);
+  const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
+  const workplaces = getAll(COLLECTIONS.WORKPLACES);
   const workers = workerIds.length > 0
     ? allWorkers.filter(w => workerIds.includes(w.id))
     : allWorkers.filter(w => w.aktivan !== false);
@@ -329,8 +331,8 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${w.ime || ''} ${w.prezime || ''}</td>
       <td>${w.jmbg || '—'}</td>
-      <td>${w.radnoMjesto || '—'}</td>
-      <td>${w.orgJedinica || '—'}</td>
+      <td>${workplaces.find(wp => wp.id === w.radnoMjestoId)?.naziv || '—'}</td>
+      <td>${orgUnits.find(ou => ou.id === w.orgJedinicaId)?.naziv || '—'}</td>
       <td style="text-align:center;font-weight:600">${wCerts.length}</td>
       <td style="text-align:center;font-weight:600">${wPPE.length}</td>
       <td><span class="badge ${aktivan ? 'badge-ok' : 'badge-neutral'}">${aktivan ? (bs ? 'Aktivan' : 'Active') : (bs ? 'Neaktivan' : 'Inactive')}</span></td>

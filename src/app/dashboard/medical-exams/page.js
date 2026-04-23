@@ -254,17 +254,7 @@ export default function MedicalExamsPage() {
                 <button className="btn btn-primary btn-sm" id="btn-new-exam" onClick={handleNew}>
                     + {bs ? 'Novi pregled' : 'New Exam'}
                 </button>
-                {orgUnits.length > 0 && (
-                    <select
-                        className="form-select"
-                        style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
-                        value={filterOrgUnit}
-                        onChange={e => setFilterOrgUnit(e.target.value)}
-                    >
-                        <option value=''>{bs ? 'Svi odjeli' : 'All departments'}</option>
-                        {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                    </select>
-                )}
+
                 <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
                     <input
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.85rem', flex: 1, width: '100%' }}
