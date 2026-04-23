@@ -127,10 +127,9 @@ function WorkersPageInner() {
             const uploadResult = await uploadSecureFile(activeCompanyId, 'workers', file);
 
             // 2. Save document directly on the worker record (NOT as a certificate)
-            const { update: updateWorker, getById: getWorkerById } = require('@/lib/dataStore');
-            const workerData = getWorkerById(COLLECTIONS.WORKERS, uploadingDocForWorker);
+            const workerData = getById(COLLECTIONS.WORKERS, uploadingDocForWorker);
             const existingDocs = workerData?.dokumenti || [];
-            updateWorker(COLLECTIONS.WORKERS, uploadingDocForWorker, {
+            update(COLLECTIONS.WORKERS, uploadingDocForWorker, {
                 dokumenti: [...existingDocs, {
                     id: Date.now().toString(36),
                     name: file.name,
@@ -1170,10 +1169,9 @@ function WorkersPageInner() {
                                                 try {
                                                     const uploadResult = await uploadSecureFile(activeCompanyId, 'workers', file);
                                                     // Save document directly on the worker record (NOT as a certificate)
-                                                    const { update: updateW, getById: getWorkerById2 } = require('@/lib/dataStore');
-                                                    const workerData2 = getWorkerById2(COLLECTIONS.WORKERS, editingWorker);
+                                                    const workerData2 = getById(COLLECTIONS.WORKERS, editingWorker);
                                                     const existingDocs2 = workerData2?.dokumenti || [];
-                                                    updateW(COLLECTIONS.WORKERS, editingWorker, {
+                                                    update(COLLECTIONS.WORKERS, editingWorker, {
                                                         dokumenti: [...existingDocs2, {
                                                             id: Date.now().toString(36),
                                                             name: file.name,
@@ -1625,6 +1623,13 @@ function WorkersPageInner() {
                                 placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
                                 value={searchTerm}
                                 onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                            />
+                            <PDFExportButton
+                                label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'}
+                                options={[
+                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(filteredWorkers, lang) },
+                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(filteredWorkers.filter(w => selectedIds.has(w.id)), lang) }] : [])
+                                ]}
                             />
                             <PDFExportButton
                                 label={lang === 'bs' ? '📊 Excel Export' : '📊 Excel Export'}

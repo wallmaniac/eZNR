@@ -43,6 +43,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="bs">
       <head>
+        <meta charSet="utf-8" />
         <link rel="icon" href="/logo-icon.png" />
       </head>
       <body>
