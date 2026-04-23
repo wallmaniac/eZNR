@@ -267,11 +267,11 @@ function WorkerCertificatesInner() {
                 </label>
               </div>
 
-              <PDFExportButton 
+                <PDFExportButton 
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
-                { label: bs ? 'Sva filtrirana uvjerenja' : 'All filtered certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
-                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport([...selectedIds], lang)) }] : []),
+                { label: bs ? 'Sva filtrirana uvjerenja' : 'All filtered certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(sorted.map(r => r.id), lang)) },
+                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(sorted.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
               <div style={{ position: 'relative' }}>

@@ -420,8 +420,8 @@ export default function InjuriesPage() {
         <div className="card">
           <div className="card-body">
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
-              <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center' }}>
+              <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', height: 32 }} onClick={openNew}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
+              <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center', height: 36 }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                 <input
                   placeholder={lang === 'bs' ? 'Pretraži povrede...' : 'Search injuries...'}
@@ -434,7 +434,7 @@ export default function InjuriesPage() {
               {orgUnits.length > 0 && (
                 <select
                   className="form-select"
-                  style={{ height: 38, width: 160, flexShrink: 0, fontSize: '0.85rem' }}
+                  style={{ height: 36, width: 150, flexShrink: 0, fontSize: '0.85rem', padding: '0 8px' }}
                   value={filterOrgUnit}
                   onChange={e => setFilterOrgUnit(e.target.value)}
                 >

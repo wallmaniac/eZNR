@@ -399,8 +399,8 @@ export default function FireProtectionPage() {
                                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 </div>
                                 <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                                    { label: bs ? 'Svi PP aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport([], lang) },
-                                    ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport([...extSelectedIds], lang) }] : []),
+                                    { label: bs ? 'Svi PP aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport(sortedExt.map(e => e.id), lang) },
+                                    ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
                                 ]} />
                                 <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
                                     { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); } },
@@ -535,8 +535,8 @@ export default function FireProtectionPage() {
                                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 </div>
                                 <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                                    { label: bs ? 'Svi hidranti' : 'All hydrants', icon: '🚰', onClick: () => generateFireProtectionReport([], lang, 'hydrants') },
-                                    ...(hydSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${hydSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport([...hydSelectedIds], lang, 'hydrants') }] : []),
+                                    { label: bs ? 'Svi hidranti' : 'All hydrants', icon: '🚰', onClick: () => generateFireProtectionReport(sortedHyd.map(h => h.id), lang, 'hydrants') },
+                                    ...(hydSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${hydSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => h.id), lang, 'hydrants') }] : []),
                                 ]} />
                                 <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
                                     { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } },

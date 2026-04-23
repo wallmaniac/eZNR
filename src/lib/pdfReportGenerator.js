@@ -281,10 +281,8 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
   const workplaces = getAll(COLLECTIONS.WORKPLACES);
   let workers = workerIds.length > 0
-    ? allWorkers.filter(w => workerIds.includes(w.id))
+    ? workerIds.map(id => allWorkers.find(w => w.id === id)).filter(Boolean)
     : allWorkers.filter(w => w.aktivan !== false);
-  
-  workers.sort((a, b) => String(a.prezime || '').localeCompare(String(b.prezime || ''), undefined, { numeric: true, sensitivity: 'base' }));
 
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
@@ -357,7 +355,7 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const workers = getAll(COLLECTIONS.WORKERS);
   const certs = certIds.length > 0
-    ? allCerts.filter(c => certIds.includes(c.id))
+    ? certIds.map(id => allCerts.find(c => c.id === id)).filter(Boolean)
     : allCerts;
 
   const title = bs ? 'PREGLED UVJERENJA I CERTIFIKATA' : 'CERTIFICATE STATUS REPORT';
@@ -425,7 +423,7 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
   const workers = getAll(COLLECTIONS.WORKERS);
   const assignments = assignmentIds.length > 0
-    ? allPPE.filter(p => assignmentIds.includes(p.id))
+    ? assignmentIds.map(id => allPPE.find(p => p.id === id)).filter(Boolean)
     : allPPE;
 
   const title = bs ? 'EVIDENCIJA OSOBNE ZAŠTITNE OPREME (OZO)' : 'PERSONAL PROTECTIVE EQUIPMENT (PPE) REPORT';
@@ -477,10 +475,8 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
   const company = getCompanyInfo();
   const allEquip = getAll(COLLECTIONS.EQUIPMENT);
   let items = equipmentIds.length > 0
-    ? allEquip.filter(e => equipmentIds.includes(e.id))
+    ? equipmentIds.map(id => allEquip.find(e => e.id === id)).filter(Boolean)
     : allEquip;
-  
-  items.sort((a, b) => String(a.naziv || '').localeCompare(String(b.naziv || ''), undefined, { numeric: true, sensitivity: 'base' }));
 
   const title = bs ? 'EVIDENCIJA SREDSTAVA RADA I OPREME' : 'WORK EQUIPMENT INSPECTION REPORT';
   const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
@@ -532,10 +528,8 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
   const company = getCompanyInfo();
   const allVehicles = getAll(COLLECTIONS.VEHICLES);
   let vehicles = vehicleIds.length > 0
-    ? allVehicles.filter(v => vehicleIds.includes(v.id))
+    ? vehicleIds.map(id => allVehicles.find(v => v.id === id)).filter(Boolean)
     : allVehicles;
-  
-  vehicles.sort((a, b) => String(a.registracija || '').localeCompare(String(b.registracija || ''), undefined, { numeric: true, sensitivity: 'base' }));
 
   const title = bs ? 'EVIDENCIJA VOZNOG PARKA' : 'FLEET REGISTRY REPORT';
   const subtitle = `${vehicles.length} ${bs ? 'vozila' : 'vehicles'} · ${new Date().toLocaleDateString('bs-BA')}`;
@@ -586,16 +580,8 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = '
   const company = getCompanyInfo();
   const allFE = getAll(type === 'hydrants' ? COLLECTIONS.HYDRANTS : COLLECTIONS.FIRE_EXTINGUISHERS);
   let items = itemIds.length > 0
-    ? allFE.filter(f => itemIds.includes(f.id))
+    ? itemIds.map(id => allFE.find(f => f.id === id)).filter(Boolean)
     : allFE;
-
-  items.sort((a, b) => {
-    if (type === 'hydrants') {
-      return String(a.oznaka || '').localeCompare(String(b.oznaka || ''), undefined, { numeric: true, sensitivity: 'base' });
-    } else {
-      return String(a.serijskiBroj || '').localeCompare(String(b.serijskiBroj || ''), undefined, { numeric: true, sensitivity: 'base' });
-    }
-  });
   const title = bs ? 'EVIDENCIJA SREDSTAVA ZAŠTITE OD POŽARA' : 'FIRE PROTECTION EQUIPMENT REPORT';
   const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
 
