@@ -497,19 +497,19 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
     <tbody>`;
 
   items.sort((a, b) => {
-    const da = daysUntil(a.sljedeciPregled || a.datumIsteka) ?? 9999;
-    const db_ = daysUntil(b.sljedeciPregled || b.datumIsteka) ?? 9999;
+    const da = daysUntil(a.iduci || a.sljedeciPregled || a.datumIsteka) ?? 9999;
+    const db_ = daysUntil(b.iduci || b.sljedeciPregled || b.datumIsteka) ?? 9999;
     return da - db_;
   }).forEach((e, i) => {
-    const days = daysUntil(e.sljedeciPregled || e.datumIsteka);
+    const days = daysUntil(e.iduci || e.sljedeciPregled || e.datumIsteka);
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${e.naziv || '—'}</td>
       <td>${e.tip || e.vrsta || '—'}</td>
       <td>${e.tvBroj || e.serijskiBroj || e.invBroj || '—'}</td>
       <td>${e.lokacija || '—'}</td>
-      <td>${fmtDate(e.zadnjiPregled || e.datumPregleda)}</td>
-      <td style="font-weight:600">${fmtDate(e.sljedeciPregled || e.datumIsteka)}</td>
+      <td>${fmtDate(e.posljednji || e.zadnjiPregled || e.datumPregleda)}</td>
+      <td style="font-weight:600">${fmtDate(e.iduci || e.sljedeciPregled || e.datumIsteka)}</td>
       <td>${statusBadge(days, bs)}</td>
     </tr>`;
   });
@@ -540,28 +540,29 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
     <thead><tr>
       <th style="width:3%">#</th>
       <th>${bs ? 'Marka / Model' : 'Make / Model'}</th>
-      <th>${bs ? 'Registracija' : 'Plate No.'}</th>
-      <th>${bs ? 'God. proizv.' : 'Year'}</th>
-      <th>${bs ? 'Registr. do' : 'Reg. until'}</th>
-      <th>${bs ? 'Tehn. pregled' : 'Tech. insp.'}</th>
-      <th>${bs ? 'Status' : 'Status'}</th>
+      <th>${bs ? 'Reg.' : 'Plate No.'}</th>
+      <th>${bs ? 'God.' : 'Year'}</th>
+      <th>${bs ? 'Vozač' : 'Driver'}</th>
+      <th>${bs ? 'Reg. do' : 'Reg. until'}</th>
+      <th>${bs ? 'Tehn. do' : 'Tech. until'}</th>
+      <th>${bs ? 'Osig. do' : 'Ins. until'}</th>
     </tr></thead>
     <tbody>`;
 
   vehicles.sort((a, b) => {
-    const da = daysUntil(a.registracijaDo || a.istekRegistracije) ?? 9999;
-    const db_ = daysUntil(b.registracijaDo || b.istekRegistracije) ?? 9999;
+    const da = daysUntil(a.registracijaIstice || a.registracijaDo || a.istekRegistracije) ?? 9999;
+    const db_ = daysUntil(b.registracijaIstice || b.registracijaDo || b.istekRegistracije) ?? 9999;
     return da - db_;
   }).forEach((v, i) => {
-    const days = daysUntil(v.registracijaDo || v.istekRegistracije);
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${v.marka || ''} ${v.model || ''}</td>
       <td style="font-weight:700;color:var(--accent)">${v.registracija || '—'}</td>
       <td>${v.godinaProizvodnje || v.godina || '—'}</td>
-      <td style="font-weight:600">${fmtDate(v.registracijaDo || v.istekRegistracije)}</td>
-      <td>${fmtDate(v.tehnickiPregled || v.datumTehnPregleda)}</td>
-      <td>${statusBadge(days, bs)}</td>
+      <td>${v.vozacIme || '—'}</td>
+      <td style="font-weight:600">${fmtDate(v.registracijaIstice || v.registracijaDo || v.istekRegistracije)}</td>
+      <td>${fmtDate(v.tehnickiIstice || v.sljedeciTehnicki || v.tehnickiPregled || v.datumTehnPregleda)}</td>
+      <td>${fmtDate(v.osiguranjeIstice || v.osiguranjeDo)}</td>
     </tr>`;
   });
 

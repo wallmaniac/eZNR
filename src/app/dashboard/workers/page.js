@@ -531,7 +531,7 @@ function WorkersPageInner() {
                     <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
                     <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
                         <Icon3D name="Radnici.png" size={64} />
-                        {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'ni' ? 'Novi radnik' : 'New Worker')}
+                        {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
                     </h1>
                 </div>
                 <DialogRenderer />
