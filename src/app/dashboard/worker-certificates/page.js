@@ -219,7 +219,7 @@ function WorkerCertificatesInner() {
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
-            <div className="uvjerenja-toolbar">
+            <div className="scrollable-toolbar data-table-wrapper" style={{ padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
