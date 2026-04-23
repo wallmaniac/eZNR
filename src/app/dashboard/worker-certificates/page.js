@@ -219,25 +219,25 @@ function WorkerCertificatesInner() {
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
-            <div className="scrollable-toolbar data-table-wrapper" style={{ padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div className="scrollable-toolbar" style={{ padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
 
-              <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+              <div className="search-bar" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                 <input
-                  placeholder={bs ? 'Pretraži povrede...' : 'Search...'}
+                  placeholder={bs ? 'Pretraži uvjerenja...' : 'Search...'}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                 />
                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
               </div>
 
               <select
                 className="form-select"
-                style={{ height: 38, padding: '0 8px', width: 90, flexShrink: 0, fontSize: '0.8rem' }}
+                style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}
               >
