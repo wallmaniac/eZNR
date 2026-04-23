@@ -390,11 +390,7 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
     </tr></thead>
     <tbody>`;
 
-  certs.sort((a, b) => {
-    const da = daysUntil(a.vrijediDo) ?? 9999;
-    const db_ = daysUntil(b.vrijediDo) ?? 9999;
-    return da - db_;
-  }).forEach((c, i) => {
+  certs.forEach((c, i) => {
     const w = workers.find(x => x.id === c.workerId);
     const days = daysUntil(c.vrijediDo);
     html += `<tr>
@@ -443,11 +439,7 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
     </tr></thead>
     <tbody>`;
 
-  assignments.sort((a, b) => {
-    const da = daysUntil(a.rokZamjene || a.vrijediDo) ?? 9999;
-    const db_ = daysUntil(b.rokZamjene || b.vrijediDo) ?? 9999;
-    return da - db_;
-  }).forEach((p, i) => {
+  assignments.forEach((p, i) => {
     const w = workers.find(x => x.id === p.workerId);
     const days = daysUntil(p.rokZamjene || p.vrijediDo);
     html += `<tr>
@@ -496,11 +488,7 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
     </tr></thead>
     <tbody>`;
 
-  items.sort((a, b) => {
-    const da = daysUntil(a.iduci || a.sljedeciPregled || a.datumIsteka) ?? 9999;
-    const db_ = daysUntil(b.iduci || b.sljedeciPregled || b.datumIsteka) ?? 9999;
-    return da - db_;
-  }).forEach((e, i) => {
+  items.forEach((e, i) => {
     const days = daysUntil(e.iduci || e.sljedeciPregled || e.datumIsteka);
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
@@ -549,11 +537,7 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
     </tr></thead>
     <tbody>`;
 
-  vehicles.sort((a, b) => {
-    const da = daysUntil(a.registracijaIstice || a.registracijaDo || a.istekRegistracije) ?? 9999;
-    const db_ = daysUntil(b.registracijaIstice || b.registracijaDo || b.istekRegistracije) ?? 9999;
-    return da - db_;
-  }).forEach((v, i) => {
+  vehicles.forEach((v, i) => {
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${v.marka || ''} ${v.model || ''}</td>
@@ -612,11 +596,7 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = '
     </tr></thead>
     <tbody>`;
 
-  items.sort((a, b) => {
-    const da = daysUntil(a.sljedeciPregled || a.sljedeciServis || a.datumIsteka) ?? 9999;
-    const db_ = daysUntil(b.sljedeciPregled || b.sljedeciServis || b.datumIsteka) ?? 9999;
-    return da - db_;
-  }).forEach((f, i) => {
+  items.forEach((f, i) => {
     const days = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
@@ -645,8 +625,7 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
         obsList = obsList.filter(o => obsIds.includes(o.id));
     }
     
-    // Sort
-    obsList.sort((a, b) => new Date(b.datum || 0) - new Date(a.datum || 0));
+    // Removed sort to preserve input order
 
     doc.setFontSize(16);
     doc.text(lang === 'bs' ? 'Izvještaj: Prijave Opasnosti' : 'Hazard Reports', 14, 20);
