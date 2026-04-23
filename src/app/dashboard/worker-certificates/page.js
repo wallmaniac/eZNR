@@ -530,10 +530,4 @@ export default function WorkerCertificatesPage() {
     </Suspense>
   );
 }
-export default function WorkerCertificatesPage() {
-  return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje...</div>}>
-      <WorkerCertificatesInner />
-    </Suspense>
-  );
-}
+
