@@ -206,9 +206,9 @@ function WorkerCertificatesInner() {
   return (
     <>
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 34, marginBottom: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <Icon3D name="Uvjerenja.png" size={50} />
-          <div style={{ flex: 1, marginLeft: 8 }}>
+          <div style={{ flex: 1, marginLeft: 0 }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
@@ -270,8 +270,8 @@ function WorkerCertificatesInner() {
                 <PDFExportButton 
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
-                { label: bs ? 'Sva filtrirana uvjerenja' : 'All filtered certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(sorted.map(r => r.id), lang)) },
-                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(sorted.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
+                { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
+                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
               <div style={{ position: 'relative' }}>

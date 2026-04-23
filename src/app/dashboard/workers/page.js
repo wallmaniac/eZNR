@@ -1474,7 +1474,7 @@ function WorkersPageInner() {
                 <input ref={zosUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOS')} />
                 <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
 
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                     <Icon3D name="Radnici.png" size={64} />
                     {t('workers')}
                 </h1>
