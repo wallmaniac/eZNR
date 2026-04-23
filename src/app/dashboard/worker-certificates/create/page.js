@@ -72,6 +72,7 @@ export function UvjerenjeFormPage() {
     const [orgUnits, setOrgUnits] = useState([]);
 
     const [formData, setFormData] = useState({ ...EMPTY_CERT });
+    const [showWorkerDropdown, setShowWorkerDropdown] = useState(false);
     const [tipSearch, setTipSearch] = useState('');
     const [showTipDropdown, setShowTipDropdown] = useState(false);
     const [ispitivacSearch, setIspitivacSearch] = useState('');
@@ -80,6 +81,7 @@ export function UvjerenjeFormPage() {
     const [newTypeName, setNewTypeName] = useState('');
     const [editingId, setEditingId] = useState(null); // null = new cert
 
+    const workerRef = useRef(null);
     const tipRef = useRef(null);
     const ispitivacRef = useRef(null);
     const appliedZiaRef = useRef(false); // prevent double-apply
@@ -211,6 +213,7 @@ export function UvjerenjeFormPage() {
     // Close dropdowns on outside click
     useEffect(() => {
         const h = (e) => {
+            if (workerRef.current && !workerRef.current.contains(e.target)) setShowWorkerDropdown(false);
             if (tipRef.current && !tipRef.current.contains(e.target)) setShowTipDropdown(false);
             if (ispitivacRef.current && !ispitivacRef.current.contains(e.target)) setShowIspitivacDropdown(false);
         };
@@ -388,81 +391,48 @@ export function UvjerenjeFormPage() {
                 </div>
             )}
 
-            {/* Worker selection — hidden when a single worker is pre-selected and locked */}
-            {!isSingleWorkerMode && (
-                <div className="card" style={{ marginBottom: 20 }}>
-                    <div className="card-body">
-                        <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
-                                <input type="checkbox" checked={showOnlySelected} onChange={e => setShowOnlySelected(e.target.checked)} />
-                                {lang === 'bs' ? 'Prikaži samo označene' : 'Show only selected'}
-                            </label>
-                            <select className="form-select" style={{ maxWidth: 260, marginLeft: 0 }} value={orgUnitFilter} onChange={e => setOrgUnitFilter(e.target.value)}>
-                                <option value="">{lang === 'bs' ? 'Prikaži sve pod org. jedinice od' : 'All org. units'}</option>
-                                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                            </select>
-                            <div className="search-bar" style={{ marginLeft: 'auto', maxWidth: 260, display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
-                                    value={workerSearch}
-                                    onChange={e => setWorkerSearch(e.target.value)}
-                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.88rem', flex: 1 }}
-                                />
-                            </div>
-                        </div>
-
-                        <div className="data-table-wrapper">
-                            <table className="data-table">
-                                <thead>
-                                    <tr>
-                                        <th style={{ width: 40 }}>
-                                            <input type="checkbox"
-                                                checked={filteredWorkers.length > 0 && filteredWorkers.every(w => selectedWorkerIds.has(w.id))}
-                                                onChange={toggleAll} />
-                                        </th>
-                                        <th>{lang === 'bs' ? 'Djelatnik' : 'Worker'} ↑</th>
-                                        <th>OIB / JMBG</th>
-                                        <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
-                                        <th>{lang === 'bs' ? 'Radno mjesto' : 'Workplace'}</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredWorkers.length === 0 ? (
-                                        <tr><td colSpan={5} style={{ textAlign: 'center', padding: 32, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                    ) : filteredWorkers.map(w => (
-                                        <tr key={w.id}
-                                            style={{ cursor: 'pointer', background: selectedWorkerIds.has(w.id) ? 'var(--bg-selected, rgba(33,150,243,0.06))' : undefined }}
-                                            onClick={() => toggleWorker(w.id)}
-                                        >
-                                            <td onClick={e => e.stopPropagation()}>
-                                                <input type="checkbox" checked={selectedWorkerIds.has(w.id)} onChange={() => toggleWorker(w.id)} />
-                                            </td>
-                                            <td style={{ fontWeight: selectedWorkerIds.has(w.id) ? 700 : undefined }}>
-                                                {w.ime} {w.prezime}
-                                            </td>
-                                            <td><code style={{ fontSize: '0.82rem' }}>{w.oib || w.jmbg || '—'}</code></td>
-                                            <td>{getOrgUnitName(w.orgJedinicaId)}</td>
-                                            <td>{getWorkplaceName(w.radnoMjestoId)}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-
-                        {selectedWorkerIds.size > 0 && (
-                            <div style={{ marginTop: 10, fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
-                                ✓ {selectedWorkerIds.size} {lang === 'bs' ? 'radnik(a) odabrano' : 'worker(s) selected'}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
-
-            {/* ── Certificate details form ── */}
+             {/* ── Certificate details form ── */}
             <div className="card">
                 <div className="card-body">
                     <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 20 }}>
                         {lang === 'bs' ? 'Podaci o uvjerenju' : 'Certificate details'}
+                    </div>
+
+                    {/* Row 0: Radnik Dropdown */}
+                    <div style={{ marginBottom: 16, position: 'relative' }} ref={workerRef}>
+                        <div style={labelStyle}>{lang === 'bs' ? 'Djelatnik (Radnik)' : 'Worker'} *</div>
+                        <div
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
+                            onClick={() => setShowWorkerDropdown(v => !v)}
+                        >
+                            <span style={{ flex: 1, fontSize: '0.88rem', color: selectedWorkerIds.size ? 'var(--text)' : 'var(--text-muted)' }}>
+                                {selectedWorkerIds.size > 0 
+                                    ? getWorkerName(Array.from(selectedWorkerIds)[0])
+                                    : (lang === 'bs' ? 'Odaberite radnika...' : 'Select worker...')}
+                            </span>
+                            {selectedWorkerIds.size > 0 && (
+                                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem', padding: '0 2px' }}
+                                    onClick={e => { e.stopPropagation(); setSelectedWorkerIds(new Set()); setWorkerSearch(''); }}>×</button>
+                            )}
+                            <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>▾</span>
+                        </div>
+                        {showWorkerDropdown && (
+                            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--shadow-lg)', zIndex: 1000, maxHeight: 260, overflowY: 'auto' }}>
+                                <div style={{ padding: '6px 8px', borderBottom: '1px solid var(--border-light)', position: 'sticky', top: 0, background: 'var(--bg-card)' }}>
+                                    <input
+                                        className="form-input" style={{ padding: '4px 8px', fontSize: '0.85rem' }}
+                                        placeholder="🔍 Pretraži radnike..." value={workerSearch} onChange={e => setWorkerSearch(e.target.value)} autoFocus onClick={e => e.stopPropagation()}
+                                    />
+                                </div>
+                                {filteredWorkers.map(w => (
+                                    <div key={w.id} onClick={() => { setSelectedWorkerIds(new Set([w.id])); setShowWorkerDropdown(false); setWorkerSearch(''); }} style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                        <div style={{ fontWeight: 600 }}>{w.ime} {w.prezime}</div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getWorkplaceName(w.radnoMjestoId)} • {getOrgUnitName(w.orgJedinicaId)}</div>
+                                    </div>
+                                ))}
+                                {filteredWorkers.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>}
+                            </div>
+                        )}
                     </div>
 
                     {/* Row 1: Oznaka | Tip uvjerenja | Sposoban */}

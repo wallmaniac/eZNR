@@ -6,6 +6,7 @@ import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSortedList } from '@/hooks/useSortedList';
 import Icon3D from '@/components/Icon3D';
+import PDFExportButton from '@/components/PDFExportButton';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
 function buildBulkPrintHtml(selectedRows, workers, lang) {
@@ -219,60 +220,62 @@ function WorkerCertificatesInner() {
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="uvjerenja-toolbar">
-              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
+              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
 
-              <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px' }}>
+              <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', flex: 1, minWidth: 200 }}>
                 <span style={{ fontSize: '1rem' }}>🔍</span>
                 <input
-                  placeholder={bs ? 'Pretraži po imenu, oznaci, tipu...' : 'Search by name, code, type...'}
+                  placeholder={bs ? 'Pretraži po imenu, oznaci, tipu...' : 'Search workers, codes...'}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
                 />
                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
               </div>
 
               <select
                 className="form-select"
-                style={{ height: 38, padding: '0 12px', minWidth: 160, maxWidth: 220, fontSize: '0.85rem' }}
+                style={{ height: 38, padding: '0 8px', width: 120, fontSize: '0.8rem' }}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}
               >
-                <option value="">{bs ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
+                <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
               </select>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} style={{ accentColor: 'var(--primary)' }} />
-                {t('showOnlyValid')}
-              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, justifyContent: 'center' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1 }}>
+                  <input type="checkbox" checked={showOnlyValid} onChange={e => { setShowOnlyValid(e.target.checked); if (e.target.checked) setShowExpiringSoon(false); }} style={{ accentColor: 'var(--primary)', width: 14, height: 14 }} />
+                  {t('showOnlyValid')}
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap', lineHeight: 1 }}>
+                  <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)', width: 14, height: 14 }} />
+                  {bs ? 'Ističe u' : 'Expiring in'}
+                  <select
+                    value={expiringSoonDays}
+                    onChange={e => setExpiringSoonDays(Number(e.target.value))}
+                    disabled={!showExpiringSoon}
+                    style={{ border: '1px solid var(--border)', borderRadius: 4, padding: '0 4px', fontSize: '0.75rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5, height: 20 }}
+                  >
+                    <option value={30}>30d</option>
+                    <option value={60}>60d</option>
+                    <option value={90}>90d</option>
+                    <option value={180}>180d</option>
+                  </select>
+                </label>
+              </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValid(false); }} style={{ accentColor: 'var(--primary)' }} />
-                {bs ? 'Ističe u' : 'Expiring in'}
-                <select
-                  value={expiringSoonDays}
-                  onChange={e => setExpiringSoonDays(Number(e.target.value))}
-                  disabled={!showExpiringSoon}
-                  style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '3px 8px', fontSize: '0.82rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
-                >
-                  <option value={30}>30 {bs ? 'dana' : 'days'}</option>
-                  <option value={60}>60 {bs ? 'dana' : 'days'}</option>
-                  <option value={90}>90 {bs ? 'dana' : 'days'}</option>
-                  <option value={180}>180 {bs ? 'dana' : 'days'}</option>
-                </select>
-              </label>
-
-              <button className="btn btn-sm" style={{ background: '#db2777', color: 'white', border: 'none', height: 38 }} onClick={() => {
-                import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang));
-              }}>
-                📄 {bs ? 'PDF Izvještaj' : 'PDF Report'}
-              </button>
+              <PDFExportButton 
+                buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
+                options={[
+                { label: bs ? 'Sva filtrirana uvjerenja' : 'All filtered certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
+                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport([...selectedIds], lang)) }] : []),
+              ]} />
 
               <div style={{ position: 'relative' }}>
-                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 16px' }} onClick={() => { const el = document.getElementById('zapisnici-menu'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }}>
+                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={() => { const el = document.getElementById('zapisnici-menu'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }}>
                     🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
                  </button>
                  <div id="zapisnici-menu" style={{ display: 'none', position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 99, minWidth: 150 }}>

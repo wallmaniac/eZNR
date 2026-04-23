@@ -520,7 +520,7 @@ function FleetInner() {
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" onClick={openNew}>+ {bs ? 'Novo vozilo' : 'New Vehicle'}</button>
-                            <PDFExportButton options={[
+                            <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                                 { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚗', onClick: () => generateFleetReport([], lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport([...selectedIds], lang) }] : []),
                             ]} />

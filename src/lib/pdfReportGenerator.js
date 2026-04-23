@@ -506,7 +506,7 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${e.naziv || '—'}</td>
       <td>${e.tip || e.vrsta || '—'}</td>
-      <td>${e.serijskiBroj || '—'}</td>
+      <td>${e.tvBroj || e.serijskiBroj || e.invBroj || '—'}</td>
       <td>${e.lokacija || '—'}</td>
       <td>${fmtDate(e.zadnjiPregled || e.datumPregleda)}</td>
       <td style="font-weight:600">${fmtDate(e.sljedeciPregled || e.datumIsteka)}</td>
