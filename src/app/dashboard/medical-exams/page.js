@@ -1,6 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import {  useState, useCallback, useMemo, useEffect  } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
@@ -16,17 +16,17 @@ import Icon3D from '@/components/Icon3D';
 // ──────────────────────────────────────────────────────────────────────────────
 
 const EXAM_TYPES = [
-    { value: 'prethodni',   labelBs: 'Prethodni pregled',     labelEn: 'Pre-employment Exam',   info: 'Čl. 44. Zakona o ZNR FBiH — prije raspoređivanja na radno mjesto' },
-    { value: 'periodični',  labelBs: 'Periodični pregled',    labelEn: 'Periodic Exam',          info: 'Prilog III Pravilnika (Sl. novine FBiH 9/23) — rokovi po vrsti opasnosti' },
-    { value: 'vanredni',    labelBs: 'Vanredni pregled',      labelEn: 'Extraordinary Exam',     info: 'Nakon promjene zdravstvenog stanja, nesreće ili dugog bolovanja' },
-    { value: 'nocniRad',    labelBs: 'Pregled - noćni rad',  labelEn: 'Night-work Exam',        info: 'Čl. 44. st. 3 — min. svake 2 godine za noćne radnike' },
-    { value: 'ostalo',      labelBs: 'Ostalo',               labelEn: 'Other',                  info: '' },
+    { value: 'prethodni', labelBs: 'Prethodni pregled', labelEn: 'Pre-employment Exam', info: 'Čl. 44. Zakona o ZNR FBiH — prije raspoređivanja na radno mjesto' },
+    { value: 'periodični', labelBs: 'Periodični pregled', labelEn: 'Periodic Exam', info: 'Prilog III Pravilnika (Sl. novine FBiH 9/23) — rokovi po vrsti opasnosti' },
+    { value: 'vanredni', labelBs: 'Vanredni pregled', labelEn: 'Extraordinary Exam', info: 'Nakon promjene zdravstvenog stanja, nesreće ili dugog bolovanja' },
+    { value: 'nocniRad', labelBs: 'Pregled - noćni rad', labelEn: 'Night-work Exam', info: 'Čl. 44. st. 3 — min. svake 2 godine za noćne radnike' },
+    { value: 'ostalo', labelBs: 'Ostalo', labelEn: 'Other', info: '' },
 ];
 
 const RESULTS = [
-    { value: 'Sposoban',         labelBs: 'Sposoban',          labelEn: 'Fit',                color: 'var(--success)' },
-    { value: 'Uvjetno Sposoban', labelBs: 'Uvjetno Sposoban',  labelEn: 'Conditionally Fit',  color: 'var(--warning)' },
-    { value: 'Nesposoban',       labelBs: 'Nesposoban',        labelEn: 'Unfit',              color: 'var(--danger)' },
+    { value: 'Sposoban', labelBs: 'Sposoban', labelEn: 'Fit', color: 'var(--success)' },
+    { value: 'Uvjetno Sposoban', labelBs: 'Uvjetno Sposoban', labelEn: 'Conditionally Fit', color: 'var(--warning)' },
+    { value: 'Nesposoban', labelBs: 'Nesposoban', labelEn: 'Unfit', color: 'var(--danger)' },
 ];
 
 const getDays = (dateStr) => {
@@ -37,10 +37,10 @@ const getDays = (dateStr) => {
 const getStatusBadge = (exam) => {
     const d = getDays(exam.vrijediDo);
     if (d === null) return { label: 'Bez roka', color: 'var(--text-muted)', bg: 'var(--border-light)' };
-    if (d < 0)    return { label: 'Isteklo',        color: 'white', bg: 'var(--danger)' };
-    if (d <= 30)  return { label: `${d}d`,          color: 'white', bg: '#E65100' };
-    if (d <= 90)  return { label: `${d}d`,          color: 'white', bg: 'var(--warning)' };
-    return { label: 'Vrijedi',                       color: 'white', bg: 'var(--success)' };
+    if (d < 0) return { label: 'Isteklo', color: 'white', bg: 'var(--danger)' };
+    if (d <= 30) return { label: `${d}d`, color: 'white', bg: '#E65100' };
+    if (d <= 90) return { label: `${d}d`, color: 'white', bg: 'var(--warning)' };
+    return { label: 'Vrijedi', color: 'white', bg: 'var(--success)' };
 };
 
 const emptyForm = {
@@ -76,30 +76,30 @@ export default function MedicalExamsPage() {
 
     // Auto-open form from URL params (openNew=1) or session draft
 
-  const toggleAll = (e) => {
-    if (e.target.checked) setSelectedIds(new Set(exams.map(x => x.id)));
-    else setSelectedIds(new Set());
-  };
-  const toggleOne = (id) => {
-    const next = new Set(selectedIds);
-    if (next.has(id)) next.delete(id); else next.add(id);
-    setSelectedIds(next);
-  };
-  const handleDuplicate = async (it) => {
-    const copy = { ...it };
-    delete copy.id; delete copy.createdAt; delete copy.updatedAt;
-    copy.datum = new Date().toISOString().split('T')[0];
-    await create(COLLECTIONS.MEDICAL_EXAMS, copy);
-    reload();
-  };
-  const handleDeleteSelected = async () => {
-    if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
-      for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
-      setSelectedIds(new Set());
-      reload();
-    }
-  };
+    const toggleAll = (e) => {
+        if (e.target.checked) setSelectedIds(new Set(exams.map(x => x.id)));
+        else setSelectedIds(new Set());
+    };
+    const toggleOne = (id) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id); else next.add(id);
+        setSelectedIds(next);
+    };
+    const handleDuplicate = async (it) => {
+        const copy = { ...it };
+        delete copy.id; delete copy.createdAt; delete copy.updatedAt;
+        copy.datum = new Date().toISOString().split('T')[0];
+        await create(COLLECTIONS.MEDICAL_EXAMS, copy);
+        reload();
+    };
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+            for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
+            setSelectedIds(new Set());
+            reload();
+        }
+    };
 
     useEffect(() => {
         if (typeof window === 'undefined') return;
@@ -136,7 +136,7 @@ export default function MedicalExamsPage() {
 
     const reload = useCallback(() => setExams(getAll(COLLECTIONS.MEDICAL_EXAMS)), []);
 
-    
+
     const setField = (k, v) => { setForm(p => ({ ...p, [k]: v })); setIsDirty(true); };
 
     // ── Stats ──────────────────────────────────────────────────────────────────
@@ -170,8 +170,8 @@ export default function MedicalExamsPage() {
             );
         }
         if (filterTab === 'expired') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d < 0; });
-        if (filterTab === 'soon')    list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d >= 0 && d <= 90; });
-        if (filterTab === 'valid')   list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d > 90; });
+        if (filterTab === 'soon') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d >= 0 && d <= 90; });
+        if (filterTab === 'valid') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d > 90; });
         return list.sort((a, b) => {
             const da = getDays(a.vrijediDo) ?? 999999;
             const db = getDays(b.vrijediDo) ?? 999999;
@@ -218,8 +218,7 @@ export default function MedicalExamsPage() {
     };
 
     const handleDelete = async (exam) => {
-        if (await confirm(bs ? `Obrisati pregled za ${exam._workerName}?` : `Delete exam for ${exam._workerName}?`))
-        { remove(COLLECTIONS.MEDICAL_EXAMS, exam.id); reload(); }
+        if (await confirm(bs ? `Obrisati pregled za ${exam._workerName}?` : `Delete exam for ${exam._workerName}?`)) { remove(COLLECTIONS.MEDICAL_EXAMS, exam.id); reload(); }
     };
 
     const handleNew = () => { setEditingId(null); setForm({ ...emptyForm }); setShowForm(true); };
@@ -229,10 +228,10 @@ export default function MedicalExamsPage() {
     const resultLabel = (v) => RESULTS.find(r => r.value === v)?.[bs ? 'labelBs' : 'labelEn'] || v;
 
     const tabs = [
-        { key: 'all',     label: bs ? `Svi (${stats.total})` : `All (${stats.total})` },
-        { key: 'expired', label: bs ? `Isteklo (${stats.expired})` : `Expired (${stats.expired})`,  col: 'var(--danger)' },
-        { key: 'soon',    label: bs ? `Uskoro (${stats.soon})` : `Soon (${stats.soon})`,            col: 'var(--warning)' },
-        { key: 'valid',   label: bs ? `Vrijedi (${stats.valid})` : `Valid (${stats.valid})`,        col: 'var(--success)' },
+        { key: 'all', label: bs ? `Svi (${stats.total})` : `All (${stats.total})` },
+        { key: 'expired', label: bs ? `Isteklo (${stats.expired})` : `Expired (${stats.expired})`, col: 'var(--danger)' },
+        { key: 'soon', label: bs ? `Uskoro (${stats.soon})` : `Soon (${stats.soon})`, col: 'var(--warning)' },
+        { key: 'valid', label: bs ? `Vrijedi (${stats.valid})` : `Valid (${stats.valid})`, col: 'var(--success)' },
     ];
 
     return (
@@ -256,15 +255,15 @@ export default function MedicalExamsPage() {
                     + {bs ? 'Novi pregled' : 'New Exam'}
                 </button>
                 {orgUnits.length > 0 && (
-                  <select
-                    className="form-select eznr-odjel-filter"
-                    value={filterOrgUnit}
-                    onChange={e => setFilterOrgUnit(e.target.value)}
-                    title={bs ? 'Filtriraj preglede po odjelu / sektoru' : 'Filter exams by department'}
-                  >
-                    <option value=''>{bs ? 'Svi odjeli' : 'All Depts'}</option>
-                    {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                  </select>
+                    <select
+                        className="form-select"
+                        style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                        value={filterOrgUnit}
+                        onChange={e => setFilterOrgUnit(e.target.value)}
+                    >
+                        <option value=''>{bs ? 'Svi odjeli' : 'All departments'}</option>
+                        {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                    </select>
                 )}
                 <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
                     <input
@@ -286,18 +285,18 @@ export default function MedicalExamsPage() {
                         🕐 {stats.soon} {bs ? 'uskoro' : 'due soon'}
                     </span>
                 )}
-                
-            {/* ── Grupne akcije bar ── */}
-            {selectedIds.size > 0 && (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  {selectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
-                </span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
-              </div>
-            )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
+
+                {/* ── Grupne akcije bar ── */}
+                {selectedIds.size > 0 && (
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                            {selectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                        </span>
+                        <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
+                        <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                    </div>
+                )}
+                {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
             </div>
 
             {/* ── Filter tabs ── */}
@@ -370,15 +369,15 @@ export default function MedicalExamsPage() {
                                                         setActionMenuId(exam.id);
                                                     }}>Akcije ▼</button>
                                                     {actionMenuId === exam.id && (
-                                                      <>
-                                                        <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                                                        <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                            <button onClick={() => { setActionMenuId(null); handleEdit(exam); }} style={menuItemSt}>✏️ Otvori</button>
-                                                            <button onClick={() => { setActionMenuId(null); handleDuplicate(exam); }} style={menuItemSt}>📋 Kopiraj</button>
-                                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => { setActionMenuId(null); handleDelete(exam); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
-                                                        </div>
-                                                      </>
+                                                        <>
+                                                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                            <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                                <button onClick={() => { setActionMenuId(null); handleEdit(exam); }} style={menuItemSt}>✏️ Otvori</button>
+                                                                <button onClick={() => { setActionMenuId(null); handleDuplicate(exam); }} style={menuItemSt}>📋 Kopiraj</button>
+                                                                <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                                <button onClick={() => { setActionMenuId(null); handleDelete(exam); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                                                            </div>
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>
@@ -447,10 +446,10 @@ export default function MedicalExamsPage() {
                                 <div className="form-group">
                                     <label className="form-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span>{bs ? 'Broj uputnice (RA-1)' : 'Referral No. (RA-1)'}</span>
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             title={bs ? 'Idi na kreiranje nove Uputnice RA-1' : 'Create new RA-1 Referral'}
-                                            onClick={() => router.push('/dashboard/referral-ra1?openNew=1')} 
+                                            onClick={() => router.push('/dashboard/referral-ra1?openNew=1')}
                                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, padding: 0, textDecoration: 'underline' }}
                                         >
                                             ↗ {bs ? 'Modul RA-1' : 'RA-1 Module'}

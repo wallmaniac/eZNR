@@ -205,29 +205,31 @@ export async function loadCompanyData(companyId) {
                 return new Promise((resolve) => {
                     try {
                         const targets = companyId === 'all' ? _getUserCompanyIds() : [companyId];
-                        
+
                         if (targets.length === 0) {
                             _cache[colName] = [];
                             return resolve();
                         }
-                        
+
                         let completed = 0;
                         if (!_cache[colName] || companyId === _activeCompanyId) _cache[colName] = []; // initialize empty
-                        
+
                         targets.forEach(targetId => {
                             const colRef = fsCollection(db, `companies/${targetId}/${colName}`);
                             const unsub = onSnapshot(colRef, (snap) => {
                                 const newDocs = snap.docs.map(d => ({ id: d.id, companyId: targetId, ...d.data() }));
-                                
+
                                 // Merge data: remove old entries for THIS target company, then push new ones natively
                                 _cache[colName] = [
                                     ...(_cache[colName] || []).filter(item => item.companyId !== targetId),
                                     ...newDocs
                                 ];
-                                
+
                                 _notifyListeners();
-                                _debouncedSyncEvent();
-                                
+                                if (typeof window !== 'undefined') {
+                                    window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                                }
+
                                 completed++;
                                 // Only resolve after all initial snapshots return to unblock the main screen
                                 if (completed === targets.length) resolve();
@@ -252,9 +254,11 @@ export async function loadCompanyData(companyId) {
                     const colRef = fsCollection(db, colName);
                     const snap = await getDocs(colRef);
                     _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-                    
-                    // Dispatch sync event so dependent UI (dropdowns) populate lazily
-                    _debouncedSyncEvent();
+
+                    // Dispatch sync event individually so dependent UI (dropdowns) populate lazily
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                    }
                 } catch (err) {
                     console.warn(`[dataStore] ⚠️ Failed to load global ${colName}:`, err.message);
                     _cache[colName] = [];
@@ -274,7 +278,7 @@ export async function loadCompanyData(companyId) {
 
             // Unblock main thread: Only await critical meta-data (users & companies for auth routing)
             await Promise.all(metaLoads);
-            
+
             // Allow everything else to initialize gracefully in the background
             Promise.all([...companyLoads, ...globalLoads]).then(() => {
                 console.log('[dataStore] 📡 All real-time modules & global references established.');
@@ -323,23 +327,8 @@ export function onDataChange(callback) {
     return () => _listeners.delete(callback);
 }
 
-let _isNotifying = false;
 function _notifyListeners() {
-    if (_isNotifying) return;          // prevent re-entrant stack overflow
-    _isNotifying = true;
-    try { _listeners.forEach(cb => { try { cb(); } catch { } }); }
-    finally { _isNotifying = false; }
-}
-
-// Debounced data-synced DOM event — coalesces rapid onSnapshot bursts
-let _syncTimer = null;
-function _debouncedSyncEvent() {
-    if (typeof window === 'undefined') return;
-    if (_syncTimer) return;            // already scheduled
-    _syncTimer = setTimeout(() => {
-        _syncTimer = null;
-        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
-    }, 60);
+    _listeners.forEach(cb => { try { cb(); } catch { } });
 }
 
 function _detachListeners() {
@@ -428,7 +417,7 @@ export async function createMass(collection, dataArray) {
     const now = new Date().toISOString();
     const companyId = _getActiveCompanyId();
     const path = _getCollectionPath(collection);
-    
+
     // Fallback if no path (e.g. no active company)
     if (!path) return [];
 
@@ -460,7 +449,7 @@ export async function createMass(collection, dataArray) {
         });
         try {
             await batch.commit();
-        } catch(err) {
+        } catch (err) {
             console.error('[createMass] Batch commit failed for', collection, err);
         }
     }

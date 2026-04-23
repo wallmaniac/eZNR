@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -156,7 +156,7 @@ function EmployerDocsInner() {
     // Sortable columns via reusable hook
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'naziv');
 
-    // â”€â”€ Bulk actions â”€â”€
+    // ���� Bulk actions ����
     const toggleSelect = (id) => {
         setSelected(prev => {
             const next = new Set(prev);
@@ -219,7 +219,7 @@ ${toPrint.map((d, i) => `<tr>
         if (w) { w.document.write(html); w.document.close(); }
     };
 
-    // â”€â”€ Shared menu item style (matching trainings/workers pattern) â”€â”€
+    // ���� Shared menu item style (matching trainings/workers pattern) ����
     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
     const tabs = [
@@ -294,7 +294,7 @@ ${toPrint.map((d, i) => `<tr>
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)' }}>
                 {tabs.map(tb => (
-                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} title={`Prikaži dokumente iz kategorije: ${tb.label}`}
+                    <button key={tb.key} onClick={() => setActiveTab(tb.key)} title={`Prika~i dokumente iz kategorije: ${tb.label}`}
                         className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}>
                         {tb.icon} {tb.label} <span style={{ marginLeft: 8, background: activeTab === tb.key ? 'rgba(0,191,166,0.15)' : 'var(--bg-badge)', color: activeTab === tb.key ? 'var(--primary)' : 'var(--text-muted)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 700 }}>{docs.filter(d => d.kategorija === tb.key).length}</span>
                     </button>
@@ -307,7 +307,7 @@ ${toPrint.map((d, i) => `<tr>
                         <button className="btn btn-primary btn-sm" title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {lang === 'bs' ? 'Novi dokument' : 'New Document'}</button>
                         <SavedFlash />
 
-                        {/* â”€â”€ Grupne akcije bar â”€â”€ */}
+                        {/* ���� Grupne akcije bar ���� */}
                         {selected.size > 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
@@ -353,10 +353,10 @@ ${toPrint.map((d, i) => `<tr>
                                             <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                 <input type="checkbox" checked={isChecked} onChange={() => toggleSelect(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                             </td>
-                                            {/* Akcije button â€” green btn-primary, matching trainings/workers pattern */}
+                                            {/* Akcije button � green btn-primary, matching trainings/workers pattern */}
                                             <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm" data-menu-trigger title="PrikaÅ¾i padajuÄ‡i izbornik akcija za dokument"
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger title="Prikaži padaju�!i izbornik akcija za dokument"
                                                         onClick={(e) => {
                                                             e.stopPropagation();
                                                             if (openMenuId === doc.id) { setOpenMenuId(null); return; }
@@ -390,7 +390,7 @@ ${toPrint.map((d, i) => `<tr>
                                                             <button onClick={() => handlePrintSingle(doc)} style={menuItemSt}>{'\u{1F5A8}\uFE0F'} Isprintaj</button>
                                                             <button onClick={() => { setOpenMenuId(null); handleDownloadFile(doc); }} style={menuItemSt}>{'\u{1F4D7}'} Preuzmi</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handleDelete(doc.id)} style={{ ...menuItemSt, color: 'var(--danger)' }}>{'🗑️ Izbriši'}</button>
+                                                            <button onClick={() => handleDelete(doc.id)} style={{ ...menuItemSt, color: 'var(--danger)' }}>{'=� Izbriai'}</button>
                                                         </div>
                                                     )}
                                                 </div>

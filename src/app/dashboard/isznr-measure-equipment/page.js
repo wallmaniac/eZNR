@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';

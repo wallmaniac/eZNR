@@ -58,16 +58,16 @@ export default function WorkerPPEPage() {
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
     if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} zaduženja?` : `Delete ${selectedIds.size} assignments?`)) {
-        for (let id of selectedIds) remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
-        setSelectedIds(new Set());
-        setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
+      for (let id of selectedIds) remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
+      setSelectedIds(new Set());
+      setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
     }
   };
-  
+
   const handleDelete = async (id) => {
     if (await confirm(lang === 'bs' ? 'Obrisati zaduženje?' : 'Delete assignment?')) {
-        remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
-        setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
+      remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
+      setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
     }
   };
 
@@ -114,18 +114,18 @@ export default function WorkerPPEPage() {
               + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
             </button>
             <PDFExportButton options={[
-                { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport([], lang) },
-                ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport([...selectedIds], lang) }] : []),
+              { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport([], lang) },
+              ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport([...selectedIds], lang) }] : []),
             ]} />
             <SavedFlash />
             {orgUnits.length > 0 && (
               <select
-                className="form-select eznr-odjel-filter"
+                className="form-select"
+                style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
                 value={filterOrgUnit}
                 onChange={e => setFilterOrgUnit(e.target.value)}
-                title={lang === 'bs' ? 'Filtriraj OZO zaduženja po odjelu / sektoru' : 'Filter PPE assignments by department'}
               >
-                <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All Depts'}</option>
+                <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All departments'}</option>
                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
               </select>
             )}
@@ -141,10 +141,10 @@ export default function WorkerPPEPage() {
             </div>
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                      {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
-                  </span>
-                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                </span>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
             {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>{sortedRows.length} {t('records')}</span>}
@@ -161,32 +161,32 @@ export default function WorkerPPEPage() {
               {sortedRows.length === 0
                 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                 : sortedRows.map((r, idx) => (
-                  <tr key={r.id || idx} style={{ transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                  <tr key={r.id || idx} style={{ transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
                     <td style={{ textAlign: 'center' }}>
                       <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                     </td>
                     <td>
                       <div style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => {
-                            e.stopPropagation();
-                            if (actionMenuId === r.id) { setActionMenuId(null); return; }
-                            const rect = e.currentTarget.getBoundingClientRect();
-                            const spaceBelow = window.innerHeight - rect.bottom - 8;
-                            const spaceAbove = rect.top - 8;
-                            const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
-                            setMenuPos(flipUp
-                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
-                            );
-                            setActionMenuId(r.id);
+                          e.stopPropagation();
+                          if (actionMenuId === r.id) { setActionMenuId(null); return; }
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const spaceBelow = window.innerHeight - rect.bottom - 8;
+                          const spaceAbove = rect.top - 8;
+                          const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                          setMenuPos(flipUp
+                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                          );
+                          setActionMenuId(r.id);
                         }}>Akcije ▼</button>
                         {actionMenuId === r.id && (
-                            <>
+                          <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                             <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
                             </div>
-                            </>
+                          </>
                         )}
                       </div>
                     </td>
@@ -242,7 +242,7 @@ export default function WorkerPPEPage() {
                   style={{ marginBottom: 6 }}
                 >
                   <option value="__custom__">{lang === 'bs' ? '— Odaberi iz kataloga ili unesi ručno —' : '— Select from catalogue or enter manually —'}</option>
-                  {ppeTypes.sort((a,b) => (a.naziv || '').localeCompare(b.naziv || '')).map(p => (
+                  {ppeTypes.sort((a, b) => (a.naziv || '').localeCompare(b.naziv || '')).map(p => (
                     <option key={p.id} value={p.naziv}>{p.naziv}</option>
                   ))}
                 </select>
