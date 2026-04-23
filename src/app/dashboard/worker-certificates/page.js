@@ -92,6 +92,8 @@ function WorkerCertificatesInner() {
   const [isPending, startTransition] = useTransition();
   const [navigatingId, setNavigatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(25);
   const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [showExpiringSoon, setShowExpiringSoon] = useState(false);
   const [expiringSoonDays, setExpiringSoonDays] = useState(60);
@@ -150,17 +152,28 @@ function WorkerCertificatesInner() {
     'asc'
   );
 
+  const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  const pagedRows = rows.slice((page - 1) * perPage, page * perPage);
+
   // ── Bulk helpers ──────────────────────────────────────────────────────────
-  const allSelected = rows.length > 0 && rows.every(r => selectedIds.has(r.id));
-  const someSelected = rows.some(r => selectedIds.has(r.id));
+  const allSelected = pagedRows.length > 0 && pagedRows.every(r => selectedIds.has(r.id));
+  const someSelected = pagedRows.some(r => selectedIds.has(r.id));
 
   const toggleAll = useCallback(() => {
     if (allSelected) {
-      setSelectedIds(new Set());
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        pagedRows.forEach(r => next.delete(r.id));
+        return next;
+      });
     } else {
-      setSelectedIds(new Set(rows.map(r => r.id)));
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        pagedRows.forEach(r => next.add(r.id));
+        return next;
+      });
     }
-  }, [allSelected, rows]);
+  }, [allSelected, pagedRows]);
 
   const toggleOne = useCallback((id) => {
     setSelectedIds(prev => {
@@ -172,7 +185,7 @@ function WorkerCertificatesInner() {
   }, []);
 
   // Clear selection when filter changes
-  useEffect(() => { setSelectedIds(new Set()); }, [searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays]);
+  useEffect(() => { setSelectedIds(new Set()); setPage(1); }, [searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays, filterOrgUnit]);
 
   // ── Bulk print ────────────────────────────────────────────────────────────
   const handleBulkPrint = useCallback(() => {
@@ -338,11 +351,11 @@ function WorkerCertificatesInner() {
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.length === 0 ? (
+                  {pagedRows.length === 0 ? (
                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                       {searchTerm ? (bs ? `Nema rezultata za "${searchTerm}"` : `No results for "${searchTerm}"`) : t('noRecords')}
                     </td></tr>
-                  ) : rows.map((r, idx) => {
+                  ) : pagedRows.map((r, idx) => {
                     const diff = r.vrijediDo ? (new Date(r.vrijediDo) - new Date()) / (1000 * 60 * 60 * 24) : 999;
                     const isNavigating = navigatingId === r.id && isPending;
                     const isSelected = selectedIds.has(r.id);
@@ -494,6 +507,29 @@ function WorkerCertificatesInner() {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination */}
+            {rows.length > 0 && (
+              <div className="pagination" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-light)' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                      {`${(page - 1) * perPage + 1} - ${Math.min(page * perPage, rows.length)} ${t('of')} ${rows.length}`} {t('records')}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>
+                      <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>‹</button>
+                      <button className="pagination-btn active">{page}</button>
+                      <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>›</button>
+                      <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>»</button>
+                      <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); setSelectedIds(new Set()); }}
+                          style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
+                          <option value={10}>10 {t('perPage')}</option>
+                          <option value={25}>25 {t('perPage')}</option>
+                          <option value={50}>50 {t('perPage')}</option>
+                          <option value={100}>100 {t('perPage')}</option>
+                      </select>
+                  </div>
+              </div>
+            )}
 
             {/* ── Bottom hint when none selected ────────────────────────── */}
             {selectedIds.size === 0 && rows.length > 0 && (
