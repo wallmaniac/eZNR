@@ -1610,13 +1610,6 @@ function WorkersPageInner() {
                             <button className="btn btn-primary btn-sm" onClick={handleNew}>
                                 + {t('add')}
                             </button>
-                            <PDFExportButton
-                                label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'}
-                                options={[
-                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport([], lang) },
-                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(Array.from(selectedIds), lang) }] : [])
-                                ]}
-                            />
                             <select
                                 className="form-select"
                                 style={{ height: 38, padding: '0 12px', minWidth: 260, flex: 1, maxWidth: '100%', fontSize: '0.85rem' }}
