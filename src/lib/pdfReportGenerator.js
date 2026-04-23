@@ -280,8 +280,9 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   const allWorkers = getAll(COLLECTIONS.WORKERS);
   const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
   const workplaces = getAll(COLLECTIONS.WORKPLACES);
-  let workers = workerIds.length > 0
-    ? workerIds.map(id => allWorkers.find(w => w.id === id)).filter(Boolean)
+  const uniqueWorkerIds = [...new Set(workerIds || [])];
+  let workers = uniqueWorkerIds.length > 0
+    ? uniqueWorkerIds.map(id => allWorkers.find(w => w.id === id)).filter(Boolean)
     : allWorkers.filter(w => w.aktivan !== false);
 
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
@@ -354,8 +355,9 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
   const company = getCompanyInfo();
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const workers = getAll(COLLECTIONS.WORKERS);
-  const certs = certIds.length > 0
-    ? certIds.map(id => allCerts.find(c => c.id === id)).filter(Boolean)
+  const uniqueCertIds = [...new Set(certIds || [])];
+  const certs = uniqueCertIds.length > 0
+    ? uniqueCertIds.map(id => allCerts.find(c => c.id === id)).filter(Boolean)
     : allCerts;
 
   const title = bs ? 'PREGLED UVJERENJA I CERTIFIKATA' : 'CERTIFICATE STATUS REPORT';
