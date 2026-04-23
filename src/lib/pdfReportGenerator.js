@@ -632,3 +632,59 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
 
   openPrintWindow(wrapDocument(html, title, false, bs, company.accentColor, company), title);
 }
+
+
+export function generateObservationsReport(obsIds = [], lang = 'bs') {
+    const jsPDF = window.jspdf.jsPDF;
+    const doc = new jsPDF('l', 'mm', 'a4');
+    
+    let obsList = window.__EZNR_DATASTORE?.safety_observations || [];
+    if (obsIds.length > 0) {
+        obsList = obsList.filter(o => obsIds.includes(o.id));
+    }
+    
+    // Sort
+    obsList.sort((a, b) => new Date(b.datum || 0) - new Date(a.datum || 0));
+
+    doc.setFontSize(16);
+    doc.text(lang === 'bs' ? 'Izvještaj: Prijave Opasnosti' : 'Hazard Reports', 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text(`${lang === 'bs' ? 'Datum generisanja' : 'Generated on'}: ${new Date().toLocaleDateString()}`, 14, 28);
+    
+    const tableData = obsList.map((o, i) => [
+        i + 1,
+        o.datum ? new Date(o.datum).toLocaleDateString() : '',
+        o.lokacija || '',
+        o.opis || '',
+        o.ime || '',
+        o.status || ''
+    ]);
+
+    doc.autoTable({
+        startY: 35,
+        head: [[
+            '#', 
+            lang === 'bs' ? 'Datum' : 'Date', 
+            lang === 'bs' ? 'Lokacija' : 'Location', 
+            lang === 'bs' ? 'Opis' : 'Description', 
+            lang === 'bs' ? 'Prijavio' : 'Reporter',
+            'Status'
+        ]],
+        body: tableData,
+        theme: 'grid',
+        headStyles: { fillColor: [0, 191, 166] },
+        styles: { fontSize: 8, cellPadding: 3 },
+        columnStyles: {
+            0: { cellWidth: 10 },
+            1: { cellWidth: 25 },
+            2: { cellWidth: 50 },
+            3: { cellWidth: 'auto' },
+            4: { cellWidth: 35 },
+            5: { cellWidth: 25 }
+        }
+    });
+
+    doc.save('prijave_opasnosti.pdf');
+}

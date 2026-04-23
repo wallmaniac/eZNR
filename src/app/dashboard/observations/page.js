@@ -8,6 +8,8 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { QRCodeSVG } from 'qrcode.react';
+import PDFExportButton from '@/components/PDFExportButton';
+import { generateObservationsReport } from '@/lib/pdfReportGenerator';
 
 export default function ObservationsPage() {
     const { t, lang } = useLanguage();
@@ -29,10 +31,19 @@ export default function ObservationsPage() {
     const [showNewForm, setShowNewForm] = useState(false);
     const [newFormData, setNewFormData] = useState({ opis: '', lokacija: '', ime: '' });
     const [newFormSaving, setNewFormSaving] = useState(false);
+    
+    // Toolbar state
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [selectedIds, setSelectedIds] = useState(new Set());
+    
+    // Image Upload State for Admin Form
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const fileInputGalleryRef = useRef(null);
 
     const loadData = useCallback(() => {
         const obs = getAll(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations');
-        // Sort newest first
         obs.sort((a, b) => new Date(b.datum || 0) - new Date(a.datum || 0));
         setItems(obs);
     }, []);
@@ -43,7 +54,6 @@ export default function ObservationsPage() {
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
 
-    // Capture initial deep link ID safely to survive Next.js router soft-navigation lifecycle
     const [deepLinkId, setDeepLinkId] = useState(() => {
         if (typeof window !== 'undefined') {
              return new URLSearchParams(window.location.search).get('id');
@@ -51,22 +61,97 @@ export default function ObservationsPage() {
         return null;
     });
 
-    // Handle deep link to open specific hazard observation from Email
     useEffect(() => {
         if (deepLinkId && items.length > 0 && !viewingItem) {
             const h = items.find(i => i.id === deepLinkId);
             if (h) {
                 setViewingItem(h);
                 setDeepLinkId(null);
-                // Remove ?id= from URL so it doesn't persistently re-open on refresh
                 window.history.replaceState({}, '', window.location.pathname);
             }
         }
     }, [items, viewingItem, deepLinkId]);
 
-    const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(items, 'datum', 'desc');
+    const filteredItems = items.filter(it => {
+        if (filterStatus && it.status !== filterStatus) return false;
+        if (searchTerm) {
+            const q = searchTerm.toLowerCase();
+            const lok = (it.lokacija || '').toLowerCase();
+            const op = (it.opis || '').toLowerCase();
+            const im = (it.ime || '').toLowerCase();
+            if (!lok.includes(q) && !op.includes(q) && !im.includes(q)) return false;
+        }
+        return true;
+    });
 
-    // ── Handle new internal hazard submission ──
+    const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(filteredItems, 'datum', 'desc');
+
+    const toggleOne = (id) => {
+        const next = new Set(selectedIds);
+        if (next.has(id)) next.delete(id);
+        else next.add(id);
+        setSelectedIds(next);
+    };
+
+    const toggleAll = () => {
+        if (selectedIds.size === sortedItems.length && sortedItems.length > 0) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(sortedItems.map(i => i.id)));
+        }
+    };
+
+    // Client-side compression
+    const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = event => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX = 1280;
+                    if (width > height) {
+                        if (width > MAX) { height *= MAX / width; width = MAX; }
+                    } else {
+                        if (height > MAX) { width *= MAX / height; height = MAX; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob((blob) => {
+                        resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                            type: 'image/webp',
+                            lastModified: Date.now()
+                        }));
+                    }, 'image/webp', 0.8);
+                };
+                img.onerror = error => reject(error);
+            };
+            reader.onerror = error => reject(error);
+        });
+    };
+
+    const handleFileSelect = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) {
+            alert(lang === 'bs' ? 'Možete odabrati samo slike.' : 'You can only select images.');
+            return;
+        }
+        try {
+            const compressed = await compressImage(file);
+            setImageFile(compressed);
+            setImagePreview(URL.createObjectURL(compressed));
+        } catch (err) {
+            alert(lang === 'bs' ? 'Greška pri obradi slike.' : 'Error processing image.');
+        }
+    };
+
     const handleNewSubmit = async () => {
         if (!newFormData.opis.trim() || !newFormData.lokacija.trim()) {
             await alert(lang === 'bs' ? 'Popunite obavezna polja: Opis i Lokacija.' : 'Description and location are required.');
@@ -74,17 +159,56 @@ export default function ObservationsPage() {
         }
         setNewFormSaving(true);
         try {
-            create(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', {
-                opis: newFormData.opis,
-                lokacija: newFormData.lokacija,
-                ime: newFormData.ime || (lang === 'bs' ? 'Admin' : 'Admin'),
-                status: 'Novo',
-                datum: new Date().toISOString(),
-            });
+            let base64Image = null;
+            if (imageFile) {
+                base64Image = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(imageFile);
+                });
+            }
+
+            if (base64Image) {
+                const proxyDbRes = await fetch('/api/firebase-proxy', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        functionName: 'saveHazard',
+                        data: {
+                            companyId: activeCompanyId || 'all',
+                            base64Image,
+                            mimeType: imageFile.type,
+                            payload: {
+                                opis: newFormData.opis,
+                                lokacija: newFormData.lokacija,
+                                ime: newFormData.ime || (lang === 'bs' ? 'Admin' : 'Admin'),
+                                status: 'Novo',
+                                datum: new Date().toISOString(),
+                            }
+                        }
+                    })
+                });
+                const proxyDbData = await proxyDbRes.json();
+                const proxyDbResult = proxyDbData.result || proxyDbData;
+                if (!proxyDbResult.success) {
+                    throw new Error(proxyDbResult.error || 'Server rejected saveHazard');
+                }
+            } else {
+                create(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', {
+                    opis: newFormData.opis,
+                    lokacija: newFormData.lokacija,
+                    ime: newFormData.ime || (lang === 'bs' ? 'Admin' : 'Admin'),
+                    status: 'Novo',
+                    datum: new Date().toISOString(),
+                });
+            }
+
             loadData();
             showFlash();
             setShowNewForm(false);
             setNewFormData({ opis: '', lokacija: '', ime: '' });
+            setImageFile(null);
+            setImagePreview(null);
         } catch (e) {
             await alert(lang === 'bs' ? 'Greška: ' + e.message : 'Error: ' + e.message);
         } finally {
@@ -96,7 +220,7 @@ export default function ObservationsPage() {
         try {
             await update(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', item.id, { status: novistatus });
             showFlash();
-            loadData(); // local reload to reflect changes
+            loadData(); 
         } catch(e) {
             alert('Greška pri promjeni statusa: ' + e.message);
         }
@@ -148,14 +272,6 @@ export default function ObservationsPage() {
                         {items.length} {lang === 'bs' ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}
                     </p>
                 </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary btn-sm" onClick={() => setShowNewForm(true)} title={lang === 'bs' ? 'Ručno prijavi opasnost iz administracije' : 'Manually report a hazard from administration'}>
-                        + {lang === 'bs' ? 'Nova prijava' : 'New Report'}
-                    </button>
-                    <button className="btn btn-outline btn-sm eznr-hide-mobile" onClick={() => setShowQR(true)} title={lang === 'bs' ? 'Isprintaj QR kod plakat za gradilište' : 'Print QR code poster for the worksite'}>
-                        🖨️ {lang === 'bs' ? 'QR Kod' : 'QR Code'}
-                    </button>
-                </div>
             </div>
 
             <p style={{ marginBottom: 24, fontSize: '0.86rem', color: 'var(--text-muted)' }}>
@@ -201,6 +317,46 @@ export default function ObservationsPage() {
                                     onChange={e => setNewFormData({ ...newFormData, ime: e.target.value })}
                                 />
                             </div>
+                            <div className="form-group">
+                                <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
+                                <div 
+                                    style={{ 
+                                        border: '2px dashed var(--border)', 
+                                        borderRadius: 'var(--radius-md)', 
+                                        padding: '24px 20px', 
+                                        textAlign: 'center',
+                                        background: 'var(--bg-card)',
+                                        position: 'relative',
+                                        overflow: 'hidden'
+                                    }}>
+                                    {imagePreview ? (
+                                        <img src={imagePreview} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover' }} alt="Preview" />
+                                    ) : (
+                                        <div>
+                                            <div style={{ fontSize: 32, marginBottom: 12 }}>📷</div>
+                                            <button 
+                                                type="button" 
+                                                className="btn btn-outline btn-sm" 
+                                                onClick={() => fileInputGalleryRef.current?.click()} 
+                                            >
+                                                {lang === 'bs' ? 'Odaberi Sliku' : 'Select Image'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                {imagePreview && (
+                                    <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8, color: 'var(--danger)', margin: '8px auto', display: 'block' }} onClick={() => { setImageFile(null); setImagePreview(null); }}>
+                                        {lang === 'bs' ? 'Ukloni sliku' : 'Remove photo'}
+                                    </button>
+                                )}
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    ref={fileInputGalleryRef} 
+                                    style={{ display: 'none' }} 
+                                    onChange={handleFileSelect}
+                                />
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={() => setShowNewForm(false)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
@@ -213,10 +369,90 @@ export default function ObservationsPage() {
             )}
 
             <div className="card">
+                <div className="card-body" style={{ padding: 0 }}>
+                    {/* Toolbar */}
+                    <div className="uvjerenja-toolbar">
+                        <button className="btn btn-primary btn-sm" onClick={() => setShowNewForm(true)} title={lang === 'bs' ? 'Ručno prijavi opasnost iz administracije' : 'Manually report a hazard from administration'}>
+                            + {lang === 'bs' ? 'Nova prijava' : 'New Report'}
+                        </button>
+                        
+                        <button className="btn btn-outline btn-sm eznr-hide-mobile" onClick={() => setShowQR(true)} title={lang === 'bs' ? 'Isprintaj QR kod plakat za gradilište' : 'Print QR code poster for the worksite'}>
+                            🖨️ {lang === 'bs' ? 'QR Kod' : 'QR Code'}
+                        </button>
+
+                        <PDFExportButton
+                            options={[
+                                { label: lang === 'bs' ? 'Sve prijave' : 'All reports', icon: '📄', onClick: () => generateObservationsReport([], lang) },
+                                { label: lang === 'bs' ? `Odabrane (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => {
+                                    if (selectedIds.size === 0) { alert(lang === 'bs' ? 'Nema odabranih prijava!' : 'No reports selected!'); return; }
+                                    generateObservationsReport(Array.from(selectedIds), lang);
+                                }}
+                            ]}
+                        />
+
+                        <div className="search-bar search-full" style={{ flex: 'none', width: '220px' }}>
+                            <span style={{ fontSize: '1rem' }}>🔍</span>
+                            <input
+                                placeholder={lang === 'bs' ? 'Pretraži prijave...' : 'Search reports...'}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                            />
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                        </div>
+
+                        <select
+                            className="form-select eznr-odjel-filter"
+                            value={filterStatus}
+                            style={{ width: '130px' }}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                        >
+                            <option value="">{lang === 'bs' ? 'Svi statusi' : 'All Statuses'}</option>
+                            <option value="Novo">Novo</option>
+                            <option value="U obradi">U obradi</option>
+                            <option value="Riješeno">Riješeno</option>
+                        </select>
+                        
+                        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            {selectedIds.size > 0 && (
+                                <>
+                                    <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                    </span>
+                                    <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none' }} onClick={async () => {
+                                        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} prijava? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} reports? This cannot be undone!`);
+                                        if (ok) {
+                                            for (let id of Array.from(selectedIds)) {
+                                                await remove(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', id);
+                                            }
+                                            setSelectedIds(new Set());
+                                            loadData();
+                                        }
+                                    }}>
+                                        🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                    </button>
+                                    <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())} title={lang === 'bs' ? 'Poništi odabir' : 'Clear selection'}>
+                                        ✕
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
                 <div className="data-table-wrapper">
                     <table className="data-table">
                         <thead>
                             <tr>
+                                <th style={{ width: 40, textAlign: 'center' }}>
+                                    <input 
+                                        type="checkbox" 
+                                        style={{ cursor: 'pointer', width: 16, height: 16 }}
+                                        checked={sortedItems.length > 0 && selectedIds.size === sortedItems.length}
+                                        ref={el => { if (el) el.indeterminate = selectedIds.size > 0 && selectedIds.size < sortedItems.length; }}
+                                        onChange={toggleAll}
+                                    />
+                                </th>
                                 <th onClick={() => requestSort('datum')} style={{...thStyle('datum'), width: 120}}>
                                     {lang === 'bs' ? 'Datum' : 'Date'} {sortIcon('datum')}
                                 </th>
@@ -238,14 +474,22 @@ export default function ObservationsPage() {
                         <tbody>
                             {sortedItems.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
+                                    <td colSpan={7} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>
                                         <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
                                         {lang === 'bs' ? 'Nema prijavljenih opasnosti' : 'No hazard reports found'}
                                     </td>
                                 </tr>
                             ) : null}
                             {sortedItems.map(item => (
-                                <tr key={item.id}>
+                                <tr key={item.id} style={{ background: selectedIds.has(item.id) ? 'rgba(0,191,166,0.06)' : undefined }}>
+                                    <td style={{ textAlign: 'center' }}>
+                                        <input 
+                                            type="checkbox" 
+                                            style={{ cursor: 'pointer', width: 16, height: 16 }}
+                                            checked={selectedIds.has(item.id)}
+                                            onChange={() => toggleOne(item.id)}
+                                        />
+                                    </td>
                                     <td style={{ color: 'var(--text-muted)' }}>
                                         {item.datum ? new Date(item.datum).toLocaleDateString() : ''}
                                     </td>
