@@ -1964,9 +1964,20 @@ a:hover {
   }
 
   /* --- Print button and export buttons: hide on very small screens --------- */
-  .hide-mobile {
+  .hide-mobile,
+  .eznr-hide-mobile {
     display: none !important;
   }
+}
+
+/* ── eZNR Toolbar Utilities ─────────────────────────────────────────────── */
+.eznr-odjel-filter {
+  width: 100px !important;
+  min-width: 100px !important;
+  max-width: 100px !important;
+  height: 36px;
+  padding: 0 8px !important;
+  font-size: 0.85rem !important;
 }
 
 /* ── Small phone: ≤ 480px ─────────────────────────────────────────────────── */

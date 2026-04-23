@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
@@ -75,7 +75,7 @@ export default function EquipmentTypesPage() {
         )}
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Novi tip opreme' : 'New Eq. Type'}</button>
             <SavedFlash />
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -655,7 +655,7 @@ function EquipmentPageInner() {
             <div className="card">
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova oprema' : 'New Equipment'}</button>
                         <PDFExportButton options={[
                             { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport([], lang) },
                             ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport([...selectedIds], lang) }] : []),

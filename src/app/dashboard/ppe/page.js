@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -128,7 +128,7 @@ export default function PPEPage() {
         )}
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova OZO stavka' : 'New PPE Item'}</button>
             {isAdmin && <button className="btn btn-primary btn-sm" onClick={handleSeedOZO} style={{ background: '#FF9800', borderColor: '#FF9800' }}>🦺 SEED OZO LIST</button>}
 
             <SavedFlash />

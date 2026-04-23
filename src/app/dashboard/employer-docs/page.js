@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -304,7 +304,7 @@ ${toPrint.map((d, i) => `<tr>
             <div className="card">
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary btn-sm" title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {t('add')}</button>
+                        <button className="btn btn-primary btn-sm" title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {lang === 'bs' ? 'Novi dokument' : 'New Document'}</button>
                         <SavedFlash />
 
                         {/* â”€â”€ Grupne akcije bar â”€â”€ */}

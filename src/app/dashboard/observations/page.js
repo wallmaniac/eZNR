@@ -1,9 +1,9 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/lib/firebase';
-import { getAll, getRawAll, update, remove, COLLECTIONS, getOrgUnitName } from '@/lib/dataStore';
+import { getAll, getRawAll, create, update, remove, COLLECTIONS, getOrgUnitName } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -24,6 +24,11 @@ export default function ObservationsPage() {
     // Status Dropdown State
     const [statusDropdownId, setStatusDropdownId] = useState(null);
     const [statusMenuPos, setStatusMenuPos] = useState({ top: 0, left: 0 });
+
+    // New Hazard Form State
+    const [showNewForm, setShowNewForm] = useState(false);
+    const [newFormData, setNewFormData] = useState({ opis: '', lokacija: '', ime: '' });
+    const [newFormSaving, setNewFormSaving] = useState(false);
 
     const loadData = useCallback(() => {
         const obs = getAll(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations');
@@ -60,6 +65,32 @@ export default function ObservationsPage() {
     }, [items, viewingItem, deepLinkId]);
 
     const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(items, 'datum', 'desc');
+
+    // ── Handle new internal hazard submission ──
+    const handleNewSubmit = async () => {
+        if (!newFormData.opis.trim() || !newFormData.lokacija.trim()) {
+            await alert(lang === 'bs' ? 'Popunite obavezna polja: Opis i Lokacija.' : 'Description and location are required.');
+            return;
+        }
+        setNewFormSaving(true);
+        try {
+            create(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', {
+                opis: newFormData.opis,
+                lokacija: newFormData.lokacija,
+                ime: newFormData.ime || (lang === 'bs' ? 'Admin' : 'Admin'),
+                status: 'Novo',
+                datum: new Date().toISOString(),
+            });
+            loadData();
+            showFlash();
+            setShowNewForm(false);
+            setNewFormData({ opis: '', lokacija: '', ime: '' });
+        } catch (e) {
+            await alert(lang === 'bs' ? 'Greška: ' + e.message : 'Error: ' + e.message);
+        } finally {
+            setNewFormSaving(false);
+        }
+    };
 
     const handleStatusChange = async (item, novistatus) => {
         try {
@@ -117,9 +148,12 @@ export default function ObservationsPage() {
                         {items.length} {lang === 'bs' ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}
                     </p>
                 </div>
-                <div style={{ marginLeft: 'auto' }}>
-                    <button className="btn btn-primary" onClick={() => setShowQR(true)}>
-                        🖨️ {lang === 'bs' ? 'Isprintaj QR Kod' : 'Print QR Code'}
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                    <button className="btn btn-primary btn-sm" onClick={() => setShowNewForm(true)} title={lang === 'bs' ? 'Ručno prijavi opasnost iz administracije' : 'Manually report a hazard from administration'}>
+                        + {lang === 'bs' ? 'Nova prijava' : 'New Report'}
+                    </button>
+                    <button className="btn btn-outline btn-sm eznr-hide-mobile" onClick={() => setShowQR(true)} title={lang === 'bs' ? 'Isprintaj QR kod plakat za gradilište' : 'Print QR code poster for the worksite'}>
+                        🖨️ {lang === 'bs' ? 'QR Kod' : 'QR Code'}
                     </button>
                 </div>
             </div>
@@ -129,6 +163,54 @@ export default function ObservationsPage() {
                     ? 'Popis prijavljenih opasnosti koje su radnici slikali i poslali putem QR koda.' 
                     : 'List of hazard reports submitted by workers via QR code scans.'}
             </p>
+
+            {/* ── New Hazard Modal ── */}
+            {showNewForm && (
+                <div className="modal-overlay" onClick={() => setShowNewForm(false)}>
+                    <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>🚨 {lang === 'bs' ? 'Nova prijava opasnosti' : 'New Hazard Report'}</h2>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowNewForm(false)}>✕</button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <label className="form-label">{lang === 'bs' ? 'Kratki opis problema' : 'Short description'} *</label>
+                                <textarea
+                                    className="form-input"
+                                    rows={3}
+                                    placeholder={lang === 'bs' ? 'Npr. Oštećena ograda na 2. spratu...' : 'E.g. Damaged railing on 2nd floor...'}
+                                    value={newFormData.opis}
+                                    onChange={e => setNewFormData({ ...newFormData, opis: e.target.value })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">{lang === 'bs' ? 'Tačna lokacija' : 'Exact location'} *</label>
+                                <input
+                                    className="form-input"
+                                    placeholder={lang === 'bs' ? 'Npr. Gradilište A, Pogon 3' : 'E.g. Site A, Unit 3'}
+                                    value={newFormData.lokacija}
+                                    onChange={e => setNewFormData({ ...newFormData, lokacija: e.target.value })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">{lang === 'bs' ? 'Prijavio/la (opcionalno)' : 'Reported by (optional)'}</label>
+                                <input
+                                    className="form-input"
+                                    placeholder={lang === 'bs' ? 'Ime osobe koja prijavljuje' : 'Name of reporter'}
+                                    value={newFormData.ime}
+                                    onChange={e => setNewFormData({ ...newFormData, ime: e.target.value })}
+                                />
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-ghost" onClick={() => setShowNewForm(false)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                            <button className="btn btn-primary" onClick={handleNewSubmit} disabled={newFormSaving}>
+                                {newFormSaving ? '⏳' : '💾'} {lang === 'bs' ? 'Spremi prijavu' : 'Save Report'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <div className="card">
                 <div className="data-table-wrapper">

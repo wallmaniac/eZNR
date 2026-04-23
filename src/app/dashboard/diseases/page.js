@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -258,7 +258,7 @@ export default function DiseasesPage() {
         <div className="card">
           <div className="card-body">
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
+              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {lang === 'bs' ? 'Nova bolest' : 'New Disease'}</button>
               <SavedFlash />
               <input
                 className="form-input"

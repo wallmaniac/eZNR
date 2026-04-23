@@ -228,12 +228,12 @@ function WorkerCertificatesInner() {
               
               {orgUnits.length > 0 && (
                 <select
-                  className="form-select"
-                  style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                  className="form-select eznr-odjel-filter"
                   value={filterOrgUnit}
                   onChange={e => setFilterOrgUnit(e.target.value)}
+                  title={bs ? 'Filtriraj uvjerenja po odjelu / sektoru' : 'Filter certificates by department'}
                 >
-                  <option value="">{bs ? 'Svi odjeli' : 'All departments'}</option>
+                  <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
                   {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                 </select>
               )}

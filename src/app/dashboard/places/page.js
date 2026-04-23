@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
@@ -56,7 +56,7 @@ export default function PlacesPage() {
       )}
       <div className="card"><div className="card-body">
         <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}>
-          <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button>
+          <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova lokacija' : 'New Location'}</button>
           <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
           </div>

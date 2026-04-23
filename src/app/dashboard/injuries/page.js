@@ -420,18 +420,7 @@ export default function InjuriesPage() {
         <div className="card">
           <div className="card-body">
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
-              {orgUnits.length > 0 && (
-                <select
-                  className="form-select"
-                  style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
-                  value={filterOrgUnit}
-                  onChange={e => setFilterOrgUnit(e.target.value)}
-                >
-                  <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All departments'}</option>
-                  {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
-                </select>
-              )}
+              <button className="btn btn-primary btn-sm" onClick={openNew} title={lang === 'bs' ? 'Prijavi novu povredu na radu' : 'Report a new work injury'}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
               <SavedFlash />
               <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center' }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>

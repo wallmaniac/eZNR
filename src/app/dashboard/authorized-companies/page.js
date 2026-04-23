@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -50,7 +50,7 @@ export default function AuthorizedCompaniesPage() {
         </div>
       )}
       <div className="card"><div className="card-body">
-        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}><button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('add')}</button></div>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 16 }}><button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova ovl. firma' : 'New Auth. Company'}</button></div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr><th>{t('actions')}</th><th>{t('name')}</th><th>{lang === 'bs' ? 'Broj rješenja' : 'Decision no.'}</th><th>{t('address')}</th><th>{t('phone')}</th></tr></thead>
           <tbody>{items.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : items.map(i => (
             <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}><td onClick={e => e.stopPropagation()}><div style={{ display: 'flex', gap: 4 }}><button className="btn btn-primary btn-sm" onClick={() => handleEdit(i)}>✏️</button><button className="btn btn-ghost btn-sm" onClick={() => handleDelete(i.id)} style={{ color: 'var(--danger)' }}>🗑️</button></div></td><td style={{ fontWeight: 600 }}>{i.naziv}</td><td><code>{i.rješenjeBroj}</code></td><td>{i.adresa}</td><td>{i.tel}</td></tr>
