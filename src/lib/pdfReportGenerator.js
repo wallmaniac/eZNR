@@ -280,9 +280,11 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
   const allWorkers = getAll(COLLECTIONS.WORKERS);
   const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
   const workplaces = getAll(COLLECTIONS.WORKPLACES);
-  const workers = workerIds.length > 0
+  let workers = workerIds.length > 0
     ? allWorkers.filter(w => workerIds.includes(w.id))
     : allWorkers.filter(w => w.aktivan !== false);
+  
+  workers.sort((a, b) => String(a.prezime || '').localeCompare(String(b.prezime || ''), undefined, { numeric: true, sensitivity: 'base' }));
 
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
@@ -474,9 +476,11 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
   const bs = lang === 'bs';
   const company = getCompanyInfo();
   const allEquip = getAll(COLLECTIONS.EQUIPMENT);
-  const items = equipmentIds.length > 0
+  let items = equipmentIds.length > 0
     ? allEquip.filter(e => equipmentIds.includes(e.id))
     : allEquip;
+  
+  items.sort((a, b) => String(a.naziv || '').localeCompare(String(b.naziv || ''), undefined, { numeric: true, sensitivity: 'base' }));
 
   const title = bs ? 'EVIDENCIJA SREDSTAVA RADA I OPREME' : 'WORK EQUIPMENT INSPECTION REPORT';
   const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
@@ -527,9 +531,11 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
   const bs = lang === 'bs';
   const company = getCompanyInfo();
   const allVehicles = getAll(COLLECTIONS.VEHICLES);
-  const vehicles = vehicleIds.length > 0
+  let vehicles = vehicleIds.length > 0
     ? allVehicles.filter(v => vehicleIds.includes(v.id))
     : allVehicles;
+  
+  vehicles.sort((a, b) => String(a.registracija || '').localeCompare(String(b.registracija || ''), undefined, { numeric: true, sensitivity: 'base' }));
 
   const title = bs ? 'EVIDENCIJA VOZNOG PARKA' : 'FLEET REGISTRY REPORT';
   const subtitle = `${vehicles.length} ${bs ? 'vozila' : 'vehicles'} · ${new Date().toLocaleDateString('bs-BA')}`;
@@ -579,10 +585,17 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = '
   const bs = lang === 'bs';
   const company = getCompanyInfo();
   const allFE = getAll(type === 'hydrants' ? COLLECTIONS.HYDRANTS : COLLECTIONS.FIRE_EXTINGUISHERS);
-  const items = itemIds.length > 0
+  let items = itemIds.length > 0
     ? allFE.filter(f => itemIds.includes(f.id))
     : allFE;
 
+  items.sort((a, b) => {
+    if (type === 'hydrants') {
+      return String(a.oznaka || '').localeCompare(String(b.oznaka || ''), undefined, { numeric: true, sensitivity: 'base' });
+    } else {
+      return String(a.serijskiBroj || '').localeCompare(String(b.serijskiBroj || ''), undefined, { numeric: true, sensitivity: 'base' });
+    }
+  });
   const title = bs ? 'EVIDENCIJA SREDSTAVA ZAŠTITE OD POŽARA' : 'FIRE PROTECTION EQUIPMENT REPORT';
   const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
 
