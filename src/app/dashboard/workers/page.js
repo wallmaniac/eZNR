@@ -1602,28 +1602,34 @@ function WorkersPageInner() {
                 )}
 
                 <div className="card">
-                    <div className="card-body">
+                    <div className="card-body" style={{ padding: 0 }}>
                         {/* Toolbar */}
-                        <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px' }} onClick={handleNew}>
+                        <div className="scrollable-toolbar data-table-wrapper" style={{ padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew}>
                                 + {lang === 'bs' ? 'Novi radnik' : 'New worker'}
                             </button>
-                            <input
-                                className="form-input"
-                                style={{ height: 38, minWidth: 200, flex: 2, maxWidth: 360, fontSize: '0.85rem' }}
-                                placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
-                                value={searchTerm}
-                                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                            />
+
+                            <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                                <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                                <input
+                                    placeholder={lang === 'bs' ? 'Pretraži radnike...' : 'Search workers...'}
+                                    value={searchTerm}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                                />
+                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                            </div>
+
                             <select
                                 className="form-select"
-                                style={{ height: 38, padding: '0 12px', minWidth: 160, flex: 1, maxWidth: 220, fontSize: '0.85rem' }}
+                                style={{ height: 38, padding: '0 12px', width: 140, flexShrink: 0, fontSize: '0.85rem' }}
                                 value={filterOrgUnit}
                                 onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
                             >
-                                <option value="">{lang === 'bs' ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
+                                <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All Departments'}</option>
                                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                             </select>
+
                             <PDFExportButton
                                 label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'}
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
@@ -1633,7 +1639,7 @@ function WorkersPageInner() {
                                 ]}
                             />
                             <PDFExportButton
-                                label={lang === 'bs' ? '📊 Excel Export' : '📊 Excel Export'}
+                                label={lang === 'bs' ? '📊 Excel' : '📊 Excel'}
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
                                 options={[
                                     { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },
@@ -1641,45 +1647,43 @@ function WorkersPageInner() {
                                 ]}
                             />
 
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer', marginLeft: 'auto' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer', flexShrink: 0 }}>
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}
                             </label>
-                            <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                                {selectedIds.size > 0 && (
-                                    <>
-                                        <span style={{ padding: '4px 12px', borderRadius: 20, background: 'var(--primary)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, whiteSpace: 'nowrap' }}>
-                                            {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
-                                        </span>
 
-                                        <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none' }} onClick={() => {
-                                            const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
-                                            const emails = selectedWorkers.map(w => w.email).filter(Boolean);
-                                            if (emails.length === 0) {
-                                                alert(lang === 'bs' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
-                                                return;
-                                            }
-                                            const subject = encodeURIComponent(lang === 'bs' ? 'Obavijest' : 'Notification');
-                                            window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
-                                        }}>
-                                            ✉️ Email
-                                        </button>
-                                        <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none' }} onClick={async () => {
-                                            const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
-                                            if (ok) {
-                                                removeManyWorkersCascade([...selectedIds]);
-                                                setSelectedIds(new Set());
-                                                loadData();
-                                            }
-                                        }}>
-                                            🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
-                                        </button>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())} title={lang === 'bs' ? 'Poništi odabir' : 'Clear selection'}>
-                                            ✕
-                                        </button>
-                                    </>
-                                )}
-                            </div>
+                            {selectedIds.size > 0 && (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', background: 'rgba(0,191,166,0.06)', borderRadius: 20, border: '1px solid rgba(0,191,166,0.3)', flexShrink: 0 }}>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>
+                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                    </span>
+                                    <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={() => {
+                                        const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
+                                        const emails = selectedWorkers.map(w => w.email).filter(Boolean);
+                                        if (emails.length === 0) {
+                                            alert(lang === 'bs' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
+                                            return;
+                                        }
+                                        const subject = encodeURIComponent(lang === 'bs' ? 'Obavijest' : 'Notification');
+                                        window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
+                                    }}>
+                                        ✉️ Email
+                                    </button>
+                                    <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={async () => {
+                                        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
+                                        if (ok) {
+                                            removeManyWorkersCascade([...selectedIds]);
+                                            setSelectedIds(new Set());
+                                            loadData();
+                                        }
+                                    }}>
+                                        🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                    </button>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={lang === 'bs' ? 'Poništi odabir' : 'Clear selection'}>
+                                        ✕
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* Table */}
@@ -1878,7 +1882,7 @@ function WorkersPageInner() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="pagination">
+                        <div className="pagination" style={{ padding: '16px' }}>
                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                 {filteredWorkers.length > 0 ? `${(page - 1) * perPage + 1} - ${Math.min(page * perPage, filteredWorkers.length)}` : '0'} {t('of')} {filteredWorkers.length} {t('records')}
                             </div>

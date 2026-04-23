@@ -206,9 +206,9 @@ function WorkerCertificatesInner() {
   return (
     <>
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 30, marginBottom: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 34, marginBottom: 8, flexWrap: 'wrap' }}>
           <Icon3D name="Uvjerenja.png" size={50} />
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, marginLeft: 8 }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
@@ -224,10 +224,10 @@ function WorkerCertificatesInner() {
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
 
-              <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', flex: 1, minWidth: 200 }}>
-                <span style={{ fontSize: '1rem' }}>🔍</span>
+              <div className="search-bar search-full" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                 <input
-                  placeholder={bs ? 'Pretraži po imenu, oznaci, tipu...' : 'Search workers, codes...'}
+                  placeholder={bs ? 'Pretraži povrede...' : 'Search...'}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
@@ -237,7 +237,7 @@ function WorkerCertificatesInner() {
 
               <select
                 className="form-select"
-                style={{ height: 38, padding: '0 8px', width: 120, fontSize: '0.8rem' }}
+                style={{ height: 38, padding: '0 8px', width: 90, flexShrink: 0, fontSize: '0.8rem' }}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}
               >
