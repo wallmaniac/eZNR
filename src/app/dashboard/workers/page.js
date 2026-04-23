@@ -1605,30 +1605,31 @@ function WorkersPageInner() {
                     <div className="card-body">
                         {/* Toolbar */}
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-                            <button className="btn btn-primary btn-sm" onClick={handleNew}>
-                                + {t('add')}
+                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px' }} onClick={handleNew}>
+                                + {lang === 'bs' ? 'Novi radnik' : 'New worker'}
                             </button>
+                            <input
+                                className="form-input"
+                                style={{ height: 38, minWidth: 200, flex: 2, maxWidth: 360, fontSize: '0.85rem' }}
+                                placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
+                                value={searchTerm}
+                                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+                            />
                             <select
                                 className="form-select"
-                                style={{ height: 38, padding: '0 12px', minWidth: 260, flex: 1, maxWidth: '100%', fontSize: '0.85rem' }}
+                                style={{ height: 38, padding: '0 12px', minWidth: 160, flex: 1, maxWidth: 220, fontSize: '0.85rem' }}
                                 value={filterOrgUnit}
                                 onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
                             >
                                 <option value="">{lang === 'bs' ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
                                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                             </select>
-                            <input
-                                className="form-input"
-                                style={{ height: 38, minWidth: 220, flex: 1, maxWidth: 320, fontSize: '0.85rem' }}
-                                placeholder={lang === 'bs' ? '🔍 Pretraži radnike...' : '🔍 Search workers...'}
-                                value={searchTerm}
-                                onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
-                            />
                             <PDFExportButton
                                 label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'}
+                                buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
-                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(filteredWorkers, lang) },
-                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(filteredWorkers.filter(w => selectedIds.has(w.id)), lang) }] : [])
+                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(filteredWorkers.map(w => w.id), lang) },
+                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(Array.from(selectedIds), lang) }] : [])
                                 ]}
                             />
                             <PDFExportButton
@@ -1640,9 +1641,7 @@ function WorkersPageInner() {
                                 ]}
                             />
 
-
-
-                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-light)', cursor: 'pointer', marginLeft: 'auto' }}>
                                 <input type="checkbox" checked={showFormer} onChange={(e) => setShowFormer(e.target.checked)} />
                                 {t('formerWorkers')}
                             </label>
