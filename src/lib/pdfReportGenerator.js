@@ -575,10 +575,10 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
 /**
  * 6. FIRE PROTECTION REPORT — Fire extinguishers & equipment
  */
-export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
+export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = 'extinguishers') {
   const bs = lang === 'bs';
   const company = getCompanyInfo();
-  const allFE = getAll(COLLECTIONS.FIRE_EXTINGUISHERS);
+  const allFE = getAll(type === 'hydrants' ? COLLECTIONS.HYDRANTS : COLLECTIONS.FIRE_EXTINGUISHERS);
   const items = itemIds.length > 0
     ? allFE.filter(f => itemIds.includes(f.id))
     : allFE;

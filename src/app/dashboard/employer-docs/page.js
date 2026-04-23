@@ -24,6 +24,7 @@ function EmployerDocsInner() {
     const [activeTab, setActiveTab] = useState('obavezna');
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [search, setSearch] = useState('');
     const [formData, setFormData] = useState({ naziv: '', kategorija: 'obavezna', status: 'aktivan', datumIzdavanja: '', datumIsteka: '', napomena: '', docData: null, docName: '', docType: '', fileObj: null });
 
     // Akcije dropdown state (per-row, fixed position)
@@ -150,8 +151,7 @@ function EmployerDocsInner() {
         a.click();
     };
 
-    // Filtered list by active tab
-    const filtered = docs.filter(d => d.kategorija === activeTab);
+    const filtered = (search ? docs.filter(d => (d.naziv||'').toLowerCase().includes(search.toLowerCase()) || (d.napomena||'').toLowerCase().includes(search.toLowerCase())) : docs).filter(d => d.kategorija === activeTab);
 
     // Sortable columns via reusable hook
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'naziv');
@@ -305,6 +305,15 @@ ${toPrint.map((d, i) => `<tr>
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary btn-sm" title="Dodajte novi dokument poslodavca (zapisnik, akt, uvjerenje...)" onClick={handleNew}>+ {lang === 'bs' ? 'Novi dokument' : 'New Document'}</button>
+                        <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
+                            <input
+                                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                                value={search}
+                                onChange={e => setSearch(e.target.value)}
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                            />
+                            {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+                        </div>
                         <SavedFlash />
 
                         {/* ���� Grupne akcije bar ���� */}

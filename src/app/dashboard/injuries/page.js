@@ -420,11 +420,21 @@ export default function InjuriesPage() {
         <div className="card">
           <div className="card-body">
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
+              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
+              <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center' }}>
+                <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                <input
+                  placeholder={lang === 'bs' ? 'Pretraži prijave...' : 'Search reports...'}
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                />
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+              </div>
               {orgUnits.length > 0 && (
                 <select
                   className="form-select"
-                  style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                  style={{ height: 38, width: 'max-content', minWidth: 140, maxWidth: 220, fontSize: '0.85rem' }}
                   value={filterOrgUnit}
                   onChange={e => setFilterOrgUnit(e.target.value)}
                 >
@@ -433,16 +443,6 @@ export default function InjuriesPage() {
                 </select>
               )}
               <SavedFlash />
-              <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center' }}>
-                <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
-                <input
-                  placeholder={lang === 'bs' ? 'Pretraži prijave...' : 'Search reports...'}
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
-                />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
-              </div>
               {/* ── Grupne akcije bar ── */}
               {selectedIds.size > 0 && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>

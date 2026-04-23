@@ -104,7 +104,7 @@ function _autoLog(action, collection, item) {
             action, category: cfg.cat, icon: cfg.icon,
             title: `${_AL_VERBS[action] || action} ${cfg.label(item)}`,
             detail: '', severity: action === 'delete' ? 'warning' : 'info',
-            relatedId: cfg.relatedId ? cfg.relatedId(item) : (item.id || ''),
+            relatedId: (cfg.relatedId && cfg.relatedId(item)) || item.id || 'system',
             companyId,
             userName: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username : 'Sistem',
             userId: user?.id || user?.uid || '',

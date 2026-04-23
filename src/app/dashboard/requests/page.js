@@ -297,10 +297,19 @@ export default function RequestsPage() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="card-body" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={handleNew}>
               + {lang === 'bs' ? 'Nova zahtjevnica' : 'New request'}
             </button>
+            <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
+              <input
+                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+              />
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+            </div>
             
             {/* Grupne akcije bar */}
             {selectedIds.size > 0 && (
@@ -314,15 +323,6 @@ export default function RequestsPage() {
             )}
             {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
           </div>
-            <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
-              <input
-                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
-              />
-              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
-            </div>
         </div>
 
         <div className="card">
