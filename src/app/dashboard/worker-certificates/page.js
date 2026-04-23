@@ -91,6 +91,8 @@ function WorkerCertificatesInner() {
   const [isPending, startTransition] = useTransition();
   const [navigatingId, setNavigatingId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterOrgUnit, setFilterOrgUnit] = useState('');
+  const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
   const [showOnlyValid, setShowOnlyValid] = useState(false);
   const [showExpiringSoon, setShowExpiringSoon] = useState(false);
   const [expiringSoonDays, setExpiringSoonDays] = useState(60);
@@ -129,6 +131,10 @@ function WorkerCertificatesInner() {
         const diffDays = (expDate - now) / (1000 * 60 * 60 * 24);
         if (diffDays > expiringSoonDays || diffDays < 0) return false;
       }
+      if (filterOrgUnit) {
+        const w = workers.find(x => x.id === r.workerId);
+        if (!w || w.orgJedinicaId !== filterOrgUnit) return false;
+      }
       if (!searchTerm) return true;
       const term = searchTerm.toLowerCase();
       return r.workerName.toLowerCase().includes(term) ||
@@ -136,7 +142,7 @@ function WorkerCertificatesInner() {
         (r.oznaka || '').toLowerCase().includes(term) ||
         (r.tipUvjerenjaIme || r.tipUvjerenja || '').toLowerCase().includes(term);
     });
-  }, [certs, workers, searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays]);
+  }, [certs, workers, searchTerm, filterOrgUnit, showOnlyValid, showExpiringSoon, expiringSoonDays]);
 
   const { sorted: rows, toggleSort: tS, sortIcon: siS, thStyle: tsS } = useSortedList(
     filteredRows,
@@ -166,7 +172,7 @@ function WorkerCertificatesInner() {
   }, []);
 
   // Clear selection when filter changes
-  useEffect(() => { setSelectedIds(new Set()); }, [searchTerm, showOnlyValid, showExpiringSoon, expiringSoonDays]);
+  useEffect(() => { setSelectedIds(new Set()); }, [searchTerm, filterOrgUnit, showOnlyValid, showExpiringSoon, expiringSoonDays]);
 
   // ── Bulk print ────────────────────────────────────────────────────────────
   const handleBulkPrint = useCallback(() => {
@@ -202,7 +208,7 @@ function WorkerCertificatesInner() {
       <div className="animate-fadeIn">
         <div style={{ display: 'flex', alignItems: 'center', gap: 30, marginBottom: 8, flexWrap: 'wrap' }}>
           <Icon3D name="Uvjerenja.png" size={50} />
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: 1, marginLeft: '4mm' }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
@@ -220,6 +226,18 @@ function WorkerCertificatesInner() {
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="uvjerenja-toolbar">
               
+              {orgUnits.length > 0 && (
+                <select
+                  className="form-select"
+                  style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                  value={filterOrgUnit}
+                  onChange={e => setFilterOrgUnit(e.target.value)}
+                >
+                  <option value="">{bs ? 'Svi odjeli' : 'All departments'}</option>
+                  {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                </select>
+              )}
+
               <div className="search-bar search-full">
                 <span style={{ fontSize: '1rem' }}>🔍</span>
                 <input

@@ -226,9 +226,7 @@ export async function loadCompanyData(companyId) {
                                 ];
                                 
                                 _notifyListeners();
-                                if (typeof window !== 'undefined') {
-                                    window.dispatchEvent(new CustomEvent('eznr:data-synced'));
-                                }
+                                _debouncedSyncEvent();
                                 
                                 completed++;
                                 // Only resolve after all initial snapshots return to unblock the main screen
@@ -255,10 +253,8 @@ export async function loadCompanyData(companyId) {
                     const snap = await getDocs(colRef);
                     _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                     
-                    // Dispatch sync event individually so dependent UI (dropdowns) populate lazily
-                    if (typeof window !== 'undefined') {
-                        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
-                    }
+                    // Dispatch sync event so dependent UI (dropdowns) populate lazily
+                    _debouncedSyncEvent();
                 } catch (err) {
                     console.warn(`[dataStore] ⚠️ Failed to load global ${colName}:`, err.message);
                     _cache[colName] = [];
@@ -327,8 +323,23 @@ export function onDataChange(callback) {
     return () => _listeners.delete(callback);
 }
 
+let _isNotifying = false;
 function _notifyListeners() {
-    _listeners.forEach(cb => { try { cb(); } catch { } });
+    if (_isNotifying) return;          // prevent re-entrant stack overflow
+    _isNotifying = true;
+    try { _listeners.forEach(cb => { try { cb(); } catch { } }); }
+    finally { _isNotifying = false; }
+}
+
+// Debounced data-synced DOM event — coalesces rapid onSnapshot bursts
+let _syncTimer = null;
+function _debouncedSyncEvent() {
+    if (typeof window === 'undefined') return;
+    if (_syncTimer) return;            // already scheduled
+    _syncTimer = setTimeout(() => {
+        _syncTimer = null;
+        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+    }, 60);
 }
 
 function _detachListeners() {

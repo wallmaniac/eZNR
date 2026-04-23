@@ -1,6 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
@@ -16,6 +16,8 @@ export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();
   const { confirm, DialogRenderer } = useDialog();
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterOrgUnit, setFilterOrgUnit] = useState('');
+  const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
   const [viewWorkerId, setViewWorkerId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [addForm, setAddForm] = useState({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
@@ -29,9 +31,13 @@ export default function WorkerPPEPage() {
   const rows = useMemo(() => {
     return assignments.map(a => {
       const w = workers.find(x => x.id === a.workerId);
-      return { ...a, workerName: w ? `${w.ime} ${w.prezime}` : '-', workerId: a.workerId };
-    }).filter(r => !searchTerm || r.workerName.toLowerCase().includes(searchTerm.toLowerCase()) || (r.naziv || '').toLowerCase().includes(searchTerm.toLowerCase()));
-  }, [assignments, workers, searchTerm]);
+      return { ...a, workerName: w ? `${w.ime} ${w.prezime}` : '-', workerId: a.workerId, _orgJedinicaId: w?.orgJedinicaId || '' };
+    }).filter(r => {
+      if (filterOrgUnit && r._orgJedinicaId !== filterOrgUnit) return false;
+      if (!searchTerm) return true;
+      return r.workerName.toLowerCase().includes(searchTerm.toLowerCase()) || (r.naziv || '').toLowerCase().includes(searchTerm.toLowerCase());
+    });
+  }, [assignments, workers, searchTerm, filterOrgUnit]);
 
   // Date-aware sort: datumZaduzenja is stored as ISO string "yyyy-mm-dd" — sorts correctly
   const { sorted: sortedRows, toggleSort, sortIcon, thStyle } = useSortedList(rows, 'workerName');
@@ -112,6 +118,17 @@ export default function WorkerPPEPage() {
                 ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport([...selectedIds], lang) }] : []),
             ]} />
             <SavedFlash />
+            {orgUnits.length > 0 && (
+              <select
+                className="form-select"
+                style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                value={filterOrgUnit}
+                onChange={e => setFilterOrgUnit(e.target.value)}
+              >
+                <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All departments'}</option>
+                {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+              </select>
+            )}
             <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input

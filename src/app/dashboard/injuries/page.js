@@ -1,6 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
@@ -35,6 +35,8 @@ export default function InjuriesPage() {
   const [injuries, setInjuries] = useState([]);
   const [workers, setWorkers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filterOrgUnit, setFilterOrgUnit] = useState('');
+  const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
   const [viewWorkerId, setViewWorkerId] = useState(null);
 
   // ── Form state ──
@@ -202,6 +204,10 @@ export default function InjuriesPage() {
   };
 
   const filtered = injuries.filter(inj => {
+    if (filterOrgUnit) {
+      const w = workers.find(x => x.id === inj.radnikId);
+      if (!w || w.orgJedinicaId !== filterOrgUnit) return false;
+    }
     if (!searchTerm) return true;
     const q = searchTerm.toLowerCase();
     return (inj.radnikIme || '').toLowerCase().includes(q) ||
@@ -415,6 +421,17 @@ export default function InjuriesPage() {
           <div className="card-body">
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" onClick={openNew}>+ {t('add')}</button>
+              {orgUnits.length > 0 && (
+                <select
+                  className="form-select"
+                  style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                  value={filterOrgUnit}
+                  onChange={e => setFilterOrgUnit(e.target.value)}
+                >
+                  <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All departments'}</option>
+                  {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                </select>
+              )}
               <SavedFlash />
               <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center' }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>

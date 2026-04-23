@@ -65,6 +65,8 @@ export default function MedicalExamsPage() {
     const [form, setForm] = useState({ ...emptyForm });
     const [filterTab, setFilterTab] = useState('all');
     const [searchQ, setSearchQ] = useState('');
+    const [filterOrgUnit, setFilterOrgUnit] = useState('');
+    const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -153,11 +155,12 @@ export default function MedicalExamsPage() {
     // ── Filter & search ────────────────────────────────────────────────────────
     const enriched = useMemo(() => exams.map(e => {
         const w = workers.find(wk => wk.id === e.workerId);
-        return { ...e, _workerName: w ? `${w.ime} ${w.prezime}` : '—' };
+        return { ...e, _workerName: w ? `${w.ime} ${w.prezime}` : '-', _orgJedinicaId: w?.orgJedinicaId || '' };
     }), [exams, workers]);
 
     const filtered = useMemo(() => {
         let list = enriched;
+        if (filterOrgUnit) list = list.filter(e => e._orgJedinicaId === filterOrgUnit);
         if (searchQ) {
             const q = searchQ.toLowerCase();
             list = list.filter(e =>
@@ -174,7 +177,7 @@ export default function MedicalExamsPage() {
             const db = getDays(b.vrijediDo) ?? 999999;
             return da - db;
         });
-    }, [enriched, filterTab, searchQ]);
+    }, [enriched, filterTab, searchQ, filterOrgUnit]);
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, '_workerName');
 
@@ -252,6 +255,17 @@ export default function MedicalExamsPage() {
                 <button className="btn btn-primary btn-sm" id="btn-new-exam" onClick={handleNew}>
                     + {bs ? 'Novi pregled' : 'New Exam'}
                 </button>
+                {orgUnits.length > 0 && (
+                  <select
+                    className="form-select"
+                    style={{ height: 36, minWidth: 160, fontSize: '0.82rem' }}
+                    value={filterOrgUnit}
+                    onChange={e => setFilterOrgUnit(e.target.value)}
+                  >
+                    <option value=''>{bs ? 'Svi odjeli' : 'All departments'}</option>
+                    {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                  </select>
+                )}
                 <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
                     <input
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.85rem', flex: 1, width: '100%' }}
