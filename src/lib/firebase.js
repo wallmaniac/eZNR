@@ -21,6 +21,17 @@ if (getApps().length === 0) {
     app = getApps()[0];
 }
 
+// Suppress known non-fatal Firebase multi-tab persistence warning
+if (typeof window !== 'undefined') {
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+        if (typeof args[0] === 'string' && args[0].includes("Failed to obtain primary lease for action 'Backfill Indexes'")) {
+            return;
+        }
+        originalConsoleError(...args);
+    };
+}
+
 let firestoreDb;
 try {
     if (typeof window !== 'undefined') {
