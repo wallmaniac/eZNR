@@ -520,6 +520,10 @@ function FleetInner() {
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" onClick={openNew}>+ {bs ? 'Novo vozilo' : 'New Vehicle'}</button>
+                            <div className="search-bar" style={{ flex: 1 }}>
+                                <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
+                            </div>
                             <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                                 { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚗', onClick: () => generateFleetReport([], lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport([...selectedIds], lang) }] : []),
@@ -529,10 +533,6 @@ function FleetInner() {
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
                             ]} />
                             <SavedFlash />
-                            <div className="search-bar" style={{ flex: 1 }}>
-                                <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                                    style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            </div>
                             {selectedIds.size > 0 && (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:</span>

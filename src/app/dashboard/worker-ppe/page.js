@@ -113,12 +113,6 @@ export default function WorkerPPEPage() {
             <button className="btn btn-primary btn-sm" onClick={openModal}>
               + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
             </button>
-            <PDFExportButton options={[
-              { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport([], lang) },
-              ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport([...selectedIds], lang) }] : []),
-            ]} />
-            <SavedFlash />
-
             <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input
@@ -129,6 +123,11 @@ export default function WorkerPPEPage() {
               />
               {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
             </div>
+            <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
+              { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport([], lang) },
+              ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport([...selectedIds], lang) }] : []),
+            ]} />
+            <SavedFlash />
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>

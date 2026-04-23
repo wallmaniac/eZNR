@@ -587,7 +587,7 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
   const subtitle = `${items.length} ${bs ? 'stavki' : 'items'} · ${new Date().toLocaleDateString('bs-BA')}`;
 
   const expired = items.filter(f => {
-    const d = daysUntil(f.sljedeciPregled || f.datumIsteka);
+    const d = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
     return d !== null && d < 0;
   }).length;
 
@@ -607,25 +607,25 @@ export function generateFireProtectionReport(itemIds = [], lang = 'bs') {
       <th>${bs ? 'Lokacija' : 'Location'}</th>
       <th>${bs ? 'Tip' : 'Type'}</th>
       <th>${bs ? 'Serijski broj' : 'Serial No.'}</th>
-      <th>${bs ? 'Zadnji pregled' : 'Last inspection'}</th>
-      <th>${bs ? 'Sljedeći pregled' : 'Next inspection'}</th>
+      <th>${bs ? 'Zadnji pregled / servis' : 'Last activity'}</th>
+      <th>${bs ? 'Sljedeći pregled / servis' : 'Next activity'}</th>
       <th>${bs ? 'Status' : 'Status'}</th>
     </tr></thead>
     <tbody>`;
 
   items.sort((a, b) => {
-    const da = daysUntil(a.sljedeciPregled || a.datumIsteka) ?? 9999;
-    const db_ = daysUntil(b.sljedeciPregled || b.datumIsteka) ?? 9999;
+    const da = daysUntil(a.sljedeciPregled || a.sljedeciServis || a.datumIsteka) ?? 9999;
+    const db_ = daysUntil(b.sljedeciPregled || b.sljedeciServis || b.datumIsteka) ?? 9999;
     return da - db_;
   }).forEach((f, i) => {
-    const days = daysUntil(f.sljedeciPregled || f.datumIsteka);
+    const days = daysUntil(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka);
     html += `<tr>
       <td style="color:#aaa">${i + 1}</td>
       <td style="font-weight:600">${f.lokacija || '—'}</td>
       <td>${f.tip || f.vrsta || '—'}</td>
-      <td>${f.serijskiBroj || '—'}</td>
-      <td>${fmtDate(f.zadnjiPregled || f.datumPregleda)}</td>
-      <td style="font-weight:600">${fmtDate(f.sljedeciPregled || f.datumIsteka)}</td>
+      <td>${f.serijskiBroj || f.oznaka || '—'}</td>
+      <td>${fmtDate(f.zadnjiPregled || f.zadnjiServis || f.datumZadnjegPregleda || f.datumPregleda)}</td>
+      <td style="font-weight:600">${fmtDate(f.sljedeciPregled || f.sljedeciServis || f.datumIsteka)}</td>
       <td>${statusBadge(days, bs)}</td>
     </tr>`;
   });
