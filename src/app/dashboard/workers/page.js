@@ -1474,7 +1474,7 @@ function WorkersPageInner() {
                 <input ref={zosUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOS')} />
                 <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
 
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
                     <Icon3D name="Radnici.png" size={64} />
                     {t('workers')}
                 </h1>
@@ -1604,7 +1604,7 @@ function WorkersPageInner() {
                 <div className="card">
                     <div className="card-body" style={{ padding: 0 }}>
                         {/* Toolbar */}
-                        <div className="scrollable-toolbar" style={{ padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                        <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                             <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew}>
                                 + {lang === 'bs' ? 'Novi radnik' : 'New worker'}
                             </button>

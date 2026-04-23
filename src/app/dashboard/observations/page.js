@@ -140,7 +140,7 @@ export default function ObservationsPage() {
             <SavedFlash />
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '1.6rem' }}>🚨</span>
                 <div>
                     <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Prijave Opasnosti' : 'Hazard Reports'}</h1>

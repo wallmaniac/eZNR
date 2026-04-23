@@ -206,9 +206,9 @@ function WorkerCertificatesInner() {
   return (
     <>
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
           <Icon3D name="Uvjerenja.png" size={50} />
-          <div style={{ flex: 1, marginLeft: 0 }}>
+          <div style={{ flex: 1, marginLeft: 12 }}>
             <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
               {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
@@ -219,7 +219,7 @@ function WorkerCertificatesInner() {
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
-            <div className="scrollable-toolbar" style={{ padding: '12px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+            <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
