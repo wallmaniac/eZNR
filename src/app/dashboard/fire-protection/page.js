@@ -394,17 +394,22 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewExt}>+ {bs ? 'Novi aparat' : 'New Extinguisher'}</button>
-                                <PDFExportButton options={[
+                                <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                                     { label: bs ? 'Svi PP aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport([], lang) },
                                     ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport([...extSelectedIds], lang) }] : []),
                                 ]} />
-                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
+                                <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
+                                    { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedExt.map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); } },
+                                    ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); } }] : []),
+                                ]} />
                                 <SavedFlash />
-                                <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)} />
+                                <div className="search-bar" style={{ flex: 1 }}>
+                                    <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)}
+                                        style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
+                                </div>
                                 {extSelectedIds.size > 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{extSelectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                                        <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => ({ id: e.id, title: `APARAT ${e.serijskiBroj}`, sub: EXT_TYPES[e.tip]?.bs || e.tip }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Printaj izabrane QR' : 'Print selected QR'}</button>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{extSelectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:</span>
                                         <button className="btn btn-danger btn-sm" onClick={handleDeleteSelectedExt}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                     </div>
                                 ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedExt.length} {bs ? 'aparata' : 'extinguishers'}</span>}
@@ -525,13 +530,18 @@ export default function FireProtectionPage() {
                         <div className="card-body">
                             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewHyd}>+ {bs ? 'Novi hidrant' : 'New Hydrant'}</button>
-                                <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
+                                <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
+                                    { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedHyd.map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } },
+                                    ...(hydSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${hydSelectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); } }] : []),
+                                ]} />
                                 <SavedFlash />
-                                <input className="form-input" style={{ maxWidth: 260 }} placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={hydSearch} onChange={e => setHydSearch(e.target.value)} />
+                                <div className="search-bar" style={{ flex: 1 }}>
+                                    <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={hydSearch} onChange={e => setHydSearch(e.target.value)}
+                                        style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
+                                </div>
                                 {hydSelectedIds.size > 0 ? (
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{hydSelectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
-                                        <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedHyd.filter(h => hydSelectedIds.has(h.id)).map(h => ({ id: h.id, title: `HIDRANT ${h.oznaka}`, sub: h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski' }))); setShowPrintModal(true); }}>🖨️ {bs ? 'Printaj izabrane QR' : 'Print selected QR'}</button>
+                                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{hydSelectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:</span>
                                         <button className="btn btn-danger btn-sm" onClick={handleDeleteSelectedHyd}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                     </div>
                                 ) : <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedHyd.length} {bs ? 'hidranata' : 'hydrants'}</span>}

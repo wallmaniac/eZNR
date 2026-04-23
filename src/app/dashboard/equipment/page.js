@@ -660,14 +660,17 @@ function EquipmentPageInner() {
                             { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport([], lang) },
                             ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport([...selectedIds], lang) }] : []),
                         ]} />
-                        <button className="btn btn-ghost btn-sm" style={{ border: '1px solid var(--border)' }} onClick={() => { setPrintSelection(sortedEquipment); setShowPrintModal(true); }}>🖨️ {lang === 'bs' ? 'Svi QR Kodovi' : 'All QR Codes'}</button>
+                        <PDFExportButton label={lang === 'bs' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
+                            { label: lang === 'bs' ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
+                            ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
+                        ]} />
                         <SavedFlash />
-                        <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
+                        <div className="search-bar" style={{ flex: 1 }}>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
                         </div>
-                        <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 260, flex: 1, maxWidth: '100%', fontSize: '0.85rem' }} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
+                        <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
                             <option value="">{lang === 'bs' ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
                             {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                         </select>
