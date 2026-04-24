@@ -510,6 +510,14 @@ export function UvjerenjeFormPage() {
                                             {lang === 'bs' ? 'Nema rezultata' : 'No results'}
                                         </div>
                                     )}
+                                    <div
+                                        onClick={() => { setShowTipDropdown(false); setShowNewTypeForm(true); setTipSearch(''); }}
+                                        style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', borderTop: '1px solid var(--border-light)', fontWeight: 600, color: 'var(--primary)' }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = ''}
+                                    >
+                                        + {lang === 'bs' ? 'Ostalo...' : 'Other...'}
+                                    </div>
                                 </div>
                             )}
                             {/* New type quick-add */}
