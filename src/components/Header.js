@@ -102,7 +102,19 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             if (ou.naziv.toLowerCase().includes(term))
                 results.push({ type: 'orgUnit', icon: '🏢', label: ou.naziv, sub: ou.skraceniNaziv || '', path: '/dashboard/org-units', id: ou.id });
         });
-        return results.slice(0, 8);
+        getAll(COLLECTIONS.VEHICLES || 'vehicles').forEach(v => {
+            if (`${v.registracija || ''} ${v.marka || ''} ${v.model || ''}`.toLowerCase().includes(term))
+                results.push({ type: 'vehicle', icon: '🚗', label: v.registracija || 'Vozilo', sub: `${v.marka || ''} ${v.model || ''}`, path: '/dashboard/fleet', id: v.id });
+        });
+        getAll(COLLECTIONS.MEDICAL_EXAMS || 'medicalExams').forEach(m => {
+            if (`${m.radnikIme || ''} ${m.ustanova || ''} ${m.doktor || ''}`.toLowerCase().includes(term))
+                results.push({ type: 'medical_exam', icon: '🩺', label: m.radnikIme || 'Pregled', sub: m.ustanova || '', path: '/dashboard/medical-exams', id: m.id });
+        });
+        getAll(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations').forEach(o => {
+            if (`${o.opis || ''} ${o.lokacija || ''}`.toLowerCase().includes(term))
+                results.push({ type: 'observation', icon: '🚨', label: o.lokacija || 'Prijava opasnosti', sub: o.opis || '', path: '/dashboard/observations', id: o.id });
+        });
+        return results.slice(0, 10);
     }, [searchTerm]);
 
     const notifications = useMemo(() => {
@@ -472,7 +484,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.sub}</div>
                                             </div>
                                             <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-badge)', color: 'var(--primary-dark)', fontWeight: 600 }}>
-                                                {r.type === 'worker' ? (lang === 'bs' ? 'Radnik' : 'Worker') : r.type === 'equipment' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : r.type === 'workplace' ? (lang === 'bs' ? 'Radno mj.' : 'Workplace') : lang === 'bs' ? 'Org. jed.' : 'Org. unit'}
+                                                {r.type === 'worker' ? (lang === 'bs' ? 'Radnik' : 'Worker') : r.type === 'equipment' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : r.type === 'workplace' ? (lang === 'bs' ? 'Radno mj.' : 'Workplace') : r.type === 'orgUnit' ? (lang === 'bs' ? 'Org. jed.' : 'Org. unit') : r.type === 'vehicle' ? (lang === 'bs' ? 'Vozilo' : 'Vehicle') : r.type === 'medical_exam' ? (lang === 'bs' ? 'Lj. Pregled' : 'Medical') : r.type === 'observation' ? (lang === 'bs' ? 'Prijava op..' : 'Observation') : ''}
                                             </span>
                                         </button>
                                     ))}

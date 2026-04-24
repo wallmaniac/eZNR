@@ -335,31 +335,33 @@ export default function WorkplacesPage() {
             )}
 
             <div className="card">
-                <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Novo radno mjesto' : 'New Workplace'}</button>
-                        <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
+                <div className="card-body" style={{ padding: 0 }}>
+                    <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {lang === 'bs' ? 'Novo radno mjesto' : 'New Workplace'}</button>
+                        <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-                            <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
                         </div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
                             <input type="checkbox" checked={showActive} onChange={e => setShowActive(e.target.checked)} />
                             {lang === 'bs' ? 'Prikaži aktivne' : 'Show active'}
                         </label>
                         {selectedIds.size > 0 && (
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:
                                 </span>
-                                <button className="btn btn-primary btn-sm" onClick={handleGenerateDocuments}>📄 {lang === 'bs' ? 'Generiši dokumente' : 'Generate documents'}</button>
-                                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments}>📄 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                             </div>
                         )}
+                        {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}></span>}
                     </div>
 
-                    <div className="data-table-wrapper">
+                    <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
                         <table className="data-table">
                             <thead>
                                 <tr>
