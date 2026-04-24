@@ -106,7 +106,8 @@ function EquipmentPageInner() {
         if (found) {
             openItemHandledRef.current = true;
             handleEdit(found, openTab || 'servis'); // default to servis tab when from calendar or qr
-            // Strip from URL so it doesn't re-trigger on reload
+
+            // Strip from URL so it doesn't re-trigger on reload
             window.history.replaceState({}, '', window.location.pathname);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -653,13 +654,14 @@ function EquipmentPageInner() {
 
             {/* ── Equipment List ── */}
             <div className="card">
-                <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="card-body" style={{ padding: 0 }}>
+                    <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                         <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova oprema' : 'New Equipment'}</button>
-                        <div className="search-bar" style={{ flex: 1 }}>
+                        <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
                         </div>
                         <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                             { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
