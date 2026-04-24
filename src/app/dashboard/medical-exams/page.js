@@ -266,17 +266,16 @@ export default function MedicalExamsPage() {
                     />
                     {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
                 </div>
-                {/* Stat chips */}
-                {stats.expired > 0 && (
-                    <span style={{ flexShrink: 0, fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'var(--danger)', color: 'white', fontWeight: 700 }}>
-                        ⚠️ {stats.expired} {bs ? 'isteklo' : 'expired'}
-                    </span>
-                )}
-                {stats.soon > 0 && (
-                    <span style={{ flexShrink: 0, fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', fontWeight: 700, border: '1px solid var(--warning)' }}>
-                        🕐 {stats.soon} {bs ? 'uskoro' : 'due soon'}
-                    </span>
-                )}
+
+                <select
+                    className="form-select"
+                    style={{ height: 38, padding: '0 12px', flexShrink: 0, fontSize: '0.85rem', width: 140, cursor: 'pointer' }}
+                    value={filterTab}
+                    onChange={(e) => setFilterTab(e.target.value)}
+                >
+                    {tabs.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
+                </select>
+
 
                 {/* ── Grupne akcije bar ── */}
                 {selectedIds.size > 0 && (
@@ -291,19 +290,7 @@ export default function MedicalExamsPage() {
                 {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
             </div>
             
-            {/* ── Filter tabs ── */}
-            <div style={{ display: 'flex', gap: 4, padding: '0 16px 16px', flexWrap: 'wrap' }}>
-                {tabs.map(tab => (
-                    <button
-                        key={tab.key}
-                        className={filterTab === tab.key ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
-                        style={tab.col && filterTab !== tab.key ? { borderColor: tab.col, color: tab.col } : {}}
-                        onClick={() => setFilterTab(tab.key)}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+
 
             {/* ── Legal tip ── */}
             <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', marginBottom: 12, background: 'rgba(33,150,243,0.05)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
