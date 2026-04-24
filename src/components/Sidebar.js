@@ -50,7 +50,7 @@ const menuItems = [
         children: [
             { key: 'injuryReport',       icon: '🩹', path: '/dashboard/injuries' },
             { key: 'diseaseReport',      icon: '🏥', path: '/dashboard/diseases' },
-            { key: 'observations',       icon: '🚨', path: '/dashboard/observations', label_bs: 'Prijave opasnosti', label_en: 'Hazard Reports' },
+            { key: 'observations',       icon: '⚠️', path: '/dashboard/observations', label_bs: 'Prijave opasnosti', label_en: 'Hazard Reports' },
             { key: 'annualInjuryReport', icon: '📈', path: '/dashboard/annual-injuries' },
         ],
     },

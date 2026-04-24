@@ -151,7 +151,7 @@ export default function ObservationsPage() {
 
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
-                <Icon3D name="🚨" size={64} />
+                <Icon3D name="⚠️" size={64} />
                 <div>
                     <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Prijave Opasnosti' : 'Hazard Reports'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
