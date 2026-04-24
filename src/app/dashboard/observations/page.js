@@ -16,6 +16,7 @@ export default function ObservationsPage() {
     const { showFlash, SavedFlash } = useSavedFlash();
 
     const [items, setItems] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     
     // View Modal
     const [viewingItem, setViewingItem] = useState(null);
@@ -64,7 +65,15 @@ export default function ObservationsPage() {
         }
     }, [items, viewingItem, deepLinkId]);
 
-    const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(items, 'datum', 'desc');
+    const filteredItems = items.filter(i => {
+        if (!searchTerm) return true;
+        const q = searchTerm.toLowerCase();
+        return (i.opis || '').toLowerCase().includes(q) ||
+               (i.lokacija || '').toLowerCase().includes(q) ||
+               (i.ime || '').toLowerCase().includes(q);
+    });
+
+    const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(filteredItems, 'datum', 'desc');
 
     // ── Handle new internal hazard submission ──
     const handleNewSubmit = async () => {
@@ -140,29 +149,44 @@ export default function ObservationsPage() {
             <SavedFlash />
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '1.6rem' }}>🚨</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
+                <Icon3D name="Prijava opasnosti.png" fallback="🚨" size={64} />
                 <div>
                     <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Prijave Opasnosti' : 'Hazard Reports'}</h1>
                     <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
                         {items.length} {lang === 'bs' ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}
                     </p>
                 </div>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                    <button className="btn btn-primary btn-sm" onClick={() => setShowNewForm(true)} title={lang === 'bs' ? 'Ručno prijavi opasnost iz administracije' : 'Manually report a hazard from administration'}>
-                        + {lang === 'bs' ? 'Nova prijava' : 'New Report'}
-                    </button>
-                    <button className="btn btn-outline btn-sm eznr-hide-mobile" onClick={() => setShowQR(true)} title={lang === 'bs' ? 'Isprintaj QR kod plakat za gradilište' : 'Print QR code poster for the worksite'}>
-                        🖨️ {lang === 'bs' ? 'QR Kod' : 'QR Code'}
-                    </button>
-                </div>
             </div>
 
-            <p style={{ marginBottom: 24, fontSize: '0.86rem', color: 'var(--text-muted)' }}>
+            <p style={{ marginBottom: 16, fontSize: '0.86rem', color: 'var(--text-muted)' }}>
                 {lang === 'bs' 
                     ? 'Popis prijavljenih opasnosti koje su radnici slikali i poslali putem QR koda.' 
                     : 'List of hazard reports submitted by workers via QR code scans.'}
             </p>
+
+            <div className="card" style={{ marginBottom: 16 }}>
+                <div className="card-body" style={{ padding: 0 }}>
+                    <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={() => setShowNewForm(true)} title={lang === 'bs' ? 'Ručno prijavi opasnost iz administracije' : 'Manually report a hazard from administration'}>
+                            + {lang === 'bs' ? 'Nova prijava' : 'New Report'}
+                        </button>
+                        <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 260, display: 'flex', alignItems: 'center' }}>
+                            <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
+                            <input
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }}
+                                placeholder={lang === 'bs' ? 'Pretraži opasnosti...' : 'Search reports...'}
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                            />
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                        </div>
+                        <button className="btn btn-outline" style={{ height: 38, flexShrink: 0 }} onClick={() => setShowQR(true)} title={lang === 'bs' ? 'Isprintaj QR kod plakat za gradilište' : 'Print QR code poster for the worksite'}>
+                            🖨️ {lang === 'bs' ? 'QR Kod' : 'QR Code'}
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             {/* ── New Hazard Modal ── */}
             {showNewForm && (
@@ -213,7 +237,7 @@ export default function ObservationsPage() {
             )}
 
             <div className="card">
-                <div className="data-table-wrapper">
+                <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
                     <table className="data-table">
                         <thead>
                             <tr>

@@ -250,47 +250,49 @@ export default function MedicalExamsPage() {
             </div>
 
             {/* ── Toolbar: New button LEFT, search RIGHT ── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, marginTop: 12, flexWrap: 'wrap' }}>
-                <button className="btn btn-primary btn-sm" id="btn-new-exam" onClick={handleNew}>
+            <div className="card"><div className="card-body" style={{ padding: 0 }}>
+            <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                <button className="btn btn-primary" id="btn-new-exam" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>
                     + {bs ? 'Novi pregled' : 'New Exam'}
                 </button>
 
-                <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
+                <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 260, display: 'flex', alignItems: 'center' }}>
+                    <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                     <input
-                        style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.85rem', flex: 1, width: '100%' }}
-                        placeholder={bs ? 'Pretraži radnika, doktora, ustanovu...' : 'Search worker, doctor, institution...'}
+                        style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }}
+                        placeholder={bs ? 'Pretraži radnika, doktora...' : 'Search worker, doctor...'}
                         value={searchQ}
                         onChange={e => setSearchQ(e.target.value)}
                     />
-                    {searchQ && <button className="btn btn-ghost btn-sm" onClick={() => setSearchQ('')}>✕</button>}
+                    {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
                 </div>
                 {/* Stat chips */}
                 {stats.expired > 0 && (
-                    <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'var(--danger)', color: 'white', fontWeight: 700 }}>
+                    <span style={{ flexShrink: 0, fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'var(--danger)', color: 'white', fontWeight: 700 }}>
                         ⚠️ {stats.expired} {bs ? 'isteklo' : 'expired'}
                     </span>
                 )}
                 {stats.soon > 0 && (
-                    <span style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', fontWeight: 700, border: '1px solid var(--warning)' }}>
+                    <span style={{ flexShrink: 0, fontSize: '0.75rem', padding: '4px 10px', borderRadius: 20, background: 'rgba(245,158,11,0.15)', color: 'var(--warning)', fontWeight: 700, border: '1px solid var(--warning)' }}>
                         🕐 {stats.soon} {bs ? 'uskoro' : 'due soon'}
                     </span>
                 )}
 
                 {/* ── Grupne akcije bar ── */}
                 {selectedIds.size > 0 && (
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                            {selectedIds.size} {bs ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                            {selectedIds.size} {bs ? 'odabrano' : 'selected'}:
                         </span>
-                        <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
-                        <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                        <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
+                        <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                     </div>
                 )}
-                {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
+                {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
             </div>
-
+            
             {/* ── Filter tabs ── */}
-            <div style={{ display: 'flex', gap: 4, marginBottom: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 4, padding: '0 16px 16px', flexWrap: 'wrap' }}>
                 {tabs.map(tab => (
                     <button
                         key={tab.key}
@@ -312,9 +314,7 @@ export default function MedicalExamsPage() {
             </div>
 
             {/* ── Table ── */}
-            <div className="card">
-                <div className="card-body" style={{ padding: 0 }}>
-                    <div className="data-table-wrapper">
+                    <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
                         <table className="data-table" style={{ width: '100%' }}>
                             <thead>
                                 <tr>
