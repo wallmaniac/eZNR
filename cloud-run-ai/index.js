@@ -233,3 +233,5 @@ app.post('/api/zia', async (req, res) => {
 app.listen(port, () => {
     console.log(`🚀 eZNR Cloud Run AI Service mapped to port ${port}`);
 });
+
+// Trigger deploy
