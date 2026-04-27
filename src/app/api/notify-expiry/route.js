@@ -247,13 +247,20 @@ export async function GET(request) {
                 const cap = rows => rows.sort((a, b) => a._days - b._days).slice(0, rowLimit === Infinity ? rows.length : rowLimit);
 
                 // Fetch all relevant collections in parallel
-                const [certsSnap, equipSnap, docsSnap, vehiclesSnap, medSnap] = await Promise.all([
+                const [certsSnap, equipSnap, docsSnap, vehiclesSnap, medSnap, workersSnap] = await Promise.all([
                     settings?.emailNotifCerts !== false ? db.collection(`${compPath}/certificates`).get() : Promise.resolve({ docs: [] }),
                     settings?.emailNotifEquip !== false ? db.collection(`${compPath}/equipment`).get() : Promise.resolve({ docs: [] }),
                     settings?.emailNotifDocs !== false ? db.collection(`${compPath}/employerDocs`).get() : Promise.resolve({ docs: [] }),
                     settings?.emailNotifFleet !== false ? db.collection(`${compPath}/vehicles`).get() : Promise.resolve({ docs: [] }),
                     settings?.emailNotifMedical !== false ? db.collection(`${compPath}/medicalExams`).get() : Promise.resolve({ docs: [] }),
+                    db.collection(`${compPath}/workers`).get()
                 ]);
+
+                const workerMap = {};
+                workersSnap.docs.forEach(doc => {
+                    const w = doc.data();
+                    workerMap[doc.id] = `${w.ime || ''} ${w.prezime || ''}`.trim() || 'Nepoznat radnik';
+                });
 
                 const langs = emailLang === 'bilingual' ? ['bs', 'en'] : [emailLang || 'bs'];
                 const allSections = [];
@@ -264,7 +271,11 @@ export async function GET(request) {
                         const rows = cap(certsSnap.docs.reduce((acc, doc) => {
                             const c = doc.data();
                             const days = daysUntil(c.vrijediDo);
-                            if (days !== null && days <= threshold) acc.push({ _days: days, [t(lang, 'worker')]: c.workerName || c.workerId || '—', [t(lang, 'type')]: c.vrstaUvjerenja || c.tip || '—', [t(lang, 'expires')]: fmtDate(c.vrijediDo) });
+                            if (days !== null && days <= threshold) {
+                                const wName = workerMap[c.workerId] || c.workerName || c.workerId || '—';
+                                const typeName = c.tipUvjerenjaIme || c.vrstaUvjerenja || c.ime || c.tip || '—';
+                                acc.push({ _days: days, [t(lang, 'worker')]: wName, [t(lang, 'type')]: typeName, [t(lang, 'expires')]: fmtDate(c.vrijediDo) });
+                            }
                             return acc;
                         }, []));
                         if (rows.length) allSections.push(buildSection(`📜 ${t(lang, 'catCerts')} (${rows.length})`, rows, [{ key: t(lang, 'worker'), label: t(lang, 'worker') }, { key: t(lang, 'type'), label: t(lang, 'type') }, { key: t(lang, 'expires'), label: t(lang, 'expires') }], lang));
@@ -307,7 +318,11 @@ export async function GET(request) {
                         const rows = cap(medSnap.docs.reduce((acc, doc) => {
                             const m = doc.data();
                             const days = daysUntil(m.vrijediDo || m.datumIsteka);
-                            if (days !== null && days <= threshold) acc.push({ _days: days, [t(lang, 'worker')]: m.workerName || m.workerId || '—', [t(lang, 'examType')]: m.vrstaPregleda || m.tip || '—', [t(lang, 'validUntil')]: fmtDate(m.vrijediDo || m.datumIsteka) });
+                            if (days !== null && days <= threshold) {
+                                const wName = workerMap[m.workerId] || m.workerName || m.workerId || '—';
+                                const typeName = m.tipPregleda || m.vrstaPregleda || m.tip || '—';
+                                acc.push({ _days: days, [t(lang, 'worker')]: wName, [t(lang, 'examType')]: typeName, [t(lang, 'validUntil')]: fmtDate(m.vrijediDo || m.datumIsteka) });
+                            }
                             return acc;
                         }, []));
                         if (rows.length) allSections.push(buildSection(`🩺 ${t(lang, 'catMed')} (${rows.length})`, rows, [{ key: t(lang, 'worker'), label: t(lang, 'worker') }, { key: t(lang, 'examType'), label: t(lang, 'examType') }, { key: t(lang, 'validUntil'), label: t(lang, 'validUntil') }], lang));
