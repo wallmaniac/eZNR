@@ -10,7 +10,7 @@
  */
 export const apiCallZia = async ({ messages, systemPrompt, tools }) => {
     try {
-        const res = await fetch('/api/zia', {
+        const res = await fetch('https://eznr-ai-backend-757041188739.europe-west1.run.app/api/zia', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ messages, systemPrompt, tools }),

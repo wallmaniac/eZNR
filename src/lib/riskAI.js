@@ -88,7 +88,7 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
 
 export const apiGenerateRiskTable = async (jobTitle, companyName, industry) => {
     try {
-        const res = await fetch('/api/risk-ai', {
+        const res = await fetch('https://eznr-ai-backend-757041188739.europe-west1.run.app/api/risk-ai', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ jobTitle, companyName, industry })
