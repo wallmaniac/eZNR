@@ -169,8 +169,8 @@ app.post('/api/zia', async (req, res) => {
         };
 
         if (Array.isArray(tools) && tools.length > 0) {
-            geminiBody.tools = [{ function_declarations: tools }];
-            geminiBody.tool_config = { function_calling_config: { mode: 'AUTO' } };
+            geminiBody.tools = [{ functionDeclarations: tools }];
+            geminiBody.toolConfig = { functionCallingConfig: { mode: 'AUTO' } };
         }
 
         for (const model of MODELS) {
