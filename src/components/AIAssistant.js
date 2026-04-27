@@ -1159,7 +1159,9 @@ export default function AIAssistant() {
                     oib: args.oib || '',
                     aktivan: true
                 });
-                return { success: true, message: `Radnik "${args.ime} ${args.prezime}" kreiran. [Otvori Profil](/dashboard/workers?openWorker=${newWorker.id})` };
+                router.push(`/dashboard/workers?openWorker=${newWorker.id}`);
+                setIsMinimized(true);
+                return { success: true, message: `Radnik "${args.ime} ${args.prezime}" uspješno kreiran.` };
             } catch (e) { return { error: e.message }; }
         }
         if (name === 'report_injury') {
@@ -1173,7 +1175,9 @@ export default function AIAssistant() {
                     opisDogadaja: args.opis || '',
                     status: 'otvorena'
                 });
-                return { success: true, message: `Prijava povrede za "${args.worker_name}" kreirana. [Otvori Prijavu](/dashboard/injuries/edit/${newInjury.id})` };
+                router.push(`/dashboard/injuries/edit/${newInjury.id}`);
+                setIsMinimized(true);
+                return { success: true, message: `Prijava povrede za "${args.worker_name}" uspješno kreirana i otvorena.` };
             } catch (e) { return { error: e.message }; }
         }
         if (name === 'add_certificate') {
@@ -1185,7 +1189,9 @@ export default function AIAssistant() {
                     datum: args.datum,
                     vrijediDo: args.vrijediDo,
                 });
-                return { success: true, message: `Uvjerenje "${args.tipUvjerenja}" dodano radniku "${args.worker_name}". [Otvori Uvjerenja](/dashboard/worker-certificates/edit/${newCert.id})` };
+                router.push(`/dashboard/worker-certificates/edit/${newCert.id}`);
+                setIsMinimized(true);
+                return { success: true, message: `Uvjerenje "${args.tipUvjerenja}" dodano radniku "${args.worker_name}" i otvoreno.` };
             } catch (e) { return { error: e.message }; }
         }
         if (name === 'assign_ppe') {
@@ -1283,7 +1289,9 @@ export default function AIAssistant() {
                     tip: 'osobno',
                     status: 'aktivan'
                 });
-                return { success: true, message: `Vozilo "${args.marka} ${args.model} (${args.registracija})" uspješno dodano. [Otvori Vozni Park](/dashboard/fleet?openVozilo=${newVeh.id})` };
+                router.push(`/dashboard/fleet?openVozilo=${newVeh.id}`);
+                setIsMinimized(true);
+                return { success: true, message: `Vozilo "${args.marka} ${args.model} (${args.registracija})" uspješno dodano i otvoreno.` };
             } catch (err) {
                 return { error: `Failed to create vehicle: ${err.message}` };
             }
@@ -1318,7 +1326,9 @@ export default function AIAssistant() {
                     tip: args.tip || 'other',
                     auto: false
                 });
-                return { success: true, message: `Događaj / podsjetnik uspješno kreiran za datum ${args.datum}. [Otvori Kalendar](/dashboard)` };
+                router.push(`/dashboard`);
+                setIsMinimized(true);
+                return { success: true, message: `Događaj / podsjetnik uspješno kreiran za datum ${args.datum}.` };
             } catch (err) {
                 return { error: `Failed to create calendar event: ${err.message}` };
             }
@@ -1334,7 +1344,9 @@ export default function AIAssistant() {
                     rezultat: args.rezultat,
                     zdravstvenaUstanova: args.ustanova || ''
                 });
-                return { success: true, message: `Ljekarski pregled za radnika "${args.worker_name}" uspješno snimljen. [Dodatno uredi](/dashboard/medical-exams)` };
+                router.push(`/dashboard/medical-exams`);
+                setIsMinimized(true);
+                return { success: true, message: `Ljekarski pregled za radnika "${args.worker_name}" uspješno snimljen i otvoren.` };
             } catch (err) {
                 return { error: `Failed to add medical exam: ${err.message}` };
             }
@@ -1377,7 +1389,9 @@ export default function AIAssistant() {
                     napomena: args.napomena || '',
                     attachedFileName: '', attachedFileSize: 0, attachedFileType: ''
                 });
-                return { success: true, message: `Zapisnik "${args.naziv}" uspješno kreiran. [Otvori](/dashboard/zapisnici)` };
+                router.push(`/dashboard/zapisnici`);
+                setIsMinimized(true);
+                return { success: true, message: `Zapisnik "${args.naziv}" uspješno kreiran.` };
             } catch (err) { return { error: err.message }; }
         }
         return { error: 'unknown_tool' };
