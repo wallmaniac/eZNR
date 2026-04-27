@@ -13,6 +13,7 @@ import DateInput from '@/components/DateInput';
 import PullToRefresh from '@/components/mobile/PullToRefresh';
 import CollapsibleWidget from '@/components/mobile/CollapsibleWidget';
 import LongPressMenu, { useLongPress } from '@/components/mobile/LongPressMenu';
+import AnalyticsWidgets from '@/components/AnalyticsWidgets';
 
 const EVENT_ROUTES = {
     cert: '/dashboard/worker-certificates',
@@ -148,6 +149,8 @@ export default function DashboardPage() {
     const [fleetVehicles, setFleetVehicles] = useState([]);
     const [employerDocs, setEmployerDocs] = useState([]);
     const [medicalExams, setMedicalExams] = useState([]);
+    const [injuriesData, setInjuriesData] = useState([]);
+    const [diseasesData, setDiseasesData] = useState([]);
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
     const [showEventForm, setShowEventForm] = useState(false);
@@ -194,6 +197,8 @@ export default function DashboardPage() {
             setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
             setRiskAssessments(getAllForCompany(COLLECTIONS.RISK_ASSESSMENTS, activeCompanyId, uids));
             setRiskItems(getAll(COLLECTIONS.RISK_ITEMS));
+            setInjuriesData(getAllForCompany(COLLECTIONS.INJURIES, activeCompanyId, uids));
+            setDiseasesData(getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids));
         };
 
         updateData();
@@ -535,6 +540,8 @@ export default function DashboardPage() {
         setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
         setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
         setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
+        setInjuriesData(getAllForCompany(COLLECTIONS.INJURIES, activeCompanyId, uids));
+        setDiseasesData(getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids));
         setNotifSettings(getNotificationSettings() || {});
         if (typeof window !== 'undefined' && window.eznrToast) {
             window.eznrToast(lang === 'bs' ? 'Podaci osvježeni' : 'Data refreshed', 'success', 2000);
@@ -665,6 +672,21 @@ export default function DashboardPage() {
 
                     return <AlertsWidget groups={groups} total={total} lang={lang} />;
                 })()}
+            </CollapsibleWidget>
+
+            {/* Analytics Charts */}
+            <CollapsibleWidget id="analytics" title={lang === 'bs' ? 'Analitika' : 'Analytics'} icon="📊" isMobile={isMobile}>
+                <AnalyticsWidgets
+                    workers={workers}
+                    certs={certs}
+                    equipment={equipment}
+                    injuries={injuriesData}
+                    diseases={diseasesData}
+                    riskItems={riskItems}
+                    riskAssessments={riskAssessments}
+                    medicalExams={medicalExams}
+                    lang={lang}
+                />
             </CollapsibleWidget>
 
             {/* Calendar */}

@@ -26,10 +26,10 @@ service cloud.firestore {
       allow update: if request.auth.uid == userId || isAdmin();
     }
 
-    // 2) Companies Collection
+    // 2) Companies Collection — only members of a company can modify it
     match /companies/{companyId} {
       allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow write: if belongsToCompany(companyId);
     }
 
     // 3) Global Catalog Data
@@ -79,6 +79,11 @@ service cloud.firestore {
     match /training_responses/{responseId} {
       allow read, delete: if isSignedIn();
       allow create, update: if true;
+    }
+
+    // 9) DENY-ALL FALLBACK — block anything not explicitly matched above
+    match /{document=**} {
+      allow read, write: if false;
     }
 
   }
