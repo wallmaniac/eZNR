@@ -183,24 +183,7 @@ export async function getUserCompanies(companyIds) {
         if (c) directCompanies.push(c);
     }
     
-    // 2. Fetch all companies to check for subsidiaries
-    const allComps = await getAllCompanies();
-    
-    // 3. Find subsidiaries where parentId is one of the direct companies
-    const subsidiaries = allComps.filter(c => c.parentId && companyIds.includes(c.parentId));
-    
-    // 4. Combine and deduplicate
-    const combined = [...directCompanies, ...subsidiaries];
-    const unique = [];
-    const seen = new Set();
-    for (const c of combined) {
-        if (!seen.has(c.id)) {
-            seen.add(c.id);
-            unique.push(c);
-        }
-    }
-    
-    return unique;
+    return directCompanies;
 }
 
 // ── Super Admin Helpers ───────────────────────────────────────────────────────
