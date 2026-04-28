@@ -1456,7 +1456,7 @@ function WorkersPageInner() {
                 {/* ── FOOTER ACTIONS (sticky) ── */}
                 <div className="sticky-footer" style={{
                     position: 'sticky', bottom: 0, background: 'var(--bg-card)', borderTop: '1px solid var(--border)', padding: '12px 0',
-                    display: 'flex', alignItems: 'center', gap: 12, zIndex: 50,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: 12, zIndex: 50,
                 }}>
                     <button className="btn btn-primary" onClick={() => handleSave(false)}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
                     <button className="btn btn-outline" onClick={() => handleSave(true)}>💾 {t('saveAndAddNew')}</button>

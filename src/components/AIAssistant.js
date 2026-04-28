@@ -99,7 +99,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Add multi-tenant context awareness
         const activeCompName = activeCompanyId === 'all' 
             ? (lang === 'bs' ? 'Sve dodijeljene firme (Agregatni prikaz)' : 'All assigned companies (Aggregate view)')
-            : (userCompanies?.find(c => c.id === activeCompanyId)?.name || activeCompanyId);
+            : (userCompanies?.find(c => c.id === activeCompanyId)?.naziv || activeCompanyId);
             
         lines.push(lang === 'bs' 
             ? `TRENUTNI KONTEKST FIRME: ${activeCompName}. Prilikom davanja odgovora o radnicima ili incidentima obavezno uzmi u obzir iz koje su firme ako je odabrano više firmi.`
