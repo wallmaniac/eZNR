@@ -72,7 +72,7 @@ function ModalSection({ title, action, children }) {
  *   onClose   — () => void
  *   onSaved   — optional () => void called after save
  */
-export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
+export default function WorkerProfileModal({ workerId, onClose, onSaved, initialTab }) {
     const { t, lang } = useLanguage();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -94,7 +94,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     const [showPpeForm, setShowPpeForm] = useState(false);
     const [ppeFormData, setPpeFormData] = useState({});
     const [ppeEditId, setPpeEditId] = useState(null);
-    const [activeTab, setActiveTab] = useState('osnovno');
+    const [activeTab, setActiveTab] = useState(initialTab || 'osnovno');
     const { activeCompanyId } = useAuth();
 
     const refreshCerts = () => setCertificates(getWorkerCertificates(workerId));
@@ -175,15 +175,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     };
 
 
-
-    const openFullEdit = () => {
-        onClose();
-        router.push(`/dashboard/workers?openWorker=${workerId}`);
-    };
-
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" style={{ maxWidth: 820, maxHeight: '92vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div className="modal" style={{ maxWidth: 820, height: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                 <DialogRenderer />
 
                 {/* ── Header ── */}
@@ -205,20 +199,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         {!editMode && (
-                            <>
-                                <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)}>
-                                    ✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}
-                                </button>
-                                <button
-                                    className="btn btn-primary btn-sm"
-                                    onClick={openFullEdit}
-                                    title={lang === 'bs' ? 'Otvori potpuni profil radnika (uvjerenja, OZO, dokumenti...)' : 'Open full worker profile'}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}
-                                >
-                                    <Icon3D name="Radnici.png" size={18} />
-                                    {lang === 'bs' ? 'Otvori potpuno' : 'Open full'}
-                                </button>
-                            </>
+                            <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)}>
+                                ✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}
+                            </button>
                         )}
                         <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
                     </div>

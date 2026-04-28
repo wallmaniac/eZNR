@@ -276,14 +276,18 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // Allow EVERYTHING to initialize gracefully in the background
-            Promise.all([...companyLoads, ...globalLoads, ...metaLoads]).then(() => {
+            // CRITICAL: Wait for company-scoped data before declaring loaded (with 5s timeout for slow mobile)
+            const companyTimeout = new Promise(r => setTimeout(r, 5000));
+            await Promise.race([Promise.all(companyLoads), companyTimeout]);
+
+            // Allow global + meta to initialize gracefully in the background
+            Promise.all([...globalLoads, ...metaLoads]).then(() => {
                 console.log('[dataStore] 📡 All real-time modules & global references established.');
             });
 
             const elapsed = ((performance.now() - start) / 1000).toFixed(2);
             const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
-            console.log(`[dataStore] ✅ Fast boot finished in ${elapsed}s, background tasks running.`);
+            console.log(`[dataStore] ✅ Fast boot finished in ${elapsed}s (${totalDocs} docs), background tasks running.`);
 
             _isLoaded = true;
             _isLoading = false;

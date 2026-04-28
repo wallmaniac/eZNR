@@ -63,6 +63,7 @@ function WorkersPageInner() {
     const [page, setPage] = useState(1);
     const [perPage, setPerPage] = useState(10);
     const [viewWorkerId, setViewWorkerId] = useState(null);
+    const [viewWorkerInitialTab, setViewWorkerInitialTab] = useState(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
@@ -251,46 +252,20 @@ function WorkersPageInner() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Auto-open from WorkerProfileModal "Otvori potpuno" or cert-return via ?openWorker=ID
+    // Auto-open from WorkerProfileModal or deep links via ?openWorker=ID
     useEffect(() => {
         if (workers.length === 0) return;
         const openId = searchParams?.get('openWorker');
         if (!openId) return;
-        // Only skip if we already handled THIS exact ID (prevents refiring on loadData rerenders)
         if (openWorkerHandledRef.current === openId) return;
         const found = workers.find(x => x.id === openId);
         if (found) {
             openWorkerHandledRef.current = openId;
-            openedViaUrlRef.current = true; // remember we came via URL — back/save must navigate
-            handleEdit(found);
-            markClean();
-            isDirtyRef.current = false;
             const section = searchParams?.get('section');
-            if (section === 'ozo') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
-                    ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            } else if (section === 'uvjerenja') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, uvjerenja: true }));
-                    uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            } else if (section === 'medExams' || section === 'zdravstvo') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, medExams: true, uvjerenja: false }));
-                    medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            } else if (section === 'dokumenti') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false }));
-                    dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            }
-            // Strip the param from the URL immediately so this effect never re-fires
-            // Use replaceState instead of router.replace to preserve back-navigation history
+            const tabMap = { ozo: 'ozo', uvjerenja: 'uvjerenja', dokumenti: 'dokumenti', medExams: 'osnovno', zdravstvo: 'osnovno' };
+            setViewWorkerInitialTab(tabMap[section] || 'osnovno');
+            setViewWorkerId(found.id);
             window.history.replaceState(null, '', '/dashboard/workers');
-
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [workers, searchParams]);
@@ -1910,8 +1885,9 @@ function WorkersPageInner() {
                 viewWorkerId && (
                     <WorkerProfileModal
                         workerId={viewWorkerId}
-                        onClose={() => setViewWorkerId(null)}
-                        onSaved={() => { loadData(); setViewWorkerId(null); }}
+                        initialTab={viewWorkerInitialTab}
+                        onClose={() => { setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
+                        onSaved={() => { loadData(); setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
                     />
                 )
             }
