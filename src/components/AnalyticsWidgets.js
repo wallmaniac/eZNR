@@ -1,5 +1,6 @@
 'use client';
 import { useMemo } from 'react';
+import PrintableAnnualReport from './PrintableAnnualReport';
 
 // ============================================================================
 // ANALYTICS WIDGETS — Pure SVG charts for the Kontrolna ploča dashboard
@@ -220,22 +221,16 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
     const handleDownloadPDF = async () => {
         try {
             const html2pdf = (await import('html2pdf.js')).default;
-            const element = document.getElementById('analytics-dashboard-export');
+            const element = document.getElementById('print-document-container');
             const opt = {
-                margin: 10,
-                filename: lang === 'bs' ? 'Godisnji_Izvjestaj_eZNR.pdf' : 'Annual_Safety_Report_eZNR.pdf',
+                margin: 0,
+                filename: lang === 'bs' ? 'Godisnji_Izvjestaj_ZNR.pdf' : 'Annual_Safety_Report.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                html2canvas: { scale: 2, useCORS: true },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
-            // Temporarily set dark mode text to black for PDF printing
-            const originalColor = element.style.color;
-            element.style.color = '#121212';
-            
             await html2pdf().from(element).set(opt).save();
-            
-            element.style.color = originalColor;
 
             if (window.eznrToast) {
                 window.eznrToast(lang === 'bs' ? 'Izvještaj uspješno preuzet!' : 'Report downloaded safely!', 'success');
@@ -320,6 +315,23 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                             />
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Hidden A4 Printable Template */}
+            <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '210mm' }}>
+                <div id="print-document-container">
+                    <PrintableAnnualReport 
+                        workers={workers}
+                        certs={certs}
+                        equipment={equipment}
+                        injuries={injuries}
+                        diseases={diseases}
+                        riskItems={riskItems}
+                        riskAssessments={riskAssessments}
+                        medicalExams={medicalExams}
+                        lang={lang}
+                    />
                 </div>
             </div>
         </div>
