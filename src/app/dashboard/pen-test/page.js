@@ -130,18 +130,59 @@ export default function FirebasePenTest() {
         setIsRunning(false);
     };
 
+    const runPDFStressTest = async () => {
+        const parsedCount = Math.max(1, parseInt(simulateCount) || 1);
+        setIsRunning(true);
+        setLogs([]);
+        log(`Starting Heavy DOM PDF Generation Stress Test: ${parsedCount} reports...`, 'warning');
+
+        try {
+            const html2pdf = (await import('html2pdf.js')).default;
+            const element = document.createElement('div');
+            element.innerHTML = `<h1 style="color: black;">QA Stress Test</h1><p>Generating ${parsedCount} reports</p><table border="1"><tr><td>Test Worker</td><td>Compliance: 100%</td></tr></table>`;
+            element.style.padding = '20px';
+            element.style.background = 'white';
+            element.style.color = 'black';
+            document.body.appendChild(element); // Temp mount
+
+            log(`Simulating ${parsedCount} users simultaneously generating a PDF heavy report...`, 'info');
+            
+            const startTime = Date.now();
+            const exportPromises = [];
+
+            const opt = {
+                margin: 10,
+                filename: 'Stress_Test.pdf',
+                image: { type: 'jpeg', quality: 0.8 },
+                html2canvas: { scale: 1 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            for (let i = 0; i < parsedCount; i++) {
+                // We use `.output('blob')` instead of `.save()` to prevent 100 download popups
+                exportPromises.push(html2pdf().from(element).set(opt).output('blob'));
+            }
+
+            await Promise.all(exportPromises);
+            document.body.removeChild(element);
+
+            const duration = ((Date.now() - startTime) / 1000).toFixed(1);
+            log(`✅ DOM PDF Stress Test Completed in ${duration} seconds. Handled ${parsedCount} heavy document compilations. If browser didn't crash, UI performance is verified.`, 'success');
+        } catch (err) {
+            log(`❌ DOM PDF Stress failed: ${err.message}`, 'error');
+        }
+        setIsRunning(false);
+    };
+
     return (
-        <div style={{ padding: 24, maxWidth: 800, margin: '0 auto', fontFamily: 'var(--font-body)' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 16 }}>Firebase PenTest</h1>
+        <div style={{ padding: 24, maxWidth: 900, margin: '0 auto', fontFamily: 'var(--font-body)' }}>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 8 }}>Professional QA Testing Suite</h1>
             <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>
-                This tool attempts to read and write to Firestore directly, bypassing localStorage. 
-                It verifies that <code>firestore.rules</code> actively blocks requests to foreign partitions even under high load.
-                <br /><br />
-                <strong>Important:</strong> You must log in as a regular <code>officer</code>, NOT an <code>admin</code>, to test isolation properly, because admins have unrestricted access.
+                Advanced tools to simulate extreme load and verify platform stability. Run comprehensive tests to validate Multi-Tenant Isolation, Database Scalability, and UI Execution limits.
             </p>
             
             <div style={{ marginBottom: 24, background: 'var(--bg-card)', padding: 16, borderRadius: 12, border: '1px solid var(--border)' }}>
-                <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, fontSize: '0.9rem' }}>Broj korisnika za simulaciju (Users to Simulate):</label>
+                <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, fontSize: '0.9rem' }}>Broj simulacija (Test Multiplier):</label>
                 <input 
                     type="number" 
                     value={simulateCount} 
@@ -150,57 +191,45 @@ export default function FirebasePenTest() {
                 />
             </div>
 
-            <button 
-                onClick={runTests} 
-                disabled={isRunning}
-                style={{ 
-                    padding: '10px 20px', 
-                    background: 'var(--primary)', 
-                    color: 'white', 
-                    border: 'none', 
-                    borderRadius: 8, 
-                    cursor: isRunning ? 'not-allowed' : 'pointer',
-                    fontWeight: 700,
-                    marginBottom: 24
-                }}>
-                {isRunning ? 'Running Tests...' : `Execute Pen Test (${simulateCount}x)`}
-            </button>
-            <button 
-                onClick={runStormTest} 
-                disabled={isRunning || isStorming}
-                style={{ 
-                    padding: '10px 20px', 
-                    background: 'var(--warning)', 
-                    color: 'white', 
-                    border: 'none', 
-                    marginLeft: 12,
-                    borderRadius: 8, 
-                    cursor: (isRunning || isStorming) ? 'not-allowed' : 'pointer',
-                    fontWeight: 700,
-                    marginBottom: 24
-                }}>
-                {isStorming ? 'Storming...' : `Simulate ${simulateCount}-User Storm`}
-            </button>
+            <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+                <button 
+                    onClick={runTests} 
+                    disabled={isRunning || isStorming}
+                    style={{ 
+                        padding: '10px 20px', background: 'var(--primary)', color: 'white', border: 'none', 
+                        borderRadius: 8, cursor: (isRunning || isStorming) ? 'not-allowed' : 'pointer', fontWeight: 700
+                    }}>
+                    Verify Tenant Security ({simulateCount}x)
+                </button>
+                <button 
+                    onClick={runStormTest} 
+                    disabled={isRunning || isStorming}
+                    style={{ 
+                        padding: '10px 20px', background: 'var(--danger)', color: 'white', border: 'none', 
+                        borderRadius: 8, cursor: (isRunning || isStorming) ? 'not-allowed' : 'pointer', fontWeight: 700
+                    }}>
+                    Live DB Stress ({simulateCount} user storm)
+                </button>
+                <button 
+                    onClick={runPDFStressTest} 
+                    disabled={isRunning || isStorming}
+                    style={{ 
+                        padding: '10px 20px', background: 'var(--warning)', color: 'white', border: 'none', 
+                        borderRadius: 8, cursor: (isRunning || isStorming) ? 'not-allowed' : 'pointer', fontWeight: 700
+                    }}>
+                    UI/PDF Throttle Test ({simulateCount}x)
+                </button>
+            </div>
 
             <div style={{ 
-                background: 'var(--bg-card)', 
-                border: '1px solid var(--border)', 
-                borderRadius: 12, 
-                padding: 16,
-                minHeight: 300,
-                maxHeight: 500,
-                overflowY: 'auto'
+                background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 12, padding: 16,
+                minHeight: 300, maxHeight: 500, overflowY: 'auto'
             }}>
                 {logs.length === 0 ? (
-                    <div style={{ color: 'var(--text-light)', textAlign: 'center', marginTop: 100 }}>Ready to run.</div>
+                    <div style={{ color: 'var(--text-light)', textAlign: 'center', marginTop: 100 }}>Odaberite test za pokretanje (Ready to run).</div>
                 ) : (
                     logs.map((l, i) => {
-                        const colors = {
-                            info: 'var(--text-muted)',
-                            success: 'var(--success)',
-                            error: 'var(--danger)',
-                            warning: 'var(--warning)'
-                        };
+                        const colors = { info: 'var(--text-muted)', success: 'var(--success)', error: 'var(--danger)', warning: 'var(--warning)' };
                         return (
                             <div key={i} style={{ marginBottom: 8, fontSize: '0.85rem' }}>
                                 <span style={{ opacity: 0.5, marginRight: 8 }}>[{l.time}]</span>

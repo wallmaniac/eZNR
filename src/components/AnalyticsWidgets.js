@@ -217,56 +217,110 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
         return null;
     }
 
+    const handleDownloadPDF = async () => {
+        try {
+            const html2pdf = (await import('html2pdf.js')).default;
+            const element = document.getElementById('analytics-dashboard-export');
+            const opt = {
+                margin: 10,
+                filename: lang === 'bs' ? 'Godisnji_Izvjestaj_eZNR.pdf' : 'Annual_Safety_Report_eZNR.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Temporarily set dark mode text to black for PDF printing
+            const originalColor = element.style.color;
+            element.style.color = '#121212';
+            
+            await html2pdf().from(element).set(opt).save();
+            
+            element.style.color = originalColor;
+
+            if (window.eznrToast) {
+                window.eznrToast(lang === 'bs' ? 'Izvještaj uspješno preuzet!' : 'Report downloaded safely!', 'success');
+            }
+        } catch (err) {
+            console.error('PDF export failed', err);
+            if (window.eznrToast) window.eznrToast(lang === 'bs' ? 'Greška pri izradi PDF-a.' : 'Error generating PDF.', 'error');
+        }
+    };
+
     return (
         <div className="animate-fadeIn" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Mini stats row */}
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                <MiniStat icon="👷" label={lang === 'bs' ? 'Aktivni radnici' : 'Active workers'} value={activeWorkerCount} color="var(--primary)" />
-                <MiniStat icon="⚙️" label={lang === 'bs' ? 'Usklađenost opreme' : 'Equipment compliance'} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
-                <MiniStat icon="⚠️" label={lang === 'bs' ? 'Prosj. rizik' : 'Avg. risk score'} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
-                {medOverdue > 0 && (
-                    <MiniStat icon="🩺" label={lang === 'bs' ? 'Prekoračeni pregledi' : 'Overdue exams'} value={medOverdue} color="var(--danger)" />
-                )}
+            {/* Action Bar */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    {lang === 'bs' ? 'Automatska analitika iz stvarnih podataka' : 'Automated analytics from live data'}
+                </span>
+                <button 
+                    onClick={handleDownloadPDF}
+                    style={{
+                        padding: '6px 14px', borderRadius: 8, border: 'none',
+                        background: 'var(--primary)', color: 'white',
+                        cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem',
+                        display: 'flex', alignItems: 'center', gap: 6
+                    }}
+                >
+                    📑 {lang === 'bs' ? 'Godišnji izvještaj (PDF)' : 'Annual Report (PDF)'}
+                </button>
             </div>
 
-            {/* Charts row */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: 14,
-            }}>
-                {/* Certificate donut */}
-                {certs.length > 0 && (
-                    <div className="card" style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center' }}>
-                        <DonutChart
-                            segments={certSegments}
-                            label={lang === 'bs' ? 'Status uvjerenja' : 'Certificate Status'}
-                            subLabel={lang === 'bs' ? 'ukupno' : 'total'}
-                        />
-                    </div>
-                )}
+            <div id="analytics-dashboard-export" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '10px 0' }}>
+                {/* PDF Header (only visible strictly during html2canvas, or just visually clean) */}
+                <h2 style={{ fontSize: '1.2rem', marginBottom: 4, display: 'none' }} className="pdf-only-header">
+                    {lang === 'bs' ? 'Godišnji izvještaj Zaštite na radu' : 'Annual Occupational Safety Report'}
+                </h2>
 
-                {/* Injuries bar chart */}
-                <div className="card" style={{ padding: '20px 16px' }}>
-                    <BarChart
-                        data={injuryMonths}
-                        title={lang === 'bs' ? 'Povrede i bolesti (12 mj.)' : 'Injuries & Diseases (12 mo.)'}
-                        barColor={(d) => d.value >= 3 ? 'var(--danger)' : d.value >= 1 ? 'var(--warning)' : 'var(--border)'}
-                        height={150}
-                    />
+                {/* Mini stats row */}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <MiniStat icon="👷" label={lang === 'bs' ? 'Aktivni radnici' : 'Active workers'} value={activeWorkerCount} color="var(--primary)" />
+                    <MiniStat icon="⚙️" label={lang === 'bs' ? 'Usklađenost opreme' : 'Equipment compliance'} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
+                    <MiniStat icon="⚠️" label={lang === 'bs' ? 'Prosj. rizik' : 'Avg. risk score'} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
+                    {medOverdue > 0 && (
+                        <MiniStat icon="🩺" label={lang === 'bs' ? 'Prekoračeni pregledi' : 'Overdue exams'} value={medOverdue} color="var(--danger)" />
+                    )}
                 </div>
 
-                {/* Risk distribution */}
-                {riskDistribution.some(b => b.value > 0) && (
+                {/* Charts row */}
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                    gap: 14,
+                }}>
+                    {/* Certificate donut */}
+                    {certs.length > 0 && (
+                        <div className="card" style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center' }}>
+                            <DonutChart
+                                segments={certSegments}
+                                label={lang === 'bs' ? 'Status uvjerenja' : 'Certificate Status'}
+                                subLabel={lang === 'bs' ? 'ukupno' : 'total'}
+                            />
+                        </div>
+                    )}
+
+                    {/* Injuries bar chart */}
                     <div className="card" style={{ padding: '20px 16px' }}>
                         <BarChart
-                            data={riskDistribution}
-                            title={lang === 'bs' ? 'Distribucija rizika' : 'Risk Distribution'}
-                            barColor={(d) => d.color}
+                            data={injuryMonths}
+                            title={lang === 'bs' ? 'Povrede i bolesti (12 mj.)' : 'Injuries & Diseases (12 mo.)'}
+                            barColor={(d) => d.value >= 3 ? 'var(--danger)' : d.value >= 1 ? 'var(--warning)' : 'var(--border)'}
                             height={150}
                         />
                     </div>
-                )}
+
+                    {/* Risk distribution */}
+                    {riskDistribution.some(b => b.value > 0) && (
+                        <div className="card" style={{ padding: '20px 16px' }}>
+                            <BarChart
+                                data={riskDistribution}
+                                title={lang === 'bs' ? 'Distribucija rizika' : 'Risk Distribution'}
+                                barColor={(d) => d.color}
+                                height={150}
+                            />
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );

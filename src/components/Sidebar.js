@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Icon3D from '@/components/Icon3D';
 import { getUIBranding, UI_DEFAULTS } from '@/lib/brandingService';
+import InstallPWA from '@/components/InstallPWA';
 
 const menuItems = [
     // ── Top-level standalone ───────────────────────────────────────────────────
@@ -467,6 +468,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 })}
                             </div>
                         )}
+                        {!collapsed && <InstallPWA />}
                     </div>
                 );
             })}
@@ -738,6 +740,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Aktivna kompanija' : 'Active Company'}</div>
                                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.companyName || '—'}</div>
                                         </div>
+                                        <InstallPWA />
                                         <button onClick={() => { setMobileProfileOpen(false); onMobileClose?.(); router.push('/dashboard/settings'); }} style={{
                                             width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--border)',
                                             background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
