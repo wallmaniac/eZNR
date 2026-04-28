@@ -2022,6 +2022,18 @@ a:hover {
     min-height: auto !important;
   }
 
+  :root, [data-theme='dark'], body {
+    --bg-page: #ffffff !important;
+    --bg-card: #ffffff !important;
+    --bg-sidebar: #ffffff !important;
+    --text: #000000 !important;
+    --text-muted: #333333 !important;
+    --border: #cccccc !important;
+    --border-light: #dddddd !important;
+    --primary: #000000 !important;
+    color: #000000 !important;
+  }
+
   .print-portal-root {
     display: block !important;
     position: static !important;
