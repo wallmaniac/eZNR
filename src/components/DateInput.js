@@ -10,6 +10,7 @@
  *   YEAR view  → 12-year decade grid with ‹ › to navigate decades
  */
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function isoToDisplay(iso) {
@@ -81,6 +82,7 @@ export default function DateInput({
     const [prev, setPrev] = useState(() => isoToDisplay(value));
     const [open, setOpen] = useState(false);
     const [view, setView] = useState('days'); // 'days' | 'months' | 'years'
+    const [popupPos, setPopupPos] = useState({ top: 0, left: 0, bottom: 'auto' });
 
     const today = new Date();
     const parseYear  = () => value ? parseInt(value.slice(0, 4)) : today.getFullYear();
@@ -109,9 +111,40 @@ export default function DateInput({
     // Close on outside click
     useEffect(() => {
         if (!open) return;
-        const h = (e) => { if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false); };
+        const h = (e) => { 
+            if (e.target.closest('.date-picker-popup')) return;
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false); 
+        };
         document.addEventListener('mousedown', h);
         return () => document.removeEventListener('mousedown', h);
+    }, [open]);
+
+    // Position portal and close on scroll
+    useEffect(() => {
+        if (!open) return;
+        const updatePos = () => {
+            if (!wrapperRef.current) return;
+            const rect = wrapperRef.current.getBoundingClientRect();
+            const spaceBelow = window.innerHeight - rect.bottom;
+            const popupHeight = 310;
+            if (spaceBelow < popupHeight && rect.top > popupHeight) {
+                setPopupPos({ top: 'auto', bottom: window.innerHeight - rect.top + 4, left: rect.left });
+            } else {
+                setPopupPos({ top: rect.bottom + 4, bottom: 'auto', left: rect.left });
+            }
+        };
+        updatePos();
+        window.addEventListener('resize', updatePos);
+        const handleScroll = (e) => {
+            if (e.target.closest('.date-picker-popup')) return;
+            setOpen(false);
+        };
+        // useCapture true to catch scroll on any container
+        window.addEventListener('scroll', handleScroll, true);
+        return () => {
+            window.removeEventListener('resize', updatePos);
+            window.removeEventListener('scroll', handleScroll, true);
+        };
     }, [open]);
 
     // ── Text input handlers ───────────────────────────────────────────────────
@@ -202,9 +235,9 @@ export default function DateInput({
         ? `${calYear}`
         : `${decStart} – ${decStart + 11}`;
 
-    const popup = open && !disabled && (
-        <div style={{
-            position: 'absolute', top: 'calc(100% + 4px)', left: 0, zIndex: 9999,
+    const popupContent = open && !disabled && (
+        <div className="date-picker-popup" style={{
+            position: 'fixed', top: popupPos.top, bottom: popupPos.bottom, left: popupPos.left, zIndex: 99999,
             background: 'var(--bg-card)', border: '1px solid var(--border)',
             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             width: 280, userSelect: 'none', overflow: 'hidden',
@@ -315,6 +348,8 @@ export default function DateInput({
             )}
         </div>
     );
+
+    const popup = popupContent && typeof document !== 'undefined' ? createPortal(popupContent, document.body) : null;
 
     const inputEl = (
         <div ref={wrapperRef} style={{ position: 'relative' }}>
