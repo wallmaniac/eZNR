@@ -733,7 +733,7 @@ export function UvjerenjeFormPage() {
                                                 set('attachedFileType', result.type);
                                             } catch (err) {
                                                 console.error('[Upload] Attachment error:', err);
-                                                alert(lang === 'bs' ? 'Greška pri učitavanju.' : 'Upload failed.');
+                                                alert(lang === 'bs' ? `Greška pri učitavanju: ${err.message}` : `Upload failed: ${err.message}`);
                                             } finally {
                                                 e.target.value = '';
                                             }

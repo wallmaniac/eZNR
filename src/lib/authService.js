@@ -184,7 +184,13 @@ export async function getUserCompanies(companyIds) {
     }
     
     // 2. Fetch all companies to check for subsidiaries
-    const allComps = await getAllCompanies();
+    let allComps = [];
+    try {
+        allComps = await getAllCompanies();
+    } catch (err) {
+        console.warn('[authService] ⚠️ Failed to fetch global companies for subsidiary parsing. Falling back to direct company access only.', err.message || err);
+        return directCompanies;
+    }
     
     // 3. Find subsidiaries where parentId is one of the direct companies
     const subsidiaries = allComps.filter(c => c.parentId && companyIds.includes(c.parentId));
