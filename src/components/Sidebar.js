@@ -466,12 +466,17 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                         </Link>
                                     );
                                 })}
-                            </div>
                         )}
-                        {!collapsed && <InstallPWA />}
                     </div>
                 );
             })}
+
+            {/* Render the PWA button ONCE at the bottom of the menu instead of inside the loop */}
+            {!collapsed && !isDrawerMode && (
+                <div style={{ marginTop: 'auto', padding: '0 8px' }}>
+                    <InstallPWA />
+                </div>
+            )}
         </nav>
     );
     };

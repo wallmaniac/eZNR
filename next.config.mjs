@@ -20,8 +20,11 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   reloadOnOnline: true,
-  cacheOnFrontEndNav: true,
-  cacheStartUrl: true,
+  cacheOnFrontEndNav: false,
+  cacheStartUrl: false,
+  workboxOptions: {
+    disableDevLogs: true,
+  },
   swcMinify: true,
   fallbacks: {
     document: "/~offline",
