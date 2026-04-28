@@ -20,6 +20,7 @@ export default function CollapsibleWidget({
     icon = '📊',
     isMobile = false,
     defaultCollapsed = false,
+    alwaysCollapsible = false,
     children,
 }) {
     const [collapsed, setCollapsed] = useState(defaultCollapsed);
@@ -44,8 +45,8 @@ export default function CollapsibleWidget({
         });
     }, [id]);
 
-    // Desktop: render children directly without wrapper
-    if (!isMobile) return children;
+    // Desktop: render children directly without wrapper unless explicitly requested
+    if (!isMobile && !alwaysCollapsible) return children;
 
     return (
         <div style={{ marginBottom: collapsed ? 8 : 0 }}>

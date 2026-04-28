@@ -675,7 +675,7 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Analytics Charts */}
-            <CollapsibleWidget id="analytics" title={lang === 'bs' ? 'Analitika' : 'Analytics'} icon="📊" isMobile={isMobile}>
+            <CollapsibleWidget id="analytics" title={lang === 'bs' ? 'Analitika' : 'Analytics'} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={true}>
                 <AnalyticsWidgets
                     workers={workers}
                     certs={certs}
