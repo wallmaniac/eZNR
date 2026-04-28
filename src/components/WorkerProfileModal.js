@@ -2,15 +2,17 @@
 import DateInput from '@/components/DateInput';
 import Icon3D from '@/components/Icon3D';
 import { fmtDate } from '@/lib/dateUtils';
+import { uploadSecureFile } from '@/lib/storageService';
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, getById, update, create, remove, COLLECTIONS,
-    getWorkerCertificates, getWorkerPPE, formatDate, todayISO,
+    getWorkerCertificates, getWorkerPPE, formatDate, todayISO, getActiveCompanyId,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { logPPEAssigned } from '@/lib/activityLog';
+import { useAuth } from '@/contexts/AuthContext';
 
 /* ── Stable sub-components (defined outside to avoid recreating on every render) ── */
 
@@ -92,6 +94,8 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
     const [showPpeForm, setShowPpeForm] = useState(false);
     const [ppeFormData, setPpeFormData] = useState({});
     const [ppeEditId, setPpeEditId] = useState(null);
+    const [activeTab, setActiveTab] = useState('osnovno');
+    const { activeCompanyId } = useAuth();
 
     const refreshCerts = () => setCertificates(getWorkerCertificates(workerId));
     const refreshPpe = () => setPpeAssign(getWorkerPPE(workerId));
@@ -220,23 +224,27 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                     </div>
                 </div>
 
-                {/* ── Quick Actions ── */}
-                <div style={{ display: 'flex', gap: 10, padding: '12px 24px', background: 'var(--bg-input)', borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', marginRight: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        ⚡ {lang === 'bs' ? 'Brze akcije:' : 'Quick Actions:'}
-                    </div>
-                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
-                        onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                        👨‍⚕️ {lang === 'bs' ? 'Novi ljekarski pregled' : 'New exam'}
-                    </button>
-                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
-                        onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                        📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}
-                    </button>
-                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'var(--bg-card)' }}
-                        onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                        🚑 {lang === 'bs' ? 'Prijavi povredu' : 'Report injury'}
-                    </button>
+                {/* ── Tab Bar ── */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)' }}>
+                    {[
+                        { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
+                        { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                        { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
+                        { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
+                    ].map(tab => (
+                        <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                            padding: '9px 16px', border: 'none', cursor: 'pointer',
+                            fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
+                            background: 'transparent',
+                            borderBottom: '2px solid',
+                            borderBottomColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
+                            color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
+                            marginBottom: -2, transition: 'all 0.15s',
+                            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
+                        }}>
+                            {tab.icon} <span style={{ opacity: activeTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
+                        </button>
+                    ))}
                 </div>
 
                 {wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo) && (
@@ -247,6 +255,23 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
 
                 {/* ── Body ── */}
                 <div className="modal-body" style={{ overflowY: 'auto', flex: 1, padding: '20px 24px' }}>
+
+                {activeTab === 'osnovno' && (<>
+                    {/* Quick Actions */}
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                        <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
+                            onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
+                            👨‍⚕️ {lang === 'bs' ? 'Novi pregled' : 'New exam'}
+                        </button>
+                        <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', background: 'var(--bg-card)' }}
+                            onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
+                            📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}
+                        </button>
+                        <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'var(--bg-card)' }}
+                            onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
+                            🚑 {lang === 'bs' ? 'Prijavi povredu' : 'Report injury'}
+                        </button>
+                    </div>
 
                     <ModalSection title={lang === 'bs' ? 'Osnovno' : 'Basic info'}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
@@ -290,7 +315,19 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                         </div>
                     </ModalSection>
 
-                    {/* ── Certificates with full CRUD ── */}
+                    {(editMode || formData.napomena) && (
+                        <ModalSection title={lang === 'bs' ? 'Napomena' : 'Notes'}>
+                            {editMode ? (
+                                <textarea className="form-input" rows={3} value={formData.napomena || ''} onChange={e => set('napomena', e.target.value)} />
+                            ) : (
+                                <div style={valueStyle}>{formData.napomena}</div>
+                            )}
+                        </ModalSection>
+                    )}
+                </>)}
+
+                {activeTab === 'uvjerenja' && (
+                    <>
                     <ModalSection
                         title={`${t('workerCerts')} (${certificates.length})`}
                         action={
@@ -371,8 +408,10 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                             );
                         })}
                     </ModalSection>
+                    </>
+                )}
 
-                    {/* ── PPE with full CRUD ── */}
+                {activeTab === 'ozo' && (
                     <ModalSection
                         title={`${t('workerPPESection')} (${ppeAssign.length})`}
                         action={
@@ -423,16 +462,56 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved }) {
                             </div>
                         ))}
                     </ModalSection>
+                )}
 
-                    {(editMode || formData.napomena) && (
-                        <ModalSection title={lang === 'bs' ? 'Napomena' : 'Notes'}>
-                            {editMode ? (
-                                <textarea className="form-input" rows={3} value={formData.napomena || ''} onChange={e => set('napomena', e.target.value)} />
-                            ) : (
-                                <div style={valueStyle}>{formData.napomena}</div>
-                            )}
-                        </ModalSection>
-                    )}
+                {activeTab === 'dokumenti' && (
+                    <ModalSection
+                        title={`${lang === 'bs' ? 'Dokumenti' : 'Documents'} (${(formData.dokumenti || []).length})`}
+                        action={
+                            <label className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px', cursor: 'pointer' }}>
+                                + {lang === 'bs' ? 'Upload' : 'Upload'}
+                                <input type="file" style={{ display: 'none' }} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        try {
+                                            const cid = activeCompanyId || getActiveCompanyId();
+                                            const res = await uploadSecureFile(cid, 'workers', file);
+                                            const newDoc = { id: Date.now().toString(36), name: file.name, url: res.url, storagePath: res.storagePath, size: res.size, type: res.type, source: 'Upload', date: new Date().toISOString().split('T')[0] };
+                                            const updated = { ...formData, dokumenti: [...(formData.dokumenti || []), newDoc] };
+                                            update(COLLECTIONS.WORKERS, workerId, { dokumenti: updated.dokumenti });
+                                            setFormData(updated);
+                                            setWorker(w => ({ ...w, dokumenti: updated.dokumenti }));
+                                        } catch (err) { await alert('Upload error: ' + err.message); }
+                                        e.target.value = '';
+                                    }} />
+                            </label>
+                        }
+                    >
+                        {(formData.dokumenti || []).length === 0 ? (
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '16px 0', textAlign: 'center' }}>📄 {lang === 'bs' ? 'Nema dokumenata.' : 'No documents.'}</div>
+                        ) : (formData.dokumenti || []).map(d => (
+                            <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
+                                <span style={{ fontSize: '1.2rem' }}>{d.name?.endsWith('.pdf') ? '📕' : '🖼️'}</span>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.name}</div>
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{d.source || ''}{d.date ? ` · ${formatDate(d.date)}` : ''}{d.size ? ` · ${(d.size/1024).toFixed(0)}KB` : ''}</div>
+                                </div>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'View'} onClick={() => window.open(d.url, '_blank')}>👁️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.target='_blank'; a.click(); }}>⬇️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'}
+                                    onClick={async () => {
+                                        if (await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?')) {
+                                            const updated = (formData.dokumenti || []).filter(x => x.id !== d.id);
+                                            update(COLLECTIONS.WORKERS, workerId, { dokumenti: updated });
+                                            setFormData(f => ({ ...f, dokumenti: updated }));
+                                        }
+                                    }}>🗑️</button>
+                            </div>
+                        ))}
+                    </ModalSection>
+                )}
+
                 </div>
 
                 {/* ── Footer ── */}

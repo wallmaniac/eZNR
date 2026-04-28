@@ -251,6 +251,29 @@ export default function ArchivePage() {
             }
         });
 
+        // Aggregate worker-level documents (ZOS/ZOP uploads stored on worker.dokumenti[])
+        const allWorkers = getAll(COLLECTIONS.WORKERS);
+        allWorkers.forEach(w => {
+            const wDocs = w.dokumenti || [];
+            wDocs.forEach(d => {
+                if (d.name && (d.url || d.data)) {
+                    docs.push({
+                        id: `worker-doc-${w.id}-${d.id}`,
+                        name: d.name,
+                        data: d.data || null,
+                        url: d.url || null,
+                        category: d.source?.includes('ZOS') ? 'Zapisnici' : d.source?.includes('ZOP') ? 'Zapisnici' : 'Ostalo',
+                        description: `${w.ime} ${w.prezime}${d.source ? ` — ${d.source}` : ''}`,
+                        size: d.size || null,
+                        uploadedAt: d.date || null,
+                        _readonly: true,
+                        _sourceLabel: 'Radnici',
+                        _sourceLink: `/dashboard/workers?openWorker=${w.id}`,
+                    });
+                }
+            });
+        });
+
         setFormDocs(docs);
     }, []);
 

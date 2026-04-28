@@ -59,7 +59,24 @@ function EditCertPageInner() {
         const c = getById(COLLECTIONS.CERTIFICATES, certId);
         if (!c) { router.back(); return; }
         setCert(c);
-        setFormData({ ...c });
+        // Migrate legacy single-file to attachments array
+        const data = { ...c };
+        if (!data.attachments) {
+            data.attachments = [];
+            if (data.attachedFileUrl || data.attachedFileData) {
+                data.attachments.push({
+                    id: 'legacy_' + Date.now(),
+                    url: data.attachedFileUrl || null,
+                    data: data.attachedFileData || null,
+                    name: data.attachedFileName || 'document',
+                    size: data.attachedFileSize || 0,
+                    type: data.attachedFileType || '',
+                    opis: data.fileOpis || '',
+                    vrsta: data.vrstaDateotekeId || '',
+                });
+            }
+        }
+        setFormData(data);
         if (c.workerId) {
             const w = getById(COLLECTIONS.WORKERS, c.workerId);
             setWorker(w);
@@ -110,12 +127,21 @@ function EditCertPageInner() {
             await dlgAlert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }
-        update(COLLECTIONS.CERTIFICATES, certId, {
+        // Sync first attachment back to legacy fields for backward compat with archive
+        const first = (formData.attachments || [])[0];
+        const saveData = {
             ...formData,
             ime: formData.tipUvjerenjaIme || formData.ime,
             sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
-        });
-        // We no longer manually push to DIGITAL_ARCHIVE because archive/page.js dynamically reads from CERTIFICATES
+            attachedFileUrl: first?.url || null,
+            attachedFileData: first?.data || null,
+            attachedFileName: first?.name || '',
+            attachedFileSize: first?.size || 0,
+            attachedFileType: first?.type || '',
+            fileOpis: first?.opis || '',
+            vrstaDateotekeId: first?.vrsta || '',
+        };
+        update(COLLECTIONS.CERTIFICATES, certId, saveData);
         await dlgAlert(lang === 'bs' ? 'Uvjerenje sačuvano!' : 'Certificate saved!');
         if (returnTo) { router.push(returnTo); } else { router.back(); }
     };
@@ -308,110 +334,66 @@ function EditCertPageInner() {
                         </div>
                     </div>
 
-                    {/* Attachments */}
+                    {/* Attachments — Multi-file */}
                     <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20, marginBottom: 24 }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-                            {lang === 'bs' ? 'Priložena datoteka' : 'Attached File'}
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                            <div>
-                                <div style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang === 'bs' ? 'Priloži datoteku' : 'Upload file'}</div>
-                                    <input
-                                        type="file"
-                                        className="form-input"
-                                        style={{ paddingTop: 6 }}
-                                        accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                        onChange={async (e) => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            if (file.size > 15 * 1024 * 1024) { dlgAlert('Max 15MB!'); return; }
-                                            try {
-                                                const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
-                                                set('attachedFileUrl', uploadResult.url);
-                                                set('attachedFileData', null); // clear legacy base64 if it existed
-                                                set('attachedFileName', file.name);
-                                                set('attachedFileSize', file.size);
-                                                set('attachedFileType', file.type);
-                                            } catch (err) {
-                                                dlgAlert('Upload failed: ' + err.message);
-                                            }
-                                            e.target.value = '';
-                                        }}
-                                    />
-                                </div>
-                                {/* Preview of attached file */}
-                                { (formData.attachedFileData || formData.attachedFileUrl) && (
-                                    <div style={{
-                                        padding: '10px 14px', borderRadius: 'var(--radius-sm)',
-                                        background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)',
-                                        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8,
-                                    }}>
-                                        <span style={{ fontSize: '1.4rem' }}>
-                                            {formData.attachedFileName?.endsWith('.pdf') ? '📕' : '🖼️'}
-                                        </span>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ fontWeight: 600, fontSize: '0.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {formData.attachedFileName}
-                                            </div>
-                                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                                {formData.attachedFileSize ? `${(formData.attachedFileSize / 1024).toFixed(1)} KB` : ''}
-                                            </div>
-                                        </div>
-                                        <button className="btn btn-ghost btn-sm"
-                                            onClick={() => {
-                                                const a = document.createElement('a');
-                                                a.href = formData.attachedFileUrl || formData.attachedFileData;
-                                                a.download = formData.attachedFileName;
-                                                if (formData.attachedFileUrl) a.target = '_blank';
-                                                a.click();
-                                            }}
-                                            title={lang === 'bs' ? 'Preuzmi' : 'Download'}>
-                                            ⬇️
-                                        </button>
-                                        <button className="btn btn-ghost btn-sm"
-                                            onClick={() => {
-                                                const fileSrc = formData.attachedFileUrl || formData.attachedFileData;
-                                                if (!fileSrc) return;
-                                                if (fileSrc.startsWith('http')) {
-                                                    window.open(fileSrc, '_blank');
-                                                    return;
-                                                }
-                                                const w = window.open('', '_blank');
-                                                if (fileSrc.startsWith('data:application/pdf')) {
-                                                    w.document.write(`<embed src="${fileSrc}" width="100%" height="100%" type="application/pdf" />`);
-                                                } else {
-                                                    w.document.write(`<img src="${fileSrc}" style="max-width:100%;margin:20px auto;display:block;" />`);
-                                                }
-                                                w.document.close();
-                                            }}
-                                            title={lang === 'bs' ? 'Prikaži' : 'View'}>
-                                            👁️
-                                        </button>
-                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }}
-                                            onClick={() => { set('attachedFileData', null); set('attachedFileUrl', null); set('attachedFileName', ''); }}
-                                            title={lang === 'bs' ? 'Ukloni' : 'Remove'}>
-                                            ✕
-                                        </button>
-                                    </div>
-                                )}
-                                <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <div style={labelStyle}>{lang === 'bs' ? 'Opis datoteke' : 'File description'}</div>
-                                    <input className="form-input" value={formData.fileOpis || ''} onChange={e => set('fileOpis', e.target.value)} />
-                                </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                📎 {lang === 'bs' ? `Priložene datoteke (${(formData.attachments || []).length})` : `Attached files (${(formData.attachments || []).length})`}
                             </div>
-                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                <div style={labelStyle}>{lang === 'bs' ? 'Vrsta datoteke' : 'File type'}</div>
-                                <select className="form-select" value={formData.vrstaDateotekeId || ''} onChange={e => set('vrstaDateotekeId', e.target.value)}>
-                                    <option value="">{lang === 'bs' ? 'Odaberite vrstu datoteke' : 'Select file type'}</option>
+                            <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', fontSize: '0.8rem' }}>
+                                + {lang === 'bs' ? 'Dodaj datoteku' : 'Add file'}
+                                <input type="file" style={{ display: 'none' }} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                                    onChange={async (e) => {
+                                        const file = e.target.files?.[0];
+                                        if (!file) return;
+                                        if (file.size > 15 * 1024 * 1024) { dlgAlert('Max 15MB!'); return; }
+                                        try {
+                                            const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
+                                            setFormData(f => ({ ...f, attachments: [...(f.attachments || []), {
+                                                id: 'att_' + Date.now(),
+                                                url: uploadResult.url,
+                                                name: file.name,
+                                                size: file.size,
+                                                type: file.type,
+                                                opis: '',
+                                                vrsta: '',
+                                            }] }));
+                                        } catch (err) {
+                                            dlgAlert('Upload failed: ' + err.message);
+                                        }
+                                        e.target.value = '';
+                                    }} />
+                            </label>
+                        </div>
+                        {(formData.attachments || []).length === 0 ? (
+                            <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
+                                📄 {lang === 'bs' ? 'Nema priloženih datoteka. Kliknite "Dodaj datoteku" za upload.' : 'No attached files. Click "Add file" to upload.'}
+                            </div>
+                        ) : (formData.attachments || []).map((att, idx) => (
+                            <div key={att.id} style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                                <span style={{ fontSize: '1.4rem' }}>{att.name?.endsWith('.pdf') ? '📕' : '🖼️'}</span>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                    <div style={{ fontWeight: 600, fontSize: '0.83rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{att.name}</div>
+                                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{att.size ? `${(att.size / 1024).toFixed(1)} KB` : ''}</div>
+                                </div>
+                                <select className="form-select" style={{ width: 120, fontSize: '0.75rem', padding: '2px 6px', height: 28 }}
+                                    value={att.vrsta || ''} onClick={e => e.stopPropagation()}
+                                    onChange={e => { const v = e.target.value; setFormData(f => { const a = [...(f.attachments || [])]; a[idx] = { ...a[idx], vrsta: v }; return { ...f, attachments: a }; }); }}>
+                                    <option value="">{lang === 'bs' ? 'Vrsta...' : 'Type...'}</option>
                                     {FILE_TYPE_OPTIONS.map(ft => <option key={ft} value={ft}>{ft}</option>)}
                                 </select>
-                                <div style={{ marginTop: 16, padding: '12px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.06)', border: '1px solid rgba(33,150,243,0.2)', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                                    💡 {lang === 'bs'
-                                        ? 'Priložena datoteka se automatski sprema u Digitalnu arhivu (kategorija: Certifikati) prilikom čuvanja uvjerenja.'
-                                        : 'Attached file is automatically saved to Digital Archive (category: Certificates) when saving the certificate.'}
-                                </div>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'View'}
+                                    onClick={() => { const src = att.url || att.data; if (src?.startsWith('http')) window.open(src, '_blank'); else if (src) { const w = window.open('', '_blank'); w.document.write(src.includes('pdf') ? `<embed src="${src}" width="100%" height="100%" type="application/pdf" />` : `<img src="${src}" style="max-width:100%;margin:20px auto;display:block;" />`); w.document.close(); } }}>👁️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'}
+                                    onClick={() => { const a = document.createElement('a'); a.href = att.url || att.data; a.download = att.name; if (att.url) a.target = '_blank'; a.click(); }}>⬇️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Ukloni' : 'Remove'}
+                                    onClick={() => setFormData(f => ({ ...f, attachments: (f.attachments || []).filter((_, i) => i !== idx) }))}>✕</button>
                             </div>
+                        ))}
+                        <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.06)', border: '1px solid rgba(33,150,243,0.2)', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
+                            💡 {lang === 'bs'
+                                ? 'Priložene datoteke se automatski pojavljuju u Digitalnoj arhivi (kategorija: Certifikati).'
+                                : 'Attached files automatically appear in the Digital Archive (category: Certificates).'}
                         </div>
                     </div>
 
