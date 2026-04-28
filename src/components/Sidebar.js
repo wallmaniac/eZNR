@@ -466,6 +466,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                         </Link>
                                     );
                                 })}
+                            </div>
                         )}
                     </div>
                 );
