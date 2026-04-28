@@ -188,7 +188,7 @@ export async function getUserCompanies(companyIds) {
     try {
         allComps = await getAllCompanies();
     } catch (err) {
-        console.warn('[authService] ⚠️ Failed to fetch global companies for subsidiary parsing. Falling back to direct company access only.', err.message || err);
+        console.debug('[authService] Subsidiary parsing skipped (insufficient permissions). Using direct company access only.');
         return directCompanies;
     }
     

@@ -106,7 +106,7 @@ function EditCertPageInner() {
     };
 
     const handleSave = async () => {
-        if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId) {
+        if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId && !formData.ime) {
             await dlgAlert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }

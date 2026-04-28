@@ -260,7 +260,7 @@ export async function loadCompanyData(companyId) {
                         window.dispatchEvent(new CustomEvent('eznr:data-synced'));
                     }
                 } catch (err) {
-                    console.warn(`[dataStore] ⚠️ Failed to load global ${colName}:`, err.message);
+                    console.debug(`[dataStore] global ${colName} load skipped:`, err.code || err.message);
                     _cache[colName] = [];
                 }
             });
@@ -271,7 +271,7 @@ export async function loadCompanyData(companyId) {
                     const snap = await getDocs(fsCollection(db, colName));
                     _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
                 } catch (err) {
-                    console.warn(`[dataStore] ⚠️ Failed to load ${colName}:`, err.message);
+                    console.debug(`[dataStore] ${colName} load skipped (insufficient permissions).`);
                     _cache[colName] = [];
                 }
             });

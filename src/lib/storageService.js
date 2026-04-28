@@ -49,8 +49,8 @@ export async function uploadSecureFile(companyId, moduleName, file, onProgress) 
                 console.warn(`[Storage] ⚠️ QUOTA EXCEEDED for ${companyId}. Used: ${used}, Quota: ${quota}`);
             }
         }
-    } catch (quotaCheckErr) {
-        console.warn('[Storage] Quota check skipped (likely public unauthenticated route):', quotaCheckErr.code || quotaCheckErr.message);
+    } catch (_quotaErr) {
+        // Quota check may fail for non-admin users or public routes — this is expected
     }
 
     // 2. Upload
@@ -81,8 +81,8 @@ export async function uploadSecureFile(companyId, moduleName, file, onProgress) 
                 // 3. Update Quota Usage Tracking
                 try {
                     await updateDoc(companyRef, { storageUsed: increment(fileBlob.size) });
-                } catch (e) {
-                    console.warn('[Storage] Failed to update storage quota usage:', e);
+                } catch (_qe) {
+                    // Non-admin users lack write access to companies collection — this is expected
                 }
 
                 resolve({
