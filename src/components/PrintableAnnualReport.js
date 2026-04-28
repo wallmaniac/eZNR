@@ -60,15 +60,16 @@ export default function PrintableAnnualReport({
             minHeight: '297mm',
             padding: '20mm',
             margin: 'auto',
-            background: 'white',
-            color: 'black',
+            background: '#ffffff',
+            backgroundColor: '#ffffff',
+            color: '#000000',
             fontFamily: '"Times New Roman", Times, serif',
             fontSize: '12pt',
             lineHeight: 1.5,
             boxSizing: 'border-box'
         },
         header: {
-            borderBottom: '2px solid black',
+            borderBottom: '2px solid #000000',
             paddingBottom: '10px',
             marginBottom: '20px',
             textAlign: 'center',
@@ -99,15 +100,18 @@ export default function PrintableAnnualReport({
             fontSize: '11pt'
         },
         th: {
-            border: '1px solid black',
+            border: '1px solid #000000',
             padding: '6px',
-            background: '#f0f0f0',
+            backgroundColor: '#ededed',
+            color: '#000000',
             fontWeight: 'bold',
             textAlign: 'left'
         },
         td: {
-            border: '1px solid black',
-            padding: '6px'
+            border: '1px solid #000000',
+            padding: '6px',
+            color: '#000000',
+            backgroundColor: '#ffffff'
         },
         footer: {
             marginTop: '50px',
@@ -116,7 +120,7 @@ export default function PrintableAnnualReport({
         },
         signLine: {
             width: '200px',
-            borderTop: '1px solid black',
+            borderTop: '1px solid #000000',
             textAlign: 'center',
             paddingTop: '5px'
         }
