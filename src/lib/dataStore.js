@@ -265,7 +265,7 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // Load companies and users (top-level)
+            // Load companies and users (top-level) in the background (NON-BLOCKING)
             const metaLoads = ['companies', 'users'].map(async (colName) => {
                 try {
                     const snap = await getDocs(fsCollection(db, colName));
@@ -276,11 +276,8 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // Unblock main thread: Only await critical meta-data (users & companies for auth routing)
-            await Promise.all(metaLoads);
-
-            // Allow everything else to initialize gracefully in the background
-            Promise.all([...companyLoads, ...globalLoads]).then(() => {
+            // Allow EVERYTHING to initialize gracefully in the background
+            Promise.all([...companyLoads, ...globalLoads, ...metaLoads]).then(() => {
                 console.log('[dataStore] 📡 All real-time modules & global references established.');
             });
 
