@@ -110,31 +110,53 @@ export default function ArchivePage() {
         FORM_SOURCES.forEach(({ col, label, link }) => {
             const recs = getAll(col);
             recs.forEach(r => {
-                // Support both legacy base64 and new Firebase Storage URLs
-                const fName = r.docName || r.attachedFileName || r.fileName || r.datotekaIme;
-                const fData = r.docData || r.attachedFileData || r.fileData || r.datotekaSadrzaj;
-                const fUrl = r.fileUrl || r.attachedFileUrl || r.docUrl;
+                let finalLink = link;
+                if (col === 'certificates') {
+                    finalLink = `${link}/edit/${r.id}`;
+                } else if (col === 'requests' || col.startsWith('forms') || col.startsWith('referrals') || col === 'employerDocs') {
+                    finalLink = `${link}?openId=${r.id}`;
+                }
 
-                if (fName && (fData || fUrl)) {
-                    let finalLink = link;
-                    if (col === 'certificates') {
-                        finalLink = `${link}/edit/${r.id}`;
-                    } else if (col === 'requests' || col.startsWith('forms') || col.startsWith('referrals') || col === 'employerDocs') {
-                        finalLink = `${link}?openId=${r.id}`;
-                    }
-                    docs.push({
-                        id: `form-${col}-${r.id}`,
-                        name: fName,
-                        data: fData || null,
-                        url: fUrl || null,
-                        category: label.includes('Uvjerenje') ? 'Certifikati' : 'Obrasci',
-                        description: r.ime ? `${r.ime}` : label,
-                        size: r.fileSize || r.attachedFileSize || null,
-                        uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
-                        _readonly: true,
-                        _sourceLabel: label,
-                        _sourceLink: finalLink,
+                // For certificates: read from attachments[] array (multi-file)
+                if (col === 'certificates' && Array.isArray(r.attachments) && r.attachments.length > 0) {
+                    r.attachments.forEach((att, idx) => {
+                        if (att.name && (att.url || att.data)) {
+                            docs.push({
+                                id: `form-${col}-${r.id}-att${idx}`,
+                                name: att.name,
+                                data: att.data || null,
+                                url: att.url || null,
+                                category: 'Certifikati',
+                                description: r.ime || r.tipUvjerenjaIme || label,
+                                size: att.size || null,
+                                uploadedAt: r.datum || null,
+                                _readonly: true,
+                                _sourceLabel: label,
+                                _sourceLink: finalLink,
+                            });
+                        }
                     });
+                } else {
+                    // Legacy single-file fields
+                    const fName = r.docName || r.attachedFileName || r.fileName || r.datotekaIme;
+                    const fData = r.docData || r.attachedFileData || r.fileData || r.datotekaSadrzaj;
+                    const fUrl = r.fileUrl || r.attachedFileUrl || r.docUrl;
+
+                    if (fName && (fData || fUrl)) {
+                        docs.push({
+                            id: `form-${col}-${r.id}`,
+                            name: fName,
+                            data: fData || null,
+                            url: fUrl || null,
+                            category: label.includes('Uvjerenje') ? 'Certifikati' : 'Obrasci',
+                            description: r.ime ? `${r.ime}` : label,
+                            size: r.fileSize || r.attachedFileSize || null,
+                            uploadedAt: r.datum || r.datumDogadjaja || r.datumPrijave || null,
+                            _readonly: true,
+                            _sourceLabel: label,
+                            _sourceLink: finalLink,
+                        });
+                    }
                 }
             });
         });
