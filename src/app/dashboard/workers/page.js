@@ -65,6 +65,7 @@ function WorkersPageInner() {
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [viewWorkerInitialTab, setViewWorkerInitialTab] = useState(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [fullFormTab, setFullFormTab] = useState('osnovno');
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
     const editingWorkerRef = useRef(null); // tracks current worker id even across saves
@@ -266,27 +267,8 @@ function WorkersPageInner() {
             markClean();
             isDirtyRef.current = false;
             const section = searchParams?.get('section');
-            if (section === 'ozo') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
-                    ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            } else if (section === 'uvjerenja') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, uvjerenja: true }));
-                    uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            } else if (section === 'medExams' || section === 'zdravstvo') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, medExams: true, uvjerenja: false }));
-                    medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            } else if (section === 'dokumenti') {
-                setTimeout(() => {
-                    setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false }));
-                    dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }, 350);
-            }
+            const tabMap = { ozo: 'ozo', uvjerenja: 'uvjerenja', dokumenti: 'dokumenti', medExams: 'pregledi', zdravstvo: 'pregledi' };
+            setFullFormTab(tabMap[section] || 'osnovno');
             window.history.replaceState(null, '', '/dashboard/workers');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -533,6 +515,31 @@ function WorkersPageInner() {
                 </div>
                 <DialogRenderer />
 
+                {/* ── Tab Bar ── */}
+                <div className="scrollable-toolbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                    {[
+                        { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
+                        { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                        { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
+                        { key: 'pregledi', icon: '👨‍⚕️', label: `${lang === 'bs' ? 'Pregledi' : 'Exams'} (${workerMedExams.length})` },
+                        { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
+                    ].map(tab => (
+                        <button key={tab.key} onClick={() => setFullFormTab(tab.key)} style={{
+                            padding: '9px 16px', border: 'none', cursor: 'pointer',
+                            fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
+                            background: 'transparent', flexShrink: 0,
+                            borderBottom: '2px solid',
+                            borderBottomColor: fullFormTab === tab.key ? 'var(--primary)' : 'transparent',
+                            color: fullFormTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
+                            marginBottom: -2, transition: 'all 0.15s',
+                            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
+                        }}>
+                            {tab.icon} <span style={{ opacity: fullFormTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+
+                {fullFormTab === 'osnovno' && (<>
                 {/* ── MAIN FORM CARD ── */}
                 <div className="card" style={{ marginBottom: 24 }}>
                     <div className="card-body">
@@ -625,6 +632,20 @@ function WorkersPageInner() {
                                 </label>
                             </div>
                         </div>
+
+                        {/* Radno vrijeme (from workplace) */}
+                        {(() => { const _wp = workplaces.find(w => w.id === formData.radnoMjestoId); return _wp && (_wp.radnoVrijemeOd || _wp.radnoVrijemeDo) ? (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 16, marginBottom: 20, alignItems: 'end' }}>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label">{lang === 'bs' ? 'Radno vrijeme od' : 'Work from'}</label>
+                                    <div className="form-input" style={{ cursor: 'not-allowed', background: 'var(--bg-input)', color: 'var(--text)' }}>{_wp.radnoVrijemeOd || '—'}</div>
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 0 }}>
+                                    <label className="form-label">{lang === 'bs' ? 'Radno vrijeme do' : 'Work to'}</label>
+                                    <div className="form-input" style={{ cursor: 'not-allowed', background: 'var(--bg-input)', color: 'var(--text)' }}>{_wp.radnoVrijemeDo || '—'}</div>
+                                </div>
+                            </div>
+                        ) : null; })()}
 
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <label className="form-label">{lang === 'bs' ? 'Dodatni poslovi' : 'Additional jobs'}</label>
@@ -751,9 +772,22 @@ function WorkersPageInner() {
                     </div>
                 </Accordion>
 
-                {/* ── ACCORDION: Uvjerenja radnika ── */}
+                {/* ── NAPOMENA (in Osnovno tab) ── */}
+                <div className="card" style={{ marginBottom: 24, marginTop: 24 }}>
+                    <div className="card-body">
+                        <div className="form-group">
+                            <label className="form-label">{t('note')}</label>
+                            <textarea className="form-textarea" value={formData.napomena} onChange={e => updateField('napomena', e.target.value)}
+                                placeholder={lang === 'bs' ? 'Napomena...' : 'Note...'} rows={3} />
+                        </div>
+                    </div>
+                </div>
+                </>)}
+
+                {fullFormTab === 'uvjerenja' && (<>
+                {/* ── Uvjerenja radnika ── */}
                 <div ref={uvjerenjaRef}>
-                    <Accordion title={t('workerCerts')} open={openSections.uvjerenja} onToggle={() => toggleSection('uvjerenja')}>
+                    <Accordion title={t('workerCerts')} open={true} onToggle={() => {}}>
                         <div style={{ display: 'flex', gap: 12, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                             <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
                                 <input style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.85rem', flex: 1 }}
@@ -961,10 +995,12 @@ function WorkersPageInner() {
                         </div>
                     </Accordion>
                 </div>
+                </>)}
 
-                {/* ── ACCORDION: OZO radnika ── */}
+                {fullFormTab === 'ozo' && (<>
+                {/* ── OZO radnika ── */}
                 <div ref={ozoRef}>
-                    <Accordion title={t('workerPPESection')} open={openSections.ozo} onToggle={() => toggleSection('ozo')}>
+                    <Accordion title={t('workerPPESection')} open={true} onToggle={() => {}}>
                         <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
                             <button className="btn btn-outline btn-sm" onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '' }); setShowPpeForm(true); }}>+ {lang === 'bs' ? 'Novo zaduženje' : 'New assignment'}</button>
                         </div>
@@ -999,11 +1035,12 @@ function WorkersPageInner() {
                         </div>
                     </Accordion>
                 </div>
+                </>)}
 
-
-                {/* ACCORDION: Ljekarski pregledi */}
+                {fullFormTab === 'pregledi' && (<>
+                {/* Ljekarski pregledi */}
                 <div ref={medExamsRef}>
-                    <Accordion title={"👨‍⚕️ " + (lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams')} open={openSections.medExams} onToggle={() => toggleSection('medExams')}>
+                    <Accordion title={"👨‍⚕️ " + (lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams')} open={true} onToggle={() => {}}>
                         <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button className="btn btn-outline btn-sm" onClick={() => { markClean(); router.push('/dashboard/medical-exams?openNew=1&workerId=' + encodeURIComponent(editingWorker) + '&returnTo=worker'); }}>
                                 + {lang === 'bs' ? 'Novi pregled' : 'New Exam'}
@@ -1057,17 +1094,12 @@ function WorkersPageInner() {
                         )}
                     </Accordion>
                 </div>
-                {/* ── ACCORDION: Mjesto rada ── */}
-                <Accordion title={t('workLocation')} open={openSections.mjestoRada} onToggle={() => toggleSection('mjestoRada')}>
-                    <div className="form-group">
-                        <textarea className="form-textarea" placeholder={lang === 'bs' ? 'Opis mjesta rada...' : 'Work location description...'} rows={3} />
-                    </div>
-                </Accordion>
+                </>)}
 
-
-                {/* ── ACCORDION: Dokumenti ── */}
+                {fullFormTab === 'dokumenti' && (<>
+                {/* ── Dokumenti ── */}
                 <div ref={dokumentiRef}>
-                    <Accordion title={`📁 ${lang === 'bs' ? 'Dokumenti' : 'Documents'}`} open={openSections.dokumenti} onToggle={() => toggleSection('dokumenti')}>
+                    <Accordion title={`📁 ${lang === 'bs' ? 'Dokumenti' : 'Documents'}`} open={true} onToggle={() => {}}>
                         {(() => {
                             // Collect all documents from this worker's certificates
                             const workerDocs = [];
@@ -1257,17 +1289,7 @@ function WorkersPageInner() {
                         })()}
                     </Accordion>
                 </div>
-
-                {/* ── NAPOMENA ── */}
-                <div className="card" style={{ marginBottom: 24, marginTop: 24 }}>
-                    <div className="card-body">
-                        <div className="form-group">
-                            <label className="form-label">{t('note')}</label>
-                            <textarea className="form-textarea" value={formData.napomena} onChange={e => updateField('napomena', e.target.value)}
-                                placeholder={lang === 'bs' ? 'Napomena...' : 'Note...'} rows={3} />
-                        </div>
-                    </div>
-                </div>
+                </>)}
 
                 {/* ── CERTIFICATE FORM MODAL ── */}
                 {showCertForm && (

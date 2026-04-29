@@ -114,6 +114,43 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
         refreshPpe();
     }, [workerId]);
 
+    // Auto-calculate Ukupni staž
+    useEffect(() => {
+        if (!formData) return;
+        const { stazDoDolaska, datumZaposlenja, datumOdlaska } = formData;
+        if (!datumZaposlenja) return;
+        let pg = 0, pm = 0, pd = 0;
+        if (stazDoDolaska) {
+            const m1 = stazDoDolaska.match(/(\d+)g(\d+)mj(\d+)d/i);
+            if (m1) { pg = +m1[1]; pm = +m1[2]; pd = +m1[3]; }
+            else { const m2 = (stazDoDolaska+'').match(/^(\d{2})(\d{2})(\d{2})$/); if (m2) { pg = +m2[1]; pm = +m2[2]; pd = +m2[3]; } }
+        }
+        const start = new Date(datumZaposlenja);
+        const end = datumOdlaska ? new Date(datumOdlaska) : new Date();
+        if (isNaN(start) || isNaN(end) || end < start) return;
+        let yy = end.getFullYear() - start.getFullYear();
+        let mm = end.getMonth() - start.getMonth();
+        let dd = end.getDate() - start.getDate();
+        if (dd < 0) { mm--; dd += 30; }
+        if (mm < 0) { yy--; mm += 12; }
+        dd += pd; if (dd >= 30) { mm++; dd -= 30; }
+        mm += pm; if (mm >= 12) { yy++; mm -= 12; }
+        yy += pg;
+        setFormData(prev => ({ ...prev, ukupniStaz: `${yy}g${mm}mj${dd}d` }));
+    }, [formData?.stazDoDolaska, formData?.datumZaposlenja, formData?.datumOdlaska]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-calculate Životna dob
+    useEffect(() => {
+        if (!formData?.datumRodenja) return;
+        const birth = new Date(formData.datumRodenja);
+        if (isNaN(birth)) return;
+        const today = new Date();
+        let age = today.getFullYear() - birth.getFullYear();
+        const mth = today.getMonth() - birth.getMonth();
+        if (mth < 0 || (mth === 0 && today.getDate() < birth.getDate())) age--;
+        setFormData(prev => ({ ...prev, zivotnaDob: age }));
+    }, [formData?.datumRodenja]); // eslint-disable-line react-hooks/exhaustive-deps
+
     if (!worker || !formData) return null;
 
     const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
@@ -207,12 +244,12 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         {!editMode && (
                             <>
-                                <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)}>
+                                <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)} style={{ fontSize: '0.8rem', padding: '6px 12px', height: 32, display: 'flex', alignItems: 'center', gap: 5 }}>
                                     ✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}
                                 </button>
                                 <button className="btn btn-primary btn-sm" onClick={openFullEdit}
-                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                    <Icon3D name="Radnici.png" size={18} />
+                                    style={{ fontSize: '0.8rem', padding: '6px 12px', height: 32, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                    <Icon3D name="Radnici.png" size={16} />
                                     {lang === 'bs' ? 'Otvori potpuno' : 'Open full'}
                                 </button>
                             </>
@@ -310,6 +347,24 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Vanjski suradnik' : 'External'} field="vanjskiSuradnik" type="checkbox" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Posebni uvjeti' : 'Special conditions'} field="posebniUvjeti" type="checkbox" />
                         </div>
+                        {/* Radno vrijeme — read-only from workplace */}
+                        {wp && (wp.radnoVrijemeOd || wp.radnoVrijemeDo) && (
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
+                                <div className="form-group" style={{ marginBottom: 12 }}>
+                                    <div style={labelStyle}>{lang === 'bs' ? 'Radno vrijeme od' : 'Work from'}</div>
+                                    <div style={valueStyle}>{wp.radnoVrijemeOd || '—'}</div>
+                                </div>
+                                <div className="form-group" style={{ marginBottom: 12 }}>
+                                    <div style={labelStyle}>{lang === 'bs' ? 'Radno vrijeme do' : 'Work to'}</div>
+                                    <div style={valueStyle}>{wp.radnoVrijemeDo || '—'}</div>
+                                </div>
+                            </div>
+                        )}
+                        {wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo) && (
+                            <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(239,83,80,0.12)', border: '1px solid var(--danger)', fontSize: '0.78rem', color: 'var(--danger)', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                🌙 {lang === 'bs' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad - čl. 40 FBiH)' : 'Mandatory medical exam min. 1x per 2 years (Night work)'}
+                            </div>
+                        )}
                         {formData.posebniUvjeti && (
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600, marginTop: 4 }}>
                                 ⚠️ {lang === 'bs' ? 'Za pozicije sa posebnim uvjetima rada potrebno je provesti periodične ljekarske preglede.' : 'Special conditions require periodic medical examinations.'}
