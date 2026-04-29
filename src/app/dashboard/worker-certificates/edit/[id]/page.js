@@ -180,9 +180,7 @@ function EditCertPageInner() {
                 <div className="card-body">
                     {/* Tab Bar */}
                     <div style={{ marginBottom: 20 }}>
-                        <TabBar 
-                            activeTab={activeTab} 
-                            onTabChange={setActiveTab} 
+                        <TabBar active={activeTab} onChange={setActiveTab} 
                             tabs={[
                                 { key: 'podaci', icon: '📝', label: lang === 'bs' ? 'Podaci' : 'Details' },
                                 { key: 'datoteke', icon: '📎', label: `${lang === 'bs' ? 'Datoteke' : 'Files'} (${(formData.attachments || []).length})` },

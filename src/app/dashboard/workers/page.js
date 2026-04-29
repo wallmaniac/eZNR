@@ -517,9 +517,7 @@ function WorkersPageInner() {
 
                 {/* ── Tab Bar ── */}
                 <div style={{ marginBottom: 20 }}>
-                    <TabBar 
-                        activeTab={fullFormTab} 
-                        onTabChange={setFullFormTab} 
+                    <TabBar active={fullFormTab} onChange={setFullFormTab} 
                         tabs={[
                             { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
                             { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },

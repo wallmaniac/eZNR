@@ -262,9 +262,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
 
                 {/* ── Tab Bar (scrollable on mobile) ── */}
                 <div style={{ padding: '0 24px', marginBottom: 20 }}>
-                    <TabBar 
-                        activeTab={activeTab} 
-                        onTabChange={setActiveTab} 
+                    <TabBar active={activeTab} onChange={setActiveTab} 
                         tabs={[
                             { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
                             { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
