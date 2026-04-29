@@ -22,6 +22,7 @@ export default function AdminUsersPage() {
     const [filterCompany, setFilterCompany] = useState('all');
     const [filterRole, setFilterRole] = useState('all');
     const [showCompanyDetail, setShowCompanyDetail] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
     const [formData, setFormData] = useState({
         username: '', password: '', firstName: '', lastName: '', email: '',
         role: 'officer', companyIds: [], aktivan: true,
@@ -77,7 +78,7 @@ export default function AdminUsersPage() {
         setShowModal(true);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // firstName is required; username is optional (Firebase users may not have one)
         if (!formData.firstName.trim()) return;
         const payload = { ...formData };
@@ -85,14 +86,47 @@ export default function AdminUsersPage() {
             payload.role = 'officer';
         }
 
-        if (editUser) {
-            update(COLLECTIONS.USERS, editUser.id, payload);
-        } else {
-            payload.creatorId = user?.id;
-            create(COLLECTIONS.USERS, payload);
+        setIsSaving(true);
+        try {
+            if (editUser) {
+                update(COLLECTIONS.USERS, editUser.id, payload);
+                setShowModal(false);
+                refreshData();
+            } else {
+                if (!payload.email || !payload.password) {
+                    await alert(lang === 'bs' ? 'Email i lozinka su obavezni za novog korisnika.' : 'Email and password are required for a new user.');
+                    setIsSaving(false);
+                    return;
+                }
+                
+                // 1. Create Firebase Auth user securely
+                const res = await fetch('/api/admin/create-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: payload.email,
+                        password: payload.password,
+                        displayName: `${payload.firstName} ${payload.lastName}`.trim()
+                    })
+                });
+                
+                const data = await res.json();
+                if (!res.ok) {
+                    throw new Error(data.error || 'Greška prilikom kreiranja korisnika.');
+                }
+                
+                // 2. Save user to Firestore with the new UID
+                payload.creatorId = user?.id;
+                payload.id = data.uid;
+                create(COLLECTIONS.USERS, payload);
+                setShowModal(false);
+                refreshData();
+            }
+        } catch (error) {
+            await alert(error.message);
+        } finally {
+            setIsSaving(false);
         }
-        setShowModal(false);
-        refreshData();
     };
 
     const handleDelete = async (u) => {
@@ -354,9 +388,9 @@ export default function AdminUsersPage() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setShowModal(false)}>{t('cancel')}</button>
-                            <button className="btn btn-primary" onClick={handleSave} disabled={!formData.firstName.trim()}>
-                                💾 {t('save')}
+                            <button className="btn btn-ghost" onClick={() => setShowModal(false)} disabled={isSaving}>{t('cancel')}</button>
+                            <button className="btn btn-primary" onClick={handleSave} disabled={!formData.firstName.trim() || isSaving}>
+                                {isSaving ? '⏳...' : `💾 ${t('save')}`}
                             </button>
                         </div>
                     </div>

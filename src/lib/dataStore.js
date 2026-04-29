@@ -395,7 +395,7 @@ export function create(collection, data) {
 
     const newItem = {
         ...enrichedData,
-        id: genId(),
+        id: data.id || genId(),
         createdAt: now,
         updatedAt: now,
     };
