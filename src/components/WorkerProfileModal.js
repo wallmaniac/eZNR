@@ -7,7 +7,7 @@ import { uploadSecureFile } from '@/lib/storageService';
 import { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
-import { TimePicker } from '@/components/forms/WorkerFormFields';
+import { TimePicker, StazPicker } from '@/components/forms/WorkerFormFields';
 import {
     getAll, getById, update, create, remove, COLLECTIONS,
     getWorkerCertificates, getWorkerPPE, formatDate, todayISO, getActiveCompanyId, getWorkplaceName,
@@ -331,8 +331,25 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum zaposlenja' : 'Employment date'} field="datumZaposlenja" type="date" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum odlaska' : 'Departure date'} field="datumOdlaska" type="date" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Staz do dolaska' : 'Prior experience'} field="stazDoDolaska" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ukupni staz' : 'Total experience'} field="ukupniStaz" />
+                            {editMode ? (
+                                <StazPicker label={lang === 'bs' ? 'Staz do dolaska' : 'Prior experience'} value={formData.stazDoDolaska} onChange={v => set('stazDoDolaska', v)} />
+                            ) : (
+                                <div className="form-group" style={{ marginBottom: 12 }}>
+                                    <div style={labelStyle}>{lang === 'bs' ? 'Staz do dolaska' : 'Prior experience'}</div>
+                                    <div style={valueStyle}>{formData.stazDoDolaska || '—'}</div>
+                                </div>
+                            )}
+                            {editMode ? (
+                                <div className="form-group" style={{ marginBottom: 12 }}>
+                                    <div style={labelStyle}>{lang === 'bs' ? 'Ukupni staz' : 'Total experience'}</div>
+                                    <div className="form-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-input)', color: formData.ukupniStaz ? 'var(--text)' : 'var(--text-muted)', cursor: 'not-allowed' }}>{formData.ukupniStaz || '—'}</div>
+                                </div>
+                            ) : (
+                                <div className="form-group" style={{ marginBottom: 12 }}>
+                                    <div style={labelStyle}>{lang === 'bs' ? 'Ukupni staz' : 'Total experience'}</div>
+                                    <div style={valueStyle}>{formData.ukupniStaz || '—'}</div>
+                                </div>
+                            )}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Koeficijent' : 'Coefficient'} field="koef" />
