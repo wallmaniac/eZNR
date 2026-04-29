@@ -912,8 +912,8 @@ export default function SettingsPage() {
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size > 500000) {
-                            setLogoError(lang === 'bs' ? 'Logo mora biti manji od 500KB' : 'Logo must be under 500KB');
+                          if (file.size > 2000000) {
+                            setLogoError(lang === 'bs' ? 'Logo mora biti manji od 2MB' : 'Logo must be under 2MB');
                             return;
                           }
                           setLogoError('');
@@ -941,7 +941,7 @@ export default function SettingsPage() {
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                       {lang === 'bs' ? 'Logo će biti prikazan na svim obukama i upitnicima koje radnici primaju.' : 'Logo will appear on all trainings and questionnaires sent to workers.'}<br />
-                      {lang === 'bs' ? 'Preporučena veličina: PNG ili SVG, max 500KB.' : 'Recommended: PNG or SVG, max 500KB.'}
+                      {lang === 'bs' ? 'Preporučena veličina: PNG ili SVG, max 2MB.' : 'Recommended: PNG or SVG, max 2MB.'}
                     </div>
                   </div>
                 </div>
