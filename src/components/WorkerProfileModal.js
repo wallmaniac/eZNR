@@ -87,6 +87,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
     const [places, setPlaces] = useState([]);
     const [certificates, setCertificates] = useState([]);
     const [ppeAssign, setPpeAssign] = useState([]);
+    const [medExams, setMedExams] = useState([]);
 
     // Certificate inline form
     const [showCertForm, setShowCertForm] = useState(false);
@@ -102,6 +103,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
     const refreshCerts = () => setCertificates(getWorkerCertificates(workerId));
     const refreshPpe = () => setPpeAssign(getWorkerPPE(workerId));
+    const refreshMed = () => setMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === workerId));
 
     useEffect(() => {
         if (!workerId) return;
@@ -114,6 +116,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
         setPlaces(getAll(COLLECTIONS.PLACES) || []);
         refreshCerts();
         refreshPpe();
+        refreshMed();
     }, [workerId]);
 
     // Auto-calculate Ukupni staž
@@ -272,6 +275,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
                             { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
                             { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
+                            { key: 'pregledi', icon: '👨‍⚕️', label: `${lang === 'bs' ? 'Pregledi' : 'Exams'} (${medExams.length})` },
                             { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
                         ]} 
                     />
@@ -562,6 +566,55 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                 </div>
                             </div>
                         ))}
+                    </ModalSection>
+                )}
+
+                {activeTab === 'pregledi' && (
+                    <ModalSection
+                        title={`${lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams'} (${medExams.length})`}
+                        action={
+                            <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
+                                onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
+                                + {lang === 'bs' ? 'Novi pregled' : 'New exam'}
+                            </button>
+                        }
+                    >
+                        {medExams.length === 0 ? (
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '16px 0', textAlign: 'center' }}>🩺 {lang === 'bs' ? 'Nema ljekarskih pregleda.' : 'No medical exams.'}</div>
+                        ) : [...medExams].sort((a, b) => (b.datumPregleda || '').localeCompare(a.datumPregleda || '')).map(m => {
+                            const expDate = m.vrijediDo ? new Date(m.vrijediDo) : null;
+                            const now = new Date();
+                            const isExp = expDate && expDate < now;
+                            const diffDays = expDate ? Math.ceil((expDate - now) / 86400000) : null;
+                            const isSoon = !isExp && diffDays !== null && diffDays <= 60;
+                            const statusColor = isExp ? 'var(--danger)' : isSoon ? 'var(--warning)' : 'var(--success)';
+                            const statusLabel = isExp ? (lang === 'bs' ? 'Istekao' : 'Expired') : isSoon ? `${diffDays}d` : (lang === 'bs' ? 'Vrijedi' : 'Valid');
+                            return (
+                                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: `1px solid ${isExp ? 'var(--danger)' : 'var(--border-light)'}` }}>
+                                    <span style={{ fontSize: '1.2rem' }}>🩺</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.tipPregleda || (lang === 'bs' ? 'Pregled' : 'Exam')}</div>
+                                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                            {m.datumPregleda ? `${lang === 'bs' ? 'Datum' : 'Date'}: ${formatDate(m.datumPregleda)}` : ''}
+                                            {m.vrijediDo ? ` · ${lang === 'bs' ? 'Vrijedi do' : 'Until'}: ${formatDate(m.vrijediDo)}` : ''}
+                                            {m.rezultat ? ` · ${m.rezultat}` : ''}
+                                        </div>
+                                    </div>
+                                    <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: `${statusColor}22`, color: statusColor }}>
+                                        {statusLabel}
+                                    </span>
+                                    <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Obriši' : 'Delete'} style={{ color: 'var(--danger)' }}
+                                        onClick={async () => { if (await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?')) { remove(COLLECTIONS.MEDICAL_EXAMS, m.id); refreshMed(); } }}>🗑️</button>
+                                </div>
+                            );
+                        })}
+                        {medExams.length > 0 && (
+                            <div style={{ marginTop: 8, textAlign: 'center' }}>
+                                <button className="btn btn-ghost btn-sm" onClick={() => { onClose(); router.push(`/dashboard/medical-exams?workerId=${workerId}`); }} style={{ fontSize: '0.78rem' }}>
+                                    {lang === 'bs' ? 'Svi pregledi →' : 'All exams →'}
+                                </button>
+                            </div>
+                        )}
                     </ModalSection>
                 )}
 
