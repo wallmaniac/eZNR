@@ -365,17 +365,52 @@ function generateExport(companyId) {
     XLSX.writeFile(wb, fileName);
 }
 
+// -- Date parser --------------------------------------------------------------
+// Handles: JS Date objects (cellDates:true), DD/MM/YYYY, DD.MM.YYYY, YYYY-MM-DD
+function parseXlDate(val) {
+    if (!val && val !== 0) return '';
+    if (val instanceof Date && !isNaN(val)) {
+        const y = val.getFullYear();
+        const m = String(val.getMonth() + 1).padStart(2, '0');
+        const d = String(val.getDate()).padStart(2, '0');
+        return `${y}-${m}-${d}`;
+    }
+    const s = String(val).trim();
+    if (!s) return '';
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+    const dmy = s.match(/^(\d{1,2})[\/\.\-](\d{1,2})[\/\.\-](\d{4})$/);
+    if (dmy) return `${dmy[3]}-${dmy[2].padStart(2, '0')}-${dmy[1].padStart(2, '0')}`;
+    return s;
+}
+
+// -- Name normaliser strips diacritics for fuzzy matching ---------------------
+function normName(s) {
+    if (!s) return '';
+    return String(s).toLowerCase().trim()
+        .replace(/\u0161/g, 's').replace(/\u0111/g, 'd').replace(/\u010d/g, 'c')
+        .replace(/\u0107/g, 'c').replace(/\u017e/g, 'z');
+}
+
+// -- Worker matcher: JMBG first, then exact name, then diacritic-insensitive --
 function matchWorker(workers, ime, prezime, jmbg) {
-    if (jmbg) {
+    if (jmbg && String(jmbg).trim()) {
         const found = workers.find(w => w.jmbg === String(jmbg).trim());
         if (found) return found;
     }
-    if (ime && prezime) {
-        return workers.find(w =>
-            w.ime?.toLowerCase().trim() === String(ime).toLowerCase().trim() &&
-            w.prezime?.toLowerCase().trim() === String(prezime).toLowerCase().trim()
+    if (!ime) return null;
+    const imeN = normName(ime);
+    const prezimeN = normName(prezime);
+    if (prezime) {
+        const exact = workers.find(w => normName(w.ime) === imeN && normName(w.prezime) === prezimeN);
+        if (exact) return exact;
+        const partial = workers.find(w =>
+            normName(w.ime) === imeN &&
+            (normName(w.prezime).startsWith(prezimeN) || prezimeN.startsWith(normName(w.prezime)))
         );
+        if (partial) return partial;
     }
+    const byIme = workers.filter(w => normName(w.ime) === imeN);
+    if (byIme.length === 1) return byIme[0];
     return null;
 }
 
@@ -383,7 +418,7 @@ function parseSheet(wb, sheetName) {
     const ws = wb.Sheets[sheetName];
     if (!ws) return [];
     const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
-    return data;
+    return data.filter(row => Object.values(row).some(v => v !== '' && v !== null && v !== undefined));
 }
 
 export default function ImportPage() {
@@ -509,9 +544,9 @@ export default function ImportPage() {
             newWList.push({
                 ime: String(row.ime || '').trim(), prezime: String(row.prezime || '').trim(),
                 imeRoditelja: String(row.imeRoditelja || '').trim(), jmbg: jmbg, oib: String(row.oib || '').trim(),
-                spol: String(row.spol || '').trim(), datumRodenja: String(row.datumRodenja || '').trim(),
-                miestoRodenja: String(row.miestoRodenja || '').trim(), datumZaposlenja: String(row.datumZaposlenja || '').trim(),
-                datumOdlaska: String(row.datumOdlaska || '').trim(), stazDoDolaska: String(row.stazDoDolaska || '').trim(),
+                spol: String(row.spol || '').trim(), datumRodenja: parseXlDate(row.datumRodenja),
+                miestoRodenja: String(row.miestoRodenja || '').trim(), datumZaposlenja: parseXlDate(row.datumZaposlenja),
+                datumOdlaska: parseXlDate(row.datumOdlaska), stazDoDolaska: String(row.stazDoDolaska || '').trim(),
                 koef: String(row.koef || '').trim(), lokacija: String(row.lokacija || '').trim(),
                 evidencijskiBroj: String(row.evidencijskiBroj || '').trim(), telefonTvrtki: String(row.telefonTvrtki || '').trim(),
                 mobitel: String(row.mobitel || '').trim(), email: String(row.email || '').trim(),
@@ -576,7 +611,7 @@ export default function ImportPage() {
             if (!row.naziv) { cSkipped++; return; }
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
             if (!worker) { cSkipped++; return; }
-            const datum = String(row.datum || '').trim();
+            const datum = parseXlDate(row.datum);
             const naziv = String(row.naziv || '').trim();
             if (existingCerts.some(c => c.workerId === worker.id && c.naziv === naziv && c.datum === datum)) {
                 cSkipped++; return;
@@ -584,8 +619,8 @@ export default function ImportPage() {
             newCerts.push({
                 workerId: worker.id, companyId: worker.companyId || companyId,
                 ime: naziv, naziv: naziv, oznaka: String(row.oznaka || '').trim(),
-                tipUvjerenja: String(row.tipUvjerenja || '').trim(), datum: datum,
-                vrijediDo: String(row.vrijediDo || '').trim(),
+                tipUvjerenja: String(row.tipUvjerenja || '').trim(), datum: parseXlDate(row.datum),
+                vrijediDo: parseXlDate(row.vrijediDo),
                 sposobnost: String(row.sposobnost || 'Sposoban').trim(),
                 ogranicenje: String(row.ogranicenje || '').trim(), upisao: 'Import',
             });
@@ -601,14 +636,14 @@ export default function ImportPage() {
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
             if (!worker) { pSkipped++; return; }
             const naziv = String(row.naziv || '').trim();
-            const datumZaduzenja = String(row.datumZaduzenja || '').trim();
+            const datumZaduzenja = parseXlDate(row.datumZaduzenja);
             if (existingPPE.some(p => p.workerId === worker.id && p.naziv === naziv && p.datumZaduzenja === datumZaduzenja)) {
                 pSkipped++; return;
             }
             newPPE.push({
                 workerId: worker.id, companyId: worker.companyId || companyId,
-                naziv: naziv, datumZaduzenja: datumZaduzenja,
-                datumRazduzenja: String(row.datumRazduzenja || '').trim(),
+                naziv: naziv, datumZaduzenja: parseXlDate(row.datumZaduzenja),
+                datumRazduzenja: parseXlDate(row.datumRazduzenja),
                 kolicina: parseInt(row.kolicina) || 1,
             });
         });
@@ -645,14 +680,14 @@ export default function ImportPage() {
             const worker = matchWorker(allWorkers, row.radnik_ime, row.radnik_prezime, row.radnik_jmbg);
             if (!worker) { mSkipped++; return; }
             const tipPregleda = String(row.tipPregleda || '').trim();
-            const datum = String(row.datum || '').trim();
+            const datum = parseXlDate(row.datum);
             if (existingMedExams.some(m => m.workerId === worker.id && m.tipPregleda === tipPregleda && (m.datumPregleda || m.datum || '') === datum)) {
                 mSkipped++; return;
             }
             newMedExams.push({
                 workerId: worker.id, companyId: worker.companyId || companyId,
                 radnikIme: `${worker.ime} ${worker.prezime}`, tipPregleda: tipPregleda,
-                datumPregleda: datum, vrijediDo: String(row.vrijediDo || '').trim(),
+                datumPregleda: parseXlDate(row.datum), vrijediDo: parseXlDate(row.vrijediDo),
                 rezultat: String(row.rezultat || 'Sposoban').trim(), napomena: String(row.napomena || '').trim(),
             });
         });
@@ -673,10 +708,10 @@ export default function ImportPage() {
                 companyId, registracija, marka: String(row.marka || '').trim(),
                 model: String(row.model || '').trim(), godinaProizvodnje: String(row.godinaProizvodnje || '').trim(),
                 tip: String(row.tip || 'osobno').trim(), vin: String(row.vin || '').trim(),
-                boja: String(row.boja || '').trim(), datumRegistracije: String(row.datumRegistracije || '').trim(),
-                registracijaIstice: String(row.registracijaIstice || '').trim(), datumTehnickogPregleda: String(row.datumTehnickogPregleda || '').trim(),
-                tehnickiIstice: String(row.tehnickiIstice || '').trim(), osiguranjeIstice: String(row.osiguranjeIstice || '').trim(),
-                vatrogasniAparatDatum: String(row.vatrogasniAparatDatum || '').trim(), prvaPomocIstice: String(row.prvaPomocIstice || '').trim(),
+                boja: String(row.boja || '').trim(), datumRegistracije: parseXlDate(row.datumRegistracije),
+                registracijaIstice: parseXlDate(row.registracijaIstice), datumTehnickogPregleda: parseXlDate(row.datumTehnickogPregleda),
+                tehnickiIstice: parseXlDate(row.tehnickiIstice), osiguranjeIstice: parseXlDate(row.osiguranjeIstice),
+                vatrogasniAparatDatum: parseXlDate(row.vatrogasniAparatDatum), prvaPomocIstice: parseXlDate(row.prvaPomocIstice),
                 vozacId: worker ? worker.id : '', vozacIme: worker ? `${worker.ime} ${worker.prezime}` : '',
                 orgJedinicaId: '', status: String(row.status || 'aktivan').trim(), napomena: String(row.napomena || '').trim()
             });
@@ -696,8 +731,8 @@ export default function ImportPage() {
             newExts.push({
                 companyId, serijskiBroj, tip: String(row.tip || 'prah').trim(),
                 tezina: String(row.tezina || '').trim(), lokacija: String(row.lokacija || '').trim(),
-                datumNabavke: String(row.datumNabavke || '').trim(), zadnjiServis: String(row.zadnjiServis || '').trim(),
-                sljedeciServis: String(row.sljedeciServis || '').trim(), odgovornaOsoba: String(row.odgovornaOsoba || '').trim(),
+                datumNabavke: parseXlDate(row.datumNabavke), zadnjiServis: parseXlDate(row.zadnjiServis),
+                sljedeciServis: parseXlDate(row.sljedeciServis), odgovornaOsoba: String(row.odgovornaOsoba || '').trim(),
                 status: String(row.status || 'ispravan').trim(), napomena: String(row.napomena || '').trim()
             });
         });
@@ -715,8 +750,8 @@ export default function ImportPage() {
             }
             newHydrants.push({
                 companyId, oznaka, tip: String(row.tip || 'unutarnji').trim(),
-                lokacija: String(row.lokacija || '').trim(), datumZadnjegPregleda: String(row.datumZadnjegPregleda || '').trim(),
-                sljedeciPregled: String(row.sljedeciPregled || '').trim(), status: String(row.status || 'ispravan').trim(),
+                lokacija: String(row.lokacija || '').trim(), datumZadnjegPregleda: parseXlDate(row.datumZadnjegPregleda),
+                sljedeciPregled: parseXlDate(row.sljedeciPregled), status: String(row.status || 'ispravan').trim(),
                 napomena: String(row.napomena || '').trim()
             });
         });
