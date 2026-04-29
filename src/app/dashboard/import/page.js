@@ -418,7 +418,16 @@ function parseSheet(wb, sheetName) {
     const ws = wb.Sheets[sheetName];
     if (!ws) return [];
     const data = XLSX.utils.sheet_to_json(ws, { defval: '' });
-    return data.filter(row => Object.values(row).some(v => v !== '' && v !== null && v !== undefined));
+    return data
+        .filter(row => Object.values(row).some(v => v !== '' && v !== null && v !== undefined))
+        .map(row => {
+            const cleaned = {};
+            for (const [k, v] of Object.entries(row)) {
+                // Convert JS Date objects -> YYYY-MM-DD string so React can render them
+                cleaned[k] = (v instanceof Date) ? parseXlDate(v) : v;
+            }
+            return cleaned;
+        });
 }
 
 export default function ImportPage() {
