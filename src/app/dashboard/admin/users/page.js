@@ -23,6 +23,7 @@ export default function AdminUsersPage() {
     const [filterRole, setFilterRole] = useState('all');
     const [showCompanyDetail, setShowCompanyDetail] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         username: '', password: '', firstName: '', lastName: '', email: '',
         role: 'officer', companyIds: [], aktivan: true,
@@ -344,7 +345,28 @@ export default function AdminUsersPage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{editUser ? (lang === 'bs' ? 'Nova lozinka' : 'New password') : (lang === 'bs' ? 'Lozinka' : 'Password')} {!editUser && '*'}</label>
-                                    <input className="form-input" type="password" value={formData.password || ''} onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} placeholder={editUser ? '(ne mijenjaj)' : ''} />
+                                    <div style={{ position: 'relative' }}>
+                                        <input 
+                                            className="form-input" 
+                                            type={showPassword ? "text" : "password"} 
+                                            value={formData.password || ''} 
+                                            onChange={e => setFormData(p => ({ ...p, password: e.target.value }))} 
+                                            placeholder={editUser ? '(ne mijenjaj)' : ''} 
+                                            style={{ paddingRight: 36 }}
+                                        />
+                                        <button 
+                                            type="button" 
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            style={{ 
+                                                position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', 
+                                                background: 'none', border: 'none', cursor: 'pointer', 
+                                                fontSize: '1.1rem', opacity: 0.6, padding: 4 
+                                            }}
+                                            title={showPassword ? (lang === 'bs' ? 'Sakrij lozinku' : 'Hide password') : (lang === 'bs' ? 'Prikaži lozinku' : 'Show password')}
+                                        >
+                                            {showPassword ? '👁️' : '👁️‍🗨️'}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
