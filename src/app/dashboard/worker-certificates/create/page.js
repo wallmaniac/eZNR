@@ -86,6 +86,7 @@ export function UvjerenjeFormPage() {
     const tipRef = useRef(null);
     const ispitivacRef = useRef(null);
     const appliedZiaRef = useRef(false); // prevent double-apply
+    const isSavingRef = useRef(false); // prevent duplicate submissions
 
     const { markDirty, markClean } = useUnsavedChanges();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -277,6 +278,9 @@ export function UvjerenjeFormPage() {
     };
 
     const handleSave = async () => {
+        // Guard against double-submission
+        if (isSavingRef.current) return;
+
         if (!isSingleWorkerMode && selectedWorkerIds.size === 0) {
             await alert(lang === 'bs' ? 'Molimo odaberite barem jednog radnika!' : 'Please select at least one worker!');
             return;
@@ -285,32 +289,33 @@ export function UvjerenjeFormPage() {
             await alert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }
-        // Save a certificate for each selected worker
-        let count = 0;
-        for (const wId of selectedWorkerIds) {
-            const certData = {
-                ...formData,
-                workerId: wId,
-                ime: formData.tipUvjerenjaIme,
-                oznaka: formData.oznaka,
-                sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
-            };
-            if (editingId && selectedWorkerIds.size === 1) {
-                update(COLLECTIONS.CERTIFICATES, editingId, certData);
-            } else {
-                create(COLLECTIONS.CERTIFICATES, certData);
+
+        isSavingRef.current = true;
+        try {
+            // Save a certificate for each selected worker
+            for (const wId of selectedWorkerIds) {
+                const certData = {
+                    ...formData,
+                    workerId: wId,
+                    ime: formData.tipUvjerenjaIme,
+                    oznaka: formData.oznaka,
+                    sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
+                };
+                if (editingId && selectedWorkerIds.size === 1) {
+                    update(COLLECTIONS.CERTIFICATES, editingId, certData);
+                } else {
+                    create(COLLECTIONS.CERTIFICATES, certData);
+                }
             }
-            count++;
-        }
-        markClean();
-        const returnTo = searchParams?.get('returnTo');
-        if (returnTo) {
-            router.back();
-        } else {
-            await alert(lang === 'bs'
-                ? `Uspješno sačuvano ${count} uvjerenje(a)!`
-                : `Successfully saved ${count} certificate(s)!`);
-            router.back();
+            markClean();
+            const returnTo = searchParams?.get('returnTo');
+            if (returnTo) {
+                router.push(decodeURIComponent(returnTo));
+            } else {
+                router.push('/dashboard/worker-certificates');
+            }
+        } finally {
+            isSavingRef.current = false;
         }
     };
 

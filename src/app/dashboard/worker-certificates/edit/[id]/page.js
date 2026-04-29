@@ -57,6 +57,7 @@ function EditCertPageInner() {
 
     const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
     const { alert: dlgAlert, DialogRenderer } = useDialog();
+    const isSavingRef = useRef(false); // prevent duplicate submissions
 
     const load = useCallback(() => {
         const c = getById(COLLECTIONS.CERTIFICATES, certId);
@@ -126,27 +127,36 @@ function EditCertPageInner() {
     };
 
     const handleSave = async () => {
+        if (isSavingRef.current) return;
         if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId && !formData.ime) {
             await dlgAlert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }
-        // Sync first attachment back to legacy fields for backward compat with archive
-        const first = (formData.attachments || [])[0];
-        const saveData = {
-            ...formData,
-            ime: formData.tipUvjerenjaIme || formData.ime,
-            sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
-            attachedFileUrl: first?.url || null,
-            attachedFileData: first?.data || null,
-            attachedFileName: first?.name || '',
-            attachedFileSize: first?.size || 0,
-            attachedFileType: first?.type || '',
-            fileOpis: first?.opis || '',
-            vrstaDateotekeId: first?.vrsta || '',
-        };
-        update(COLLECTIONS.CERTIFICATES, certId, saveData);
-        await dlgAlert(lang === 'bs' ? 'Uvjerenje sačuvano!' : 'Certificate saved!');
-        if (returnTo) { router.push(returnTo); } else { router.back(); }
+        isSavingRef.current = true;
+        try {
+            // Sync first attachment back to legacy fields for backward compat with archive
+            const first = (formData.attachments || [])[0];
+            const saveData = {
+                ...formData,
+                ime: formData.tipUvjerenjaIme || formData.ime,
+                sposobnost: formData.sposoban ? 'Sposoban' : 'Nesposoban',
+                attachedFileUrl: first?.url || null,
+                attachedFileData: first?.data || null,
+                attachedFileName: first?.name || '',
+                attachedFileSize: first?.size || 0,
+                attachedFileType: first?.type || '',
+                fileOpis: first?.opis || '',
+                vrstaDateotekeId: first?.vrsta || '',
+            };
+            update(COLLECTIONS.CERTIFICATES, certId, saveData);
+            // Toast feedback (non-blocking)
+            if (typeof window !== 'undefined' && window.eznrToast) {
+                window.eznrToast(lang === 'bs' ? 'Uvjerenje sačuvano ✅' : 'Certificate saved ✅', 'success');
+            }
+            if (returnTo) { router.push(decodeURIComponent(returnTo)); } else { router.back(); }
+        } finally {
+            isSavingRef.current = false;
+        }
     };
 
     const labelStyle = {
