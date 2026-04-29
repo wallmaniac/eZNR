@@ -158,6 +158,7 @@ export default function AdminUsersPage() {
 
     return (
         <div className="animate-fadeIn">
+            <DialogRenderer />
             {/* Header — stack on mobile */}
             <PageHeader 
                 icon="👤" 
