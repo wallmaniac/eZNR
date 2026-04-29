@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, getById, update, create, remove, COLLECTIONS,
-    getWorkerCertificates, getWorkerPPE, formatDate, todayISO, getActiveCompanyId,
+    getWorkerCertificates, getWorkerPPE, formatDate, todayISO, getActiveCompanyId, getWorkplaceName,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { logPPEAssigned } from '@/lib/activityLog';
@@ -82,6 +82,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
     const [formData, setFormData] = useState(null);
     const [orgUnits, setOrgUnits] = useState([]);
     const [workplaces, setWorkplaces] = useState([]);
+    const [places, setPlaces] = useState([]);
     const [certificates, setCertificates] = useState([]);
     const [ppeAssign, setPpeAssign] = useState([]);
 
@@ -103,12 +104,14 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
     useEffect(() => {
         if (!workerId) return;
         const w = getById(COLLECTIONS.WORKERS, workerId);
+        if (!w) return;
         setWorker(w);
-        setFormData(w ? { ...w } : null);
+        setFormData({ ...w });
         setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
         setWorkplaces(getAll(COLLECTIONS.WORKPLACES));
-        setCertificates(getWorkerCertificates(workerId));
-        setPpeAssign(getWorkerPPE(workerId));
+        setPlaces(getAll(COLLECTIONS.PLACES) || []);
+        refreshCerts();
+        refreshPpe();
     }, [workerId]);
 
     if (!worker || !formData) return null;
@@ -174,10 +177,14 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
         return false;
     };
 
+    const openFullEdit = () => {
+        onClose();
+        router.push(`/dashboard/workers?openWorker=${workerId}`);
+    };
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" style={{ maxWidth: 820, height: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div className="modal" style={{ maxWidth: 860, height: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                 <DialogRenderer />
 
                 {/* ── Header ── */}
@@ -199,16 +206,23 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                     </div>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
                         {!editMode && (
-                            <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)}>
-                                ✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}
-                            </button>
+                            <>
+                                <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)}>
+                                    ✏️ {lang === 'bs' ? 'Uredi' : 'Edit'}
+                                </button>
+                                <button className="btn btn-primary btn-sm" onClick={openFullEdit}
+                                    style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                    <Icon3D name="Radnici.png" size={18} />
+                                    {lang === 'bs' ? 'Otvori potpuno' : 'Open full'}
+                                </button>
+                            </>
                         )}
                         <button className="btn btn-ghost btn-icon" onClick={onClose}>✕</button>
                     </div>
                 </div>
 
-                {/* ── Tab Bar ── */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)' }}>
+                {/* ── Tab Bar (scrollable on mobile) ── */}
+                <div className="scrollable-toolbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                     {[
                         { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
                         { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
@@ -218,7 +232,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                         <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
                             padding: '9px 16px', border: 'none', cursor: 'pointer',
                             fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
-                            background: 'transparent',
+                            background: 'transparent', flexShrink: 0,
                             borderBottom: '2px solid',
                             borderBottomColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
                             color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
@@ -270,6 +284,10 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum rođenja' : 'Date of birth'} field="datumRodenja" type="date" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Životna dob' : 'Age'} field="zivotnaDob" type="number" />
                         </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Mjesto rođenja' : 'Birth place'} field="mjestoRodenja" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Općina rođenja' : 'Birth municipality'} field="opcinaRodenja" />
+                        </div>
                     </ModalSection>
 
                     <ModalSection title={lang === 'bs' ? 'Radno mjesto' : 'Employment'}>
@@ -279,22 +297,49 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('orgUnit')} field="orgJedinicaId"
                                 opts={orgUnits.map(o => ({ value: o.id, label: o.naziv }))} />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ev. broj' : 'Emp. number'} field="evidencijskiBroj" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum zaposlenja' : 'Employment date'} field="datumZaposlenja" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Lokacija' : 'Location'} field="lokacija" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum zaposlenja' : 'Employment date'} field="datumZaposlenja" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Datum odlaska' : 'Departure date'} field="datumOdlaska" type="date" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Staz do dolaska' : 'Prior experience'} field="stazDoDolaska" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ukupni staz' : 'Total experience'} field="ukupniStaz" />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Koeficijent' : 'Coefficient'} field="koef" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Vanjski suradnik' : 'External'} field="vanjskiSuradnik" type="checkbox" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Posebni uvjeti' : 'Special conditions'} field="posebniUvjeti" type="checkbox" />
                         </div>
+                        {formData.posebniUvjeti && (
+                            <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600, marginTop: 4 }}>
+                                ⚠️ {lang === 'bs' ? 'Za pozicije sa posebnim uvjetima rada potrebno je provesti periodične ljekarske preglede.' : 'Special conditions require periodic medical examinations.'}
+                            </div>
+                        )}
+                        {editMode && (
+                            <div style={{ marginTop: 8 }}>
+                                <div style={labelStyle}>{lang === 'bs' ? 'Dodatni poslovi' : 'Additional jobs'}</div>
+                                <textarea className="form-input" rows={2} value={formData.dodatniPoslovi || ''} onChange={e => set('dodatniPoslovi', e.target.value)}
+                                    placeholder={lang === 'bs' ? 'Opišite dodatne poslove...' : 'Describe additional jobs...'} />
+                            </div>
+                        )}
+                        {!editMode && formData.dodatniPoslovi && (
+                            <div style={{ marginTop: 4 }}><div style={labelStyle}>{lang === 'bs' ? 'Dodatni poslovi' : 'Additional jobs'}</div><div style={valueStyle}>{formData.dodatniPoslovi}</div></div>
+                        )}
                     </ModalSection>
 
-                    <ModalSection title={lang === 'bs' ? 'Kontakt' : 'Contact'}>
+                    <ModalSection title={lang === 'bs' ? 'Kontakt & Adresa' : 'Contact & Address'}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Mobitel' : 'Mobile'} field="mobitel" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Tel. kuće' : 'Home phone'} field="telefonKuce" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Tel. firme' : 'Company phone'} field="telefonTvrtki" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="Email" field="email" type="email" />
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 2fr 1fr', gap: '0 16px' }}>
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Ulica' : 'Street'} field="ulica" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Br.' : 'No.'} field="kucniBroj" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Mjesto' : 'Place'} field="mjestoId"
+                                opts={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj || ''})` }))} />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang === 'bs' ? 'Općina' : 'Municipality'} field="opcina" />
                         </div>
                     </ModalSection>
 

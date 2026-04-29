@@ -252,7 +252,7 @@ function WorkersPageInner() {
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
-    // Auto-open from WorkerProfileModal or deep links via ?openWorker=ID
+    // Auto-open full form via ?openWorker=ID (from "Otvori potpuno" or deep links)
     useEffect(() => {
         if (workers.length === 0) return;
         const openId = searchParams?.get('openWorker');
@@ -261,10 +261,32 @@ function WorkersPageInner() {
         const found = workers.find(x => x.id === openId);
         if (found) {
             openWorkerHandledRef.current = openId;
+            openedViaUrlRef.current = true;
+            handleEdit(found);
+            markClean();
+            isDirtyRef.current = false;
             const section = searchParams?.get('section');
-            const tabMap = { ozo: 'ozo', uvjerenja: 'uvjerenja', dokumenti: 'dokumenti', medExams: 'osnovno', zdravstvo: 'osnovno' };
-            setViewWorkerInitialTab(tabMap[section] || 'osnovno');
-            setViewWorkerId(found.id);
+            if (section === 'ozo') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, ozo: true, uvjerenja: false }));
+                    ozoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'uvjerenja') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, uvjerenja: true }));
+                    uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'medExams' || section === 'zdravstvo') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, medExams: true, uvjerenja: false }));
+                    medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            } else if (section === 'dokumenti') {
+                setTimeout(() => {
+                    setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false }));
+                    dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 350);
+            }
             window.history.replaceState(null, '', '/dashboard/workers');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

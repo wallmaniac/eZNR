@@ -51,6 +51,7 @@ function EditCertPageInner() {
     const [newTypeName, setNewTypeName] = useState('');
     const tipRef = useRef(null);
     const ispitivacRef = useRef(null);
+    const [activeTab, setActiveTab] = useState('podaci');
 
     const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
     const { alert: dlgAlert, DialogRenderer } = useDialog();
@@ -175,9 +176,28 @@ function EditCertPageInner() {
             {/* Form */}
             <div className="card">
                 <div className="card-body">
-                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 20 }}>
-                        {lang === 'bs' ? 'Podaci o uvjerenju' : 'Certificate details'}
+                    {/* Tab Bar */}
+                    <div className="scrollable-toolbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+                        {[
+                            { key: 'podaci', icon: '📝', label: lang === 'bs' ? 'Podaci' : 'Details' },
+                            { key: 'datoteke', icon: '📎', label: `${lang === 'bs' ? 'Datoteke' : 'Files'} (${(formData.attachments || []).length})` },
+                        ].map(tab => (
+                            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
+                                padding: '9px 16px', border: 'none', cursor: 'pointer',
+                                fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
+                                background: 'transparent', flexShrink: 0,
+                                borderBottom: '2px solid',
+                                borderBottomColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
+                                color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
+                                marginBottom: -2, transition: 'all 0.15s',
+                                display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
+                            }}>
+                                {tab.icon} <span style={{ opacity: activeTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
+                            </button>
+                        ))}
                     </div>
+
+                    {activeTab === 'podaci' && (<>
 
                     {/* Row 1: Oznaka | Tip uvjerenja | Sposoban */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 16, marginBottom: 16, alignItems: 'start' }}>
@@ -334,8 +354,11 @@ function EditCertPageInner() {
                         </div>
                     </div>
 
+                    </>)}
+
+                    {activeTab === 'datoteke' && (<>
                     {/* Attachments — Multi-file */}
-                    <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20, marginBottom: 24 }}>
+                    <div style={{ marginBottom: 24 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                                 📎 {lang === 'bs' ? `Priložene datoteke (${(formData.attachments || []).length})` : `Attached files (${(formData.attachments || []).length})`}
@@ -396,8 +419,8 @@ function EditCertPageInner() {
                                 : 'Attached files automatically appear in the Digital Archive (category: Certificates).'}
                         </div>
                     </div>
+                    </>)}
 
-                    {/* Actions */}
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary" onClick={handleSave}>
                             💾 {lang === 'bs' ? 'Snimi' : 'Save'}
