@@ -292,9 +292,7 @@ export default function RequestsPage() {
   if (!showForm) {
     return (
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>📨 {t('requests')}</h1>
-        </div>
+        <PageHeader icon="📝" title={t('requests')} />
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>

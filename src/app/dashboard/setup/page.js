@@ -24,7 +24,7 @@ export default function SetupPage() {
 
     return (
         <div style={{ padding: 40, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
-            <h1>🔥 Firestore Setup</h1>
+            <PageHeader icon="🔥" title={"Firestore Setup"} />
             <p>Click the button below to upload all your demo data from memory to the Google Cloud database.</p>
             <div style={{ marginTop: 30 }}>
                 <button

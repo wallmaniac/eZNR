@@ -198,9 +198,7 @@ export default function NightWorkPage() {
     const allSelected = sorted.length > 0 && sorted.every(r => selectedIds.has(r.id));
     return (
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <h1 style={{ margin: 0 }}>🌙 {t('nightWorkReferral')}</h1>
-        </div>
+        <PageHeader icon="🌙" title={t('nightWorkReferral')} />
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>

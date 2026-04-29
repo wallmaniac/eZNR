@@ -537,15 +537,7 @@ export default function ConverterPage() {
       <DialogRenderer />
       {/* Header — stacks on mobile */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-          <span style={{ fontSize: '1.6rem' }}>🔄</span>
-          <div style={{ minWidth: 0 }}>
-            <h1 style={{ margin: 0, fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>{t('converter')}</h1>
-            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              {lang === 'bs' ? 'PDF i Word — pregled, ispis, konverzija i spajanje' : 'PDF and Word — preview, print, convert and merge'}
-            </p>
-          </div>
-        </div>
+        <PageHeader icon="🔄" title={t('converter')} subtitle={lang === 'bs' ? 'PDF i Word — pregled, ispis, konverzija i spajanje' : 'PDF and Word — preview, print, convert and merge'} />
         
         {/* Tabs */}
         <div style={{ display: 'flex', background: 'var(--bg-card)', padding: 4, borderRadius: 10, border: '1px solid var(--border)', flexShrink: 0 }}>

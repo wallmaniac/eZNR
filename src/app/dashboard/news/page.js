@@ -215,7 +215,7 @@ export default function NewsPage() {
 
     return (
         <div className="animate-fadeIn">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>🏠 Početna</h1>
+            <PageHeader icon="📰" title={lang === 'bs' ? 'Početna' : 'Home'} />
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>

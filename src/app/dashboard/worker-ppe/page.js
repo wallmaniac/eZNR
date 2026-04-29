@@ -105,10 +105,7 @@ export default function WorkerPPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <Icon3D name="OZO.png" size={64} />
-          <h1 style={{ margin: 0 }}>{t('workerPPE')}</h1>
-        </div>
+        <PageHeader icon="🔍" title={t('workerPPE')} />
         <div className="card"><div className="card-body" style={{ padding: 0 }}>
           <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
             <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openModal}>

@@ -68,7 +68,7 @@ export default function ISZNRDocumentsPage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>🏛️ {t('documents')} — ISZNR</h1>
+            <PageHeader icon="🏛️" title={"{t('documents')} — ISZNR"} />
 
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>

@@ -240,15 +240,11 @@ export default function MedicalExamsPage() {
             <DialogRenderer />
 
             {/* ── Page header — emoji + title only, NO button here ── */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                <Icon3D name="Ljekarski pregledi.png" size={64} />
-                <div>
-                    <h1 style={{ margin: 0 }}>{bs ? 'Ljekarski pregledi' : 'Medical Examinations'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {stats.total} {bs ? 'zapisa' : 'records'} · {bs ? 'Zakon o ZNR FBiH (79/20) + Pravilnik (9/23)' : 'BiH OSH Law (79/20) + Rulebook (9/23)'}
-                    </p>
-                </div>
-            </div>
+            <PageHeader 
+                icon={<Icon3D name="Ljekarski pregledi.png" size={64} />} 
+                title={bs ? 'Ljekarski pregledi' : 'Medical Examinations'} 
+                subtitle={`${stats.total} ${bs ? 'zapisa' : 'records'} · ${bs ? 'Zakon o ZNR FBiH (79/20) + Pravilnik (9/23)' : 'BiH OSH Law (79/20) + Rulebook (9/23)'}`}
+            />
 
             {/* ── Toolbar: New button LEFT, search RIGHT ── */}
             <div className="card"><div className="card-body" style={{ padding: 0 }}>

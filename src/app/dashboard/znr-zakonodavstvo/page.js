@@ -299,15 +299,7 @@ export default function ZNRZakonodavstvoPage() {
     return (
         <div className="animate-fadeIn">
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <button onClick={() => router.back()} className="btn btn-ghost btn-sm" style={{ marginRight: 4, fontSize: '1rem' }}>←</button>
-                <div>
-                    <h1 style={{ margin: 0, fontSize: '1.5rem' }}>⚖️ Zakonodavstvo zaštite na radu u BiH</h1>
-                    <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                        Prečišćeni pregled svih važećih zakona, pravilnika i EU direktiva — FBiH, RS i EU · Ažurirano 2025.
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon="" title={"⚖️ Zakonodavstvo zaštite na radu u BiH"} subtitle={"Prečišćeni pregled svih važećih zakona, pravilnika i EU direktiva — FBiH, RS i EU · Ažurirano 2025."} />
 
             {/* Notice */}
             <div style={{ marginBottom: 24, padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'rgba(21,101,192,0.08)', border: '1px solid rgba(21,101,192,0.2)', fontSize: '0.82rem', color: 'var(--text)' }}>

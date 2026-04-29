@@ -292,15 +292,7 @@ function FleetInner() {
                 )}
 
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 8 }}>
-                    <Icon3D name="Vozni park.png" size={64} />
-                    <div>
-                        <h1 style={{ margin: 0 }}>{bs ? 'Vozni park' : 'Fleet Management'}</h1>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            {bs ? 'Evidencija vozila, registracija, tehnički pregledi i osiguranja' : 'Vehicle tracking, registration, inspections & insurance'}
-                        </p>
-                    </div>
-                </div>
+                <PageHeader icon={<Icon3D name="Vozni park.png" size={64} />} title={bs ? 'Vozni park' : 'Fleet Management'} subtitle={bs ? 'Evidencija vozila, registracija, tehnički pregledi i osiguranja' : 'Vehicle tracking, registration, inspections & insurance'} />
 
                 {/* Stats cards */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20, marginTop: 16 }}>

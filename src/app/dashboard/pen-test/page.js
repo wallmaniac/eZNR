@@ -177,7 +177,7 @@ export default function FirebasePenTest() {
 
     return (
         <div style={{ padding: 24, maxWidth: 900, margin: '0 auto', fontFamily: 'var(--font-body)' }}>
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: 8 }}>Professional QA Testing Suite</h1>
+            <PageHeader icon="Professional" title={"QA Testing Suite"} />
             <p style={{ color: 'var(--text-muted)', marginBottom: 24 }}>
                 Advanced tools to simulate extreme load and verify platform stability. Run comprehensive tests to validate Multi-Tenant Isolation, Database Scalability, and UI Execution limits.
             </p>

@@ -173,9 +173,7 @@ export default function OrgUnitsPage() {
 
     return (
         <div className="animate-fadeIn">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                🗂️ {t('orgUnits')}
-            </h1>
+            <PageHeader icon="🏢" title={lang === 'bs' ? 'Organizacijske jedinice' : 'Organizational Units'} />
 
             {/* Workers Panel Modal */}
             {workersPanel && (

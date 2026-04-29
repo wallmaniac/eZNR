@@ -231,7 +231,7 @@ ${toPrint.map((d, i) => `<tr>
 
     return (
         <div className="animate-fadeIn">
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>{'\u{1F4CB}'} {t('employerDocs')}</h1>
+            <PageHeader icon="📋" title={t('employerDocs')} />
 
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>

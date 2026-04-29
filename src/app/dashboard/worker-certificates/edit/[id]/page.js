@@ -12,6 +12,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import HelpTip from '@/components/HelpTip';
 import PageHeader from '@/components/PageHeader';
+import TabBar from '@/components/TabBar';
 
 const DEFAULT_CERT_TYPES = [
     'Koordinatora ZNR tijekom građenja',
@@ -178,24 +179,15 @@ function EditCertPageInner() {
             <div className="card">
                 <div className="card-body">
                     {/* Tab Bar */}
-                    <div className="scrollable-toolbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                        {[
-                            { key: 'podaci', icon: '📝', label: lang === 'bs' ? 'Podaci' : 'Details' },
-                            { key: 'datoteke', icon: '📎', label: `${lang === 'bs' ? 'Datoteke' : 'Files'} (${(formData.attachments || []).length})` },
-                        ].map(tab => (
-                            <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-                                padding: '9px 16px', border: 'none', cursor: 'pointer',
-                                fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
-                                background: 'transparent', flexShrink: 0,
-                                borderBottom: '2px solid',
-                                borderBottomColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
-                                color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
-                                marginBottom: -2, transition: 'all 0.15s',
-                                display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
-                            }}>
-                                {tab.icon} <span style={{ opacity: activeTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
-                            </button>
-                        ))}
+                    <div style={{ marginBottom: 20 }}>
+                        <TabBar 
+                            activeTab={activeTab} 
+                            onTabChange={setActiveTab} 
+                            tabs={[
+                                { key: 'podaci', icon: '📝', label: lang === 'bs' ? 'Podaci' : 'Details' },
+                                { key: 'datoteke', icon: '📎', label: `${lang === 'bs' ? 'Datoteke' : 'Files'} (${(formData.attachments || []).length})` },
+                            ]} 
+                        />
                     </div>
 
                     {activeTab === 'podaci' && (<>

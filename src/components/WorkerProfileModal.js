@@ -1,4 +1,5 @@
 'use client';
+import TabBar from '@/components/TabBar';
 import DateInput from '@/components/DateInput';
 import Icon3D from '@/components/Icon3D';
 import { fmtDate } from '@/lib/dateUtils';
@@ -123,7 +124,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
         if (stazDoDolaska) {
             const m1 = stazDoDolaska.match(/(\d+)g(\d+)mj(\d+)d/i);
             if (m1) { pg = +m1[1]; pm = +m1[2]; pd = +m1[3]; }
-            else { const m2 = (stazDoDolaska+'').match(/^(\d{2})(\d{2})(\d{2})$/); if (m2) { pg = +m2[1]; pm = +m2[2]; pd = +m2[3]; } }
+            else { const m2 = (stazDoDolaska+'').replace(/[^0-9]/g, '').match(/^(\d{2})(\d{2})(\d{2})$/); if (m2) { pg = +m2[1]; pm = +m2[2]; pd = +m2[3]; } }
         }
         const start = new Date(datumZaposlenja);
         const end = datumOdlaska ? new Date(datumOdlaska) : new Date();
@@ -222,7 +223,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal" style={{ maxWidth: 860, height: '88vh', display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
+            <div className="modal" style={{ maxWidth: 860, height: '88vh', minHeight: 650, display: 'flex', flexDirection: 'column' }} onClick={e => e.stopPropagation()}>
                 <DialogRenderer />
 
                 {/* ── Header ── */}
@@ -260,26 +261,17 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
                 </div>
 
                 {/* ── Tab Bar (scrollable on mobile) ── */}
-                <div className="scrollable-toolbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, padding: '0 24px', borderBottom: '2px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                    {[
-                        { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
-                        { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
-                        { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
-                        { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
-                    ].map(tab => (
-                        <button key={tab.key} onClick={() => setActiveTab(tab.key)} style={{
-                            padding: '9px 16px', border: 'none', cursor: 'pointer',
-                            fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
-                            background: 'transparent', flexShrink: 0,
-                            borderBottom: '2px solid',
-                            borderBottomColor: activeTab === tab.key ? 'var(--primary)' : 'transparent',
-                            color: activeTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
-                            marginBottom: -2, transition: 'all 0.15s',
-                            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
-                        }}>
-                            {tab.icon} <span style={{ opacity: activeTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
-                        </button>
-                    ))}
+                <div style={{ padding: '0 24px', marginBottom: 20 }}>
+                    <TabBar 
+                        activeTab={activeTab} 
+                        onTabChange={setActiveTab} 
+                        tabs={[
+                            { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
+                            { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                            { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
+                            { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
+                        ]} 
+                    />
                 </div>
 
                 {wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo) && (

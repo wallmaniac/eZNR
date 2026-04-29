@@ -220,15 +220,7 @@ function WorkerCertificatesInner() {
   return (
     <>
       <div className="animate-fadeIn">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
-          <Icon3D name="Uvjerenja.png" size={50} />
-          <div style={{ flex: 1, marginLeft: 12 }}>
-            <h1 style={{ margin: 0 }}>{t('workerCertificates')}</h1>
-            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-              {rows.length} {t('records')}{selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}
-            </p>
-          </div>
-        </div>
+        <PageHeader icon="📜" title={t('workerCertificates')} subtitle={`${rows.length} ${t('records')}${selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}`} />
 
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>

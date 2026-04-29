@@ -197,19 +197,16 @@ export default function ISZNRSigningPage() {
 
   return (
     <div className="animate-fadeIn">
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
-          <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-dark)' }}>
-            ✍️ {t('digitalSigning')}
-          </h1>
-          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
-            {lang === 'bs' ? 'Digitalno potpisivanje i verifikacija dokumenata' : 'Digital document signing and verification'}
-          </p>
-        </div>
-        <button className="btn btn-primary" onClick={() => openSignModal()}>
-          ✍️ {lang === 'bs' ? 'Potpiši dokument' : 'Sign Document'}
-        </button>
-      </div>
+      <PageHeader 
+        icon="✍️" 
+        title={t('digitalSigning')} 
+        subtitle={lang === 'bs' ? 'Digitalno potpisivanje i verifikacija dokumenata' : 'Digital document signing and verification'} 
+        actions={
+          <button className="btn btn-primary" onClick={() => openSignModal()}>
+            ✍️ {lang === 'bs' ? 'Potpiši dokument' : 'Sign Document'}
+          </button>
+        }
+      />
 
       {/* Info banner */}
       <div className="alert alert-info" style={{ marginBottom: 20 }}>

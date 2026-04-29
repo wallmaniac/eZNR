@@ -23,6 +23,7 @@ import * as XLSX from 'xlsx';
 import { fmtDate, matchesSearch } from '@/lib/dateUtils';
 import { isoToDisplay, displayToISO, DateField, Field, SelectField, InfoTip, StazPicker, Accordion } from '@/components/forms/WorkerFormFields';
 import PageHeader from '@/components/PageHeader';
+import TabBar from '@/components/TabBar';
 
 const emptyWorker = {
     prefix: '', ime: '', prezime: '', sufiks: '',
@@ -507,37 +508,26 @@ function WorkersPageInner() {
     if (showForm) {
         return (
             <div className="animate-fadeIn">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Radnici' : 'Workers'}</button>
-                    <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
-                        <Icon3D name="Radnici.png" size={64} />
-                        {editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')}
-                    </h1>
-                </div>
+                <PageHeader 
+                    icon={<Icon3D name="Radnici.png" size={64} />} 
+                    title={editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')} 
+                    backBtn={{ onClick: handleBack, label: lang === 'bs' ? 'Radnici' : 'Workers' }} 
+                />
                 <DialogRenderer />
 
                 {/* ── Tab Bar ── */}
-                <div className="scrollable-toolbar" style={{ display: 'flex', flexWrap: 'nowrap', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                    {[
-                        { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
-                        { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
-                        { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
-                        { key: 'pregledi', icon: '👨‍⚕️', label: `${lang === 'bs' ? 'Pregledi' : 'Exams'} (${workerMedExams.length})` },
-                        { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
-                    ].map(tab => (
-                        <button key={tab.key} onClick={() => setFullFormTab(tab.key)} style={{
-                            padding: '9px 16px', border: 'none', cursor: 'pointer',
-                            fontFamily: 'var(--font-body)', fontSize: '0.88rem', fontWeight: 600,
-                            background: 'transparent', flexShrink: 0,
-                            borderBottom: '2px solid',
-                            borderBottomColor: fullFormTab === tab.key ? 'var(--primary)' : 'transparent',
-                            color: fullFormTab === tab.key ? 'var(--primary)' : 'var(--text-muted)',
-                            marginBottom: -2, transition: 'all 0.15s',
-                            display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap'
-                        }}>
-                            {tab.icon} <span style={{ opacity: fullFormTab === tab.key ? 1 : 0.85 }}>{tab.label}</span>
-                        </button>
-                    ))}
+                <div style={{ marginBottom: 20 }}>
+                    <TabBar 
+                        activeTab={fullFormTab} 
+                        onTabChange={setFullFormTab} 
+                        tabs={[
+                            { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
+                            { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                            { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
+                            { key: 'pregledi', icon: '👨‍⚕️', label: `${lang === 'bs' ? 'Pregledi' : 'Exams'} (${workerMedExams.length})` },
+                            { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
+                        ]} 
+                    />
                 </div>
 
                 {fullFormTab === 'osnovno' && (<>
@@ -581,6 +571,10 @@ function WorkersPageInner() {
                                 </label>
                                 <input className="form-input" value={formData.koef} onChange={e => updateField('koef', e.target.value)} title="Koeficijent radnog staža (Minuli rad)" />
                             </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
+                            <Field type="time" label={lang === 'bs' ? 'Radno vrijeme od' : 'Work from'} value={formData.radnoVrijemeOd} onChange={v => updateField('radnoVrijemeOd', v)} />
+                            <Field type="time" label={lang === 'bs' ? 'Radno vrijeme do' : 'Work to'} value={formData.radnoVrijemeDo} onChange={v => updateField('radnoVrijemeDo', v)} />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
@@ -1494,10 +1488,7 @@ function WorkersPageInner() {
                 <input ref={zosUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOS')} />
                 <input ref={zopUploadRef} type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" style={{ display: 'none' }} onChange={(e) => processZosZopUpload(e, 'ZOP')} />
 
-                <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-                    <Icon3D name="Radnici.png" size={64} />
-                    {t('workers')}
-                </h1>
+                <PageHeader icon={<Icon3D name="Radnici.png" size={64} />} title={t('workers')} />
                 <DialogRenderer />
 
                 {/* ── EXCEL EXPORT MODAL ── */}
@@ -1949,3 +1940,4 @@ export default function WorkersPage() {
         </Suspense>
     );
 }
+

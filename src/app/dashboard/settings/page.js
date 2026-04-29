@@ -592,12 +592,15 @@ export default function SettingsPage() {
   return (
     <div className="animate-fadeIn">
       <DialogRenderer />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, marginTop: typeof window !== 'undefined' && window.innerWidth < 768 ? 16 : 0 }}>
-        <h1 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 12 }}>⚙️ {t('settings')}</h1>
-        <button className="btn" onClick={logout} style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 700, padding: '8px 16px', fontSize: '0.85rem' }}>
-          🚪 {lang === 'bs' ? 'Odjava' : 'Logout'}
-        </button>
-      </div>
+      <PageHeader 
+        icon="⚙️" 
+        title={t('settings')} 
+        actions={
+          <button className="btn" onClick={logout} style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 700, padding: '8px 16px', fontSize: '0.85rem' }}>
+            🚪 {lang === 'bs' ? 'Odjava' : 'Logout'}
+          </button>
+        } 
+      />
 
       {/* Removed global Success toast */}
 

@@ -733,14 +733,7 @@ export default function ImportPage() {
 
     return (
         <div className="animate-fadeIn" style={{ maxWidth: 860, margin: '0 auto' }}>
-            <h1 style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                📥 {lang === 'bs' ? 'Excel Import/Export' : 'Excel Import/Export'}
-            </h1>
-            <p style={{ color: 'var(--text-muted)', marginBottom: 28, fontSize: '0.9rem' }}>
-                {lang === 'bs'
-                    ? 'Uvezi podatke iz Excel-a ili preuzmi (exportuj) sve podatke aktivne firme u Excel formatu.'
-                    : 'Import data from Excel or download (export) all active company data in Excel format.'}
-            </p>
+            <PageHeader icon="📥" title="Excel Import/Export" subtitle={lang === 'bs' ? 'Uvezi podatke iz Excel-a ili preuzmi (exportuj) sve podatke aktivne firme u Excel formatu.' : 'Import data from Excel or download (export) all active company data in Excel format.'} />
 
             {fileError && (
                 <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#D32F2F', fontSize: '0.85rem' }}>
@@ -964,3 +957,4 @@ export default function ImportPage() {
         </div>
     );
 }
+

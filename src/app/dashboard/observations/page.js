@@ -151,15 +151,7 @@ export default function ObservationsPage() {
             <SavedFlash />
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4, flexWrap: 'wrap' }}>
-                <Icon3D name="⚠️" size={64} />
-                <div>
-                    <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Prijave Opasnosti' : 'Hazard Reports'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {items.length} {lang === 'bs' ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon={<Icon3D name="Obzervacije.png" size={64} />} title={lang === 'bs' ? 'Prijave Opasnosti' : 'Hazard Reports'} subtitle={`${items.length} ${lang === 'bs' ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}`} />
 
             <p style={{ marginBottom: 16, fontSize: '0.86rem', color: 'var(--text-muted)' }}>
                 {lang === 'bs' 

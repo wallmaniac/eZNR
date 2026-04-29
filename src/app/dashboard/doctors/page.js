@@ -32,10 +32,7 @@ export default function DoctorsPage() {
 
   return (
     <><DialogRenderer /><div className="animate-fadeIn">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <Icon3D name="Doktori.png" size={64} />
-        <h1 style={{ margin: 0 }}>{t('doctors')}</h1>
-      </div>
+      <PageHeader icon="" title={t('doctors')} />
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal" style={{ maxWidth: 550 }} onClick={e => e.stopPropagation()}>

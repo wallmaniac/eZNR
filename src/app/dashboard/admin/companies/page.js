@@ -130,19 +130,16 @@ export default function AdminCompaniesPage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
-                <div style={{ minWidth: 0 }}>
-                    <h1 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.3rem', fontWeight: 800, color: 'var(--text-dark)' }}>
-                        🏢 {lang === 'bs' ? 'Upravljanje firmama' : 'Company Management'}
-                    </h1>
-                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                        {lang === 'bs' ? 'Sve registrirane firme u sistemu' : 'All registered companies in the system'}
-                    </p>
-                </div>
-                <button className="btn btn-primary btn-sm" onClick={openNew} style={{ flexShrink: 0 }}>
-                    ➕ {lang === 'bs' ? 'Nova firma' : 'New Company'}
-                </button>
-            </div>
+            <PageHeader 
+                icon="🏢" 
+                title={lang === 'bs' ? 'Upravljanje firmama' : 'Company Management'} 
+                subtitle={lang === 'bs' ? 'Sve registrirane firme u sistemu' : 'All registered companies in the system'} 
+                actions={
+                    <button className="btn btn-primary btn-sm" onClick={openNew} style={{ flexShrink: 0 }}>
+                        ➕ {lang === 'bs' ? 'Nova firma' : 'New Company'}
+                    </button>
+                }
+            />
 
             {/* Company Cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 14 }}>
