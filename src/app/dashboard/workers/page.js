@@ -21,7 +21,7 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
 import * as XLSX from 'xlsx';
 import { fmtDate, matchesSearch } from '@/lib/dateUtils';
-import { isoToDisplay, displayToISO, DateField, Field, SelectField, InfoTip, StazPicker, Accordion } from '@/components/forms/WorkerFormFields';
+import { isoToDisplay, displayToISO, DateField, Field, SelectField, InfoTip, StazPicker, Accordion, TimePicker } from '@/components/forms/WorkerFormFields';
 import PageHeader from '@/components/PageHeader';
 import TabBar from '@/components/TabBar';
 
@@ -571,8 +571,8 @@ function WorkersPageInner() {
                             </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <Field type="time" label={lang === 'bs' ? 'Radno vrijeme od' : 'Work from'} value={formData.radnoVrijemeOd} onChange={v => updateField('radnoVrijemeOd', v)} />
-                            <Field type="time" label={lang === 'bs' ? 'Radno vrijeme do' : 'Work to'} value={formData.radnoVrijemeDo} onChange={v => updateField('radnoVrijemeDo', v)} />
+                            <TimePicker label={lang === 'bs' ? 'Radno vrijeme od' : 'Work from'} value={formData.radnoVrijemeOd} onChange={v => updateField('radnoVrijemeOd', v)} />
+                            <TimePicker label={lang === 'bs' ? 'Radno vrijeme do' : 'Work to'} value={formData.radnoVrijemeDo} onChange={v => updateField('radnoVrijemeDo', v)} />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>

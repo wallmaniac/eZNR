@@ -169,3 +169,27 @@ export function Accordion({ title, open, onToggle, children }) {
         </div>
     );
 }
+
+export function TimePicker({ label, value, onChange }) {
+    const [h, m] = (value || ':').split(':');
+    return (
+        <div className="form-group">
+            <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{label}</label>
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                <select className="form-select" style={{ padding: '8px 4px', minWidth: 60, textAlign: 'center' }} 
+                        value={h || ''} 
+                        onChange={e => onChange(`${e.target.value}:${m || '00'}`)}>
+                    <option value="">--</option>
+                    {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
+                </select>
+                <span style={{ fontWeight: 700 }}>:</span>
+                <select className="form-select" style={{ padding: '8px 4px', minWidth: 60, textAlign: 'center' }} 
+                        value={m || ''} 
+                        onChange={e => onChange(`${h || '08'}:${e.target.value}`)}>
+                    <option value="">--</option>
+                    {['00','15','30','45'].map(min => <option key={min} value={min}>{min}</option>)}
+                </select>
+            </div>
+        </div>
+    );
+}
