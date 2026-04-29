@@ -12,6 +12,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateFireProtectionReport } from '@/lib/pdfReportGenerator';
+import PageHeader from '@/components/PageHeader';
 
 // ── Fire Extinguisher ──
 const EMPTY_EXT = {

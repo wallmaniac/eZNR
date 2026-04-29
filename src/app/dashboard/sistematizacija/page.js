@@ -7,6 +7,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import HelpTip from '@/components/HelpTip';
 import { apiGenerateSistematizacija, apiParseSistematizacija } from '@/lib/sistematizacijaAI';
 import { useAuth } from '@/contexts/AuthContext';
+import PageHeader from '@/components/PageHeader';
 
 
 /* ═══════════════════════════════════════════════

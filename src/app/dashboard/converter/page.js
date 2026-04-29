@@ -6,6 +6,7 @@ import { getAll, getRawAll, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { callFirebaseFunction } from '@/lib/firebaseCallable';
+import PageHeader from '@/components/PageHeader';
 
 const FILE_ICONS = {
   pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗',

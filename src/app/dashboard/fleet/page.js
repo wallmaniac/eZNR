@@ -19,6 +19,7 @@ import VehicleDocumentsTab from './VehicleDocumentsTab';
 import VehicleTravelOrdersTab from './VehicleTravelOrdersTab';
 import Icon3D from '@/components/Icon3D';
 import { getNotificationSettings } from '@/lib/systemMonitor';
+import PageHeader from '@/components/PageHeader';
 
 const EMPTY = {
     registracija: '', marka: '', model: '', godinaProizvodnje: '',

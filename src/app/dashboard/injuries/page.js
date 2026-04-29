@@ -12,6 +12,7 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import HelpTip from '@/components/HelpTip';
 import { fmtDate } from '@/lib/dateUtils';
 
+import PageHeader from '@/components/PageHeader';
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
   datum: '', vrijemePovrede: '',
@@ -247,7 +248,7 @@ export default function InjuriesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🩹 {lang === 'bs' ? 'Povrede na radu' : 'Work Injuries'}</h1>
+        <PageHeader icon="🩹" title={lang === 'bs' ? 'Povrede na radu' : 'Work Injuries'} />
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>

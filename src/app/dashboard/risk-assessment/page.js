@@ -12,6 +12,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { generateSafeWordDoc } from '@/lib/riskExportDocx';
 import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
 
+import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
    5×5 Risk Matrix — Procjena rizika (FBiH ZNR)
    ═══════════════════════════════════════════════ */
@@ -914,7 +915,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
         return (
             <div className="animate-fadeIn">
                 <style>{`.hover-row:hover { background: rgba(0,0,0,0.02); }`}</style>
-                <h1 style={{ marginBottom: 24 }}>📊 {lang === 'bs' ? 'Procjene rizika' : 'Risk Assessments'}</h1>
+                <PageHeader icon="📊" title={lang === 'bs' ? 'Procjene rizika' : 'Risk Assessments'} />
                 <DialogRenderer />
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>

@@ -6,6 +6,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 
+import PageHeader from '@/components/PageHeader';
 export default function EquipmentTypesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
@@ -61,7 +62,7 @@ export default function EquipmentTypesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🏭 {t('equipmentTypes')}</h1>
+        <PageHeader icon="🏭" title={t('equipmentTypes')} />
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>

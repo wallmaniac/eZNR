@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
+import PageHeader from '@/components/PageHeader';
 export default function FileTypesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
@@ -23,7 +24,7 @@ export default function FileTypesPage() {
   const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.FILE_TYPES || 'file_types', id); loadData(); } };
   return (
     <><DialogRenderer /><div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>📂 {t('fileTypes')}</h1>
+      <PageHeader icon="📂" title={t('fileTypes')} />
       {showForm && (<div className="modal-overlay" onClick={() => setShowForm(false)}><div className="modal" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('fileTypes')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
         <div className="modal-body">

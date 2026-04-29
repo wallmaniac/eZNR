@@ -5,6 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useSortedList } from '@/hooks/useSortedList';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 export default function EKEquipmentPage() {
   const { t, lang } = useLanguage();

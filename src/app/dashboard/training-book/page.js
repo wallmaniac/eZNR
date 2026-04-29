@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useSortedList } from '@/hooks/useSortedList';
+import PageHeader from '@/components/PageHeader';
 export default function TrainingBookPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
@@ -20,7 +21,7 @@ export default function TrainingBookPage() {
 
   return (
     <div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>📚 {t('trainingMasterBook')}</h1>
+      <PageHeader icon="📚" title={t('trainingMasterBook')} />
       <div className="card"><div className="card-body">
         <div style={{ marginBottom: 16, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{rows.length} {t('records')}</div>
         <div className="data-table-wrapper"><table className="data-table"><thead><tr>

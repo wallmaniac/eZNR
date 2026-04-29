@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, COLLECTIONS, getOrgUnitName, getWorkplaceName } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useSortedList } from '@/hooks/useSortedList';
+import PageHeader from '@/components/PageHeader';
 
 export default function AddressBookPage() {
   const [copyToast, setCopyToast] = useState(false);
@@ -86,7 +87,7 @@ export default function AddressBookPage() {
           ✅ {lang === 'bs' ? 'Sve email adrese kopirane!' : 'All emails copied!'}
         </div>
       )}
-      <h1 style={{ marginBottom: 24 }}>📒 {t('addressBook')}</h1>
+      <PageHeader icon="📒" title={t('addressBook')} subtitle={`${sorted.length} ${lang === 'bs' ? 'zapisa' : 'records'}`} />
         <div className="card"><div className="card-body">
 
           {/* Toolbar */}

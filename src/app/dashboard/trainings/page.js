@@ -14,6 +14,7 @@ import {
 import { sendBatchEmails } from '@/lib/emailService';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import { apiGenerateQuiz, apiParsePresentation } from '@/lib/trainingsAI';
+import PageHeader from '@/components/PageHeader';
 
 
 /* ═══════════════════════════════════════════════

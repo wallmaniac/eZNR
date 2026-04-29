@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { uploadSecureFile, deleteSecureFile } from '@/lib/storageService';
+import PageHeader from '@/components/PageHeader';
 
 function FleetDocumentsInner() {
     const { t, lang } = useLanguage();

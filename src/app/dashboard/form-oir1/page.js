@@ -9,6 +9,7 @@ import {
 import { uploadDocument } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import PageHeader from '@/components/PageHeader';
 
 const EMPTY_OIR1 = {
   // Section 1: General

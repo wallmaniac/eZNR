@@ -9,6 +9,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { QRCodeSVG } from 'qrcode.react';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 export default function ObservationsPage() {
     const { t, lang } = useLanguage();

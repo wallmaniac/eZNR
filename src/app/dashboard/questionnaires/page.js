@@ -15,6 +15,7 @@ import HelpTip from '@/components/HelpTip';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import { apiGenerateRiskQuestionnaire } from '@/lib/riskAI';
 
+import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
    Upitnici/Ankete — Questionnaire System
    Matching: https://app.zastitanaradu.hr/merkant/Upitnik
@@ -386,7 +387,7 @@ export default function QuestionnairesPage() {
 
     return (
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>❓ {t('questionnaires')}</h1>
+        <PageHeader icon="❓" title={t('questionnaires')} />
         <DialogRenderer />
 
         {/* ═══ User Questionnaires ═══ */}

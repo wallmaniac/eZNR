@@ -9,6 +9,7 @@ import {
 import { useDialog } from '@/hooks/useDialog';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useSortedList } from '@/hooks/useSortedList';
+import PageHeader from '@/components/PageHeader';
 
 const emptyWP = {
     naziv: '', oznaka: '', strucnaSprema: '', grupaRM: '',

@@ -11,6 +11,7 @@ import { useDialog } from '@/hooks/useDialog';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generatePPEReport } from '@/lib/pdfReportGenerator';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 export default function WorkerPPEPage() {
   const { t, lang } = useLanguage();

@@ -11,6 +11,7 @@ import { uploadSecureFile } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import HelpTip from '@/components/HelpTip';
+import PageHeader from '@/components/PageHeader';
 
 const DEFAULT_CERT_TYPES = [
     'Koordinatora ZNR tijekom građenja',

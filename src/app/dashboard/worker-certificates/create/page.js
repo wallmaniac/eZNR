@@ -13,6 +13,7 @@ import { printZosPdf } from '@/lib/zosPdfGenerator';
 import { uploadSecureFile } from '@/lib/storageService';
 import HelpTip from '@/components/HelpTip';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 const EMPTY_CERT = {
     workerId: '',

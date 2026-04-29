@@ -8,6 +8,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 // ── Legal basis ────────────────────────────────────────────────────────────────
 // Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)

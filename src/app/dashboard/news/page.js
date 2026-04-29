@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { fmtDateTime } from '@/lib/dateUtils';
 import { apiFetchNews } from '@/lib/newsAPI';
+import PageHeader from '@/components/PageHeader';
 
 // No localStorage cache — server caches for 2h, so every page load is fresh within 2h
 

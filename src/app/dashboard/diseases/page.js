@@ -10,6 +10,7 @@ import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { fmtDate } from '@/lib/dateUtils';
 
+import PageHeader from '@/components/PageHeader';
 const EMPTY_FORM = {
   radnikId: '', radnikIme: '',
   datum: '', dijagnoza: '', uzrok: '',
@@ -156,7 +157,7 @@ export default function DiseasesPage() {
   return (
     <>
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🏥 {t('diseaseReport')}</h1>
+        <PageHeader icon="🏥" title={t('diseaseReport')} />
 
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>

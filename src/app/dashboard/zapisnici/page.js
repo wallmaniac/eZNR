@@ -7,6 +7,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel, extractNameTokens } from '@/lib/textMatch';
 import { idbSaveFile, idbDeleteFile, idbDownloadFile, idbOpenFile, idbKey as makeIdbKey } from '@/lib/idbFiles';
+import PageHeader from '@/components/PageHeader';
 
 // ── CDN loader ────────────────────────────────────────────────────────────────
 function loadScript(src) {

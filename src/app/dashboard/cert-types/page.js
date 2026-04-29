@@ -5,6 +5,7 @@ import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import PageHeader from '@/components/PageHeader';
 
 export default function CertTypesPage() {
   const { t, lang } = useLanguage();
@@ -61,14 +62,14 @@ export default function CertTypesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <h1 style={{ marginBottom: 24 }}>🎓 {t('certTypes')}</h1>
+        <PageHeader icon="🎓" title={t('certTypes')} subtitle={`${sorted.length} ${lang === 'bs' ? 'zapisa' : 'records'}`} />
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
               <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('certTypes')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
               <div className="modal-body">
                 <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.naziv} onChange={e => setFormData({ ...formData, naziv: e.target.value })} /></div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="form-grid-2">
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Oznaka' : 'Code'}</label><input className="form-input" value={formData.oznaka} onChange={e => setFormData({ ...formData, oznaka: e.target.value })} /></div>
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Trajanje (mjeseci)' : 'Duration (months)'}</label><input className="form-input" type="number" value={formData.trajanjeMjeseci} onChange={e => setFormData({ ...formData, trajanjeMjeseci: Number(e.target.value) })} /></div>
                 </div>

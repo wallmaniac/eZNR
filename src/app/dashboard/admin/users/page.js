@@ -7,6 +7,7 @@ import {
     getAll, create, update, remove, COLLECTIONS, getAllCompanies,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import PageHeader from '@/components/PageHeader';
 
 export default function AdminUsersPage() {
     const { t, lang } = useLanguage();

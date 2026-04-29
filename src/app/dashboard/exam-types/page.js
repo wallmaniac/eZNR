@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
+import PageHeader from '@/components/PageHeader';
 export default function ExamTypesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
@@ -23,7 +24,7 @@ export default function ExamTypesPage() {
   const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.EXAM_TYPES || 'exam_types', id); loadData(); } };
   return (
     <><DialogRenderer /><div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>🧪 {t('examTypes')}</h1>
+      <PageHeader icon="🧪" title={t('examTypes')} />
       {showForm && (<div className="modal-overlay" onClick={() => setShowForm(false)}><div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
         <div className="modal-header"><h2>{editingId ? '✏️' : '+'} {t('examTypes')}</h2><button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button></div>
         <div className="modal-body">

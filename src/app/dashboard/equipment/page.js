@@ -17,6 +17,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateEquipmentReport } from '@/lib/pdfReportGenerator';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 const emptyEQ = {
     naziv: '', vrsta: '', tip: '', tvBroj: '', invBroj: '',

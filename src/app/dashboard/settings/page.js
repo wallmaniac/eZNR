@@ -24,6 +24,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/lib/webAuthn';
 import { uploadSecureFile } from '@/lib/storageService';
+import PageHeader from '@/components/PageHeader';
 import {
   ACCENT_PRESETS, SIDEBAR_PRESETS, EZNR_DEFAULTS,
   PDF_DEFAULTS, UI_DEFAULTS, WATERMARK_POSITIONS, LOGO_POSITIONS,

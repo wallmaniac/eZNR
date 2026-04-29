@@ -10,6 +10,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel } from '@/lib/textMatch';
 import Link from 'next/link';
 import { idbOpenFile, idbDownloadFile } from '@/lib/idbFiles';
+import PageHeader from '@/components/PageHeader';
 
 
 const FILE_ICONS = {

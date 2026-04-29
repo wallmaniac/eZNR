@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 
+import PageHeader from '@/components/PageHeader';
 export default function ISZNRExaminersPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
@@ -31,7 +32,7 @@ export default function ISZNRExaminersPage() {
 
   return (
     <><DialogRenderer /><div className="animate-fadeIn">
-      <h1 style={{ marginBottom: 24 }}>🔍 {t('examiners')} (ISZNR)</h1>
+      <PageHeader icon="🔍" title={`${t('examiners')} (ISZNR)`} />
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
           <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>

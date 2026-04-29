@@ -7,6 +7,7 @@ import { saveAs } from 'file-saver';
 import { useState } from 'react';
 import TestGenerator from './TestGenerator';
 
+import PageHeader from '@/components/PageHeader';
 export default function TestsZopZnrPage() {
     const { lang } = useLanguage();
     const bs = lang === 'bs';
@@ -121,7 +122,7 @@ export default function TestsZopZnrPage() {
 
     return (
         <div className="animate-fadeIn">
-            <h1 style={{ marginBottom: 24 }}>📝 {bs ? 'Testovi ZOP i ZNR' : 'ZOP & ZNR Tests'}</h1>
+            <PageHeader icon="📝" title={bs ? 'Testovi ZOP i ZNR' : 'ZOP & ZNR Tests'} />
             
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', alignItems: 'center', flexWrap: 'wrap' }}>
                 <button onClick={() => setActiveTab('DOWNLOAD')}

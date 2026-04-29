@@ -1,6 +1,7 @@
 'use client';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
+import PageHeader from '@/components/PageHeader';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ALL URLs below are manually verified working (March 2026).

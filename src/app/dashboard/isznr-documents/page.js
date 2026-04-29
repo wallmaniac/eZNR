@@ -6,6 +6,7 @@ import {
     getAll, create, update, remove, COLLECTIONS, formatDate,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import PageHeader from '@/components/PageHeader';
 
 const emptyDoc = {
     partyId: '', naslov: '', tipDokumentaId: '', datum: '', potpisano: false, datoteka: '',

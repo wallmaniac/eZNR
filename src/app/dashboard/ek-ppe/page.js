@@ -6,6 +6,7 @@ import { getAll, create, update, remove, COLLECTIONS, todayISO } from '@/lib/dat
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import Icon3D from '@/components/Icon3D';
+import PageHeader from '@/components/PageHeader';
 
 export default function EKPPEPage() {
   const { lang } = useLanguage();

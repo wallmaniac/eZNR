@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { seedFirestore } from '@/lib/firestoreService';
 import { SEED_DATA } from '@/lib/dataStore';
+import PageHeader from '@/components/PageHeader';
 
 export default function SetupPage() {
     const [loading, setLoading] = useState(false);

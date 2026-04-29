@@ -6,6 +6,7 @@ import { create, createMass, getAll, COLLECTIONS } from '@/lib/dataStore';
 import * as XLSX from 'xlsx';
 import { collection, getDocs, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import PageHeader from '@/components/PageHeader';
 
 // ── Template column definitions ───────────────────────────────
 const WORKER_COLS = [

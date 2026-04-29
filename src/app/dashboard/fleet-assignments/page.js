@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
+import PageHeader from '@/components/PageHeader';
 
 function FleetAssignmentsInner() {
     const { t, lang } = useLanguage();

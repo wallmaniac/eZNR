@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import PageHeader from '@/components/PageHeader';
 
 export default function FirebasePenTest() {
     const [logs, setLogs] = useState([]);

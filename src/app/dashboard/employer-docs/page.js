@@ -11,6 +11,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { useSearchParams } from 'next/navigation';
 import HelpTip from '@/components/HelpTip';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
+import PageHeader from '@/components/PageHeader';
 
 function EmployerDocsInner() {
     const { t, lang } = useLanguage();
