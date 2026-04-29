@@ -442,6 +442,8 @@ export default function ImportPage() {
     const [result, setResult] = useState(null);
     const [dragOver, setDragOver] = useState(false);
     const [fileError, setFileError] = useState('');
+    const [expanded, setExpanded] = useState({});
+    const toggleExpand = (key) => setExpanded(prev => ({ ...prev, [key]: !prev[key] }));
 
     const companyId = activeCompanyId === 'all'
         ? (user?.companyIds?.[0] || '')
@@ -899,56 +901,152 @@ export default function ImportPage() {
                         ))}
                     </div>
 
-                    {/* Workers preview table */}
-                    {preview.workers.length > 0 && (
-                        <div className="card">
-                            <div className="card-body">
-                                <div style={{ fontWeight: 700, marginBottom: 12 }}>👷 {lang === 'bs' ? 'Radnici (pregled, prvih 5)' : 'Workers (preview, first 5)'}</div>
-                                <div className="data-table-wrapper">
-                                    <table className="data-table">
-                                        <thead><tr>
-                                            <th>Ime</th><th>Prezime</th><th>JMBG</th><th>Zaposlenje</th><th>Aktivan</th>
-                                        </tr></thead>
-                                        <tbody>
-                                            {preview.workers.slice(0, 5).map((r, i) => (
-                                                <tr key={i}>
-                                                    <td>{r.ime}</td><td>{r.prezime}</td><td><code>{r.jmbg}</code></td>
-                                                    <td>{r.datumZaposlenja}</td>
-                                                    <td><span className={`badge ${String(r.aktivan).toUpperCase() !== 'NE' ? 'badge-success' : 'badge-danger'}`}>{String(r.aktivan || 'DA')}</span></td>
-                                                </tr>
-                                            ))}
-                                            {preview.workers.length > 5 && <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>...i još {preview.workers.length - 5} radnika</td></tr>}
-                                        </tbody>
-                                    </table>
+        
+                    {/* ── Expandable preview tables ── */}
+                    {[
+                        {
+                            key: 'workers', data: preview.workers, icon: '👷',
+                            title_bs: 'Radnici', title_en: 'Workers',
+                            cols: [
+                                { h: 'Ime', r: (r) => r.ime },
+                                { h: 'Prezime', r: (r) => r.prezime },
+                                { h: 'JMBG', r: (r) => <code>{r.jmbg}</code> },
+                                { h: 'Zaposlenje', r: (r) => r.datumZaposlenja },
+                                { h: 'Aktivan', r: (r) => <span className={`badge ${String(r.aktivan).toUpperCase() !== 'NE' ? 'badge-success' : 'badge-danger'}`}>{String(r.aktivan || 'DA')}</span> },
+                            ],
+                        },
+                        {
+                            key: 'certs', data: preview.certs, icon: '📜',
+                            title_bs: 'Uvjerenja', title_en: 'Certificates',
+                            cols: [
+                                { h: 'Radnik', r: (r) => `${r.radnik_ime} ${r.radnik_prezime}` },
+                                { h: 'Naziv', r: (r) => r.naziv },
+                                { h: 'Oznaka', r: (r) => <code>{r.oznaka}</code> },
+                                { h: 'Vrijedi do', r: (r) => r.vrijediDo },
+                            ],
+                        },
+                        {
+                            key: 'ppe', data: preview.ppe, icon: '🦺',
+                            title_bs: 'OZO', title_en: 'PPE',
+                            cols: [
+                                { h: 'Radnik', r: (r) => `${r.radnik_ime} ${r.radnik_prezime}` },
+                                { h: 'Naziv', r: (r) => r.naziv },
+                                { h: 'Datum zaduž.', r: (r) => r.datumZaduzenja },
+                                { h: 'Količina', r: (r) => r.kolicina },
+                            ],
+                        },
+                        {
+                            key: 'medExams', data: preview.medExams, icon: '🩺',
+                            title_bs: 'Ljekarski pregledi', title_en: 'Medical Exams',
+                            cols: [
+                                { h: 'Radnik', r: (r) => `${r.radnik_ime} ${r.radnik_prezime}` },
+                                { h: 'Tip', r: (r) => r.tipPregleda },
+                                { h: 'Datum', r: (r) => r.datum },
+                                { h: 'Vrijedi do', r: (r) => r.vrijediDo },
+                                { h: 'Rezultat', r: (r) => r.rezultat },
+                            ],
+                        },
+                        {
+                            key: 'equip', data: preview.equip, icon: '⚙️',
+                            title_bs: 'Oprema', title_en: 'Equipment',
+                            cols: [
+                                { h: 'Naziv', r: (r) => r.naziv },
+                                { h: 'Vrsta', r: (r) => r.vrsta },
+                                { h: 'TV Broj', r: (r) => r.tvBroj },
+                                { h: 'Status', r: (r) => r.status },
+                            ],
+                        },
+                        {
+                            key: 'vRows', data: preview.vRows, icon: '🚗',
+                            title_bs: 'Vozila', title_en: 'Vehicles',
+                            cols: [
+                                { h: 'Registracija', r: (r) => r.registracija },
+                                { h: 'Marka/Model', r: (r) => `${r.marka} ${r.model}` },
+                                { h: 'Reg. istice', r: (r) => r.registracijaIstice },
+                                { h: 'Status', r: (r) => r.status },
+                            ],
+                        },
+                        {
+                            key: 'ouRows', data: preview.ouRows, icon: '🏢',
+                            title_bs: 'Org. Jedinice', title_en: 'Org Units',
+                            cols: [
+                                { h: 'Naziv', r: (r) => r.naziv },
+                                { h: 'Opis', r: (r) => r.opis },
+                            ],
+                        },
+                        {
+                            key: 'wpRows', data: preview.wpRows, icon: '📍',
+                            title_bs: 'Radna Mjesta', title_en: 'Workplaces',
+                            cols: [
+                                { h: 'Naziv', r: (r) => r.naziv },
+                                { h: 'Opis', r: (r) => r.opis },
+                            ],
+                        },
+                        {
+                            key: 'fRows', data: preview.fRows, icon: '🧯',
+                            title_bs: 'PP Aparati', title_en: 'Fire Extinguishers',
+                            cols: [
+                                { h: 'Serijski br.', r: (r) => r.serijskiBroj },
+                                { h: 'Tip', r: (r) => r.tip },
+                                { h: 'Lokacija', r: (r) => r.lokacija },
+                                { h: 'Sljed. servis', r: (r) => r.sljedeciServis },
+                            ],
+                        },
+                        {
+                            key: 'hRows', data: preview.hRows, icon: '🚰',
+                            title_bs: 'Hidranti', title_en: 'Hydrants',
+                            cols: [
+                                { h: 'Oznaka', r: (r) => r.oznaka },
+                                { h: 'Tip', r: (r) => r.tip },
+                                { h: 'Lokacija', r: (r) => r.lokacija },
+                                { h: 'Slj. pregled', r: (r) => r.sljedeciPregled },
+                            ],
+                        },
+                    ].filter(sec => sec.data && sec.data.length > 0).map(sec => {
+                        const isExp = expanded[sec.key];
+                        const rows = isExp ? sec.data : sec.data.slice(0, 5);
+                        const remaining = sec.data.length - 5;
+                        const title = lang === 'bs' ? sec.title_bs : sec.title_en;
+                        return (
+                            <div key={sec.key} className="card">
+                                <div className="card-body">
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                                        <div style={{ fontWeight: 700 }}>{sec.icon} {title} <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 400 }}>({sec.data.length})</span></div>
+                                        {sec.data.length > 5 && (
+                                            <button
+                                                onClick={() => toggleExpand(sec.key)}
+                                                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, whiteSpace: 'nowrap' }}
+                                            >
+                                                {isExp ? (lang === 'bs' ? '▲ Sakrij' : '▲ Collapse') : `▼ ${lang === 'bs' ? `Prikaži sve (${sec.data.length})` : `Show all (${sec.data.length})`}`}
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="data-table-wrapper">
+                                        <table className="data-table">
+                                            <thead><tr>{sec.cols.map(c => <th key={c.h}>{c.h}</th>)}</tr></thead>
+                                            <tbody>
+                                                {rows.map((r, i) => (
+                                                    <tr key={i}>{sec.cols.map(c => <td key={c.h}>{c.r(r)}</td>)}</tr>
+                                                ))}
+                                                {!isExp && remaining > 0 && (
+                                                    <tr>
+                                                        <td colSpan={sec.cols.length} style={{ textAlign: 'center', padding: '10px 0' }}>
+                                                            <button
+                                                                onClick={() => toggleExpand(sec.key)}
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}
+                                                            >
+                                                                ▼ {lang === 'bs' ? `...i još ${remaining} reda` : `...and ${remaining} more`}
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Certs preview */}
-                    {preview.certs.length > 0 && (
-                        <div className="card">
-                            <div className="card-body">
-                                <div style={{ fontWeight: 700, marginBottom: 12 }}>📜 {lang === 'bs' ? 'Uvjerenja (pregled, prvih 5)' : 'Certificates (preview, first 5)'}</div>
-                                <div className="data-table-wrapper">
-                                    <table className="data-table">
-                                        <thead><tr>
-                                            <th>Radnik</th><th>Naziv</th><th>Oznaka</th><th>Vrijedi do</th>
-                                        </tr></thead>
-                                        <tbody>
-                                            {preview.certs.slice(0, 5).map((r, i) => (
-                                                <tr key={i}>
-                                                    <td>{r.radnik_ime} {r.radnik_prezime}</td>
-                                                    <td>{r.naziv}</td><td><code>{r.oznaka}</code></td><td>{r.vrijediDo}</td>
-                                                </tr>
-                                            ))}
-                                            {preview.certs.length > 5 && <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.8rem' }}>...i još {preview.certs.length - 5} uvjerenja</td></tr>}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                        );
+                    })}
 
                     <div style={{ display: 'flex', gap: 12 }}>
                         <button className="btn btn-ghost" onClick={reset}>← {lang === 'bs' ? 'Nazad' : 'Back'}</button>
