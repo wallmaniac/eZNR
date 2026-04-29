@@ -99,6 +99,14 @@ export default function AdminUsersPage() {
                     setIsSaving(false);
                     return;
                 }
+
+                // Check if user already exists in Firestore cache
+                const existingInDb = users.find(u => u.email === payload.email);
+                if (existingInDb) {
+                    await alert(lang === 'bs' ? 'Korisnik sa ovom email adresom već postoji u bazi.' : 'User with this email already exists in the database.');
+                    setIsSaving(false);
+                    return;
+                }
                 
                 // 1. Create Firebase Auth user securely
                 const res = await fetch('/api/admin/create-user', {
@@ -371,7 +379,7 @@ export default function AdminUsersPage() {
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">Email</label>
+                                    <label className="form-label">Email (KORISTI SE ZA PRIJAVU)</label>
                                     <input className="form-input" type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
                                 </div>
                                 <div className="form-group">

@@ -30,7 +30,13 @@ export async function POST(req) {
         try {
             const existingUser = await auth.getUserByEmail(email);
             if (existingUser) {
-                return NextResponse.json({ error: 'Korisnik sa ovom email adresom već postoji.' }, { status: 400 });
+                // User exists in Firebase Auth (likely deleted from Firestore but Auth remained)
+                // We will update their password and return the existing UID to reconnect them.
+                await auth.updateUser(existingUser.uid, {
+                    password,
+                    displayName
+                });
+                return NextResponse.json({ uid: existingUser.uid });
             }
         } catch (err) {
             // Error means user does not exist, which is what we want
