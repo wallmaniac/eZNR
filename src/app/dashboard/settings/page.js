@@ -238,7 +238,7 @@ export default function SettingsPage() {
 
   const allOfficersList = useMemo(() => {
     if (!isAdmin) return [];
-    return getRawAll(COLLECTIONS.USERS).filter(u => u.role === 'officer' && u.aktivan !== false);
+    return getRawAll(COLLECTIONS.USERS).filter(u => (u.role === 'officer' || u.role === 'admin') && u.aktivan !== false);
   }, [isAdmin]);
 
   const toggleOfficerAssignment = (officerId) => {
@@ -865,9 +865,9 @@ export default function SettingsPage() {
 
                 {isAdmin && allOfficersList.length > 0 && (
                   <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>👮 {lang === 'bs' ? 'Dodijeljeni stručnjaci ZNR' : 'Assigned Officers'}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>👮 {lang === 'bs' ? 'Dodijeljeni stručnjaci ZNR i Administratori' : 'Assigned Officers and Admins'}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                      {lang === 'bs' ? 'Odaberite koji stručnjaci imaju pristup ovoj firmi:' : 'Select which officers can access this company:'}
+                      {lang === 'bs' ? 'Odaberite koji stručnjaci/administratori imaju pristup ovoj firmi:' : 'Select which officers/admins can access this company:'}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {allOfficersList.map(officer => {

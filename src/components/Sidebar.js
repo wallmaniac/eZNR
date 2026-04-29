@@ -232,7 +232,7 @@ const SIDEBAR_TOOLTIPS = {
 
 export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileOpen = false, onMobileClose }) {
     const { t, lang } = useLanguage();
-    const { user, logout, isAdmin, activeCompanyId } = useAuth();
+    const { user, logout, isAdmin, isSuperAdmin, activeCompanyId } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
     const [openMenus, setOpenMenus] = useState({});

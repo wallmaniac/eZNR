@@ -12,7 +12,7 @@ import PageHeader from '@/components/PageHeader';
 export default function AdminCompaniesPage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
-    const { isAdmin } = useAuth();
+    const { isAdmin, isSuperAdmin, user } = useAuth();
     const router = useRouter();
     const [companies, setCompanies] = useState([]);
     const [users, setUsers] = useState([]);
@@ -27,13 +27,17 @@ export default function AdminCompaniesPage() {
 
     useEffect(() => {
         if (!isAdmin) { router.push('/dashboard'); return; }
-        setCompanies(getAllCompanies());
-        setUsers(getAllUsers());
-    }, [isAdmin]);
+        const allComps = getAllCompanies();
+        const allUsers = getAllUsers();
+        setCompanies(isSuperAdmin ? allComps : allComps.filter(c => (user?.companyIds || []).includes(c.id) || c.creatorId === user?.id));
+        setUsers(allUsers);
+    }, [isAdmin, isSuperAdmin, user]);
 
     const refreshData = () => {
-        setCompanies(getAllCompanies());
-        setUsers(getAllUsers());
+        const allComps = getAllCompanies();
+        const allUsers = getAllUsers();
+        setCompanies(isSuperAdmin ? allComps : allComps.filter(c => (user?.companyIds || []).includes(c.id) || c.creatorId === user?.id));
+        setUsers(allUsers);
     };
 
     const emptyForm = { naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', aktivan: true, logo: '', parentId: '' };
@@ -59,10 +63,24 @@ export default function AdminCompaniesPage() {
 
     const handleSave = () => {
         if (!formData.naziv.trim()) return;
+
+        const payload = { ...formData };
+        if (!isSuperAdmin && !editCompany) {
+            payload.creatorId = user?.id;
+        }
+
         if (editCompany) {
-            update(COLLECTIONS.COMPANIES, editCompany.id, formData);
+            update(COLLECTIONS.COMPANIES, editCompany.id, payload);
         } else {
-            create(COLLECTIONS.COMPANIES, formData);
+            const newCompany = create(COLLECTIONS.COMPANIES, payload);
+            if (!isSuperAdmin) {
+                // Grant the creator access to the new company immediately
+                const currentUserData = users.find(u => u.id === user?.id);
+                if (currentUserData) {
+                    const newCompanyIds = [...(currentUserData.companyIds || []), newCompany.id];
+                    update(COLLECTIONS.USERS, currentUserData.id, { companyIds: newCompanyIds });
+                }
+            }
         }
         setShowModal(false);
         refreshData();

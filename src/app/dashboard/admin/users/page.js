@@ -12,7 +12,7 @@ import PageHeader from '@/components/PageHeader';
 export default function AdminUsersPage() {
     const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
-    const { isAdmin, user } = useAuth();
+    const { isAdmin, isSuperAdmin, user } = useAuth();
     const router = useRouter();
     const [users, setUsers] = useState([]);
     const [companies, setCompanies] = useState([]);
@@ -30,17 +30,22 @@ export default function AdminUsersPage() {
     useEffect(() => {
         if (!isAdmin) { router.push('/dashboard'); return; }
         setUsers(getAll(COLLECTIONS.USERS));
-        setCompanies(getAllCompanies());
-    }, [isAdmin]);
+        const allComps = getAllCompanies();
+        setCompanies(isSuperAdmin ? allComps : allComps.filter(c => (user?.companyIds || []).includes(c.id)));
+    }, [isAdmin, isSuperAdmin, user]);
 
     const refreshData = () => {
         setUsers(getAll(COLLECTIONS.USERS));
-        setCompanies(getAllCompanies());
+        const allComps = getAllCompanies();
+        setCompanies(isSuperAdmin ? allComps : allComps.filter(c => (user?.companyIds || []).includes(c.id)));
     };
 
     // Filtered users based on search, company filter, and role filter
     const filteredUsers = useMemo(() => {
         let result = users;
+        if (!isSuperAdmin) {
+            result = result.filter(u => u.role === 'officer' && ((u.companyIds || []).some(cid => (user?.companyIds || []).includes(cid)) || u.creatorId === user?.id));
+        }
         if (searchTerm.trim()) {
             const q = searchTerm.toLowerCase();
             result = result.filter(u =>
@@ -54,7 +59,7 @@ export default function AdminUsersPage() {
             result = result.filter(u => u.role === filterRole);
         }
         return result;
-    }, [users, searchTerm, filterCompany, filterRole]);
+    }, [users, searchTerm, filterCompany, filterRole, isSuperAdmin, user]);
 
     const openNew = () => {
         setEditUser(null);
@@ -75,10 +80,16 @@ export default function AdminUsersPage() {
     const handleSave = () => {
         // firstName is required; username is optional (Firebase users may not have one)
         if (!formData.firstName.trim()) return;
+        const payload = { ...formData };
+        if (!isSuperAdmin) {
+            payload.role = 'officer';
+        }
+
         if (editUser) {
-            update(COLLECTIONS.USERS, editUser.id, formData);
+            update(COLLECTIONS.USERS, editUser.id, payload);
         } else {
-            create(COLLECTIONS.USERS, formData);
+            payload.creatorId = user?.id;
+            create(COLLECTIONS.USERS, payload);
         }
         setShowModal(false);
         refreshData();
@@ -129,8 +140,8 @@ export default function AdminUsersPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
                 {[
                     { label: lang === 'bs' ? 'Ukupno' : 'Total', value: users.length, icon: '👥', color: 'var(--primary)' },
-                    { label: 'Superadmin', value: users.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' },
-                    { label: lang === 'bs' ? 'Stručnjaci ZNR' : 'Officers', value: users.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
+                    ...(isSuperAdmin ? [{ label: 'Superadmin', value: users.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' }] : []),
+                    { label: lang === 'bs' ? 'Stručnjaci ZNR i Admini' : 'Officers & Admins', value: users.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
                     { label: lang === 'bs' ? 'Aktivni' : 'Active', value: users.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
                 ].map((s, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
@@ -172,13 +183,15 @@ export default function AdminUsersPage() {
                                 <option key={c.id} value={c.id}>{c.naziv}</option>
                             ))}
                         </select>
-                        <select className="form-input" value={filterRole} onChange={e => setFilterRole(e.target.value)}
-                            style={{ flex: 1, minWidth: 110, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
-                            <option value="all">👥 {lang === 'bs' ? 'Sve uloge' : 'All roles'}</option>
-                            <option value="superadmin">👑 Superadmin</option>
-                            <option value="officer">🛡️ {lang === 'bs' ? 'Stručnjak ZNR' : 'Officer'}</option>
-                            <option value="admin">⚙️ Admin</option>
-                        </select>
+                        {isSuperAdmin && (
+                            <select className="form-input" value={filterRole} onChange={e => setFilterRole(e.target.value)}
+                                style={{ flex: 1, minWidth: 110, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
+                                <option value="all">👥 {lang === 'bs' ? 'Sve uloge' : 'All roles'}</option>
+                                <option value="superadmin">👑 Superadmin</option>
+                                <option value="officer">🛡️ {lang === 'bs' ? 'Stručnjak ZNR' : 'Officer'}</option>
+                                <option value="admin">⚙️ Admin</option>
+                            </select>
+                        )}
                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                             {filteredUsers.length} / {users.length}
                         </span>
@@ -306,10 +319,10 @@ export default function AdminUsersPage() {
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{lang === 'bs' ? 'Uloga' : 'Role'}</label>
-                                    <select className="form-input" value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))}>
+                                    <select className="form-input" value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))} disabled={!isSuperAdmin}>
                                         <option value="officer">{lang === 'bs' ? '🛡️ Stručnjak ZNR' : '🛡️ Safety Officer'}</option>
-                                        <option value="admin">⚙️ Admin</option>
-                                        <option value="superadmin">👑 Superadmin</option>
+                                        {isSuperAdmin && <option value="admin">⚙️ Admin</option>}
+                                        {isSuperAdmin && <option value="superadmin">👑 Superadmin</option>}
                                     </select>
                                 </div>
                             </div>
