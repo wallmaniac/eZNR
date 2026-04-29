@@ -121,7 +121,7 @@ const menuItems = [
     {
         key: 'alati', icon: '🛠️',
         children: [
-            { key: 'excelImport',    icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export' },
+            { key: 'excelImport',    icon: '📥', path: '/dashboard/import', label_bs: 'Excel Import/Export', label_en: 'Excel Import/Export', adminOnly: true },
             { key: 'converter',      icon: '🔄', path: '/dashboard/converter' },
             { key: 'digitalArchive', icon: '🗄️', path: '/dashboard/archive' },
         ],
@@ -259,7 +259,14 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
 
     // Build menu: base items + admin items (if admin)
     const allMenuItems = useMemo(() => {
-        const items = [...menuItems];
+        const items = menuItems.map(item => {
+            // Filter adminOnly children
+            if (item.children) {
+                return { ...item, children: item.children.filter(c => !c.adminOnly || isAdmin) };
+            }
+            return item;
+        }).filter(item => !item.adminOnly || isAdmin);
+
         if (isAdmin) {
             items.push({
                 key: 'admin',

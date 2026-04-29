@@ -1,8 +1,9 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { create, createMass, getAll, COLLECTIONS } from '@/lib/dataStore';
+import { useRouter } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { collection, getDocs, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
@@ -387,7 +388,8 @@ function parseSheet(wb, sheetName) {
 
 export default function ImportPage() {
     const { t, lang } = useLanguage();
-    const { activeCompanyId, user } = useAuth();
+    const { activeCompanyId, user, isAdmin } = useAuth();
+    const router = useRouter();
     const fileRef = useRef(null);
     const [step, setStep] = useState('upload'); // upload | preview | done
     const [preview, setPreview] = useState(null);
@@ -400,6 +402,13 @@ export default function ImportPage() {
     const companyId = activeCompanyId === 'all'
         ? (user?.companyIds?.[0] || '')
         : activeCompanyId;
+
+    // Redirect officers away -- only Admins & Superadmins may access
+    useEffect(() => {
+        if (isAdmin === false) { router.replace('/dashboard'); }
+    }, [isAdmin, router]);
+
+    if (!isAdmin) return null;
 
     const processFile = (file) => {
         const reader = new FileReader();
