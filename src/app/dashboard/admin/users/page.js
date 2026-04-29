@@ -42,6 +42,13 @@ export default function AdminUsersPage() {
         setCompanies(isSuperAdmin ? allComps : allComps.filter(c => (user?.companyIds || []).includes(c.id)));
     };
 
+    // Listen for background data-sync so the page populates once users/companies finish loading
+    useEffect(() => {
+        const handler = () => refreshData();
+        window.addEventListener('eznr:data-synced', handler);
+        return () => window.removeEventListener('eznr:data-synced', handler);
+    }, [isSuperAdmin, user]);
+
     // Filtered users based on search, company filter, and role filter
     const filteredUsers = useMemo(() => {
         let result = users;
@@ -183,10 +190,10 @@ export default function AdminUsersPage() {
             {/* Stats — 2x2 on mobile */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
                 {[
-                    { label: lang === 'bs' ? 'Ukupno' : 'Total', value: users.length, icon: '👥', color: 'var(--primary)' },
-                    ...(isSuperAdmin ? [{ label: 'Superadmin', value: users.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' }] : []),
-                    { label: lang === 'bs' ? 'Stručnjaci ZNR i Admini' : 'Officers & Admins', value: users.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
-                    { label: lang === 'bs' ? 'Aktivni' : 'Active', value: users.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
+                    { label: lang === 'bs' ? 'Ukupno' : 'Total', value: filteredUsers.length, icon: '👥', color: 'var(--primary)' },
+                    ...(isSuperAdmin ? [{ label: 'Superadmin', value: filteredUsers.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' }] : []),
+                    { label: lang === 'bs' ? 'Stručnjaci ZNR i Admini' : 'Officers & Admins', value: filteredUsers.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
+                    { label: lang === 'bs' ? 'Aktivni' : 'Active', value: filteredUsers.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
                 ].map((s, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>

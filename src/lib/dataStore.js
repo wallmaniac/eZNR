@@ -276,14 +276,20 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // CRITICAL: Wait for company-scoped data before declaring loaded (with 5s timeout for slow mobile)
-            const companyTimeout = new Promise(r => setTimeout(r, 5000));
+            // CRITICAL: Wait for company-scoped data before declaring loaded (with 3s timeout for slow mobile)
+            const companyTimeout = new Promise(r => setTimeout(r, 3000));
+            // Start meta loads in parallel immediately (don't wait for company data)
+            const metaPromise = Promise.all([...globalLoads, ...metaLoads]).then(() => {
+                console.log('[dataStore] 📡 All real-time modules & global references established.');
+                // Fire sync event so UI pages (admin/users) refresh when users data is ready
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                }
+            });
             await Promise.race([Promise.all(companyLoads), companyTimeout]);
 
             // Allow global + meta to initialize gracefully in the background
-            Promise.all([...globalLoads, ...metaLoads]).then(() => {
-                console.log('[dataStore] 📡 All real-time modules & global references established.');
-            });
+            metaPromise.catch(() => {});
 
             const elapsed = ((performance.now() - start) / 1000).toFixed(2);
             const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
