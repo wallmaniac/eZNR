@@ -55,7 +55,7 @@ export default function InstallPWA() {
     if (!isIOS && !deferredPrompt) return null;
 
     return (
-        <div>
+        <div className="mobile-only">
             <button
                 onClick={handleInstallClick}
                 style={{
