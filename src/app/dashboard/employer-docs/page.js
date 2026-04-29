@@ -241,7 +241,7 @@ ${toPrint.map((d, i) => `<tr>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>{'\u2715'}</button>
                         </div>
                         <div className="modal-body">
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div className="form-grid-2">
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label className="form-label" style={{ fontWeight: 700 }}>{t('name')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <input className="form-input" value={formData.naziv} onChange={(e) => updateField('naziv', e.target.value)} />

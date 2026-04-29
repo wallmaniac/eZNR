@@ -148,15 +148,7 @@ export default function EvacuationDrillsPage() {
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                    <span style={{ fontSize: '1.6rem' }}>🏃</span>
-                    <div>
-                        <h1 style={{ margin: 0 }}>{bs ? 'Vježbe evakuacije' : 'Evacuation Drills'}</h1>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            {bs ? 'Evidencija provođenja vježbi evakuacije i spašavanja' : 'Records of evacuation and rescue drills'}
-                        </p>
-                    </div>
-                </div>
+                <PageHeader icon="🏃" title={bs ? 'Vježbe evakuacije' : 'Evacuation Drills'} />
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20, marginTop: 16 }}>
@@ -187,7 +179,7 @@ export default function EvacuationDrillsPage() {
                                 <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                             </div>
                             <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Plan evakuacije (Lokacija)' : 'Evacuation Plan (Location)'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <select className="form-select" value={formData.planId} onChange={e => set('planId', e.target.value)}>

@@ -43,7 +43,7 @@ export default function DoctorsPage() {
             <div className="modal-body">
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.ime} onChange={e => setFormData({ ...formData, ime: e.target.value })} /></div>
               <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{lang === 'bs' ? 'Specijalizacija' : 'Specialization'}</label><input className="form-input" value={formData.specijalizacija} onChange={e => setFormData({ ...formData, specijalizacija: e.target.value })} /></div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div className="form-grid-2">
                 <div className="form-group"><label className="form-label">{t('phone')}</label><input className="form-input" value={formData.telefon} onChange={e => setFormData({ ...formData, telefon: e.target.value })} /></div>
                 <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} /></div>
               </div>

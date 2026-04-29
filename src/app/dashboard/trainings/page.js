@@ -469,13 +469,7 @@ export default function TrainingsPage() {
 
         return (
             <div className="animate-fadeIn">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <span style={{ fontSize: '1.6rem' }}>🎬</span>
-                    <div>
-                        <h1 style={{ margin: 0 }}>Obuke i prezentacije</h1>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>Kreirajte prezentacije s automatski generiranim testovima i šaljite radnicima</p>
-                    </div>
-                </div>
+                <PageHeader icon="🎬" title="Obuke i prezentacije" subtitle="Kreirajte prezentacije s automatski generiranim testovima i šaljite radnicima" />
                 <DialogRenderer />
 
                 <div className="card" style={{ marginBottom: 16 }}>

@@ -173,15 +173,7 @@ function FleetOrdersInner() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <span style={{ fontSize: '1.6rem' }}>📝</span>
-                <div>
-                    <h1 style={{ margin: 0 }}>{bs ? 'Putni Nalozi' : 'Travel Orders'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {bs ? 'Evidencija svih putnih naloga unutar voznog parka.' : 'Log of all travel orders generated within the fleet.'}
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon="📝" title={bs ? 'Putni Nalozi' : 'Travel Orders'} />
 
             {/* Modal */}
             {showForm && (
@@ -194,7 +186,7 @@ function FleetOrdersInner() {
                         <div className="modal-body">
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
                                 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group" ref={vRef} style={{ position: 'relative' }}>
                                         <label className="form-label">{bs ? 'Vozilo' : 'Vehicle'}</label>
                                         <input className="form-input" placeholder="🔍 Pretraži..." value={vehicleSearch} 
@@ -242,7 +234,7 @@ function FleetOrdersInner() {
                                     <input className="form-input" value={formData.relacija} onChange={e => setFormData(f => ({...f, relacija: e.target.value}))} />
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum polaska' : 'Date Out'}</label>
                                         <DateInput value={formData.datumPolaska} onChange={v => setFormData(f => ({...f, datumPolaska: v}))} />

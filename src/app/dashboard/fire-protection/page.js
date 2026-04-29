@@ -289,15 +289,7 @@ export default function FireProtectionPage() {
             )}
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                <span style={{ fontSize: '1.6rem' }}>🧯</span>
-                <div>
-                    <h1 style={{ margin: 0 }}>{bs ? 'Zaštita od požara' : 'Fire Protection'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {bs ? 'Protupožarni aparati, hidrantska mreža i servisni rokovi' : 'Fire extinguishers, hydrant network & service schedules'}
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon="🧯" title={bs ? 'Zaštita od požara' : 'Fire Protection'} />
 
             {/* Stats */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20, marginTop: 16 }}>
@@ -337,7 +329,7 @@ export default function FireProtectionPage() {
                                     <button className="btn btn-ghost btn-icon" onClick={() => setShowExtForm(false)}>✕</button>
                                 </div>
                                 <div className="modal-body">
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-grid-2">
                                         <div className="form-group">
                                             <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Serijski broj' : 'Serial No.'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                             <input className="form-input" value={extForm.serijskiBroj} onChange={e => setExt('serijskiBroj', e.target.value)} />
@@ -484,7 +476,7 @@ export default function FireProtectionPage() {
                                     <button className="btn btn-ghost btn-icon" onClick={() => setShowHydForm(false)}>✕</button>
                                 </div>
                                 <div className="modal-body">
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-grid-2">
                                         <div className="form-group">
                                             <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Oznaka' : 'Code'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                             <input className="form-input" value={hydForm.oznaka} onChange={e => setHyd('oznaka', e.target.value)} placeholder="H-01, VH-03..." />

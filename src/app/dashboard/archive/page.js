@@ -455,15 +455,7 @@ export default function ArchivePage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <span style={{ fontSize: '1.6rem' }}>🗄️</span>
-                <div>
-                    <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Digitalna arhiva' : 'Digital Archive'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {files.length} {lang === 'bs' ? 'datoteka' : 'files'} · {formatSize(totalSize)} {lang === 'bs' ? 'ukupno' : 'total'} · max {MAX_MB}MB po datoteci
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon="🗄️" title={lang === 'bs' ? 'Digitalna arhiva' : 'Digital Archive'} />
 
             {/* ── Tab bar ── */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>

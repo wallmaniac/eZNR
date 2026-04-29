@@ -78,7 +78,7 @@ export default function ISZNRDocumentsPage() {
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div className="form-grid-2">
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label className="form-label" style={{ fontWeight: 700 }}>{lang === 'bs' ? 'Naslov' : 'Title'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <input className="form-input" value={formData.naslov} onChange={e => updateField('naslov', e.target.value)} />

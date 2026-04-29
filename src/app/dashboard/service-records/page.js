@@ -192,15 +192,7 @@ function ServiceRecordsInner() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <span style={{ fontSize: '1.6rem' }}>🔧</span>
-                <div>
-                    <h1 style={{ margin: 0 }}>{bs ? 'Servisni Zapisnici' : 'Service Records'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {bs ? 'Pregled svih servisnih zapisnika za kompletnu radnu opremu.' : 'Overview of all service records across all equipment.'}
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon="🔧" title={bs ? 'Servisni Zapisnici' : 'Service Records'} />
 
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
@@ -210,7 +202,7 @@ function ServiceRecordsInner() {
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div className="form-grid-2">
                                 
                                 <div className="form-group" ref={eqRef} style={{ gridColumn: '1 / -1', position: 'relative' }}>
                                     <label className="form-label">{bs ? 'Radna oprema / Objekt' : 'Equipment'} <span style={{color: 'var(--danger)'}}>*</span></label>

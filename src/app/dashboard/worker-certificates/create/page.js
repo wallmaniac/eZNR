@@ -712,7 +712,7 @@ export function UvjerenjeFormPage() {
                         <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
                             {lang === 'bs' ? 'Datoteka/e' : 'Attachments'}
                         </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                        <div className="form-grid-2">
                             <div>
                                 <div style={{ marginBottom: 12 }}>
                                     <div style={labelStyle}>{lang === 'bs' ? 'Priloži datoteku' : 'Upload file'}</div>

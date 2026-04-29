@@ -136,15 +136,7 @@ export default function EvacuationPage() {
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                    <span style={{ fontSize: '1.6rem' }}>🚨</span>
-                    <div>
-                        <h1 style={{ margin: 0 }}>{bs ? 'Planovi evakuacije' : 'Evacuation Plans'}</h1>
-                        <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                            {bs ? 'Planovi evakuacije po lokacijama i evidencija vježbi' : 'Evacuation plans by location and drill records'}
-                        </p>
-                    </div>
-                </div>
+                <PageHeader icon="🚨" title={bs ? 'Planovi evakuacije' : 'Evacuation Plans'} />
 
                 {/* Info banner */}
                 <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 'var(--radius-md)', padding: '12px 16px', marginTop: 12, marginBottom: 16, fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -183,7 +175,7 @@ export default function EvacuationPage() {
                                 <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                             </div>
                             <div className="modal-body">
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Lokacija / Objekat' : 'Location / Building'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                         <input className="form-input" value={formData.lokacija} onChange={e => set('lokacija', e.target.value)} placeholder={bs ? 'Hala 1, Upravna zgrada...' : 'Hall 1, Office building...'} />

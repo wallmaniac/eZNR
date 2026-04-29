@@ -508,7 +508,7 @@ export default function AnnualInjuriesPage() {
           </div>
         )}
         <div className="animate-fadeIn">
-          <h1 style={{ margin: '0 0 12px 0' }}>📈 {t('annualInjuryReport')}</h1>
+          <PageHeader icon="📈" title={t('annualInjuryReport')} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 24 }}>
             <select className="form-select" style={{ width: 100 }} value={year} onChange={e => setYear(e.target.value)}>
               {years.map(y => <option key={y} value={y}>{y}</option>)}

@@ -753,7 +753,7 @@ function WorkersPageInner() {
 
                 {/* ── ACCORDION: Osobni podaci ── */}
                 <Accordion title={t('personalData')} open={openSections.osobni} onToggle={() => toggleSection('osobni')}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+                    <div className="form-grid-4">
                         <div className="form-group">
                             <label className="form-label">{t('gender')}</label>
                             <div style={{ display: 'flex', gap: 24, padding: '10px 0' }}>
@@ -1301,7 +1301,7 @@ function WorkersPageInner() {
                                 <button className="btn btn-ghost btn-icon" onClick={() => { setShowCertForm(false); setCertEditId(null); }}>✕</button>
                             </div>
                             <div className="modal-body">
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Oznaka' : 'Code'} * <InfoTip text="Interni broj ili evidencijski kod certifikata u registru poslodavca (npr. ZNR-001)" /></label>
                                         <input className="form-input" value={certFormData.oznaka} onChange={e => setCertFormData({ ...certFormData, oznaka: e.target.value })} placeholder="ZNR-001" />
@@ -1453,7 +1453,7 @@ function WorkersPageInner() {
                                         {ppeTypes.filter((pt, i, a) => a.findIndex(x => x.naziv === pt.naziv) === i).map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
                                     </select>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
                                         <DateInput value={ppeFormData.datumZaduzenja} onChange={v => setPpeFormData({ ...ppeFormData, datumZaduzenja: v })} />

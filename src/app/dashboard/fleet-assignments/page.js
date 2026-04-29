@@ -162,15 +162,7 @@ function FleetAssignmentsInner() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <span style={{ fontSize: '1.6rem' }}>🔄</span>
-                <div>
-                    <h1 style={{ margin: 0 }}>{bs ? 'Zaduženja vozila' : 'Vehicle Assignments'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {bs ? 'Pregled svih zaduženja i razduženja u voznom parku.' : 'Overview of all active and past vehicle assignments.'}
-                    </p>
-                </div>
-            </div>
+            <PageHeader icon="🔄" title={bs ? 'Zaduženja vozila' : 'Vehicle Assignments'} />
 
             {/* Modal */}
             {showForm && (
@@ -219,7 +211,7 @@ function FleetAssignmentsInner() {
                                     {formData.workerId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {formData.workerIme}</div>}
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-grid-2">
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Datum zaduženja' : 'Date Given'}</label>
                                         <DateInput value={formData.datumZaduzenja} onChange={v => setFormData(f => ({...f, datumZaduzenja: v}))} />

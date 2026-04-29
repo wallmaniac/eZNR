@@ -326,20 +326,10 @@ export default function ZapisniciPage() {
             <DialogRenderer />
 
             {/* Header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                <span style={{ fontSize: '1.6rem' }}>📋</span>
-                <div>
-                    <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Zapisnici' : 'Zapisnici'}</h1>
-                    <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                        {items.length} {lang === 'bs' ? 'zapisnika' : 'records'}
-                    </p>
-                </div>
-                {activeTab === 'korekcija' && step !== 'upload' && (
-                    <div style={{ marginLeft: 'auto' }}>
-                        <button className="btn btn-ghost btn-sm" onClick={handleReset}>↺ {lang === 'bs' ? 'Novi dokument' : 'New document'}</button>
-                    </div>
-                )}
-            </div>
+            <PageHeader icon="📋" title={lang === 'bs' ? 'Zapisnici' : 'Zapisnici'}
+                subtitle={`${items.length} ${lang === 'bs' ? 'zapisnika' : 'records'}`}
+                actions={activeTab === 'korekcija' && step !== 'upload' ? <button className="btn btn-ghost btn-sm" onClick={handleReset}>↺ {lang === 'bs' ? 'Novi dokument' : 'New document'}</button> : null}
+            />
 
             {/* Tab bar */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>

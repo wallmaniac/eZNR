@@ -592,7 +592,7 @@ function EquipmentPageInner() {
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowServiceForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                            <div className="form-grid-2">
                                 <div className="form-group">
                                     <label className="form-label" style={{ fontWeight: 700 }}>📅 {lang === 'bs' ? 'Datum servisa' : 'Service date'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <DateInput value={serviceFormData.datum} onChange={v => setServiceFormData(p => ({ ...p, datum: v }))} />

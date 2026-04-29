@@ -356,7 +356,7 @@ function FleetInner() {
 
                             <div className="modal-body" style={{ flex: 1, overflowY: 'auto', padding: '24px 32px' }}>
                                 {activeTab === 'osnovno' && (
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-grid-2">
                                         {/* Registration */}
                                         <div className="form-group">
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Registracija' : 'Registration'} <span style={{ color: 'var(--danger)' }}>*</span></label>
