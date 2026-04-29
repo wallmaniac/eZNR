@@ -1922,6 +1922,19 @@ function WorkersPageInner() {
                         initialTab={viewWorkerInitialTab}
                         onClose={() => { setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
                         onSaved={() => { loadData(); setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
+                        onOpenFull={() => {
+                            const found = workers.find(x => x.id === viewWorkerId);
+                            setViewWorkerId(null);
+                            setViewWorkerInitialTab(null);
+                            if (found) {
+                                openWorkerHandledRef.current = viewWorkerId;
+                                openedViaUrlRef.current = true;
+                                handleEdit(found);
+                                const url = new URL(window.location);
+                                url.searchParams.set('openWorker', viewWorkerId);
+                                window.history.pushState(null, '', url.toString());
+                            }
+                        }}
                     />
                 )
             }

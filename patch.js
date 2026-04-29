@@ -1,10 +1,9 @@
 const fs = require('fs');
 const file = 'src/app/dashboard/workers/page.js';
 let data = fs.readFileSync(file, 'utf8');
-
-const target = 'onClose={() => { setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}\\r\\n                        onSaved={() => { loadData(); setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}';
-
-const replacement = \onClose={() => { setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
+data = data.replace(
+    'onClose={() => { setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}\\n                        onSaved={() => { loadData(); setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}',
+    \onClose={() => { setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
                         onSaved={() => { loadData(); setViewWorkerId(null); setViewWorkerInitialTab(null); openWorkerHandledRef.current = null; }}
                         onOpenFull={() => {
                             const found = workers.find(x => x.id === viewWorkerId);
@@ -18,19 +17,7 @@ const replacement = \onClose={() => { setViewWorkerId(null); setViewWorkerInitia
                                 url.searchParams.set('openWorker', viewWorkerId);
                                 window.history.pushState(null, '', url.toString());
                             }
-                        }}\;
-
-if (data.includes(target)) {
-    data = data.replace(target, replacement);
-    fs.writeFileSync(file, data);
-    console.log('patched CRLF target');
-} else {
-    const targetLF = target.replace(/\\\\r\\\\n/g, '\\n');
-    if (data.includes(targetLF)) {
-        data = data.replace(targetLF, replacement);
-        fs.writeFileSync(file, data);
-        console.log('patched LF target');
-    } else {
-        console.log('TARGET NOT FOUND');
-    }
-}
+                        }}\
+);
+fs.writeFileSync(file, data);
+console.log('done');

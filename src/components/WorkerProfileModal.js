@@ -74,7 +74,7 @@ function ModalSection({ title, action, children }) {
  *   onClose   — () => void
  *   onSaved   — optional () => void called after save
  */
-export default function WorkerProfileModal({ workerId, onClose, onSaved, initialTab }) {
+export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenFull, initialTab }) {
     const { t, lang } = useLanguage();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -217,9 +217,13 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
     };
 
     const openFullEdit = () => {
-        onClose();
-        // Small delay to let onClose state flush (resets openWorkerHandledRef)
-        setTimeout(() => router.push(`/dashboard/workers?openWorker=${workerId}`), 50);
+        if (onOpenFull) {
+            onOpenFull();
+        } else {
+            onClose();
+            // Small delay to let onClose state flush (resets openWorkerHandledRef)
+            setTimeout(() => router.push(`/dashboard/workers?openWorker=${workerId}`), 50);
+        }
     };
 
     return (
