@@ -216,7 +216,8 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, initial
 
     const openFullEdit = () => {
         onClose();
-        router.push(`/dashboard/workers?openWorker=${workerId}`);
+        // Small delay to let onClose state flush (resets openWorkerHandledRef)
+        setTimeout(() => router.push(`/dashboard/workers?openWorker=${workerId}`), 50);
     };
 
     return (
