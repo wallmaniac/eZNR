@@ -1980,35 +1980,31 @@ export default function AIAssistant() {
                             </div>
                         </>
                     )}
+
+                    {/* ── Close bubble anchored at bottom-right of chat window ── */}
+                    <button
+                        onClick={handleClose}
+                        style={{
+                            position: 'absolute',
+                            zIndex: 1002,
+                            bottom: -10,
+                            right: -10,
+                            width: 28, height: 28, borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #00BFA6, #009985)',
+                            border: '2px solid rgba(255,255,255,0.25)',
+                            cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            boxShadow: '0 3px 12px rgba(0,191,166,0.4)',
+                            transition: 'transform 0.15s',
+                            color: 'white',
+                        }}
+                        title={lang === 'bs' ? 'Zatvori Zia' : 'Close Zia'}
+                        onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+                    >
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, lineHeight: 1 }}>✕</span>
+                    </button>
                 </div>
-            )}
-
-
-
-            {/* ── Close bubble anchored at bottom-right of chat window ── */}
-            {isOpen && (
-                <button
-                    onClick={handleClose}
-                    style={{
-        position: 'fixed',
-        zIndex: 1002,
-        bottom: isMobileScreen ? 75 : 30,
-        right: isMobileScreen ? 12 : 30,
-                        width: 28, height: 28, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #00BFA6, #009985)',
-                        border: '2px solid rgba(255,255,255,0.25)',
-                        cursor: 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        boxShadow: '0 3px 12px rgba(0,191,166,0.4)',
-                        transition: 'transform 0.15s',
-                        color: 'white',
-                    }}
-                    title={lang === 'bs' ? 'Zatvori Zia' : 'Close Zia'}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
-                >
-                    <span style={{ fontSize: '0.8rem', fontWeight: 700, lineHeight: 1 }}>✕</span>
-                </button>
             )}
 
             {/* ── CSS Animations ── */}
