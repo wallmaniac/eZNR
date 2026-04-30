@@ -2005,6 +2005,35 @@ export default function AIAssistant() {
 
 
 
+            {/* ── Close bubble anchored at bottom-right of chat window ── */}
+            {isOpen && (
+                <button
+                    onClick={handleClose}
+                    style={{
+                        position: 'fixed',
+                        zIndex: 1002,
+                        ...(isMobileScreen
+                            ? { bottom: 12, right: 12 }
+                            : isFabLeft
+                                ? { bottom: 20, left: 390 }
+                                : { bottom: 20, right: 20 }),
+                        width: 28, height: 28, borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #00BFA6, #009985)',
+                        border: '2px solid rgba(255,255,255,0.25)',
+                        cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 3px 12px rgba(0,191,166,0.4)',
+                        transition: 'transform 0.15s',
+                        color: 'white',
+                    }}
+                    title={lang === 'bs' ? 'Zatvori Zia' : 'Close Zia'}
+                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
+                >
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, lineHeight: 1 }}>✕</span>
+                </button>
+            )}
+
             {/* ── CSS Animations ── */}
             <style>{`
                 @keyframes aiPulse {
@@ -2032,8 +2061,8 @@ const fabStyles = {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '8px 16px',
-        borderRadius: 24,
+        padding: '6px 14px',
+        borderRadius: 20,
         background: 'rgba(0, 191, 166, 0.15)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
@@ -2043,14 +2072,15 @@ const fabStyles = {
         boxShadow: '0 4px 16px rgba(0,191,166,0.2)',
         transition: 'transform 0.2s, box-shadow 0.2s',
         gap: 6,
+        whiteSpace: 'nowrap',
     },
     fabIcon: {
-        fontSize: '1.2rem',
+        fontSize: '1rem',
         lineHeight: 1,
         filter: 'drop-shadow(0 0 4px rgba(0,191,166,0.5))',
     },
     fabLabel: {
-        fontSize: '0.8rem',
+        fontSize: '0.75rem',
         fontWeight: 700,
         fontFamily: 'var(--font-heading)',
         letterSpacing: 0.5,
