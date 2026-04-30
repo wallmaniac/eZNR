@@ -10,19 +10,17 @@
  *   const result = await callFirebaseFunction('news', { force: true });
  */
 
+import { getFunctions, httpsCallable } from 'firebase/functions';
+import app from '@/lib/firebase';
+
 export async function callFirebaseFunction(name, data = {}) {
-    const res = await fetch('/api/firebase-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ functionName: name, data }),
-    });
-
-    const json = await res.json();
-
-    if (!res.ok) {
-        throw new Error(json.error || `Firebase function ${name} failed (${res.status})`);
+    try {
+        const functions = getFunctions(app, 'europe-west1');
+        const callable = httpsCallable(functions, name);
+        const result = await callable(data);
+        return result.data;
+    } catch (error) {
+        console.error(`Firebase function ${name} failed:`, error);
+        throw error;
     }
-
-    // Firebase onCall response format: { result: ... }
-    return json.result ?? json;
 }

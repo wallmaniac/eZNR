@@ -129,6 +129,7 @@ function EquipmentPageInner() {
 
     const enrichedItems = filtered.map(eq => ({ ...eq, orgName: getOrgUnitName(eq.orgJedinicaId) }));
     const { sorted: sortedEquipment, toggleSort, sortIcon, thStyle } = useSortedList(enrichedItems, 'naziv');
+    const { page, perPage, setPage, setPerPage, totalPages, pagedData: pagedEquipment, totalItems, nextPage, prevPage } = usePagination(sortedEquipment, 25);
 
     const handleNew = () => { setFormData({ ...emptyEQ }); setEditingId(null); setActiveTab('podaci'); setServiceLogs([]); setShowForm(true); };
     const handleEdit = (item, tab = 'podaci') => {
@@ -791,7 +792,7 @@ function EquipmentPageInner() {
                         page={page} 
                         perPage={perPage} 
                         totalPages={totalPages} 
-                        totalItems={filteredEquipment.length} 
+                        totalItems={filtered.length} 
                         setPage={setPage} 
                         setPerPage={setPerPage} 
                         prevPage={prevPage} 

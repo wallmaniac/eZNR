@@ -378,7 +378,10 @@ export default function DashboardPage() {
     const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
     const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
-    const monthName = currentDate.toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-US', { month: 'long', year: 'numeric' });
+    const MONTH_LABELS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
+    const MONTH_LABELS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthName = `${(lang === 'bs' ? MONTH_LABELS_BS : MONTH_LABELS_EN)[month]} ${year}`;
+    
     const dayNames = lang === 'bs'
         ? ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned']
         : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -693,10 +696,12 @@ export default function DashboardPage() {
             <CollapsibleWidget id="calendar" title={lang === 'bs' ? 'Kalendar' : 'Calendar'} icon="📅" isMobile={isMobile}>
                 <div className="card" style={{ marginBottom: 24 }}>
                     <div className="card-body">
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                            <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
-                                ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
-                            </button>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 16 }}>
+                            <div style={{ justifySelf: 'start' }}>
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
+                                    ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
+                                </button>
+                            </div>
 
                             {/* ── Custom Month/Year Picker ── */}
                             <div ref={monthPickerRef} style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -809,9 +814,11 @@ export default function DashboardPage() {
                                 })()}
                             </div>
 
-                            <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
-                                {lang === 'bs' ? 'Sljedeći' : 'Next'} ▶
-                            </button>
+                            <div style={{ justifySelf: 'end' }}>
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
+                                    {lang === 'bs' ? 'Sljedeći' : 'Next'} ▶
+                                </button>
+                            </div>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(0, 1fr))', gap: 1, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)' }}>
