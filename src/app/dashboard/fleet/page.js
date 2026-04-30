@@ -103,7 +103,7 @@ function FleetInner() {
     const returnTo = searchParams?.get('returnTo');
 
     // Safely capture initial deep link
-    const [deepLinkId] = useState(() => {
+    const [deepLinkId, setDeepLinkId] = useState(() => {
         if (typeof window !== 'undefined') {
             return new URLSearchParams(window.location.search).get('openId');
         }
@@ -125,7 +125,7 @@ function FleetInner() {
     }, [deepLinkId, vehicles, showForm]);
 
     const closeForm = () => {
-        setShowForm(false);
+        setShowForm(false); setDeepLinkId(null);
         // If opened from another page, navigate back there
         if (returnTo) {
             router.push(returnTo);
