@@ -1714,29 +1714,22 @@ export default function AIAssistant() {
                 <button
                     ref={fabRef}
                     id="ai-assistant-fab"
-                    onMouseDown={onFabMouseDown}
-                    onTouchStart={onFabTouchStart}
-                    onTouchMove={onFabTouchMove}
-                    onTouchEnd={onFabTouchEnd}
+                    onClick={handleOpen}
                     style={{
         ...fabStyles.fab,
-        ...fabPosition,
-        borderRadius: isFabLeft ? '0 24px 24px 0' : '24px 0 0 24px',
-        borderLeft: isFabLeft ? '1px solid rgba(0, 191, 166, 0.3)' : 'none',
-        borderRight: !isFabLeft ? '1px solid rgba(0, 191, 166, 0.3)' : 'none',
+        right: 0,
+        bottom: isMobileScreen ? 70 : 0,
         animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
-        transition: dragRef.current.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        touchAction: 'none',
-        cursor: 'grab',
     }}
-                    title={lang === 'bs' ? 'Otvori AI asistenta Zia (povuci da pomjeriš)' : 'Open AI assistant Zia (drag to move)'}
+    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
+    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.filter = 'none'; }}
+                    title={lang === 'bs' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia'}
                 >
-                    <span style={{ ...fabStyles.fabIcon, fontSize: '1.3rem' }}>✨</span>
-                    <span style={fabStyles.fabLabel}>Zia</span>
+                    <span style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>✨</span>
                     {/* Numeric urgent badge */}
                     {urgentCount > 0 && (
                         <span style={{
-                            position: 'absolute', top: -5, right: -5,
+                            position: 'absolute', top: 12, right: 6,
                             minWidth: 18, height: 18, borderRadius: 9,
                             background: '#EF4444', border: '2px solid white',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -1997,13 +1990,10 @@ export default function AIAssistant() {
                 <button
                     onClick={handleClose}
                     style={{
-                        position: 'fixed',
-                        zIndex: 1002,
-                        ...(isMobileScreen
-                            ? { bottom: 12, right: 12 }
-                            : isFabLeft
-                                ? { bottom: 20, left: 390 }
-                                : { bottom: 20, right: 20 }),
+        position: 'fixed',
+        zIndex: 1002,
+        bottom: isMobileScreen ? 75 : 10,
+        right: 10,
                         width: 28, height: 28, borderRadius: '50%',
                         background: 'linear-gradient(135deg, #00BFA6, #009985)',
                         border: '2px solid rgba(255,255,255,0.25)',
@@ -2042,22 +2032,21 @@ const fabStyles = {
     fab: {
         position: 'fixed',
         zIndex: 1001,
+        width: '64px',
+        height: '64px',
+        background: 'linear-gradient(135deg, rgba(0, 191, 166, 0.85), rgba(0, 153, 133, 0.95))',
+        backdropFilter: 'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
+        clipPath: 'polygon(100% 0, 0 100%, 100% 100%)',
+        cursor: 'pointer',
+        transition: 'transform 0.2s, filter 0.2s',
         display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '8px 12px',
-        background: 'rgba(0, 191, 166, 0.15)',
-        backdropFilter: 'blur(8px)',
-        WebkitBackdropFilter: 'blur(8px)',
-        borderTop: '1px solid rgba(0, 191, 166, 0.3)',
-        borderBottom: '1px solid rgba(0, 191, 166, 0.3)',
-        color: '#009985',
-        cursor: 'grab',
-        boxShadow: '0 4px 16px rgba(0,191,166,0.2)',
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        gap: 6,
-        whiteSpace: 'nowrap',
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+        padding: '0 10px 10px 0',
+        color: 'white',
+        border: 'none',
+        outline: 'none',
     },
     fabIcon: {
         fontSize: '1rem',
