@@ -1764,9 +1764,7 @@ export default function AIAssistant() {
                     ) : {
                         height: isMinimized ? 'auto' : 580,
                         // Position relative to FAB or default
-                        ...(isFabLeft
-                            ? { left: 28, right: 'auto', bottom: 72 }
-                            : { right: 28, bottom: 72 }),
+                        ...({ right: 28, left: 'auto', bottom: 28 }),
                     }),
                 }}>
                     {/* Header */}
@@ -2082,7 +2080,6 @@ const makeChatStyles = (isDark) => ({
             : '0 20px 60px rgba(11,42,60,0.2), 0 0 0 1px rgba(0,191,166,0.15)',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
         transition: 'height 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
         fontFamily: 'var(--font-body)',
     },
@@ -2092,6 +2089,7 @@ const makeChatStyles = (isDark) => ({
         justifyContent: 'space-between',
         padding: '14px 16px',
         background: 'linear-gradient(135deg, #0B2A3C, #143d54)',
+        borderRadius: '20px 20px 0 0',
         flexShrink: 0,
         WebkitUserSelect: 'none',
         userSelect: 'none',
@@ -2266,6 +2264,7 @@ const makeChatStyles = (isDark) => ({
         borderTop: isDark ? '1px solid var(--border)' : '1px solid #eef2f5',
         flexShrink: 0,
         background: isDark ? 'var(--bg-card)' : 'white',
+        borderRadius: '0 0 20px 20px',
     },
     inputWrapper: {
         display: 'flex',
