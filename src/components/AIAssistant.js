@@ -1293,7 +1293,7 @@ export default function AIAssistant() {
                     tip: 'osobno',
                     status: 'aktivan'
                 });
-                router.push(`/dashboard/fleet?openVozilo=${newVeh.id}`);
+                router.push(`/dashboard/fleet?openId=${newVeh.id}`);
                 setIsMinimized(true);
                 return { success: true, message: `Vozilo "${args.marka} ${args.model} (${args.registracija})" uspješno dodano i otvoreno.` };
             } catch (err) {

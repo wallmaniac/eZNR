@@ -1152,20 +1152,33 @@ function WorkersPageInner() {
                                     }
                                 }
                             };
-                            const downloadDoc = (doc) => {
+                            const downloadDoc = async (doc) => {
                                 if (doc.url) {
-                                    const a = document.createElement('a');
-                                    a.href = doc.url;
-                                    a.download = doc.name;
-                                    a.target = '_blank';
-                                    a.click();
+                                    try {
+                                        const response = await fetch(doc.url);
+                                        if (!response.ok) throw new Error('Network error');
+                                        const blob = await response.blob();
+                                        const blobUrl = window.URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = blobUrl;
+                                        a.download = doc.name || 'document';
+                                        document.body.appendChild(a);
+                                        a.click();
+                                        document.body.removeChild(a);
+                                        window.URL.revokeObjectURL(blobUrl);
+                                    } catch (err) {
+                                        console.error('Download failed:', err);
+                                        window.open(doc.url, '_blank');
+                                    }
                                     return;
                                 }
                                 if (doc.data) {
                                     const a = document.createElement('a');
                                     a.href = doc.data;
                                     a.download = doc.name;
+                                    document.body.appendChild(a);
                                     a.click();
+                                    document.body.removeChild(a);
                                 }
                             };
                             const printDoc = (doc) => {

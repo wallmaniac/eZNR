@@ -656,7 +656,32 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{d.source || ''}{d.date ? ` · ${formatDate(d.date)}` : ''}{d.size ? ` · ${(d.size/1024).toFixed(0)}KB` : ''}</div>
                                 </div>
                                 <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Otvori' : 'View'} onClick={() => window.open(d.url, '_blank')}>👁️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={() => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.target='_blank'; a.click(); }}>⬇️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Preuzmi' : 'Download'} onClick={async () => { 
+                                    if (d.url) {
+                                        try {
+                                            const response = await fetch(d.url);
+                                            if (!response.ok) throw new Error('Network error');
+                                            const blob = await response.blob();
+                                            const blobUrl = window.URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = blobUrl;
+                                            a.download = d.name || 'document';
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            document.body.removeChild(a);
+                                            window.URL.revokeObjectURL(blobUrl);
+                                        } catch(e) {
+                                            window.open(d.url, '_blank');
+                                        }
+                                    } else if (d.data) {
+                                        const a = document.createElement('a'); 
+                                        a.href = d.data; 
+                                        a.download = d.name; 
+                                        document.body.appendChild(a);
+                                        a.click(); 
+                                        document.body.removeChild(a);
+                                    }
+                                }}>⬇️</button>
                                 <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'}
                                     onClick={async () => {
                                         if (await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?')) {

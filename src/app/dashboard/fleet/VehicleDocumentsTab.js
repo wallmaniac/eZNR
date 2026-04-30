@@ -65,7 +65,34 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
 
     const handleEdit = (doc) => { setEditingId(doc.id); setForm({ naziv: doc.naziv || '', kategorija: doc.kategorija || 'Ostalo', datumIzdavanja: doc.datumIzdavanja || '', datumIsteka: doc.datumIsteka || '' }); setSelectedFile(null); setShowForm(true); };
     const handleCopy = (doc) => { setEditingId(null); setForm({ naziv: (doc.naziv || 'Dokument') + ' (Kopija)', kategorija: doc.kategorija || 'Ostalo', datumIzdavanja: doc.datumIzdavanja || '', datumIsteka: doc.datumIsteka || '' }); setSelectedFile(null); setShowForm(true); };
-    const handleDownload = (doc) => { if (!doc.docData) return; if (doc.docData.startsWith('http')) { window.open(doc.docData, '_blank'); return; } const a = document.createElement('a'); a.href = doc.docData; a.download = doc.naziv; a.click(); };
+    const handleDownload = async (doc) => { 
+        if (!doc.docData) return; 
+        if (doc.docData.startsWith('http')) { 
+            try {
+                const response = await fetch(doc.docData);
+                if (!response.ok) throw new Error('Network error');
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = doc.naziv || 'dokument';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (err) {
+                console.error('Download failed:', err);
+                window.open(doc.docData, '_blank'); 
+            }
+            return; 
+        } 
+        const a = document.createElement('a'); 
+        a.href = doc.docData; 
+        a.download = doc.naziv || 'dokument'; 
+        document.body.appendChild(a);
+        a.click(); 
+        document.body.removeChild(a);
+    };
     const handlePrint = (doc) => {
         if (!doc.docData) return;
         if (doc.docData.startsWith('http')) { window.open(doc.docData, '_blank'); return; }
