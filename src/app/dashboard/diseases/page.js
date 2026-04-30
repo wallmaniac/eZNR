@@ -257,8 +257,7 @@ export default function DiseasesPage() {
         )}
 
         <div className="card">
-          <div className="card-body">
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="card-body" style={{ padding: 0 }}>`n<div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <button className="btn btn-primary btn-sm" onClick={openNew}>+ {lang === 'bs' ? 'Nova bolest' : 'New Disease'}</button>
               <SavedFlash />
               <input

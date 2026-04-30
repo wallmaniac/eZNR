@@ -384,8 +384,7 @@ export default function FireProtectionPage() {
                         </div>
                     )}
                     <div className="card">
-                        <div className="card-body">
-                            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div className="card-body" style={{ padding: 0 }}>`n<div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewExt}>+ {bs ? 'Novi aparat' : 'New Extinguisher'}</button>
                                 <div className="search-bar" style={{ flex: 1 }}>
                                     <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)}
@@ -520,8 +519,7 @@ export default function FireProtectionPage() {
                         </div>
                     )}
                     <div className="card">
-                        <div className="card-body">
-                            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                        <div className="card-body" style={{ padding: 0 }}>`n<div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                                 <button className="btn btn-primary btn-sm" onClick={openNewHyd}>+ {bs ? 'Novi hidrant' : 'New Hydrant'}</button>
                                 <div className="search-bar" style={{ flex: 1 }}>
                                     <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={hydSearch} onChange={e => setHydSearch(e.target.value)}

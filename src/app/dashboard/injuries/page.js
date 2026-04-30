@@ -419,8 +419,7 @@ export default function InjuriesPage() {
 
         {/* Main card */}
         <div className="card">
-          <div className="card-body">
-            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="card-body" style={{ padding: 0 }}>`n<div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
               <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', height: 32 }} onClick={openNew}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
               <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center', height: 36 }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
