@@ -1718,18 +1718,21 @@ export default function AIAssistant() {
                     style={{
         ...fabStyles.fab,
         right: 0,
-        bottom: isMobileScreen ? 70 : 0,
+        top: isMobileScreen ? 'auto' : '50%',
+        bottom: isMobileScreen ? '120px' : 'auto',
+        transform: isMobileScreen ? 'none' : 'translateY(-50%)',
         animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
     }}
-    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
-    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.filter = 'none'; }}
+    onMouseEnter={e => { e.currentTarget.style.transform = isMobileScreen ? 'scale(1.05)' : 'translateY(-50%) scale(1.05)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
+    onMouseLeave={e => { e.currentTarget.style.transform = isMobileScreen ? 'none' : 'translateY(-50%)'; e.currentTarget.style.filter = 'none'; }}
                     title={lang === 'bs' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia'}
                 >
-                    <span style={{ fontSize: '1.4rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' }}>✨</span>
+                    <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', marginBottom: 6 }}>✨</span>
+    <span style={{ writingMode: 'vertical-rl', textOrientation: 'upright', fontSize: '0.75rem', fontWeight: 800, letterSpacing: 4 }}>ZIA</span>
                     {/* Numeric urgent badge */}
                     {urgentCount > 0 && (
                         <span style={{
-                            position: 'absolute', top: 12, right: 6,
+                            position: 'absolute', top: -6, left: -6,
                             minWidth: 18, height: 18, borderRadius: 9,
                             background: '#EF4444', border: '2px solid white',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2032,20 +2035,21 @@ const fabStyles = {
     fab: {
         position: 'fixed',
         zIndex: 1001,
-        width: '64px',
-        height: '64px',
-        background: 'linear-gradient(135deg, rgba(0, 191, 166, 0.85), rgba(0, 153, 133, 0.95))',
+        background: 'linear-gradient(180deg, #00BFA6, #009985)',
         backdropFilter: 'blur(4px)',
         WebkitBackdropFilter: 'blur(4px)',
-        clipPath: 'polygon(100% 0, 0 100%, 100% 100%)',
         cursor: 'pointer',
         transition: 'transform 0.2s, filter 0.2s',
         display: 'flex',
-        alignItems: 'flex-end',
-        justifyContent: 'flex-end',
-        padding: '0 10px 10px 0',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '16px 8px',
         color: 'white',
-        border: 'none',
+        border: '1px solid rgba(255,255,255,0.2)',
+        borderRight: 'none',
+        borderRadius: '16px 0 0 16px',
+        boxShadow: '-2px 0 12px rgba(0,191,166,0.3)',
         outline: 'none',
     },
     fabIcon: {
