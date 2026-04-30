@@ -682,6 +682,37 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         document.body.removeChild(a);
                                     }
                                 }}>⬇️</button>
+                                <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={async () => {
+                                    if (d.url) {
+                                        try {
+                                            const res = await fetch(d.url);
+                                            const blob = await res.blob();
+                                            const blobUrl = window.URL.createObjectURL(blob);
+                                            const isPdf = d.name?.toLowerCase().endsWith('.pdf') || blob.type === 'application/pdf';
+                                            const win = window.open(isPdf ? blobUrl : '');
+                                            if (win) {
+                                                if (isPdf) {
+                                                    setTimeout(() => win.print(), 1000);
+                                                } else {
+                                                    win.document.write(`<html><head><title>${d.name}</title></head><body style="margin:0"><img src="${blobUrl}" style="max-width:100%;max-height:95vh;margin:20px auto;display:block;" onload="window.print()" /></body></html>`);
+                                                    win.document.close();
+                                                }
+                                            }
+                                        } catch (e) {
+                                            console.error('Print failed', e);
+                                            const win = window.open(d.url, '_blank');
+                                            if (win) setTimeout(() => win.print(), 1000);
+                                        }
+                                    } else if (d.data) {
+                                        const isPdf = d.data.startsWith('data:application/pdf');
+                                        const win = window.open('');
+                                        if (win) {
+                                            win.document.write(`<html><head><title>${d.name}</title></head><body style="margin:0">${isPdf ? `<iframe src="${d.data}" style="width:100%;height:100vh;border:none"></iframe>` : `<img src="${d.data}" style="max-width:100%;max-height:95vh;margin:20px auto;display:block;" onload="window.print()" />`}</body></html>`);
+                                            win.document.close();
+                                            if (isPdf) setTimeout(() => win.print(), 1000);
+                                        }
+                                    }
+                                }}>🖨️</button>
                                 <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'}
                                     onClick={async () => {
                                         if (await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?')) {

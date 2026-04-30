@@ -361,11 +361,22 @@ export default function ArchivePage() {
             return;
         }
         if (file.url) {
-            const a = document.createElement('a');
-            a.href = file.url;
-            a.download = file.name;
-            a.target = '_blank';
-            a.click();
+            try {
+                const response = await fetch(file.url);
+                if (!response.ok) throw new Error('Network error');
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = file.name || 'document';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (err) {
+                console.error('Download failed:', err);
+                window.open(file.url, '_blank');
+            }
             return;
         }
         if (file.data) {

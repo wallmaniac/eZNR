@@ -2003,35 +2003,7 @@ export default function AIAssistant() {
                 </div>
             )}
 
-            {/* ── Close bubble anchored at bottom-right of chat window ── */}
-            {isOpen && (
-                <button
-                    onClick={handleClose}
-                    style={{
-                        position: 'fixed',
-                        zIndex: 1002,
-                        ...(isMobileScreen
-                            ? { bottom: 16, right: 16 }
-                            : isFabLeft
-                                ? { bottom: 16, left: 400 }
-                                : { bottom: 16, right: 16 }),
-                        width: 32, height: 32, borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #00BFA6, #009985)',
-                        border: '2px solid rgba(255,255,255,0.25)',
-                        cursor: 'pointer',
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center', gap: 0,
-                        boxShadow: '0 3px 12px rgba(0,191,166,0.4)',
-                        transition: 'transform 0.15s',
-                    }}
-                    title={lang === 'bs' ? 'Zatvori Zia' : 'Close Zia'}
-                    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
-                >
-                    <span style={{ fontSize: '0.7rem', lineHeight: 1, color: 'white' }}>✕</span>
-                    <span style={{ fontSize: '0.48rem', fontWeight: 700, color: 'white', fontFamily: 'var(--font-heading)', letterSpacing: 0.3 }}>Zia</span>
-                </button>
-            )}
+
 
             {/* ── CSS Animations ── */}
             <style>{`
@@ -2053,31 +2025,33 @@ export default function AIAssistant() {
 const fabStyles = {
     fab: {
         position: 'fixed',
-        bottom: 16,
-        right: 16,
+        bottom: 24,
+        right: 24,
         zIndex: 1001,
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        width: 48,
-        height: 48,
-        borderRadius: '50%',
-        background: 'linear-gradient(135deg, #00BFA6, #009985)',
-        border: 'none',
-        cursor: 'pointer',
-        boxShadow: '0 4px 16px rgba(0,191,166,0.45)',
+        padding: '8px 16px',
+        borderRadius: 24,
+        background: 'rgba(0, 191, 166, 0.15)',
+        backdropFilter: 'blur(8px)',
+        WebkitBackdropFilter: 'blur(8px)',
+        border: '1px solid rgba(0, 191, 166, 0.3)',
+        color: '#009985',
+        cursor: 'grab',
+        boxShadow: '0 4px 16px rgba(0,191,166,0.2)',
         transition: 'transform 0.2s, box-shadow 0.2s',
-        gap: 1,
+        gap: 6,
     },
     fabIcon: {
-        fontSize: '1.3rem',
+        fontSize: '1.2rem',
         lineHeight: 1,
+        filter: 'drop-shadow(0 0 4px rgba(0,191,166,0.5))',
     },
     fabLabel: {
-        fontSize: '0.55rem',
+        fontSize: '0.8rem',
         fontWeight: 700,
-        color: 'white',
         fontFamily: 'var(--font-heading)',
         letterSpacing: 0.5,
     },

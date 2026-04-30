@@ -1181,10 +1181,28 @@ function WorkersPageInner() {
                                     document.body.removeChild(a);
                                 }
                             };
-                            const printDoc = (doc) => {
+                            const printDoc = async (doc) => {
                                 if (doc.url) {
-                                    const win = window.open(doc.url, '_blank');
-                                    if (win) setTimeout(() => win.print(), 1000);
+                                    try {
+                                        const res = await fetch(doc.url);
+                                        const blob = await res.blob();
+                                        const blobUrl = window.URL.createObjectURL(blob);
+                                        const isPdf = doc.name?.toLowerCase().endsWith('.pdf') || blob.type === 'application/pdf';
+                                        
+                                        const win = window.open(isPdf ? blobUrl : '');
+                                        if (win) {
+                                            if (isPdf) {
+                                                setTimeout(() => win.print(), 1000);
+                                            } else {
+                                                win.document.write(`<html><head><title>${doc.name}</title></head><body style="margin:0"><img src="${blobUrl}" style="max-width:100%;max-height:95vh;margin:20px auto;display:block;" onload="window.print()" /></body></html>`);
+                                                win.document.close();
+                                            }
+                                        }
+                                    } catch (e) {
+                                        console.error('Print failed', e);
+                                        const win = window.open(doc.url, '_blank');
+                                        if (win) setTimeout(() => win.print(), 1000);
+                                    }
                                     return;
                                 }
                                 const isPdf = doc.data?.startsWith('data:application/pdf');
