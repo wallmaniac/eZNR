@@ -1,13 +1,15 @@
 'use client';
 import { useState, useMemo, useTransition, useEffect, useRef, useCallback, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { getAll, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSortedList } from '@/hooks/useSortedList';
 import Icon3D from '@/components/Icon3D';
 import PDFExportButton from '@/components/PDFExportButton';
 import PageHeader from '@/components/PageHeader';
+import { useDialog } from '@/hooks/useDialog';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
 function buildBulkPrintHtml(selectedRows, workers, lang) {
@@ -100,8 +102,11 @@ function WorkerCertificatesInner() {
   const [expiringSoonDays, setExpiringSoonDays] = useState(60);
   const [viewWorkerId, setViewWorkerId] = useState(null);
   const [actionMenuId, setActionMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 400 });
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
+  const { confirm, DialogRenderer } = useDialog();
+  const [certsVersion, setCertsVersion] = useState(0);
 
   // ── Bulk selection state ──────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -111,7 +116,7 @@ function WorkerCertificatesInner() {
   const highlightRef = useRef(null);
 
   const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
-  const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), []);
+  const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), [certsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
   const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
   const [filterOrgUnit, setFilterOrgUnit] = useState('');
 
@@ -219,6 +224,7 @@ function WorkerCertificatesInner() {
 
   return (
     <>
+      <DialogRenderer />
       <div className="animate-fadeIn">
         <PageHeader icon="📜" title={t('workerCertificates')} subtitle={`${rows.length} ${t('records')}${selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}`} />
 
@@ -340,7 +346,7 @@ function WorkerCertificatesInner() {
                     <th style={tsS('datum')} onClick={() => tS('datum')}>{t('certDate')}{siS('datum')}</th>
                     <th style={tsS('vrijediDo')} onClick={() => tS('vrijediDo')}>{t('certValidUntil')}{siS('vrijediDo')}</th>
                     <th style={tsS('statusText')} onClick={() => tS('statusText')}>{t('status')}{siS('statusText')}</th>
-                    <th style={{ width: 80, textAlign: 'center' }}>{bs ? 'Akcije' : 'Actions'}</th>
+                    <th style={{ width: 110, textAlign: 'center' }}>{bs ? 'Akcije' : 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -412,87 +418,66 @@ function WorkerCertificatesInner() {
                           {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
                         </td>
                         <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
-                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px', gap: 6, width: 'fit-content', margin: '0 auto' }}>
-                            <div>
-                              <button
-                                onClick={() => handleEdit(r.id)}
-                                disabled={isNavigating}
-                                title={bs ? 'Otvori/Uredi uvjerenje' : 'Open/Edit certificate'}
-                                style={{
-                                  background: 'rgba(148,163,184,0.15)', border: '1px solid rgba(148,163,184,0.3)', borderRadius: 6,
-                                  cursor: isNavigating ? 'wait' : 'pointer', padding: 0,
-                                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: '0.85rem', color: isNavigating ? 'var(--primary)' : 'var(--text-muted)',
-                                  transition: 'all 0.15s', width: '100%', height: 28,
-                                  borderColor: isNavigating ? 'var(--primary)' : undefined,
-                                }}
-                                onMouseEnter={e => { if (!isNavigating) { e.currentTarget.style.background = 'rgba(148,163,184,0.25)'; } }}
-                                onMouseLeave={e => { if (!isNavigating) { e.currentTarget.style.background = 'rgba(148,163,184,0.15)'; } }}
-                              >
-                                {isNavigating
-                                  ? <span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid var(--primary)', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.6s linear infinite', verticalAlign: 'middle' }} />
-                                  : '📄'}
-                              </button>
-                            </div>
-                            {/* Single-cert print */}
-                            <div>
-                              <button
-                                onClick={() => {
-                                  const html = buildBulkPrintHtml([r], workers, lang);
-                                  const win = window.open('', '_blank', 'width=900,height=700');
-                                  if (!win) return;
-                                  win.document.write(html);
-                                  win.document.close();
-                                }}
-                                title={bs ? 'Isprintaj ovo uvjerenje' : 'Print this certificate'}
-                                style={{
-                                  background: 'rgba(0,191,166,0.08)', border: '1px solid rgba(0,191,166,0.25)', borderRadius: 6,
-                                  cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: '0.85rem', color: 'var(--primary)', transition: 'all 0.15s', width: '100%', height: 28,
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.2)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(0,191,166,0.08)'; }}
-                              >🖨️</button>
-                            </div>
-                            {/* Renew / Copy certificate (Available on all rows) */}
-                            <div>
-                              <button
-                                onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}
-                                title={bs ? 'Obnovi/kopiraj uvjerenje' : 'Renew/copy certificate'}
-                                style={{
-                                  background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 6,
-                                  cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  fontSize: '0.85rem', color: 'var(--secondary)', transition: 'all 0.15s', width: '100%', height: 28,
-                                }}
-                                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.2)'; }}
-                                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(99,102,241,0.1)'; }}
-                              >📋</button>
-                            </div>
-
-                            {actionMenuId === r.id && (
-                              <>
-                                <div onClick={() => setActionMenuId(null)} onTouchStart={() => setActionMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 998 }} />
-                                <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', right: 0, minWidth: 200, zIndex: 999 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>{r.workerName}</span>
-                                    <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', color: 'var(--text-muted)' }}>✕</button>
-                                  </div>
-                                  <button className="dropdown-item" onClick={() => handleEdit(r.id)}>📂 Otvori</button>
-                                  <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}`)}>📋 Kopiraj</button>
-                                  <button className="dropdown-item" onClick={() => router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`)}>🔄 Produži</button>
-                                  <button className="dropdown-item" onClick={() => {
-                                    const html = buildBulkPrintHtml([r], workers, lang);
-                                    const win = window.open('', '_blank', 'width=900,height=700');
-                                    if (win) { win.document.write(html); win.document.close(); }
-                                    setActionMenuId(null);
-                                  }}>🖨️ Generiši PDF</button>
-                                  <div className="dropdown-divider" />
-                                  <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => { alert('Brisanje je dostupno iz profila radnika na Meni > Radnici.'); setActionMenuId(null); }}>🗑️ Obriši</button>
-                                </div>
-                              </>
-                            )}
+                        <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }} onClick={e => e.stopPropagation()}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
+                            <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
+                                onClick={() => handleEdit(r.id)}>▶</button>
+                            <button className="btn btn-primary btn-sm" onClick={e => {
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                const spaceBelow = window.innerHeight - rect.bottom;
+                                const spaceAbove = rect.top;
+                                const flipUp = spaceBelow < 300 && spaceAbove > spaceBelow;
+                                setMenuPos(flipUp
+                                    ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                                    : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                );
+                                setActionMenuId(actionMenuId === r.id ? null : r.id);
+                            }}>
+                                {bs ? 'Akcije' : 'Actions'} ▼
+                            </button>
                           </div>
+                          {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
+                              <>
+                                <div onClick={() => setActionMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
+                                <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto', padding: '4px 0' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
+                                            {r.workerName} — {(r.naziv || r.ime || '').substring(0, 30)}
+                                        </span>
+                                        <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
+                                    </div>
+                                    {(() => {
+                                        const _miSt = { width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontFamily: 'inherit' };
+                                        return (<>
+                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                                onClick={() => { setActionMenuId(null); handleEdit(r.id); }}>📂 {bs ? 'Otvori' : 'Open'}</button>
+                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                                onClick={() => {
+                                                    setActionMenuId(null);
+                                                    const html = buildBulkPrintHtml([r], workers, lang);
+                                                    const win = window.open('', '_blank', 'width=900,height=700');
+                                                    if (win) { win.document.write(html); win.document.close(); }
+                                                }}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
+                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/edit/${r.id}?tab=dokumenti`); }}>📁 {bs ? 'Dokumenti' : 'Documents'}</button>
+                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                                onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>🔄 {bs ? 'Produži' : 'Renew'}</button>
+                                            <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                            <button style={{..._miSt, color: 'var(--danger)'}} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                                onClick={async () => {
+                                                    setActionMenuId(null);
+                                                    const ok = await confirm(bs ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.');
+                                                    if (ok) { remove(COLLECTIONS.CERTIFICATES, r.id); setCertsVersion(v => v + 1); }
+                                                }}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                        </>);
+                                    })()}
+                                </div>
+                              </>,
+                              document.body
+                          )}
                         </td>
                       </tr>
                     );

@@ -1053,31 +1053,39 @@ function WorkersPageInner() {
                             <div className="data-table-wrapper">
                                 <table className="data-table">
                                     <thead><tr>
+                                        <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                                         <th>{lang === 'bs' ? 'Vrsta pregleda' : 'Type'}</th>
                                         <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
                                         <th>{lang === 'bs' ? 'Naredni pregled' : 'Next exam'}</th>
                                         <th>{lang === 'bs' ? 'Rezultat' : 'Result'}</th>
                                         <th>{lang === 'bs' ? 'Ustanova' : 'Institution'}</th>
-                                        <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
                                     </tr></thead>
                                     <tbody>
                                         {workerMedExams.sort((a, b) => (b.datumPregleda || '').localeCompare(a.datumPregleda || '')).map(me => {
                                             const days = me.vrijediDo ? Math.ceil((new Date(me.vrijediDo) - new Date()) / 86400000) : null;
                                             const badgeCls = days === null ? '' : days < 0 ? 'badge-danger' : days <= 90 ? 'badge-warning' : 'badge-success';
                                             const badgeLabel = days === null ? (lang === 'bs' ? 'Bez roka' : 'No deadline') : days < 0 ? (lang === 'bs' ? 'Isteklo' : 'Expired') : formatDate(me.vrijediDo);
-                                            const TMAP = { prethodni: 'Prethodni', 'periodicni': 'Periodicki', vanredni: 'Vanredni', nocniRad: 'Nocni rad', ostalo: 'Ostalo' };
+                                            const TMAP = { prethodni: 'Prethodni', 'periodicni': 'Periodički', vanredni: 'Vanredni', nocniRad: 'Noćni rad', ostalo: 'Ostalo' };
                                             const RCOL = { 'Sposoban': 'var(--success)', 'Uvjetno Sposoban': 'var(--warning)', 'Nesposoban': 'var(--danger)' };
+                                            const openExamEdit = () => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); };
                                             return (
-                                                <tr key={me.id} style={{ background: days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : '' }}>
+                                                <tr key={me.id}
+                                                    style={{ background: days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : '', cursor: 'pointer' }}
+                                                    onClick={openExamEdit}
+                                                    onMouseEnter={e => { if (!(days !== null && days < 0)) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.background = days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : ''; }}
+                                                >
+                                                    <td onClick={e => e.stopPropagation()}>
+                                                        <div style={{ display: 'flex', gap: 4 }}>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={openExamEdit}>✏️</button>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>🗑️</button>
+                                                        </div>
+                                                    </td>
                                                     <td style={{ fontSize: '0.82rem' }}>{TMAP[me.tipPregleda] || me.tipPregleda}</td>
                                                     <td style={{ fontSize: '0.85rem' }}>{formatDate(me.datumPregleda)}</td>
                                                     <td><span className={`badge ${badgeCls}`} style={{ fontSize: '0.7rem' }}>{badgeLabel}</span></td>
                                                     <td style={{ fontWeight: 600, color: RCOL[me.rezultat] || 'inherit', fontSize: '0.85rem' }}>{me.rezultat}</td>
                                                     <td style={{ fontSize: '0.8rem' }}>{me.zdravstvenaUstanova || ''}{me.doktorIme ? ` / Dr. ${me.doktorIme}` : ''}</td>
-                                                    <td><div style={{ display: 'flex', gap: 4 }}>
-                                                        <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); }}>✏️</button>
-                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>🗑️</button>
-                                                    </div></td>
                                                 </tr>
                                             );
                                         })}
@@ -1271,7 +1279,25 @@ function WorkersPageInner() {
                                                                     🖨️
                                                                 </button>
                                                             )}
-                                                        </div>
+                                                        
+                                                            <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši' : 'Delete'}
+                                                                onClick={async () => {
+                                                                    if (doc.id?.startsWith('wdoc_')) {
+                                                                        const ok = await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?');
+                                                                        if (ok) {
+                                                                            const wData = getById(COLLECTIONS.WORKERS, editingWorker);
+                                                                            const idx = parseInt(doc.id.replace('wdoc_', ''), 10);
+                                                                            const updDocs = (wData?.dokumenti || []).filter((_, i) => i !== idx);
+                                                                            update(COLLECTIONS.WORKERS, editingWorker, { dokumenti: updDocs });
+                                                                            setFormData(f => ({ ...f, dokumenti: updDocs }));
+                                                                            loadData();
+                                                                        }
+                                                                    } else {
+                                                                        await alert(lang === 'bs' ? 'Ovaj dokument je vezan uz uvjerenje. Obriši ga iz uvjerenja.' : 'This document is linked to a certificate. Delete it from the certificate.');
+                                                                    }
+                                                                }} style={{ padding: '4px 6px', fontSize: '0.9rem', color: 'var(--danger)' }}>
+                                                                🗑️
+                                                            </button></div>
                                                     </div>
                                                 );
                                             })}
@@ -1819,7 +1845,7 @@ function WorkersPageInner() {
                                                                     );
                                                                 })()}
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setOpenSections(prev => ({ ...prev, dokumenti: true, uvjerenja: false })); dokumentiRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 350); }}>📁 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
+                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>\ud83d\udcc1 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={{ ..._miSt, color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                             </div>

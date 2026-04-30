@@ -53,7 +53,7 @@ function EditCertPageInner() {
     const [newTypeName, setNewTypeName] = useState('');
     const tipRef = useRef(null);
     const ispitivacRef = useRef(null);
-    const [activeTab, setActiveTab] = useState('podaci');
+    const [activeTab, setActiveTab] = useState(searchParams?.get('tab') || 'podaci');
 
     const set = (k, v) => setFormData(f => ({ ...f, [k]: v }));
     const { alert: dlgAlert, DialogRenderer } = useDialog();
@@ -193,7 +193,7 @@ function EditCertPageInner() {
                         <TabBar active={activeTab} onChange={setActiveTab} 
                             tabs={[
                                 { key: 'podaci', icon: '📝', label: lang === 'bs' ? 'Podaci' : 'Details' },
-                                { key: 'datoteke', icon: '📎', label: `${lang === 'bs' ? 'Datoteke' : 'Files'} (${(formData.attachments || []).length})` },
+                                { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.attachments || []).length})` },
                             ]} 
                         />
                     </div>
@@ -357,7 +357,7 @@ function EditCertPageInner() {
 
                     </>)}
 
-                    {activeTab === 'datoteke' && (<>
+                    {activeTab === 'dokumenti' && (<>
                     {/* Attachments — Multi-file */}
                     <div style={{ marginBottom: 24 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>

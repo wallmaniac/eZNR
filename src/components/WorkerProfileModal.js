@@ -590,7 +590,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             const statusColor = isExp ? 'var(--danger)' : isSoon ? 'var(--warning)' : 'var(--success)';
                             const statusLabel = isExp ? (lang === 'bs' ? 'Istekao' : 'Expired') : isSoon ? `${diffDays}d` : (lang === 'bs' ? 'Vrijedi' : 'Valid');
                             return (
-                                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: `1px solid ${isExp ? 'var(--danger)' : 'var(--border-light)'}` }}>
+                                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: `1px solid ${isExp ? 'var(--danger)' : 'var(--border-light)'}`, cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s' }}
+                                    onClick={() => { onClose(); router.push(`/dashboard/workers?openWorker=${workerId}&section=medExams`); }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.boxShadow = '0 0 0 1px var(--primary)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = isExp ? 'var(--danger)' : 'var(--border-light)'; e.currentTarget.style.boxShadow = 'none'; }}
+                                >
                                     <span style={{ fontSize: '1.2rem' }}>🩺</span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.tipPregleda || (lang === 'bs' ? 'Pregled' : 'Exam')}</div>
@@ -604,7 +608,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         {statusLabel}
                                     </span>
                                     <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Obriši' : 'Delete'} style={{ color: 'var(--danger)' }}
-                                        onClick={async () => { if (await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?')) { remove(COLLECTIONS.MEDICAL_EXAMS, m.id); refreshMed(); } }}>🗑️</button>
+                                        onClick={async (e) => { e.stopPropagation(); if (await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?')) { remove(COLLECTIONS.MEDICAL_EXAMS, m.id); refreshMed(); } }}>🗑️</button>
                                 </div>
                             );
                         })}
