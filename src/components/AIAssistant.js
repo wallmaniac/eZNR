@@ -870,22 +870,18 @@ export default function AIAssistant() {
     const handleDragMove = useCallback((clientX, clientY) => {
         const d = dragRef.current;
         if (!d.dragging) return;
-        const dx = clientX - d.currentX;
         const dy = clientY - d.currentY;
         d.currentX = clientX;
         d.currentY = clientY;
 
         setFabPos(prev => {
-            const cur = prev || { x: window.innerWidth - 60, y: window.innerHeight - 130 };
-            const vw = window.innerWidth;
+            const cur = prev || { y: window.innerHeight - (window.innerWidth < 768 ? 120 : 100) };
             const vh = window.innerHeight;
-            const isMob = vw < 768;
-            const minX = 0;
-            const maxX = vw - 60;
+            const isMob = window.innerWidth < 768;
             const minY = 60;
             const maxY = isMob ? vh - 120 : vh - 60;
             return {
-                x: Math.max(minX, Math.min(cur.x + dx, maxX)),
+                x: 0,
                 y: Math.max(minY, Math.min(cur.y + dy, maxY)),
             };
         });
@@ -894,18 +890,15 @@ export default function AIAssistant() {
     const handleDragEnd = useCallback(() => {
         const d = dragRef.current;
         d.dragging = false;
-
         const dist = Math.abs(d.currentX - d.startX) + Math.abs(d.currentY - d.startY);
 
         if (dist > 15) {
             setFabPos(prev => {
                 if (!prev) return prev;
-                const vw = window.innerWidth;
                 const vh = window.innerHeight;
-                const isMob = vw < 768;
-                
+                const isMob = window.innerWidth < 768;
                 const snapped = {
-                    x: prev.x < vw / 2 ? 0 : vw - 60,
+                    x: 0,
                     y: Math.max(60, Math.min(prev.y, isMob ? vh - 120 : vh - 60)),
                 };
                 try { localStorage.setItem('eznr_zia_position', JSON.stringify(snapped)); } catch {}
@@ -1714,13 +1707,17 @@ export default function AIAssistant() {
                 <button
                     ref={fabRef}
                     id="ai-assistant-fab"
-                    onClick={handleOpen}
+                    onMouseDown={onFabMouseDown}
+                    onTouchStart={onFabTouchStart}
+                    onTouchMove={onFabTouchMove}
+                    onTouchEnd={onFabTouchEnd}
                     style={{
         ...fabStyles.fab,
         right: 0,
-        top: 'auto',
-        bottom: isMobileScreen ? '120px' : '100px',
+        top: fabPos && fabPos.y !== undefined ? fabPos.y : 'auto',
+        bottom: fabPos && fabPos.y !== undefined ? 'auto' : (isMobileScreen ? '120px' : '100px'),
         transform: 'none',
+        transition: dragRef.current && dragRef.current.dragging ? 'none' : 'transform 0.2s, filter 0.2s, top 0.2s',
         animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
     }}
     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
@@ -1995,8 +1992,8 @@ export default function AIAssistant() {
                     style={{
         position: 'fixed',
         zIndex: 1002,
-        bottom: isMobileScreen ? 75 : 20,
-        right: isMobileScreen ? 12 : 20,
+        bottom: isMobileScreen ? 75 : 30,
+        right: isMobileScreen ? 12 : 30,
                         width: 28, height: 28, borderRadius: '50%',
                         background: 'linear-gradient(135deg, #00BFA6, #009985)',
                         border: '2px solid rgba(255,255,255,0.25)',
