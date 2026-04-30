@@ -7,6 +7,7 @@ import {
   getAll, create, update, remove, COLLECTIONS, getUserCompanies,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 import QuestionnaireBuilder from '@/components/SurveyCreator';
 import EmailDispatchModal from '@/components/EmailDispatchModal';
 import QuestionnaireResults from '@/components/QuestionnaireResults';
@@ -378,9 +379,6 @@ export default function QuestionnairesPage() {
      VIEW: LIST
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   if (view === 'list') {
-    const filtered = search
-      ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()) || (r.oznaka || '').toLowerCase().includes(search.toLowerCase()))
-      : records;
     const filteredTemplates = templateSearch
       ? BUILTIN_TEMPLATES.filter(t => (t.naziv || '').toLowerCase().includes(templateSearch.toLowerCase()) || (t.oznaka || '').toLowerCase().includes(templateSearch.toLowerCase()))
       : BUILTIN_TEMPLATES;
@@ -417,22 +415,28 @@ export default function QuestionnairesPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
-                    <th>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRecords.length && sortedRecords.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                    <th style={{ width: 100 }}>{t('actions')}</th>
+                    <th style={tsRec('naziv')} onClick={() => tRec('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{siRec('naziv')}</th>
+                    <th style={tsRec('zaVrstu')} onClick={() => tRec('zaVrstu')}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}{siRec('zaVrstu')}</th>
                     <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
-                    <th>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}</th>
-                    <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}</th>
-                    <th>{lang === 'bs' ? 'Predložak' : 'Template'}</th>
-                    <th>{lang === 'bs' ? 'Jezik' : 'Language'}</th>
+                    <th style={tsRec('rokIsteka')} onClick={() => tRec('rokIsteka')}>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}{siRec('rokIsteka')}</th>
+                    <th style={tsRec('prikaziNaPortalu')} onClick={() => tRec('prikaziNaPortalu')}>{lang === 'bs' ? 'Prika�i na portalu' : 'Show on portal'}{siRec('prikaziNaPortalu')}</th>
+                    <th style={tsRec('predlozak')} onClick={() => tRec('predlozak')}>{lang === 'bs' ? 'Predlo�ak' : 'Template'}{siRec('predlozak')}</th>
+                    <th style={tsRec('jezik')} onClick={() => tRec('jezik')}>{lang === 'bs' ? 'Jezik' : 'Language'}{siRec('jezik')}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.length === 0 ? (
-                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : filtered.map(r => (
-                    <tr key={r.id}>
-                      <td>
+                  {sortedRecords.length === 0 ? (
+                    <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                  ) : sortedRecords.map(r => (
+                    <tr key={r.id} onClick={() => handleEdit(r)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
+                        onMouseLeave={e => e.currentTarget.style.background = ''}>
+                      <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                          <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
+                      </td>
+                      <td onClick={e => e.stopPropagation()}>
                         <div style={{ position: 'relative' }}>
                           <button
                             className="btn btn-primary btn-sm"

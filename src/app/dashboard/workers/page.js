@@ -17,12 +17,14 @@ import PDFExportButton from '@/components/PDFExportButton';
 import Icon3D from '@/components/Icon3D';
 import { generateWorkersReport, generateCertificatesReport } from '@/lib/pdfReportGenerator';
 import { useSortedList } from '@/hooks/useSortedList';
+import { usePagination } from '@/hooks/usePagination';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useDialog } from '@/hooks/useDialog';
 import * as XLSX from 'xlsx';
 import { fmtDate, matchesSearch } from '@/lib/dateUtils';
 import { isoToDisplay, displayToISO, DateField, Field, SelectField, InfoTip, StazPicker, Accordion, TimePicker } from '@/components/forms/WorkerFormFields';
 import PageHeader from '@/components/PageHeader';
+import Pagination from '@/components/Pagination';
 import TabBar from '@/components/TabBar';
 
 const emptyWorker = {
@@ -62,8 +64,7 @@ function WorkersPageInner() {
     const [ppeAssign, setPpeAssign] = useState([]);
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0, maxH: 300 });
-    const [page, setPage] = useState(1);
-    const [perPage, setPerPage] = useState(10);
+    
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [viewWorkerInitialTab, setViewWorkerInitialTab] = useState(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -300,8 +301,7 @@ function WorkersPageInner() {
     });
 
     const { sorted: sortedWorkers, toggleSort: tW, sortIcon: siW, thStyle: tsW } = useSortedList(filteredWorkers, 'prezime');
-    const totalPages = Math.max(1, Math.ceil(sortedWorkers.length / perPage));
-    const pagedWorkers = sortedWorkers.slice((page - 1) * perPage, page * perPage);
+    const { page, perPage, setPage, setPerPage, totalPages, pagedData: pagedWorkers, totalItems, nextPage, prevPage } = usePagination(sortedWorkers, 10);
 
     // ── Selection helpers ──
     const pagedIds = pagedWorkers.map(w => w.id);
@@ -1917,25 +1917,17 @@ function WorkersPageInner() {
                         </div>
 
                         {/* Pagination */}
-                        <div className="pagination" style={{ padding: '16px' }}>
-                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                {filteredWorkers.length > 0 ? `${(page - 1) * perPage + 1} - ${Math.min(page * perPage, filteredWorkers.length)}` : '0'} {t('of')} {filteredWorkers.length} {t('records')}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1}>⏮</button>
-                                <button className="pagination-btn" onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>◀</button>
-                                <button className="pagination-btn active">{page}</button>
-                                <button className="pagination-btn" onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages}>▶</button>
-                                <button className="pagination-btn" onClick={() => setPage(totalPages)} disabled={page === totalPages}>⏭</button>
-                                <select value={perPage} onChange={(e) => { setPerPage(Number(e.target.value)); setPage(1); setSelectedIds(new Set()); }}
-                                    style={{ padding: '6px 10px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
-                                    <option value={10}>10 {t('perPage')}</option>
-                                    <option value={25}>25 {t('perPage')}</option>
-                                    <option value={50}>50 {t('perPage')}</option>
-                                    <option value={100}>100 {t('perPage')}</option>
-                                </select>
-                            </div>
-                        </div>
+                        <Pagination 
+                            page={page} 
+                            perPage={perPage} 
+                            totalPages={totalPages} 
+                            totalItems={filteredWorkers.length} 
+                            setPage={setPage} 
+                            setPerPage={setPerPage} 
+                            prevPage={prevPage} 
+                            nextPage={nextPage} 
+                            onPerPageChangeExtra={() => setSelectedIds(new Set())} 
+                        />
                     </div>
                 </div>
             </div>

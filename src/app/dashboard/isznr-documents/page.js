@@ -6,6 +6,8 @@ import {
     getAll, create, update, remove, COLLECTIONS, formatDate,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
+import { useSavedFlash } from '@/hooks/useSavedFlash';
 import PageHeader from '@/components/PageHeader';
 
 const emptyDoc = {
@@ -14,7 +16,10 @@ const emptyDoc = {
 
 export default function ISZNRDocumentsPage() {
     const { t, lang } = useLanguage();
+    const bs = lang === 'bs';
     const { alert, confirm, DialogRenderer } = useDialog();
+    const { showFlash, SavedFlash } = useSavedFlash();
+    
     const [docs, setDocs] = useState([]);
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -22,8 +27,10 @@ export default function ISZNRDocumentsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [parties, setParties] = useState([]);
     const [docTypes, setDocTypes] = useState([]);
+    
     const [actionMenuId, setActionMenuId] = useState(null);
-    const actionRef = useRef(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const [selectedIds, setSelectedIds] = useState(new Set());
 
     const loadData = useCallback(() => {
         setDocs(getAll(COLLECTIONS.ISZNR_DOCUMENTS));
@@ -36,15 +43,22 @@ export default function ISZNRDocumentsPage() {
         window.addEventListener('eznr:data-synced', loadData);
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
+    
     useEffect(() => {
-        const handleClick = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null); };
+        const handleClick = (e) => {
+            if (actionMenuId && !e.target.closest('[data-menu]') && !e.target.closest('[data-menu-trigger]')) {
+                setActionMenuId(null);
+            }
+        };
         document.addEventListener('mousedown', handleClick);
         return () => document.removeEventListener('mousedown', handleClick);
-    }, []);
+    }, [actionMenuId]);
 
     const filtered = docs.filter(d =>
         !searchTerm || d.naslov.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum');
 
     const getPartyName = (id) => { const p = parties.find(x => x.id === id); return p ? p.naziv : '-'; };
     const getDocTypeName = (id) => { const dt = docTypes.find(x => x.id === id); return dt ? dt.naziv : '-'; };
@@ -52,35 +66,48 @@ export default function ISZNRDocumentsPage() {
     const handleNew = () => { setFormData({ ...emptyDoc }); setEditingId(null); setShowForm(true); };
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
     const handleDelete = async (id) => {
-        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni?' : 'Are you sure?');
+        const ok = await confirm(bs ? 'Jeste li sigurni?' : 'Are you sure?');
         if (ok) { remove(COLLECTIONS.ISZNR_DOCUMENTS, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = async () => {
         if (!formData.naslov || !formData.partyId) {
-            await alert(lang === 'bs' ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!');
+            await alert(bs ? 'Naslov i stranka su obavezna polja!' : 'Title and party are required!');
             return;
         }
         if (editingId) { update(COLLECTIONS.ISZNR_DOCUMENTS, editingId, formData); } else { create(COLLECTIONS.ISZNR_DOCUMENTS, formData); }
-        setShowForm(false); loadData();
+        setShowForm(false); showFlash(); loadData();
     };
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
+
+    const toggleAll = (e) => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); };
+    const toggleOne = (id) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
+
+    const handleDeleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        if (await confirm(bs ? `Obrisati ${selectedIds.size} dokumenata?` : `Delete ${selectedIds.size} documents?`)) {
+            for (const id of selectedIds) remove(COLLECTIONS.ISZNR_DOCUMENTS, id);
+            setSelectedIds(new Set()); loadData();
+        }
+    };
+
+    const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <PageHeader icon="🏛️" title={"{t('documents')} — ISZNR"} />
+            <PageHeader icon="🏛️" title={`${t('documents')} — ISZNR`} />
 
             {showForm && (
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 650 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {lang === 'bs' ? 'Dokument' : 'Document'}</h2>
+                            <h2>{editingId ? '✏️' : '+'} {bs ? 'Dokument' : 'Document'}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-grid-2">
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label" style={{ fontWeight: 700 }}>{lang === 'bs' ? 'Naslov' : 'Title'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <label className="form-label" style={{ fontWeight: 700 }}>{bs ? 'Naslov' : 'Title'} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <input className="form-input" value={formData.naslov} onChange={e => updateField('naslov', e.target.value)} />
                                 </div>
                                 <div className="form-group">
@@ -118,54 +145,62 @@ export default function ISZNRDocumentsPage() {
             )}
 
             <div className="card">
-                <div className="card-body">
-                    <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Novi dokument' : 'New Document'}</button>
-                        <div className="search-bar" style={{ flex: 1, maxWidth: 350 }}>
-                            <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-                            <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
+                <div className="card-body" style={{ padding: 0 }}>
+                    <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? 'Novi dokument' : 'New Document'}</button>
+                        <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
+                            <span style={{ opacity: 0.5 }}>🔍</span>
+                            <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
+                        <SavedFlash />
+                        {selectedIds.size > 0 ? (
+                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                            </div>
+                        ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>}
                     </div>
 
-                    <div className="data-table-wrapper">
+                    <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 100 }}>{t('actions')}</th>
-                                    <th>{lang === 'bs' ? 'Stranka' : 'Party'}</th>
-                                    <th>{lang === 'bs' ? 'Naslov' : 'Title'}</th>
-                                    <th>{t('type')}</th>
-                                    <th>{t('date')}</th>
-                                    <th>{lang === 'bs' ? 'Potpisano' : 'Signed'}</th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 90 }}>{t('actions')}</th>
+                                    <th onClick={() => toggleSort('partyId')} style={thStyle('partyId')}>{bs ? 'Stranka' : 'Party'} {sortIcon('partyId')}</th>
+                                    <th onClick={() => toggleSort('naslov')} style={thStyle('naslov')}>{bs ? 'Naslov' : 'Title'} {sortIcon('naslov')}</th>
+                                    <th onClick={() => toggleSort('tipDokumentaId')} style={thStyle('tipDokumentaId')}>{t('type')} {sortIcon('tipDokumentaId')}</th>
+                                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')} {sortIcon('datum')}</th>
+                                    <th onClick={() => toggleSort('potpisano')} style={thStyle('potpisano')}>{bs ? 'Potpisano' : 'Signed'} {sortIcon('potpisano')}</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {filtered.length === 0 ? (
-                                    <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : filtered.map((doc) => (
-                                    <tr key={doc.id}>
-                                        <td style={{ position: 'relative' }} ref={actionMenuId === doc.id ? actionRef : null}>
-                                            <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === doc.id ? null : doc.id)}>
-                                                {t('actions')} ▼
-                                            </button>
-                                            {actionMenuId === doc.id && (
-                                                <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0 }}>
-                                                    <button className="dropdown-item" onClick={() => handleEdit(doc)}>📂 {t('open')}</button>
-                                                    <button className="dropdown-item">✍️ {t('digitalSigning')}</button>
-                                                    <div className="dropdown-divider" />
-                                                    <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(doc.id)}>🗑️ {t('delete')}</button>
-                                                </div>
-                                            )}
+                                {sorted.length === 0 ? (
+                                    <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
+                                ) : sorted.map((doc) => (
+                                    <tr key={doc.id} onClick={() => handleEdit(doc)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                                        <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(doc.id)} onChange={() => toggleOne(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
+                                        <td onClick={e => e.stopPropagation()}>
+                                            <div style={{ position: 'relative' }}>
+                                                <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => { e.stopPropagation(); if (actionMenuId === doc.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 150 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }); setActionMenuId(doc.id); }}>Akcije ▼</button>
+                                                {actionMenuId === doc.id && (
+                                                    <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                        <button onClick={() => handleEdit(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📂 {t('open')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, { potpisano: !doc.potpisano }); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✍️ {doc.potpisano ? (bs ? 'Ukloni potpis' : 'Remove signature') : t('digitalSigning')}</button>
+                                                        <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                                        <button onClick={() => handleDelete(doc.id)} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {t('delete')}</button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </td>
                                         <td style={{ fontWeight: 600 }}>{getPartyName(doc.partyId)}</td>
                                         <td>{doc.naslov}</td>
-                                        <td><span className="badge badge-info">{getDocTypeName(doc.tipDokumentaId)}</span></td>
+                                        <td><span className="badge badge-info" style={{ fontWeight: 600 }}>{getDocTypeName(doc.tipDokumentaId)}</span></td>
                                         <td>{formatDate(doc.datum)}</td>
                                         <td>
                                             {doc.potpisano
-                                                ? <span className="badge badge-success">✓ {lang === 'bs' ? 'Potpisano' : 'Signed'}</span>
-                                                : <span className="badge badge-warning">{lang === 'bs' ? 'Nije potpisano' : 'Not signed'}</span>}
+                                                ? <span className="badge badge-success">✓ {bs ? 'Potpisano' : 'Signed'}</span>
+                                                : <span className="badge badge-warning">{bs ? 'Nije potpisano' : 'Not signed'}</span>}
                                         </td>
                                     </tr>
                                 ))}

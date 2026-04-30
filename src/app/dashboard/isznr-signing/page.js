@@ -1,14 +1,14 @@
 'use client';
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   getAll, create, update, remove, COLLECTIONS, formatDate,
 } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
+import { useSortedList } from '@/hooks/useSortedList';
 import PageHeader from '@/components/PageHeader';
 
-// Simulated digital signature generation
 function generateSignatureHash() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let hash = '';
@@ -18,6 +18,7 @@ function generateSignatureHash() {
 
 export default function ISZNRSigningPage() {
   const { t, lang } = useLanguage();
+  const bs = lang === 'bs';
   const { alert, confirm, DialogRenderer } = useDialog();
   const { user, activeCompanyId } = useAuth();
   const [documents, setDocuments] = useState([]);
@@ -26,7 +27,7 @@ export default function ISZNRSigningPage() {
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [signStep, setSignStep] = useState(0); // 0=select, 1=pin, 2=signing, 3=done
+  const [signStep, setSignStep] = useState(0); 
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [pinCode, setPinCode] = useState('');
   const [pinError, setPinError] = useState('');
@@ -39,7 +40,20 @@ export default function ISZNRSigningPage() {
   const [batchMode, setBatchMode] = useState(false);
   const [batchSelected, setBatchSelected] = useState([]);
 
-  // Load ISZNR documents
+  const [openMenuId, setOpenMenuId] = useState(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+  const menuButtonRef = useRef(null);
+
+  useEffect(() => {
+    const close = (e) => {
+        if (openMenuId && !e.target.closest('[data-menu]') && !e.target.closest('[data-menu-trigger]')) {
+            setOpenMenuId(null);
+        }
+    };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openMenuId]);
+
   const loadData = useCallback(() => {
     setDocuments(getAll(COLLECTIONS.ISZNR_DOCUMENTS));
   }, []);
@@ -49,11 +63,9 @@ export default function ISZNRSigningPage() {
       return () => window.removeEventListener('eznr:data-synced', loadData);
   }, [loadData]);
 
-  // Document types
   const docTypes = useMemo(() => getAll(COLLECTIONS.ISZNR_DOC_TYPES), []);
   const getDocTypeName = (id) => docTypes.find(dt => dt.id === id)?.naziv || id;
 
-  // Filtered documents
   const filteredDocs = useMemo(() => {
     let result = documents;
     if (searchTerm.trim()) {
@@ -65,17 +77,18 @@ export default function ISZNRSigningPage() {
     return result;
   }, [documents, searchTerm, activeTab]);
 
-  // Stats
+  const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filteredDocs, 'datum');
+
   const stats = useMemo(() => ({
     total: documents.length,
     signed: documents.filter(d => d.potpisano).length,
     unsigned: documents.filter(d => !d.potpisano).length,
   }), [documents]);
 
-  // ── Sign Flow ──
   const openSignModal = (doc = null) => {
+    setOpenMenuId(null);
     setSelectedDoc(doc);
-    setSignStep(doc ? 1 : 0); // If doc selected, go straight to PIN
+    setSignStep(doc ? 1 : 0);
     setPinCode('');
     setPinError('');
     setModalDocSearch('');
@@ -92,7 +105,6 @@ export default function ISZNRSigningPage() {
 
   const handleBatchSign = () => {
     if (batchSelected.length === 0) return;
-    // Select first doc, we'll sign them sequentially
     const firstDoc = documents.find(d => d.id === batchSelected[0]);
     setSelectedDoc(firstDoc);
     setSignStep(1);
@@ -117,13 +129,12 @@ export default function ISZNRSigningPage() {
 
   const handlePinSubmit = () => {
     if (pinCode.length < 4) {
-      setPinError(lang === 'bs' ? 'PIN mora imati najmanje 4 znaka' : 'PIN must be at least 4 characters');
+      setPinError(bs ? 'PIN mora imati najmanje 4 znaka' : 'PIN must be at least 4 characters');
       return;
     }
     setPinError('');
     setSignStep(2);
 
-    // Simulate signing process
     setTimeout(() => {
       const signatureData = {
         potpisano: true,
@@ -134,12 +145,11 @@ export default function ISZNRSigningPage() {
         certifikat: `eZNR-CERT-${Date.now().toString(36).toUpperCase()}`,
         algoritam: 'SHA-256 + RSA-2048',
       };
-      // In batch mode, sign ALL selected docs
       if (batchMode && batchSelected.length > 0) {
         batchSelected.forEach(docId => {
           update(COLLECTIONS.ISZNR_DOCUMENTS, docId, {
             ...signatureData,
-            potpis: generateSignatureHash(), // unique hash per doc
+            potpis: generateSignatureHash(),
           });
         });
       } else if (selectedDoc) {
@@ -150,14 +160,13 @@ export default function ISZNRSigningPage() {
     }, 2500);
   };
 
-  // ── Verify Flow ──
   const handleVerify = (doc) => {
+    setOpenMenuId(null);
     setShowDetailModal(null);
     setVerifyFile(doc);
     setVerifyResult(null);
     setShowVerifyModal(true);
 
-    // Simulate verification
     setTimeout(() => {
       setVerifyResult({
         valid: doc.potpisano,
@@ -172,7 +181,7 @@ export default function ISZNRSigningPage() {
   };
 
   const handleRevokeSignature = async (doc) => {
-    const ok = await confirm(lang === 'bs' ? 'Poništiti digitalni potpis na ovom dokumentu?' : 'Revoke digital signature on this document?'); if (!ok) return;
+    const ok = await confirm(bs ? 'Poništiti digitalni potpis na ovom dokumentu?' : 'Revoke digital signature on this document?'); if (!ok) return;
     update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, {
       potpisano: false,
       datumPotpisa: null,
@@ -184,44 +193,45 @@ export default function ISZNRSigningPage() {
   };
 
   const handleDeleteDoc = async (doc) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?'); if (!ok) return;
+    setOpenMenuId(null);
+    const ok = await confirm(bs ? 'Obrisati dokument?' : 'Delete document?'); if (!ok) return;
     remove(COLLECTIONS.ISZNR_DOCUMENTS, doc.id);
     loadData();
   };
 
   const tabs = [
-    { key: 'all', label: lang === 'bs' ? 'Svi dokumenti' : 'All documents', icon: '📄', count: stats.total },
-    { key: 'signed', label: lang === 'bs' ? 'Potpisani' : 'Signed', icon: '✅', count: stats.signed },
-    { key: 'unsigned', label: lang === 'bs' ? 'Nepotpisani' : 'Unsigned', icon: '📝', count: stats.unsigned },
+    { key: 'all', label: bs ? 'Svi dokumenti' : 'All documents', icon: '📄', count: stats.total },
+    { key: 'signed', label: bs ? 'Potpisani' : 'Signed', icon: '✅', count: stats.signed },
+    { key: 'unsigned', label: bs ? 'Nepotpisani' : 'Unsigned', icon: '📝', count: stats.unsigned },
   ];
+
+  const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
   return (
     <div className="animate-fadeIn">
       <PageHeader 
         icon="✍️" 
         title={t('digitalSigning')} 
-        subtitle={lang === 'bs' ? 'Digitalno potpisivanje i verifikacija dokumenata' : 'Digital document signing and verification'} 
+        subtitle={bs ? 'Digitalno potpisivanje i verifikacija dokumenata' : 'Digital document signing and verification'} 
         actions={
           <button className="btn btn-primary" onClick={() => openSignModal()}>
-            ✍️ {lang === 'bs' ? 'Potpiši dokument' : 'Sign Document'}
+            ✍️ {bs ? 'Potpiši dokument' : 'Sign Document'}
           </button>
         }
       />
 
-      {/* Info banner */}
       <div className="alert alert-info" style={{ marginBottom: 20 }}>
-        ℹ️ {lang === 'bs'
+        ℹ️ {bs
           ? 'Digitalno potpisivanje dokumenata koristi kvalificirani elektronski certifikat (eZNR-CERT). Potpis osigurava autentičnost i integritet dokumenta u skladu sa Zakonom o elektronskom potpisu.'
           : 'Digital document signing uses a qualified electronic certificate (eZNR-CERT). The signature ensures document authenticity and integrity in compliance with the Electronic Signature Act.'}
       </div>
 
-      {/* Stats Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
         {[
-          { label: lang === 'bs' ? 'Ukupno dokumenata' : 'Total documents', value: stats.total, icon: '📄', color: 'var(--primary)' },
-          { label: lang === 'bs' ? 'Potpisano' : 'Signed', value: stats.signed, icon: '✅', color: 'var(--success)' },
-          { label: lang === 'bs' ? 'Čeka potpis' : 'Pending', value: stats.unsigned, icon: '📝', color: 'var(--warning)' },
-          { label: lang === 'bs' ? 'Certifikat' : 'Certificate', value: 'Aktivan', icon: '🔐', color: 'var(--info)' },
+          { label: bs ? 'Ukupno dokumenata' : 'Total documents', value: stats.total, icon: '📄', color: 'var(--primary)' },
+          { label: bs ? 'Potpisano' : 'Signed', value: stats.signed, icon: '✅', color: 'var(--success)' },
+          { label: bs ? 'Čeka potpis' : 'Pending', value: stats.unsigned, icon: '📝', color: 'var(--warning)' },
+          { label: bs ? 'Certifikat' : 'Certificate', value: 'Aktivan', icon: '🔐', color: 'var(--info)' },
         ].map((s, i) => (
           <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
             <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
@@ -235,7 +245,6 @@ export default function ISZNRSigningPage() {
         ))}
       </div>
 
-      {/* Tabs & Search */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap', borderBottom: '2px solid var(--border)' }}>
         {tabs.map(tb => (
           <button key={tb.key} onClick={() => setActiveTab(tb.key)}
@@ -243,63 +252,59 @@ export default function ISZNRSigningPage() {
             {tb.icon} {tb.label} <span style={{ marginLeft: 6, background: activeTab === tb.key ? 'rgba(0,191,166,0.15)' : 'var(--bg-badge)', color: activeTab === tb.key ? 'var(--primary)' : 'var(--text-muted)', padding: '2px 8px', borderRadius: 10, fontSize: '0.72rem', fontWeight: 700 }}>{tb.count}</span>
           </button>
         ))}
-        <div style={{ flex: 1 }} />
-        <div style={{ position: 'relative', width: 260 }}>
-          <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }}>🔍</span>
-          <input className="form-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-            placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
-            style={{ paddingLeft: 32, borderRadius: 'var(--radius-full)', fontSize: '0.82rem' }} />
-        </div>
       </div>
 
-      {/* Documents Table */}
       <div className="card">
-        <div className="card-body">
-          <div className="data-table-wrapper">
+        <div className="card-body" style={{ padding: 0 }}>
+            <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
+                <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={() => openSignModal()}>✍️ {bs ? 'Potpiši dokument' : 'Sign Document'}</button>
+                <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
+                    <span style={{ opacity: 0.5 }}>🔍</span>
+                    <input placeholder={bs ? 'Pretraži...' : 'Search...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
+                </div>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {t('records')}</span>
+            </div>
+          <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>{t('actions')}</th>
-                  <th>{t('name')}</th>
-                  <th>{lang === 'bs' ? 'Tip' : 'Type'}</th>
-                  <th>{t('date')}</th>
-                  <th>{t('status')}</th>
-                  <th>{lang === 'bs' ? 'Potpisnik' : 'Signer'}</th>
+                  <th style={{ width: 90 }}>{t('actions')}</th>
+                  <th onClick={() => toggleSort('naslov')} style={thStyle('naslov')}>{t('name')} {sortIcon('naslov')}</th>
+                  <th onClick={() => toggleSort('tipDokumentaId')} style={thStyle('tipDokumentaId')}>{bs ? 'Tip' : 'Type'} {sortIcon('tipDokumentaId')}</th>
+                  <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')} {sortIcon('datum')}</th>
+                  <th onClick={() => toggleSort('potpisano')} style={thStyle('potpisano')}>{t('status')} {sortIcon('potpisano')}</th>
+                  <th onClick={() => toggleSort('potpisnik')} style={thStyle('potpisnik')}>{bs ? 'Potpisnik' : 'Signer'} {sortIcon('potpisnik')}</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredDocs.length === 0 ? (
+                {sorted.length === 0 ? (
                   <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
                     {t('noRecords')}
                   </td></tr>
-                ) : filteredDocs.map(doc => (
-                  <tr key={doc.id}>
-                    <td>
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        {!doc.potpisano && (
-                          <button className="btn btn-primary btn-sm" onClick={() => openSignModal(doc)} title={lang === 'bs' ? 'Potpiši' : 'Sign'}>
-                            ✍️
-                          </button>
-                        )}
-                        <button className="btn btn-ghost btn-sm" onClick={() => setShowDetailModal(doc)} title={lang === 'bs' ? 'Detalji' : 'Details'}>
-                          👁️
-                        </button>
-                        {doc.potpisano && (
-                          <button className="btn btn-ghost btn-sm" onClick={() => handleVerify(doc)} title={lang === 'bs' ? 'Verifikuj' : 'Verify'}>
-                            🔍
-                          </button>
-                        )}
-                        <button className="btn btn-ghost btn-sm" onClick={() => handleDeleteDoc(doc)} style={{ color: 'var(--danger)' }}>🗑️</button>
-                      </div>
+                ) : sorted.map(doc => (
+                  <tr key={doc.id} className="hover-row" onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                    <td onClick={e => e.stopPropagation()}>
+                        <div style={{ position: 'relative' }}>
+                            <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }); setOpenMenuId(doc.id); }}>Akcije ▼</button>
+                            {openMenuId === doc.id && (
+                                <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                    {!doc.potpisano && <button onClick={() => openSignModal(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✍️ {bs ? 'Potpiši' : 'Sign'}</button>}
+                                    <button onClick={() => { setOpenMenuId(null); setShowDetailModal(doc); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>👁️ {bs ? 'Detalji' : 'Details'}</button>
+                                    {doc.potpisano && <button onClick={() => handleVerify(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🔍 {bs ? 'Verifikuj' : 'Verify'}</button>}
+                                    <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
+                                    <button onClick={() => handleDeleteDoc(doc)} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                </div>
+                            )}
+                        </div>
                     </td>
                     <td style={{ fontWeight: 600 }}>{doc.naslov}</td>
                     <td><span style={{ fontSize: '0.78rem', padding: '2px 8px', borderRadius: 6, background: 'var(--bg-badge)', color: 'var(--info)', fontWeight: 600 }}>{getDocTypeName(doc.tipDokumentaId)}</span></td>
                     <td>{formatDate(doc.datum)}</td>
                     <td>
                       {doc.potpisano ? (
-                        <span className="badge badge-success">✅ {lang === 'bs' ? 'Potpisano' : 'Signed'}</span>
+                        <span className="badge badge-success">✅ {bs ? 'Potpisano' : 'Signed'}</span>
                       ) : (
-                        <span className="badge badge-warning">📝 {lang === 'bs' ? 'Čeka potpis' : 'Pending'}</span>
+                        <span className="badge badge-warning">📝 {bs ? 'Čeka potpis' : 'Pending'}</span>
                       )}
                     </td>
                     <td style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
@@ -313,22 +318,20 @@ export default function ISZNRSigningPage() {
         </div>
       </div>
 
-      {/* ── SIGN MODAL ── */}
       {showSignModal && (
         <div className="modal-overlay" onClick={() => setShowSignModal(false)}>
           <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #1565C0, #42A5F5)' }}>
-              <h2 style={{ color: 'white' }}>✍️ {lang === 'bs' ? 'Digitalno potpisivanje' : 'Digital Signing'}</h2>
+              <h2 style={{ color: 'white' }}>✍️ {bs ? 'Digitalno potpisivanje' : 'Digital Signing'}</h2>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowSignModal(false)}>✕</button>
             </div>
             <div className="modal-body">
-              {/* Step indicators */}
               <div style={{ display: 'flex', gap: 0, marginBottom: 24 }}>
                 {[
-                  lang === 'bs' ? '1. Odaberi' : '1. Select',
-                  lang === 'bs' ? '2. PIN' : '2. PIN',
-                  lang === 'bs' ? '3. Potpis' : '3. Sign',
-                  lang === 'bs' ? '4. Gotovo' : '4. Done'
+                  bs ? '1. Odaberi' : '1. Select',
+                  bs ? '2. PIN' : '2. PIN',
+                  bs ? '3. Potpis' : '3. Sign',
+                  bs ? '4. Gotovo' : '4. Done'
                 ].map((step, i) => (
                   <div key={i} style={{
                     flex: 1, textAlign: 'center', padding: '8px 4px',
@@ -342,7 +345,6 @@ export default function ISZNRSigningPage() {
                 ))}
               </div>
 
-              {/* Step 0: Select/Create document */}
               {signStep === 0 && (() => {
                 const unsignedDocs = documents.filter(d => !d.potpisano);
                 const modalFiltered = modalDocSearch.trim()
@@ -350,15 +352,13 @@ export default function ISZNRSigningPage() {
                   : unsignedDocs;
                 return (
                   <div>
-                    <h4 style={{ marginBottom: 12 }}>📄 {lang === 'bs' ? 'Odaberite ili kreirajte dokument' : 'Select or create a document'}</h4>
+                    <h4 style={{ marginBottom: 12 }}>📄 {bs ? 'Odaberite ili kreirajte dokument' : 'Select or create a document'}</h4>
 
-                    {/* Existing unsigned docs */}
                     {unsignedDocs.length > 0 && (
                       <div style={{ marginBottom: 16 }}>
-                        {/* Header with count + batch toggle */}
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-                            {lang === 'bs' ? 'Nepotpisani dokumenti' : 'Unsigned documents'}
+                            {bs ? 'Nepotpisani dokumenti' : 'Unsigned documents'}
                             <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', fontSize: '0.68rem' }}>
                               {unsignedDocs.length}
                             </span>
@@ -372,12 +372,11 @@ export default function ISZNRSigningPage() {
                                 color: batchMode ? 'var(--primary)' : 'var(--text-muted)',
                                 cursor: 'pointer', transition: 'all 0.15s',
                               }}>
-                              {batchMode ? '✅' : '☐'} {lang === 'bs' ? 'Grupno potpisivanje' : 'Batch sign'}
+                              {batchMode ? '✅' : '☐'} {bs ? 'Grupno potpisivanje' : 'Batch sign'}
                             </button>
                           )}
                         </div>
 
-                        {/* Search inside modal — shown when more than 5 docs */}
                         {unsignedDocs.length > 5 && (
                           <div style={{ position: 'relative', marginBottom: 8 }}>
                             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem' }}>🔍</span>
@@ -385,7 +384,7 @@ export default function ISZNRSigningPage() {
                               className="form-input"
                               value={modalDocSearch}
                               onChange={e => setModalDocSearch(e.target.value)}
-                              placeholder={lang === 'bs' ? 'Filtriraj dokumente...' : 'Filter documents...'}
+                              placeholder={bs ? 'Filtriraj dokumente...' : 'Filter documents...'}
                               style={{ paddingLeft: 32, fontSize: '0.8rem', borderRadius: 'var(--radius-full)' }}
                             />
                             {modalDocSearch && (
@@ -397,25 +396,23 @@ export default function ISZNRSigningPage() {
                           </div>
                         )}
 
-                        {/* Batch select all / deselect all */}
                         {batchMode && modalFiltered.length > 0 && (
                           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                             <button onClick={() => setBatchSelected(modalFiltered.map(d => d.id))}
                               style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>
-                              ✅ {lang === 'bs' ? 'Odaberi sve' : 'Select all'} ({modalFiltered.length})
+                              ✅ {bs ? 'Odaberi sve' : 'Select all'} ({modalFiltered.length})
                             </button>
                             <button onClick={() => setBatchSelected([])}
                               style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--text-muted)', fontWeight: 600 }}>
-                              ☐ {lang === 'bs' ? 'Poništi izbor' : 'Deselect all'}
+                              ☐ {bs ? 'Poništi izbor' : 'Deselect all'}
                             </button>
                           </div>
                         )}
 
-                        {/* Scrollable document list */}
                         <div style={{ maxHeight: 280, overflowY: 'auto', borderRadius: 8, border: unsignedDocs.length > 5 ? '1px solid var(--border-light)' : 'none' }}>
                           {modalFiltered.length === 0 ? (
                             <div style={{ padding: '20px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-                              {lang === 'bs' ? 'Nema rezultata' : 'No results'}
+                              {bs ? 'Nema rezultata' : 'No results'}
                             </div>
                           ) : modalFiltered.map(doc => {
                             const isSelected = batchSelected.includes(doc.id);
@@ -442,10 +439,9 @@ export default function ISZNRSigningPage() {
                           })}
                         </div>
 
-                        {/* Batch sign button */}
                         {batchMode && batchSelected.length > 0 && (
                           <button className="btn btn-primary" onClick={handleBatchSign} style={{ width: '100%', marginTop: 10, justifyContent: 'center' }}>
-                            ✍️ {lang === 'bs' ? `Potpiši ${batchSelected.length} dokumenata` : `Sign ${batchSelected.length} documents`}
+                            ✍️ {bs ? `Potpiši ${batchSelected.length} dokumenata` : `Sign ${batchSelected.length} documents`}
                           </button>
                         )}
                       </div>
@@ -453,40 +449,39 @@ export default function ISZNRSigningPage() {
 
                     <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 16 }}>
                       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
-                        {lang === 'bs' ? 'Ili kreirajte novi' : 'Or create new'}
+                        {bs ? 'Ili kreirajte novi' : 'Or create new'}
                       </div>
                       <div className="form-group">
-                        <label className="form-label">{lang === 'bs' ? 'Naziv dokumenta' : 'Document title'} *</label>
+                        <label className="form-label">{bs ? 'Naziv dokumenta' : 'Document title'} *</label>
                         <input className="form-input" value={newDocForm.naslov} onChange={e => setNewDocForm(p => ({ ...p, naslov: e.target.value }))}
-                          placeholder={lang === 'bs' ? 'npr. Zapisnik o ispitivanju' : 'e.g. Inspection Report'} />
+                          placeholder={bs ? 'npr. Zapisnik o ispitivanju' : 'e.g. Inspection Report'} />
                       </div>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
                         <div className="form-group">
-                          <label className="form-label">{lang === 'bs' ? 'Tip dokumenta' : 'Document type'}</label>
+                          <label className="form-label">{bs ? 'Tip dokumenta' : 'Document type'}</label>
                           <select className="form-input" value={newDocForm.tipDokumenta} onChange={e => setNewDocForm(p => ({ ...p, tipDokumenta: e.target.value }))}>
                             {docTypes.map(dt => <option key={dt.id} value={dt.oznaka}>{dt.naziv}</option>)}
                           </select>
                         </div>
                         <div className="form-group">
-                          <label className="form-label">{lang === 'bs' ? 'Napomena' : 'Note'}</label>
+                          <label className="form-label">{bs ? 'Napomena' : 'Note'}</label>
                           <input className="form-input" value={newDocForm.napomena} onChange={e => setNewDocForm(p => ({ ...p, napomena: e.target.value }))} />
                         </div>
                       </div>
                       <button className="btn btn-primary" onClick={handleNewDocForSigning} disabled={!newDocForm.naslov.trim()} style={{ marginTop: 12 }}>
-                        📄 {lang === 'bs' ? 'Kreiraj i potpiši' : 'Create & Sign'}
+                        📄 {bs ? 'Kreiraj i potpiši' : 'Create & Sign'}
                       </button>
                     </div>
                   </div>
                 );
               })()}
 
-              {/* Step 1: PIN Entry */}
               {signStep === 1 && (
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '3rem', marginBottom: 12 }}>🔐</div>
-                  <h4 style={{ marginBottom: 4 }}>{lang === 'bs' ? 'Unesite PIN certifikata' : 'Enter Certificate PIN'}</h4>
+                  <h4 style={{ marginBottom: 4 }}>{bs ? 'Unesite PIN certifikata' : 'Enter Certificate PIN'}</h4>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                    {lang === 'bs' ? 'Dokument:' : 'Document:'} <strong>{selectedDoc?.naslov}</strong>
+                    {bs ? 'Dokument:' : 'Document:'} <strong>{selectedDoc?.naslov}</strong>
                   </p>
                   <input className="form-input" type="password" value={pinCode} onChange={e => setPinCode(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
@@ -494,15 +489,14 @@ export default function ISZNRSigningPage() {
                     style={{ textAlign: 'center', fontSize: '1.5rem', letterSpacing: 8, maxWidth: 200, margin: '0 auto' }} />
                   {pinError && <div style={{ color: 'var(--danger)', fontSize: '0.82rem', marginTop: 8, fontWeight: 600 }}>⚠️ {pinError}</div>}
                   <div style={{ marginTop: 20, display: 'flex', gap: 8, justifyContent: 'center' }}>
-                    <button className="btn btn-ghost" onClick={() => setSignStep(0)}>{lang === 'bs' ? 'Nazad' : 'Back'}</button>
+                    <button className="btn btn-ghost" onClick={() => setSignStep(0)}>{bs ? 'Nazad' : 'Back'}</button>
                     <button className="btn btn-primary" onClick={handlePinSubmit} disabled={!pinCode}>
-                      🔓 {lang === 'bs' ? 'Potvrdi' : 'Confirm'}
+                      🔓 {bs ? 'Potvrdi' : 'Confirm'}
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* Step 2: Signing... */}
               {signStep === 2 && (
                 <div style={{ textAlign: 'center', padding: '30px 0' }}>
                   <div style={{
@@ -510,38 +504,37 @@ export default function ISZNRSigningPage() {
                     border: '4px solid var(--primary)', borderTopColor: 'transparent',
                     animation: 'spin 0.8s linear infinite',
                   }} />
-                  <h4>{lang === 'bs' ? 'Potpisivanje u toku...' : 'Signing in progress...'}</h4>
+                  <h4>{bs ? 'Potpisivanje u toku...' : 'Signing in progress...'}</h4>
                   <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    {lang === 'bs' ? 'Primjena SHA-256 + RSA-2048 algoritma' : 'Applying SHA-256 + RSA-2048 algorithm'}
+                    {bs ? 'Primjena SHA-256 + RSA-2048 algoritma' : 'Applying SHA-256 + RSA-2048 algorithm'}
                   </p>
                   <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
               )}
 
-              {/* Step 3: Done */}
               {signStep === 3 && (
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ fontSize: '4rem', marginBottom: 12 }}>✅</div>
                   <h3 style={{ color: 'var(--success)', marginBottom: 8 }}>
                     {batchMode && batchSelected.length > 1
-                      ? (lang === 'bs' ? `${batchSelected.length} dokumenata uspješno potpisano!` : `${batchSelected.length} documents successfully signed!`)
-                      : (lang === 'bs' ? 'Dokument uspješno potpisan!' : 'Document successfully signed!')}
+                      ? (bs ? `${batchSelected.length} dokumenata uspješno potpisano!` : `${batchSelected.length} documents successfully signed!`)
+                      : (bs ? 'Dokument uspješno potpisan!' : 'Document successfully signed!')}
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
                     {batchMode && batchSelected.length > 1
-                      ? (lang === 'bs' ? 'Grupno potpisivanje završeno' : 'Batch signing complete')
+                      ? (bs ? 'Grupno potpisivanje završeno' : 'Batch signing complete')
                       : selectedDoc?.naslov}
                   </p>
                   <div style={{ background: 'var(--bg-input)', borderRadius: 12, padding: 16, textAlign: 'left', marginBottom: 16 }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: '0.8rem' }}>
-                      <div><span style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Potpisnik:' : 'Signer:'}</span> <strong>{user?.firstName} {user?.lastName}</strong></div>
-                      <div><span style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Datum:' : 'Date:'}</span> <strong>{formatDate(new Date().toISOString().slice(0, 10))}</strong></div>
-                      <div><span style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Algoritam:' : 'Algorithm:'}</span> <strong>SHA-256 + RSA-2048</strong></div>
-                      <div><span style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Certifikat:' : 'Certificate:'}</span> <strong>eZNR-CERT</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)' }}>{bs ? 'Potpisnik:' : 'Signer:'}</span> <strong>{user?.firstName} {user?.lastName}</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)' }}>{bs ? 'Datum:' : 'Date:'}</span> <strong>{formatDate(new Date().toISOString().slice(0, 10))}</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)' }}>{bs ? 'Algoritam:' : 'Algorithm:'}</span> <strong>SHA-256 + RSA-2048</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)' }}>{bs ? 'Certifikat:' : 'Certificate:'}</span> <strong>eZNR-CERT</strong></div>
                     </div>
                   </div>
                   <button className="btn btn-primary" onClick={() => setShowSignModal(false)}>
-                    ✅ {lang === 'bs' ? 'Zatvori' : 'Close'}
+                    ✅ {bs ? 'Zatvori' : 'Close'}
                   </button>
                 </div>
               )}
@@ -550,12 +543,11 @@ export default function ISZNRSigningPage() {
         </div>
       )}
 
-      {/* ── VERIFY MODAL ── */}
       {showVerifyModal && (
         <div className="modal-overlay" onClick={() => setShowVerifyModal(false)}>
           <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #2E7D32, #66BB6A)' }}>
-              <h2 style={{ color: 'white' }}>🔍 {lang === 'bs' ? 'Verifikacija potpisa' : 'Signature Verification'}</h2>
+              <h2 style={{ color: 'white' }}>🔍 {bs ? 'Verifikacija potpisa' : 'Signature Verification'}</h2>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowVerifyModal(false)}>✕</button>
             </div>
             <div className="modal-body">
@@ -566,7 +558,7 @@ export default function ISZNRSigningPage() {
                     border: '4px solid #2E7D32', borderTopColor: 'transparent',
                     animation: 'spin 0.8s linear infinite',
                   }} />
-                  <p style={{ color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Verifikacija u toku...' : 'Verifying...'}</p>
+                  <p style={{ color: 'var(--text-muted)' }}>{bs ? 'Verifikacija u toku...' : 'Verifying...'}</p>
                   <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </div>
               ) : (
@@ -579,22 +571,22 @@ export default function ISZNRSigningPage() {
                     <span style={{ fontSize: '3rem' }}>{verifyResult.valid ? '✅' : '❌'}</span>
                     <h3 style={{ color: verifyResult.valid ? 'var(--success)' : 'var(--danger)', marginTop: 8 }}>
                       {verifyResult.valid
-                        ? (lang === 'bs' ? 'Potpis je validan!' : 'Signature is valid!')
-                        : (lang === 'bs' ? 'Potpis nije validan!' : 'Signature is not valid!')}
+                        ? (bs ? 'Potpis je validan!' : 'Signature is valid!')
+                        : (bs ? 'Potpis nije validan!' : 'Signature is not valid!')}
                     </h3>
                   </div>
                   <div style={{ background: 'var(--bg-input)', borderRadius: 12, padding: 16, fontSize: '0.82rem' }}>
                     <div style={{ display: 'grid', gap: 10 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>📄 {lang === 'bs' ? 'Dokument' : 'Document'}</span><strong>{verifyFile?.naslov}</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>👤 {lang === 'bs' ? 'Potpisnik' : 'Signer'}</span><strong>{verifyResult.signer}</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>📅 {lang === 'bs' ? 'Datum potpisa' : 'Sign date'}</span><strong>{formatDate(verifyResult.signDate)}</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🔐 {lang === 'bs' ? 'Certifikat' : 'Certificate'}</span><strong>{verifyResult.certId}</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🔒 {lang === 'bs' ? 'Algoritam' : 'Algorithm'}</span><strong>{verifyResult.algorithm}</strong></div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🛡️ {lang === 'bs' ? 'Integritet' : 'Integrity'}</span><strong style={{ color: verifyResult.integrity === 'OK' ? 'var(--success)' : 'var(--danger)' }}>{verifyResult.integrity}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>📄 {bs ? 'Dokument' : 'Document'}</span><strong>{verifyFile?.naslov}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>👤 {bs ? 'Potpisnik' : 'Signer'}</span><strong>{verifyResult.signer}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>📅 {bs ? 'Datum potpisa' : 'Sign date'}</span><strong>{formatDate(verifyResult.signDate)}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🔐 {bs ? 'Certifikat' : 'Certificate'}</span><strong>{verifyResult.certId}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🔒 {bs ? 'Algoritam' : 'Algorithm'}</span><strong>{verifyResult.algorithm}</strong></div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--text-muted)' }}>🛡️ {bs ? 'Integritet' : 'Integrity'}</span><strong style={{ color: verifyResult.integrity === 'OK' ? 'var(--success)' : 'var(--danger)' }}>{verifyResult.integrity}</strong></div>
                     </div>
                     {verifyResult.hash && verifyResult.hash !== 'NOT_SIGNED' && (
                       <div style={{ marginTop: 12, padding: 10, borderRadius: 8, background: 'var(--bg-input)', fontFamily: 'monospace', fontSize: '0.65rem', wordBreak: 'break-all', color: 'var(--text-muted)' }}>
-                        {lang === 'bs' ? 'Hash:' : 'Hash:'} {verifyResult.hash}
+                        {bs ? 'Hash:' : 'Hash:'} {verifyResult.hash}
                       </div>
                     )}
                   </div>
@@ -602,13 +594,12 @@ export default function ISZNRSigningPage() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setShowVerifyModal(false)}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowVerifyModal(false)}>{bs ? 'Zatvori' : 'Close'}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── DETAIL MODAL ── */}
       {showDetailModal && (
         <div className="modal-overlay" onClick={() => setShowDetailModal(null)}>
           <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
@@ -618,23 +609,23 @@ export default function ISZNRSigningPage() {
             </div>
             <div className="modal-body">
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-                <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{lang === 'bs' ? 'Tip' : 'Type'}</div><div style={{ fontWeight: 600 }}>{getDocTypeName(showDetailModal.tipDokumentaId)}</div></div>
+                <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{bs ? 'Tip' : 'Type'}</div><div style={{ fontWeight: 600 }}>{getDocTypeName(showDetailModal.tipDokumentaId)}</div></div>
                 <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('date')}</div><div style={{ fontWeight: 600 }}>{formatDate(showDetailModal.datum)}</div></div>
                 <div>
                   <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{t('status')}</div>
                   <div>{showDetailModal.potpisano
-                    ? <span className="badge badge-success">✅ {lang === 'bs' ? 'Potpisano' : 'Signed'}</span>
-                    : <span className="badge badge-warning">📝 {lang === 'bs' ? 'Čeka potpis' : 'Pending'}</span>
+                    ? <span className="badge badge-success">✅ {bs ? 'Potpisano' : 'Signed'}</span>
+                    : <span className="badge badge-warning">📝 {bs ? 'Čeka potpis' : 'Pending'}</span>
                   }</div>
                 </div>
                 {showDetailModal.potpisnik && (
-                  <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{lang === 'bs' ? 'Potpisnik' : 'Signer'}</div><div style={{ fontWeight: 600 }}>{showDetailModal.potpisnik}</div></div>
+                  <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{bs ? 'Potpisnik' : 'Signer'}</div><div style={{ fontWeight: 600 }}>{showDetailModal.potpisnik}</div></div>
                 )}
                 {showDetailModal.datumPotpisa && (
-                  <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{lang === 'bs' ? 'Datum potpisa' : 'Sign date'}</div><div style={{ fontWeight: 600 }}>{formatDate(showDetailModal.datumPotpisa?.slice(0, 10))}</div></div>
+                  <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{bs ? 'Datum potpisa' : 'Sign date'}</div><div style={{ fontWeight: 600 }}>{formatDate(showDetailModal.datumPotpisa?.slice(0, 10))}</div></div>
                 )}
                 {showDetailModal.certifikat && (
-                  <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{lang === 'bs' ? 'Certifikat' : 'Certificate'}</div><div style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: '0.78rem' }}>{showDetailModal.certifikat}</div></div>
+                  <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{bs ? 'Certifikat' : 'Certificate'}</div><div style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: '0.78rem' }}>{showDetailModal.certifikat}</div></div>
                 )}
               </div>
               {showDetailModal.potpis && (
@@ -646,20 +637,20 @@ export default function ISZNRSigningPage() {
             <div className="modal-footer">
               {!showDetailModal.potpisano && (
                 <button className="btn btn-primary" onClick={() => { setShowDetailModal(null); openSignModal(showDetailModal); }}>
-                  ✍️ {lang === 'bs' ? 'Potpiši' : 'Sign'}
+                  ✍️ {bs ? 'Potpiši' : 'Sign'}
                 </button>
               )}
               {showDetailModal.potpisano && (
                 <>
                   <button className="btn btn-ghost" onClick={() => handleVerify(showDetailModal)}>
-                    🔍 {lang === 'bs' ? 'Verifikuj' : 'Verify'}
+                    🔍 {bs ? 'Verifikuj' : 'Verify'}
                   </button>
                   <button className="btn btn-ghost" style={{ color: 'var(--danger)' }} onClick={() => { handleRevokeSignature(showDetailModal); setShowDetailModal(null); }}>
-                    ❌ {lang === 'bs' ? 'Poništi potpis' : 'Revoke'}
+                    ❌ {bs ? 'Poništi potpis' : 'Revoke'}
                   </button>
                 </>
               )}
-              <button className="btn btn-ghost" onClick={() => setShowDetailModal(null)}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowDetailModal(null)}>{bs ? 'Zatvori' : 'Close'}</button>
             </div>
           </div>
         </div>

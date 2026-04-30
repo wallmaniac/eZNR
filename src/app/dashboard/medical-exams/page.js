@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { usePagination } from '@/hooks/usePagination';
+import Pagination from '@/components/Pagination';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';

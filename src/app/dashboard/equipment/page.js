@@ -14,6 +14,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
+import { usePagination } from '@/hooks/usePagination';
+import Pagination from '@/components/Pagination';
 import PDFExportButton from '@/components/PDFExportButton';
 import { generateEquipmentReport } from '@/lib/pdfReportGenerator';
 import Icon3D from '@/components/Icon3D';
@@ -710,7 +712,7 @@ function EquipmentPageInner() {
                             <tbody>
                                 {sortedEquipment.length === 0 ? (
                                     <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                ) : sortedEquipment.map((eq) => {
+                                ) : pagedEquipment.map((eq) => {
                                     const isExpired = eq.iduci && new Date(eq.iduci) < new Date();
                                     const serviceLogsForEq = getAll(COLLECTIONS.SERVICE_LOG).filter(l => l.equipmentId === eq.id);
                                     const logCount = serviceLogsForEq.length;
@@ -785,11 +787,17 @@ function EquipmentPageInner() {
                             </tbody>
                         </table>
                     </div>
-                    <div className="pagination" style={{ marginTop: 12 }}>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            1 - {sortedEquipment.length} {t('of')} {sortedEquipment.length} {t('records')}
-                        </div>
-                    </div>
+                    <Pagination 
+                        page={page} 
+                        perPage={perPage} 
+                        totalPages={totalPages} 
+                        totalItems={filteredEquipment.length} 
+                        setPage={setPage} 
+                        setPerPage={setPerPage} 
+                        prevPage={prevPage} 
+                        nextPage={nextPage} 
+                        onPerPageChangeExtra={() => setSelectedIds(new Set())} 
+                    />
                 </div>
             </div>
             <DialogRenderer />
