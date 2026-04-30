@@ -2,7 +2,7 @@
 import DateInput from '@/components/DateInput';
 import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
+import { getAll, create, update, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { logPPEAssigned } from '@/lib/activityLog';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -21,6 +21,7 @@ export default function WorkerPPEPage() {
   const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
   const [viewWorkerId, setViewWorkerId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [addForm, setAddForm] = useState({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
   const [saving, setSaving] = useState(false);
   const { showFlash, SavedFlash } = useSavedFlash();
@@ -75,25 +76,38 @@ export default function WorkerPPEPage() {
   const handleSave = () => {
     if (!addForm.workerId || !addForm.naziv.trim()) return;
     setSaving(true);
-    const saved = create(COLLECTIONS.PPE_ASSIGNMENTS, {
+    const payload = {
       workerId: addForm.workerId,
       naziv: addForm.naziv.trim(),
       datumZaduzenja: addForm.datumZaduzenja || todayISO(),
       kolicina: addForm.kolicina || 1,
-      datumRazduzenja: '',
-    });
-    const w = workers.find(x => x.id === addForm.workerId);
-    const workerName = w ? `${w.ime} ${w.prezime}` : '';
-    try { logPPEAssigned(saved, workerName, null); } catch { }
+    };
+    if (editingId) {
+      update(COLLECTIONS.PPE_ASSIGNMENTS, editingId, payload);
+    } else {
+      payload.datumRazduzenja = '';
+      const saved = create(COLLECTIONS.PPE_ASSIGNMENTS, payload);
+      const w = workers.find(x => x.id === addForm.workerId);
+      const workerName = w ? `${w.ime} ${w.prezime}` : '';
+      try { logPPEAssigned(saved, workerName, null); } catch { }
+    }
     setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
     setShowAddModal(false);
     setAddForm({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
+    setEditingId(null);
     setSaving(false);
     showFlash();
   };
 
   const openModal = () => {
+    setEditingId(null);
     setAddForm({ workerId: '', naziv: '', datumZaduzenja: todayISO(), kolicina: 1 });
+    setShowAddModal(true);
+  };
+
+  const handleEditModal = (item) => {
+    setEditingId(item.id);
+    setAddForm({ workerId: item.workerId, naziv: item.naziv || '', datumZaduzenja: item.datumZaduzenja || todayISO(), kolicina: item.kolicina || 1 });
     setShowAddModal(true);
   };
 
@@ -175,6 +189,7 @@ export default function WorkerPPEPage() {
                                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{r.workerName}</span>
                                   <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                               </div>
+                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✏️ {lang === 'bs' ? 'Uredi OZO' : 'Edit PPE'}</button>
                               <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📂 {lang === 'bs' ? 'Otvori profil' : 'Open profile'}</button>
                               <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
@@ -190,7 +205,7 @@ export default function WorkerPPEPage() {
                       </button>
                     </td>
                     <td>
-                      <button style={clickableNaziv} onClick={() => { if (r.workerId) setViewWorkerId(r.workerId); }}>
+                      <button style={clickableNaziv} onClick={() => handleEditModal(r)}>
                         🦺 {r.naziv}
                       </button>
                     </td>
@@ -209,7 +224,7 @@ export default function WorkerPPEPage() {
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Icon3D name="OZO.png" size={56} />
-                <h2 style={{ color: 'white', margin: 0 }}>{lang === 'bs' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment'}</h2>
+                <h2 style={{ color: 'white', margin: 0 }}>{editingId ? (lang === 'bs' ? 'Uredi OZO' : 'Edit PPE') : (lang === 'bs' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment')}</h2>
               </div>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowAddModal(false)}>✕</button>
             </div>
