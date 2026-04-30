@@ -182,9 +182,9 @@ export default function EKPPEPage() {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+              <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
               <button className="btn btn-primary" onClick={handleSave} disabled={!form.naziv.trim()}>
-                💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}
+                💾 {t('save')}
               </button>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function EKPPEPage() {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-ghost" onClick={() => setAssignFor(null)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+              <button className="btn btn-ghost" onClick={() => setAssignFor(null)}>{t('cancel')}</button>
               <button className="btn btn-primary" onClick={handleAssign} disabled={!assignForm.workerId}>
                 ✅ {lang === 'bs' ? 'Zaduži' : 'Assign'}
               </button>

@@ -593,7 +593,7 @@ export default function NightWorkPage() {
               💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              ↩ {t('cancel')}
             </button>
           </div>
         </div>

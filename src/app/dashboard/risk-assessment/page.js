@@ -1096,8 +1096,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
-                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={() => setView('list')}>↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {t('save')}</button>
+                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={() => setView('list')}>↩ {t('cancel')}</button>
                             <SavedFlash />
                         </div>
                     </div></div>
@@ -1125,7 +1125,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <textarea className="form-input" rows={4} value={formData.analizaOrganizacije || ''} onChange={e => set('analizaOrganizacije', e.target.value)}
                             placeholder="Opišite organizaciju rada, smjene, posebne uvjete..." style={{ resize: 'vertical' }} />
                         <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
                         
@@ -1156,7 +1156,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 )}
                                             </div>
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                                                <button className="btn btn-ghost" onClick={() => setShowDocAiModal(false)} disabled={docAiLoading}>Odustani</button>
+                                                <button className="btn btn-ghost" onClick={() => setShowDocAiModal(false)} disabled={docAiLoading}>{t('cancel')}</button>
                                                 <button className="btn btn-primary" onClick={handleDocAiAnalyze} disabled={docAiFiles.length === 0 || docAiLoading}
                                                     style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', border: 'none' }}>
                                                     {docAiLoading ? '⏳ AI čita...' : '⚡ Analiziraj dokumente'}
@@ -1260,7 +1260,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 <input className="form-input" value={aiGenJobTitle} onChange={e => setAiGenJobTitle(e.target.value)} placeholder="Npr. Zavarivač, Referent, Skladištar..." disabled={aiGenLoading} />
                                             </div>
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-                                                <button className="btn btn-ghost" onClick={() => setShowAiGenTableModal(false)} disabled={aiGenLoading}>Odustani</button>
+                                                <button className="btn btn-ghost" onClick={() => setShowAiGenTableModal(false)} disabled={aiGenLoading}>{t('cancel')}</button>
                                                 <button className="btn btn-primary" onClick={handleAiGenerateTableSubmit} disabled={!aiGenJobTitle.trim() || aiGenLoading}
                                                         style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
                                                     {aiGenLoading ? '⏳ Generišem tabelu...' : '⚡ Generiši Tabela'}
@@ -1393,8 +1393,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             <div><div style={labelSt}>Rok provedbe</div><DateInput value={riForm.rokProvedbe || ''} onChange={v => setRi('rokProvedbe', v)} /></div>
                                         </div>
                                         <div style={{ display: 'flex', gap: 8 }}>
-                                            <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {lang === 'bs' ? 'Spremi' : 'Save'}</button>
-                                            <button className="btn btn-ghost btn-sm" onClick={() => { setShowRiForm(false); setRiEditId(null); }}>✖ {lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                                            <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {t('save')}</button>
+                                            <button className="btn btn-ghost btn-sm" onClick={() => { setShowRiForm(false); setRiEditId(null); }}>✖ {t('cancel')}</button>
                                         </div>
                                     </div>
                                 )}
@@ -1614,11 +1614,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                                                 <button className="btn" onClick={() => setMjeraEdit(null)}
                                                     style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-                                                >Odustani</button>
+                                                >{t('cancel')}</button>
                                                 <button className="btn btn-primary" onClick={() => {
                                                     handleInlineRiUpdate(mjeraEdit.riId, mjeraEdit.field, mjeraEdit.value);
                                                     setMjeraEdit(null);
-                                                }}>💾 Spremi</button>
+                                                }}>💾 {t('save')}</button>
                                             </div>
                                         </div>
                                     </div>
@@ -1783,7 +1783,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                             <SavedFlash />
                             <button className="btn btn-outline" onClick={handleGenerateReport}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>

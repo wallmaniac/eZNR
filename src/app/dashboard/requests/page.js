@@ -279,7 +279,7 @@ export default function RequestsPage() {
                 💾 {lang === 'bs' ? 'Snimi' : 'Save'}
               </button>
               <button className="btn btn-ghost" onClick={() => setShowItemForm(false)}>
-                ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                ↩ {t('cancel')}
               </button>
             </div>
           </div>
@@ -603,7 +603,7 @@ export default function RequestsPage() {
             </button>
             <SavedFlash />
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              ↩ {t('cancel')}
             </button>
           </div>
         </div>

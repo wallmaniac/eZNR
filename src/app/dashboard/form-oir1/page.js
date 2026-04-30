@@ -511,7 +511,7 @@ export default function FormOIR1Page() {
               💾 {lang === 'bs' ? 'Snimi obrazac' : 'Save form'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              ↩ {t('cancel')}
             </button>
           </div>
         </div>

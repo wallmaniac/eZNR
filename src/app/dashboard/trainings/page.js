@@ -841,7 +841,7 @@ export default function TrainingsPage() {
                         </button>
                     ))}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                        <button className="btn btn-ghost" onClick={() => setView('list')}>Odustani</button>
+                        <button className="btn btn-ghost" onClick={() => setView('list')}>{t('cancel')}</button>
                         <button className="btn btn-primary" onClick={handleSave}>💾 Snimi</button>
                     </div>
                 </div>
@@ -1062,7 +1062,7 @@ export default function TrainingsPage() {
             <div className="card" style={{ marginTop: 16 }}>
                 <div className="card-body" style={{ display: 'flex', gap: 10 }}>
                     <button className="btn btn-primary" onClick={handleSave}>💾 Snimi obuku</button>
-                    <button className="btn btn-ghost" onClick={() => setView('list')}>Odustani</button>
+                    <button className="btn btn-ghost" onClick={() => setView('list')}>{t('cancel')}</button>
                     {editingId && (
                         <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}
                             onClick={() => handleDelete(editingId)}>🗑️ Obriši</button>
@@ -1276,7 +1276,7 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                         <>
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted,#94a3b8)' }}>{totalRecipients} primatelja</span>
                             <div style={{ display: 'flex', gap: 10 }}>
-                                <button onClick={onClose} style={{ padding: '9px 20px', fontSize: '0.88rem', fontWeight: 600, borderRadius: 8, border: '1px solid var(--border,rgba(255,255,255,0.1))', background: 'transparent', color: 'var(--text,#e2e8f0)', cursor: 'pointer' }}>Odustani</button>
+                                <button onClick={onClose} style={{ padding: '9px 20px', fontSize: '0.88rem', fontWeight: 600, borderRadius: 8, border: '1px solid var(--border,rgba(255,255,255,0.1))', background: 'transparent', color: 'var(--text,#e2e8f0)', cursor: 'pointer' }}>{t('cancel')}</button>
                                 <button onClick={handleSend} disabled={totalRecipients === 0} style={{ ...sendBtnSt, opacity: totalRecipients === 0 ? 0.4 : 1, cursor: totalRecipients === 0 ? 'not-allowed' : 'pointer' }}>
                                     📤 Pošalji ({totalRecipients})
                                 </button>

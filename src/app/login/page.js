@@ -306,7 +306,7 @@ export default function LoginPage() {
                   </div>
                   <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '0.75rem' }}
                     onClick={() => setShowForgotPassword(false)}>
-                    {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                    {t('cancel')}
                   </button>
                 </>
               )}

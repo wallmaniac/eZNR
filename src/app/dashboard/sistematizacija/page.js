@@ -462,7 +462,7 @@ export default function SistematizacijaPage() {
 
                         {/* Actions */}
                         <div style={{ display: 'flex', gap: 8 }}>
-                            <button className="btn btn-primary" onClick={handleSaveEdit}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-primary" onClick={handleSaveEdit}>💾 {t('save')}</button>
                             <button className="btn btn-ghost" onClick={() => setEditData(null)}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
                         </div>
                     </div>

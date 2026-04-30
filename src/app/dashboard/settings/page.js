@@ -1256,7 +1256,7 @@ export default function SettingsPage() {
 
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}</button>
+                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
 
                   {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
                 </div>
@@ -1280,7 +1280,7 @@ export default function SettingsPage() {
                   <span style={{ fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600 }}>● {lang === 'bs' ? 'Nesačuvano' : 'Unsaved'}</span>
                 )}
                 <button className="btn btn-primary btn-sm" onClick={handleSaveNotifSettings}>
-                  💾 {lang === 'bs' ? 'Spremi' : 'Save'}
+                  💾 {t('save')}
                 </button>
                 {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.85rem' }}>✅</span>}
               </div>

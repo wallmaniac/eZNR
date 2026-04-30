@@ -427,7 +427,7 @@ function EditCertPageInner() {
                             💾 {lang === 'bs' ? 'Snimi' : 'Save'}
                         </button>
                         <button className="btn btn-ghost" onClick={() => { if (returnTo) router.push(returnTo); else router.back(); }}>
-                            ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                            ↩ {t('cancel')}
                         </button>
                         <button className="btn btn-outline btn-sm" onClick={() => {
                             const url = `/dashboard/worker-certificates/create?workerId=${cert?.workerId || ''}&copyFrom=${certId}${returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : ''}`;

@@ -484,11 +484,11 @@ export default function MedicalExamsPage() {
                         </div>
 
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={async () => { if (isDirty) { const ok = await confirm(bs ? 'Imate nesačuvane podatke. Želite li odustati?' : 'You have unsaved data. Discard?'); if (!ok) return; } setShowForm(false); setEditingId(null); setIsDirty(false); }}>{bs ? 'Odustani' : 'Cancel'}</button>
+                            <button className="btn btn-ghost" onClick={async () => { if (isDirty) { const ok = await confirm(bs ? 'Imate nesačuvane podatke. Želite li odustati?' : 'You have unsaved data. Discard?'); if (!ok) return; } setShowForm(false); setEditingId(null); setIsDirty(false); }}>{t('cancel')}</button>
                             <button className="btn btn-outline btn-sm" style={{ marginRight: 'auto' }} onClick={() => { sessionStorage.setItem('eznr_draft_medexam', JSON.stringify(form)); router.push('/dashboard/referral-ra1?openNew=1'); }}>
                                 📋 {bs ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                             </button>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {bs ? 'Sačuvaj' : 'Save'}</button>
+                            <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
                     </div>

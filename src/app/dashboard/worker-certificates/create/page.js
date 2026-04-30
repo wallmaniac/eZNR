@@ -663,7 +663,7 @@ export function UvjerenjeFormPage() {
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                        <button className="btn btn-ghost btn-sm" onClick={() => setShowNewExaminerForm(false)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => setShowNewExaminerForm(false)}>{t('cancel')}</button>
                                         <button className="btn btn-primary btn-sm" onClick={handleSaveNewExaminer}>+ {lang === 'bs' ? 'Dodaj ispitivača' : 'Add examiner'}</button>
                                     </div>
                                 </div>
@@ -789,7 +789,7 @@ export function UvjerenjeFormPage() {
                                 router.back(); 
                             }
                         }}>
-                            ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                            ↩ {t('cancel')}
                         </button>
                         {(formData.tipUvjerenjaIme || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') && selectedWorkerIds.size === 1 && (() => {
                             const wId = [...selectedWorkerIds][0];

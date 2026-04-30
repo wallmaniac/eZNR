@@ -974,7 +974,7 @@ export default function QuestionnairesPage() {
               💾 {lang === 'bs' ? 'Snimi' : 'Save'}
             </button>
             <button className="btn btn-ghost" onClick={() => setView('list')}>
-              ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+              ↩ {t('cancel')}
             </button>
             {editingId && (
               <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }} onClick={() => { handleDelete(editingId); setView('list'); }}>

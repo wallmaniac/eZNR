@@ -418,10 +418,10 @@ export default function ZapisniciPage() {
 
                                 <div style={{ display: 'flex', gap: 10 }}>
                                     <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
-                                        💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}
+                                        💾 {t('save')}
                                     </button>
                                     <button className="btn btn-ghost" onClick={() => { setShowForm(false); setEditId(null); }}>
-                                        ↩ {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                                        ↩ {t('cancel')}
                                     </button>
                                 </div>
                             </div>
@@ -634,7 +634,7 @@ export default function ZapisniciPage() {
 
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button className="btn btn-primary" onClick={handleSendEmail}>✉️ {lang === 'bs' ? 'Otvori email klijent' : 'Open email client'}</button>
-                                <button className="btn btn-ghost" onClick={() => setEmailModal(null)}>{lang === 'bs' ? 'Odustani' : 'Cancel'}</button>
+                                <button className="btn btn-ghost" onClick={() => setEmailModal(null)}>{t('cancel')}</button>
                             </div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: -6 }}>💡 {lang === 'bs' ? 'Otvorit će se vaš email klijent (Outlook, Gmail...) s popunjenim podacima.' : 'This will open your email client (Outlook, Gmail...) with the fields pre-filled.'}</div>
                         </div>
