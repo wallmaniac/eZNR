@@ -828,14 +828,12 @@ export default function AIAssistant() {
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
                 const isMob = vw < 768;
-                // Desktop: keep fully on-screen (48px button + 8px badge overhang = 56px min from each edge)
-                // Mobile: allow up to 36px off-screen
-                const minX = isMob ? -36 : 8;
-                const maxX = isMob ? vw - 16 : vw - 72; // 72 = button width + badge margin
-                const minY = isMob ? -36 : 60; // 60 = keep below header
-                const maxY = isMob ? vh - 16 : vh - 72;
+                const minX = 0;
+                const maxX = vw - 60; // 60 is approx width of the edge tab
+                const minY = 60;
+                const maxY = isMob ? vh - 120 : vh - 60;
                 setFabPos({
-                    x: Math.max(minX, Math.min(saved.x, maxX)),
+                    x: saved.x < vw / 2 ? minX : maxX,
                     y: Math.max(minY, Math.min(saved.y, maxY)),
                 });
             }
@@ -878,15 +876,14 @@ export default function AIAssistant() {
         d.currentY = clientY;
 
         setFabPos(prev => {
-            const cur = prev || { x: window.innerWidth - 72, y: window.innerHeight - 130 };
+            const cur = prev || { x: window.innerWidth - 60, y: window.innerHeight - 130 };
             const vw = window.innerWidth;
             const vh = window.innerHeight;
             const isMob = vw < 768;
-            // Desktop: keep fully visible (button ~56px w/ badge). Mobile: allow partial off-screen.
-            const minX = isMob ? -36 : 8;
-            const maxX = isMob ? vw - 16 : vw - 72;
-            const minY = isMob ? -36 : 60;
-            const maxY = isMob ? vh - 16 : vh - 72;
+            const minX = 0;
+            const maxX = vw - 60;
+            const minY = 60;
+            const maxY = isMob ? vh - 120 : vh - 60;
             return {
                 x: Math.max(minX, Math.min(cur.x + dx, maxX)),
                 y: Math.max(minY, Math.min(cur.y + dy, maxY)),
@@ -898,32 +895,19 @@ export default function AIAssistant() {
         const d = dragRef.current;
         d.dragging = false;
 
-        // Calculate absolute distance from start to end (ignoring wiggles)
         const dist = Math.abs(d.currentX - d.startX) + Math.abs(d.currentY - d.startY);
 
-        // Only snap + persist if it was a real drag (not a click)
         if (dist > 15) {
             setFabPos(prev => {
                 if (!prev) return prev;
                 const vw = window.innerWidth;
                 const vh = window.innerHeight;
                 const isMob = vw < 768;
-
-                let snapped;
-                if (isMob) {
-                    // Mobile: snap to nearest edge, partially off-screen allowed
-                    snapped = {
-                        x: prev.x < vw / 2 ? -16 : vw - 36,
-                        y: prev.y,
-                    };
-                } else {
-                    // Desktop: snap to nearest edge but stay FULLY visible
-                    // Left edge: 8px margin. Right edge: 8px margin from right (vw - 72)
-                    snapped = {
-                        x: prev.x < vw / 2 ? 8 : vw - 72,
-                        y: Math.max(60, Math.min(prev.y, vh - 72)),
-                    };
-                }
+                
+                const snapped = {
+                    x: prev.x < vw / 2 ? 0 : vw - 60,
+                    y: Math.max(60, Math.min(prev.y, isMob ? vh - 120 : vh - 60)),
+                };
                 try { localStorage.setItem('eznr_zia_position', JSON.stringify(snapped)); } catch {}
                 return snapped;
             });
@@ -980,7 +964,7 @@ export default function AIAssistant() {
     // Default position: above the bottom nav (80px from bottom)
     const fabPosition = fabPos
         ? { position: 'fixed', left: fabPos.x, top: fabPos.y, bottom: 'auto', right: 'auto' }
-        : { position: 'fixed', bottom: 80, right: 16 };
+        : { position: 'fixed', bottom: 80, right: 0 };
 
     // Is FAB on the left side of the screen?
     const isFabLeft = (typeof window !== 'undefined' && fabPos) ? fabPos.x < window.innerWidth / 2 : false;
@@ -1735,13 +1719,16 @@ export default function AIAssistant() {
                     onTouchMove={onFabTouchMove}
                     onTouchEnd={onFabTouchEnd}
                     style={{
-                        ...fabStyles.fab,
-                        ...fabPosition,
-                        animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
-                        transition: dragRef.current.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        touchAction: 'none',
-                        cursor: 'grab',
-                    }}
+        ...fabStyles.fab,
+        ...fabPosition,
+        borderRadius: isFabLeft ? '0 24px 24px 0' : '24px 0 0 24px',
+        borderLeft: isFabLeft ? '1px solid rgba(0, 191, 166, 0.3)' : 'none',
+        borderRight: !isFabLeft ? '1px solid rgba(0, 191, 166, 0.3)' : 'none',
+        animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
+        transition: dragRef.current.dragging ? 'none' : 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        touchAction: 'none',
+        cursor: 'grab',
+    }}
                     title={lang === 'bs' ? 'Otvori AI asistenta Zia (povuci da pomjeriš)' : 'Open AI assistant Zia (drag to move)'}
                 >
                     <span style={{ ...fabStyles.fabIcon, fontSize: '1.3rem' }}>✨</span>
@@ -2054,19 +2041,17 @@ export default function AIAssistant() {
 const fabStyles = {
     fab: {
         position: 'fixed',
-        bottom: 24,
-        right: 24,
         zIndex: 1001,
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '6px 14px',
-        borderRadius: 20,
+        padding: '8px 12px',
         background: 'rgba(0, 191, 166, 0.15)',
         backdropFilter: 'blur(8px)',
         WebkitBackdropFilter: 'blur(8px)',
-        border: '1px solid rgba(0, 191, 166, 0.3)',
+        borderTop: '1px solid rgba(0, 191, 166, 0.3)',
+        borderBottom: '1px solid rgba(0, 191, 166, 0.3)',
         color: '#009985',
         cursor: 'grab',
         boxShadow: '0 4px 16px rgba(0,191,166,0.2)',
