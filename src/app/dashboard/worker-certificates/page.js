@@ -340,13 +340,13 @@ function WorkerCertificatesInner() {
                         style={{ cursor: 'pointer', width: 16, height: 16, accentColor: 'var(--primary)' }}
                       />
                     </th>
+                    <th style={{ width: 110, textAlign: 'center' }}>{bs ? 'Akcije' : 'Actions'}</th>
                     <th style={tsS('workerName')} onClick={() => tS('workerName')}>{t('worker')}{siS('workerName')}</th>
                     <th style={tsS('naziv')} onClick={() => tS('naziv')}>{t('name')}{siS('naziv')}</th>
                     <th style={tsS('oznaka')} onClick={() => tS('oznaka')}>{t('certCode')}{siS('oznaka')}</th>
                     <th style={tsS('datum')} onClick={() => tS('datum')}>{t('certDate')}{siS('datum')}</th>
                     <th style={tsS('vrijediDo')} onClick={() => tS('vrijediDo')}>{t('certValidUntil')}{siS('vrijediDo')}</th>
                     <th style={tsS('statusText')} onClick={() => tS('statusText')}>{t('status')}{siS('statusText')}</th>
-                    <th style={{ width: 110, textAlign: 'center' }}>{bs ? 'Akcije' : 'Actions'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -397,27 +397,6 @@ function WorkerCertificatesInner() {
                             />
                           </label>
                         </td>
-                        <td style={{ fontWeight: 600 }}>
-                          <button
-                            onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
-                            style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                            title={r.workerId ? (bs ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
-                          >{r.workerName}</button>
-                        </td>
-                        <td>
-                          <button
-                            onClick={() => handleEdit(r.id)}
-                            disabled={isNavigating}
-                            style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
-                            title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
-                          >{r.naziv || r.ime || '—'}</button>
-                        </td>
-                        <td><span className="badge badge-info">{r.oznaka}</span></td>
-                        <td>{formatDate(r.datum)}</td>
-                        <td style={{ color: r.isExpired ? 'var(--danger)' : diff <= 60 ? '#FF9800' : undefined, fontWeight: r.isExpired || diff <= 60 ? 700 : undefined }}>
-                          {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
-                        </td>
-                        <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }} onClick={e => e.stopPropagation()}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                             <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
@@ -479,6 +458,28 @@ function WorkerCertificatesInner() {
                               document.body
                           )}
                         </td>
+                        <td style={{ fontWeight: 600 }}>
+                          <button
+                            onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
+                            style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
+                            title={r.workerId ? (bs ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
+                          >{r.workerName}</button>
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => handleEdit(r.id)}
+                            disabled={isNavigating}
+                            style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
+                            title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
+                          >{r.naziv || r.ime || '—'}</button>
+                        </td>
+                        <td><span className="badge badge-info">{r.oznaka}</span></td>
+                        <td>{formatDate(r.datum)}</td>
+                        <td style={{ color: r.isExpired ? 'var(--danger)' : diff <= 60 ? '#FF9800' : undefined, fontWeight: r.isExpired || diff <= 60 ? 700 : undefined }}>
+                          {formatDate(r.vrijediDo)} {r.isExpired ? '⚠️' : diff <= 60 ? '⏰' : ''}
+                        </td>
+                        <td><span className={`badge ${r.isExpired ? 'badge-danger' : 'badge-success'}`}>{r.isExpired ? (bs ? 'Isteklo' : 'Expired') : (bs ? 'Važeće' : 'Valid')}</span></td>
+
                       </tr>
                     );
                   })}
