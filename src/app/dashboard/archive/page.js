@@ -291,7 +291,7 @@ export default function ArchivePage() {
                         uploadedAt: d.date || null,
                         _readonly: true,
                         _sourceLabel: 'Radnici',
-                        _sourceLink: `/dashboard/workers?openWorker=${w.id}`,
+                        _sourceLink: `/dashboard/workers?openWorker=${w.id}&section=dokumenti`,
                     });
                 }
             });

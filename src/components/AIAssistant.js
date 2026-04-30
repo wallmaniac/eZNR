@@ -2011,11 +2011,11 @@ export default function AIAssistant() {
                         position: 'fixed',
                         zIndex: 1002,
                         ...(isMobileScreen
-                            ? { bottom: 64, right: 12 }
+                            ? { bottom: 16, right: 16 }
                             : isFabLeft
-                                ? { bottom: 76, left: 382 }
-                                : { bottom: 76, right: 12 }),
-                        width: 44, height: 44, borderRadius: '50%',
+                                ? { bottom: 16, left: 400 }
+                                : { bottom: 16, right: 16 }),
+                        width: 32, height: 32, borderRadius: '50%',
                         background: 'linear-gradient(135deg, #00BFA6, #009985)',
                         border: '2px solid rgba(255,255,255,0.25)',
                         cursor: 'pointer',
