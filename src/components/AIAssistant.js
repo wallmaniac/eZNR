@@ -1718,17 +1718,17 @@ export default function AIAssistant() {
                     style={{
         ...fabStyles.fab,
         right: 0,
-        top: isMobileScreen ? 'auto' : '50%',
-        bottom: isMobileScreen ? '120px' : 'auto',
-        transform: isMobileScreen ? 'none' : 'translateY(-50%)',
+        top: 'auto',
+        bottom: isMobileScreen ? '120px' : '100px',
+        transform: 'none',
         animation: pulseAnimation ? 'aiPulse 2s ease-in-out infinite' : 'none',
     }}
-    onMouseEnter={e => { e.currentTarget.style.transform = isMobileScreen ? 'scale(1.05)' : 'translateY(-50%) scale(1.05)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
-    onMouseLeave={e => { e.currentTarget.style.transform = isMobileScreen ? 'none' : 'translateY(-50%)'; e.currentTarget.style.filter = 'none'; }}
+    onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
+    onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.filter = 'none'; }}
                     title={lang === 'bs' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia'}
                 >
-                    <span style={{ fontSize: '1.2rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', marginBottom: 6 }}>✨</span>
-    <span style={{ writingMode: 'vertical-rl', textOrientation: 'upright', fontSize: '0.75rem', fontWeight: 800, letterSpacing: 4 }}>ZIA</span>
+                    <span style={{ fontSize: '0.9rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', marginBottom: 4 }}>✨</span>
+    <span style={{ writingMode: 'vertical-rl', textOrientation: 'upright', fontSize: '0.6rem', fontWeight: 800, letterSpacing: 2 }}>ZIA</span>
                     {/* Numeric urgent badge */}
                     {urgentCount > 0 && (
                         <span style={{
@@ -1995,8 +1995,8 @@ export default function AIAssistant() {
                     style={{
         position: 'fixed',
         zIndex: 1002,
-        bottom: isMobileScreen ? 75 : 10,
-        right: 10,
+        bottom: isMobileScreen ? 75 : 20,
+        right: isMobileScreen ? 12 : 20,
                         width: 28, height: 28, borderRadius: '50%',
                         background: 'linear-gradient(135deg, #00BFA6, #009985)',
                         border: '2px solid rgba(255,255,255,0.25)',
@@ -2044,7 +2044,7 @@ const fabStyles = {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '16px 8px',
+        padding: '10px 4px',
         color: 'white',
         border: '1px solid rgba(255,255,255,0.2)',
         borderRight: 'none',
