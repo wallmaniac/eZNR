@@ -7,6 +7,7 @@
  * 
  * Usage:
  *   import { callFirebaseFunction } from '@/lib/firebaseCallable';
+ */
 
 import { getFunctions, httpsCallable } from 'firebase/functions';
 import app from '@/lib/firebase';
