@@ -699,7 +699,7 @@ export default function DashboardPage() {
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 16 }}>
                             <div style={{ justifySelf: 'start' }}>
                                 <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
-                                    ◀ {lang === 'bs' ? 'Prethodni' : 'Previous'}
+                                    ◀ {!isMobile && (lang === 'bs' ? ' Prethodni' : ' Previous')}
                                 </button>
                             </div>
 
@@ -709,7 +709,7 @@ export default function DashboardPage() {
                                     onClick={() => { setPickerYear(year); setShowMonthPicker(p => !p); }}
                                     style={{
                                         margin: 0, textTransform: 'capitalize', cursor: 'pointer',
-                                        display: 'flex', alignItems: 'center', gap: 6,
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', gap: 6, whiteSpace: 'nowrap',
                                         padding: '4px 12px', borderRadius: 'var(--radius-md)',
                                         transition: 'background 0.15s',
                                         background: showMonthPicker ? 'rgba(0,191,166,0.1)' : 'transparent',
@@ -816,7 +816,7 @@ export default function DashboardPage() {
 
                             <div style={{ justifySelf: 'end' }}>
                                 <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
-                                    {lang === 'bs' ? 'Sljedeći' : 'Next'} ▶
+                                    {!isMobile && (lang === 'bs' ? 'Sljedeći ' : 'Next ')}▶
                                 </button>
                             </div>
                         </div>
