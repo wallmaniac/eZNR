@@ -1,6 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
@@ -116,12 +116,14 @@ function EquipmentPageInner() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [items, deepLinkId]);
 
-    const filtered = items.filter(eq => {
-        const matchSearch = !searchTerm || eq.naziv.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchStatus = showOutOfUse ? !!eq.izvanUpotrebeOd : !eq.izvanUpotrebeOd;
-        const matchOrgUnit = !filterOrgUnit || eq.orgJedinicaId === filterOrgUnit || eq.orgJedinica === filterOrgUnit;
-        return matchSearch && matchStatus && matchOrgUnit;
-    });
+    const filtered = useMemo(() => {
+        return items.filter(eq => {
+            const matchSearch = !searchTerm || eq.naziv.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchStatus = showOutOfUse ? !!eq.izvanUpotrebeOd : !eq.izvanUpotrebeOd;
+            const matchOrgUnit = !filterOrgUnit || eq.orgJedinicaId === filterOrgUnit || eq.orgJedinica === filterOrgUnit;
+            return matchSearch && matchStatus && matchOrgUnit;
+        });
+    }, [items, searchTerm, showOutOfUse, filterOrgUnit]);
 
     const equipmentTypes = getAll(COLLECTIONS.EQUIPMENT_TYPES);
     const orgUnits = getAll(COLLECTIONS.ORG_UNITS);

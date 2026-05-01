@@ -1,6 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -290,15 +290,17 @@ function WorkersPageInner() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    const filteredWorkers = workers.filter(w => {
-        const matchSearch = !searchTerm || matchesSearch(
-            `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib} ${w.identBroj || ''} ${w.datumRodenja || ''} ${w.datumZaposlenja || ''} ${w.datumOdlaska || ''}`,
-            searchTerm
-        );
-        const matchStatus = showFormer ? !w.aktivan : w.aktivan;
-        const matchOrgUnit = !filterOrgUnit || w.orgJedinicaId === filterOrgUnit || w.orgJedinica === filterOrgUnit;
-        return matchSearch && matchStatus && matchOrgUnit;
-    });
+    const filteredWorkers = useMemo(() => {
+        return workers.filter(w => {
+            const matchSearch = !searchTerm || matchesSearch(
+                `${w.ime} ${w.prezime} ${w.jmbg} ${w.oib} ${w.identBroj || ''} ${w.datumRodenja || ''} ${w.datumZaposlenja || ''} ${w.datumOdlaska || ''}`,
+                searchTerm
+            );
+            const matchStatus = showFormer ? !w.aktivan : w.aktivan;
+            const matchOrgUnit = !filterOrgUnit || w.orgJedinicaId === filterOrgUnit || w.orgJedinica === filterOrgUnit;
+            return matchSearch && matchStatus && matchOrgUnit;
+        });
+    }, [workers, searchTerm, showFormer, filterOrgUnit]);
 
     const { sorted: sortedWorkers, toggleSort: tW, sortIcon: siW, thStyle: tsW } = useSortedList(filteredWorkers, 'prezime');
     const { page, perPage, setPage, setPerPage, totalPages, pagedData: pagedWorkers, totalItems, nextPage, prevPage } = usePagination(sortedWorkers, 10);
