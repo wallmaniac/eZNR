@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { usePagination } from '@/hooks/usePagination';
+import Pagination from '@/components/Pagination';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import WorkerProfileModal from '@/components/WorkerProfileModal';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -217,6 +219,7 @@ export default function InjuriesPage() {
   });
 
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'datum', 'desc');
+  const { page, perPage, setPage, setPerPage, totalPages, pagedData: paged, nextPage, prevPage } = usePagination(sorted, 25);
 
   const tipBadge = (tip) => {
     const map = {
@@ -472,7 +475,7 @@ export default function InjuriesPage() {
                 <tbody>
                   {sorted.length === 0 ? (
                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                  ) : sorted.map(inj => {
+                  ) : paged.map(inj => {
                     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
                     return (
                       <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
@@ -520,6 +523,17 @@ export default function InjuriesPage() {
                   })}
                 </tbody>
               </table>
+            <Pagination
+                page={page}
+                perPage={perPage}
+                totalPages={totalPages}
+                totalItems={filtered.length}
+                setPage={setPage}
+                setPerPage={setPerPage}
+                prevPage={prevPage}
+                nextPage={nextPage}
+                onPerPageChangeExtra={() => setSelectedIds(new Set())}
+            />
             </div>
           </div>
         </div>

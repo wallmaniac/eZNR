@@ -15,6 +15,8 @@ import { sendBatchEmails } from '@/lib/emailService';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import { apiGenerateQuiz, apiParsePresentation } from '@/lib/trainingsAI';
 import PageHeader from '@/components/PageHeader';
+import { usePagination } from '@/hooks/usePagination';
+import Pagination from '@/components/Pagination';
 
 
 /* ═══════════════════════════════════════════════
@@ -466,6 +468,8 @@ export default function TrainingsPage() {
         const filtered = search
             ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()))
             : records;
+        // eslint-disable-next-line react-hooks/rules-of-hooks
+        const { page: tPage, perPage: tPerPage, setPage: setTPage, setPerPage: setTPerPage, totalPages: tTotalPages, pagedData: pagedTrainings, nextPage: tNextPage, prevPage: tPrevPage } = usePagination(filtered, 25);
 
         return (
             <div className="animate-fadeIn">
@@ -510,7 +514,7 @@ export default function TrainingsPage() {
                                             <div style={{ fontWeight: 600 }}>Nema kreiranih obuka</div>
                                             <div style={{ fontSize: '0.85rem', marginTop: 4 }}>Kliknite &quot;+ Nova obuka&quot; da kreirate prvu</div>
                                         </td></tr>
-                                    ) : filtered.map(r => (
+                                    ) : pagedTrainings.map(r => (
                                         <tr key={r.id}>
                                             <td>
                                                 <div style={{ position: 'relative' }}>
@@ -593,6 +597,16 @@ export default function TrainingsPage() {
                                 </tbody>
                             </table>
                         </div>
+                    <Pagination
+                        page={tPage}
+                        perPage={tPerPage}
+                        totalPages={tTotalPages}
+                        totalItems={filtered.length}
+                        setPage={setTPage}
+                        setPerPage={setTPerPage}
+                        prevPage={tPrevPage}
+                        nextPage={tNextPage}
+                    />
                     </div>
                 </div>
 

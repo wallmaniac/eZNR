@@ -7,6 +7,8 @@ import { getById, getAll, create, update, remove, COLLECTIONS, formatDate } from
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
+import { usePagination } from '@/hooks/usePagination';
+import Pagination from '@/components/Pagination';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
 import QRCodeLabel from '@/components/QRCodeLabel';
@@ -182,6 +184,7 @@ function FleetInner() {
     });
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'registracija');
+    const { page, perPage, setPage, setPerPage, totalPages, pagedData: paged, nextPage, prevPage } = usePagination(sorted, 25);
 
     // Action menu
     const [actionMenuId, setActionMenuId] = useState(null);
@@ -555,7 +558,7 @@ function FleetInner() {
                                 <tbody>
                                     {sorted.length === 0 ? (
                                         <tr><td colSpan={10} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
-                                    ) : sorted.map(v => {
+                                    ) : paged.map(v => {
                                         const st = STATUS_MAP[v.status] || STATUS_MAP.aktivan;
                                         return (
                                             <tr key={v.id} onClick={() => openEdit(v)} style={{ cursor: 'pointer' }}
@@ -641,6 +644,17 @@ function FleetInner() {
                                     })}
                                 </tbody>
                             </table>
+                    <Pagination
+                        page={page}
+                        perPage={perPage}
+                        totalPages={totalPages}
+                        totalItems={filtered.length}
+                        setPage={setPage}
+                        setPerPage={setPerPage}
+                        prevPage={prevPage}
+                        nextPage={nextPage}
+                        onPerPageChangeExtra={() => setSelectedIds(new Set())}
+                    />
                         </div>
                     </div>
                 </div>

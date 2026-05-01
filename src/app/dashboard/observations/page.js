@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAll, create, update, remove, COLLECTIONS, getOrgUnitName } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
+import { usePagination } from '@/hooks/usePagination';
+import Pagination from '@/components/Pagination';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { QRCodeSVG } from 'qrcode.react';
 import Icon3D from '@/components/Icon3D';
@@ -71,6 +73,7 @@ export default function ObservationsPage() {
     });
 
     const { sorted: sortedItems, toggleSort: requestSort, sortIcon, thStyle } = useSortedList(filteredItems, 'datum', 'desc');
+    const { page, perPage, setPage, setPerPage, totalPages, pagedData: pagedItems, nextPage, prevPage } = usePagination(sortedItems, 25);
 
     const toggleAll = (e) => { if (e.target.checked) setSelectedIds(new Set(sortedItems.map(x => x.id))); else setSelectedIds(new Set()); };
     const toggleOne = (id) => { const next = new Set(selectedIds); if (next.has(id)) next.delete(id); else next.add(id); setSelectedIds(next); };
@@ -185,7 +188,7 @@ export default function ObservationsPage() {
                             <tbody>
                                 {sortedItems.length === 0 ? (
                                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>{bs ? 'Nema prijavljenih opasnosti' : 'No hazard reports found'}</td></tr>
-                                ) : sortedItems.map(item => (
+                                ) : pagedItems.map(item => (
                                     <tr key={item.id} onClick={() => setViewingItem(item)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                                         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                             <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleOne(item.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
@@ -215,6 +218,17 @@ export default function ObservationsPage() {
                                 ))}
                             </tbody>
                         </table>
+                    <Pagination
+                        page={page}
+                        perPage={perPage}
+                        totalPages={totalPages}
+                        totalItems={filteredItems.length}
+                        setPage={setPage}
+                        setPerPage={setPerPage}
+                        prevPage={prevPage}
+                        nextPage={nextPage}
+                        onPerPageChangeExtra={() => setSelectedIds(new Set())}
+                    />
                     </div>
                 </div>
             </div>

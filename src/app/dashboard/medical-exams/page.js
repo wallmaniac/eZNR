@@ -183,6 +183,7 @@ export default function MedicalExamsPage() {
     }, [enriched, filterTab, searchQ, filterOrgUnit]);
 
     const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, '_workerName');
+    const { page, perPage, setPage, setPerPage, totalPages, pagedData: paged, nextPage, prevPage } = usePagination(sorted, 25);
 
     const handleClose = () => {
         setShowForm(false);
@@ -319,7 +320,7 @@ export default function MedicalExamsPage() {
                                 {sorted.length === 0 && (
                                     <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>{bs ? 'Nema unesenih ljekarskih pregleda' : 'No medical exams recorded'}</td></tr>
                                 )}
-                                {sorted.map(exam => {
+                                {paged.map(exam => {
                                     const badge = getStatusBadge(exam);
                                     const days = getDays(exam.vrijediDo);
                                     const rowBg = days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
@@ -372,6 +373,17 @@ export default function MedicalExamsPage() {
                                 })}
                             </tbody>
                         </table>
+                    <Pagination
+                        page={page}
+                        perPage={perPage}
+                        totalPages={totalPages}
+                        totalItems={filtered.length}
+                        setPage={setPage}
+                        setPerPage={setPerPage}
+                        prevPage={prevPage}
+                        nextPage={nextPage}
+                        onPerPageChangeExtra={() => setSelectedIds(new Set())}
+                    />
                     </div>
                 </div>
             </div>
