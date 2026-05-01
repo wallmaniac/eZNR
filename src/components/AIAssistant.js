@@ -953,6 +953,32 @@ export default function AIAssistant() {
         }
     }, [handleDragEnd, isOpen]);
 
+    // ── Non-passive touch listeners on the FAB ────────────────────────────────
+    // React synthetic events are ALWAYS passive on mobile — e.preventDefault()
+    // inside onTouchMove is silently ignored, so the page scrolls while dragging.
+    // Fix: attach listeners imperatively with { passive: false } so the browser
+    // actually honours preventDefault and suppresses page scroll during drag.
+    useEffect(() => {
+        const el = fabRef.current;
+        if (!el) return;
+        const onTMStart = (e) => {
+            const t = e.touches[0];
+            handleDragStart(t.clientX, t.clientY);
+        };
+        const onTMMove = (e) => {
+            if (!dragRef.current.dragging) return;
+            e.preventDefault(); // now actually works — listener is non-passive
+            const t = e.touches[0];
+            handleDragMove(t.clientX, t.clientY);
+        };
+        el.addEventListener('touchstart', onTMStart, { passive: false });
+        el.addEventListener('touchmove', onTMMove, { passive: false });
+        return () => {
+            el.removeEventListener('touchstart', onTMStart);
+            el.removeEventListener('touchmove', onTMMove);
+        };
+    }, [handleDragStart, handleDragMove]);
+
     // Computed FAB styles
     // Default position: above the bottom nav (80px from bottom)
     const fabPosition = fabPos
@@ -1708,8 +1734,6 @@ export default function AIAssistant() {
                     ref={fabRef}
                     id="ai-assistant-fab"
                     onMouseDown={onFabMouseDown}
-                    onTouchStart={onFabTouchStart}
-                    onTouchMove={onFabTouchMove}
                     onTouchEnd={onFabTouchEnd}
                     style={{
         ...fabStyles.fab,
