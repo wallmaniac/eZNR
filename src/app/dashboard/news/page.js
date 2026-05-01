@@ -6,6 +6,7 @@ import { apiFetchNews } from '@/lib/newsAPI';
 import { getAll, COLLECTIONS, getById, getUserCompanies } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateZosPdf } from '@/lib/zosPdfGenerator';
+import { generateObrazac1, generateObrazac2, generateUputnica, openFormPrintWindow } from '@/lib/obrasciPdfGenerator';
 import PageHeader from '@/components/PageHeader';
 
 // No localStorage cache — server caches for 2h, so every page load is fresh within 2h
@@ -80,8 +81,8 @@ const FORM_CATEGORIES = [
         icon: '🚑',
         legal: 'Pravilnik o sadržaju i načinu podnošenja izvještaja — Sl. novine FBiH br. 9/23',
         items: [
-            { name: 'Obrazac br. 1 — Izvještaj o povredi na radu', shortName: 'Prijava povrede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Pravilnik 9/23, Čl. 2' },
-            { name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Pravilnik 9/23, Čl. 3' },
+            { name: 'Obrazac br. 1 — Izvještaj o povredi na radu', shortName: 'Prijava povrede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Pravilnik 9/23, Čl. 2', printBlank: 'obrazac1' },
+            { name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Pravilnik 9/23, Čl. 3', printBlank: 'obrazac2' },
             { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 63. Zakona 79/20' },
         ]
     },
@@ -91,8 +92,8 @@ const FORM_CATEGORIES = [
         icon: '🩺',
         legal: 'Pravilnik o raspoređivanju radnika na poslove s povećanim rizikom — Sl. novine FBiH',
         items: [
-            { name: 'Uputnica za prethodni ljekarski pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 1 Pravilnika' },
-            { name: 'Uputnica za periodični ljekarski pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 3 Pravilnika' },
+            { name: 'Uputnica za prethodni ljekarski pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 1 Pravilnika', printBlank: 'uputnica-prethodni' },
+            { name: 'Uputnica za periodični ljekarski pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 3 Pravilnika', printBlank: 'uputnica-periodicni' },
             { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Obrazac br. 2 Pravilnika' },
             { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Obrazac br. 4 Pravilnika' },
         ]
@@ -558,8 +559,14 @@ function FormsTab({ lang }) {
     };
 
     const handlePrintBlank = (type) => {
-        if (type === 'zos') printBlankZos();
-        else if (type === 'zop') printBlankZop();
+        const companies = getUserCompanies(user?.id);
+        const company = companies.find(c => c.id === activeCompanyId) || {};
+        if (type === 'zos') { printBlankZos(); return; }
+        if (type === 'zop') { printBlankZop(); return; }
+        if (type === 'obrazac1') { openFormPrintWindow(generateObrazac1({ company })); return; }
+        if (type === 'obrazac2') { openFormPrintWindow(generateObrazac2({ company })); return; }
+        if (type === 'uputnica-prethodni') { openFormPrintWindow(generateUputnica({ company, tipPregleda: 'prethodni' })); return; }
+        if (type === 'uputnica-periodicni') { openFormPrintWindow(generateUputnica({ company, tipPregleda: 'periodicni' })); return; }
     };
 
     return (
