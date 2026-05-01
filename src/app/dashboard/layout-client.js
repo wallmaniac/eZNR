@@ -125,7 +125,7 @@ export default function DashboardLayout({ children }) {
         setSidebarCollapsed(prev => !prev);
     }, []);
 
-    if (!mounted || loading) {
+    if (!mounted || loading || !isAuthenticated) {
         return (
             <div style={{
                 height: '100dvh',
