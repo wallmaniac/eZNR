@@ -630,7 +630,7 @@ export default function SettingsPage() {
                     ? 'Imate nesačuvane promjene.\nŽelite li ih sačuvati prije promjene taba?'
                     : 'You have unsaved changes.\nDo you want to save them before switching tabs?',
                   [
-                    { label: '💾 Spremi i nastavi', value: 'save', primary: true },
+                    { label: '💾 Sačuvaj i nastavi', value: 'save', primary: true },
                     { label: '🗑️ Odbaci promjene', value: 'discard', danger: true },
                     { label: 'Odustani', value: null }
                   ]
@@ -1534,7 +1534,7 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Spremi postavke obavijesti' : 'Save Notification Settings'}</button>
+              <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang === 'bs' ? 'Sačuvaj postavke obavijesti' : 'Save Notification Settings'}</button>
               {saved && !notifSyncError && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
               {notifSyncError && (
                 <span className="animate-fadeIn" style={{ color: 'var(--danger)', fontWeight: 600, fontSize: '0.85rem' }}>
@@ -1637,7 +1637,7 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke prikaza' : 'Save Display Settings'}</button>
+              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Sačuvaj postavke prikaza' : 'Save Display Settings'}</button>
               {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>
@@ -1803,7 +1803,7 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Spremi postavke sistema' : 'Save System Settings'}</button>
+              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang === 'bs' ? 'Sačuvaj postavke sistema' : 'Save System Settings'}</button>
               {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang === 'bs' ? 'Sačuvano!' : 'Saved!'}</span>}
             </div>
           </div>

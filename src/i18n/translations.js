@@ -201,7 +201,7 @@ export const translations = {
     enterForm: 'Unesi obrazac',
     files: 'Datoteke',
     downloadFiles: 'Preuzmi datoteke',
-    saveAndAddNew: 'Spremi i dodaj novog',
+    saveAndAddNew: 'Sačuvaj i dodaj novog',
     discard: 'Odustani',
 
     // Training
