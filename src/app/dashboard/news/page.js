@@ -3,6 +3,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { fmtDateTime } from '@/lib/dateUtils';
 import { apiFetchNews } from '@/lib/newsAPI';
+import { getAll, COLLECTIONS, getById, getUserCompanies } from '@/lib/dataStore';
+import { useAuth } from '@/contexts/AuthContext';
+import { generateZosPdf } from '@/lib/zosPdfGenerator';
 import PageHeader from '@/components/PageHeader';
 
 // No localStorage cache — server caches for 2h, so every page load is fresh within 2h
@@ -70,14 +73,49 @@ const LAW_LINKS = [
     },
 ];
 
-const FORMS_LIST = [
-    { name: 'Obrazac OR — Prijava povrede na radu', route: '/dashboard/injuries' },
-    { name: 'Obrazac PB — Prijava profesionalne bolesti', route: '/dashboard/diseases' },
-    { name: 'Obrazac OIR-1 — Obavijest o prijavi povrede', route: '/dashboard/form-oir1' },
-    { name: 'Obrazac RA1 — Ljekarska uputnica za pregled', route: '/dashboard/referral-ra1' },
-    { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', route: '/dashboard/form-ro1' },
-    { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', route: '/dashboard/form-ro2' },
-    { name: 'Obrazac NR1 — Evidencija noćnog rada', route: '/dashboard/night-work' },
+const FORM_CATEGORIES = [
+    {
+        title: 'Prijave povreda i oboljenja',
+        title_en: 'Injury & Disease Reporting',
+        icon: '🚑',
+        legal: 'Pravilnik o sadržaju i načinu podnošenja izvještaja — Sl. novine FBiH br. 9/23',
+        items: [
+            { name: 'Obrazac br. 1 — Izvještaj o povredi na radu', shortName: 'Prijava povrede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Pravilnik 9/23, Čl. 2' },
+            { name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Pravilnik 9/23, Čl. 3' },
+            { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 63. Zakona 79/20' },
+        ]
+    },
+    {
+        title: 'Ljekarske uputnice i nalazi',
+        title_en: 'Medical Referrals & Reports',
+        icon: '🩺',
+        legal: 'Pravilnik o raspoređivanju radnika na poslove s povećanim rizikom — Sl. novine FBiH',
+        items: [
+            { name: 'Uputnica za prethodni ljekarski pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 1 Pravilnika' },
+            { name: 'Uputnica za periodični ljekarski pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 3 Pravilnika' },
+            { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Obrazac br. 2 Pravilnika' },
+            { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Obrazac br. 4 Pravilnika' },
+        ]
+    },
+    {
+        title: 'Zapisnici o osposobljavanju',
+        title_en: 'Training Records',
+        icon: '📝',
+        legal: 'Čl. 34., 48., 49. Zakona o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)',
+        items: [
+            { name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način', shortName: 'Zapisnik ZOS', icon: '📝', route: '/dashboard/trainings', type: 'page', desc: 'Čl. 48-49 Zakona 79/20', printBlank: 'zos' },
+            { name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara', shortName: 'Zapisnik ZOP', icon: '🔥', route: '/dashboard/trainings', type: 'page', desc: 'Zakon o zaštiti od požara FBiH 64/09', printBlank: 'zop' },
+        ]
+    },
+    {
+        title: 'Evidencije i ostali obrasci',
+        title_en: 'Records & Other Forms',
+        icon: '📊',
+        legal: 'Zakon o radu FBiH (Sl. novine FBiH br. 26/16) + Pravilnik 92/16',
+        items: [
+            { name: 'Evidencija noćnog rada (NR1)', shortName: 'Noćni rad (NR1)', icon: '🌙', route: '/dashboard/night-work', type: 'page', desc: 'Pravilnik 92/16, Čl. 36-38 ZoR' },
+        ]
+    },
 ];
 
 // Parse "DD.MM.YYYY." → Date for sorting
@@ -369,37 +407,249 @@ export default function NewsPage() {
 
             {/* ── FORMS TAB ── */}
             {activeTab === 'forms' && (
-                <div className="card">
-                    <div className="card-body">
-                        <h3 style={{ marginBottom: 20, display: 'flex', alignItems: 'center', gap: 8 }}>
-                            📄 Službeni obrasci ZNR — Bosna i Hercegovina
-                        </h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12 }}>
-                            {FORMS_LIST.map((form, idx) => (
-                                <a key={idx} href={form.route}
-                                    style={{
-                                        padding: '14px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
-                                        display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', textDecoration: 'none',
-                                        color: 'var(--text)', transition: 'all 0.2s',
-                                    }}
-                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = ''; }}>
-                                    <span style={{ fontSize: '1.6rem' }}>📋</span>
-                                    <div>
-                                        <div style={{ fontWeight: 600, fontSize: '0.88rem', marginBottom: 3 }}>{form.name}</div>
-                                        <div style={{ fontSize: '0.73rem', color: 'var(--primary)', fontWeight: 600 }}>Otvori obrazac →</div>
-                                    </div>
-                                </a>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <FormsTab lang={lang} />
             )}
 
             <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
                 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
             `}</style>
+        </div>
+    );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   FormsTab — Categorized official forms with blank template downloads
+   ═══════════════════════════════════════════════════════════════════════════════ */
+function FormsTab({ lang }) {
+    const { activeCompanyId, user } = useAuth();
+
+    /** Generate a blank ZOS template and open in a print window */
+    const printBlankZos = () => {
+        const companies = getUserCompanies(user?.id);
+        const company = companies.find(c => c.id === activeCompanyId) || {};
+        const html = generateZosPdf({
+            company: { naziv: company.naziv || '', adresa: company.adresa || '', mjesto: company.mjesto || '', postanskiBroj: company.postanskiBroj || '', oib: company.oib || '', direktor: company.direktor || '', logo: company.logo || '' },
+            worker: { ime: '', prezime: '', jmbg: '', oib: '' },
+            workplaceName: '',
+            training: { naziv: '' },
+            officer: company.strucnoLice || '',
+            date: '',
+            certOznaka: '',
+            testResult: '',
+        });
+        const w = window.open('', '_blank', 'width=800,height=1100');
+        if (w) { w.document.write(html); w.document.close(); }
+    };
+
+    /** Generate a blank ZOP template — same structure, fire safety focus */
+    const printBlankZop = () => {
+        const companies = getUserCompanies(user?.id);
+        const company = companies.find(c => c.id === activeCompanyId) || {};
+        // Build a ZOP-specific HTML (fire safety variant of ZOS)
+        const formattedDate = '__.__.____.';
+        const logoHtml = company.logo ? `<img src="${company.logo}" style="max-height:60px; max-width:180px; object-fit:contain;" />` : '';
+        const html = `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>ZOP - Prazan obrazac</title>
+<style>
+    @page { size: A4; margin: 20mm 18mm 20mm 18mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 11pt; color: #1a1a1a; line-height: 1.5; background: #fff; }
+    .page { width: 100%; max-width: 210mm; margin: 0 auto; }
+    .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #b71c1c; padding-bottom: 12px; margin-bottom: 8px; }
+    .company-info { flex: 1; }
+    .company-name { font-size: 14pt; font-weight: 800; color: #b71c1c; }
+    .company-details { font-size: 8.5pt; color: #555; margin-top: 3px; line-height: 1.4; }
+    .logo-area { text-align: right; }
+    .doc-title { text-align: center; margin: 18px 0 6px; font-size: 13pt; font-weight: 800; text-transform: uppercase; color: #b71c1c; letter-spacing: 0.5px; }
+    .doc-subtitle { text-align: center; font-size: 9pt; color: #666; margin-bottom: 16px; }
+    .doc-ref { text-align: center; font-size: 8.5pt; color: #888; margin-bottom: 20px; }
+    .section { margin-bottom: 14px; }
+    .section-title { font-size: 10pt; font-weight: 700; color: #b71c1c; border-bottom: 1.5px solid #ddd; padding-bottom: 3px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .data-row { display: flex; border-bottom: 1px solid #eee; padding: 4px 0; font-size: 10pt; }
+    .data-label { width: 220px; font-weight: 600; color: #444; flex-shrink: 0; }
+    .data-value { flex: 1; font-weight: 400; }
+    .checklist { margin: 8px 0; }
+    .check-item { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; font-size: 9.5pt; line-height: 1.4; }
+    .check-box { width: 14px; height: 14px; border: 1.5px solid #b71c1c; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; color: #b71c1c; flex-shrink: 0; margin-top: 2px; }
+    .assessment-box { border: 2px solid #b71c1c; border-radius: 6px; padding: 12px 16px; margin: 14px 0; background: #fff5f5; }
+    .assessment-text { font-size: 10.5pt; font-weight: 600; text-align: center; color: #b71c1c; }
+    .signatures { display: flex; justify-content: space-between; margin-top: 30px; gap: 20px; }
+    .sig-block { flex: 1; text-align: center; }
+    .sig-role { font-size: 8.5pt; color: #666; margin-bottom: 4px; font-weight: 600; }
+    .sig-line { border-top: 1.5px solid #333; margin-top: 40px; padding-top: 4px; font-size: 9.5pt; font-weight: 600; }
+    .sig-note { font-size: 7.5pt; color: #999; margin-top: 2px; }
+    .footer { border-top: 2px solid #b71c1c; margin-top: 20px; padding-top: 8px; font-size: 7.5pt; color: #999; text-align: center; }
+    .legal-ref { font-size: 8pt; color: #888; font-style: italic; text-align: center; margin: 6px 0; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } .no-print { display: none !important; } }
+</style></head><body>
+<div class="page">
+    <div class="header">
+        <div class="company-info">
+            <div class="company-name">${company.naziv || '________________________________'}</div>
+            <div class="company-details">${company.adresa ? company.adresa + ', ' : ''}${company.mjesto || ''} ${company.postanskiBroj || ''}<br>${company.oib ? 'ID broj: ' + company.oib : ''}</div>
+        </div>
+        <div class="logo-area">${logoHtml}</div>
+    </div>
+    <div class="doc-title">Zapisnik o ocjeni osposobljenosti<br>radnika za zaštitu od požara</div>
+    <div class="doc-subtitle">Obrazac ZOP — u skladu sa Zakonom o zaštiti od požara i vatrogastvu FBiH ("Sl. novine FBiH" br. 64/09, 45/22)</div>
+    <div class="doc-ref">Broj: ________ &nbsp;&nbsp;|&nbsp;&nbsp; Datum: ${formattedDate}</div>
+    <div class="section">
+        <div class="section-title">I. Podaci o radniku</div>
+        <div class="data-row"><span class="data-label">Ime i prezime:</span><span class="data-value">________________________</span></div>
+        <div class="data-row"><span class="data-label">JMBG:</span><span class="data-value">________________________</span></div>
+        <div class="data-row"><span class="data-label">OIB / ID broj radnika:</span><span class="data-value">________________________</span></div>
+        <div class="data-row"><span class="data-label">Radno mjesto:</span><span class="data-value">________________________</span></div>
+    </div>
+    <div class="section">
+        <div class="section-title">II. Podaci o osposobljavanju za zaštitu od požara</div>
+        <div class="data-row"><span class="data-label">Program osposobljavanja:</span><span class="data-value">________________________</span></div>
+        <div class="data-row"><span class="data-label">Mjesto provođenja:</span><span class="data-value">${company.adresa || ''}, ${company.mjesto || ''}</span></div>
+        <div class="data-row"><span class="data-label">Datum osposobljavanja:</span><span class="data-value">${formattedDate}</span></div>
+        <div class="data-row"><span class="data-label">Rezultat provjere znanja:</span><span class="data-value">________</span></div>
+        <div class="data-row"><span class="data-label">Stručnjak zaštite od požara:</span><span class="data-value">${company.strucnoLice || '________________________'}</span></div>
+    </div>
+    <div class="section">
+        <div class="section-title">III. Teoretski dio — zaštita od požara</div>
+        <p style="font-size:9.5pt; margin-bottom:6px; color:#333;">
+            Stručnjak zaštite od požara ocjenjuje da je radnik <strong>________________________</strong>
+            u teoretskom dijelu <strong>osposobljen/a</strong> za zaštitu od požara za poslove radnog mjesta
+            <strong>________________________</strong>.
+        </p>
+        <p style="font-size:9pt; color:#666;">
+            Tijekom osposobljavanja radnik je upoznat sa: uzrocima nastanka požara na radnom mjestu,
+            mjerama za sprečavanje požara, postupcima u slučaju požara, upotrebom PP aparata i hidranata,
+            planom evakuacije i spašavanja, te pravima i dužnostima u provođenju propisa zaštite od požara.
+        </p>
+    </div>
+    <div class="section">
+        <div class="section-title">IV. Provjera praktične osposobljenosti</div>
+        <p style="font-size:9pt; color:#666; margin-bottom:8px;">Neposredni ovlaštenik i stručnjak potvrđuju da radnik:</p>
+        <div class="checklist">
+            <div class="check-item"><span class="check-box">☐</span> Poznaje i primjenjuje mjere zaštite od požara na svom radnom mjestu</div>
+            <div class="check-item"><span class="check-box">☐</span> Pravilno koristi PP aparat (S-9, CO2) i zna lokacije PP opreme</div>
+            <div class="check-item"><span class="check-box">☐</span> Poznaje plan evakuacije i zna evakuacijske puteve</div>
+            <div class="check-item"><span class="check-box">☐</span> Zna postupak dojave požara (telefon 123, vatrodojavni sistem)</div>
+            <div class="check-item"><span class="check-box">☐</span> Odmah obavještava neposrednog rukovodioca o uočenim opasnostima od požara</div>
+            <div class="check-item"><span class="check-box">☐</span> Poznaje zabranu pušenja i korištenja otvorenog plamena na mjestima s povećanim rizikom od požara</div>
+            <div class="check-item"><span class="check-box">☐</span> Zna postupke pružanja prve pomoći u slučaju opeklina</div>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-title">V. Zaključna ocjena</div>
+        <div class="assessment-box">
+            <div class="assessment-text">
+                Na osnovu provedenog teoretskog i praktičnog osposobljavanja, ocjenjuje se da je radnik/ca<br>
+                <strong style="font-size:12pt;">________________________</strong><br>
+                <strong>OSPOSOBLJEN/A</strong> za zaštitu od požara<br>
+                na poslovima radnog mjesta: <strong>________________________</strong>
+            </div>
+        </div>
+    </div>
+    <div class="legal-ref">Zakon o zaštiti od požara i vatrogastvu FBiH ("Sl. novine FBiH" br. 64/09, 45/22)</div>
+    <div class="signatures">
+        <div class="sig-block"><div class="sig-role">Osposobljeni radnik</div><div class="sig-line">________________________</div><div class="sig-note">(potpis radnika)</div></div>
+        <div class="sig-block"><div class="sig-role">Neposredni ovlaštenik poslodavca</div><div class="sig-line">${company.direktor || '________________________'}</div><div class="sig-note">(potpis ovlaštenika)</div></div>
+        <div class="sig-block"><div class="sig-role">Stručnjak zaštite od požara</div><div class="sig-line">${company.strucnoLice || '________________________'}</div><div class="sig-note">(potpis stručnjaka)</div></div>
+    </div>
+    <div class="footer">${company.naziv || ''} &nbsp;|&nbsp; ${company.adresa || ''}, ${company.mjesto || ''} &nbsp;|&nbsp; ${formattedDate}<br>Ovaj zapisnik se čuva trajno u evidencijama poslodavca i predočava inspektoru rada na zahtjev.</div>
+</div></body></html>`;
+        const w = window.open('', '_blank', 'width=800,height=1100');
+        if (w) { w.document.write(html); w.document.close(); }
+    };
+
+    const handlePrintBlank = (type) => {
+        if (type === 'zos') printBlankZos();
+        else if (type === 'zop') printBlankZop();
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* Hero banner */}
+            <div className="card" style={{ background: 'linear-gradient(135deg, #0B2A3C, #1a4a5e)', border: 'none' }}>
+                <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '2.2rem' }}>📋</span>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'white', marginBottom: 4 }}>
+                            Službeni obrasci ZNR — Bosna i Hercegovina
+                        </div>
+                        <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
+                            Svi obrasci su usklađeni sa Zakonom o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20),
+                            Pravilnikom 9/23, Zakonom o zaštiti od požara (64/09) i Zakonom o radu (26/16).
+                            Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Categories */}
+            {FORM_CATEGORIES.map((cat, catIdx) => (
+                <div key={catIdx} className="card">
+                    <div className="card-body">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                            <span style={{ fontSize: '1.4rem' }}>{cat.icon}</span>
+                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{lang === 'bs' ? cat.title : cat.title_en}</h3>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 16, paddingLeft: 36, fontStyle: 'italic' }}>
+                            📌 {cat.legal}
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
+                            {cat.items.map((form, idx) => (
+                                <div key={idx} style={{
+                                    padding: '14px 16px', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)',
+                                    display: 'flex', alignItems: 'flex-start', gap: 14, transition: 'all 0.2s',
+                                    background: 'var(--bg-card)',
+                                }}
+                                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+                                >
+                                    <span style={{ fontSize: '1.5rem', flexShrink: 0, marginTop: 2 }}>{form.icon}</span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 3, color: 'var(--text)' }}>{form.name}</div>
+                                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: 8 }}>{form.desc}</div>
+                                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                            <a href={form.route} style={{
+                                                display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                padding: '4px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700,
+                                                background: 'var(--primary)', color: 'white', textDecoration: 'none',
+                                                transition: 'opacity 0.15s', cursor: 'pointer',
+                                            }}
+                                                onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
+                                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                                            >
+                                                📂 {lang === 'bs' ? 'Popuni obrazac' : 'Fill form'}
+                                            </a>
+                                            {form.printBlank && (
+                                                <button onClick={() => handlePrintBlank(form.printBlank)} style={{
+                                                    display: 'inline-flex', alignItems: 'center', gap: 4,
+                                                    padding: '4px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700,
+                                                    background: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)',
+                                                    cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-body)',
+                                                }}
+                                                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                                                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}
+                                                >
+                                                    🖨️ {lang === 'bs' ? 'Preuzmi prazan' : 'Download blank'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            ))}
+
+            {/* Footer note */}
+            <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                <span style={{ flexShrink: 0 }}>⚖️</span>
+                <span>
+                    Svi obrasci temelje se na važećim propisima FBiH. Pravilnik 9/23 zamjenjuje ranije obrasce za prijavu povreda.
+                    Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (79/20) i Zakonom o zaštiti od požara (64/09).
+                    Za zvanične tekstove propisa pogledajte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> ili
+                    Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                </span>
+            </div>
         </div>
     );
 }
