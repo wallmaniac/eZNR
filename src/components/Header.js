@@ -114,6 +114,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             if (`${o.opis || ''} ${o.lokacija || ''}`.toLowerCase().includes(term))
                 results.push({ type: 'observation', icon: '🚨', label: o.lokacija || 'Prijava opasnosti', sub: o.opis || '', path: '/dashboard/observations', id: o.id });
         });
+        getAll(COLLECTIONS.CERTIFICATES).forEach(c => {
+            if (`${c.naziv || ''} ${c.radnikIme || ''} ${c.oznaka || ''}`.toLowerCase().includes(term))
+                results.push({ type: 'certificate', icon: '📜', label: c.naziv || 'Uvjerenje', sub: c.radnikIme || '', path: '/dashboard/certificates', id: c.id });
+        });
         return results.slice(0, 10);
     }, [searchTerm]);
 
@@ -484,7 +488,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.sub}</div>
                                             </div>
                                             <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-badge)', color: 'var(--primary-dark)', fontWeight: 600 }}>
-                                                {r.type === 'worker' ? (lang === 'bs' ? 'Radnik' : 'Worker') : r.type === 'equipment' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : r.type === 'workplace' ? (lang === 'bs' ? 'Radno mj.' : 'Workplace') : r.type === 'orgUnit' ? (lang === 'bs' ? 'Org. jed.' : 'Org. unit') : r.type === 'vehicle' ? (lang === 'bs' ? 'Vozilo' : 'Vehicle') : r.type === 'medical_exam' ? (lang === 'bs' ? 'Lj. Pregled' : 'Medical') : r.type === 'observation' ? (lang === 'bs' ? 'Prijava op..' : 'Observation') : ''}
+                                                {r.type === 'worker' ? (lang === 'bs' ? 'Radnik' : 'Worker') : r.type === 'equipment' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : r.type === 'workplace' ? (lang === 'bs' ? 'Radno mj.' : 'Workplace') : r.type === 'orgUnit' ? (lang === 'bs' ? 'Org. jed.' : 'Org. unit') : r.type === 'vehicle' ? (lang === 'bs' ? 'Vozilo' : 'Vehicle') : r.type === 'medical_exam' ? (lang === 'bs' ? 'Lj. Pregled' : 'Medical') : r.type === 'observation' ? (lang === 'bs' ? 'Prijava op..' : 'Observation') : r.type === 'certificate' ? (lang === 'bs' ? 'Uvjerenje' : 'Certificate') : ''}
                                             </span>
                                         </button>
                                     ))}

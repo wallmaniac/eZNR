@@ -52,6 +52,22 @@ export default function MobileSearchOverlay({ isOpen, onClose }) {
                 if (ou.naziv.toLowerCase().includes(term))
                     results.push({ type: 'orgUnit', icon: '🏢', label: ou.naziv, sub: ou.skraceniNaziv || '', id: ou.id });
             });
+            getAll(COLLECTIONS.VEHICLES || 'vehicles').forEach(v => {
+                if (`${v.registracija || ''} ${v.marka || ''} ${v.model || ''}`.toLowerCase().includes(term))
+                    results.push({ type: 'vehicle', icon: '🚗', label: v.registracija || 'Vozilo', sub: `${v.marka || ''} ${v.model || ''}`, id: v.id });
+            });
+            getAll(COLLECTIONS.MEDICAL_EXAMS || 'medicalExams').forEach(m => {
+                if (`${m.radnikIme || ''} ${m.ustanova || ''} ${m.doktor || ''}`.toLowerCase().includes(term))
+                    results.push({ type: 'medical_exam', icon: '🩺', label: m.radnikIme || 'Pregled', sub: m.ustanova || '', id: m.id });
+            });
+            getAll(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations').forEach(o => {
+                if (`${o.opis || ''} ${o.lokacija || ''}`.toLowerCase().includes(term))
+                    results.push({ type: 'observation', icon: '🚨', label: o.lokacija || 'Prijava opasnosti', sub: o.opis || '', id: o.id });
+            });
+            getAll(COLLECTIONS.CERTIFICATES).forEach(c => {
+                if (`${c.naziv || ''} ${c.radnikIme || ''} ${c.oznaka || ''}`.toLowerCase().includes(term))
+                    results.push({ type: 'certificate', icon: '📜', label: c.naziv || 'Uvjerenje', sub: c.radnikIme || '', id: c.id });
+            });
         } catch { /* dataStore not ready */ }
         return results.slice(0, 12);
     }, [searchTerm]);
@@ -61,6 +77,10 @@ export default function MobileSearchOverlay({ isOpen, onClose }) {
         if (r.type === 'worker') router.push(`/dashboard/workers?openWorker=${r.id}`);
         else if (r.type === 'equipment') router.push(`/dashboard/equipment?openItem=${r.id}`);
         else if (r.type === 'workplace') router.push('/dashboard/workplaces');
+        else if (r.type === 'vehicle') router.push('/dashboard/fleet');
+        else if (r.type === 'medical_exam') router.push('/dashboard/medical-exams');
+        else if (r.type === 'observation') router.push('/dashboard/observations');
+        else if (r.type === 'certificate') router.push('/dashboard/certificates');
         else router.push('/dashboard/org-units');
     };
 
@@ -68,6 +88,10 @@ export default function MobileSearchOverlay({ isOpen, onClose }) {
         if (type === 'worker') return lang === 'bs' ? 'Radnik' : 'Worker';
         if (type === 'equipment') return lang === 'bs' ? 'Oprema' : 'Equipment';
         if (type === 'workplace') return lang === 'bs' ? 'Radno mj.' : 'Workplace';
+        if (type === 'vehicle') return lang === 'bs' ? 'Vozilo' : 'Vehicle';
+        if (type === 'medical_exam') return lang === 'bs' ? 'Lj. Pregled' : 'Medical';
+        if (type === 'observation') return lang === 'bs' ? 'Prijava op.' : 'Observation';
+        if (type === 'certificate') return lang === 'bs' ? 'Uvjerenje' : 'Certificate';
         return lang === 'bs' ? 'Org. jed.' : 'Org. unit';
     };
 
