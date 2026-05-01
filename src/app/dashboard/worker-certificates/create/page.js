@@ -779,7 +779,7 @@ export function UvjerenjeFormPage() {
                     {/* Actions */}
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-primary" onClick={handleSave}>
-                            💾 {lang === 'bs' ? 'Snimi' : 'Save'}
+                            💾 {t('save')}
                         </button>
                         <button className="btn btn-ghost" onClick={() => { 
                             const returnTo = searchParams?.get('returnTo'); 

@@ -459,10 +459,10 @@ export default function FormRO2Page() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi uputnicu' : 'Save referral'}
+              💾 {lang === 'bs' ? 'Sačuvaj uputnicu' : 'Save referral'}
             </button>
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
-              💾 {lang === 'bs' ? 'Snimi i otvori novu' : 'Save & new'}
+              💾 {lang === 'bs' ? 'Sačuvaj i nova' : 'Save & new'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
               ↩ {t('cancel')}

@@ -842,7 +842,7 @@ export default function TrainingsPage() {
                     ))}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
                         <button className="btn btn-ghost" onClick={() => setView('list')}>{t('cancel')}</button>
-                        <button className="btn btn-primary" onClick={handleSave}>💾 Snimi</button>
+                        <button className="btn btn-primary" onClick={handleSave}>{`💾 ${t('save')}`}</button>
                     </div>
                 </div>
             </div>
@@ -1061,7 +1061,7 @@ export default function TrainingsPage() {
             {/* Bottom Save */}
             <div className="card" style={{ marginTop: 16 }}>
                 <div className="card-body" style={{ display: 'flex', gap: 10 }}>
-                    <button className="btn btn-primary" onClick={handleSave}>💾 Snimi obuku</button>
+                    <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj obuku' : 'Save training'}</button>
                     <button className="btn btn-ghost" onClick={() => setView('list')}>{t('cancel')}</button>
                     {editingId && (
                         <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}

@@ -971,7 +971,7 @@ export default function QuestionnairesPage() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi' : 'Save'}
+              💾 {t('save')}
             </button>
             <button className="btn btn-ghost" onClick={() => setView('list')}>
               ↩ {t('cancel')}

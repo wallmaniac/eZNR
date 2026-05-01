@@ -508,7 +508,7 @@ export default function FormOIR1Page() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi obrazac' : 'Save form'}
+              💾 {lang === 'bs' ? 'Sačuvaj obrazac' : 'Save form'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
               ↩ {t('cancel')}

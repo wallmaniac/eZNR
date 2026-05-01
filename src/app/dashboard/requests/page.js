@@ -276,7 +276,7 @@ export default function RequestsPage() {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
               <button className="btn btn-primary" onClick={handleSaveItem}>
-                💾 {lang === 'bs' ? 'Snimi' : 'Save'}
+                💾 {t('save')}
               </button>
               <button className="btn btn-ghost" onClick={() => setShowItemForm(false)}>
                 ↩ {t('cancel')}
@@ -599,7 +599,7 @@ export default function RequestsPage() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Snimi zahtjevnicu' : 'Save request'}
+              💾 {lang === 'bs' ? 'Sačuvaj zahtjevnicu' : 'Save request'}
             </button>
             <SavedFlash />
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
