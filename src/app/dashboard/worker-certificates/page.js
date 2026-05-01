@@ -107,6 +107,7 @@ function WorkerCertificatesInner() {
   const touchStartPos = useRef({ x: 0, y: 0 });
   const { confirm, DialogRenderer } = useDialog();
   const [certsVersion, setCertsVersion] = useState(0);
+  const [zapisniciOpen, setZapisniciOpen] = useState(false);
 
   // ── Bulk selection state ──────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -287,13 +288,18 @@ function WorkerCertificatesInner() {
               ]} />
 
               <div style={{ position: 'relative' }}>
-                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={() => { const el = document.getElementById('zapisnici-menu'); el.style.display = el.style.display === 'block' ? 'none' : 'block'; }}>
+                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={() => setZapisniciOpen(prev => !prev)}>
                     🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
                  </button>
-                 <div id="zapisnici-menu" style={{ display: 'none', position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 99, minWidth: 150 }}>
-                    <div onClick={() => { document.getElementById('zapisnici-menu').style.display='none'; window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem' }}>🖨️ {bs ? 'Zapisnik ZOS' : 'ZOS'}</div>
-                    <div onClick={() => { document.getElementById('zapisnici-menu').style.display='none'; window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '8px 12px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem' }}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP'}</div>
-                 </div>
+                 {zapisniciOpen && (
+                   <>
+                     <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
+                     <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
+                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
+                     </div>
+                   </>
+                 )}
               </div>
             </div>
 

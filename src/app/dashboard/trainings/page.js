@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -480,11 +480,11 @@ export default function TrainingsPage() {
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                             <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ Nova obuka</button>
-                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOS', '_blank')}>??? {lang === 'bs' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>?? {lang === 'bs' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOS', '_blank')}>📝 {lang === 'bs' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>🔥 {lang === 'bs' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                             <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
-                                <span style={{ opacity: 0.5 }}>??</span>
-                                <input placeholder="Pretra�i obuke..." value={search} onChange={e => setSearch(e.target.value)}
+                                <span style={{ opacity: 0.5 }}>🔍</span>
+                                <input placeholder="Pretraži obuke..." value={search} onChange={e => setSearch(e.target.value)}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             </div>
                             <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{filtered.length} {t('records')}</span>
