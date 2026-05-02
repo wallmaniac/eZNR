@@ -112,6 +112,7 @@ export default function LandingPage() {
     <div className="landing-root">
       
       {/* ── Ambient Backgrounds ── */}
+      <div className="starry-dust"></div>
       <div className="bg-glow bg-glow-1"></div>
       <div className="bg-glow bg-glow-2"></div>
       <div className="bg-glow bg-glow-3"></div>
@@ -168,7 +169,7 @@ export default function LandingPage() {
       <header className="hero-section">
         <div className="hero-content reveal-element">
           <div style={{ marginBottom: 30, display: 'flex', justifyContent: 'center' }}>
-            <Image src="/landing/eznr_logo_main.png" width={440} height={140} alt="eZNR" className="hero-main-logo" />
+            <Image src="/landing/eznr_logo_main.png" width={330} height={105} alt="eZNR" className="hero-main-logo" />
           </div>
           <h1 className="hero-title">{t.heroTitle}</h1>
           <p className="hero-subtitle">{t.heroSub}</p>

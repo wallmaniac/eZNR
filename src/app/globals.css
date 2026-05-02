@@ -2835,28 +2835,80 @@ p { line-height: 1.6; }
 /* Logo Fade & Light Effects */
 .hero-main-logo {
   object-fit: contain;
-  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 70%, transparent 100%);
-  mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 70%, transparent 100%);
+  /* Tighter mask to ensure left/right borders are fully faded out */
+  -webkit-mask-image: radial-gradient(ellipse 45% 45% at 50% 50%, black 60%, transparent 100%);
+  mask-image: radial-gradient(ellipse 45% 45% at 50% 50%, black 60%, transparent 100%);
   mix-blend-mode: screen;
 }
 
+/* Starry Dust */
+.starry-dust {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: 
+    radial-gradient(2px 2px at 40px 60px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 150px 180px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 300px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 450px 240px, rgba(255,255,255,0.6), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 80px 320px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 260px 420px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 550px 100px, rgba(255,255,255,0.5), rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 680px 300px, #fff, rgba(0,0,0,0));
+  background-repeat: repeat;
+  background-size: 800px 500px;
+  animation: star-drift 100s linear infinite;
+  opacity: 0.45;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes star-drift {
+  from { background-position: 0 0; }
+  to { background-position: -800px 500px; }
+}
+
+/* Floating Orbs (Using radial gradients instead of filter:blur to fix browser freezing!) */
 .floating-orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
   pointer-events: none;
   z-index: 0;
   animation: orb-drift 20s infinite alternate ease-in-out;
 }
-.orb-1 { width: 30vw; height: 30vw; background: #00BFA6; top: 10%; left: 10%; animation-delay: 0s; }
-.orb-2 { width: 40vw; height: 40vw; background: #6366F1; top: 60%; right: 10%; animation-delay: -5s; }
-.orb-3 { width: 25vw; height: 25vw; background: #F59E0B; top: 40%; left: 30%; animation-delay: -10s; }
-.orb-4 { width: 35vw; height: 35vw; background: #EF4444; bottom: -10%; left: 50%; animation-delay: -15s; }
+
+/* Located strategically near text areas */
+/* Orb 1: Hero text area */
+.orb-1 { 
+  width: 50vw; height: 50vw; 
+  background: radial-gradient(circle, rgba(0, 191, 166, 0.15) 0%, transparent 60%); 
+  top: 15vh; left: 10vw; 
+  animation-delay: 0s; 
+}
+/* Orb 2: Moduli section (Features) */
+.orb-2 { 
+  width: 60vw; height: 60vw; 
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 60%); 
+  top: 120vh; right: 5vw; 
+  animation-delay: -5s; 
+}
+/* Orb 3: Procjena rizika area */
+.orb-3 { 
+  width: 50vw; height: 50vw; 
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 60%); 
+  top: 240vh; left: 15vw; 
+  animation-delay: -10s; 
+}
+/* Orb 4: Contact section */
+.orb-4 { 
+  width: 65vw; height: 65vw; 
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 60%); 
+  top: 360vh; left: 25vw; 
+  animation-delay: -15s; 
+}
 
 @keyframes orb-drift {
   0% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(5%, 10%) scale(1.1); }
-  66% { transform: translate(-5%, -5%) scale(0.9); }
-  100% { transform: translate(10%, -10%) scale(1.2); }
+  33% { transform: translate(3%, 6%) scale(1.05); }
+  66% { transform: translate(-3%, -3%) scale(0.95); }
+  100% { transform: translate(6%, -6%) scale(1.1); }
 }
