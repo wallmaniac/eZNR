@@ -2833,25 +2833,36 @@ p { line-height: 1.6; }
   .links-row { justify-content: center; }
 }
 /* Logo Fade & Light Effects */
+.landing-root {
+  background: radial-gradient(circle at top, #10152b 0%, #03080c 100%);
+  position: relative;
+  overflow-x: hidden; /* Fixes mobile horizontal scroll issues */
+  min-height: 100vh;
+}
+
 /* Logo Fade & Light Effects */
 .hero-main-logo {
   object-fit: contain;
-  /* Very soft fade only at the outer 10% edge so logo is 100% visible */
-  -webkit-mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 75%, transparent 100%);
-  mask-image: radial-gradient(ellipse 90% 90% at 50% 50%, black 75%, transparent 100%);
+  width: 100%;
+  max-width: 550px; /* Forces responsive scaling on mobile */
+  height: auto;
+  /* Visibly rounded and heavily faded edges */
+  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 50%, transparent 100%);
+  mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 50%, transparent 100%);
   mix-blend-mode: screen;
-  filter: drop-shadow(0 0 15px rgba(0, 191, 166, 0.2));
+  filter: drop-shadow(0 0 20px rgba(0, 191, 166, 0.4));
 }
 
-/* Interactive Milky Way Background */
+/* Interactive Milky Way Background - Bright & Vibrant! */
 .milky-way {
   position: fixed;
   top: -50%; left: -50%; right: -50%; bottom: -50%;
   background: 
-    radial-gradient(ellipse at 50% 50%, rgba(14, 21, 58, 0.45) 0%, transparent 60%),
-    radial-gradient(ellipse at 40% 60%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 40%, rgba(0, 191, 166, 0.08) 0%, transparent 50%);
-  transform: rotate(-15deg) translate(calc(var(--mouse-x, 0) * -2%), calc(var(--mouse-y, 0) * -2%));
+    radial-gradient(ellipse at 50% 50%, rgba(25, 20, 60, 0.8) 0%, transparent 60%),
+    radial-gradient(ellipse at 40% 60%, rgba(120, 50, 240, 0.3) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 40%, rgba(0, 220, 180, 0.25) 0%, transparent 50%),
+    radial-gradient(circle at 30% 30%, rgba(255, 0, 150, 0.15) 0%, transparent 40%);
+  transform: rotate(-15deg) translate(calc(var(--mouse-x, 0) * -3%), calc(var(--mouse-y, 0) * -3%));
   transition: transform 0.2s ease-out;
   pointer-events: none;
   z-index: -2;
