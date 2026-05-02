@@ -210,7 +210,7 @@ export default function LandingPage() {
         <div style={{ ...S.cursorGlow, left: mousePos.x, top: mousePos.y }} />
 
         <div className="landing-section-reveal" style={S.heroContent}>
-          <img src="/landing/eznr_logo_icon.png" alt="eZNR Logo" style={{ height: 120, marginBottom: 32, objectFit: 'contain' }} />
+          <img src="/landing/eznr_logo_icon.png" alt="eZNR Logo" style={{ height: 140, marginBottom: 32, objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse at center, black 50%, transparent 85%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 50%, transparent 85%)' }} />
           <h1 className="landing-hero-title" style={S.heroTitle}>{t.heroTitle}</h1>
           <p className="landing-hero-subtitle" style={S.heroSubtitle}>{t.heroSub}</p>
 
@@ -254,58 +254,58 @@ export default function LandingPage() {
           
           <div className="bento-grid" style={S.bentoGrid}>
             {/* Popis Opreme - Large */}
-            <div className="bento-card bento-lg glass-card">
-              <div style={S.bentoText}>
+            <div className="bento-card bento-lg glass-card" style={{ overflow: 'hidden' }}>
+              <div style={{...S.bentoText, flex: 1}}>
                 <h3 style={S.bentoTitle}>{t.m1T}</h3>
                 <p style={S.bentoDesc}>{t.m1D}</p>
               </div>
-              <div style={S.bentoImgWrap}>
-                <img src="/landing/hpop.png" alt="Popis opreme" style={S.bentoImg} />
+              <div style={{ flex: 1.2, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', paddingLeft: 20 }}>
+                <img src="/landing/hpop.png" alt="Popis opreme" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left top', borderTopLeftRadius: 16, boxShadow: '-10px -10px 30px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none', borderRight: 'none' }} />
               </div>
             </div>
 
             {/* Zia AI - Small */}
-            <div className="bento-card bento-sm glass-card">
+            <div className="bento-card bento-sm glass-card" style={{ overflow: 'hidden', justifyContent: 'space-between' }}>
               <div style={S.bentoText}>
                 <h3 style={S.bentoTitle}>{t.m2T}</h3>
                 <p style={S.bentoDesc}>{t.m2D}</p>
               </div>
-              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
-                <img src="/landing/hzia.png" alt="Zia AI" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
+              <div style={{ padding: '0 36px', display: 'flex', justifyContent: 'center' }}>
+                <img src="/landing/hzia.png" alt="Zia AI" style={{ width: '100%', objectFit: 'contain', objectPosition: 'top', borderTopLeftRadius: 16, borderTopRightRadius: 16, boxShadow: '0 0 30px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none' }} />
               </div>
             </div>
 
             {/* Certificates - Small */}
-            <div className="bento-card bento-sm glass-card">
+            <div className="bento-card bento-sm glass-card" style={{ overflow: 'hidden', justifyContent: 'space-between' }}>
               <div style={S.bentoText}>
                 <h3 style={S.bentoTitle}>{t.m3T}</h3>
                 <p style={S.bentoDesc}>{t.m3D}</p>
               </div>
-              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
-                <img src="/landing/hcert.png" alt="Certificates" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
+              <div style={{ padding: '0 36px', display: 'flex', justifyContent: 'center' }}>
+                <img src="/landing/hcert.png" alt="Certificates" style={{ width: '100%', objectFit: 'contain', objectPosition: 'top', borderTopLeftRadius: 16, borderTopRightRadius: 16, boxShadow: '0 0 30px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none' }} />
               </div>
             </div>
 
             {/* Procjena rizika - Large */}
-            <div className="bento-card bento-lg glass-card">
-              <div style={{...S.bentoImgWrap, paddingLeft: 0, paddingRight: 36, justifyContent: 'flex-start'}}>
-                <img src="/landing/hproc.png" alt="Procjena rizika" style={{...S.bentoImg, borderTopLeftRadius: 16, borderTopRightRadius: 0, borderLeft: 'none', borderRight: '1px solid rgba(255,255,255,0.1)'}} />
+            <div className="bento-card bento-lg glass-card" style={{ overflow: 'hidden' }}>
+              <div style={{ flex: 1.2, display: 'flex', alignItems: 'center' }}>
+                <img src="/landing/hproc.png" alt="Procjena rizika" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }} />
               </div>
-              <div style={{...S.bentoText, textAlign: 'right'}}>
+              <div style={{...S.bentoText, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                 <h3 style={S.bentoTitle}>{t.m4T}</h3>
                 <p style={S.bentoDesc}>{t.m4D}</p>
               </div>
             </div>
 
             {/* Mobilna aplikacija - Large */}
-            <div className="bento-card bento-lg glass-card" style={{ flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{...S.bentoText, textAlign: 'center', width: '100%', paddingBottom: 0}}>
+            <div className="bento-card bento-lg glass-card" style={{ flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
+              <div style={{...S.bentoText, textAlign: 'center', width: '100%', maxWidth: 700, paddingBottom: 10}}>
                 <h3 style={S.bentoTitle}>{t.m5T}</h3>
                 <p style={S.bentoDesc}>{t.m5D}</p>
               </div>
-              <div style={{ display: 'flex', gap: 30, justifyContent: 'center', padding: 36, overflow: 'hidden' }}>
-                <img src="/landing/hmob.jpg" alt="Mobilna Aplikacija 1" style={{ height: 360, borderRadius: 20, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', border: '4px solid rgba(255,255,255,0.05)' }} />
-                <img src="/landing/hmob1.jpg" alt="Mobilna Aplikacija 2" style={{ height: 360, borderRadius: 20, boxShadow: '0 10px 40px rgba(0,0,0,0.6)', border: '4px solid rgba(255,255,255,0.05)' }} />
+              <div style={{ display: 'flex', gap: 40, justifyContent: 'center', padding: '20px 40px 40px', width: '100%' }}>
+                <img src="/landing/hmob.jpg" alt="Mobilna Aplikacija 1" style={{ height: 420, width: 'auto', objectFit: 'contain', borderRadius: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }} />
+                <img src="/landing/hmob1.jpg" alt="Mobilna Aplikacija 2" style={{ height: 420, width: 'auto', objectFit: 'contain', borderRadius: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }} />
               </div>
             </div>
           </div>
