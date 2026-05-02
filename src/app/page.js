@@ -114,6 +114,11 @@ export default function LandingPage() {
       {/* ── Ambient Backgrounds ── */}
       <div className="bg-glow bg-glow-1"></div>
       <div className="bg-glow bg-glow-2"></div>
+      <div className="bg-glow bg-glow-3"></div>
+      <div className="floating-orb orb-1"></div>
+      <div className="floating-orb orb-2"></div>
+      <div className="floating-orb orb-3"></div>
+      <div className="floating-orb orb-4"></div>
       <div className="grid-overlay"></div>
 
       {/* ══════════════ NAVBAR ══════════════ */}
@@ -162,8 +167,8 @@ export default function LandingPage() {
       {/* ══════════════ HERO ══════════════ */}
       <header className="hero-section">
         <div className="hero-content reveal-element">
-          <div style={{ marginBottom: 30 }}>
-            <Image src="/landing/eznr_logo_main.png" width={220} height={70} alt="eZNR" style={{ objectFit: 'contain' }} />
+          <div style={{ marginBottom: 30, display: 'flex', justifyContent: 'center' }}>
+            <Image src="/landing/eznr_logo_main.png" width={440} height={140} alt="eZNR" className="hero-main-logo" />
           </div>
           <h1 className="hero-title">{t.heroTitle}</h1>
           <p className="hero-subtitle">{t.heroSub}</p>

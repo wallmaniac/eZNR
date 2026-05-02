@@ -2832,3 +2832,31 @@ p { line-height: 1.6; }
   .footer-links { text-align: center; }
   .links-row { justify-content: center; }
 }
+/* Logo Fade & Light Effects */
+.hero-main-logo {
+  object-fit: contain;
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 70%, transparent 100%);
+  mix-blend-mode: screen;
+}
+
+.floating-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+  animation: orb-drift 20s infinite alternate ease-in-out;
+}
+.orb-1 { width: 30vw; height: 30vw; background: #00BFA6; top: 10%; left: 10%; animation-delay: 0s; }
+.orb-2 { width: 40vw; height: 40vw; background: #6366F1; top: 60%; right: 10%; animation-delay: -5s; }
+.orb-3 { width: 25vw; height: 25vw; background: #F59E0B; top: 40%; left: 30%; animation-delay: -10s; }
+.orb-4 { width: 35vw; height: 35vw; background: #EF4444; bottom: -10%; left: 50%; animation-delay: -15s; }
+
+@keyframes orb-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(5%, 10%) scale(1.1); }
+  66% { transform: translate(-5%, -5%) scale(0.9); }
+  100% { transform: translate(10%, -10%) scale(1.2); }
+}
