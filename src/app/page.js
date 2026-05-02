@@ -123,19 +123,15 @@ export default function LandingPage() {
   return (
     <div className="landing-root" style={{ '--mouse-x': mousePos.x, '--mouse-y': mousePos.y }}>
       
-      {/* ── Interactive Milky Way Background ── */}
-      <div className="milky-way"></div>
+      {/* ── Animated Aurora & Stars Background ── */}
+      <div className="aurora-bg">
+        <div className="aurora-orb a-1"></div>
+        <div className="aurora-orb a-2"></div>
+        <div className="aurora-orb a-3"></div>
+        <div className="aurora-orb a-4"></div>
+      </div>
       <div className="starry-layer slow"></div>
       <div className="starry-layer fast"></div>
-      
-      {/* ── Ambient Backgrounds ── */}
-      <div className="bg-glow bg-glow-1"></div>
-      <div className="bg-glow bg-glow-2"></div>
-      <div className="bg-glow bg-glow-3"></div>
-      <div className="floating-orb orb-1"></div>
-      <div className="floating-orb orb-2"></div>
-      <div className="floating-orb orb-3"></div>
-      <div className="floating-orb orb-4"></div>
       <div className="grid-overlay"></div>
 
       {/* ══════════════ NAVBAR ══════════════ */}

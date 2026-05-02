@@ -2877,9 +2877,9 @@ p { line-height: 1.6; }
 }
 /* Logo Fade & Light Effects */
 .landing-root {
-  background: radial-gradient(circle at top, #10152b 0%, #03080c 100%);
+  background: #020617; /* Deep midnight base */
   position: relative;
-  overflow-x: hidden; /* Fixes mobile horizontal scroll issues */
+  overflow-x: hidden;
   min-height: 100vh;
 }
 
@@ -2887,28 +2887,50 @@ p { line-height: 1.6; }
 .hero-main-logo {
   object-fit: contain;
   width: 100%;
-  max-width: 550px; /* Forces responsive scaling on mobile */
+  max-width: 550px;
   height: auto;
-  /* Visibly rounded and heavily faded edges */
-  -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 50%, transparent 100%);
-  mask-image: radial-gradient(ellipse 60% 50% at 50% 50%, black 50%, transparent 100%);
+  /* Extremely soft linear masks specifically targeting the 10% edges to make the box vanish without cutting text */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
   mix-blend-mode: screen;
-  filter: drop-shadow(0 0 20px rgba(0, 191, 166, 0.4));
+  filter: drop-shadow(0 0 40px rgba(0, 191, 166, 0.4)) contrast(1.1);
+  animation: logo-float 6s ease-in-out infinite;
 }
 
-/* Interactive Milky Way Background - Bright & Vibrant! */
-.milky-way {
+@keyframes logo-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+/* Animated Aurora & Stars Background */
+.aurora-bg {
   position: fixed;
-  top: -50%; left: -50%; right: -50%; bottom: -50%;
-  background: 
-    radial-gradient(ellipse at 50% 50%, rgba(25, 20, 60, 0.8) 0%, transparent 60%),
-    radial-gradient(ellipse at 40% 60%, rgba(120, 50, 240, 0.3) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 40%, rgba(0, 220, 180, 0.25) 0%, transparent 50%),
-    radial-gradient(circle at 30% 30%, rgba(255, 0, 150, 0.15) 0%, transparent 40%);
-  transform: rotate(-15deg) translate(calc(var(--mouse-x, 0) * -3%), calc(var(--mouse-y, 0) * -3%));
-  transition: transform 0.2s ease-out;
+  top: 0; left: 0; right: 0; bottom: 0;
+  z-index: -3;
+  overflow: hidden;
   pointer-events: none;
-  z-index: -2;
+  background: #020617;
+}
+
+.aurora-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: aurora-drift 20s infinite alternate ease-in-out;
+  mix-blend-mode: screen;
+}
+
+/* Using radial-gradients instead of filter:blur() ensures 60fps performance without lag! */
+.a-1 { width: 100vw; height: 100vw; background: radial-gradient(circle, rgba(0, 191, 166, 0.25) 0%, transparent 60%); top: -20%; left: -20%; animation-delay: 0s; }
+.a-2 { width: 90vw; height: 90vw; background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 60%); top: 40%; right: -20%; animation-delay: -5s; }
+.a-3 { width: 110vw; height: 110vw; background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 60%); bottom: -30%; left: 10%; animation-delay: -10s; }
+.a-4 { width: 80vw; height: 80vw; background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%); top: 10%; left: 40%; animation-delay: -15s; }
+
+@keyframes aurora-drift {
+  0% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(8vw, 8vh) scale(1.1); }
+  66% { transform: translate(-8vw, 12vh) scale(0.9); }
+  100% { transform: translate(-12vw, -8vh) scale(1.15); }
 }
 
 .starry-layer {
@@ -2916,73 +2938,45 @@ p { line-height: 1.6; }
   top: -10%; left: -10%; right: -10%; bottom: -10%;
   background-repeat: repeat;
   pointer-events: none;
-  z-index: -1;
+  z-index: -2;
   transition: transform 0.2s ease-out;
   will-change: transform;
 }
 
 .starry-layer.slow {
   background-image: 
-    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1.5px 1.5px at 150px 180px, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1px 1px at 250px 80px, rgba(255,255,255,0.3), transparent);
+    radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1.5px 1.5px at 150px 180px, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 250px 80px, rgba(255,255,255,0.5), transparent);
   background-size: 300px 300px;
   transform: translate(calc(var(--mouse-x, 0) * -1.5%), calc(var(--mouse-y, 0) * -1.5%));
 }
 
 .starry-layer.fast {
   background-image: 
-    radial-gradient(2px 2px at 80px 120px, rgba(255,255,255,0.8), transparent),
-    radial-gradient(1.5px 1.5px at 200px 60px, rgba(255,255,255,0.6), transparent),
+    radial-gradient(2px 2px at 80px 120px, rgba(255,255,255,0.9), transparent),
+    radial-gradient(1.5px 1.5px at 200px 60px, rgba(255,255,255,0.8), transparent),
     radial-gradient(2.5px 2.5px at 300px 250px, #fff, transparent);
   background-size: 400px 400px;
   transform: translate(calc(var(--mouse-x, 0) * -3%), calc(var(--mouse-y, 0) * -3%));
 }
 
-/* Floating Orbs (Using radial gradients instead of filter:blur to fix browser freezing!) */
-.floating-orb {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 0;
-  animation: orb-drift 20s infinite alternate ease-in-out;
+/* Animated Title Sweep */
+.hero-title {
+  font-size: 4.8rem;
+  margin-bottom: 24px;
+  background: linear-gradient(to right, #ffffff 20%, #00BFA6 40%, #00BFA6 60%, #ffffff 80%);
+  background-size: 200% auto;
+  color: #fff;
+  background-clip: text;
+  text-fill-color: transparent;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shine 6s linear infinite;
 }
 
-/* Located strategically near text areas */
-/* Orb 1: Hero text area */
-.orb-1 { 
-  width: 50vw; height: 50vw; 
-  background: radial-gradient(circle, rgba(0, 191, 166, 0.15) 0%, transparent 60%); 
-  top: 15vh; left: 10vw; 
-  animation-delay: 0s; 
-}
-/* Orb 2: Moduli section (Features) */
-.orb-2 { 
-  width: 60vw; height: 60vw; 
-  background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, transparent 60%); 
-  top: 120vh; right: 5vw; 
-  animation-delay: -5s; 
-}
-/* Orb 3: Procjena rizika area */
-.orb-3 { 
-  width: 50vw; height: 50vw; 
-  background: radial-gradient(circle, rgba(245, 158, 11, 0.12) 0%, transparent 60%); 
-  top: 240vh; left: 15vw; 
-  animation-delay: -10s; 
-}
-/* Orb 4: Contact section */
-.orb-4 { 
-  width: 65vw; height: 65vw; 
-  background: radial-gradient(circle, rgba(239, 68, 68, 0.15) 0%, transparent 60%); 
-  top: 360vh; left: 25vw; 
-  animation-delay: -15s; 
-}
-
-@keyframes orb-drift {
-  0% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(3%, 6%) scale(1.05); }
-  66% { transform: translate(-3%, -3%) scale(0.95); }
-  100% { transform: translate(6%, -6%) scale(1.1); }
+@keyframes shine {
+  to { background-position: 200% center; }
 }
 
 /* Button Glossy Edge Fix Override */
