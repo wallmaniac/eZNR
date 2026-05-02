@@ -20,15 +20,15 @@ const T = {
     videoSub: "Pogledajte kako izgleda svakodnevni rad u najnaprednijoj aplikaciji za zaštitu na radu.",
     modulesTitle: "Sveobuhvatni Ekosustav",
     m1T: "Popis opreme",
-    m1D: "Vodite preciznu i brzu evidenciju zadužene opreme po svakom radniku i pratite stanje sredstava rada.",
+    m1D: "Upravljajte svom opremom na jednom mjestu, sa upozorenjima o isteku pregleda i atesta.",
     m2T: "Zia AI Asistent",
     m2D: "Pitajte našeg AI agenta o zakonima ili radnicima. Zia čita vašu bazu i daje precizne odgovore.",
     m3T: "Certifikati i Uvjerenja",
     m3D: "Pravite ZOS i ZOP zapisnike te pratite rokove važenja ljekarskih uvjerenja bez muke.",
     m4T: "Izrada procjene rizika",
-    m4D: "Identifikacija opasnosti i kvantifikacija rizika u skladu sa zvaničnom metodologijom, uz trenutni izvoz gotovog dokumenta.",
-    m5T: "Mobilna Aplikacija",
-    m5D: "eZNR je dostupan i kao mobilna aplikacija na dohvat ruke. Brzo i jednostavno prijavite opasnosti direktno sa gradilišta i skenirajte QR kodove.",
+    m4D: "Kreirajte detaljne procjene rizika za radna mjesta uz pomoć umjetne inteligencije i izvezite u DOCX.",
+    m5T: "Mobilna aplikacija",
+    m5D: "eZNR je dostupan i na vašem pametnom telefonu. Brzo pristupite podacima i izvršite provjere na terenu.",
     contactTitle: "Obratite nam se!",
     contactSub: "Kontaktirajte nas za personaliziranu prezentaciju sistema i saznajte kako možemo unaprijediti vaš proces zaštite na radu.",
     fName: "Ime i Prezime",
@@ -58,17 +58,17 @@ const T = {
     videoTitle: "See eZNR in Action",
     videoSub: "Watch what daily operations look like in the most advanced occupational safety app.",
     modulesTitle: "Comprehensive Ecosystem",
-    m1T: "Equipment List",
-    m1D: "Keep precise and fast records of assigned equipment for each worker and track asset conditions.",
+    m1T: "Equipment Inventory",
+    m1D: "Manage all your equipment in one place, with inspection and certification expiration alerts.",
     m2T: "Zia AI Assistant",
     m2D: "Ask our AI agent about regulations or workers. Zia reads your database and provides precise answers.",
     m3T: "Certificates & Training",
     m3D: "Create ZOS and ZOP records and track the validity periods of medical certificates effortlessly.",
     m4T: "Risk Assessment Generation",
-    m4D: "Hazard identification and risk quantification according to the official methodology, with instant document export.",
+    m4D: "Create detailed risk assessments for workplaces with the help of artificial intelligence and export to DOCX.",
     m5T: "Mobile Application",
-    m5D: "eZNR is also available as a mobile app at your fingertips. Quickly and easily report hazards directly from the construction site and scan QR codes.",
-    contactTitle: "Contact Us!",
+    m5D: "eZNR is also available on your smartphone. Quickly access data and perform field checks.",
+    contactTitle: "Get in touch!",
     contactSub: "Contact us for a personalized system presentation and learn how we can improve your occupational safety process.",
     fName: "Full Name",
     fCompany: "Company Name",
@@ -210,7 +210,9 @@ export default function LandingPage() {
         <div style={{ ...S.cursorGlow, left: mousePos.x, top: mousePos.y }} />
 
         <div className="landing-section-reveal" style={S.heroContent}>
-          <img src="/landing/eznr_logo_icon.png" alt="eZNR Logo" style={{ height: 140, marginBottom: 32, objectFit: 'contain', mixBlendMode: 'screen', maskImage: 'radial-gradient(ellipse at center, black 50%, transparent 85%)', WebkitMaskImage: 'radial-gradient(ellipse at center, black 50%, transparent 85%)' }} />
+          <div style={{ marginBottom: 24 }}>
+            <Image src="/landing/eznr_logo_main.png" width={180} height={60} alt="eZNR" style={{ objectFit: 'contain' }} />
+          </div>
           <h1 className="landing-hero-title" style={S.heroTitle}>{t.heroTitle}</h1>
           <p className="landing-hero-subtitle" style={S.heroSubtitle}>{t.heroSub}</p>
 
@@ -253,59 +255,59 @@ export default function LandingPage() {
           </div>
           
           <div className="bento-grid" style={S.bentoGrid}>
-            {/* Popis Opreme - Large */}
-            <div className="bento-card bento-lg glass-card" style={{ overflow: 'hidden' }}>
-              <div style={{...S.bentoText, flex: 1}}>
+            {/* Popis opreme - Large */}
+            <div className="bento-card bento-lg glass-card">
+              <div style={S.bentoText}>
                 <h3 style={S.bentoTitle}>{t.m1T}</h3>
                 <p style={S.bentoDesc}>{t.m1D}</p>
               </div>
-              <div style={{ flex: 1.2, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', paddingLeft: 20 }}>
-                <img src="/landing/hpop.png" alt="Popis opreme" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'left top', borderTopLeftRadius: 16, boxShadow: '-10px -10px 30px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none', borderRight: 'none' }} />
+              <div style={S.bentoImgWrap}>
+                <img src="/landing/hpop.png" alt="Oprema" style={S.bentoImg} />
+              </div>
+            </div>
+
+            {/* Izrada procjene rizika - Large */}
+            <div className="bento-card bento-lg glass-card">
+              <div style={S.bentoText}>
+                <h3 style={S.bentoTitle}>{t.m4T}</h3>
+                <p style={S.bentoDesc}>{t.m4D}</p>
+              </div>
+              <div style={S.bentoImgWrap}>
+                <img src="/landing/hproc.png" alt="Procjena Rizika" style={S.bentoImg} />
               </div>
             </div>
 
             {/* Zia AI - Small */}
-            <div className="bento-card bento-sm glass-card" style={{ overflow: 'hidden', justifyContent: 'space-between' }}>
+            <div className="bento-card bento-sm glass-card">
               <div style={S.bentoText}>
                 <h3 style={S.bentoTitle}>{t.m2T}</h3>
                 <p style={S.bentoDesc}>{t.m2D}</p>
               </div>
-              <div style={{ padding: '0 36px', display: 'flex', justifyContent: 'center' }}>
-                <img src="/landing/hzia.png" alt="Zia AI" style={{ width: '100%', objectFit: 'contain', objectPosition: 'top', borderTopLeftRadius: 16, borderTopRightRadius: 16, boxShadow: '0 0 30px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none' }} />
+              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
+                <img src="/landing/hzia.png" alt="Zia AI" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', borderRight: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)'}} />
               </div>
             </div>
 
             {/* Certificates - Small */}
-            <div className="bento-card bento-sm glass-card" style={{ overflow: 'hidden', justifyContent: 'space-between' }}>
+            <div className="bento-card bento-sm glass-card">
               <div style={S.bentoText}>
                 <h3 style={S.bentoTitle}>{t.m3T}</h3>
                 <p style={S.bentoDesc}>{t.m3D}</p>
               </div>
-              <div style={{ padding: '0 36px', display: 'flex', justifyContent: 'center' }}>
-                <img src="/landing/hcert.png" alt="Certificates" style={{ width: '100%', objectFit: 'contain', objectPosition: 'top', borderTopLeftRadius: 16, borderTopRightRadius: 16, boxShadow: '0 0 30px rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.05)', borderBottom: 'none' }} />
+              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
+                <img src="/landing/hcert.png" alt="Certificates" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', borderRight: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)'}} />
               </div>
             </div>
 
-            {/* Procjena rizika - Large */}
-            <div className="bento-card bento-lg glass-card" style={{ overflow: 'hidden' }}>
-              <div style={{ flex: 1.2, display: 'flex', alignItems: 'center' }}>
-                <img src="/landing/hproc.png" alt="Procjena rizika" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', borderRight: '1px solid rgba(255,255,255,0.05)' }} />
-              </div>
-              <div style={{...S.bentoText, flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                <h3 style={S.bentoTitle}>{t.m4T}</h3>
-                <p style={S.bentoDesc}>{t.m4D}</p>
-              </div>
-            </div>
-
-            {/* Mobilna aplikacija - Large */}
-            <div className="bento-card bento-lg glass-card" style={{ flexDirection: 'column', alignItems: 'center', overflow: 'hidden' }}>
-              <div style={{...S.bentoText, textAlign: 'center', width: '100%', maxWidth: 700, paddingBottom: 10}}>
+            {/* Mobilna aplikacija - Large with two images */}
+            <div className="bento-card bento-lg glass-card" style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <div style={{...S.bentoText, flex: '1 1 50%'}}>
                 <h3 style={S.bentoTitle}>{t.m5T}</h3>
                 <p style={S.bentoDesc}>{t.m5D}</p>
               </div>
-              <div style={{ display: 'flex', gap: 40, justifyContent: 'center', padding: '20px 40px 40px', width: '100%' }}>
-                <img src="/landing/hmob.jpg" alt="Mobilna Aplikacija 1" style={{ height: 420, width: 'auto', objectFit: 'contain', borderRadius: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }} />
-                <img src="/landing/hmob1.jpg" alt="Mobilna Aplikacija 2" style={{ height: 420, width: 'auto', objectFit: 'contain', borderRadius: 24, boxShadow: '0 20px 50px rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.1)' }} />
+              <div style={{...S.bentoImgWrap, flex: '1 1 50%', display: 'flex', flexDirection: 'row', gap: '20px', padding: '36px 36px 0 0', justifyContent: 'center', alignItems: 'flex-end', overflow: 'hidden'}}>
+                <img src="/landing/hmob.jpg" alt="Mobilna aplikacija" style={{ width: '45%', height: 'auto', objectFit: 'contain', borderTopLeftRadius: 16, borderTopRightRadius: 16, border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
+                <img src="/landing/hmob1.jpg" alt="Mobilna aplikacija" style={{ width: '45%', height: 'auto', objectFit: 'contain', borderTopLeftRadius: 16, borderTopRightRadius: 16, border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transform: 'translateY(20px)' }} />
               </div>
             </div>
           </div>
@@ -316,7 +318,7 @@ export default function LandingPage() {
       <section id="kontakt" style={S.section}>
         <div className="landing-section-reveal landing-container-card" style={S.containerCard}>
           <div style={S.contactGlow} />
-          <h2 className="landing-section-title" style={{ ...S.sectionTitle, textAlign: 'center', background: 'linear-gradient(135deg, #00e5c8 0%, #00a892 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', margin: '0 auto 16px', display: 'table' }}>{t.contactTitle}</h2>
+          <h2 className="landing-section-title" style={{ ...S.sectionTitle, textAlign: "center", background: "linear-gradient(135deg, #00e5c8 0%, #6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{t.contactTitle}</h2>
           <p style={{ textAlign: "center", color: "rgba(255,255,255,0.6)", marginBottom: 30, maxWidth: 560, margin: "0 auto 30px" }}>{t.contactSub}</p>
           <form onSubmit={(e) => { e.preventDefault(); alert(t.fAlert); }} style={S.contactForm}>
             <div style={S.formRow}>
