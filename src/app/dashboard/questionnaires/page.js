@@ -123,7 +123,18 @@ export default function QuestionnairesPage() {
   const filteredForList = search
     ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()))
     : records;
-  const { sortedRecords, toggleAll, toggleOne, selectedIds, sortField, sortAsc, tsRec, tRec, siRec } = useSortedList(filteredForList, 'naziv');
+  const { sorted: sortedRecords, toggleSort: tRec, sortIcon: siRec, thStyle: tsRec, sortField, sortDir: sortAsc } = useSortedList(filteredForList, 'naziv');
+
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const toggleAll = (e) => {
+    if (e.target.checked && sortedRecords.length > 0) setSelectedIds(new Set(sortedRecords.map(x => x.id)));
+    else setSelectedIds(new Set());
+  };
+  const toggleOne = (id) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
 
   const loadData = useCallback(() => {
     const recs = getAll(COLLECTIONS.QUESTIONNAIRES);
