@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -11,33 +11,20 @@ const T = {
     navModules: "Moduli",
     navContact: "Kontakt",
     login: "Prijava",
-    badge: "Nova Era Sigurnosti",
-    heroTitle: "Sigurnost vaših radnika sada je na jedan klik od vas",
-    heroSub: "eZNR platforma jedino je rješenje koje vam je potrebno za potpunu tehničku, pravnu i operativnu zaštitu na radu.",
-    ctaPrimary: "Zatražite Kontakt",
-    ctaSecondary: "Istražite mogućnosti",
-    videoTitle: "Pogledajte eZNR u akciji",
-    videoSoon: "Video prezentacija uskoro",
-    appTitle: "Vaša nova komandna ploča",
-    app1T: "Sve je međusobno povezano",
-    app1D: "Svaki dokument, radnik i komad opreme klikabilan je na svakom koraku. Navigacija bez zaustavljanja.",
-    app2T: "Automatska upozorenja",
-    app2D: "Liječnički pregledi, PP aparati, vozila ili certifikati koji ulaze u kritičnu zonu automatski trepere crvenim signalima.",
-    app3T: "Trenutni PDF Export",
-    app3D: "Generirajte profesionalna A4 Uvjerenja za više radnika unutar sekunde, s vašim korporativnim bojama i logotipom.",
-    modulesTitle: "Sveobuhvatni Ekosustav Modula",
-    m1T: "Centralni registar radnika",
-    m1D: "Upravljajte tisućama radnika. Liječnička uvjerenja, klinike, noćne smjene — sve na jednom mjestu.",
-    m2T: "Osobna zaštitna oprema (OZO)",
-    m2D: "Precizan inventar opreme. Zadužite, pratite i zamijenite opremu pravovremeno bez duplanja troškova.",
-    m3T: "Upitnici & Certifikati",
-    m3D: "Drag & Drop dizajn ZOP testova. Pošaljite link radnicima na mobitel. Sustav sam ocjenjuje i bilježi rezultate.",
-    m4T: "Vozni park & Zaštita od požara",
-    m4D: "Praćenje tehničkih pregleda voznog parka i rokova servisiranja vatrogasnih aparata.",
-    m5T: "Zia AI Asistent",
-    m5D: "Pitajte AI agenta o zakonima ili radnicima. Zia čita vašu bazu i daje trenutne odgovore.",
-    m6T: "Multi-Grupna arhitektura",
-    m6D: "Administrirajte svaku granu holdinga jednim klikom. Segmentirano, sigurno, centralizirano.",
+    badge: "🚀 Sljedeća generacija ERP-a za ZNR",
+    heroTitle: "Sveobuhvatna zaštita na radu u vašem pregledniku",
+    heroSub: "eZNR platforma jedino je rješenje koje vam je potrebno za potpunu tehničku, pravnu i operativnu zaštitu na radu. Modernizirajte svoje poslovanje danas.",
+    ctaPrimary: "Zatražite Demo",
+    ctaSecondary: "Saznajte više",
+    videoTitle: "Upoznajte eZNR u akciji",
+    videoSub: "Pogledajte kako izgleda svakodnevni rad u najnaprednijoj aplikaciji za zaštitu na radu.",
+    modulesTitle: "Sveobuhvatni Ekosustav",
+    m1T: "Službeni Obrasci",
+    m1D: "Generirajte zvanične FBiH obrasce (Povrede, Oboljenja) u PDF formatu unutar sekunde.",
+    m2T: "Zia AI Asistent",
+    m2D: "Pitajte našeg AI agenta o zakonima ili radnicima. Zia čita vašu bazu i daje precizne odgovore.",
+    m3T: "Certifikati i Uvjerenja",
+    m3D: "Pravite ZOS i ZOP zapisnike te pratite rokove važenja ljekarskih uvjerenja bez muke.",
     contactTitle: "Spremni za podizanje standarda?",
     contactSub: "Zatražite kontakt s našim timom kako bismo demonstrirali aplikaciju prilagođenu vašim potrebama.",
     fName: "Ime i Prezime",
@@ -59,33 +46,20 @@ const T = {
     navModules: "Modules",
     navContact: "Contact",
     login: "Sign In",
-    badge: "A New Era of Safety",
-    heroTitle: "Your workers' safety is now just one click away",
-    heroSub: "eZNR is the only platform you need for complete technical, legal and operational occupational safety management.",
-    ctaPrimary: "Request a Call",
-    ctaSecondary: "Explore Features",
+    badge: "🚀 Next-generation OSH ERP",
+    heroTitle: "Comprehensive Occupational Safety in your browser",
+    heroSub: "eZNR is the only platform you need for complete technical, legal and operational occupational safety management. Modernize your business today.",
+    ctaPrimary: "Request Demo",
+    ctaSecondary: "Learn More",
     videoTitle: "See eZNR in Action",
-    videoSoon: "Video presentation coming soon",
-    appTitle: "Your New Command Center",
-    app1T: "Everything is interconnected",
-    app1D: "Every document, worker and piece of equipment is clickable at every step. Navigation without dead ends.",
-    app2T: "Automatic Alerts",
-    app2D: "Medical exams, fire extinguishers, vehicles or certificates entering the critical zone automatically flash red warnings.",
-    app3T: "Instant PDF Export",
-    app3D: "Generate professional A4 certificates for multiple workers in seconds, branded with your corporate colors and logo.",
-    modulesTitle: "Comprehensive Module Ecosystem",
-    m1T: "Central Worker Registry",
-    m1D: "Manage thousands of workers. Medical certificates, clinics, night shifts — all in one place.",
-    m2T: "Personal Protective Equipment (PPE)",
-    m2D: "Precise equipment inventory. Assign, track and replace equipment on time without doubling costs.",
-    m3T: "Questionnaires & Certificates",
-    m3D: "Drag & Drop fire safety test designer. Send links to workers' phones. The system auto-grades and records results.",
-    m4T: "Fleet & Fire Protection",
-    m4D: "Track fleet technical inspections and fire extinguisher servicing deadlines automatically.",
-    m5T: "Zia AI Assistant",
-    m5D: "Ask the AI agent about regulations or workers. Zia reads your database and provides instant answers.",
-    m6T: "Multi-Group Architecture",
-    m6D: "Administer every branch of a holding with one click. Segmented, secure, centralized.",
+    videoSub: "Watch what daily operations look like in the most advanced occupational safety app.",
+    modulesTitle: "Comprehensive Ecosystem",
+    m1T: "Official Forms",
+    m1D: "Generate official FBiH forms (Injuries, Diseases) in PDF format within seconds.",
+    m2T: "Zia AI Assistant",
+    m2D: "Ask our AI agent about regulations or workers. Zia reads your database and provides precise answers.",
+    m3T: "Certificates & Training",
+    m3D: "Create ZOS and ZOP records and track the validity periods of medical certificates effortlessly.",
     contactTitle: "Ready to raise the standard?",
     contactSub: "Request a call with our team so we can demonstrate the app tailored to your specific needs.",
     fName: "Full Name",
@@ -122,8 +96,7 @@ export default function LandingPage() {
 
   const [mousePos, setMousePos] = useState({ x: -500, y: -500 });
   const [scrolled, setScrolled] = useState(false);
-  const particles = useMemo(() => generateParticles(50), []);
-  const sectionRefs = useRef([]);
+  const particles = useMemo(() => generateParticles(40), []);
 
   /* Mouse tracker */
   useEffect(() => {
@@ -154,7 +127,10 @@ export default function LandingPage() {
 
   return (
     <div style={S.page}>
-      {/* ── Ambient grid lines ── */}
+      {/* ── Ambient Backgrounds ── */}
+      <div style={S.heroBgContainer}>
+        <img src="/landing/hero-bg.png" alt="Background" style={S.heroBgImg} />
+      </div>
       <div style={S.gridBg} />
 
       {/* ── Floating particles ── */}
@@ -176,7 +152,7 @@ export default function LandingPage() {
       ))}
 
       {/* ══════════════ NAVBAR ══════════════ */}
-      <nav className="landing-nav" style={{ ...S.nav, background: scrolled ? "rgba(8,20,31,0.92)" : "rgba(8,20,31,0.4)", boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.3)" : "none" }}>
+      <nav className="landing-nav" style={{ ...S.nav, background: scrolled ? "rgba(6,17,27,0.85)" : "transparent", boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.5)" : "none", backdropFilter: scrolled ? "blur(12px)" : "none" }}>
         <div style={S.navBrand}>
           <Image src="/logo-icon.png" width={36} height={36} alt="eZNR" style={{ borderRadius: 8 }} />
           <span style={S.brandTitle}>eZNR</span>
@@ -223,90 +199,84 @@ export default function LandingPage() {
 
       {/* ══════════════ HERO ══════════════ */}
       <header style={S.hero}>
-        {/* Ambient glows */}
-        <div style={S.heroGlow} />
-        <div style={S.heroGlow2} />
-        {/* Cursor glow */}
         <div style={{ ...S.cursorGlow, left: mousePos.x, top: mousePos.y }} />
 
-        {/* Orbital rings */}
-        <div style={S.orbitContainer}>
-          <div style={{ ...S.orbitRing, width: 280, height: 280, animation: "landing-ring-pulse 4s ease-in-out infinite" }} />
-          <div style={{ ...S.orbitRing, width: 380, height: 380, animation: "landing-ring-pulse 5s ease-in-out infinite 1s" }} />
-          {/* Orbiting dots */}
-          <div style={{ ...S.orbitDot, animation: "landing-orbit 12s linear infinite" }} />
-          <div style={{ ...S.orbitDotSmall, animation: "landing-orbit-reverse 18s linear infinite" }} />
-        </div>
-
-        <div style={S.heroContent}>
-          {/* Logo */}
-          <div style={S.heroLogoWrap}>
-            <div style={S.heroLogoPulse} />
-            <Image src="/logo-transparent.png" width={340} height={160} alt="eZNR Digitalna Platforma" style={{ position: "relative", zIndex: 2, objectFit: "contain", maxWidth: "90vw", height: "auto" }} priority />
-          </div>
-
+        <div className="landing-section-reveal" style={S.heroContent}>
           <div style={S.badge}>{t.badge}</div>
           <h1 className="landing-hero-title" style={S.heroTitle}>{t.heroTitle}</h1>
           <p className="landing-hero-subtitle" style={S.heroSubtitle}>{t.heroSub}</p>
 
           <div className="landing-cta-group" style={S.heroCtaGroup}>
-            <a href="#kontakt" style={S.btnPrimary}>{t.ctaPrimary}</a>
+            <a href="#kontakt" className="btn-glow" style={S.btnPrimary}>{t.ctaPrimary}</a>
             <a href="#moduli" style={S.btnSecondary}>{t.ctaSecondary}</a>
           </div>
         </div>
+
+        {/* Floating Dashboard Image */}
+        <div className="landing-section-reveal" style={S.heroImageWrapper}>
+            <div style={S.heroImageGlow} />
+            <img src="/landing/screenshot-dashboard.png" alt="eZNR Dashboard" style={S.heroImage} />
+        </div>
       </header>
 
-      {/* ══════════════ VIDEO PLACEHOLDER ══════════════ */}
-      <section style={{ ...S.section, paddingTop: 60, paddingBottom: 60 }}>
-        <div className="landing-section-reveal" style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 className="landing-section-title" style={{ ...S.sectionTitle, marginBottom: 30 }}>{t.videoTitle}</h2>
-          <div style={S.videoPlaceholder}>
-            <div style={S.videoPlayBtn}>▶</div>
-            <p style={{ color: "rgba(255,255,255,0.4)", fontSize: "0.9rem", marginTop: 16 }}>{t.videoSoon}</p>
+      {/* ══════════════ VIDEO SHOWCASE ══════════════ */}
+      <section id="aplikacija" style={{...S.section, background: "rgba(0,0,0,0.3)"}}>
+        <div className="landing-section-reveal" style={S.container}>
+          <div style={S.sectionHeader}>
+            <h2 className="landing-section-title" style={S.sectionTitle}>{t.videoTitle}</h2>
+            <p style={S.sectionSub}>{t.videoSub}</p>
+          </div>
+          <div className="glass-window" style={S.videoContainer}>
+            <div style={S.windowBar}>
+                <div style={{...S.windowDot, background: "#ff5f56"}}/>
+                <div style={{...S.windowDot, background: "#ffbd2e"}}/>
+                <div style={{...S.windowDot, background: "#27c93f"}}/>
+            </div>
+            <img src="/landing/demo-video.webp" alt="eZNR Demo Video" style={S.videoImg} />
           </div>
         </div>
       </section>
 
-      {/* ══════════════ APP HIGHLIGHTS ══════════════ */}
-      <section id="aplikacija" style={S.section}>
+      {/* ══════════════ BENTO GRID MODULES ══════════════ */}
+      <section id="moduli" style={S.section}>
         <div className="landing-section-reveal" style={S.container}>
-          <h2 className="landing-section-title" style={S.sectionTitle}>{t.appTitle}</h2>
-          <div className="landing-grid-3" style={S.grid3}>
-            {[
-              { icon: "📊", t: t.app1T, d: t.app1D },
-              { icon: "⏱️", t: t.app2T, d: t.app2D },
-              { icon: "📄", t: t.app3T, d: t.app3D },
-            ].map((item, i) => (
-              <div key={i} className="landing-card" style={S.featureCard}>
-                <div style={S.cardGlow} />
-                <div style={S.icon}>{item.icon}</div>
-                <h3 style={S.cardTitle}>{item.t}</h3>
-                <p style={S.cardDesc}>{item.d}</p>
-              </div>
-            ))}
+          <div style={S.sectionHeader}>
+            <h2 className="landing-section-title" style={S.sectionTitle}>{t.modulesTitle}</h2>
           </div>
-        </div>
-      </section>
-
-      {/* ══════════════ MODULES ══════════════ */}
-      <section id="moduli" style={{ ...S.section, background: "rgba(0, 191, 166, 0.015)" }}>
-        <div className="landing-section-reveal" style={S.container}>
-          <h2 className="landing-section-title" style={S.sectionTitle}>{t.modulesTitle}</h2>
-          <div className="landing-grid-2" style={S.grid2}>
-            {[
-              { icon: "👷", t: t.m1T, d: t.m1D },
-              { icon: "🦺", t: t.m2T, d: t.m2D },
-              { icon: "📝", t: t.m3T, d: t.m3D },
-              { icon: "🚗", t: t.m4T, d: t.m4D },
-              { icon: "🤖", t: t.m5T, d: t.m5D },
-              { icon: "🏢", t: t.m6T, d: t.m6D },
-            ].map((item, i) => (
-              <div key={i} className="landing-card" style={{ ...S.featureCard, padding: 36 }}>
-                <div style={{ fontSize: "2rem", marginBottom: 10 }}>{item.icon}</div>
-                <h3 style={{ ...S.cardTitle, fontSize: "1.3rem", marginTop: 6 }}>{item.t}</h3>
-                <p style={S.cardDesc}>{item.d}</p>
+          
+          <div className="bento-grid" style={S.bentoGrid}>
+            {/* Obrasci - Large */}
+            <div className="bento-card bento-lg glass-card">
+              <div style={S.bentoText}>
+                <h3 style={S.bentoTitle}>{t.m1T}</h3>
+                <p style={S.bentoDesc}>{t.m1D}</p>
               </div>
-            ))}
+              <div style={S.bentoImgWrap}>
+                <img src="/landing/screenshot-obrasci.png" alt="Obrasci" style={S.bentoImg} />
+              </div>
+            </div>
+
+            {/* Zia AI - Small */}
+            <div className="bento-card bento-sm glass-card">
+              <div style={S.bentoText}>
+                <h3 style={S.bentoTitle}>{t.m2T}</h3>
+                <p style={S.bentoDesc}>{t.m2D}</p>
+              </div>
+              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
+                <img src="/landing/screenshot-zia.png" alt="Zia AI" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
+              </div>
+            </div>
+
+            {/* Certificates - Small */}
+            <div className="bento-card bento-sm glass-card">
+              <div style={S.bentoText}>
+                <h3 style={S.bentoTitle}>{t.m3T}</h3>
+                <p style={S.bentoDesc}>{t.m3D}</p>
+              </div>
+              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
+                <img src="/landing/screenshot-certificates.png" alt="Certificates" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -314,6 +284,7 @@ export default function LandingPage() {
       {/* ══════════════ CONTACT ══════════════ */}
       <section id="kontakt" style={S.section}>
         <div className="landing-section-reveal landing-container-card" style={S.containerCard}>
+          <div style={S.contactGlow} />
           <h2 className="landing-section-title" style={S.sectionTitle}>{t.contactTitle}</h2>
           <p style={{ textAlign: "center", color: "rgba(255,255,255,0.6)", marginBottom: 30, maxWidth: 560, margin: "0 auto 30px" }}>{t.contactSub}</p>
           <form onSubmit={(e) => { e.preventDefault(); alert(t.fAlert); }} style={S.contactForm}>
@@ -325,7 +296,7 @@ export default function LandingPage() {
               <input style={S.input} type="email" placeholder={t.fEmail} required />
               <input style={S.input} type="tel" placeholder={t.fPhone} />
             </div>
-            <button type="submit" style={{ ...S.btnPrimary, width: "100%", display: "flex", justifyContent: "center" }}>{t.fSubmit}</button>
+            <button type="submit" className="btn-glow" style={{ ...S.btnPrimary, width: "100%", display: "flex", justifyContent: "center" }}>{t.fSubmit}</button>
           </form>
         </div>
       </section>
@@ -353,6 +324,78 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Inline styles for complex animations and specific grid rules */}
+      <style>{`
+        .glass-card {
+            background: rgba(16, 28, 40, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .glass-card:hover {
+            border-color: rgba(0, 191, 166, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 40px rgba(0, 191, 166, 0.1);
+        }
+        .glass-window {
+            background: rgba(16, 28, 40, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 100px rgba(0,191,166,0.15);
+        }
+        .btn-glow {
+            position: relative;
+        }
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border-radius: inherit;
+            box-shadow: 0 0 20px rgba(0, 191, 166, 0.4);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .btn-glow:hover::after {
+            opacity: 1;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            grid-auto-rows: minmax(380px, auto);
+        }
+        .bento-lg {
+            grid-column: span 2;
+            display: flex;
+            flex-direction: row;
+        }
+        .bento-sm {
+            grid-column: span 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes dashboard-float {
+            0% { transform: perspective(1200px) rotateX(12deg) translateY(0px); }
+            50% { transform: perspective(1200px) rotateX(12deg) translateY(-15px); }
+            100% { transform: perspective(1200px) rotateX(12deg) translateY(0px); }
+        }
+
+        .dashboard-img-anim {
+            animation: dashboard-float 8s ease-in-out infinite;
+        }
+
+        @media (max-width: 900px) {
+            .bento-grid { grid-template-columns: 1fr; }
+            .bento-lg { grid-column: span 1; flex-direction: column; }
+            .bento-sm { grid-column: span 1; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -363,17 +406,33 @@ export default function LandingPage() {
 const S = {
   page: {
     minHeight: "100vh",
-    background: "#06111B",
+    backgroundColor: "#03080c", // Deep dark base
     color: "#ffffff",
     fontFamily: "var(--font-heading)",
     overflowX: "hidden",
     position: "relative",
   },
+  heroBgContainer: {
+    position: "absolute",
+    top: 0, left: 0, right: 0,
+    height: "140vh",
+    zIndex: 0,
+    pointerEvents: "none",
+    overflow: "hidden"
+  },
+  heroBgImg: {
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    objectPosition: "top center",
+    opacity: 0.8,
+    mixBlendMode: "screen",
+  },
   gridBg: {
     position: "fixed",
     inset: 0,
     backgroundImage:
-      "linear-gradient(rgba(0,191,166,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,191,166,0.04) 1px, transparent 1px)",
+      "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
     backgroundSize: "60px 60px",
     animation: "landing-grid-fade 8s ease-in-out infinite",
     pointerEvents: "none",
@@ -388,47 +447,46 @@ const S = {
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: "0 36px",
-    backdropFilter: "blur(24px)",
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
+    padding: "0 40px",
     zIndex: 100,
-    transition: "background 0.3s ease, box-shadow 0.3s ease",
+    transition: "all 0.3s ease",
+    borderBottom: "1px solid rgba(255,255,255,0.05)",
   },
-  navBrand: { display: "flex", alignItems: "center", gap: 10 },
-  brandTitle: { fontSize: "1.35rem", fontWeight: 900, color: "white", letterSpacing: "-0.02em" },
-  navLinks: { display: "flex", alignItems: "center", gap: 28 },
-  navLink: { color: "rgba(255,255,255,0.6)", textDecoration: "none", fontSize: "0.88rem", fontWeight: 600, transition: "color 0.2s" },
+  navBrand: { display: "flex", alignItems: "center", gap: 12 },
+  brandTitle: { fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "-0.02em" },
+  navLinks: { display: "flex", alignItems: "center", gap: 32 },
+  navLink: { color: "rgba(255,255,255,0.7)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600, transition: "color 0.2s" },
   loginBtn: {
-    padding: "9px 26px",
-    background: "rgba(0,191,166,0.1)",
-    border: "1px solid rgba(0,191,166,0.25)",
+    padding: "10px 28px",
+    background: "rgba(0,191,166,0.15)",
+    border: "1px solid rgba(0,191,166,0.3)",
     borderRadius: 12,
     color: "#00BFA6",
-    fontSize: "0.88rem",
+    fontSize: "0.9rem",
     fontWeight: 700,
     textDecoration: "none",
     transition: "all 0.2s",
   },
   langPill: {
     display: "flex",
-    background: "rgba(255,255,255,0.06)",
+    background: "rgba(255,255,255,0.05)",
     borderRadius: 10,
-    padding: 3,
+    padding: 4,
     gap: 2,
-    border: "1px solid rgba(255,255,255,0.08)",
+    border: "1px solid rgba(255,255,255,0.1)",
   },
   langFlag: {
     background: "transparent",
     border: "none",
-    fontSize: "1.15rem",
+    fontSize: "1.1rem",
     padding: "4px 8px",
-    borderRadius: 8,
+    borderRadius: 6,
     cursor: "pointer",
     transition: "all 0.2s",
     lineHeight: 1,
   },
   langFlagActive: {
-    background: "rgba(0,191,166,0.2)",
+    background: "rgba(0,191,166,0.25)",
     boxShadow: "0 0 10px rgba(0,191,166,0.2)",
   },
   hamburger: {
@@ -443,7 +501,7 @@ const S = {
   hamLine: {
     width: 24,
     height: 2,
-    background: "rgba(255,255,255,0.7)",
+    background: "white",
     borderRadius: 2,
     transition: "all 0.3s ease",
   },
@@ -451,20 +509,20 @@ const S = {
     position: "fixed",
     top: 72,
     left: 0, right: 0,
-    background: "rgba(6,17,27,0.97)",
+    background: "rgba(3,8,12,0.98)",
     backdropFilter: "blur(20px)",
     display: "flex",
     flexDirection: "column",
-    padding: "20px 24px",
-    gap: 16,
+    padding: "24px",
+    gap: 20,
     zIndex: 99,
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    animation: "landing-fade-up 0.25s ease",
+    borderBottom: "1px solid rgba(255,255,255,0.08)",
+    animation: "landing-fade-up 0.3s ease",
   },
   mobileLink: {
-    color: "rgba(255,255,255,0.7)",
+    color: "rgba(255,255,255,0.8)",
     textDecoration: "none",
-    fontSize: "1rem",
+    fontSize: "1.1rem",
     fontWeight: 600,
     padding: "8px 0",
   },
@@ -473,245 +531,238 @@ const S = {
   hero: {
     minHeight: "100vh",
     display: "flex",
+    flexDirection: "column",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     position: "relative",
-    padding: "100px 20px 40px",
+    padding: "160px 20px 40px",
     textAlign: "center",
+    zIndex: 2,
   },
-  heroContent: { position: "relative", zIndex: 2, maxWidth: 800 },
-  heroLogoWrap: {
-    position: "relative",
-    display: "inline-block",
-    marginBottom: 32,
-  },
-  heroLogoPulse: {
-    position: "absolute",
-    top: "50%", left: "50%",
-    width: "120%", height: "200%",
-    transform: "translate(-50%, -50%)",
-    background: "radial-gradient(ellipse, rgba(0,191,166,0.18) 0%, transparent 65%)",
-    animation: "landing-pulse-glow 4s ease-in-out infinite",
-    zIndex: 1,
-    pointerEvents: "none",
-  },
+  heroContent: { position: "relative", zIndex: 3, maxWidth: 900, marginBottom: 60 },
   badge: {
     display: "inline-block",
-    background: "rgba(0,191,166,0.08)",
-    color: "#00BFA6",
-    border: "1px solid rgba(0,191,166,0.2)",
-    padding: "5px 16px",
+    background: "rgba(0,191,166,0.1)",
+    color: "#00e5c8",
+    border: "1px solid rgba(0,191,166,0.3)",
+    padding: "8px 20px",
     borderRadius: 50,
-    fontSize: "0.82rem",
+    fontSize: "0.9rem",
     fontWeight: 700,
-    marginBottom: 20,
+    marginBottom: 24,
     letterSpacing: "0.5px",
+    boxShadow: "0 4px 20px rgba(0,191,166,0.15)"
   },
   heroTitle: {
-    fontSize: "4rem",
-    lineHeight: 1.08,
+    fontSize: "4.5rem",
+    lineHeight: 1.1,
     fontWeight: 900,
-    marginBottom: 20,
-    background: "linear-gradient(175deg, #ffffff 30%, rgba(0,191,166,0.7) 100%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
+    marginBottom: 24,
+    color: "white",
+    textShadow: "0 10px 30px rgba(0,0,0,0.5)",
     letterSpacing: "-0.02em",
   },
   heroSubtitle: {
-    fontSize: "1.15rem",
-    lineHeight: 1.65,
-    color: "rgba(255,255,255,0.5)",
-    maxWidth: 580,
-    margin: "0 auto 36px",
+    fontSize: "1.25rem",
+    lineHeight: 1.6,
+    color: "rgba(255,255,255,0.7)",
+    maxWidth: 700,
+    margin: "0 auto 40px",
   },
   heroCtaGroup: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: 14,
+    gap: 16,
     flexWrap: "wrap",
   },
   btnPrimary: {
-    padding: "15px 34px",
-    background: "linear-gradient(135deg, #00BFA6 0%, #00897B 100%)",
-    color: "#fff",
+    padding: "16px 36px",
+    background: "linear-gradient(135deg, #00e5c8 0%, #00a892 100%)",
+    color: "#000",
     borderRadius: 14,
-    fontSize: "0.95rem",
+    fontSize: "1rem",
     fontWeight: 800,
     textDecoration: "none",
     border: "none",
     cursor: "pointer",
-    boxShadow: "0 8px 32px rgba(0,191,166,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
-    transition: "transform 0.2s, box-shadow 0.2s",
+    boxShadow: "0 10px 30px rgba(0,191,166,0.3)",
+    transition: "all 0.2s",
   },
   btnSecondary: {
-    padding: "15px 34px",
-    background: "rgba(255,255,255,0.04)",
-    border: "1px solid rgba(255,255,255,0.1)",
+    padding: "16px 36px",
+    background: "rgba(255,255,255,0.05)",
+    border: "1px solid rgba(255,255,255,0.15)",
     color: "white",
     borderRadius: 14,
-    fontSize: "0.95rem",
+    fontSize: "1rem",
     fontWeight: 700,
     textDecoration: "none",
     transition: "all 0.2s",
+    backdropFilter: "blur(10px)"
   },
-  heroGlow: {
-    position: "absolute",
-    top: "25%", left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "70vw", height: "50vh",
-    background: "radial-gradient(ellipse, rgba(0,191,166,0.12) 0%, transparent 55%)",
-    zIndex: 1,
-    pointerEvents: "none",
+  heroImageWrapper: {
+    position: "relative",
+    width: "100%",
+    maxWidth: 1200,
+    marginTop: 20,
+    zIndex: 2,
+    perspective: "1200px"
   },
-  heroGlow2: {
+  heroImageGlow: {
     position: "absolute",
-    top: "60%", left: "30%",
+    top: "50%", left: "50%",
     transform: "translate(-50%, -50%)",
-    width: "40vw", height: "40vh",
-    background: "radial-gradient(ellipse, rgba(120,100,255,0.06) 0%, transparent 60%)",
-    zIndex: 1,
-    pointerEvents: "none",
+    width: "80%", height: "80%",
+    background: "radial-gradient(circle, rgba(0,191,166,0.2) 0%, transparent 70%)",
+    filter: "blur(60px)",
+    zIndex: -1
+  },
+  heroImage: {
+    width: "100%",
+    height: "auto",
+    borderRadius: 20,
+    border: "1px solid rgba(255,255,255,0.1)",
+    boxShadow: "0 40px 100px rgba(0,0,0,0.6)",
+    transform: "rotateX(12deg)",
+    transformOrigin: "top center",
+    className: "dashboard-img-anim"
   },
   cursorGlow: {
     position: "fixed",
-    width: 500, height: 500,
-    background: "radial-gradient(circle, rgba(0,191,166,0.07) 0%, rgba(120,100,255,0.03) 40%, transparent 65%)",
+    width: 600, height: 600,
+    background: "radial-gradient(circle, rgba(0,191,166,0.05) 0%, rgba(0,0,0,0) 60%)",
     borderRadius: "50%",
     transform: "translate(-50%, -50%)",
     pointerEvents: "none",
     zIndex: 1,
-    transition: "left 0.05s linear, top 0.05s linear",
-  },
-  orbitContainer: {
-    position: "absolute",
-    top: "42%", left: "50%",
-    transform: "translate(-50%, -50%)",
-    zIndex: 1,
-    pointerEvents: "none",
-  },
-  orbitRing: {
-    position: "absolute",
-    top: "50%", left: "50%",
-    border: "1px solid rgba(0,191,166,0.1)",
-    borderRadius: "50%",
-    transform: "translate(-50%, -50%)",
-  },
-  orbitDot: {
-    position: "absolute",
-    top: "50%", left: "50%",
-    width: 6, height: 6,
-    background: "#00BFA6",
-    borderRadius: "50%",
-    boxShadow: "0 0 12px rgba(0,191,166,0.6)",
-    transformOrigin: "0 0",
-  },
-  orbitDotSmall: {
-    position: "absolute",
-    top: "50%", left: "50%",
-    width: 4, height: 4,
-    background: "rgba(120,100,255,0.8)",
-    borderRadius: "50%",
-    boxShadow: "0 0 10px rgba(120,100,255,0.5)",
-    transformOrigin: "0 0",
-  },
-
-  /* ── Video ── */
-  videoPlaceholder: {
-    width: "100%",
-    aspectRatio: "16/9",
-    background: "rgba(255,255,255,0.02)",
-    border: "1px dashed rgba(255,255,255,0.1)",
-    borderRadius: 20,
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-    transition: "border-color 0.3s",
-  },
-  videoPlayBtn: {
-    width: 72, height: 72,
-    borderRadius: "50%",
-    background: "rgba(0,191,166,0.1)",
-    border: "2px solid rgba(0,191,166,0.3)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "1.6rem",
-    color: "#00BFA6",
+    transition: "left 0.1s linear, top 0.1s linear",
   },
 
   /* ── Sections ── */
-  section: { padding: "100px 20px", position: "relative", zIndex: 2 },
+  section: { padding: "120px 20px", position: "relative", zIndex: 2 },
   container: { maxWidth: 1200, margin: "0 auto" },
-  containerCard: {
-    maxWidth: 780,
-    margin: "0 auto",
-    background: "rgba(255,255,255,0.02)",
-    border: "1px solid rgba(255,255,255,0.05)",
-    borderRadius: 28,
-    padding: 56,
-    boxShadow: "0 30px 80px rgba(0,0,0,0.4)",
+  sectionHeader: {
+    textAlign: "center",
+    marginBottom: 60,
   },
   sectionTitle: {
-    fontSize: "2.4rem",
+    fontSize: "2.8rem",
     fontWeight: 800,
-    textAlign: "center",
-    marginBottom: 56,
-    background: "linear-gradient(180deg, #ffffff 0%, rgba(255,255,255,0.7) 100%)",
-    WebkitBackgroundClip: "text",
-    WebkitTextFillColor: "transparent",
-  },
-  grid3: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 24 },
-  grid2: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 24 },
-  featureCard: {
-    background: "rgba(255,255,255,0.02)",
-    border: "1px solid rgba(255,255,255,0.05)",
-    borderRadius: 20,
-    padding: 28,
-    position: "relative",
-    overflow: "hidden",
-  },
-  cardGlow: {
-    position: "absolute",
-    top: -40, right: -40,
-    width: 130, height: 130,
-    background: "radial-gradient(circle, rgba(0,191,166,0.08) 0%, transparent 70%)",
-  },
-  icon: {
-    fontSize: "2.2rem",
     marginBottom: 16,
-    height: 54, width: 54,
+    color: "white",
+    letterSpacing: "-0.01em"
+  },
+  sectionSub: {
+    fontSize: "1.1rem",
+    color: "rgba(255,255,255,0.6)",
+    maxWidth: 600,
+    margin: "0 auto",
+  },
+
+  /* ── Video Container ── */
+  videoContainer: {
+    position: "relative",
+    width: "100%",
+    padding: "40px 10px 10px 10px", // space for window bar
+  },
+  windowBar: {
+    position: "absolute",
+    top: 0, left: 0, right: 0,
+    height: 40,
+    background: "rgba(0,0,0,0.2)",
+    borderBottom: "1px solid rgba(255,255,255,0.05)",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    background: "rgba(255,255,255,0.04)",
-    borderRadius: 14,
+    padding: "0 16px",
+    gap: 8
   },
-  cardTitle: { fontSize: "1.15rem", fontWeight: 700, marginBottom: 10 },
-  cardDesc: { fontSize: "0.9rem", lineHeight: 1.65, color: "rgba(255,255,255,0.45)" },
+  windowDot: {
+    width: 12, height: 12,
+    borderRadius: "50%",
+  },
+  videoImg: {
+    width: "100%",
+    height: "auto",
+    borderRadius: 8,
+    display: "block"
+  },
 
-  /* ── Form ── */
-  contactForm: { display: "flex", flexDirection: "column", gap: 14 },
-  formRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 14 },
+  /* ── Bento Grid Elements ── */
+  bentoText: {
+    padding: 36,
+    flex: "1 1 auto",
+  },
+  bentoTitle: {
+    fontSize: "1.6rem",
+    fontWeight: 800,
+    marginBottom: 12,
+    color: "white"
+  },
+  bentoDesc: {
+    fontSize: "1.05rem",
+    lineHeight: 1.5,
+    color: "rgba(255,255,255,0.6)"
+  },
+  bentoImgWrap: {
+    flex: "1 1 auto",
+    display: "flex",
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+    paddingLeft: 36,
+    overflow: "hidden"
+  },
+  bentoImg: {
+    width: "100%",
+    height: "auto",
+    objectFit: "cover",
+    objectPosition: "left top",
+    borderTopLeftRadius: 16,
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderBottom: "none",
+    borderRight: "none",
+    boxShadow: "-10px -10px 30px rgba(0,0,0,0.3)"
+  },
+
+  /* ── Contact ── */
+  containerCard: {
+    maxWidth: 800,
+    margin: "0 auto",
+    background: "rgba(16, 28, 40, 0.7)",
+    backdropFilter: "blur(20px)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    borderRadius: 32,
+    padding: 64,
+    boxShadow: "0 40px 100px rgba(0,0,0,0.5)",
+    position: "relative",
+    overflow: "hidden"
+  },
+  contactGlow: {
+    position: "absolute",
+    top: 0, right: 0,
+    width: 300, height: 300,
+    background: "radial-gradient(circle, rgba(0,191,166,0.1) 0%, transparent 70%)",
+    pointerEvents: "none"
+  },
+  contactForm: { display: "flex", flexDirection: "column", gap: 16, position: "relative", zIndex: 2 },
+  formRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 },
   input: {
-    background: "rgba(255,255,255,0.03)",
-    border: "1px solid rgba(255,255,255,0.08)",
-    padding: "15px 18px",
-    borderRadius: 12,
+    background: "rgba(0,0,0,0.3)",
+    border: "1px solid rgba(255,255,255,0.1)",
+    padding: "16px 20px",
+    borderRadius: 14,
     color: "white",
-    fontSize: "0.92rem",
+    fontSize: "1rem",
     fontFamily: "var(--font-heading)",
     outline: "none",
-    transition: "border-color 0.2s",
+    transition: "border-color 0.2s, background 0.2s",
   },
 
   /* ── Footer ── */
   footer: {
-    borderTop: "1px solid rgba(255,255,255,0.04)",
-    padding: "50px 36px",
-    background: "rgba(0,0,0,0.25)",
+    borderTop: "1px solid rgba(255,255,255,0.05)",
+    padding: "60px 40px",
+    background: "#020508",
     position: "relative",
     zIndex: 2,
   },
@@ -722,7 +773,7 @@ const S = {
     alignItems: "flex-start",
     justifyContent: "space-between",
     flexWrap: "wrap",
-    gap: 36,
+    gap: 40,
   },
-  footerBrand: { maxWidth: 280 },
+  footerBrand: { maxWidth: 300 },
 };
