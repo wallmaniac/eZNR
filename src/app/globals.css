@@ -2877,7 +2877,7 @@ p { line-height: 1.6; }
 }
 /* Logo Fade & Light Effects */
 .landing-root {
-  background: #020617; /* Deep midnight base */
+  background: transparent; /* Fixed: this was blocking the aurora! */
   position: relative;
   overflow-x: hidden;
   min-height: 100vh;
@@ -2889,11 +2889,17 @@ p { line-height: 1.6; }
   width: 100%;
   max-width: 550px;
   height: auto;
-  /* Extremely soft linear masks specifically targeting the 10% edges to make the box vanish without cutting text */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
-  mask-image: linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%);
+  /* Mask heavily feathers only the extreme left/right 2% and top/bottom 10% to prevent cutting the text while killing borders */
+  -webkit-mask-image: 
+    linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: 
+    linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+  mask-composite: intersect;
   mix-blend-mode: screen;
-  filter: drop-shadow(0 0 40px rgba(0, 191, 166, 0.4)) contrast(1.1);
+  filter: drop-shadow(0 0 40px rgba(0, 191, 166, 0.5)) contrast(1.15) brightness(1.1);
   animation: logo-float 6s ease-in-out infinite;
 }
 
@@ -2909,7 +2915,7 @@ p { line-height: 1.6; }
   z-index: -3;
   overflow: hidden;
   pointer-events: none;
-  background: #020617;
+  background: #050b1f; /* A deeply vibrant space blue/black base */
 }
 
 .aurora-orb {
@@ -2921,8 +2927,8 @@ p { line-height: 1.6; }
 }
 
 /* Using radial-gradients instead of filter:blur() ensures 60fps performance without lag! */
-.a-1 { width: 100vw; height: 100vw; background: radial-gradient(circle, rgba(0, 191, 166, 0.25) 0%, transparent 60%); top: -20%; left: -20%; animation-delay: 0s; }
-.a-2 { width: 90vw; height: 90vw; background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, transparent 60%); top: 40%; right: -20%; animation-delay: -5s; }
+.a-1 { width: 100vw; height: 100vw; background: radial-gradient(circle, rgba(0, 191, 166, 0.4) 0%, transparent 60%); top: -20%; left: -20%; animation-delay: 0s; }
+.a-2 { width: 90vw; height: 90vw; background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, transparent 60%); top: 40%; right: -20%; animation-delay: -5s; }
 .a-3 { width: 110vw; height: 110vw; background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 60%); bottom: -30%; left: 10%; animation-delay: -10s; }
 .a-4 { width: 80vw; height: 80vw; background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 60%); top: 10%; left: 40%; animation-delay: -15s; }
 
