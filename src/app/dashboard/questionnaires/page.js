@@ -120,6 +120,11 @@ export default function QuestionnairesPage() {
   const [aiCustomVrsta, setAiCustomVrsta] = useState('');
   const [aiJezik, setAiJezik] = useState('Bosanski');
 
+  const filteredForList = search
+    ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()))
+    : records;
+  const { sortedRecords, toggleAll, toggleOne, selectedIds, sortField, sortAsc, tsRec, tRec, siRec } = useSortedList(filteredForList, 'naziv');
+
   const loadData = useCallback(() => {
     const recs = getAll(COLLECTIONS.QUESTIONNAIRES);
     setRecords(recs);
@@ -382,6 +387,8 @@ export default function QuestionnairesPage() {
     const filteredTemplates = templateSearch
       ? BUILTIN_TEMPLATES.filter(t => (t.naziv || '').toLowerCase().includes(templateSearch.toLowerCase()) || (t.oznaka || '').toLowerCase().includes(templateSearch.toLowerCase()))
       : BUILTIN_TEMPLATES;
+
+    const filtered = filteredForList;
 
     return (
       <div className="animate-fadeIn">

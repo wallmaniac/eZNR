@@ -11,7 +11,7 @@ const T = {
     navModules: "Moduli",
     navContact: "Kontakt",
     login: "Prijava",
-    badge: "🚀 Sljedeća generacija ERP-a za ZNR",
+    badge: "🚀 Sljedeća generacija za ZNR",
     heroTitle: "Sveobuhvatna zaštita na radu u vašem pregledniku",
     heroSub: "eZNR platforma jedino je rješenje koje vam je potrebno za potpunu tehničku, pravnu i operativnu zaštitu na radu. Modernizirajte svoje poslovanje danas.",
     ctaPrimary: "Zatražite Demo",
@@ -25,15 +25,15 @@ const T = {
     m2D: "Pitajte našeg AI agenta o zakonima ili radnicima. Zia čita vašu bazu i daje precizne odgovore.",
     m3T: "Certifikati i Uvjerenja",
     m3D: "Pravite ZOS i ZOP zapisnike te pratite rokove važenja ljekarskih uvjerenja bez muke.",
-    contactTitle: "Spremni za podizanje standarda?",
-    contactSub: "Zatražite kontakt s našim timom kako bismo demonstrirali aplikaciju prilagođenu vašim potrebama.",
+    contactTitle: "Započnite digitalnu transformaciju",
+    contactSub: "Kontaktirajte nas za personaliziranu prezentaciju sistema i saznajte kako možemo unaprijediti vaš proces zaštite na radu.",
     fName: "Ime i Prezime",
     fCompany: "Naziv Tvrtke",
     fEmail: "Poslovni e-mail",
     fPhone: "Telefon za kontakt",
     fSubmit: "Zatraži Kontakt i Pristup",
     fAlert: "Vaš upit je poslan! Uskoro ćemo Vas kontaktirati.",
-    footerDesc: "Enterprise Occupational Safety & Health ERP System.",
+    footerDesc: "Enterprise Occupational Safety & Health System.",
     footerDistLabel: "Ekskluzivni distributer za Bosnu i Hercegovinu:",
     footerDist: "zastitanaradu.ba",
     footerTerms: "Uvjeti korištenja",
@@ -46,7 +46,7 @@ const T = {
     navModules: "Modules",
     navContact: "Contact",
     login: "Sign In",
-    badge: "🚀 Next-generation OSH ERP",
+    badge: "🚀 Next-generation OSH Platform",
     heroTitle: "Comprehensive Occupational Safety in your browser",
     heroSub: "eZNR is the only platform you need for complete technical, legal and operational occupational safety management. Modernize your business today.",
     ctaPrimary: "Request Demo",
@@ -60,15 +60,15 @@ const T = {
     m2D: "Ask our AI agent about regulations or workers. Zia reads your database and provides precise answers.",
     m3T: "Certificates & Training",
     m3D: "Create ZOS and ZOP records and track the validity periods of medical certificates effortlessly.",
-    contactTitle: "Ready to raise the standard?",
-    contactSub: "Request a call with our team so we can demonstrate the app tailored to your specific needs.",
+    contactTitle: "Start your digital transformation",
+    contactSub: "Contact us for a personalized system presentation and learn how we can improve your occupational safety process.",
     fName: "Full Name",
     fCompany: "Company Name",
     fEmail: "Business Email",
     fPhone: "Phone Number",
     fSubmit: "Request Contact & Access",
     fAlert: "Your inquiry has been sent! We will contact you shortly.",
-    footerDesc: "Enterprise Occupational Safety & Health ERP System.",
+    footerDesc: "Enterprise Occupational Safety & Health System.",
     footerDistLabel: "Exclusive distributor for Bosnia and Herzegovina:",
     footerDist: "zastitanaradu.ba",
     footerTerms: "Terms of Use",
@@ -202,7 +202,10 @@ export default function LandingPage() {
         <div style={{ ...S.cursorGlow, left: mousePos.x, top: mousePos.y }} />
 
         <div className="landing-section-reveal" style={S.heroContent}>
-          <div style={S.badge}>{t.badge}</div>
+          <div style={S.badge}>
+            <Image src="/logo-icon.png" width={20} height={20} alt="eZNR" style={{ borderRadius: 4, marginRight: 8, display: 'inline-block', verticalAlign: 'middle' }} />
+            <span style={{ verticalAlign: 'middle' }}>eZNR Platforma</span>
+          </div>
           <h1 className="landing-hero-title" style={S.heroTitle}>{t.heroTitle}</h1>
           <p className="landing-hero-subtitle" style={S.heroSubtitle}>{t.heroSub}</p>
 
@@ -215,7 +218,7 @@ export default function LandingPage() {
         {/* Floating Dashboard Image */}
         <div className="landing-section-reveal" style={S.heroImageWrapper}>
             <div style={S.heroImageGlow} />
-            <img src="/landing/screenshot-dashboard.png" alt="eZNR Dashboard" style={S.heroImage} />
+            <img src="/landing/screenshot5.png" alt="eZNR Dashboard" style={S.heroImage} />
         </div>
       </header>
 
@@ -263,7 +266,7 @@ export default function LandingPage() {
                 <p style={S.bentoDesc}>{t.m2D}</p>
               </div>
               <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
-                <img src="/landing/screenshot-zia.png" alt="Zia AI" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
+                <img src="/landing/screenshot1.png" alt="Zia AI" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
               </div>
             </div>
 
@@ -274,7 +277,7 @@ export default function LandingPage() {
                 <p style={S.bentoDesc}>{t.m3D}</p>
               </div>
               <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
-                <img src="/landing/screenshot-certificates.png" alt="Certificates" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
+                <img src="/landing/screenshot2.png" alt="Certificates" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)'}} />
               </div>
             </div>
           </div>
@@ -541,13 +544,14 @@ const S = {
   },
   heroContent: { position: "relative", zIndex: 3, maxWidth: 900, marginBottom: 60 },
   badge: {
-    display: "inline-block",
+    display: "inline-flex",
+    alignItems: "center",
     background: "rgba(0,191,166,0.1)",
     color: "#00e5c8",
     border: "1px solid rgba(0,191,166,0.3)",
-    padding: "8px 20px",
+    padding: "6px 16px",
     borderRadius: 50,
-    fontSize: "0.9rem",
+    fontSize: "0.95rem",
     fontWeight: 700,
     marginBottom: 24,
     letterSpacing: "0.5px",

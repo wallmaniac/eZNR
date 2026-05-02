@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -76,6 +76,11 @@ export default function TrainingsPage() {
     const [reminderTraining, setReminderTraining] = useState(null);
     // Completion stats per training { [trainingId]: { total, completed } }
     const [completionStats, setCompletionStats] = useState({});
+
+    const filteredForList = search
+        ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()))
+        : records;
+    const { page: tPage, perPage: tPerPage, setPage: setTPage, setPerPage: setTPerPage, totalPages: tTotalPages, pagedData: pagedTrainings, nextPage: tNextPage, prevPage: tPrevPage } = usePagination(filteredForList, 25);
 
     const loadData = useCallback(() => {
         const recs = getAll(COLLECTIONS.TRAININGS);
@@ -465,11 +470,7 @@ export default function TrainingsPage() {
 
     /* ── LIST VIEW ──────────────────────────────────────────────────────── */
     if (view === 'list') {
-        const filtered = search
-            ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()))
-            : records;
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const { page: tPage, perPage: tPerPage, setPage: setTPage, setPerPage: setTPerPage, totalPages: tTotalPages, pagedData: pagedTrainings, nextPage: tNextPage, prevPage: tPrevPage } = usePagination(filtered, 25);
+        const filtered = filteredForList;
 
         return (
             <div className="animate-fadeIn">
