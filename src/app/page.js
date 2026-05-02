@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo, useRef } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -7,35 +7,35 @@ import { useLanguage } from "@/contexts/LanguageContext";
 /* ── i18n inline (landing-only texts) ─────────────────────────────────── */
 const T = {
   bs: {
-    navApp: "Moć Aplikacije",
-    navModules: "Moduli",
+    navApp: "Platforma",
+    navModules: "Mogućnosti",
     navContact: "Kontakt",
     login: "Prijava",
     badge: "🚀 Sljedeća generacija za ZNR",
-    heroTitle: "Sveobuhvatna zaštita na radu u vašem pregledniku",
-    heroSub: "eZNR platforma jedino je rješenje koje vam je potrebno za potpunu tehničku, pravnu i operativnu zaštitu na radu. Modernizirajte svoje poslovanje danas.",
+    heroTitle: "Nova era zaštite na radu u vašem pregledniku",
+    heroSub: "eZNR je jedino rješenje koje vam je potrebno za potpunu tehničku, pravnu i operativnu zaštitu na radu. Modernizirajte i ubrzajte svoje poslovanje danas.",
     ctaPrimary: "Zatražite Demo",
     ctaSecondary: "Saznajte više",
     videoTitle: "Upoznajte eZNR u akciji",
     videoSub: "Pogledajte kako izgleda svakodnevni rad u najnaprednijoj aplikaciji za zaštitu na radu.",
-    modulesTitle: "Sveobuhvatni Ekosustav",
+    modulesTitle: "Sveobuhvatni Ekosistem",
     m1T: "Popis opreme",
-    m1D: "Upravljajte svom opremom na jednom mjestu, sa upozorenjima o isteku pregleda i atesta.",
+    m1D: "Upravljajte svom opremom na jednom mjestu, sa pametnim upozorenjima o isteku pregleda i atesta. Zaboravite na Excel tabele.",
     m2T: "Zia AI Asistent",
-    m2D: "Pitajte našeg AI agenta o zakonima ili radnicima. Zia čita vašu bazu i daje precizne odgovore.",
+    m2D: "Pitajte našeg pametnog AI agenta o zakonima ili radnicima. Zia čita vašu bazu u stvarnom vremenu i daje precizne, kontekstualne odgovore.",
     m3T: "Certifikati i Uvjerenja",
-    m3D: "Pravite ZOS i ZOP zapisnike te pratite rokove važenja ljekarskih uvjerenja bez muke.",
+    m3D: "Pravite ZOS i ZOP zapisnike te pratite rokove važenja ljekarskih uvjerenja. Sistem će vas automatski obavijestiti prije isteka.",
     m4T: "Izrada procjene rizika",
-    m4D: "Kreirajte detaljne procjene rizika za radna mjesta uz pomoć umjetne inteligencije i izvezite u DOCX.",
+    m4D: "Kreirajte detaljne, zakonski usklađene procjene rizika za radna mjesta uz pomoć umjetne inteligencije i izvezite ih direktno u DOCX format.",
     m5T: "Mobilna aplikacija",
-    m5D: "eZNR je dostupan i na vašem pametnom telefonu. Brzo pristupite podacima i izvršite provjere na terenu.",
+    m5D: "eZNR je u potpunosti dostupan i optimiziran za vaš pametni telefon. Brzo pristupite podacima, dodajte slike i izvršite provjere direktno na terenu.",
     contactTitle: "Obratite nam se!",
-    contactSub: "Kontaktirajte nas za personaliziranu prezentaciju sistema i saznajte kako možemo unaprijediti vaš proces zaštite na radu.",
+    contactSub: "Kontaktirajte nas za personaliziranu prezentaciju sistema i saznajte kako možemo značajno unaprijediti vaš proces zaštite na radu.",
     fName: "Ime i Prezime",
     fCompany: "Naziv Tvrtke",
     fEmail: "Poslovni e-mail",
     fPhone: "Telefon za kontakt",
-    fSubmit: "Zatraži Kontakt i Pristup",
+    fSubmit: "Pošalji Upit",
     fAlert: "Vaš upit je poslan! Uskoro ćemo Vas kontaktirati.",
     footerDesc: "Enterprise Occupational Safety & Health System.",
     footerDistLabel: "Ekskluzivni distributer za Bosnu i Hercegovinu:",
@@ -46,12 +46,12 @@ const T = {
     privacyUrl: "/legal/privacy-bs.html",
   },
   en: {
-    navApp: "App Power",
-    navModules: "Modules",
+    navApp: "Platform",
+    navModules: "Features",
     navContact: "Contact",
     login: "Sign In",
     badge: "🚀 Next-generation OSH Platform",
-    heroTitle: "Comprehensive Occupational Safety in your browser",
+    heroTitle: "A new era of Occupational Safety in your browser",
     heroSub: "eZNR is the only platform you need for complete technical, legal and operational occupational safety management. Modernize your business today.",
     ctaPrimary: "Request Demo",
     ctaSecondary: "Learn More",
@@ -59,22 +59,22 @@ const T = {
     videoSub: "Watch what daily operations look like in the most advanced occupational safety app.",
     modulesTitle: "Comprehensive Ecosystem",
     m1T: "Equipment Inventory",
-    m1D: "Manage all your equipment in one place, with inspection and certification expiration alerts.",
+    m1D: "Manage all your equipment in one place, with smart inspection and certification expiration alerts. Forget about Excel spreadsheets.",
     m2T: "Zia AI Assistant",
-    m2D: "Ask our AI agent about regulations or workers. Zia reads your database and provides precise answers.",
+    m2D: "Ask our smart AI agent about regulations or workers. Zia reads your database in real time and provides precise, contextual answers.",
     m3T: "Certificates & Training",
-    m3D: "Create ZOS and ZOP records and track the validity periods of medical certificates effortlessly.",
+    m3D: "Create ZOS and ZOP records and track the validity periods of medical certificates. The system will automatically notify you before expiration.",
     m4T: "Risk Assessment Generation",
-    m4D: "Create detailed risk assessments for workplaces with the help of artificial intelligence and export to DOCX.",
+    m4D: "Create detailed, legally compliant risk assessments for workplaces with the help of artificial intelligence and export directly to DOCX.",
     m5T: "Mobile Application",
-    m5D: "eZNR is also available on your smartphone. Quickly access data and perform field checks.",
+    m5D: "eZNR is fully available and optimized for your smartphone. Quickly access data, add photos, and perform field checks on the go.",
     contactTitle: "Get in touch!",
-    contactSub: "Contact us for a personalized system presentation and learn how we can improve your occupational safety process.",
+    contactSub: "Contact us for a personalized system presentation and learn how we can significantly improve your occupational safety process.",
     fName: "Full Name",
     fCompany: "Company Name",
     fEmail: "Business Email",
     fPhone: "Phone Number",
-    fSubmit: "Request Contact & Access",
+    fSubmit: "Send Inquiry",
     fAlert: "Your inquiry has been sent! We will contact you shortly.",
     footerDesc: "Enterprise Occupational Safety & Health System.",
     footerDistLabel: "Exclusive distributor for Bosnia and Herzegovina:",
@@ -86,728 +86,480 @@ const T = {
   },
 };
 
-/* ── Particle config ──────────────────────────────────────────────────── */
-function generateParticles(count) {
-  return Array.from({ length: count }, () => ({
-    x: Math.random() * 100,
-    size: Math.random() * 3 + 1.5,
-    delay: Math.random() * 25,
-    duration: Math.random() * 18 + 12,
-    hue: Math.random() > 0.5 ? "0, 191, 166" : "120, 100, 255",
-    opacity: Math.random() * 0.5 + 0.2,
-  }));
-}
-
 export default function LandingPage() {
   const { lang, setLang } = useLanguage();
   const t = T[lang] || T.bs;
-
-  const [mousePos, setMousePos] = useState({ x: -500, y: -500 });
   const [scrolled, setScrolled] = useState(false);
-  const particles = useMemo(() => generateParticles(40), []);
+  const [mobileMenu, setMobileMenu] = useState(false);
 
-  /* Mouse tracker */
-  useEffect(() => {
-    const onMove = (e) => setMousePos({ x: e.clientX, y: e.clientY });
-    window.addEventListener("mousemove", onMove);
-    return () => window.removeEventListener("mousemove", onMove);
-  }, []);
-
-  /* Scroll tracker for sticky nav + section reveals */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* IntersectionObserver for scroll-reveal */
   useEffect(() => {
-    const els = document.querySelectorAll(".landing-section-reveal");
+    const els = document.querySelectorAll(".reveal-element");
     const obs = new IntersectionObserver(
       (entries) => entries.forEach((e) => { if (e.isIntersecting) e.target.classList.add("visible"); }),
-      { threshold: 0.08 }
+      { threshold: 0.15 }
     );
     els.forEach((el) => obs.observe(el));
     return () => obs.disconnect();
   }, []);
 
-  const [mobileMenu, setMobileMenu] = useState(false);
-
   return (
-    <div style={S.page}>
+    <div className="landing-root">
+      
       {/* ── Ambient Backgrounds ── */}
-      <div style={S.heroBgContainer}>
-        <img src="/landing/hero-bg.png" alt="Background" style={S.heroBgImg} />
-      </div>
-      <div style={S.gridBg} />
-
-      {/* ── Floating particles ── */}
-      {particles.map((p, i) => (
-        <div
-          key={i}
-          className="landing-particle"
-          style={{
-            left: p.x + "%",
-            bottom: "-10%",
-            width: p.size,
-            height: p.size,
-            background: `rgba(${p.hue}, ${p.opacity})`,
-            boxShadow: `0 0 ${p.size * 3}px rgba(${p.hue}, 0.4)`,
-            animationDelay: p.delay + "s",
-            animationDuration: p.duration + "s",
-          }}
-        />
-      ))}
+      <div className="bg-glow bg-glow-1"></div>
+      <div className="bg-glow bg-glow-2"></div>
+      <div className="grid-overlay"></div>
 
       {/* ══════════════ NAVBAR ══════════════ */}
-      <nav className="landing-nav" style={{ ...S.nav, background: scrolled ? "rgba(6,17,27,0.85)" : "transparent", boxShadow: scrolled ? "0 4px 30px rgba(0,0,0,0.5)" : "none", backdropFilter: scrolled ? "blur(12px)" : "none" }}>
-        <div style={S.navBrand}>
-          <Image src="/logo-icon.png" width={36} height={36} alt="eZNR" style={{ borderRadius: 8 }} />
-          <span style={S.brandTitle}>eZNR</span>
-        </div>
-
-        {/* Desktop links */}
-        <div className="landing-nav-links-desktop" style={S.navLinks}>
-          <a href="#aplikacija" style={S.navLink}>{t.navApp}</a>
-          <a href="#moduli" style={S.navLink}>{t.navModules}</a>
-          <a href="#kontakt" style={S.navLink}>{t.navContact}</a>
-
-          {/* Flag toggle */}
-          <div style={S.langPill}>
-            <button onClick={() => setLang("bs")} style={{ ...S.langFlag, ...(lang === "bs" ? S.langFlagActive : {}) }} aria-label="Bosanski">🇧🇦</button>
-            <button onClick={() => setLang("en")} style={{ ...S.langFlag, ...(lang === "en" ? S.langFlagActive : {}) }} aria-label="English">🇬🇧</button>
+      <nav className={\`fixed-nav \${scrolled ? 'scrolled' : ''}\`}>
+        <div className="nav-container">
+          <div className="nav-brand">
+            <Image src="/logo-icon.png" width={36} height={36} alt="eZNR" style={{ borderRadius: 8 }} />
+            <span>eZNR</span>
           </div>
 
-          <Link href="/login" style={S.loginBtn}>{t.login}</Link>
-        </div>
-
-        {/* Mobile hamburger */}
-        <div className="landing-nav-mobile" style={{ display: "none", alignItems: "center", gap: 12 }}>
-          <div style={S.langPill}>
-            <button onClick={() => setLang("bs")} style={{ ...S.langFlag, ...(lang === "bs" ? S.langFlagActive : {}) }}>🇧🇦</button>
-            <button onClick={() => setLang("en")} style={{ ...S.langFlag, ...(lang === "en" ? S.langFlagActive : {}) }}>🇬🇧</button>
+          <div className="nav-links desktop-only">
+            <a href="#aplikacija">{t.navApp}</a>
+            <a href="#moduli">{t.navModules}</a>
+            <a href="#kontakt">{t.navContact}</a>
+            
+            <div className="lang-switcher">
+              <button onClick={() => setLang("bs")} className={lang === "bs" ? "active" : ""}>BA</button>
+              <button onClick={() => setLang("en")} className={lang === "en" ? "active" : ""}>EN</button>
+            </div>
+            
+            <Link href="/login" className="btn-login">{t.login}</Link>
           </div>
-          <button onClick={() => setMobileMenu(!mobileMenu)} style={S.hamburger} aria-label="Menu">
-            <span style={{ ...S.hamLine, transform: mobileMenu ? "rotate(45deg) translate(5px,5px)" : "none" }} />
-            <span style={{ ...S.hamLine, opacity: mobileMenu ? 0 : 1 }} />
-            <span style={{ ...S.hamLine, transform: mobileMenu ? "rotate(-45deg) translate(5px,-5px)" : "none" }} />
-          </button>
+
+          {/* Mobile hamburger */}
+          <div className="mobile-only">
+             <button className="hamburger" onClick={() => setMobileMenu(!mobileMenu)}>
+               ☰
+             </button>
+          </div>
         </div>
       </nav>
 
-      {/* Mobile menu dropdown */}
       {mobileMenu && (
-        <div style={S.mobileDropdown}>
-          <a href="#aplikacija" onClick={() => setMobileMenu(false)} style={S.mobileLink}>{t.navApp}</a>
-          <a href="#moduli" onClick={() => setMobileMenu(false)} style={S.mobileLink}>{t.navModules}</a>
-          <a href="#kontakt" onClick={() => setMobileMenu(false)} style={S.mobileLink}>{t.navContact}</a>
-          <Link href="/login" onClick={() => setMobileMenu(false)} style={{ ...S.mobileLink, color: "#00BFA6" }}>{t.login}</Link>
+        <div className="mobile-menu">
+          <a href="#aplikacija" onClick={() => setMobileMenu(false)}>{t.navApp}</a>
+          <a href="#moduli" onClick={() => setMobileMenu(false)}>{t.navModules}</a>
+          <a href="#kontakt" onClick={() => setMobileMenu(false)}>{t.navContact}</a>
+          <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
+            <button onClick={() => {setLang("bs"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'bs' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>BA</button>
+            <button onClick={() => {setLang("en"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'en' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>EN</button>
+          </div>
+          <Link href="/login" className="btn-login" onClick={() => setMobileMenu(false)} style={{marginTop: 20}}>{t.login}</Link>
         </div>
       )}
 
       {/* ══════════════ HERO ══════════════ */}
-      <header style={S.hero}>
-        <div style={{ ...S.cursorGlow, left: mousePos.x, top: mousePos.y }} />
-
-        <div className="landing-section-reveal" style={S.heroContent}>
-          <div style={{ marginBottom: 24 }}>
-            <Image src="/landing/eznr_logo_main.png" width={180} height={60} alt="eZNR" style={{ objectFit: 'contain' }} />
+      <header className="hero-section">
+        <div className="hero-content reveal-element">
+          <div style={{ marginBottom: 30 }}>
+            <Image src="/landing/eznr_logo_main.png" width={220} height={70} alt="eZNR" style={{ objectFit: 'contain' }} />
           </div>
-          <h1 className="landing-hero-title" style={S.heroTitle}>{t.heroTitle}</h1>
-          <p className="landing-hero-subtitle" style={S.heroSubtitle}>{t.heroSub}</p>
-
-          <div className="landing-cta-group" style={S.heroCtaGroup}>
-            <a href="#kontakt" className="btn-glow" style={S.btnPrimary}>{t.ctaPrimary}</a>
-            <a href="#moduli" style={S.btnSecondary}>{t.ctaSecondary}</a>
+          <h1 className="hero-title">{t.heroTitle}</h1>
+          <p className="hero-subtitle">{t.heroSub}</p>
+          <div className="hero-cta">
+            <a href="#kontakt" className="btn-primary-glow">{t.ctaPrimary}</a>
+            <a href="#moduli" className="btn-secondary">{t.ctaSecondary}</a>
           </div>
         </div>
-
-        {/* Floating Dashboard Image */}
-        <div className="landing-section-reveal" style={S.heroImageWrapper}>
-            <div style={S.heroImageGlow} />
-            <img src="/landing/heropage.png" alt="eZNR Dashboard" style={S.heroImage} />
+        
+        <div className="hero-image-wrapper reveal-element" style={{ animationDelay: '0.2s' }}>
+          <div className="hero-image-glow"></div>
+          <img src="/landing/heropage.png" alt="eZNR Dashboard" className="hero-dashboard-img" />
         </div>
       </header>
 
       {/* ══════════════ VIDEO SHOWCASE ══════════════ */}
-      <section id="aplikacija" style={{...S.section, background: "rgba(0,0,0,0.3)"}}>
-        <div className="landing-section-reveal" style={S.container}>
-          <div style={S.sectionHeader}>
-            <h2 className="landing-section-title" style={S.sectionTitle}>{t.videoTitle}</h2>
-            <p style={S.sectionSub}>{t.videoSub}</p>
+      <section id="aplikacija" className="video-section">
+        <div className="container reveal-element">
+          <div className="section-header center">
+            <h2>{t.videoTitle}</h2>
+            <p>{t.videoSub}</p>
           </div>
-          <div className="glass-window" style={S.videoContainer}>
-            <div style={S.windowBar}>
-                <div style={{...S.windowDot, background: "#ff5f56"}}/>
-                <div style={{...S.windowDot, background: "#ffbd2e"}}/>
-                <div style={{...S.windowDot, background: "#27c93f"}}/>
+          <div className="mac-window">
+            <div className="mac-header">
+              <span className="dot close"></span>
+              <span className="dot min"></span>
+              <span className="dot max"></span>
             </div>
-            <img src="/landing/demo-video.webp" alt="eZNR Demo Video" style={S.videoImg} />
+            <img src="/landing/demo-video.webp" alt="eZNR Demo" className="mac-content" />
           </div>
         </div>
       </section>
 
-      {/* ══════════════ BENTO GRID MODULES ══════════════ */}
-      <section id="moduli" style={S.section}>
-        <div className="landing-section-reveal" style={S.container}>
-          <div style={S.sectionHeader}>
-            <h2 className="landing-section-title" style={S.sectionTitle}>{t.modulesTitle}</h2>
+      {/* ══════════════ FEATURE SHOWCASE (Z-PATTERN) ══════════════ */}
+      <section id="moduli" className="features-section">
+        <div className="container">
+          <div className="section-header center reveal-element">
+            <h2>{t.modulesTitle}</h2>
+            <div className="header-line"></div>
           </div>
-          
-          <div className="bento-grid" style={S.bentoGrid}>
-            {/* Popis opreme - Large */}
-            <div className="bento-card bento-lg glass-card">
-              <div style={S.bentoText}>
-                <h3 style={S.bentoTitle}>{t.m1T}</h3>
-                <p style={S.bentoDesc}>{t.m1D}</p>
-              </div>
-              <div style={S.bentoImgWrap}>
-                <img src="/landing/hpop.png" alt="Oprema" style={S.bentoImg} />
-              </div>
-            </div>
 
-            {/* Izrada procjene rizika - Large */}
-            <div className="bento-card bento-lg glass-card">
-              <div style={S.bentoText}>
-                <h3 style={S.bentoTitle}>{t.m4T}</h3>
-                <p style={S.bentoDesc}>{t.m4D}</p>
-              </div>
-              <div style={S.bentoImgWrap}>
-                <img src="/landing/hproc.png" alt="Procjena Rizika" style={S.bentoImg} />
-              </div>
+          {/* Feature 1: Popis Opreme (Image Left) */}
+          <div className="feature-row reveal-element">
+            <div className="feature-img-container">
+               <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.2)' }}></div>
+               <img src="/landing/hpop.png" alt="Oprema" className="feature-img floating" />
             </div>
-
-            {/* Zia AI - Small */}
-            <div className="bento-card bento-sm glass-card">
-              <div style={S.bentoText}>
-                <h3 style={S.bentoTitle}>{t.m2T}</h3>
-                <p style={S.bentoDesc}>{t.m2D}</p>
-              </div>
-              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
-                <img src="/landing/hzia.png" alt="Zia AI" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', borderRight: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)'}} />
-              </div>
-            </div>
-
-            {/* Certificates - Small */}
-            <div className="bento-card bento-sm glass-card">
-              <div style={S.bentoText}>
-                <h3 style={S.bentoTitle}>{t.m3T}</h3>
-                <p style={S.bentoDesc}>{t.m3D}</p>
-              </div>
-              <div style={{...S.bentoImgWrap, alignItems: 'center', padding: '0 20px 20px'}}>
-                <img src="/landing/hcert.png" alt="Certificates" style={{...S.bentoImg, borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,0.5)', borderRight: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)'}} />
-              </div>
-            </div>
-
-            {/* Mobilna aplikacija - Large with two images */}
-            <div className="bento-card bento-lg glass-card" style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <div style={{...S.bentoText, flex: '1 1 50%'}}>
-                <h3 style={S.bentoTitle}>{t.m5T}</h3>
-                <p style={S.bentoDesc}>{t.m5D}</p>
-              </div>
-              <div style={{...S.bentoImgWrap, flex: '1 1 50%', display: 'flex', flexDirection: 'row', gap: '20px', padding: '36px 36px 0 0', justifyContent: 'center', alignItems: 'flex-end', overflow: 'hidden'}}>
-                <img src="/landing/hmob.jpg" alt="Mobilna aplikacija" style={{ width: '45%', height: 'auto', objectFit: 'contain', borderTopLeftRadius: 16, borderTopRightRadius: 16, border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }} />
-                <img src="/landing/hmob1.jpg" alt="Mobilna aplikacija" style={{ width: '45%', height: 'auto', objectFit: 'contain', borderTopLeftRadius: 16, borderTopRightRadius: 16, border: '1px solid rgba(255,255,255,0.1)', borderBottom: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', transform: 'translateY(20px)' }} />
-              </div>
+            <div className="feature-text">
+               <div className="feature-badge">01</div>
+               <h3>{t.m1T}</h3>
+               <p>{t.m1D}</p>
+               <ul className="feature-list">
+                 <li>✓ Praćenje atesta</li>
+                 <li>✓ QR kodovi opreme</li>
+                 <li>✓ Historija servisa</li>
+               </ul>
             </div>
           </div>
+
+          {/* Feature 2: Zia AI (Image Right) */}
+          <div className="feature-row reverse reveal-element">
+            <div className="feature-img-container">
+               <div className="feature-img-glow" style={{ background: 'rgba(99, 102, 241, 0.2)' }}></div>
+               <img src="/landing/hzia_new.png" alt="Zia AI" className="feature-img floating-delay" />
+            </div>
+            <div className="feature-text">
+               <div className="feature-badge" style={{ color: '#6366F1', background: 'rgba(99, 102, 241, 0.1)' }}>02</div>
+               <h3>{t.m2T}</h3>
+               <p>{t.m2D}</p>
+               <ul className="feature-list">
+                 <li>✓ Razumije kontekst vaših podataka</li>
+                 <li>✓ Poznaje zakone BiH</li>
+                 <li>✓ Chat uživo</li>
+               </ul>
+            </div>
+          </div>
+
+          {/* Feature 3: Certifikati i Uvjerenja (Image Left) */}
+          <div className="feature-row reveal-element">
+            <div className="feature-img-container">
+               <div className="feature-img-glow" style={{ background: 'rgba(245, 158, 11, 0.2)' }}></div>
+               <img src="/landing/hcert.png" alt="Certifikati" className="feature-img floating" />
+            </div>
+            <div className="feature-text">
+               <div className="feature-badge" style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>03</div>
+               <h3>{t.m3T}</h3>
+               <p>{t.m3D}</p>
+               <ul className="feature-list">
+                 <li>✓ Ljekarska uvjerenja</li>
+                 <li>✓ Generiranje ZOS i ZOP Zapisnika</li>
+                 <li>✓ Evidencija radnika</li>
+               </ul>
+            </div>
+          </div>
+
+          {/* Feature 4: Procjena Rizika (Image Right) */}
+          <div className="feature-row reverse reveal-element">
+            <div className="feature-img-container">
+               <div className="feature-img-glow" style={{ background: 'rgba(239, 68, 68, 0.2)' }}></div>
+               <img src="/landing/hproc.png" alt="Procjena rizika" className="feature-img floating-delay" />
+            </div>
+            <div className="feature-text">
+               <div className="feature-badge" style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)' }}>04</div>
+               <h3>{t.m4T}</h3>
+               <p>{t.m4D}</p>
+               <ul className="feature-list">
+                 <li>✓ AUVA Matrica procjene</li>
+                 <li>✓ Preporuke mjera</li>
+                 <li>✓ Generiranje službenog Word dokumenta</li>
+               </ul>
+            </div>
+          </div>
+
+          {/* Feature 5: Mobile App (Dual Images Left) */}
+          <div className="feature-row reveal-element">
+            <div className="feature-img-container dual-mobile">
+               <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.3)', width: '120%' }}></div>
+               <img src="/landing/hmob.jpg" alt="Mobile 1" className="mobile-img left-mobile floating" />
+               <img src="/landing/hmob1.jpg" alt="Mobile 2" className="mobile-img right-mobile floating-delay" />
+            </div>
+            <div className="feature-text">
+               <div className="feature-badge" style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)' }}>05</div>
+               <h3>{t.m5T}</h3>
+               <p>{t.m5D}</p>
+               <ul className="feature-list">
+                 <li>✓ Unos obilazaka na terenu</li>
+                 <li>✓ Slanje slika drito u sistem</li>
+                 <li>✓ Notifikacije u stvarnom vremenu</li>
+               </ul>
+            </div>
+          </div>
+
         </div>
       </section>
 
       {/* ══════════════ CONTACT ══════════════ */}
-      <section id="kontakt" style={S.section}>
-        <div className="landing-section-reveal landing-container-card" style={S.containerCard}>
-          <div style={S.contactGlow} />
-          <h2 className="landing-section-title" style={{ ...S.sectionTitle, textAlign: "center", background: "linear-gradient(135deg, #00e5c8 0%, #6366F1 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>{t.contactTitle}</h2>
-          <p style={{ textAlign: "center", color: "rgba(255,255,255,0.6)", marginBottom: 30, maxWidth: 560, margin: "0 auto 30px" }}>{t.contactSub}</p>
-          <form onSubmit={(e) => { e.preventDefault(); alert(t.fAlert); }} style={S.contactForm}>
-            <div style={S.formRow}>
-              <input style={S.input} type="text" placeholder={t.fName} />
-              <input style={S.input} type="text" placeholder={t.fCompany} />
-            </div>
-            <div style={S.formRow}>
-              <input style={S.input} type="email" placeholder={t.fEmail} required />
-              <input style={S.input} type="tel" placeholder={t.fPhone} />
-            </div>
-            <button type="submit" className="btn-glow" style={{ ...S.btnPrimary, width: "100%", display: "flex", justifyContent: "center" }}>{t.fSubmit}</button>
-          </form>
+      <section id="kontakt" className="contact-section">
+        <div className="container">
+          <div className="contact-card reveal-element">
+            <div className="contact-card-bg"></div>
+            <h2 className="gradient-text text-center">{t.contactTitle}</h2>
+            <p className="contact-sub">{t.contactSub}</p>
+            
+            <form className="modern-form" onSubmit={(e) => { e.preventDefault(); alert(t.fAlert); }}>
+              <div className="form-grid">
+                <div className="input-group">
+                  <label>{t.fName}</label>
+                  <input type="text" placeholder="John Doe" />
+                </div>
+                <div className="input-group">
+                  <label>{t.fCompany}</label>
+                  <input type="text" placeholder="Company d.o.o." />
+                </div>
+                <div className="input-group">
+                  <label>{t.fEmail} *</label>
+                  <input type="email" placeholder="john@company.com" required />
+                </div>
+                <div className="input-group">
+                  <label>{t.fPhone}</label>
+                  <input type="tel" placeholder="+387 61 123 456" />
+                </div>
+              </div>
+              <div style={{ marginTop: 32, textAlign: 'center' }}>
+                <button type="submit" className="btn-primary-glow large">{t.fSubmit}</button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
 
       {/* ══════════════ FOOTER ══════════════ */}
-      <footer style={S.footer}>
-        <div className="landing-footer-container" style={S.footerContainer}>
-          <div style={S.footerBrand}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Image src="/logo-icon.png" width={28} height={28} alt="eZNR" style={{ borderRadius: 6 }} />
-              <span style={{ fontSize: "1.2rem", fontWeight: 800 }}>eZNR</span>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.35)", marginTop: 8 }}>{t.footerDesc}</p>
+      <footer className="modern-footer">
+        <div className="container footer-grid">
+          <div className="footer-brand">
+             <div className="brand-logo">
+               <Image src="/logo-icon.png" width={32} height={32} alt="eZNR" style={{ borderRadius: 8 }} />
+               <span>eZNR</span>
+             </div>
+             <p>{t.footerDesc}</p>
           </div>
-          <div>
-            <span style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.3)", display: "block", marginBottom: 4 }}>{t.footerDistLabel}</span>
-            <span style={{ fontSize: "1rem", fontWeight: 700, color: "#00BFA6" }}>{t.footerDist}</span>
+          
+          <div className="footer-dist">
+            <span className="dist-label">{t.footerDistLabel}</span>
+            <span className="dist-name">{t.footerDist}</span>
           </div>
-          <div>
-            <div style={{ display: "flex", gap: 16, fontSize: "0.85rem", marginBottom: 8 }}>
-              <a href={t.termsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>{t.footerTerms}</a>
-              <a href={t.privacyUrl} target="_blank" rel="noopener noreferrer" style={{ color: "rgba(255,255,255,0.45)", textDecoration: "none" }}>{t.footerPrivacy}</a>
-            </div>
-            <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.2)" }}>© 2026 eZNR. Sva prava pridržana.</p>
+
+          <div className="footer-links">
+             <div className="links-row">
+               <a href={t.termsUrl} target="_blank" rel="noopener noreferrer">{t.footerTerms}</a>
+               <span className="dot-sep">•</span>
+               <a href={t.privacyUrl} target="_blank" rel="noopener noreferrer">{t.footerPrivacy}</a>
+             </div>
+             <p className="copyright">© {new Date().getFullYear()} eZNR. Sva prava pridržana.</p>
           </div>
         </div>
       </footer>
 
-      {/* Inline styles for complex animations and specific grid rules */}
+      {/* ══════════════ STYLES ══════════════ */}
       <style>{`
-        .glass-card {
-            background: rgba(16, 28, 40, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            border-radius: 24px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-        .glass-card:hover {
-            border-color: rgba(0, 191, 166, 0.3);
-            transform: translateY(-5px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 40px rgba(0, 191, 166, 0.1);
-        }
-        .glass-window {
-            background: rgba(16, 28, 40, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 100px rgba(0,191,166,0.15);
-        }
-        .btn-glow {
-            position: relative;
-        }
-        .btn-glow::after {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            border-radius: inherit;
-            box-shadow: 0 0 20px rgba(0, 191, 166, 0.4);
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .btn-glow:hover::after {
-            opacity: 1;
-        }
-        .bento-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 24px;
-            grid-auto-rows: minmax(380px, auto);
-        }
-        .bento-lg {
-            grid-column: span 2;
-            display: flex;
-            flex-direction: row;
-        }
-        .bento-sm {
-            grid-column: span 1;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        @keyframes dashboard-float {
-            0% { transform: perspective(1200px) rotateX(12deg) translateY(0px); }
-            50% { transform: perspective(1200px) rotateX(12deg) translateY(-15px); }
-            100% { transform: perspective(1200px) rotateX(12deg) translateY(0px); }
+        :root {
+          --c-bg: #03080c;
+          --c-surface: rgba(16, 28, 40, 0.6);
+          --c-surface-hover: rgba(22, 38, 54, 0.8);
+          --c-border: rgba(255, 255, 255, 0.08);
+          --c-primary: #00BFA6;
+          --c-primary-glow: rgba(0, 191, 166, 0.4);
+          --c-text: #ffffff;
+          --c-text-muted: rgba(255, 255, 255, 0.65);
+          --font-main: 'Inter', sans-serif;
+          --radius-lg: 24px;
+          --radius-md: 16px;
         }
 
-        .dashboard-img-anim {
-            animation: dashboard-float 8s ease-in-out infinite;
+        /* Base */
+        .landing-root {
+          background-color: var(--c-bg);
+          color: var(--c-text);
+          font-family: var(--font-main);
+          min-height: 100vh;
+          overflow-x: hidden;
+          position: relative;
         }
+
+        .container {
+          max-width: 1200px;
+          margin: 0 auto;
+          padding: 0 24px;
+        }
+
+        /* Typography */
+        h1, h2, h3 { font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
+        p { line-height: 1.6; }
+        .text-center { textAlign: center; }
+
+        /* Backgrounds */
+        .bg-glow { position: absolute; border-radius: 50%; filter: blur(100px); opacity: 0.15; pointer-events: none; z-index: 0; }
+        .bg-glow-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: var(--c-primary); }
+        .bg-glow-2 { top: 40%; right: -20%; width: 60vw; height: 60vw; background: #6366F1; }
+        
+        .grid-overlay {
+          position: fixed; inset: 0; pointer-events: none; z-index: 0;
+          background-image: linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+          background-size: 40px 40px;
+        }
+
+        /* Nav */
+        .fixed-nav {
+          position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+          padding: 20px 0; transition: all 0.3s ease;
+        }
+        .fixed-nav.scrolled {
+          padding: 12px 0; background: rgba(3, 8, 12, 0.85); backdrop-filter: blur(16px);
+          border-bottom: 1px solid var(--c-border);
+        }
+        .nav-container { max-width: 1300px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+        .nav-brand { display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 900; }
+        .nav-links { display: flex; align-items: center; gap: 32px; font-weight: 600; font-size: 0.95rem; }
+        .nav-links a { color: var(--c-text-muted); text-decoration: none; transition: color 0.2s; }
+        .nav-links a:hover { color: var(--c-text); }
+        
+        .lang-switcher { display: flex; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px; }
+        .lang-switcher button { background: none; border: none; color: var(--c-text-muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.2s; }
+        .lang-switcher button.active { background: rgba(0, 191, 166, 0.2); color: var(--c-primary); }
+
+        .btn-login { background: rgba(0, 191, 166, 0.1); border: 1px solid rgba(0, 191, 166, 0.3); color: var(--c-primary); padding: 10px 24px; border-radius: 12px; transition: 0.2s; text-decoration: none; }
+        .btn-login:hover { background: rgba(0, 191, 166, 0.2); }
+
+        .mobile-only { display: none; }
+        .hamburger { background: none; border: none; color: white; font-size: 1.8rem; cursor: pointer; }
+        .mobile-menu { position: fixed; top: 70px; left: 0; right: 0; background: rgba(3,8,12,0.98); padding: 24px; z-index: 99; display: flex; flex-direction: column; gap: 20px; border-bottom: 1px solid var(--c-border); backdrop-filter: blur(20px); }
+        .mobile-menu a { color: white; text-decoration: none; font-size: 1.2rem; font-weight: 600; }
 
         @media (max-width: 900px) {
-            .bento-grid { grid-template-columns: 1fr; }
-            .bento-lg { grid-column: span 1; flex-direction: column; }
-            .bento-sm { grid-column: span 1; }
+          .desktop-only { display: none; }
+          .mobile-only { display: block; }
+        }
+
+        /* Hero */
+        .hero-section {
+          padding-top: 180px; padding-bottom: 80px; position: relative; z-index: 2; text-align: center;
+        }
+        .hero-content { max-width: 900px; margin: 0 auto 60px; }
+        .hero-title { font-size: 4.8rem; margin-bottom: 24px; text-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .hero-subtitle { font-size: 1.25rem; color: var(--c-text-muted); max-width: 700px; margin: 0 auto 40px; }
+        
+        .hero-cta { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        .btn-primary-glow {
+          background: linear-gradient(135deg, #00e5c8 0%, #00a892 100%); color: #000; padding: 16px 36px; border-radius: 14px; font-weight: 800; font-size: 1rem; text-decoration: none; box-shadow: 0 10px 30px var(--c-primary-glow); transition: 0.3s;
+        }
+        .btn-primary-glow:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0, 191, 166, 0.6); }
+        .btn-primary-glow.large { font-size: 1.1rem; padding: 18px 48px; }
+        
+        .btn-secondary {
+          background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 16px 36px; border-radius: 14px; font-weight: 700; font-size: 1rem; text-decoration: none; transition: 0.3s; backdrop-filter: blur(10px);
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+
+        .hero-image-wrapper { position: relative; max-width: 1200px; margin: 0 auto; perspective: 1200px; }
+        .hero-image-glow { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 80%; background: radial-gradient(circle, var(--c-primary-glow) 0%, transparent 70%); filter: blur(60px); z-index: -1; }
+        .hero-dashboard-img { width: 100%; border-radius: 20px; border: 1px solid var(--c-border); box-shadow: 0 40px 100px rgba(0,0,0,0.8); transform: rotateX(10deg); transform-origin: top; animation: float 8s ease-in-out infinite; }
+
+        @keyframes float { 0%, 100% { transform: rotateX(10deg) translateY(0); } 50% { transform: rotateX(10deg) translateY(-20px); } }
+
+        /* Video Showcase */
+        .video-section { padding: 100px 0; background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.4), transparent); position: relative; z-index: 2; }
+        .section-header { margin-bottom: 60px; }
+        .section-header h2 { font-size: 2.8rem; margin-bottom: 16px; }
+        .section-header p { font-size: 1.1rem; color: var(--c-text-muted); max-width: 600px; margin: 0 auto; }
+        .header-line { width: 60px; height: 4px; background: var(--c-primary); margin: 24px auto 0; border-radius: 4px; }
+        
+        .mac-window { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--radius-md); overflow: hidden; backdrop-filter: blur(20px); box-shadow: 0 30px 60px rgba(0,0,0,0.5); }
+        .mac-header { background: rgba(0,0,0,0.3); padding: 12px 16px; display: flex; gap: 8px; border-bottom: 1px solid var(--c-border); }
+        .mac-header .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .mac-header .close { background: #ff5f56; } .mac-header .min { background: #ffbd2e; } .mac-header .max { background: #27c93f; }
+        .mac-content { width: 100%; display: block; }
+
+        /* Features Z-Pattern Layout */
+        .features-section { padding: 120px 0; position: relative; z-index: 2; }
+        .feature-row { display: flex; align-items: center; gap: 60px; margin-bottom: 140px; }
+        .feature-row.reverse { flex-direction: row-reverse; }
+        
+        .feature-img-container { flex: 1; position: relative; border-radius: var(--radius-lg); padding: 20px; }
+        .feature-img-glow { position: absolute; inset: 0; filter: blur(50px); z-index: -1; border-radius: 50%; opacity: 0.6; }
+        .feature-img { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--c-border); box-shadow: 0 20px 50px rgba(0,0,0,0.4); object-fit: cover; }
+        
+        .feature-text { flex: 1; padding: 20px; }
+        .feature-badge { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: rgba(0, 191, 166, 0.1); color: var(--c-primary); font-size: 1.2rem; font-weight: 800; border-radius: 12px; margin-bottom: 24px; }
+        .feature-text h3 { font-size: 2.4rem; margin-bottom: 20px; }
+        .feature-text p { font-size: 1.15rem; color: var(--c-text-muted); margin-bottom: 30px; }
+        .feature-list { list-style: none; padding: 0; margin: 0; }
+        .feature-list li { font-size: 1.05rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; font-weight: 500; color: #E2E8F0; }
+
+        .floating { animation: float-simple 6s ease-in-out infinite; }
+        .floating-delay { animation: float-simple 6s ease-in-out infinite; animation-delay: -3s; }
+        @keyframes float-simple { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+
+        /* Dual Mobile Setup */
+        .dual-mobile { display: flex; align-items: flex-end; justify-content: center; gap: 20px; padding-top: 40px; }
+        .mobile-img { width: 45%; max-width: 260px; border-radius: 24px; border: 1px solid var(--c-border); box-shadow: 0 20px 40px rgba(0,0,0,0.5); object-fit: contain; }
+        .right-mobile { transform: translateY(30px); }
+
+        /* Contact Section */
+        .contact-section { padding: 80px 0 140px; position: relative; z-index: 2; }
+        .contact-card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 32px; padding: 80px 60px; position: relative; overflow: hidden; backdrop-filter: blur(20px); box-shadow: 0 40px 100px rgba(0,0,0,0.5); }
+        .contact-card-bg { position: absolute; top: -50%; right: -50%; width: 100%; height: 100%; background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%); z-index: -1; }
+        
+        .gradient-text { background: linear-gradient(135deg, #00BFA6 0%, #6366F1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 3.5rem; margin-bottom: 20px; }
+        .contact-sub { font-size: 1.15rem; color: var(--c-text-muted); text-align: center; max-width: 600px; margin: 0 auto 50px; }
+        
+        .modern-form { max-width: 800px; margin: 0 auto; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; }
+        .input-group label { font-size: 0.9rem; font-weight: 600; color: rgba(255,255,255,0.8); padding-left: 4px; }
+        .input-group input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); padding: 16px 20px; border-radius: 14px; color: white; font-size: 1rem; font-family: var(--font-main); transition: 0.3s; outline: none; }
+        .input-group input:focus { border-color: var(--c-primary); background: rgba(0,0,0,0.6); box-shadow: 0 0 0 4px rgba(0,191,166,0.1); }
+
+        /* Footer */
+        .modern-footer { border-top: 1px solid var(--c-border); padding: 60px 0 40px; background: #020406; position: relative; z-index: 2; }
+        .footer-grid { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 40px; }
+        .footer-brand { max-width: 300px; }
+        .brand-logo { display: flex; align-items: center; gap: 12px; font-size: 1.3rem; font-weight: 800; margin-bottom: 16px; }
+        .footer-brand p { color: var(--c-text-muted); font-size: 0.9rem; }
+        
+        .footer-dist { display: flex; flex-direction: column; gap: 6px; }
+        .dist-label { color: rgba(255,255,255,0.4); font-size: 0.85rem; }
+        .dist-name { color: var(--c-primary); font-weight: 700; font-size: 1.1rem; }
+        
+        .footer-links { text-align: right; }
+        .links-row { display: flex; gap: 12px; align-items: center; justify-content: flex-end; margin-bottom: 12px; }
+        .links-row a { color: var(--c-text-muted); text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .links-row a:hover { color: white; }
+        .dot-sep { color: rgba(255,255,255,0.2); }
+        .copyright { color: rgba(255,255,255,0.3); font-size: 0.8rem; }
+
+        /* Reveal Animation */
+        .reveal-element { opacity: 0; transform: translateY(30px); transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .reveal-element.visible { opacity: 1; transform: translateY(0); }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+          .hero-title { font-size: 3.5rem; }
+          .feature-row { flex-direction: column; gap: 40px; margin-bottom: 100px; }
+          .feature-row.reverse { flex-direction: column; }
+          .feature-img-container { width: 100%; }
+          .feature-text { padding: 0; }
+        }
+        @media (max-width: 768px) {
+          .hero-title { font-size: 2.8rem; }
+          .form-grid { grid-template-columns: 1fr; }
+          .contact-card { padding: 40px 24px; }
+          .gradient-text { font-size: 2.5rem; }
+          .footer-grid { flex-direction: column; align-items: center; text-align: center; }
+          .footer-links { text-align: center; }
+          .links-row { justify-content: center; }
         }
       `}</style>
     </div>
   );
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════ */
-/* STYLES                                                                    */
-/* ═══════════════════════════════════════════════════════════════════════════ */
-const S = {
-  page: {
-    minHeight: "100vh",
-    backgroundColor: "#03080c", // Deep dark base
-    color: "#ffffff",
-    fontFamily: "var(--font-heading)",
-    overflowX: "hidden",
-    position: "relative",
-  },
-  heroBgContainer: {
-    position: "absolute",
-    top: 0, left: 0, right: 0,
-    height: "140vh",
-    zIndex: 0,
-    pointerEvents: "none",
-    overflow: "hidden"
-  },
-  heroBgImg: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-    objectPosition: "top center",
-    opacity: 0.8,
-    mixBlendMode: "screen",
-  },
-  gridBg: {
-    position: "fixed",
-    inset: 0,
-    backgroundImage:
-      "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)",
-    backgroundSize: "60px 60px",
-    animation: "landing-grid-fade 8s ease-in-out infinite",
-    pointerEvents: "none",
-    zIndex: 0,
-  },
-
-  /* ── Nav ── */
-  nav: {
-    position: "fixed",
-    top: 0, left: 0, right: 0,
-    height: 72,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "0 40px",
-    zIndex: 100,
-    transition: "all 0.3s ease",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
-  },
-  navBrand: { display: "flex", alignItems: "center", gap: 12 },
-  brandTitle: { fontSize: "1.4rem", fontWeight: 900, color: "white", letterSpacing: "-0.02em" },
-  navLinks: { display: "flex", alignItems: "center", gap: 32 },
-  navLink: { color: "rgba(255,255,255,0.7)", textDecoration: "none", fontSize: "0.9rem", fontWeight: 600, transition: "color 0.2s" },
-  loginBtn: {
-    padding: "10px 28px",
-    background: "rgba(0,191,166,0.15)",
-    border: "1px solid rgba(0,191,166,0.3)",
-    borderRadius: 12,
-    color: "#00BFA6",
-    fontSize: "0.9rem",
-    fontWeight: 700,
-    textDecoration: "none",
-    transition: "all 0.2s",
-  },
-  langPill: {
-    display: "flex",
-    background: "rgba(255,255,255,0.05)",
-    borderRadius: 10,
-    padding: 4,
-    gap: 2,
-    border: "1px solid rgba(255,255,255,0.1)",
-  },
-  langFlag: {
-    background: "transparent",
-    border: "none",
-    fontSize: "1.1rem",
-    padding: "4px 8px",
-    borderRadius: 6,
-    cursor: "pointer",
-    transition: "all 0.2s",
-    lineHeight: 1,
-  },
-  langFlagActive: {
-    background: "rgba(0,191,166,0.25)",
-    boxShadow: "0 0 10px rgba(0,191,166,0.2)",
-  },
-  hamburger: {
-    background: "transparent",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    flexDirection: "column",
-    gap: 5,
-    padding: 6,
-  },
-  hamLine: {
-    width: 24,
-    height: 2,
-    background: "white",
-    borderRadius: 2,
-    transition: "all 0.3s ease",
-  },
-  mobileDropdown: {
-    position: "fixed",
-    top: 72,
-    left: 0, right: 0,
-    background: "rgba(3,8,12,0.98)",
-    backdropFilter: "blur(20px)",
-    display: "flex",
-    flexDirection: "column",
-    padding: "24px",
-    gap: 20,
-    zIndex: 99,
-    borderBottom: "1px solid rgba(255,255,255,0.08)",
-    animation: "landing-fade-up 0.3s ease",
-  },
-  mobileLink: {
-    color: "rgba(255,255,255,0.8)",
-    textDecoration: "none",
-    fontSize: "1.1rem",
-    fontWeight: 600,
-    padding: "8px 0",
-  },
-
-  /* ── Hero ── */
-  hero: {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "flex-start",
-    position: "relative",
-    padding: "160px 20px 40px",
-    textAlign: "center",
-    zIndex: 2,
-  },
-  heroContent: { position: "relative", zIndex: 3, maxWidth: 900, marginBottom: 60 },
-  badge: {
-    display: "inline-flex",
-    alignItems: "center",
-    background: "rgba(0,191,166,0.1)",
-    color: "#00e5c8",
-    border: "1px solid rgba(0,191,166,0.3)",
-    padding: "6px 16px",
-    borderRadius: 50,
-    fontSize: "0.95rem",
-    fontWeight: 700,
-    marginBottom: 24,
-    letterSpacing: "0.5px",
-    boxShadow: "0 4px 20px rgba(0,191,166,0.15)"
-  },
-  heroTitle: {
-    fontSize: "4.5rem",
-    lineHeight: 1.1,
-    fontWeight: 900,
-    marginBottom: 24,
-    color: "white",
-    textShadow: "0 10px 30px rgba(0,0,0,0.5)",
-    letterSpacing: "-0.02em",
-  },
-  heroSubtitle: {
-    fontSize: "1.25rem",
-    lineHeight: 1.6,
-    color: "rgba(255,255,255,0.7)",
-    maxWidth: 700,
-    margin: "0 auto 40px",
-  },
-  heroCtaGroup: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-    flexWrap: "wrap",
-  },
-  btnPrimary: {
-    padding: "16px 36px",
-    background: "linear-gradient(135deg, #00e5c8 0%, #00a892 100%)",
-    color: "#000",
-    borderRadius: 14,
-    fontSize: "1rem",
-    fontWeight: 800,
-    textDecoration: "none",
-    border: "none",
-    cursor: "pointer",
-    boxShadow: "0 10px 30px rgba(0,191,166,0.3)",
-    transition: "all 0.2s",
-  },
-  btnSecondary: {
-    padding: "16px 36px",
-    background: "rgba(255,255,255,0.05)",
-    border: "1px solid rgba(255,255,255,0.15)",
-    color: "white",
-    borderRadius: 14,
-    fontSize: "1rem",
-    fontWeight: 700,
-    textDecoration: "none",
-    transition: "all 0.2s",
-    backdropFilter: "blur(10px)"
-  },
-  heroImageWrapper: {
-    position: "relative",
-    width: "100%",
-    maxWidth: 1200,
-    marginTop: 20,
-    zIndex: 2,
-    perspective: "1200px"
-  },
-  heroImageGlow: {
-    position: "absolute",
-    top: "50%", left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "80%", height: "80%",
-    background: "radial-gradient(circle, rgba(0,191,166,0.2) 0%, transparent 70%)",
-    filter: "blur(60px)",
-    zIndex: -1
-  },
-  heroImage: {
-    width: "100%",
-    height: "auto",
-    borderRadius: 20,
-    border: "1px solid rgba(255,255,255,0.1)",
-    boxShadow: "0 40px 100px rgba(0,0,0,0.6)",
-    transform: "rotateX(12deg)",
-    transformOrigin: "top center",
-    className: "dashboard-img-anim"
-  },
-  cursorGlow: {
-    position: "fixed",
-    width: 600, height: 600,
-    background: "radial-gradient(circle, rgba(0,191,166,0.05) 0%, rgba(0,0,0,0) 60%)",
-    borderRadius: "50%",
-    transform: "translate(-50%, -50%)",
-    pointerEvents: "none",
-    zIndex: 1,
-    transition: "left 0.1s linear, top 0.1s linear",
-  },
-
-  /* ── Sections ── */
-  section: { padding: "120px 20px", position: "relative", zIndex: 2 },
-  container: { maxWidth: 1200, margin: "0 auto" },
-  sectionHeader: {
-    textAlign: "center",
-    marginBottom: 60,
-  },
-  sectionTitle: {
-    fontSize: "2.8rem",
-    fontWeight: 800,
-    marginBottom: 16,
-    color: "white",
-    letterSpacing: "-0.01em"
-  },
-  sectionSub: {
-    fontSize: "1.1rem",
-    color: "rgba(255,255,255,0.6)",
-    maxWidth: 600,
-    margin: "0 auto",
-  },
-
-  /* ── Video Container ── */
-  videoContainer: {
-    position: "relative",
-    width: "100%",
-    padding: "40px 10px 10px 10px", // space for window bar
-  },
-  windowBar: {
-    position: "absolute",
-    top: 0, left: 0, right: 0,
-    height: 40,
-    background: "rgba(0,0,0,0.2)",
-    borderBottom: "1px solid rgba(255,255,255,0.05)",
-    display: "flex",
-    alignItems: "center",
-    padding: "0 16px",
-    gap: 8
-  },
-  windowDot: {
-    width: 12, height: 12,
-    borderRadius: "50%",
-  },
-  videoImg: {
-    width: "100%",
-    height: "auto",
-    borderRadius: 8,
-    display: "block"
-  },
-
-  /* ── Bento Grid Elements ── */
-  bentoText: {
-    padding: 36,
-    flex: "1 1 auto",
-  },
-  bentoTitle: {
-    fontSize: "1.6rem",
-    fontWeight: 800,
-    marginBottom: 12,
-    color: "white"
-  },
-  bentoDesc: {
-    fontSize: "1.05rem",
-    lineHeight: 1.5,
-    color: "rgba(255,255,255,0.6)"
-  },
-  bentoImgWrap: {
-    flex: "1 1 auto",
-    display: "flex",
-    alignItems: "flex-end",
-    justifyContent: "flex-end",
-    paddingLeft: 36,
-    overflow: "hidden"
-  },
-  bentoImg: {
-    width: "100%",
-    height: "auto",
-    objectFit: "cover",
-    objectPosition: "left top",
-    borderTopLeftRadius: 16,
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderBottom: "none",
-    borderRight: "none",
-    boxShadow: "-10px -10px 30px rgba(0,0,0,0.3)"
-  },
-
-  /* ── Contact ── */
-  containerCard: {
-    maxWidth: 800,
-    margin: "0 auto",
-    background: "rgba(16, 28, 40, 0.7)",
-    backdropFilter: "blur(20px)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: 32,
-    padding: 64,
-    boxShadow: "0 40px 100px rgba(0,0,0,0.5)",
-    position: "relative",
-    overflow: "hidden"
-  },
-  contactGlow: {
-    position: "absolute",
-    top: 0, right: 0,
-    width: 300, height: 300,
-    background: "radial-gradient(circle, rgba(0,191,166,0.1) 0%, transparent 70%)",
-    pointerEvents: "none"
-  },
-  contactForm: { display: "flex", flexDirection: "column", gap: 16, position: "relative", zIndex: 2 },
-  formRow: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 16 },
-  input: {
-    background: "rgba(0,0,0,0.3)",
-    border: "1px solid rgba(255,255,255,0.1)",
-    padding: "16px 20px",
-    borderRadius: 14,
-    color: "white",
-    fontSize: "1rem",
-    fontFamily: "var(--font-heading)",
-    outline: "none",
-    transition: "border-color 0.2s, background 0.2s",
-  },
-
-  /* ── Footer ── */
-  footer: {
-    borderTop: "1px solid rgba(255,255,255,0.05)",
-    padding: "60px 40px",
-    background: "#020508",
-    position: "relative",
-    zIndex: 2,
-  },
-  footerContainer: {
-    maxWidth: 1200,
-    margin: "0 auto",
-    display: "flex",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
-    gap: 40,
-  },
-  footerBrand: { maxWidth: 300 },
-};
