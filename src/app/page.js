@@ -91,6 +91,18 @@ export default function LandingPage() {
   const t = T[lang] || T.bs;
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      // Normalize to -1 to 1
+      const x = (e.clientX / window.innerWidth - 0.5) * 2;
+      const y = (e.clientY / window.innerHeight - 0.5) * 2;
+      setMousePos({ x, y });
+    };
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -109,10 +121,14 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="landing-root">
+    <div className="landing-root" style={{ '--mouse-x': mousePos.x, '--mouse-y': mousePos.y }}>
+      
+      {/* ── Interactive Milky Way Background ── */}
+      <div className="milky-way"></div>
+      <div className="starry-layer slow"></div>
+      <div className="starry-layer fast"></div>
       
       {/* ── Ambient Backgrounds ── */}
-      <div className="starry-dust"></div>
       <div className="bg-glow bg-glow-1"></div>
       <div className="bg-glow bg-glow-2"></div>
       <div className="bg-glow bg-glow-3"></div>
@@ -169,7 +185,8 @@ export default function LandingPage() {
       <header className="hero-section">
         <div className="hero-content reveal-element">
           <div style={{ marginBottom: 30, display: 'flex', justifyContent: 'center' }}>
-            <Image src="/landing/eznr_logo_main.png" width={330} height={105} alt="eZNR" className="hero-main-logo" />
+            {/* The logo was 220px originally. User wants it twice as big as it was *before*, making it 660x210. Let's make it massive (660x210) so it's fully visible and large. */}
+            <Image src="/landing/eznr_logo_main.png" width={660} height={210} alt="eZNR" className="hero-main-logo" priority />
           </div>
           <h1 className="hero-title">{t.heroTitle}</h1>
           <p className="hero-subtitle">{t.heroSub}</p>
