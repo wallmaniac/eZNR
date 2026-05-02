@@ -228,95 +228,99 @@ export default function LandingPage() {
             <div className="header-line"></div>
           </div>
 
-          {/* Feature 1: Popis Opreme (Image Left) */}
-          <div className="feature-row reveal-element">
-            <div className="feature-img-container">
-               <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.2)' }}></div>
-               <img src="/landing/hpop.png" alt="Oprema" className="feature-img floating" />
-            </div>
-            <div className="feature-text">
-               <div className="feature-badge">01</div>
-               <h3>{t.m1T}</h3>
-               <p>{t.m1D}</p>
-               <ul className="feature-list">
+          <div className="bento-grid">
+            
+            {/* Feature 1: Popis Opreme */}
+            <div className="bento-card reveal-element">
+              <div className="feature-text">
+                 <div className="feature-badge">01</div>
+                 <h3>{t.m1T}</h3>
+                 <p>{t.m1D}</p>
+              </div>
+              <div className="feature-img-container bento-img">
+                 <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.3)' }}></div>
+                 <img src="/landing/hpop.png" alt="Oprema" className="feature-img floating" />
+              </div>
+              <ul className="feature-list bento-list">
                  <li>✓ Praćenje atesta</li>
                  <li>✓ QR kodovi opreme</li>
                  <li>✓ Historija servisa</li>
-               </ul>
+              </ul>
             </div>
-          </div>
 
-          {/* Feature 2: Zia AI (Image Right) */}
-          <div className="feature-row reverse reveal-element">
-            <div className="feature-img-container">
-               <div className="feature-img-glow" style={{ background: 'rgba(99, 102, 241, 0.2)' }}></div>
-               <img src="/landing/hzia_new.png" alt="Zia AI" className="feature-img floating-delay" />
-            </div>
-            <div className="feature-text">
-               <div className="feature-badge" style={{ color: '#6366F1', background: 'rgba(99, 102, 241, 0.1)' }}>02</div>
-               <h3>{t.m2T}</h3>
-               <p>{t.m2D}</p>
-               <ul className="feature-list">
+            {/* Feature 2: Zia AI */}
+            <div className="bento-card reveal-element" style={{ transitionDelay: '0.1s' }}>
+              <div className="feature-text">
+                 <div className="feature-badge" style={{ color: '#6366F1', background: 'rgba(99, 102, 241, 0.1)' }}>02</div>
+                 <h3>{t.m2T}</h3>
+                 <p>{t.m2D}</p>
+              </div>
+              <div className="feature-img-container bento-img">
+                 <div className="feature-img-glow" style={{ background: 'rgba(99, 102, 241, 0.3)' }}></div>
+                 <img src="/landing/hzia_new.png" alt="Zia AI" className="feature-img floating-delay" />
+              </div>
+              <ul className="feature-list bento-list">
                  <li>✓ Razumije kontekst vaših podataka</li>
                  <li>✓ Poznaje zakone BiH</li>
                  <li>✓ Chat uživo</li>
-               </ul>
+              </ul>
             </div>
-          </div>
 
-          {/* Feature 3: Certifikati i Uvjerenja (Image Left) */}
-          <div className="feature-row reveal-element">
-            <div className="feature-img-container">
-               <div className="feature-img-glow" style={{ background: 'rgba(245, 158, 11, 0.2)' }}></div>
-               <img src="/landing/hcert.png" alt="Certifikati" className="feature-img floating" />
-            </div>
-            <div className="feature-text">
-               <div className="feature-badge" style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>03</div>
-               <h3>{t.m3T}</h3>
-               <p>{t.m3D}</p>
-               <ul className="feature-list">
+            {/* Feature 3: Certifikati i Uvjerenja */}
+            <div className="bento-card reveal-element">
+              <div className="feature-text">
+                 <div className="feature-badge" style={{ color: '#F59E0B', background: 'rgba(245, 158, 11, 0.1)' }}>03</div>
+                 <h3>{t.m3T}</h3>
+                 <p>{t.m3D}</p>
+              </div>
+              <div className="feature-img-container bento-img">
+                 <div className="feature-img-glow" style={{ background: 'rgba(245, 158, 11, 0.3)' }}></div>
+                 <img src="/landing/hcert.png" alt="Certifikati" className="feature-img floating" />
+              </div>
+              <ul className="feature-list bento-list">
                  <li>✓ Ljekarska uvjerenja</li>
-                 <li>✓ Generiranje ZOS i ZOP Zapisnika</li>
+                 <li>✓ Generiranje ZOS/ZOP Zapisnika</li>
                  <li>✓ Evidencija radnika</li>
-               </ul>
+              </ul>
             </div>
-          </div>
 
-          {/* Feature 4: Procjena Rizika (Image Right) */}
-          <div className="feature-row reverse reveal-element">
-            <div className="feature-img-container">
-               <div className="feature-img-glow" style={{ background: 'rgba(239, 68, 68, 0.2)' }}></div>
-               <img src="/landing/hproc.png" alt="Procjena rizika" className="feature-img floating-delay" />
-            </div>
-            <div className="feature-text">
-               <div className="feature-badge" style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)' }}>04</div>
-               <h3>{t.m4T}</h3>
-               <p>{t.m4D}</p>
-               <ul className="feature-list">
+            {/* Feature 4: Procjena Rizika */}
+            <div className="bento-card reveal-element" style={{ transitionDelay: '0.1s' }}>
+              <div className="feature-text">
+                 <div className="feature-badge" style={{ color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)' }}>04</div>
+                 <h3>{t.m4T}</h3>
+                 <p>{t.m4D}</p>
+              </div>
+              <div className="feature-img-container bento-img">
+                 <div className="feature-img-glow" style={{ background: 'rgba(239, 68, 68, 0.3)' }}></div>
+                 <img src="/landing/hproc.png" alt="Procjena rizika" className="feature-img floating-delay" />
+              </div>
+              <ul className="feature-list bento-list">
                  <li>✓ AUVA Matrica procjene</li>
                  <li>✓ Preporuke mjera</li>
-                 <li>✓ Generiranje službenog Word dokumenta</li>
-               </ul>
+                 <li>✓ Word izvoz</li>
+              </ul>
             </div>
-          </div>
 
-          {/* Feature 5: Mobile App (Dual Images Left) */}
-          <div className="feature-row reveal-element">
-            <div className="feature-img-container dual-mobile">
-               <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.3)', width: '120%' }}></div>
-               <img src="/landing/hmob.jpg" alt="Mobile 1" className="mobile-img left-mobile floating" />
-               <img src="/landing/hmob1.jpg" alt="Mobile 2" className="mobile-img right-mobile floating-delay" />
+            {/* Feature 5: Mobile App (Full Width) */}
+            <div className="bento-card full reveal-element">
+              <div className="feature-text">
+                 <div className="feature-badge" style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)' }}>05</div>
+                 <h3>{t.m5T}</h3>
+                 <p>{t.m5D}</p>
+                 <ul className="feature-list bento-list-vertical">
+                   <li>✓ Unos obilazaka na terenu</li>
+                   <li>✓ Slanje slika direktno u sistem</li>
+                   <li>✓ Notifikacije u stvarnom vremenu</li>
+                 </ul>
+              </div>
+              <div className="feature-img-container dual-mobile">
+                 <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.4)', width: '120%' }}></div>
+                 <img src="/landing/hmob.jpg" alt="Mobile 1" className="mobile-img left-mobile floating" />
+                 <img src="/landing/hmob1.jpg" alt="Mobile 2" className="mobile-img right-mobile floating-delay" />
+              </div>
             </div>
-            <div className="feature-text">
-               <div className="feature-badge" style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)' }}>05</div>
-               <h3>{t.m5T}</h3>
-               <p>{t.m5D}</p>
-               <ul className="feature-list">
-                 <li>✓ Unos obilazaka na terenu</li>
-                 <li>✓ Slanje slika drito u sistem</li>
-                 <li>✓ Notifikacije u stvarnom vremenu</li>
-               </ul>
-            </div>
+
           </div>
 
         </div>
