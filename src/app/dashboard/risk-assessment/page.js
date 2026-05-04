@@ -1858,9 +1858,9 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                         <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteRi(ri.id)}>✖</button>
                                                     </div></td>
                                                     <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
-                                                    <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : '—'}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}×{ri.posljedica}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}></td>
+                                                    <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}</td>
+                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}</td>
+                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.posljedica}</td>
                                                     <td style={{ textAlign: 'center', fontWeight: 800, color: rl.color }}>{ri.rizik}</td>
                                                     <td><span style={{ padding: '3px 8px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '0.7rem' }}>{rl.label}</span></td>
                                                     <td style={{ textAlign: 'center', fontWeight: 800, color: rlA?.color || 'var(--text-muted)' }}>{ri.rizikNakon || '—'}</td>
