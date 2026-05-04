@@ -42,6 +42,7 @@ function EquipmentPageInner() {
     const [showForm, setShowForm] = useState(false);
     const [returnPath, setReturnPath] = useState(null);
     const [editingId, setEditingId] = useState(null);
+    const [lastEditedId, setLastEditedId] = useState(null);
     const [formData, setFormData] = useState({ ...emptyEQ });
     const [activeTab, setActiveTab] = useState('podaci'); // 'podaci' | 'servis'
     const [serviceLogs, setServiceLogs] = useState([]);
@@ -137,6 +138,7 @@ function EquipmentPageInner() {
     const handleEdit = (item, tab = 'podaci') => {
         setFormData({ ...item });
         setEditingId(item.id);
+        setLastEditedId(null);
         setActiveTab(tab);
         loadServiceLogs(item.id);
         setShowForm(true);
@@ -148,7 +150,15 @@ function EquipmentPageInner() {
     };
     const handleSave = async () => {
         if (!formData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
-        if (editingId) { update(COLLECTIONS.EQUIPMENT, editingId, formData); } else { create(COLLECTIONS.EQUIPMENT, formData); }
+        let savedId = editingId;
+        if (editingId) {
+            update(COLLECTIONS.EQUIPMENT, editingId, formData);
+        } else {
+            const newItem = create(COLLECTIONS.EQUIPMENT, formData);
+            savedId = newItem.id;
+            setEditingId(savedId);
+        }
+        setLastEditedId(savedId);
         setShowForm(false); loadData(); showFlash(); if(returnPath) { router.push(returnPath); setReturnPath(null); }
     };
     const updateField = (field, value) => { setFormData(prev => ({ ...prev, [field]: value })); };
@@ -277,6 +287,12 @@ function EquipmentPageInner() {
         showFlash();
     };
 
+    const handleCancel = () => {
+        if (editingId) setLastEditedId(editingId);
+        setEditingId(null);
+        setShowForm(false);
+    };
+
     const handlePrintSingle = (eq) => {
         setActionMenuId(null);
         const orgName = getOrgUnitName(eq.orgJedinicaId);
@@ -380,14 +396,14 @@ function EquipmentPageInner() {
 
             {/* ── Equipment Edit Modal ── */}
             {showForm && (
-                <div className="modal-overlay" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>
+                <div className="modal-overlay" onClick={handleCancel}>
                     <div className="modal" style={{ width: '100%', maxWidth: 860, minHeight: 650, display: 'flex', flexDirection: 'column' }} onClick={(e) => e.stopPropagation()}>
                             <div className="modal-header">
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                                     <Icon3D name="Oprema.png" size={48} />
                                     <h2 style={{ margin: 0 }}>{lang === 'bs' ? 'Radna oprema / objekt' : 'Equipment / Object'} {formData.naziv && `— ${formData.naziv}`}</h2>
                                 </div>
-                            <button className="btn btn-ghost btn-icon" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>✕</button>
+                            <button className="btn btn-ghost btn-icon" onClick={handleCancel}>✕</button>
                         </div>
 
                         {/* Tab bar */}
@@ -581,7 +597,7 @@ function EquipmentPageInner() {
                         </div>
 
                         <div className="modal-footer" style={{ marginTop: 'auto' }}>
-                            <button className="btn btn-ghost" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>{t('cancel')}</button>
+                            <button className="btn btn-ghost" onClick={handleCancel}>{t('cancel')}</button>
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                         </div>
                     </div>
@@ -722,7 +738,7 @@ function EquipmentPageInner() {
                                     const docLog = [...serviceLogsForEq].sort((a,b) => new Date(b.datum) - new Date(a.datum)).find(l => l.docData);
 
                                     return (
-                                        <tr key={eq.id} onClick={() => handleEdit(eq, 'podaci')} style={{ cursor: 'pointer' }}>
+                                        <tr key={eq.id} onClick={() => handleEdit(eq, 'podaci')} style={{ background: lastEditedId === eq.id ? 'rgba(102,126,234,0.15)' : undefined, transition: 'background 0.5s ease', cursor: 'pointer' }}>
                                             <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(eq.id)} onChange={() => toggleOne(eq.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
                                             <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
                                                 <button className="btn btn-primary btn-sm" onClick={e => {

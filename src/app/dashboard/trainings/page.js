@@ -52,6 +52,7 @@ export default function TrainingsPage() {
     const [view, setView] = useState('list'); // list | form | results
     const [records, setRecords] = useState([]);
     const [editingId, setEditingId] = useState(null);
+    const [lastEditedId, setLastEditedId] = useState(null);
     const [formData, setFormData] = useState({ ...EMPTY_TRAINING });
     const [search, setSearch] = useState('');
     const [activeFormTab, setActiveFormTab] = useState('slides'); // slides | quiz | settings
@@ -146,14 +147,21 @@ export default function TrainingsPage() {
     const handleEdit = (item) => {
         setFormData({ ...EMPTY_TRAINING, ...item });
         setEditingId(item.id);
+        setLastEditedId(null);
         setActiveFormTab('slides');
         setView('form');
     };
 
     const handleSave = async () => {
         if (!formData.naziv.trim()) { await alert(lang === 'bs' ? 'Unesite naziv obuke.' : 'Enter training name.'); return; }
-        if (editingId) update(COLLECTIONS.TRAININGS, editingId, formData);
-        else create(COLLECTIONS.TRAININGS, formData);
+        let savedId = editingId;
+        if (editingId) {
+            update(COLLECTIONS.TRAININGS, editingId, formData);
+        } else {
+            const newItem = create(COLLECTIONS.TRAININGS, formData);
+            savedId = newItem.id;
+        }
+        setLastEditedId(savedId);
         loadData();
         setView('list');
     };
@@ -161,6 +169,11 @@ export default function TrainingsPage() {
     const handleDelete = async (id) => {
         setOpenMenuId(null);
         if (await confirm('Obrisati ovu obuku?')) { remove(COLLECTIONS.TRAININGS, id); loadData(); }
+    };
+
+    const handleCancel = () => {
+        if (editingId) setLastEditedId(editingId);
+        setView('list');
     };
 
     const handleDuplicate = (item) => {
@@ -516,8 +529,8 @@ export default function TrainingsPage() {
                                             <div style={{ fontSize: '0.85rem', marginTop: 4 }}>Kliknite &quot;+ Nova obuka&quot; da kreirate prvu</div>
                                         </td></tr>
                                     ) : pagedTrainings.map(r => (
-                                        <tr key={r.id}>
-                                            <td>
+                                        <tr key={r.id} onClick={() => handleEdit(r)} style={{ background: lastEditedId === r.id ? 'rgba(102,126,234,0.15)' : undefined, transition: 'background 0.5s ease', cursor: 'pointer' }}>
+                                            <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
                                                     <button className="btn btn-primary btn-sm" data-menu-trigger
                                                         onClick={(e) => {
@@ -839,7 +852,7 @@ export default function TrainingsPage() {
         <div className="animate-fadeIn">
             <DialogRenderer />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={() => setView('list')}>←</button>
+                <button className="btn btn-ghost" onClick={handleCancel}>←</button>
                 <h1 style={{ margin: 0 }}>{editingId ? '✏️ Uredi obuku' : '🎬 Nova obuka'}</h1>
             </div>
 
@@ -856,7 +869,7 @@ export default function TrainingsPage() {
                         </button>
                     ))}
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                        <button className="btn btn-ghost" onClick={() => setView('list')}>{t('cancel')}</button>
+                        <button className="btn btn-ghost" onClick={handleCancel}>{t('cancel')}</button>
                         <button className="btn btn-primary" onClick={handleSave}>{`💾 ${t('save')}`}</button>
                     </div>
                 </div>
@@ -1077,7 +1090,7 @@ export default function TrainingsPage() {
             <div className="card" style={{ marginTop: 16 }}>
                 <div className="card-body" style={{ display: 'flex', gap: 10 }}>
                     <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj obuku' : 'Save training'}</button>
-                    <button className="btn btn-ghost" onClick={() => setView('list')}>{t('cancel')}</button>
+                    <button className="btn btn-ghost" onClick={handleCancel}>{t('cancel')}</button>
                     {editingId && (
                         <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}
                             onClick={() => handleDelete(editingId)}>🗑️ Obriši</button>

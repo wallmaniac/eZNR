@@ -68,6 +68,7 @@ function WorkersPageInner() {
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [viewWorkerInitialTab, setViewWorkerInitialTab] = useState(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [lastEditedId, setLastEditedId] = useState(null);
     const [fullFormTab, setFullFormTab] = useState('osnovno');
     const actionRef = useRef(null);
     const photoInputRef = useRef(null);
@@ -385,6 +386,7 @@ function WorkersPageInner() {
     const handleEdit = (worker) => {
         setFormData({ ...worker });
         setEditingWorker(worker.id);
+        setLastEditedId(null);
         editingWorkerRef.current = worker.id;
         setCertificates(getWorkerCertificates(worker.id));
         setPpeAssign(getWorkerPPE(worker.id));
@@ -442,6 +444,7 @@ function WorkersPageInner() {
             setEditingWorker(savedId);
             editingWorkerRef.current = savedId;
         }
+        setLastEditedId(savedId);
 
         // Keep formData in sync with the new cloud URL
         setFormData(finalFormData);
@@ -474,6 +477,7 @@ function WorkersPageInner() {
         isDirtyRef.current = false;
         openWorkerHandledRef.current = null;
         openedViaUrlRef.current = false;
+        if (editingWorker) setLastEditedId(editingWorker);
         setEditingWorker(null);
         setShowForm(false);
         // If closing via in-app button, pop the history entry we pushed
@@ -1782,8 +1786,8 @@ function WorkersPageInner() {
                                         <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                     ) : (
                                         pagedWorkers.map((w) => (
-                                            <tr key={w.id} style={{ background: selectedIds.has(w.id) ? 'rgba(0,191,166,0.06)' : undefined }}>
-                                                <td style={{ textAlign: 'center' }}>
+                                            <tr key={w.id} onClick={() => handleEdit(w)} style={{ background: selectedIds.has(w.id) ? 'rgba(0,191,166,0.06)' : lastEditedId === w.id ? 'rgba(102,126,234,0.15)' : undefined, transition: 'background 0.5s ease', cursor: 'pointer' }}>
+                                                <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                                                     <input
                                                         type="checkbox"
                                                         checked={selectedIds.has(w.id)}
