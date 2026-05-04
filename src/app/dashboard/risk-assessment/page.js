@@ -3,7 +3,7 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import {
-    getAll, create, update, remove, COLLECTIONS, formatDate, todayISO,
+    getAll, getById, create, update, remove, COLLECTIONS, formatDate, todayISO,
 } from '@/lib/dataStore';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import HelpTip from '@/components/HelpTip';
@@ -12,6 +12,8 @@ import { useDialog } from '@/hooks/useDialog';
 import { generateSafeWordDoc } from '@/lib/riskExportDocx';
 import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
+import { useAuth } from '@/contexts/AuthContext';
+import { apiGenerateSistematizacija } from '@/lib/sistematizacijaAI';
 
 import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
@@ -138,6 +140,12 @@ export default function RiskAssessmentPage() {
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(async () => await handleSave());
     const isDirtyRef = useRef(false);
+    const { activeCompanyId } = useAuth();
+    const activeCompany = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
+    // Sistematizacija tab state
+    const [sistEditData, setSistEditData] = useState(null);
+    const [sistAiLoading, setSistAiLoading] = useState(false);
+    const [sistSelectedWp, setSistSelectedWp] = useState(null);
 
     const [view, setView] = useState('list');
     const [records, setRecords] = useState([]);
@@ -456,7 +464,21 @@ export default function RiskAssessmentPage() {
                 // Pass user-written text as additional context for the AI
                 userOpisProcesa: mode === 'text' ? (formData.opisProcesa || '') : '',
                 userAnalizaOrganizacije: mode === 'text' ? (formData.analizaOrganizacije || '') : '',
+                // Include sistematizacija data for accurate AI generation
+                ukupnoZaposlenih: workers.length,
             };
+            
+            // Build rich sistematizacija context for the AI
+            const sistContext = wps.map(wp => {
+                const sist = sistematizacije.find(s => s.radnoMjestoId === wp.id);
+                if (!sist) return `${wp.naziv}: (nema sistematizacije)`;
+                return `${wp.naziv}: ${sist.opisPoslova || 'Nema opisa'}. Složenost: ${sist.slozenostPoslova || '?'}. Kategorija: ${sist.kategorijaRM || '?'}. OZO: ${(sist.potrebnaOZO || []).join(', ') || 'Nema'}. Oprema: ${(sist.radnaOprema || []).join(', ') || 'Nema'}. Stručna sprema: ${sist.strucnaSprema || '?'}. Certifikati: ${(sist.certifikati || []).join(', ') || 'Nema'}. Zdravstveni zahtjevi: ${(sist.zdravstveniZahtjevi || []).join(', ') || 'Nema'}. Broj izvršilaca: ${sist.brojIzvrsilaca || '?'}.`;
+            }).join('\n');
+            
+            // Pass sistematizacija context alongside other data
+            if (sistContext) {
+                companyDataWithContext.sistematizacijaKontekst = sistContext;
+            }
             
             const result = await fetchAiOpisProcesa(companyDataWithContext, wps, hazards);
             setFormData(prev => ({
@@ -969,6 +991,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
     const tabs = [
         { key: 'opsti', label: '📋 Opšti podaci', en: '📋 General' },
+        { key: 'sistematizacija', label: '📑 Sistematizacija', en: '📑 Systematization' },
         { key: 'opis', label: '🏭 Opis procesa', en: '🏭 Process' },
         { key: 'procjena', label: '📊 Procjena rizika', en: '📊 Assessment' },
         { key: 'mjere', label: '🛡️ Mjere', en: '🛡️ Measures' },
@@ -1211,6 +1234,163 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={handleBack}>↩ {t('cancel')}</button>
                             <SavedFlash />
                         </div>
+                    </div></div>
+                )}
+
+                {/* ── TAB: Sistematizacija radnih mjesta ── */}
+                {activeTab === 'sistematizacija' && (
+                    <div className="card"><div className="card-body">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                            <div>
+                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 4 }}>SISTEMATIZACIJA RADNIH MJESTA</div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    Definirajte poslove, uvjete rada i zahtjeve za svako radno mjesto — ovi podaci koriste se za generisanje opisa procesa.
+                                </div>
+                            </div>
+                            <div style={{ padding: '6px 14px', borderRadius: 'var(--radius-md)', background: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length > 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length > 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.78rem', color: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length > 0 ? '#4caf50' : '#ffc107' }}>
+                                {workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length}/{workplaces.length} popunjeno
+                            </div>
+                        </div>
+
+                        {workplaces.length === 0 && (
+                            <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 30 }}>
+                                ⚠️ Nema radnih mjesta. Kreirajte ih u modulu Radna mjesta (Organizacija → Radna mjesta).
+                            </div>
+                        )}
+
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 14 }}>
+                            {workplaces.map(wp => {
+                                const sist = sistematizacije.find(s => s.radnoMjestoId === wp.id);
+                                const ou = orgUnits.find(o => o.id === wp.orgUnitId);
+                                const isLoading = sistAiLoading && sistSelectedWp === wp.id;
+
+                                return (
+                                    <div key={wp.id} style={{ border: sist ? '2px solid rgba(76,175,80,0.4)' : '2px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 14, transition: 'all 0.2s', background: 'var(--bg-card)' }}>
+                                        {/* Workplace Header */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                                            <div>
+                                                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{wp.naziv}</div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                                    {wp.oznaka && <span style={{ marginRight: 6, padding: '1px 5px', borderRadius: 4, background: 'rgba(102,126,234,0.15)', color: '#667eea', fontWeight: 600 }}>{wp.oznaka}</span>}
+                                                    {ou?.naziv || ''} {wp.strucnaSprema && `• ${wp.strucnaSprema}`}
+                                                </div>
+                                            </div>
+                                            <span style={{ fontSize: '1rem' }}>{sist ? '✅' : '⚠️'}</span>
+                                        </div>
+
+                                        {sist ? (
+                                            <div>
+                                                {sist.nazivPosla && <div style={{ fontSize: '0.7rem', color: 'var(--primary)', fontWeight: 600, marginBottom: 3 }}>{sist.nazivPosla}</div>}
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text)', lineHeight: 1.5, marginBottom: 8, maxHeight: 50, overflow: 'hidden' }}>
+                                                    {sist.opisPoslova || '—'}
+                                                </div>
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginBottom: 6 }}>
+                                                    {sist.kategorijaRM && <span style={{ padding: '1px 6px', borderRadius: 10, background: 'rgba(102,126,234,0.12)', color: '#667eea', fontSize: '0.65rem', fontWeight: 600 }}>{sist.kategorijaRM}</span>}
+                                                    {sist.slozenostPoslova && <span style={{ padding: '1px 6px', borderRadius: 10, background: 'rgba(245,158,11,0.12)', color: '#f59e0b', fontSize: '0.65rem', fontWeight: 600 }}>{sist.slozenostPoslova}</span>}
+                                                    {(sist.potrebnaOZO || []).slice(0, 2).map((ozo, i) => (
+                                                        <span key={i} style={{ padding: '1px 6px', borderRadius: 10, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.65rem', fontWeight: 600 }}>🦺 {ozo}</span>
+                                                    ))}
+                                                    {(sist.potrebnaOZO || []).length > 2 && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>+{sist.potrebnaOZO.length - 2}</span>}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 4, fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 8 }}>
+                                                    <span>📋 {sist.certifikati?.length || 0} cert.</span>
+                                                    <span>⚙️ {sist.radnaOprema?.length || 0} oprema</span>
+                                                    <span>👥 {sist.brojIzvrsilaca || '?'} izvrš.</span>
+                                                    {sist.aiGenerated && <span style={{ color: '#667eea' }}>🤖 AI</span>}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.7rem' }} onClick={() => setSistEditData({ ...sist })}>✏️ Detalji</button>
+                                                    <button className="btn btn-outline btn-sm" onClick={async () => {
+                                                        setSistAiLoading(true); setSistSelectedWp(wp.id);
+                                                        try {
+                                                            const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '' });
+                                                            if (data) { const existing = sistematizacije.find(s => s.radnoMjestoId === wp.id); if (existing) { update(COLLECTIONS.SISTEMATIZACIJE, existing.id, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); } else { create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); } loadData(); showFlash(); }
+                                                            else { alert('AI greška: ' + error); }
+                                                        } catch (err) { alert('Greška: ' + err.message); }
+                                                        setSistAiLoading(false); setSistSelectedWp(null);
+                                                    }} disabled={isLoading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.7rem' }}>
+                                                        {isLoading ? '⏳' : '🤖'} Regeneriši
+                                                    </button>
+                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.7rem' }} onClick={async () => {
+                                                        if (await confirm('Obrisati sistematizaciju za ovo radno mjesto?')) {
+                                                            const s = sistematizacije.find(s => s.radnoMjestoId === wp.id);
+                                                            if (s) { remove(COLLECTIONS.SISTEMATIZACIJE, s.id); loadData(); }
+                                                        }
+                                                    }}>✖</button>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 10, padding: 8, textAlign: 'center', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
+                                                    Nema sistematizacije. Generiši putem AI ili popuni ručno.
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                                                    <button className="btn btn-outline btn-sm" onClick={async () => {
+                                                        setSistAiLoading(true); setSistSelectedWp(wp.id);
+                                                        try {
+                                                            const { data, error } = await apiGenerateSistematizacija({ workplaceName: wp.naziv, oznaka: wp.oznaka || '', strucnaSprema: wp.strucnaSprema || '', industry: activeCompany.djelatnost || formData.djelatnost || '', companyName: activeCompany.naziv || formData.nazivTvrtke || '', numberOfWorkers: '', orgUnit: ou?.naziv || '', radnoVrijemeOd: wp.radnoVrijemeOd || '', radnoVrijemeDo: wp.radnoVrijemeDo || '', additionalInfo: wp.opis || '' });
+                                                            if (data) { create(COLLECTIONS.SISTEMATIZACIJE, { ...data, radnoMjestoId: wp.id, aiGenerated: true }); loadData(); showFlash(); }
+                                                            else { alert('AI greška: ' + error); }
+                                                        } catch (err) { alert('Greška: ' + err.message); }
+                                                        setSistAiLoading(false); setSistSelectedWp(null);
+                                                    }} disabled={isLoading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
+                                                        {isLoading ? '⏳ Generiše...' : '🤖 AI Generiši'}
+                                                    </button>
+                                                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.72rem' }} onClick={() => setSistEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: 'Čl. 118. Zakona o radu FBiH', uvjetiRada: {}, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
+                                                        ✏️ Ručno
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* Sistematizacija Detail/Edit Modal */}
+                        {sistEditData && (
+                            <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
+                                onClick={e => { if (e.target === e.currentTarget) setSistEditData(null); }}>
+                                <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, width: '90%', maxWidth: 700, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                                        <div style={{ fontSize: '1.1rem', fontWeight: 700 }}>
+                                            📑 Sistematizacija — {workplaces.find(w => w.id === sistEditData.radnoMjestoId)?.naziv || ''}
+                                        </div>
+                                        <button className="btn btn-ghost btn-icon" onClick={() => setSistEditData(null)} style={{ fontSize: '1.2rem', padding: 4 }}>✕</button>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 10, marginBottom: 12 }}>
+                                        <div><div style={labelSt}>NAZIV POSLA</div><input className="form-input" value={sistEditData.nazivPosla || ''} onChange={e => setSistEditData(p => ({ ...p, nazivPosla: e.target.value }))} placeholder="npr. Stručni saradnik za ZNR" /></div>
+                                        <div><div style={labelSt}>KATEGORIJA RM</div><select className="form-select" value={sistEditData.kategorijaRM || ''} onChange={e => setSistEditData(p => ({ ...p, kategorijaRM: e.target.value }))}><option value="">—</option>{['Rukovodeće', 'Izvršno', 'Pomoćno'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                        <div><div style={labelSt}>SLOŽENOST</div><select className="form-select" value={sistEditData.slozenostPoslova || ''} onChange={e => setSistEditData(p => ({ ...p, slozenostPoslova: e.target.value }))}><option value="">—</option>{['Jednostavni', 'Srednje složeni', 'Složeni', 'Visoko složeni'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                    </div>
+                                    <div style={labelSt}>OPIS POSLOVA I ZADATAKA</div>
+                                    <textarea className="form-input" rows={3} value={sistEditData.opisPoslova || ''} onChange={e => setSistEditData(p => ({ ...p, opisPoslova: e.target.value }))} style={{ resize: 'vertical', marginBottom: 12 }} />
+                                    <div style={labelSt}>ODGOVORNOSTI</div>
+                                    <textarea className="form-input" rows={2} value={sistEditData.odgovornosti || ''} onChange={e => setSistEditData(p => ({ ...p, odgovornosti: e.target.value }))} placeholder="Ključne odgovornosti" style={{ resize: 'vertical', marginBottom: 12 }} />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px 1fr', gap: 10, marginBottom: 12 }}>
+                                        <div><div style={labelSt}>STRUČNA SPREMA</div><select className="form-select" value={sistEditData.strucnaSprema || ''} onChange={e => setSistEditData(p => ({ ...p, strucnaSprema: e.target.value }))}><option value="">—</option>{['NKV', 'PKV', 'KV', 'SSS', 'VŠS', 'VSS', 'Mr.', 'Dr.'].map(s => <option key={s} value={s}>{s}</option>)}</select></div>
+                                        <div><div style={labelSt}>RADNO ISKUSTVO</div><input className="form-input" value={sistEditData.radnoIskustvo || ''} onChange={e => setSistEditData(p => ({ ...p, radnoIskustvo: e.target.value }))} placeholder="npr. 2 godine" /></div>
+                                        <div><div style={labelSt}>IZVRŠILACA</div><input className="form-input" type="number" min={1} value={sistEditData.brojIzvrsilaca || 1} onChange={e => setSistEditData(p => ({ ...p, brojIzvrsilaca: +e.target.value }))} /></div>
+                                        <div><div style={labelSt}>PROBNI RAD</div><input className="form-input" value={sistEditData.probniRad || ''} onChange={e => setSistEditData(p => ({ ...p, probniRad: e.target.value }))} placeholder="npr. 3 mjeseca" /></div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 12 }}>
+                                        <div><div style={labelSt}>POTREBNA OZO</div><textarea className="form-input" rows={2} value={(sistEditData.potrebnaOZO || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, potrebnaOZO: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>RADNA OPREMA</div><textarea className="form-input" rows={2} value={(sistEditData.radnaOprema || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, radnaOprema: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>ZDRAVSTVENI ZAHTJEVI</div><textarea className="form-input" rows={2} value={(sistEditData.zdravstveniZahtjevi || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, zdravstveniZahtjevi: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                        <div><div style={labelSt}>POTREBNI CERTIFIKATI</div><textarea className="form-input" rows={2} value={(sistEditData.certifikati || []).join('\n')} onChange={e => setSistEditData(p => ({ ...p, certifikati: e.target.value.split('\n').filter(Boolean) }))} placeholder="Jedna stavka po redu" style={{ fontSize: '0.78rem', resize: 'vertical' }} /></div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: 8 }}>
+                                        <button className="btn btn-primary" onClick={() => {
+                                            const existing = sistematizacije.find(s => s.radnoMjestoId === sistEditData.radnoMjestoId);
+                                            if (existing) { update(COLLECTIONS.SISTEMATIZACIJE, existing.id, sistEditData); }
+                                            else { create(COLLECTIONS.SISTEMATIZACIJE, sistEditData); }
+                                            loadData(); setSistEditData(null); showFlash();
+                                        }}>💾 {t('save')}</button>
+                                        <button className="btn btn-ghost" onClick={() => setSistEditData(null)}>Zatvori</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div></div>
                 )}
 

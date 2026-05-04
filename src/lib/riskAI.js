@@ -28,6 +28,8 @@ export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
             ukupnoZaposlenih: companyData.ukupnoZaposlenih || '',
             userOpisProcesa: companyData.userOpisProcesa || '',
             userAnalizaOrganizacije: companyData.userAnalizaOrganizacije || '',
+            // Sistematizacija data for accurate role-specific descriptions
+            sistematizacijaKontekst: companyData.sistematizacijaKontekst || '',
         };
 
         const response = await callFirebaseFunction('generateOpisProcesa', payload);
