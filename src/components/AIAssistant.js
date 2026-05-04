@@ -8,6 +8,47 @@ import { getRawAll } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiCallZia } from '@/lib/ziaAPI';
 
+// ─── PII Sanitization Interceptors ──────────────────────────────────────────
+const globalWorkerMap = {};
+
+function maskPIIInput(text, workers) {
+    if (!text) return text;
+    let masked = text;
+    // Sort descending by name length to match longer names first
+    const sorted = [...workers].sort((a,b) => (`${b.ime} ${b.prezime}`.length) - (`${a.ime} ${a.prezime}`.length));
+    sorted.forEach(w => {
+        globalWorkerMap[w.id] = `${w.ime} ${w.prezime}`;
+        const fullName = `${w.ime} ${w.prezime}`.trim();
+        const firstName = (w.ime || '').trim();
+        
+        // Replace full name matches
+        if (fullName) {
+            // Basic regex to match name regardless of some suffixes
+            const escaped = fullName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            // Try to match the full name with optional suffixes (a, u, e, om, em, i)
+            const regex = new RegExp(`\\b${escaped}(a|u|e|om|em|i)?\\b`, 'gi');
+            masked = masked.replace(regex, `W[${w.id}]`);
+        }
+        // Replace just first name if it's unique and long enough
+        if (firstName && firstName.length > 3) {
+            const sameFirstNameCount = workers.filter(x => x.ime === w.ime).length;
+            if (sameFirstNameCount === 1) {
+                const escapedFirst = firstName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const regexFirst = new RegExp(`\\b${escapedFirst}(a|u|e|om|em|i)?\\b`, 'gi');
+                masked = masked.replace(regexFirst, `W[${w.id}]`);
+            }
+        }
+    });
+    return masked;
+}
+
+function unmaskPIIOutput(text) {
+    if (!text) return text;
+    return text.replace(/W\[([^\]]+)\]/g, (match, id) => {
+        return globalWorkerMap[id] ? `**${globalWorkerMap[id]}**` : match;
+    });
+}
+
 // ─── App knowledge base for the AI system prompt ───────────────────────────
 const APP_KNOWLEDGE = {
     pages: [
@@ -110,13 +151,13 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         const in30 = new Date(); in30.setDate(in30.getDate() + 30);
         const in60 = new Date(); in60.setDate(in60.getDate() + 60);
 
-        // Workers on sick leave
-        const injuryBol = injuries.filter(i => i.bolovanje && i.status !== 'zatvorena').map(i => ({ name: i.radnikIme, src: 'injury' }));
-        const diseaseBol = diseases.filter(d => d.bolovanje && d.status !== 'zatvorena').map(d => ({ name: d.radnikIme, src: 'disease' }));
-        const allBol = [...injuryBol, ...diseaseBol].filter((b, i, arr) => b.name && arr.findIndex(x => x.name === b.name) === i);
+        // ── PII SANITIZATION: We ONLY send W[id] to the AI! ──
+        const injuryBol = injuries.filter(i => i.bolovanje && i.status !== 'zatvorena').map(i => ({ id: i.radnikId, src: 'injury' }));
+        const diseaseBol = diseases.filter(d => d.bolovanje && d.status !== 'zatvorena').map(d => ({ id: d.radnikId, src: 'disease' }));
+        const allBol = [...injuryBol, ...diseaseBol].filter((b, i, arr) => b.id && arr.findIndex(x => x.id === b.id) === i);
         lines.push(lang === 'bs'
-            ? `\nRADNICI NA BOLOVANJU (${allBol.length}): ${allBol.length === 0 ? 'Nema.' : allBol.map(b => `${b.name} (${b.src === 'injury' ? 'povreda' : 'bolest'})`).join(', ')}`
-            : `\nWORKERS ON SICK LEAVE (${allBol.length}): ${allBol.length === 0 ? 'None.' : allBol.map(b => `${b.name} (${b.src === 'injury' ? 'injury' : 'disease'})`).join(', ')}`
+            ? `\nRADNICI NA BOLOVANJU (${allBol.length}): ${allBol.length === 0 ? 'Nema.' : allBol.map(b => `W[${b.id}] (${b.src === 'injury' ? 'povreda' : 'bolest'})`).join(', ')}`
+            : `\nWORKERS ON SICK LEAVE (${allBol.length}): ${allBol.length === 0 ? 'None.' : allBol.map(b => `W[${b.id}] (${b.src === 'injury' ? 'injury' : 'disease'})`).join(', ')}`
         );
 
         // Calendar Events
@@ -131,17 +172,17 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Expired certificates
         const expiredCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today);
         const soonCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30);
-        const workerMap = Object.fromEntries(workers.map(w => [w.id, `${w.ime} ${w.prezime}`]));
+        
         if (expiredCerts.length > 0) {
             lines.push(lang === 'bs'
-                ? `ISTEKLA UVJERENJA (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (isteklo: ${c.vrijediDo})`).join('; ')}`
-                : `EXPIRED CERTIFICATES (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (expired: ${c.vrijediDo})`).join('; ')}`
+                ? `ISTEKLA UVJERENJA (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (isteklo: ${c.vrijediDo})`).join('; ')}`
+                : `EXPIRED CERTIFICATES (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (expired: ${c.vrijediDo})`).join('; ')}`
             );
         }
         if (soonCerts.length > 0) {
             lines.push(lang === 'bs'
-                ? `UVJERENJA KOJA USKORO ISTIČU - 30 DANA (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (ističe: ${c.vrijediDo})`).join('; ')}`
-                : `CERTIFICATES EXPIRING SOON - 30 DAYS (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — ${workerMap[c.radnikId] || 'N/A'} (expires: ${c.vrijediDo})`).join('; ')}`
+                ? `UVJERENJA KOJA USKORO ISTIČU - 30 DANA (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (ističe: ${c.vrijediDo})`).join('; ')}`
+                : `CERTIFICATES EXPIRING SOON - 30 DAYS (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (expires: ${c.vrijediDo})`).join('; ')}`
             );
         }
 
@@ -149,12 +190,12 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         const overdueMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today);
         const soonMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) >= today && new Date(m.vrijediDo) <= in60);
         if (overdueMed.length > 0) lines.push(lang === 'bs'
-            ? `PREKORAČENI LJEKARSKI PREGLEDI (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Nepoznato'} (isteklo: ${m.vrijediDo})`).join('; ')}`
-            : `OVERDUE MEDICAL EXAMS (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Unknown'} (expired: ${m.vrijediDo})`).join('; ')}`
+            ? `PREKORAČENI LJEKARSKI PREGLEDI (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `W[${m.workerId}] (isteklo: ${m.vrijediDo})`).join('; ')}`
+            : `OVERDUE MEDICAL EXAMS (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `W[${m.workerId}] (expired: ${m.vrijediDo})`).join('; ')}`
         );
         if (soonMed.length > 0) lines.push(lang === 'bs'
-            ? `LJEKARSKI PREGLEDI USKORO (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Nepoznato'} (ističe: ${m.vrijediDo})`).join('; ')}`
-            : `MEDICAL EXAMS DUE SOON (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `${workerMap[m.workerId] || 'Unknown'} (expires: ${m.vrijediDo})`).join('; ')}`
+            ? `LJEKARSKI PREGLEDI USKORO (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (ističe: ${m.vrijediDo})`).join('; ')}`
+            : `MEDICAL EXAMS DUE SOON (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (expires: ${m.vrijediDo})`).join('; ')}`
         );
 
         // Employer Docs
@@ -218,8 +259,8 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Recent injuries
         const recentInj = injuries.filter(i => i.datum && new Date(i.datum) >= new Date(Date.now() - 90 * 86400000)).sort((a, b) => new Date(b.datum) - new Date(a.datum));
         if (recentInj.length > 0) lines.push(lang === 'bs'
-            ? `NEDAVNE POVREDE (90 dana, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `${i.radnikIme || 'N/A'} ${i.datum} ${i.tip}${i.bolovanje ? ' BOLOVANJE' : ''}`).join('; ')}`
-            : `RECENT INJURIES (90 days, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `${i.radnikIme || 'N/A'} ${i.datum} ${i.tip}${i.bolovanje ? ' SICK LEAVE' : ''}`).join('; ')}`
+            ? `NEDAVNE POVREDE (90 dana, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `W[${i.radnikId}] ${i.datum} ${i.tip}${i.bolovanje ? ' BOLOVANJE' : ''}`).join('; ')}`
+            : `RECENT INJURIES (90 days, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `W[${i.radnikId}] ${i.datum} ${i.tip}${i.bolovanje ? ' SICK LEAVE' : ''}`).join('; ')}`
         );
 
         // ── Workers roster with workplace & org unit ──────────────────────────
@@ -235,7 +276,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
                 const ou = ouMap[w.orgJedinicaId] || ouMap[w.orgJedinica] || '';
                 const compMatch = userCompanies?.find(c => c.id === w.companyId);
                 const compStr = compMatch ? ` [Firma: ${compMatch.name}]` : '';
-                return `[ID:${w.id}] ${w.ime} ${w.prezime}${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}${compStr}`;
+                return `W[${w.id}]${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}${compStr}`;
             });
             lines.push(lang === 'bs'
                 ? `\nSVI AKTIVNI RADNICI (${activeWorkerList.length}) sa radnim mjestima:\n${rosterLines.join('\n')}`
@@ -251,7 +292,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
                     (w.radnoMjestoId === wp.id || w.radnoMjesto === wp.naziv)
                 );
                 if (assigned.length === 0) return null;
-                return `${wp.naziv}: ${assigned.map(w => `${w.ime} ${w.prezime}`).join(', ')}`;
+                return `${wp.naziv}: ${assigned.map(w => `W[${w.id}]`).join(', ')}`;
             }).filter(Boolean);
 
             if (wpWorkers.length > 0) {
@@ -270,7 +311,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
                     (w.orgJedinicaId === ou.id || w.orgJedinica === ou.naziv)
                 );
                 if (assigned.length === 0) return null;
-                return `${ou.naziv}: ${assigned.map(w => `${w.ime} ${w.prezime}`).join(', ')}`;
+                return `${ou.naziv}: ${assigned.map(w => `W[${w.id}]`).join(', ')}`;
             }).filter(Boolean);
 
             if (ouWorkers.length > 0) {
@@ -319,6 +360,8 @@ function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, user
 
 NISI SAMO CHATBOT I NAVIGATOR — TI SI NAPREDNI ANALITIČAR PODATAKA (DATA ANALYST). 
 Tvoj zadatak je da direktno odgovaraš na pitanja korisnika o njihovoj firmi čitajući 'ŽIVE PODATKE' koji su ti proslijeđeni ispod.
+VAŽNO ZA ZAŠTITU PODATAKA: Imena radnika su pseudonimizirana u format W[id]. Ako korisnik pita "Da li je Haso na bolovanju?", tvoj ulaz će već biti pretvoren u "Da li je W[123] na bolovanju?". Ti UVIJEK u odgovorima i pozivima alata koristi tačno taj isti W[id] token (npr. W[123]). Nikada ne pokušavaj izmisliti pravo ime. Mi ćemo ga na klijentu prevesti nazad u pravo ime.
+
 Ako te korisnik pita "koliko imamo radnika", "kakvo nam je stanje opreme", "imamo li nedavnih povreda", NEMOJ mu govoriti da nemaš pristup bazi. TI IMAŠ PRISTUP – svi ti podaci se nalaze u ovom promptu! PREBROJ, ANALIZIRAJ i odgovori vrlo precizno.
 
 Možeš i aktivno pomagati pri kreiranju zapisa:
@@ -423,6 +466,8 @@ YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers 
 - Open a NEW WORKER form pre-filled with a name (use create_new_worker tool)
 - Open an INJURY REPORT form pre-filled with a worker (use report_injury tool)
 - Analyse data and give concrete recommendations
+
+IMPORTANT DATA PROTECTION: Worker names are pseudonymized as W[id]. If the user asks "Is John on sick leave?", the input you receive will automatically be "Is W[123] on sick leave?". You must ALWAYS use W[123] in your responses and tool calls. Never try to invent a real name. We will translate it back on the client side.
 
 - IMPORTANT: NEVER use "dummy" or fake data. If you are missing required data to create a record, ASK THE USER to provide it before calling the tool.
 - If the user says "go to", "open", "show me" a page → USE navigate_to immediately
@@ -1458,33 +1503,39 @@ export default function AIAssistant() {
     }, [lang]); // eslint-disable-line react-hooks/exhaustive-deps
 
     // ── Internal send (supports retry loop + function calling) ───────────────
-    const sendMessageInternal = useCallback(async (text, existingHistory, isRetry = false, attachedFiles = []) => {
-        // Build parts: text + any attached file data
-        const msgParts = [];
-        if (text) msgParts.push({ text });
-        attachedFiles.forEach(att => msgParts.push({ inlineData: { mimeType: att.type, data: att.data } }));
-        if (msgParts.length === 0) msgParts.push({ text: ' ' });
-
-        const newHistory = existingHistory || [...chatHistoryRef.current, { role: 'user', parts: msgParts }];
-        if (!existingHistory) chatHistoryRef.current = newHistory;
+    const sendMessageInternal = useCallback(async (text, prefilledHistory, forceAutoSend = false, attachedFiles = []) => {
+        const workers = getRawAll('workers') || [];
+        const safeText = maskPIIInput(text, workers);
 
         setIsLoading(true);
-        const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
-        const dataCtx = buildDataContext(lang, activeCompId, userCompanies);
-        const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies);
-
         try {
+            const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
+            const dataCtx = buildDataContext(lang, activeCompId, userCompanies);
+            const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies);
+
+            const newHistory = prefilledHistory || [...chatHistoryRef.current, { role: 'user', parts: [{ text: safeText }] }];
+            if (!prefilledHistory) chatHistoryRef.current = newHistory;
+
             const result = await callZiaAPI(newHistory, systemPrompt, ZIA_TOOLS);
 
             // ── Function call: Zia wants to take an action ────────────────────
             if (result.function_call) {
                 const { name, args } = result.function_call;
+                
+                const cleanArgs = { ...args };
+                if (cleanArgs.worker_id && cleanArgs.worker_id.startsWith('W[')) {
+                    cleanArgs.worker_id = cleanArgs.worker_id.replace(/^W\[/, '').replace(/\]$/, '');
+                }
+                if (cleanArgs.worker_name && cleanArgs.worker_name.startsWith('W[')) {
+                    const extractedId = cleanArgs.worker_name.replace(/^W\[/, '').replace(/\]$/, '');
+                    cleanArgs.worker_name = globalWorkerMap[extractedId] || cleanArgs.worker_name;
+                }
 
                 // Add model's function_call turn to history
                 const historyWithCall = [...newHistory, { role: 'model', parts: [{ function_call: { name, args } }] }];
 
                 // Execute the tool
-                const toolResult = await executeTool(name, args);
+                const toolResult = await executeTool(name, cleanArgs);
 
                 // Add function response turn
                 const historyWithResult = [...historyWithCall, {
@@ -1496,10 +1547,10 @@ export default function AIAssistant() {
                 let reply;
                 try {
                     const finalResult = await callZiaAPI(historyWithResult, systemPrompt, ZIA_TOOLS);
-                    reply = finalResult.text || (lang === 'bs' ? 'Urađeno.' : 'Done.');
+                    reply = unmaskPIIOutput(finalResult.text) || unmaskPIIOutput(toolResult.message || toolResult.error || (lang === 'bs' ? 'Urađeno.' : 'Done.'));
                 } catch {
                     // If second call fails (rate limit etc), use the tool result message
-                    reply = toolResult.message || toolResult.error || (lang === 'bs' ? 'Urađeno.' : 'Done.');
+                    reply = unmaskPIIOutput(toolResult.message || toolResult.error || (lang === 'bs' ? 'Urađeno.' : 'Done.'));
                 }
 
                 chatHistoryRef.current = [...historyWithResult, { role: 'model', parts: [{ text: reply }] }];
@@ -1511,7 +1562,7 @@ export default function AIAssistant() {
             }
 
             // ── Normal text response ──────────────────────────────────────────
-            const reply = result.text || (lang === 'bs' ? 'Nema odgovora.' : 'No response.');
+            const reply = unmaskPIIOutput(result.text) || (lang === 'bs' ? 'Nema odgovora.' : 'No response.');
             chatHistoryRef.current = [...newHistory, { role: 'model', parts: [{ text: reply }] }];
             setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date() }]);
             if (isMinimized) setHasNewMessage(true);
