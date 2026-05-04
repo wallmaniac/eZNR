@@ -1862,10 +1862,10 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     const improved = rlA && ri.rizikNakon < ri.rizik;
                                                     return (
                                                         <tbody key={ri.id}>
-                                                            <tr style={showRiForm && riEditId === ri.id ? { background: 'var(--bg-input)' } : lastEditedRiId === ri.id ? { background: 'rgba(102,126,234,0.15)', transition: 'background 0.5s ease' } : {}}>
+                                                            <tr onClick={() => handleEditRi(ri)} style={{ ...(showRiForm && riEditId === ri.id ? { background: 'var(--bg-input)' } : lastEditedRiId === ri.id ? { background: 'rgba(102,126,234,0.15)', transition: 'background 0.5s ease' } : {}), cursor: 'pointer' }}>
                                                                 <td><div style={{ display: 'flex', gap: 4 }}>
-                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Uredi stavku' : 'Edit item'} onClick={() => handleEditRi(ri)}>✏️</button>
-                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši stavku' : 'Delete item'} style={{ color: 'var(--danger)' }} onClick={() => handleDeleteRi(ri.id)}>🗑️</button>
+                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Uredi stavku' : 'Edit item'} onClick={(e) => { e.stopPropagation(); handleEditRi(ri); }}>✏️</button>
+                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši stavku' : 'Delete item'} style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDeleteRi(ri.id); }}>🗑️</button>
                                                                 </div></td>
                                                                 <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
                                                                 <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}</td>
