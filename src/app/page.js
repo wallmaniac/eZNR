@@ -304,7 +304,7 @@ export default function LandingPage() {
                  <div className="feature-badge" style={{ color: '#10B981', background: 'rgba(16, 185, 129, 0.1)' }}>05</div>
                  <h3>{t.m5T}</h3>
                  <p>{t.m5D}</p>
-                 <ul className="feature-list bento-list-vertical">
+                 <ul className="feature-list bento-list bento-list-vertical">
                    <li>✓ Unos obilazaka na terenu</li>
                    <li>✓ Slanje slika direktno u sistem</li>
                    <li>✓ Notifikacije u stvarnom vremenu</li>
