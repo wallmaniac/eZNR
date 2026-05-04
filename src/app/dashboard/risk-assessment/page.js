@@ -1708,169 +1708,188 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     </div>
                                 )}
 
-                                {showRiForm && (
-                                    <div style={{ padding: 16, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary)', marginBottom: 16 }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>Radno mjesto</div>
-                                                <select className="form-select" value={riForm.radnoMjestoId || ''} onChange={e => setRi('radnoMjestoId', e.target.value)}>
-                                                    <option value="">— Odaberi —</option>
-                                                    {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
-                                                </select>
-                                            </div>
-                                            <div><div style={labelSt}>Opasnost / Štetnost</div>
-                                                <select className="form-select" value={riForm.opasnostId || ''} onChange={e => setRi('opasnostId', e.target.value)}>
-                                                    <option value="">— Odaberi —</option>
-                                                    {hazards.map(h => <option key={h.id} value={h.id}>{h.oznaka ? `${h.oznaka} — ` : ''}{h.naziv}</option>)}
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        {/* ── Sistematizacija + Equipment Context Panel ── */}
-                                        {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length > 0) && (
-                                            <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', marginBottom: 4 }}>
-                                                <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 8 }}>📑 Kontekst radnog mjesta</div>
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                    {selectedWpSist?.potrebnaOZO?.map((ozo, i) => (
-                                                        <span key={`ozo-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + ozo)}
-                                                            style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
-                                                            title="Klikni da dodaš u opis">🦺 {ozo}</span>
-                                                    ))}
-                                                    {selectedWpSist?.radnaOprema?.map((op, i) => (
-                                                        <span key={`rop-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + op)}
-                                                            style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(102,126,234,0.15)', color: '#667eea', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
-                                                            title="Klikni da dodaš u opis">⚙️ {op}</span>
-                                                    ))}
-                                                    {selectedWpEquipment.map(eq => (
-                                                        <span key={eq.id} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + eq.naziv)}
-                                                            style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(96,125,139,0.15)', color: '#607d8b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
-                                                            title="Klikni da dodaš u opis">🏗️ {eq.naziv}</span>
-                                                    ))}
-                                                    {selectedWpSist?.posebniUvjeti?.map((pu, i) => (
-                                                        <span key={`pu-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(244,67,54,0.12)', color: '#f44336', fontSize: '0.7rem', fontWeight: 600 }}>⚠️ {pu}</span>
-                                                    ))}
-                                                    {selectedWpSist?.zdravstveniZahtjevi?.map((zz, i) => (
-                                                        <span key={`zz-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(233,30,99,0.12)', color: '#e91e63', fontSize: '0.7rem', fontWeight: 600 }}>🏥 {zz}</span>
-                                                    ))}
-                                                    {Object.entries(selectedWpSist?.uvjetiRada || {}).flatMap(([cat, items]) =>
-                                                        (items || []).map((item, i) => (
-                                                            <span key={`ur-${cat}-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(255,152,0,0.12)', color: '#ff9800', fontSize: '0.7rem', fontWeight: 600 }}>🔶 {item}</span>
-                                                        ))
-                                                    )}
+                                {(() => {
+                                    const riFormContent = (
+                                        <div style={{ padding: 16, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', border: '1px solid var(--primary)', marginBottom: 16 }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                                                <div><div style={labelSt}>Radno mjesto</div>
+                                                    <select className="form-select" value={riForm.radnoMjestoId || ''} onChange={e => setRi('radnoMjestoId', e.target.value)}>
+                                                        <option value="">— Odaberi —</option>
+                                                        {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
+                                                    </select>
                                                 </div>
-                                                <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 6 }}>💡 Kliknite na stavku da je dodate u opis opasnosti</div>
+                                                <div><div style={labelSt}>Opasnost / Štetnost</div>
+                                                    <select className="form-select" value={riForm.opasnostId || ''} onChange={e => setRi('opasnostId', e.target.value)}>
+                                                        <option value="">— Odaberi —</option>
+                                                        {hazards.map(h => <option key={h.id} value={h.id}>{h.oznaka ? `${h.oznaka} — ` : ''}{h.naziv}</option>)}
+                                                    </select>
+                                                </div>
                                             </div>
-                                        )}
 
-                                        <div style={{ marginBottom: 12 }}><div style={labelSt}>Opis opasnosti na radnom mjestu</div>
-                                            <input className="form-input" value={riForm.opisOpasnosti || ''} onChange={e => setRi('opisOpasnosti', e.target.value)} placeholder="Kratak opis specifične opasnosti..." />
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>Vjerovatnoća (V) 1–5<HelpTip text="Koliko je vjerovatno da će se opasnost dogoditi? 1 = Zanemarivo (gotovo nemoguće), 3 = Moguće, 5 = Gotovo sigurno da će se desiti." /></div>
-                                                <select className="form-select" value={riForm.vjerovatnoca || 0} onChange={e => setRi('vjerovatnoca', +e.target.value)}>
-                                                    <option value={0}>—</option>
-                                                    {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
-                                                </select>
-                                            </div>
-                                            <div><div style={labelSt}>Posljedica (P) 1–5<HelpTip text="Kolika bi bila šteta ako se opasnost dogodi? 1 = Zanemarivo (bez povrede), 3 = Značajno oštećenje zdravlja, 5 = Smrtni ishod." /></div>
-                                                <select className="form-select" value={riForm.posljedica || 0} onChange={e => setRi('posljedica', +e.target.value)}>
-                                                    <option value={0}>—</option>
-                                                    {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <div style={labelSt}>Rizik (R=V×P)</div>
-                                                {riForm.vjerovatnoca > 0 && riForm.posljedica > 0 ? (() => {
-                                                    const sc = riForm.vjerovatnoca * riForm.posljedica;
-                                                    const rl = riskLevel(sc);
-                                                    return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl.color}` }}>{sc} — {rl.label}</div>;
-                                                })() : <div className="form-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                                            <input type="file" accept=".pdf,.doc,.docx" id="aiDocInput" style={{ display: 'none' }} onChange={e => setAiDocument(e.target.files[0] || null)} />
-                                            <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('aiDocInput').click()} disabled={aiLoading}
-                                                style={{ borderColor: aiDocument ? '#11998e' : 'var(--border)', color: aiDocument ? '#11998e' : 'var(--text)', background: aiDocument ? 'rgba(17,153,142,0.1)' : 'transparent', fontWeight: 600 }}>
-                                                📎 {aiDocument ? aiDocument.name : 'Priloži dokument (PDF/Word)'}
-                                            </button>
-                                            <button className="btn btn-outline btn-sm" onClick={handleAiSuggest} disabled={aiLoading}
-                                                style={{ background: aiLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                                {aiLoading ? '⏳ AI analizira...' : '🤖 AI Predloži mjere'}
-                                            </button>
-                                            <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AI u obzir uzima i priloženi dokument</span>
-                                            {aiDocument && <button className="btn btn-ghost btn-sm" onClick={() => { setAiDocument(null); document.getElementById('aiDocInput').value = ''; }} style={{ color: 'var(--danger)', padding: '0 4px', fontSize: '1rem' }} title="Ukloni dokument">✖</button>}
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>Postojeće mjere</div><textarea className="form-input" rows={2} value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
-                                            <div><div style={labelSt}>Predložene mjere</div><textarea className="form-input" rows={2} value={riForm.predlozeneMjere || ''} onChange={e => setRi('predlozeneMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
-                                        </div>
-                                        <div style={{ ...labelSt, fontSize: '0.78rem', color: '#667eea', marginBottom: 10, marginTop: 6 }}>PREOSTALI RIZIK (NAKON MJERA)</div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>V nakon mjera (1–5)</div>
-                                                <select className="form-select" value={riForm.vjerovatnocaNakon || 0} onChange={e => setRi('vjerovatnocaNakon', +e.target.value)}>
-                                                    <option value={0}>—</option>
-                                                    {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
-                                                </select>
-                                            </div>
-                                            <div><div style={labelSt}>P nakon mjera (1–5)</div>
-                                                <select className="form-select" value={riForm.posljedlicaNakon || 0} onChange={e => setRi('posljedlicaNakon', +e.target.value)}>
-                                                    <option value={0}>—</option>
-                                                    {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <div style={labelSt}>R nakon</div>
-                                                {riForm.vjerovatnocaNakon > 0 && riForm.posljedlicaNakon > 0 ? (() => {
-                                                    const sc2 = riForm.vjerovatnocaNakon * riForm.posljedlicaNakon;
-                                                    const rl2 = riskLevel(sc2);
-                                                    return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl2.bg, color: rl2.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl2.color}` }}>{sc2} — {rl2.label}</div>;
-                                                })() : <div className="form-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>}
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
-                                            <div><div style={labelSt}>Odgovorna osoba</div><input className="form-input" value={riForm.odgovornaOsoba || ''} onChange={e => setRi('odgovornaOsoba', e.target.value)} /></div>
-                                            <div><div style={labelSt}>Rok provedbe</div><DateInput value={riForm.rokProvedbe || ''} onChange={v => setRi('rokProvedbe', v)} /></div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: 8 }}>
-                                            <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {t('save')}</button>
-                                            <button className="btn btn-ghost btn-sm" onClick={() => { setShowRiForm(false); setRiEditId(null); }}>✖ {t('cancel')}</button>
-                                        </div>
-                                    </div>
-                                )}
+                                            {/* ── Sistematizacija + Equipment Context Panel ── */}
+                                            {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length > 0) && (
+                                                <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', marginBottom: 4 }}>
+                                                    <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 8 }}>📑 Kontekst radnog mjesta</div>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                        {selectedWpSist?.potrebnaOZO?.map((ozo, i) => (
+                                                            <span key={`ozo-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + ozo)}
+                                                                style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s' }}
+                                                                title="Klikni da dodaš u opis">🦺 {ozo}</span>
+                                                        ))}
+                                                        {selectedWpSist?.radnaOprema?.map((op, i) => (
+                                                            <span key={`rop-${i}`} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + op)}
+                                                                style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(102,126,234,0.15)', color: '#667eea', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
+                                                                title="Klikni da dodaš u opis">⚙️ {op}</span>
+                                                        ))}
+                                                        {selectedWpEquipment.map(eq => (
+                                                            <span key={eq.id} onClick={() => setRi('opisOpasnosti', (riForm.opisOpasnosti ? riForm.opisOpasnosti + ', ' : '') + eq.naziv)}
+                                                                style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(96,125,139,0.15)', color: '#607d8b', fontSize: '0.7rem', fontWeight: 600, cursor: 'pointer' }}
+                                                                title="Klikni da dodaš u opis">🏗️ {eq.naziv}</span>
+                                                        ))}
+                                                        {selectedWpSist?.posebniUvjeti?.map((pu, i) => (
+                                                            <span key={`pu-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(244,67,54,0.12)', color: '#f44336', fontSize: '0.7rem', fontWeight: 600 }}>⚠️ {pu}</span>
+                                                        ))}
+                                                        {selectedWpSist?.zdravstveniZahtjevi?.map((zz, i) => (
+                                                            <span key={`zz-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(233,30,99,0.12)', color: '#e91e63', fontSize: '0.7rem', fontWeight: 600 }}>🏥 {zz}</span>
+                                                        ))}
+                                                        {Object.entries(selectedWpSist?.uvjetiRada || {}).flatMap(([cat, items]) =>
+                                                            (items || []).map((item, i) => (
+                                                                <span key={`ur-${cat}-${i}`} style={{ padding: '3px 10px', borderRadius: 12, background: 'rgba(255,152,0,0.12)', color: '#ff9800', fontSize: '0.7rem', fontWeight: 600 }}>🔶 {item}</span>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.62rem', color: 'var(--text-muted)', marginTop: 6 }}>💡 Kliknite na stavku da je dodate u opis opasnosti</div>
+                                                </div>
+                                            )}
 
-                                {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki. Kliknite na matricu ili "Dodaj stavku".' : 'No items yet.'}</div>}
-                                {riSorted.length > 0 && (
-                                    <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                                        <th style={{ width: 70 }}></th><th>Radno mjesto</th><th>Opasnost</th>
-                                        <th style={{ width: 50, textAlign: 'center' }}>V</th><th style={{ width: 50, textAlign: 'center' }}>P</th>
-                                        <th style={{ width: 50, textAlign: 'center' }}>R₀</th><th>Prije</th>
-                                        <th style={{ width: 50, textAlign: 'center' }}>R₁</th><th>Nakon</th><th style={{ width: 40 }}></th>
-                                    </tr></thead><tbody>
-                                        {riSorted.map(ri => {
-                                            const rl = riskLevel(ri.rizik || 0);
-                                            const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
-                                            const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
-                                            const hz = hazards.find(h => h.id === ri.opasnostId);
-                                            const improved = rlA && ri.rizikNakon < ri.rizik;
-                                            return (
-                                                <tr key={ri.id}>
-                                                    <td><div style={{ display: 'flex', gap: 4 }}>
-                                                        <button className="btn btn-ghost btn-sm" onClick={() => handleEditRi(ri)}>✏️</button>
-                                                        <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteRi(ri.id)}>✖</button>
-                                                    </div></td>
-                                                    <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
-                                                    <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.posljedica}</td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 800, color: rl.color }}>{ri.rizik}</td>
-                                                    <td><span style={{ padding: '3px 8px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '0.7rem' }}>{rl.label}</span></td>
-                                                    <td style={{ textAlign: 'center', fontWeight: 800, color: rlA?.color || 'var(--text-muted)' }}>{ri.rizikNakon || '—'}</td>
-                                                    <td>{rlA ? <span style={{ padding: '3px 8px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 700, fontSize: '0.7rem' }}>{rlA.label}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>—</span>}</td>
-                                                    <td>{improved && <span style={{ color: '#4caf50', fontWeight: 800 }}>↓</span>}</td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody></table></div>
-                                )}
+                                            <div style={{ marginBottom: 12 }}><div style={labelSt}>Opis opasnosti na radnom mjestu</div>
+                                                <input className="form-input" value={riForm.opisOpasnosti || ''} onChange={e => setRi('opisOpasnosti', e.target.value)} placeholder="Kratak opis specifične opasnosti..." />
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
+                                                <div><div style={labelSt}>Vjerovatnoća (V) 1–5<HelpTip text="Koliko je vjerovatno da će se opasnost dogoditi? 1 = Zanemarivo (gotovo nemoguće), 3 = Moguće, 5 = Gotovo sigurno da će se desiti." /></div>
+                                                    <select className="form-select" value={riForm.vjerovatnoca || 0} onChange={e => setRi('vjerovatnoca', +e.target.value)}>
+                                                        <option value={0}>—</option>
+                                                        {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div><div style={labelSt}>Posljedica (P) 1–5<HelpTip text="Kolika bi bila šteta ako se opasnost dogodi? 1 = Zanemarivo (bez povrede), 3 = Značajno oštećenje zdravlja, 5 = Smrtni ishod." /></div>
+                                                    <select className="form-select" value={riForm.posljedica || 0} onChange={e => setRi('posljedica', +e.target.value)}>
+                                                        <option value={0}>—</option>
+                                                        {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <div style={labelSt}>Rizik (R=V×P)</div>
+                                                    {riForm.vjerovatnoca > 0 && riForm.posljedica > 0 ? (() => {
+                                                        const sc = riForm.vjerovatnoca * riForm.posljedica;
+                                                        const rl = riskLevel(sc);
+                                                        return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl.color}` }}>{sc} — {rl.label}</div>;
+                                                    })() : <div className="form-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                                <input type="file" accept=".pdf,.doc,.docx" id="aiDocInput" style={{ display: 'none' }} onChange={e => setAiDocument(e.target.files[0] || null)} />
+                                                <button className="btn btn-outline btn-sm" onClick={() => document.getElementById('aiDocInput').click()} disabled={aiLoading}
+                                                    style={{ borderColor: aiDocument ? '#11998e' : 'var(--border)', color: aiDocument ? '#11998e' : 'var(--text)', background: aiDocument ? 'rgba(17,153,142,0.1)' : 'transparent', fontWeight: 600 }}>
+                                                    📎 {aiDocument ? aiDocument.name : 'Priloži dokument (PDF/Word)'}
+                                                </button>
+                                                <button className="btn btn-outline btn-sm" onClick={handleAiSuggest} disabled={aiLoading}
+                                                    style={{ background: aiLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                                    {aiLoading ? '⏳ AI analizira...' : '🤖 AI Predloži mjere'}
+                                                </button>
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>AI u obzir uzima i priloženi dokument</span>
+                                                {aiDocument && <button className="btn btn-ghost btn-sm" onClick={() => { setAiDocument(null); document.getElementById('aiDocInput').value = ''; }} style={{ color: 'var(--danger)', padding: '0 4px', fontSize: '1rem' }} title="Ukloni dokument">✖</button>}
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 12 }}>
+                                                <div><div style={labelSt}>Postojeće mjere</div><textarea className="form-input" rows={2} value={riForm.postojeceMjere || ''} onChange={e => setRi('postojeceMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
+                                                <div><div style={labelSt}>Predložene mjere</div><textarea className="form-input" rows={2} value={riForm.predlozeneMjere || ''} onChange={e => setRi('predlozeneMjere', e.target.value)} style={{ resize: 'vertical' }} /></div>
+                                            </div>
+                                            <div style={{ ...labelSt, fontSize: '0.78rem', color: '#667eea', marginBottom: 10, marginTop: 6 }}>PREOSTALI RIZIK (NAKON MJERA)</div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 120px', gap: 12, marginBottom: 12 }}>
+                                                <div><div style={labelSt}>V nakon mjera (1–5)</div>
+                                                    <select className="form-select" value={riForm.vjerovatnocaNakon || 0} onChange={e => setRi('vjerovatnocaNakon', +e.target.value)}>
+                                                        <option value={0}>—</option>
+                                                        {[1,2,3,4,5].map(v => <option key={v} value={v}>{v} — {V_LABELS[v]}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div><div style={labelSt}>P nakon mjera (1–5)</div>
+                                                    <select className="form-select" value={riForm.posljedlicaNakon || 0} onChange={e => setRi('posljedlicaNakon', +e.target.value)}>
+                                                        <option value={0}>—</option>
+                                                        {[1,2,3,4,5].map(p => <option key={p} value={p}>{p} — {P_LABELS[p]}</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <div style={labelSt}>R nakon</div>
+                                                    {riForm.vjerovatnocaNakon > 0 && riForm.posljedlicaNakon > 0 ? (() => {
+                                                        const sc2 = riForm.vjerovatnocaNakon * riForm.posljedlicaNakon;
+                                                        const rl2 = riskLevel(sc2);
+                                                        return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl2.bg, color: rl2.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl2.color}` }}>{sc2} — {rl2.label}</div>;
+                                                    })() : <div className="form-input" style={{ color: 'var(--text-muted)', textAlign: 'center' }}>—</div>}
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
+                                                <div><div style={labelSt}>Odgovorna osoba</div><input className="form-input" value={riForm.odgovornaOsoba || ''} onChange={e => setRi('odgovornaOsoba', e.target.value)} /></div>
+                                                <div><div style={labelSt}>Rok provedbe</div><DateInput value={riForm.rokProvedbe || ''} onChange={v => setRi('rokProvedbe', v)} /></div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {t('save')}</button>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => { setShowRiForm(false); setRiEditId(null); }}>✖ {t('cancel')}</button>
+                                            </div>
+                                        </div>
+                                    );
+
+                                    return (
+                                        <>
+                                            {showRiForm && !riEditId && riFormContent}
+
+                                            {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki. Kliknite na matricu ili "Dodaj stavku".' : 'No items yet.'}</div>}
+                                            {riSorted.length > 0 && (
+                                                <div className="data-table-wrapper"><table className="data-table"><thead><tr>
+                                                    <th style={{ width: 70 }}></th><th>Radno mjesto</th><th>Opasnost</th>
+                                                    <th style={{ width: 50, textAlign: 'center' }}>V</th><th style={{ width: 50, textAlign: 'center' }}>P</th>
+                                                    <th style={{ width: 50, textAlign: 'center' }}>R₀</th><th>Prije</th>
+                                                    <th style={{ width: 50, textAlign: 'center' }}>R₁</th><th>Nakon</th><th style={{ width: 40 }}></th>
+                                                </tr></thead>
+                                                {riSorted.map(ri => {
+                                                    const rl = riskLevel(ri.rizik || 0);
+                                                    const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
+                                                    const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
+                                                    const hz = hazards.find(h => h.id === ri.opasnostId);
+                                                    const improved = rlA && ri.rizikNakon < ri.rizik;
+                                                    return (
+                                                        <tbody key={ri.id}>
+                                                            <tr style={showRiForm && riEditId === ri.id ? { background: 'var(--bg-input)' } : {}}>
+                                                                <td><div style={{ display: 'flex', gap: 4 }}>
+                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Uredi stavku' : 'Edit item'} onClick={() => handleEditRi(ri)}>✏️</button>
+                                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteRi(ri.id)}>✖</button>
+                                                                </div></td>
+                                                                <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
+                                                                <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}</td>
+                                                                <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}</td>
+                                                                <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.posljedica}</td>
+                                                                <td style={{ textAlign: 'center', fontWeight: 800, color: rl.color }}>{ri.rizik}</td>
+                                                                <td><span style={{ padding: '3px 8px', borderRadius: 12, background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '0.7rem' }}>{rl.label}</span></td>
+                                                                <td style={{ textAlign: 'center', fontWeight: 800, color: rlA?.color || 'var(--text-muted)' }}>{ri.rizikNakon || '—'}</td>
+                                                                <td>{rlA ? <span style={{ padding: '3px 8px', borderRadius: 12, background: rlA.bg, color: rlA.color, fontWeight: 700, fontSize: '0.7rem' }}>{rlA.label}</span> : <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>—</span>}</td>
+                                                                <td>{improved && <span style={{ color: '#4caf50', fontWeight: 800 }}>↓</span>}</td>
+                                                            </tr>
+                                                            {showRiForm && riEditId === ri.id && (
+                                                                <tr>
+                                                                    <td colSpan={10} style={{ padding: 0, borderTop: 'none' }}>
+                                                                        <div style={{ padding: '0 12px 16px 12px', borderLeft: '4px solid var(--primary)', background: 'var(--bg-input)' }}>
+                                                                            {riFormContent}
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            )}
+                                                        </tbody>
+                                                    );
+                                                })}
+                                                </table></div>
+                                            )}
+                                        </>
+                                    );
+                                })()}
                             </div></div>
                         </>}
 
