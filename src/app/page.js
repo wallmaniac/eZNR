@@ -237,7 +237,7 @@ export default function LandingPage() {
                  <div className="feature-img-glow" style={{ background: 'rgba(0, 191, 166, 0.3)' }}></div>
                  <img src="/landing/hpop.png" alt="Oprema" className="feature-img floating" />
               </div>
-              <ul className="feature-list bento-list">
+              <ul className="feature-list bento-list bento-list-vertical">
                  <li>✓ Praćenje atesta</li>
                  <li>✓ QR kodovi opreme</li>
                  <li>✓ Historija servisa</li>
@@ -255,7 +255,7 @@ export default function LandingPage() {
                  <div className="feature-img-glow" style={{ background: 'rgba(99, 102, 241, 0.3)' }}></div>
                  <img src="/landing/hzia_new.png" alt="Zia AI" className="feature-img floating-delay" />
               </div>
-              <ul className="feature-list bento-list">
+              <ul className="feature-list bento-list bento-list-vertical">
                  <li>✓ Razumije kontekst vaših podataka</li>
                  <li>✓ Poznaje zakone BiH</li>
                  <li>✓ Chat uživo</li>
@@ -273,7 +273,7 @@ export default function LandingPage() {
                  <div className="feature-img-glow" style={{ background: 'rgba(245, 158, 11, 0.3)' }}></div>
                  <img src="/landing/hcert.png" alt="Certifikati" className="feature-img floating" />
               </div>
-              <ul className="feature-list bento-list">
+              <ul className="feature-list bento-list bento-list-vertical">
                  <li>✓ Ljekarska uvjerenja</li>
                  <li>✓ Generiranje ZOS/ZOP Zapisnika</li>
                  <li>✓ Evidencija radnika</li>
@@ -291,7 +291,7 @@ export default function LandingPage() {
                  <div className="feature-img-glow" style={{ background: 'rgba(239, 68, 68, 0.3)' }}></div>
                  <img src="/landing/hproc.png" alt="Procjena rizika" className="feature-img floating-delay" />
               </div>
-              <ul className="feature-list bento-list">
+              <ul className="feature-list bento-list bento-list-vertical">
                  <li>✓ AUVA Matrica procjene</li>
                  <li>✓ Preporuke mjera</li>
                  <li>✓ Word izvoz</li>
