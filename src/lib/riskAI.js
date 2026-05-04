@@ -12,54 +12,40 @@ export const riskLevel = (score) => {
 
 export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
     try {
-        const wNames = workplaces.map(w => w.naziv).join(', ');
+        const wNames = workplaces.map(w => w.naziv);
         const hNames = hazards.map(h => h.naziv).join(', ');
         
-        const prompt = `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini (FBiH). Tvoj zadatak je generisati detaljan "Opis tehničko-tehnološkog procesa" i "Analizu organizacije rada" za kompaniju, kako bi se ti tekstovi unijeli direktno u zvanični "Akt o procjeni rizika". Piši visoko profesionalnim, formalnim jezikom stručnjaka zaštite na radu (bosanski jezik).
-
-Podaci o kompaniji:
-- Naziv: ${companyData.nazivTvrtke || 'Nepoznato'}
-- Djelatnost: ${companyData.djelatnost || 'Nepoznato'}
-- Broj zaposlenih: ${companyData.ukupnoZaposlenih || 'Nepoznato'}
-- Sjedište: ${companyData.sjediste || 'Nepoznato'}
-
-Radna mjesta koja postoje u kompaniji:
-${wNames || 'Nije specificirano'}
-
-Identificirane opasnosti/štetnosti:
-${hNames || 'Nije specificirano'}
-
-Uputa: Obuhvati sve faze rada tipične za navedenu djelatnost. Opiši radno vrijeme, smjenski rad i preventivne mjere organizacije rada.
-Važno: Vrati odgovor isključivo kao JSON objekat sa sljedeća dva ključa (bez markdowna, čisti JSON):
-{
-  "opisProcesa": "tekst...",
-  "analizaOrganizacije": "tekst..."
-}`;
-
-        const data = await apiCallZia({
-            systemPrompt: 'Ti si ekspert za zaštitu na radu. Tvoj izlaz mora biti isključivo validan JSON bez markdown code blokova. Strogo pazi: ukoliko tekst sadrži nove redove (paragrafe), obavezno ih escape-uj kao "\\n". Znak za novi red ne smije biti doslovno u stringu.',
-            messages: [{ role: 'user', parts: [{ text: prompt }] }]
-        });
-
-        if (!data.text) throw new Error('Prazan odgovor od AI modela.');
+        // PII Sanitization: We omit sensitive identifiers like company name and exact address 
+        // to protect client data before sending it to third-party AI models.
+        const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
         
-        let parsed;
-        try {
-            let clean = data.text.replace(/```json/gi, '').replace(/```JSON/gi, '').replace(/```/g, '').trim();
-            const startIdx = clean.indexOf('{');
-            const endIdx = clean.lastIndexOf('}');
-            if (startIdx !== -1 && endIdx !== -1) {
-                clean = clean.substring(startIdx, endIdx + 1);
-            }
-            parsed = JSON.parse(clean);
-        } catch(e) {
-            console.error('Failed to parse AI response:', data.text);
-            throw new Error('AI nije vratio ispravan format podataka.');
+        const payload = {
+            nazivTvrtke: sanitizedCompanyName,
+            djelatnost: companyData.djelatnost || 'Opća djelatnost',
+            radnaMjesta: wNames,
+            opasnosti: hNames
+        };
+
+        const response = await callFirebaseFunction('generateOpisProcesa', payload);
+        
+        if (!response.success || !response.result) {
+            throw new Error(response.error || 'AI nije uspio generisati opis.');
+        }
+
+        // The backend returns a valid JSON object thanks to responseMimeType: 'application/json'
+        let parsed = response.result;
+        
+        // Re-inject the real company name back into the text locally
+        if (parsed.opisProcesa && companyData.nazivTvrtke) {
+            parsed.opisProcesa = parsed.opisProcesa.replace(/\[Zaštićen Naziv Kompanije\]/g, companyData.nazivTvrtke);
+        }
+        if (parsed.analizaOrganizacije && companyData.nazivTvrtke) {
+            parsed.analizaOrganizacije = parsed.analizaOrganizacije.replace(/\[Zaštićen Naziv Kompanije\]/g, companyData.nazivTvrtke);
         }
 
         return parsed;
     } catch (err) {
-        throw new Error(err.message || 'Nepoznata greška');
+        throw new Error(err.message || 'Nepoznata greška pri komunikaciji s AI serverom.');
     }
 };
 
@@ -93,18 +79,28 @@ export const fetchAiAutoConclusion = async (riskItems, formData) => {
     const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
     const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
 
+    // PII Sanitization
+    const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
+
     const data = await apiCallZia({
         systemPrompt: 'Ti si stručnjak za zaštitu na radu u FBiH. Piši formalno, profesionalno, na bosanskom jeziku. Generiši zaključak za akt o procjeni rizika.',
         messages: [{
             role: 'user', parts: [{
-                text: `Na osnovu procjene rizika sa ${riskItems.length} stavki:\n- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})\n- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}\n- Smanjenje: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}\n- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}\n- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}\n- Naziv tvrtke: ${formData.nazivTvrtke || 'N/A'}\n- Djelatnost: ${formData.djelatnost || 'N/A'}\n\nNapiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uključi: opći zaključak, ključne rizike, obaveze poslodavca, rok za reviziju.`
+                text: `Na osnovu procjene rizika sa ${riskItems.length} stavki:\n- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})\n- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}\n- Smanjenje: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}\n- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}\n- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}\n- Naziv tvrtke: ${sanitizedCompanyName}\n- Djelatnost: ${formData.djelatnost || 'N/A'}\n\nNapiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uključi: opći zaključak, ključne rizike, obaveze poslodavca, rok za reviziju.`
             }]
         }],
     });
     if (!data.text) {
         throw new Error(data.error || 'Generisanje zaključka nije uspjelo');
     }
-    return data.text;
+    
+    // Restore PII
+    let finalText = data.text;
+    if (formData.nazivTvrtke) {
+        finalText = finalText.replace(/\[Zaštićen Naziv Kompanije\]/g, formData.nazivTvrtke);
+    }
+    
+    return finalText;
 };
 
 export const apiGenerateRiskQuestionnaire = async (payload) => {
