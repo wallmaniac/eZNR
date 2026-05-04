@@ -1205,6 +1205,10 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
             else if (s <= 20) bands.znatan++; else bands.nedopustiv++;
         });
 
+        const currentTabIndex = tabs.findIndex(t => t.key === activeTab);
+        const hasPrevTab = currentTabIndex > 0;
+        const hasNextTab = currentTabIndex < tabs.length - 1;
+
         return (
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
@@ -1264,11 +1268,6 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     <option value="draft">Nacrt</option><option value="active">Aktivna</option><option value="archived">Arhivirana</option>
                                 </select>
                             </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
-                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {t('save')}</button>
-                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={handleBack}>↩ {t('cancel')}</button>
-                            <SavedFlash />
                         </div>
                     </div></div>
                 )}
@@ -2222,8 +2221,6 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
-                            <SavedFlash />
                             <button className="btn btn-outline" onClick={handleGenerateReport}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                 📄 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}
@@ -2236,6 +2233,22 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     </div></div>
                     );
                 })()}
+                    {/* Global Form Footer Navigation */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, padding: '16px 20px', background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)', boxShadow: '0 -4px 20px rgba(0,0,0,0.1)', position: 'sticky', bottom: 16, zIndex: 100 }}>
+                        <div style={{ display: 'flex', gap: 12 }}>
+                            <button className="btn btn-ghost" onClick={() => hasPrevTab && setActiveTab(tabs[currentTabIndex - 1].key)} disabled={!hasPrevTab} style={{ opacity: !hasPrevTab ? 0.3 : 1 }}>
+                                ← {lang === 'bs' ? 'Nazad' : 'Previous'}
+                            </button>
+                            <button className="btn btn-outline" onClick={() => hasNextTab && setActiveTab(tabs[currentTabIndex + 1].key)} disabled={!hasNextTab} style={{ opacity: !hasNextTab ? 0.3 : 1, borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+                                {lang === 'bs' ? 'Dalje' : 'Next'} →
+                            </button>
+                        </div>
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={handleBack}>↩ {t('cancel')}</button>
+                            <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave} style={{ minWidth: 120 }}>💾 {t('save')}</button>
+                            <SavedFlash />
+                        </div>
+                    </div>
             </div>
         );
     }
