@@ -186,6 +186,7 @@ export default function RiskAssessmentPage() {
     const [riskItems, setRiskItems] = useState([]);
     const [riForm, setRiForm] = useState({ ...EMPTY_RISK_ITEM });
     const [riEditId, setRiEditId] = useState(null);
+    const [lastEditedRiId, setLastEditedRiId] = useState(null);
     const [showRiForm, setShowRiForm] = useState(false);
     const [workplaces, setWorkplaces] = useState([]);
     const [aiLoading, setAiLoading] = useState(false);
@@ -420,7 +421,10 @@ export default function RiskAssessmentPage() {
         setRiForm({ ...EMPTY_RISK_ITEM, procjenaId: editingId }); setRiEditId(null); setShowRiForm(true);
     };
     const handleEditRi = (ri) => {
-        setRiForm({ ...ri }); setRiEditId(ri.id); setShowRiForm(true);
+        if (riEditId === ri.id && showRiForm) {
+            setShowRiForm(false); setRiEditId(null); return;
+        }
+        setRiForm({ ...ri }); setRiEditId(ri.id); setShowRiForm(true); setLastEditedRiId(null);
     };
     const handleDeleteRi = async (id) => {
         if (await confirm(lang === 'bs' ? 'Obrisati stavku?' : 'Delete item?')) {
@@ -435,7 +439,7 @@ export default function RiskAssessmentPage() {
         const pN = riForm.posljedlicaNakon || 0;
         const scoreAfter = vN > 0 && pN > 0 ? vN * pN : 0;
         const data = { ...riForm, rizik: score, nivoRizika: riskLevel(score).label, rizikNakon: scoreAfter, nivoRizikaNakon: scoreAfter > 0 ? riskLevel(scoreAfter).label : '' };
-        if (riEditId) update(COLLECTIONS.RISK_ITEMS, riEditId, data);
+        if (riEditId) { update(COLLECTIONS.RISK_ITEMS, riEditId, data); setLastEditedRiId(riEditId); }
         else create(COLLECTIONS.RISK_ITEMS, data);
         setShowRiForm(false); setRiEditId(null); loadRiskItems(editingId);
         showFlash();
@@ -1833,7 +1837,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </div>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 <button className="btn btn-primary btn-sm" onClick={handleSaveRi}>✔ {t('save')}</button>
-                                                <button className="btn btn-ghost btn-sm" onClick={() => { setShowRiForm(false); setRiEditId(null); }}>✖ {t('cancel')}</button>
+                                                <button className="btn btn-ghost btn-sm" onClick={() => { setShowRiForm(false); setLastEditedRiId(riEditId); setRiEditId(null); }}>✖ {t('cancel')}</button>
                                             </div>
                                         </div>
                                     );
@@ -1858,10 +1862,10 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     const improved = rlA && ri.rizikNakon < ri.rizik;
                                                     return (
                                                         <tbody key={ri.id}>
-                                                            <tr style={showRiForm && riEditId === ri.id ? { background: 'var(--bg-input)' } : {}}>
+                                                            <tr style={showRiForm && riEditId === ri.id ? { background: 'var(--bg-input)' } : lastEditedRiId === ri.id ? { background: 'rgba(102,126,234,0.15)', transition: 'background 0.5s ease' } : {}}>
                                                                 <td><div style={{ display: 'flex', gap: 4 }}>
                                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Uredi stavku' : 'Edit item'} onClick={() => handleEditRi(ri)}>✏️</button>
-                                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteRi(ri.id)}>✖</button>
+                                                                    <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši stavku' : 'Delete item'} style={{ color: 'var(--danger)' }} onClick={() => handleDeleteRi(ri.id)}>🗑️</button>
                                                                 </div></td>
                                                                 <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
                                                                 <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}</td>
