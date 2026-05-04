@@ -137,8 +137,8 @@ function buildEmailBody({ companyName, sections, lang, today }) {
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0">
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
-      <tr><td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0">
-        <img src="${APP_URL}/email-header.png" alt="eZNR" width="600" style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0" />
+      <tr><td style="background:linear-gradient(135deg, #020617, #0f172a);border-radius:16px 16px 0 0;padding:40px 20px;text-align:center">
+        <img src="${APP_URL}/logo-transparent.png" alt="eZNR" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto" />
       </td></tr>
       <tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 40px;text-align:center">
         <p style="margin:0;font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:2px">⏰ ${t(lang, 'titleDig')}</p>
