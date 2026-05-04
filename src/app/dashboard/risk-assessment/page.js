@@ -252,15 +252,28 @@ export default function RiskAssessmentPage() {
     // ─── Procjene CRUD ───
     const handleNew = () => {
         let defaultCompany = '';
+        let djelatnost = '';
+        let sjediste = '';
         try {
             const activeId = localStorage.getItem('eznr_activeCompany');
             if (activeId && activeId !== 'all') {
                 const comp = getAll(COLLECTIONS.COMPANIES).find(c => c.id === activeId);
-                if (comp) defaultCompany = comp.naziv;
+                if (comp) {
+                    defaultCompany = comp.naziv || '';
+                    djelatnost = comp.djelatnost || '';
+                    sjediste = comp.adresa || '';
+                }
             }
         } catch(e){}
         
-        setFormData({ ...EMPTY_PROCJENA, nazivTvrtke: defaultCompany, datumIzrade: todayISO() });
+        setFormData({ 
+            ...EMPTY_PROCJENA, 
+            nazivTvrtke: defaultCompany, 
+            djelatnost,
+            sjediste,
+            ukupnoZaposlenih: workers.length.toString(),
+            datumIzrade: todayISO() 
+        });
         setEditingId(null); setRiskItems([]); setActiveTab('opsti'); setView('form');
     };
     const handleEdit = (item) => {
@@ -386,7 +399,7 @@ export default function RiskAssessmentPage() {
         setAiOpisLoading(true);
         try {
             const wps = riskItems.map(ri => workplaces.find(w => w.id === ri.radnoMjestoId)).filter(Boolean);
-            const result = await fetchAiOpisProcesa(wps, hazards);
+            const result = await fetchAiOpisProcesa(formData, wps, hazards);
             setFormData(prev => ({
                 ...prev,
                 opisProcesa: result.opisProcesa || prev.opisProcesa,

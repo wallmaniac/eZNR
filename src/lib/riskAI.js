@@ -10,14 +10,51 @@ export const riskLevel = (score) => {
     return { label: 'Nedopustiv', color: '#b71c1c', bg: 'rgba(183,28,28,0.2)' };
 };
 
-export const fetchAiOpisProcesa = async (workplaces, hazards) => {
+export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
     try {
         const wNames = workplaces.map(w => w.naziv).join(', ');
         const hNames = hazards.map(h => h.naziv).join(', ');
-        const res = await callFirebaseFunction('generateOpisProcesa', { radnaMjesta: wNames, opasnosti: hNames });
-        return res?.result;
-    } catch (firebaseError) {
-        throw new Error(firebaseError.message || 'Nepoznata greška');
+        
+        const prompt = `Ti si stručnjak za zaštitu na radu u Bosni i Hercegovini (FBiH). Tvoj zadatak je generisati detaljan "Opis tehničko-tehnološkog procesa" i "Analizu organizacije rada" za kompaniju, kako bi se ti tekstovi unijeli direktno u zvanični "Akt o procjeni rizika". Piši visoko profesionalnim, formalnim jezikom stručnjaka zaštite na radu (bosanski jezik).
+
+Podaci o kompaniji:
+- Naziv: ${companyData.nazivTvrtke || 'Nepoznato'}
+- Djelatnost: ${companyData.djelatnost || 'Nepoznato'}
+- Broj zaposlenih: ${companyData.ukupnoZaposlenih || 'Nepoznato'}
+- Sjedište: ${companyData.sjediste || 'Nepoznato'}
+
+Radna mjesta koja postoje u kompaniji:
+${wNames || 'Nije specificirano'}
+
+Identificirane opasnosti/štetnosti:
+${hNames || 'Nije specificirano'}
+
+Uputa: Obuhvati sve faze rada tipične za navedenu djelatnost. Opiši radno vrijeme, smjenski rad i preventivne mjere organizacije rada.
+Važno: Vrati odgovor isključivo kao JSON objekat sa sljedeća dva ključa (bez markdowna, čisti JSON):
+{
+  "opisProcesa": "tekst...",
+  "analizaOrganizacije": "tekst..."
+}`;
+
+        const data = await apiCallZia({
+            systemPrompt: 'Ti si ekspert za zaštitu na radu. Tvoj izlaz mora biti isključivo validan JSON bez markdown code blokova.',
+            messages: [{ role: 'user', parts: [{ text: prompt }] }]
+        });
+
+        if (!data.text) throw new Error('Prazan odgovor od AI modela.');
+        
+        let parsed;
+        try {
+            const clean = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+            parsed = JSON.parse(clean);
+        } catch(e) {
+            console.error('Failed to parse AI response:', data.text);
+            throw new Error('AI nije vratio ispravan format podataka.');
+        }
+
+        return parsed;
+    } catch (err) {
+        throw new Error(err.message || 'Nepoznata greška');
     }
 };
 
