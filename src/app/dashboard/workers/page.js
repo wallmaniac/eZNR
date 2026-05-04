@@ -1769,8 +1769,8 @@ function WorkersPageInner() {
                                             />
                                         </th>
                                         <th style={{ width: 100 }}>{t('actions')}</th>
-                                        <th style={tsW('ime')} onClick={() => tW('ime')}>{t('workerName')}{siW('ime')}</th>
-                                        <th style={tsW('prezime')} onClick={() => tW('prezime')}>{t('workerSurname')}{siW('prezime')}</th>
+                                        <th style={{ ...tsW('ime'), minWidth: 130, textAlign: 'left' }} onClick={() => tW('ime')}>{t('workerName')}{siW('ime')}</th>
+                                        <th style={{ ...tsW('prezime'), minWidth: 140, textAlign: 'left' }} onClick={() => tW('prezime')}>{t('workerSurname')}{siW('prezime')}</th>
                                         <th>{t('oib')}</th>
                                         <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
                                         <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
@@ -1878,7 +1878,7 @@ function WorkersPageInner() {
                                                                     );
                                                                 })()}
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>\ud83d\udcc1 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
+                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>📁 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={{ ..._miSt, color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                             </div>
@@ -1886,17 +1886,17 @@ function WorkersPageInner() {
                                                         document.body
                                                     )}
                                                 </td>
-                                                <td style={{ fontWeight: 600 }}>
+                                                <td style={{ fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'left' }}>
                                                     <button
                                                         onClick={() => setViewWorkerId(w.id)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
                                                         title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.ime}</button>
                                                 </td>
-                                                <td style={{ fontWeight: 600 }}>
+                                                <td style={{ fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'left' }}>
                                                     <button
                                                         onClick={() => setViewWorkerId(w.id)}
-                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
+                                                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
                                                         title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.prezime}</button>
                                                 </td>
