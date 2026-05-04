@@ -196,6 +196,12 @@ export default function RiskAssessmentPage() {
     // Sistematizacija + response counts
     const [sistematizacije, setSistematizacije] = useState([]);
     const [responseCounts, setResponseCounts] = useState({});
+    // AI Generation
+    const [showAiGenTableModal, setShowAiGenTableModal] = useState(false);
+    const [aiGenJobTitle, setAiGenJobTitle] = useState('');
+    const [aiGenLoading, setAiGenLoading] = useState(false);
+    const [aiGenSelectedWps, setAiGenSelectedWps] = useState([]); // Array of workplace IDs
+    const [aiGenCustomWp, setAiGenCustomWp] = useState(''); // Custom workplace name
     // Equipment for context panel
     const [equipment, setEquipment] = useState([]);
     const [orgUnits, setOrgUnits] = useState([]);
@@ -204,10 +210,6 @@ export default function RiskAssessmentPage() {
     const [showBulkModal, setShowBulkModal] = useState(false);
     const [bulkWpId, setBulkWpId] = useState('');
     const [bulkSelected, setBulkSelected] = useState([]);
-    // AI Generation
-    const [showAiGenTableModal, setShowAiGenTableModal] = useState(false);
-    const [aiGenJobTitle, setAiGenJobTitle] = useState('');
-    const [aiGenLoading, setAiGenLoading] = useState(false);
     // Mjere inline cell edit modal
     const [mjeraEdit, setMjeraEdit] = useState(null); // { riId, field, label, value, type }
 
@@ -430,15 +432,33 @@ export default function RiskAssessmentPage() {
         setShowRiForm(false); setRiEditId(null); loadRiskItems(editingId);
         showFlash();
     };
-    const handleAiOpis = async () => {
+    const handleAiOpis = async (mode = 'app') => {
         if (!formData.nazivTvrtke) {
             alert(lang === 'bs' ? 'Molimo prvo unesite naziv firme u Opštim podacima.' : 'Please enter company name first.');
             return;
         }
         setAiOpisLoading(true);
         try {
-            const wps = riskItems.map(ri => workplaces.find(w => w.id === ri.radnoMjestoId)).filter(Boolean);
-            const result = await fetchAiOpisProcesa(formData, wps, hazards);
+            // Determine which workplaces to use:
+            // If a specific workplace is selected, use it; otherwise use ALL from the company
+            let wps;
+            if (formData.radnoMjestoId) {
+                const selectedWp = workplaces.find(w => w.id === formData.radnoMjestoId);
+                wps = selectedWp ? [selectedWp] : workplaces;
+            } else {
+                // "Cijela firma" — use ALL workplaces
+                wps = workplaces;
+            }
+            
+            // Build context from user-written text and app data
+            const companyDataWithContext = {
+                ...formData,
+                // Pass user-written text as additional context for the AI
+                userOpisProcesa: mode === 'text' ? (formData.opisProcesa || '') : '',
+                userAnalizaOrganizacije: mode === 'text' ? (formData.analizaOrganizacije || '') : '',
+            };
+            
+            const result = await fetchAiOpisProcesa(companyDataWithContext, wps, hazards);
             setFormData(prev => ({
                 ...prev,
                 opisProcesa: result.opisProcesa || prev.opisProcesa,
@@ -676,44 +696,79 @@ export default function RiskAssessmentPage() {
         setImportLoading(false);
     };
 
-    // ─── Auto-Generate Risk Items Table ───
+    // ─── Auto-Generate Risk Items Table (Multi-Workplace) ───
     const handleAiGenerateTableSubmit = async () => {
         if (!editingId) return;
-        if (!aiGenJobTitle.trim()) { alert('Unesite naziv radnog mjesta!'); return; }
+        
+        // Build list of workplace names/IDs to generate for
+        const wpTargets = [];
+        for (const wpId of aiGenSelectedWps) {
+            const wp = workplaces.find(w => w.id === wpId);
+            if (wp) wpTargets.push({ id: wp.id, naziv: wp.naziv });
+        }
+        // Add custom workplace if specified
+        if (aiGenCustomWp.trim()) {
+            wpTargets.push({ id: '', naziv: aiGenCustomWp.trim() });
+        }
+        // Fallback to the single input field
+        if (wpTargets.length === 0 && aiGenJobTitle.trim()) {
+            wpTargets.push({ id: formData.radnoMjestoId || '', naziv: aiGenJobTitle.trim() });
+        }
+        
+        if (wpTargets.length === 0) {
+            alert('Odaberite barem jedno radno mjesto ili unesite naziv!');
+            return;
+        }
+        
         setAiGenLoading(true);
+        let totalCreated = 0;
+        let errors = [];
+        
         try {
-            const items = await apiGenerateRiskTable(aiGenJobTitle, formData.nazivTvrtke, formData.djelatnost);
-            let created = 0;
-            for (const item of items) {
-                const rizik = item.vjerovatnoca * item.posljedica;
-                const rizikNakon = item.vjerovatnocaNakon * item.posljedlicaNakon;
-                create(COLLECTIONS.RISK_ITEMS, {
-                    procjenaId: editingId,
-                    radnoMjestoId: formData.radnoMjestoId || '',
-                    opasnostId: '',
-                    opisOpasnosti: item.opisOpasnosti || '',
-                    vjerovatnoca: item.vjerovatnoca,
-                    posljedica: item.posljedica,
-                    rizik: rizik,
-                    nivoRizika: riskLevel(rizik).label,
-                    postojeceMjere: item.postojeceMjere || '',
-                    predlozeneMjere: item.predlozeneMjere || '',
-                    vjerovatnocaNakon: item.vjerovatnocaNakon,
-                    posljedlicaNakon: item.posljedlicaNakon,
-                    rizikNakon: rizikNakon,
-                    nivoRizikaNakon: rizikNakon > 0 ? riskLevel(rizikNakon).label : '',
-                    odgovornaOsoba: formData.ovlOsobaIme || '',
-                    rokProvedbe: '',
-                    status: 'draft',
-                    aiGenerated: true
-                });
-                created++;
+            for (const wp of wpTargets) {
+                try {
+                    const items = await apiGenerateRiskTable(wp.naziv, formData.nazivTvrtke, formData.djelatnost);
+                    for (const item of items) {
+                        const rizik = item.vjerovatnoca * item.posljedica;
+                        const rizikNakon = (item.vjerovatnocaNakon || 0) * (item.posljedlicaNakon || 0);
+                        create(COLLECTIONS.RISK_ITEMS, {
+                            procjenaId: editingId,
+                            radnoMjestoId: wp.id || formData.radnoMjestoId || '',
+                            opasnostId: '',
+                            opisOpasnosti: item.opisOpasnosti || '',
+                            vjerovatnoca: item.vjerovatnoca,
+                            posljedica: item.posljedica,
+                            rizik: rizik,
+                            nivoRizika: riskLevel(rizik).label,
+                            postojeceMjere: item.postojeceMjere || '',
+                            predlozeneMjere: item.predlozeneMjere || '',
+                            vjerovatnocaNakon: item.vjerovatnocaNakon || 0,
+                            posljedlicaNakon: item.posljedlicaNakon || 0,
+                            rizikNakon: rizikNakon,
+                            nivoRizikaNakon: rizikNakon > 0 ? riskLevel(rizikNakon).label : '',
+                            odgovornaOsoba: formData.ovlOsobaIme || '',
+                            rokProvedbe: '',
+                            status: 'draft',
+                            aiGenerated: true,
+                            wpNaziv: wp.naziv, // Store which workplace this was generated for
+                        });
+                        totalCreated++;
+                    }
+                } catch (wpErr) {
+                    errors.push(`${wp.naziv}: ${wpErr.message}`);
+                }
             }
             loadRiskItems(editingId);
             setShowAiGenTableModal(false);
             setAiGenJobTitle('');
+            setAiGenSelectedWps([]);
+            setAiGenCustomWp('');
             showFlash();
-            alert(`Uspješno generisano ${created} stavki procjene.`);
+            if (errors.length > 0) {
+                alert(`Generisano ${totalCreated} stavki. Greške za: ${errors.join('; ')}`);
+            } else {
+                alert(`Uspješno generisano ${totalCreated} stavki procjene za ${wpTargets.length} radno/a mjesto/a.`);
+            }
         } catch (err) {
             alert('Greška pri AI izradi: ' + err.message);
         }
@@ -1162,25 +1217,58 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {/* ── TAB: Opis procesa ── */}
                 {activeTab === 'opis' && (
                     <div className="card"><div className="card-body">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                            <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
-                            <div style={{ display: 'flex', gap: 8 }}>
-                                <button className="btn btn-outline btn-sm" onClick={() => setShowDocAiModal(true)} title="Automatski izvuci podatke o procesu, organizaciji i opasnostima iz priloženih word/pdf dokumenata (zapisnici, protokoli)"
-                                    style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                    🤖 AI Analiza dokumenata
-                                </button>
-                                <button className="btn btn-outline btn-sm" onClick={handleAiOpis} disabled={aiOpisLoading} title="Dopustite vještačkoj inteligenciji da sastavi stručan tekst opisa radnog procesa na osnovu osnovnih podataka"
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>OPIS TEHNIČKO-TEHNOLOŠKOG PROCESA</div>
+                        <textarea className="form-input" rows={8} value={formData.opisProcesa || ''} onChange={e => set('opisProcesa', e.target.value)}
+                            placeholder="Opišite tehničko-tehnološki i radni proces, sredstva rada, opremu... Možete pisati ručno ili koristiti AI generisanje ispod." style={{ resize: 'vertical', marginBottom: 20 }} />
+                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>ANALIZA ORGANIZACIJE RADA</div>
+                        <textarea className="form-input" rows={6} value={formData.analizaOrganizacije || ''} onChange={e => set('analizaOrganizacije', e.target.value)}
+                            placeholder="Opišite organizaciju rada, smjene, posebne uvjete... Možete pisati ručno ili koristiti AI generisanje ispod." style={{ resize: 'vertical', marginBottom: 20 }} />
+
+                        {/* ── AI Generation Section ── */}
+                        <div style={{ border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 16, background: 'rgba(102,126,234,0.06)', marginBottom: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                                <span style={{ fontSize: '1.1rem' }}>✨</span>
+                                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text)' }}>AI Generisanje opisa</div>
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: 14 }}>
+                                {(formData.opisProcesa || formData.analizaOrganizacije)
+                                    ? '💡 Već ste napisali tekst u gornjim poljima. AI može proširiti i poboljšati vaš tekst, ili generisati potpuno novi opis iz podataka aplikacije.'
+                                    : '💡 AI može generisati profesionalni opis na osnovu radnih mjesta, djelatnosti i opasnosti iz vaše aplikacije.'}
+                            </div>
+                            {/* Data source indicators */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+                                <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 12, background: 'rgba(76,175,80,0.15)', color: '#4caf50', fontWeight: 600 }}>
+                                    📋 Radna mjesta: {formData.radnoMjestoId ? (workplaces.find(w => w.id === formData.radnoMjestoId)?.naziv || '1') : `Sva (${workplaces.length})`}
+                                </span>
+                                <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 12, background: 'rgba(255,193,7,0.15)', color: '#ffc107', fontWeight: 600 }}>
+                                    ⚠️ Opasnosti: {hazards.length}
+                                </span>
+                                <span style={{ fontSize: '0.7rem', padding: '3px 8px', borderRadius: 12, background: 'rgba(33,150,243,0.15)', color: '#2196f3', fontWeight: 600 }}>
+                                    🏢 Djelatnost: {formData.djelatnost || 'Nije navedeno'}
+                                </span>
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                <button className="btn btn-outline btn-sm" onClick={() => handleAiOpis('app')} disabled={aiOpisLoading}
+                                    title="Generiši opis iz podataka aplikacije (radna mjesta, djelatnost, sistematizacija)"
                                     style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                    {aiOpisLoading ? '⏳...' : '🤖 AI Generiši opis'}
+                                    {aiOpisLoading ? '⏳ Generišem...' : '🤖 Generiši iz podataka aplikacije'}
+                                </button>
+                                {(formData.opisProcesa || formData.analizaOrganizacije) && (
+                                    <button className="btn btn-outline btn-sm" onClick={() => handleAiOpis('text')} disabled={aiOpisLoading}
+                                        title="Proširi i poboljšaj tekst koji ste već napisali koristeći AI"
+                                        style={{ background: aiOpisLoading ? 'var(--bg-input)' : 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                        {aiOpisLoading ? '⏳ Generišem...' : '📝 Proširi moj tekst s AI'}
+                                    </button>
+                                )}
+                                <button className="btn btn-outline btn-sm" onClick={() => setShowDocAiModal(true)}
+                                    title="Automatski izvuci podatke o procesu, organizaciji i opasnostima iz priloženih word/pdf dokumenata (zapisnici, protokoli)"
+                                    style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
+                                    📄 AI Analiza dokumenata
                                 </button>
                             </div>
                         </div>
-                        <textarea className="form-input" rows={6} value={formData.opisProcesa || ''} onChange={e => set('opisProcesa', e.target.value)}
-                            placeholder="Opišite tehničko-tehnološki i radni proces, sredstva rada, opremu..." style={{ resize: 'vertical', marginBottom: 20 }} />
-                        <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>ANALIZA ORGANIZACIJE RADA</div>
-                        <textarea className="form-input" rows={4} value={formData.analizaOrganizacije || ''} onChange={e => set('analizaOrganizacije', e.target.value)}
-                            placeholder="Opišite organizaciju rada, smjene, posebne uvjete..." style={{ resize: 'vertical' }} />
-                        <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
+
+                        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                             <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
@@ -1288,10 +1376,16 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             📋 Uvezi iz upitnika
                                         </button>
                                         <button className="btn btn-outline btn-sm" onClick={() => {
-                                            const wpName = workplaces.find(w => w.id === formData.radnoMjestoId)?.naziv || '';
-                                            setAiGenJobTitle(wpName);
+                                            // Auto-detect workplaces: if Cijela firma, pre-select all; otherwise just the selected one
+                                            if (!formData.radnoMjestoId) {
+                                                setAiGenSelectedWps(workplaces.map(w => w.id));
+                                            } else {
+                                                setAiGenSelectedWps([formData.radnoMjestoId]);
+                                            }
+                                            setAiGenCustomWp('');
+                                            setAiGenJobTitle('');
                                             setShowAiGenTableModal(true);
-                                        }} title="Zia AI Automatski izrađuje tabelu rizika za specifično radno mjesto sukladno normama"
+                                        }} title="Zia AI Automatski izrađuje tabelu rizika za odabrana radna mjesta sukladno normama"
                                             style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             ✨ Autoizradi s AI
                                         </button>
@@ -1306,20 +1400,78 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 {showAiGenTableModal && (
                                     <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.55)' }}
                                          onClick={(e) => { if (e.target === e.currentTarget && !aiGenLoading) setShowAiGenTableModal(false); }}>
-                                        <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 400, boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
+                                        <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 500, maxWidth: 650, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
                                             <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>✨ AI Generisanje Tabele Rizika</div>
-                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20 }}>
-                                                Zia AI će analizirati radno mjesto i kreirati standardne (8-15) opasnosti, zajedno sa FBiH procjenom posljedica, vjerovatnoće i listom mjera prevencije.
+                                            <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.6 }}>
+                                                Zia AI će analizirati odabrana radna mjesta i kreirati standardne (8-15) opasnosti po radnom mjestu, zajedno sa FBiH procjenom posljedica, vjerovatnoće i listom mjera prevencije.
                                             </div>
+
+                                            {/* Workplace selection from app data */}
+                                            {workplaces.length > 0 && (
+                                                <div style={{ marginBottom: 16 }}>
+                                                    <div style={{ ...labelSt, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span>Radna mjesta iz aplikacije ({workplaces.length})</span>
+                                                        <button style={{ fontSize: '0.7rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontWeight: 600 }}
+                                                            onClick={() => {
+                                                                if (aiGenSelectedWps.length === workplaces.length) setAiGenSelectedWps([]);
+                                                                else setAiGenSelectedWps(workplaces.map(w => w.id));
+                                                            }}>
+                                                            {aiGenSelectedWps.length === workplaces.length ? 'Odznači sve' : 'Označi sve'}
+                                                        </button>
+                                                    </div>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
+                                                        {workplaces.map(wp => {
+                                                            const isSelected = aiGenSelectedWps.includes(wp.id);
+                                                            const wpWorkers = workers.filter(w => w.radnoMjestoId === wp.id).length;
+                                                            return (
+                                                                <button key={wp.id} onClick={() => {
+                                                                    if (isSelected) setAiGenSelectedWps(prev => prev.filter(id => id !== wp.id));
+                                                                    else setAiGenSelectedWps(prev => [...prev, wp.id]);
+                                                                }}
+                                                                    disabled={aiGenLoading}
+                                                                    style={{
+                                                                        padding: '6px 12px', borderRadius: 16, fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer',
+                                                                        border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)',
+                                                                        background: isSelected ? 'rgba(102,126,234,0.15)' : 'var(--bg-input)',
+                                                                        color: isSelected ? 'var(--primary)' : 'var(--text-muted)',
+                                                                        transition: 'all 0.15s ease',
+                                                                    }}>
+                                                                    {isSelected ? '✓ ' : ''}{wp.naziv}
+                                                                    {wpWorkers > 0 && <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.7rem' }}>({wpWorkers}👤)</span>}
+                                                                </button>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Custom workplace input */}
                                             <div style={{ marginBottom: 16 }}>
-                                                <div style={labelSt}>Naziv radnog mjesta *</div>
-                                                <input className="form-input" value={aiGenJobTitle} onChange={e => setAiGenJobTitle(e.target.value)} placeholder="Npr. Zavarivač, Referent, Skladištar..." disabled={aiGenLoading} />
+                                                <div style={labelSt}>Dodaj vlastito radno mjesto (opciono)</div>
+                                                <div style={{ display: 'flex', gap: 6 }}>
+                                                    <input className="form-input" value={aiGenCustomWp} onChange={e => setAiGenCustomWp(e.target.value)}
+                                                        placeholder="Npr. Zavarivač, Monter, Čistačica..." disabled={aiGenLoading}
+                                                        style={{ flex: 1 }} />
+                                                </div>
+                                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                                    💡 Ako radno mjesto ne postoji u aplikaciji, možete ga upisati ručno.
+                                                </div>
                                             </div>
+
+                                            {/* Summary */}
+                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16, padding: '8px 12px', borderRadius: 8, background: 'rgba(102,126,234,0.06)', border: '1px solid var(--border)' }}>
+                                                📊 Generisat će se procjena za <strong style={{ color: 'var(--primary)' }}>{aiGenSelectedWps.length + (aiGenCustomWp.trim() ? 1 : 0)}</strong> radno/a mjesto/a
+                                                {aiGenSelectedWps.length + (aiGenCustomWp.trim() ? 1 : 0) > 0 && (
+                                                    <span> — oko {(aiGenSelectedWps.length + (aiGenCustomWp.trim() ? 1 : 0)) * 10} stavki ukupno</span>
+                                                )}
+                                            </div>
+
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                                                 <button className="btn btn-ghost" onClick={() => setShowAiGenTableModal(false)} disabled={aiGenLoading}>{t('cancel')}</button>
-                                                <button className="btn btn-primary" onClick={handleAiGenerateTableSubmit} disabled={!aiGenJobTitle.trim() || aiGenLoading}
+                                                <button className="btn btn-primary" onClick={handleAiGenerateTableSubmit}
+                                                    disabled={(aiGenSelectedWps.length === 0 && !aiGenCustomWp.trim() && !aiGenJobTitle.trim()) || aiGenLoading}
                                                         style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}>
-                                                    {aiGenLoading ? '⏳ Generišem tabelu...' : '⚡ Generiši Tabela'}
+                                                    {aiGenLoading ? '⏳ Generišem tabelu...' : '⚡ Generiši Tabelu'}
                                                 </button>
                                             </div>
                                         </div>

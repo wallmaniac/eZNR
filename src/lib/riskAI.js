@@ -23,7 +23,11 @@ export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
             nazivTvrtke: sanitizedCompanyName,
             djelatnost: companyData.djelatnost || 'Opća djelatnost',
             radnaMjesta: wNames,
-            opasnosti: hNames
+            opasnosti: hNames,
+            // Additional context for better generation
+            ukupnoZaposlenih: companyData.ukupnoZaposlenih || '',
+            userOpisProcesa: companyData.userOpisProcesa || '',
+            userAnalizaOrganizacije: companyData.userAnalizaOrganizacije || '',
         };
 
         const response = await callFirebaseFunction('generateOpisProcesa', payload);
@@ -48,6 +52,7 @@ export const fetchAiOpisProcesa = async (companyData, workplaces, hazards) => {
         throw new Error(err.message || 'Nepoznata greška pri komunikaciji s AI serverom.');
     }
 };
+
 
 export const fetchAiMeasures = async (payload) => {
     try {
@@ -126,15 +131,19 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
 
 export const apiGenerateRiskTable = async (jobTitle, companyName, industry) => {
     try {
-        const res = await fetch('https://eznr-ai-backend-757041188739.europe-west1.run.app/api/risk-ai', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ jobTitle, companyName, industry })
+        // PII Sanitization
+        const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
+        
+        const response = await callFirebaseFunction('generateRiskTable', {
+            jobTitle,
+            companyName: sanitizedCompanyName,
+            industry: industry || 'Opća djelatnost'
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Server error');
-        if (!data.items) throw new Error('Invalid JSON schema received from AI');
-        return data.items;
+        
+        if (!response.success || !response.items) {
+            throw new Error(response.error || 'AI nije uspio generisati tabelu rizika.');
+        }
+        return response.items;
     } catch (err) {
         throw new Error(err.message || 'Nepoznata greška pri generisanju rizika');
     }
