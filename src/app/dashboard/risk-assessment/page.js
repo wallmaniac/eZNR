@@ -1344,8 +1344,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                             else { alert('AI greška: ' + error); }
                                                         } catch (err) { alert('Greška: ' + err.message); }
                                                         setSistAiLoading(false); setSistSelectedWp(null);
-                                                    }} disabled={isLoading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.7rem' }}>
-                                                        {isLoading ? '⏳' : '🤖'} Regeneriši
+                                                    }} disabled={sistAiLoading && sistSelectedWp === wp.id} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.7rem' }}>
+                                                        {sistAiLoading && sistSelectedWp === wp.id ? '⏳ Regeneriše...' : '🤖 Regeneriši'}
                                                     </button>
                                                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', fontSize: '0.7rem' }} onClick={async () => {
                                                         if (await confirm('Obrisati sistematizaciju za ovo radno mjesto?')) {

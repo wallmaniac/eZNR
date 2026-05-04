@@ -311,7 +311,7 @@ export default function SistematizacijaPage() {
                                             <button className="btn btn-outline btn-sm" onClick={() => handlePrintSist(sist, wp, ou)} style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
                                             <button className="btn btn-outline btn-sm" onClick={() => handleAIGenerate(wp)} disabled={isLoading}
                                                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
-                                                {isLoading ? '⏳' : '🤖'} {lang === 'bs' ? 'Regeneriši' : 'Regenerate'}
+                                                {isLoading ? (lang === 'bs' ? '⏳ Regeneriše...' : '⏳ Regenerating...') : (lang === 'bs' ? '🤖 Regeneriši' : '🤖 Regenerate')}
                                             </button>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSist(wp.id)}>✖</button>
                                         </div>
