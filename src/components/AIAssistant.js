@@ -175,14 +175,14 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         
         if (expiredCerts.length > 0) {
             lines.push(lang === 'bs'
-                ? `ISTEKLA UVJERENJA (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (isteklo: ${c.vrijediDo})`).join('; ')}`
-                : `EXPIRED CERTIFICATES (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (expired: ${c.vrijediDo})`).join('; ')}`
+                ? `ISTEKLA UVJERENJA (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (isteklo: ${c.vrijediDo})`).join('; ')}`
+                : `EXPIRED CERTIFICATES (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (expired: ${c.vrijediDo})`).join('; ')}`
             );
         }
         if (soonCerts.length > 0) {
             lines.push(lang === 'bs'
-                ? `UVJERENJA KOJA USKORO ISTIČU - 30 DANA (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (ističe: ${c.vrijediDo})`).join('; ')}`
-                : `CERTIFICATES EXPIRING SOON - 30 DAYS (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.radnikId}] (expires: ${c.vrijediDo})`).join('; ')}`
+                ? `UVJERENJA KOJA USKORO ISTIČU - 30 DANA (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (ističe: ${c.vrijediDo})`).join('; ')}`
+                : `CERTIFICATES EXPIRING SOON - 30 DAYS (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (expires: ${c.vrijediDo})`).join('; ')}`
             );
         }
 
