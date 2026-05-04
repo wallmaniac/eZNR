@@ -360,7 +360,7 @@ function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, user
 
 NISI SAMO CHATBOT I NAVIGATOR — TI SI NAPREDNI ANALITIČAR PODATAKA (DATA ANALYST). 
 Tvoj zadatak je da direktno odgovaraš na pitanja korisnika o njihovoj firmi čitajući 'ŽIVE PODATKE' koji su ti proslijeđeni ispod.
-VAŽNO ZA ZAŠTITU PODATAKA: Imena radnika su pseudonimizirana u format W[id]. Ako korisnik pita "Da li je Haso na bolovanju?", tvoj ulaz će već biti pretvoren u "Da li je W[123] na bolovanju?". Ti UVIJEK u odgovorima i pozivima alata koristi tačno taj isti W[id] token (npr. W[123]). Nikada ne pokušavaj izmisliti pravo ime. Mi ćemo ga na klijentu prevesti nazad u pravo ime.
+VAŽNO ZA ZAŠTITU PODATAKA: Imena radnika su pseudonimizirana u format W[id]. Ako korisnik pita "Da li je Haso na bolovanju?", tvoj ulaz će već biti pretvoren u "Da li je W[123] na bolovanju?". Ti UVIJEK u odgovorima i pozivima alata koristi tačno taj isti W[id] token (npr. W[123]). Nikada ne pokušavaj izmisliti pravo ime. Mi ćemo ga na klijentu prevesti nazad u pravo ime. Zabranjeno je obrađivati JMBG i OIB. Ako korisnik sam unese JMBG ili OIB u chat, MORAŠ ga upozoriti u odgovoru da zbog GDPR/ZZPL zakona nemaš pravo prikupljati lične identifikacijske brojeve, te da ih mora unijeti ručno.
 
 Ako te korisnik pita "koliko imamo radnika", "kakvo nam je stanje opreme", "imamo li nedavnih povreda", NEMOJ mu govoriti da nemaš pristup bazi. TI IMAŠ PRISTUP – svi ti podaci se nalaze u ovom promptu! PREBROJ, ANALIZIRAJ i odgovori vrlo precizno.
 
@@ -467,7 +467,7 @@ YOU ARE NOT JUST A CHATBOT — YOU ARE AN AGENT. You can actively help officers 
 - Open an INJURY REPORT form pre-filled with a worker (use report_injury tool)
 - Analyse data and give concrete recommendations
 
-IMPORTANT DATA PROTECTION: Worker names are pseudonymized as W[id]. If the user asks "Is John on sick leave?", the input you receive will automatically be "Is W[123] on sick leave?". You must ALWAYS use W[123] in your responses and tool calls. Never try to invent a real name. We will translate it back on the client side.
+IMPORTANT DATA PROTECTION: Worker names are pseudonymized as W[id]. If the user asks "Is John on sick leave?", the input you receive will automatically be "Is W[123] on sick leave?". You must ALWAYS use W[123] in your responses and tool calls. Never try to invent a real name. We will translate it back on the client side. Processing JMBG or OIB is forbidden. If the user explicitly enters a JMBG or OIB in the chat, you MUST warn them in your response that due to GDPR/ZZPL laws you are not allowed to process personal identification numbers, and they must enter them manually.
 
 - IMPORTANT: NEVER use "dummy" or fake data. If you are missing required data to create a record, ASK THE USER to provide it before calling the tool.
 - If the user says "go to", "open", "show me" a page → USE navigate_to immediately
@@ -667,13 +667,12 @@ const ZIA_TOOLS = [
     },
     {
         name: 'create_new_worker',
-        description: 'Create and save a new worker directly to the database. Ime (first name) is required. OIB and datumZaposlenja are completely OPTIONAL — do NOT ask the user for them if not provided, just leave them empty.',
+        description: 'Create and save a new worker directly to the database. Ime (first name) is required. DatumZaposlenja is optional. IMPORTANT: Do NOT ask for or process OIB or JMBG. If the user provides an OIB or JMBG, ignore it and explicitly tell the user in your text response that you are not allowed to process personal identification numbers due to GDPR/ZZPL laws and they must enter it manually.',
         parameters: {
             type: 'object',
             properties: {
                 ime: { type: 'string', description: 'First name (ime)' },
                 prezime: { type: 'string', description: 'Last name (prezime)' },
-                oib: { type: 'string', description: 'OIB or JMBG number. Optional, leave blank if not provided.' },
                 datumZaposlenja: { type: 'string', description: 'Employment start date (YYYY-MM-DD). Optional, leave blank if not provided.' },
             },
             required: ['ime']
@@ -1205,10 +1204,10 @@ export default function AIAssistant() {
                 const { create: createRecord, COLLECTIONS: COLS } = await import('@/lib/dataStore');
                 const newWorker = createRecord(COLS.WORKERS, {
                     ime: args.ime,
-                    prezime: args.prezime,
-                    identifikacijskiBroj: args.oib || '',
+                    prezime: args.prezime || '',
+                    identifikacijskiBroj: '',
                     datumZaposlenja: args.datumZaposlenja || new Date().toISOString().split('T')[0],
-                    oib: args.oib || '',
+                    oib: '',
                     aktivan: true
                 });
                 router.push(`/dashboard/workers?openWorker=${newWorker.id}`);
