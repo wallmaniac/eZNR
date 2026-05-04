@@ -24,6 +24,7 @@ export default function ObservationsPage() {
     
     // View Modal
     const [viewingItem, setViewingItem] = useState(null);
+    const [lastEditedId, setLastEditedId] = useState(null);
     const [showQR, setShowQR] = useState(false);
     
     // New Hazard Form State
@@ -189,7 +190,7 @@ export default function ObservationsPage() {
                                 {sortedItems.length === 0 ? (
                                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>{bs ? 'Nema prijavljenih opasnosti' : 'No hazard reports found'}</td></tr>
                                 ) : pagedItems.map(item => (
-                                    <tr key={item.id} onClick={() => setViewingItem(item)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                                    <tr key={item.id} onClick={() => setViewingItem(item)} style={{ background: lastEditedId === item.id ? 'rgba(102,126,234,0.15)' : undefined, cursor: 'pointer', transition: 'background 0.5s ease' }} onMouseEnter={e => e.currentTarget.style.background= lastEditedId === item.id ? 'rgba(102,126,234,0.25)' : 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background= lastEditedId === item.id ? 'rgba(102,126,234,0.15)' : ''}>
                                         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                             <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleOne(item.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                         </td>
@@ -282,7 +283,7 @@ export default function ObservationsPage() {
                     <div className="card animate-fadeIn" style={{ width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', background: 'var(--bg-page)' }}>
                         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)' }}>
                             <div style={{ fontWeight: 700 }}>🚨 Prijava Opasnosti <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginLeft: 12 }}>{new Date(viewingItem.datum).toLocaleString()}</span></div>
-                            <button className="btn btn-ghost btn-sm btn-icon" onClick={() => setViewingItem(null)}>✕</button>
+                            <button className="btn btn-ghost btn-sm btn-icon" onClick={() => { setLastEditedId(viewingItem.id); setViewingItem(null); }}>✕</button>
                         </div>
                         <div className="card-body" style={{ overflowY: 'auto', padding: 0 }}>
                             <div style={{ padding: 24 }}>
