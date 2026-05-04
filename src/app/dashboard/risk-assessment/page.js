@@ -11,6 +11,7 @@ import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useDialog } from '@/hooks/useDialog';
 import { generateSafeWordDoc } from '@/lib/riskExportDocx';
 import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
@@ -135,6 +136,8 @@ export default function RiskAssessmentPage() {
     const { t, lang } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
+    const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(async () => await handleSave());
+    const isDirtyRef = useRef(false);
 
     const [view, setView] = useState('list');
     const [records, setRecords] = useState([]);
@@ -247,7 +250,35 @@ export default function RiskAssessmentPage() {
         setRiskItems(getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === procjenaId));
     }, []);
 
-    const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+    const set = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        markDirty();
+        isDirtyRef.current = true;
+    };
+
+    const handleCancel = (skipHistoryBack = false) => {
+        markClean();
+        isDirtyRef.current = false;
+        setEditingId(null);
+        setView('list');
+        if (!skipHistoryBack && typeof window !== 'undefined') {
+            window.history.back();
+        }
+    };
+
+    const handleBack = () => {
+        window.history.back();
+    };
+
+    useEffect(() => {
+        const onPopState = () => {
+            if (view === 'form' && !contextIsDirty) {
+                handleCancel(true);
+            }
+        };
+        window.addEventListener('popstate', onPopState);
+        return () => window.removeEventListener('popstate', onPopState);
+    }, [view, contextIsDirty]);
 
     // ─── Procjene CRUD ───
     const handleNew = () => {
@@ -275,10 +306,16 @@ export default function RiskAssessmentPage() {
             datumIzrade: todayISO() 
         });
         setEditingId(null); setRiskItems([]); setActiveTab('opsti'); setView('form');
+        markClean();
+        isDirtyRef.current = false;
+        if (typeof window !== 'undefined') window.history.pushState({ riskForm: true }, '');
     };
     const handleEdit = (item) => {
         setFormData({ ...EMPTY_PROCJENA, ...item });
         setEditingId(item.id); loadRiskItems(item.id); setActiveTab('opsti'); setView('form');
+        markClean();
+        isDirtyRef.current = false;
+        if (typeof window !== 'undefined') window.history.pushState({ riskForm: true }, '');
     };
     const handleDelete = async (id) => {
         if (await confirm(lang === 'bs' ? 'Obrisati procjenu i sve stavke?' : 'Delete assessment and all items?')) {
@@ -358,6 +395,8 @@ export default function RiskAssessmentPage() {
 
         loadData();
         showFlash();
+        markClean();
+        isDirtyRef.current = false;
     };
 
     // ─── Risk Items CRUD ───
@@ -405,6 +444,8 @@ export default function RiskAssessmentPage() {
                 opisProcesa: result.opisProcesa || prev.opisProcesa,
                 analizaOrganizacije: result.analizaOrganizacije || prev.analizaOrganizacije
             }));
+            markDirty();
+            isDirtyRef.current = true;
             showFlash();
         } catch (err) { alert('Greška: ' + err.message); }
         setAiOpisLoading(false);
@@ -488,6 +529,8 @@ export default function RiskAssessmentPage() {
             opisProcesa: docAiResult.opisProcesa || prev.opisProcesa,
             analizaOrganizacije: docAiResult.analizaOrganizacije || prev.analizaOrganizacije
         }));
+        markDirty();
+        isDirtyRef.current = true;
         
         // Predložena oprema (create unlinked array or just hint)
         // Ako želimo automatski integrirati, možda je bolje to ostaviti kao alert ili appendovati u opis procesa
@@ -1051,7 +1094,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
         return (
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                    <button className="btn btn-ghost" onClick={() => setView('list')}>← {lang === 'bs' ? 'Procjene' : 'Assessments'}</button>
+                    <button className="btn btn-ghost" onClick={handleBack}>← {lang === 'bs' ? 'Procjene' : 'Assessments'}</button>
                     <h1 style={{ margin: 0 }}>📊 {editingId ? (lang === 'bs' ? 'Uredi procjenu' : 'Edit') : (lang === 'bs' ? 'Nova procjena rizika' : 'New assessment')}</h1>
                 </div>
                 <DialogRenderer />
@@ -1110,7 +1153,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         </div>
                         <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
                             <button className="btn btn-primary" title="Spasite sve dosadašnje promjene" onClick={handleSave}>💾 {t('save')}</button>
-                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={() => setView('list')}>↩ {t('cancel')}</button>
+                            <button className="btn btn-ghost" title="Zatvorite formu i vratite se na početnu listu" onClick={handleBack}>↩ {t('cancel')}</button>
                             <SavedFlash />
                         </div>
                     </div></div>

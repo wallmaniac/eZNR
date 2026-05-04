@@ -37,7 +37,7 @@ Važno: Vrati odgovor isključivo kao JSON objekat sa sljedeća dva ključa (bez
 }`;
 
         const data = await apiCallZia({
-            systemPrompt: 'Ti si ekspert za zaštitu na radu. Tvoj izlaz mora biti isključivo validan JSON bez markdown code blokova.',
+            systemPrompt: 'Ti si ekspert za zaštitu na radu. Tvoj izlaz mora biti isključivo validan JSON bez markdown code blokova. Strogo pazi: ukoliko tekst sadrži nove redove (paragrafe), obavezno ih escape-uj kao "\\n". Znak za novi red ne smije biti doslovno u stringu.',
             messages: [{ role: 'user', parts: [{ text: prompt }] }]
         });
 
@@ -45,7 +45,12 @@ Važno: Vrati odgovor isključivo kao JSON objekat sa sljedeća dva ključa (bez
         
         let parsed;
         try {
-            const clean = data.text.replace(/```json/g, '').replace(/```/g, '').trim();
+            let clean = data.text.replace(/```json/gi, '').replace(/```JSON/gi, '').replace(/```/g, '').trim();
+            const startIdx = clean.indexOf('{');
+            const endIdx = clean.lastIndexOf('}');
+            if (startIdx !== -1 && endIdx !== -1) {
+                clean = clean.substring(startIdx, endIdx + 1);
+            }
             parsed = JSON.parse(clean);
         } catch(e) {
             console.error('Failed to parse AI response:', data.text);
