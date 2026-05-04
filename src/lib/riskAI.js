@@ -131,7 +131,7 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
     }
 };
 
-export const apiGenerateRiskTable = async (jobTitle, companyName, industry) => {
+export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sistContext) => {
     try {
         // PII Sanitization
         const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
@@ -139,7 +139,8 @@ export const apiGenerateRiskTable = async (jobTitle, companyName, industry) => {
         const response = await callFirebaseFunction('generateRiskTable', {
             jobTitle,
             companyName: sanitizedCompanyName,
-            industry: industry || 'Opća djelatnost'
+            industry: industry || 'Opća djelatnost',
+            sistematizacijaKontekst: sistContext || '',
         });
         
         if (!response.success || !response.items) {

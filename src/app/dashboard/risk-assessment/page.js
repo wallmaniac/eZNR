@@ -742,14 +742,47 @@ export default function RiskAssessmentPage() {
             return;
         }
         
+        // ─── DEDUPLICATE by workplace name ───
+        // If 15 workers have "Vozač", we only generate risks ONCE for "Vozač"
+        const uniqueByName = new Map();
+        for (const wp of wpTargets) {
+            const key = wp.naziv.trim().toLowerCase();
+            if (!uniqueByName.has(key)) {
+                uniqueByName.set(key, wp);
+            }
+        }
+        const dedupedTargets = [...uniqueByName.values()];
+        
         setAiGenLoading(true);
         let totalCreated = 0;
         let errors = [];
         
         try {
-            for (const wp of wpTargets) {
+            for (const wp of dedupedTargets) {
                 try {
-                    const items = await apiGenerateRiskTable(wp.naziv, formData.nazivTvrtke, formData.djelatnost);
+                    // Build sistematizacija context for this workplace
+                    const sist = sistematizacije.find(s => s.radnoMjestoId === wp.id);
+                    let sistContext = '';
+                    if (sist) {
+                        const parts = [];
+                        if (sist.opisPoslova) parts.push(`Opis poslova: ${sist.opisPoslova}`);
+                        if (sist.kategorijaRM) parts.push(`Kategorija: ${sist.kategorijaRM}`);
+                        if (sist.slozenostPoslova) parts.push(`Složenost: ${sist.slozenostPoslova}`);
+                        if (sist.potrebnaOZO?.length) parts.push(`OZO: ${sist.potrebnaOZO.join(', ')}`);
+                        if (sist.radnaOprema?.length) parts.push(`Oprema: ${sist.radnaOprema.join(', ')}`);
+                        if (sist.certifikati?.length) parts.push(`Certifikati: ${sist.certifikati.join(', ')}`);
+                        if (sist.zdravstveniZahtjevi?.length) parts.push(`Zdravstveni zahtjevi: ${sist.zdravstveniZahtjevi.join(', ')}`);
+                        if (sist.posebniUvjeti?.length) parts.push(`Posebni uvjeti: ${(Array.isArray(sist.posebniUvjeti) ? sist.posebniUvjeti : Object.values(sist.posebniUvjeti)).join(', ')}`);
+                        if (sist.odgovornosti) parts.push(`Odgovornosti: ${sist.odgovornosti}`);
+                        sistContext = parts.join('. ');
+                    }
+                    
+                    const items = await apiGenerateRiskTable(
+                        wp.naziv, 
+                        formData.nazivTvrtke, 
+                        formData.djelatnost,
+                        sistContext
+                    );
                     for (const item of items) {
                         const rizik = item.vjerovatnoca * item.posljedica;
                         const rizikNakon = (item.vjerovatnocaNakon || 0) * (item.posljedlicaNakon || 0);
@@ -789,7 +822,10 @@ export default function RiskAssessmentPage() {
             if (errors.length > 0) {
                 alert(`Generisano ${totalCreated} stavki. Greške za: ${errors.join('; ')}`);
             } else {
-                alert(`Uspješno generisano ${totalCreated} stavki procjene za ${wpTargets.length} radno/a mjesto/a.`);
+                const skipped = wpTargets.length - dedupedTargets.length;
+                let msg = `Uspješno generisano ${totalCreated} stavki za ${dedupedTargets.length} jedinstveno/a radno/a mjesto/a.`;
+                if (skipped > 0) msg += ` (${skipped} duplikata preskočeno)`;
+                alert(msg);
             }
         } catch (err) {
             alert('Greška pri AI izradi: ' + err.message);
@@ -1639,12 +1675,27 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </div>
 
                                             {/* Summary */}
-                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16, padding: '8px 12px', borderRadius: 8, background: 'rgba(102,126,234,0.06)', border: '1px solid var(--border)' }}>
-                                                📊 Generisat će se procjena za <strong style={{ color: 'var(--primary)' }}>{aiGenSelectedWps.length + (aiGenCustomWp.trim() ? 1 : 0)}</strong> radno/a mjesto/a
-                                                {aiGenSelectedWps.length + (aiGenCustomWp.trim() ? 1 : 0) > 0 && (
-                                                    <span> — oko {(aiGenSelectedWps.length + (aiGenCustomWp.trim() ? 1 : 0)) * 10} stavki ukupno</span>
-                                                )}
-                                            </div>
+                                            {(() => {
+                                                const allSelected = aiGenSelectedWps.map(id => workplaces.find(w => w.id === id)?.naziv || '').filter(Boolean);
+                                                if (aiGenCustomWp.trim()) allSelected.push(aiGenCustomWp.trim());
+                                                const uniqueNames = new Set(allSelected.map(n => n.trim().toLowerCase()));
+                                                const totalSelected = allSelected.length;
+                                                const uniqueCount = uniqueNames.size;
+                                                const hasDuplicates = totalSelected > uniqueCount;
+                                                return (
+                                                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16, padding: '8px 12px', borderRadius: 8, background: 'rgba(102,126,234,0.06)', border: '1px solid var(--border)' }}>
+                                                        📊 Generisat će se procjena za <strong style={{ color: 'var(--primary)' }}>{uniqueCount}</strong> jedinstveno/a radno/a mjesto/a
+                                                        {uniqueCount > 0 && (
+                                                            <span> — oko {uniqueCount * 10} stavki ukupno</span>
+                                                        )}
+                                                        {hasDuplicates && (
+                                                            <div style={{ marginTop: 4, fontSize: '0.72rem', color: 'var(--warning)' }}>
+                                                                ⚠️ {totalSelected - uniqueCount} duplikat(a) preskočeno — ista radna mjesta se procjenjuju samo jednom.
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })()}
 
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                                                 <button className="btn btn-ghost" onClick={() => setShowAiGenTableModal(false)} disabled={aiGenLoading}>{t('cancel')}</button>
