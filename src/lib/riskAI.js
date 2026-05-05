@@ -271,20 +271,112 @@ Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mje
 
 export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sistContext) => {
     try {
-        // PII Sanitization
         const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
         
-        const response = await callFirebaseFunction('generateRiskTable', {
-            jobTitle,
-            companyName: sanitizedCompanyName,
-            industry: industry || 'Opća djelatnost',
-            sistematizacijaKontekst: sistContext || '',
-        });
-        
-        if (!response.success || !response.items) {
-            throw new Error(response.error || 'AI nije uspio generisati tabelu rizika.');
+        const systemPrompt = `Ti si certificirani stručnjak za zaštitu na radu (ZNR) u Federaciji Bosne i Hercegovine, specijalizovan za izradu procjena rizika prema:
+- Zakon o zaštiti na radu FBiH (Službene novine FBiH 79/20)
+- Pravilnik o procjeni rizika
+- Pravilnik o sredstvima i opremi za ličnu zaštitu na radu
+
+TVOJ ZADATAK: Za dato radno mjesto generiši REALNU tabelu procjene rizika sa 8-15 stavki (opasnosti).
+
+KRITIČNA PRAVILA:
+1. Generiši SAMO opasnosti koje su STVARNO relevantne za dato radno mjesto. NE generiši opasnosti koje se ne odnose na opisane poslove.
+2. Ako je dostavljena SISTEMATIZACIJA RADNOG MJESTA, koristi ISKLJUČIVO te podatke kao osnovu za identifikaciju opasnosti.
+3. Ocjene V (vjerovatnoća) i P (posljedica) moraju biti KONZISTENTNE - iste opasnosti na istom radnom mjestu uvijek imaju istu ocjenu.
+4. Odgovori ISKLJUČIVO u JSON formatu (niz objekata), bez markdown blokova, komentara ili dodatnog teksta.
+5. Mjere moraju biti konkretne, provodive i u skladu sa FBiH zakonodavstvom.
+6. Ocjene NAKON primjene mjera moraju biti NIŽE od početnih i realistične.
+
+SKALA VJEROVATNOĆE (V):
+1 = Vrlo malo vjerovatno
+2 = Malo vjerovatno
+3 = Moguće
+4 = Vjerovatno
+5 = Vrlo vjerovatno
+
+SKALA POSLJEDICE (P):
+1 = Zanemariva
+2 = Mala
+3 = Umjerena
+4 = Ozbiljna
+5 = Katastrofalna
+
+OČEKIVANI JSON FORMAT:
+{
+  "items": [
+    {
+      "opisOpasnosti": "Konkretan opis opasnosti",
+      "vjerovatnoca": 3,
+      "posljedica": 4,
+      "postojeceMjere": "Konkretne postojeće mjere",
+      "predlozeneMjere": "Konkretne dodatne mjere",
+      "vjerovatnocaNakon": 2,
+      "posljedlicaNakon": 3,
+      "rokProvedbe": "90"
+    }
+  ]
+}`;
+
+        let userMsg = `RADNO MJESTO: ${jobTitle}\nFIRMA: ${sanitizedCompanyName}\nDJELATNOST: ${industry || 'Nije navedeno'}`;
+
+        if (sistContext) {
+            userMsg += `\n\nSISTEMATIZACIJA RADNOG MJESTA:\n${sistContext}`;
         }
-        return response.items;
+
+        userMsg += `\n\nVAŽNO: Generiši 8-15 stavki procjene rizika ISKLJUČIVO za poslove koje ovo radno mjesto STVARNO obavlja.`;
+
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        if (!apiKey) throw new Error("API ključ za AI nije konfigurisan.");
+
+        const geminiBody = {
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
+        };
+
+        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+        let lastError = null;
+
+        for (const model of models) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(geminiBody)
+                });
+
+                if (!res.ok) {
+                    if (res.status === 503 || res.status >= 500) {
+                        lastError = new Error(`Model ${model} je privremeno nedostupan.`);
+                        continue;
+                    }
+                    throw new Error(`Greška na API-ju (${res.status})`);
+                }
+
+                const responseData = await res.json();
+                const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                
+                if (!text) {
+                    lastError = new Error("AI model nije vratio sadržaj.");
+                    continue;
+                }
+
+                const parsed = JSON.parse(text);
+                const items = Array.isArray(parsed) ? parsed : (parsed.items || [parsed]);
+                
+                if (!items || items.length === 0) {
+                    lastError = new Error("AI model je vratio neispravan JSON format.");
+                    continue;
+                }
+
+                return items;
+            } catch (err) {
+                lastError = err;
+            }
+        }
+
+        throw new Error(lastError?.message || 'Svi AI modeli su trenutno nedostupni. Pokušajte ponovo kasnije.');
     } catch (err) {
         throw new Error(err.message || 'Nepoznata greška pri generisanju rizika');
     }
