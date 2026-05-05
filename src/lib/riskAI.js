@@ -221,7 +221,7 @@ Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mje
         const geminiBody = {
             system_instruction: { parts: [{ text: systemPrompt }] },
             contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' },
+            generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
         };
 
         const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
