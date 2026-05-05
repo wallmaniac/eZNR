@@ -158,6 +158,7 @@ export default function RiskAssessmentPage() {
     const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
     const menuButtonRef = useRef(null);
     const [selectedIds, setSelectedIds] = useState(new Set());
+    const [selectedRiIds, setSelectedRiIds] = useState(new Set());
 
     // Click outside listener for dropdown
     useEffect(() => {
@@ -427,8 +428,19 @@ export default function RiskAssessmentPage() {
         setRiForm({ ...ri }); setRiEditId(ri.id); setShowRiForm(true); setLastEditedRiId(null);
     };
     const handleDeleteRi = async (id) => {
-        if (await confirm(lang === 'bs' ? 'Obrisati stavku?' : 'Delete item?')) {
+        if (await confirm(lang === 'bs' ? 'Obriši stavku?' : 'Delete item?')) {
             remove(COLLECTIONS.RISK_ITEMS, id); loadRiskItems(editingId);
+        }
+    };
+    
+    const handleBulkDeleteRi = async () => {
+        if (selectedRiIds.size === 0) return;
+        if (await confirm(lang === 'bs' ? `Obrisati ${selectedRiIds.size} odabranih stavki?` : `Delete ${selectedRiIds.size} selected items?`)) {
+            for (const id of selectedRiIds) {
+                remove(COLLECTIONS.RISK_ITEMS, id);
+            }
+            setSelectedRiIds(new Set());
+            loadRiskItems(editingId);
         }
     };
     const handleSaveRi = () => {
@@ -659,6 +671,17 @@ export default function RiskAssessmentPage() {
     // ─── Import from Questionnaire ───
     const handleImportFromQuestionnaire = async (q) => {
         if (!editingId) return;
+        
+        const existingItems = riskItems.filter(ri => ri.questionnaireId === q.id);
+        if (existingItems.length > 0) {
+            if (!await confirm(`Već ste uvezli ${existingItems.length} stavki iz ovog upitnika. Želite li izbrisati prethodne i generisati nove?`)) {
+                return;
+            }
+            for (const item of existingItems) {
+                remove(COLLECTIONS.RISK_ITEMS, item.id);
+            }
+        }
+
         setImportLoading(true);
         try {
             const wp = workplaces.find(w => w.id === q.radnoMjestoId);
@@ -1873,7 +1896,17 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki. Kliknite na matricu ili "Dodaj stavku".' : 'No items yet.'}</div>}
                                             {riSorted.length > 0 && (
                                                 <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                                                    <th style={{ width: 70 }}></th><th>Radno mjesto</th><th>Opasnost</th>
+                                                    <th style={{ width: 85, paddingLeft: 8 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                            <input type="checkbox" checked={selectedRiIds.size === riSorted.length && riSorted.length > 0} onChange={() => {
+                                                                if (selectedRiIds.size === riSorted.length) setSelectedRiIds(new Set());
+                                                                else setSelectedRiIds(new Set(riSorted.map(ri => ri.id)));
+                                                            }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 16, height: 16 }} title="Označi sve" />
+                                                            {selectedRiIds.size > 0 && (
+                                                                <button className="btn btn-ghost btn-sm" onClick={handleBulkDeleteRi} title="Obriši označene" style={{ color: 'var(--danger)', padding: '0px 4px', minHeight: 'auto', height: 'auto', fontSize: '1rem' }}>🗑️</button>
+                                                            )}
+                                                        </div>
+                                                    </th><th>Radno mjesto</th><th>Opasnost</th>
                                                     <th style={{ width: 50, textAlign: 'center' }}>V</th><th style={{ width: 50, textAlign: 'center' }}>P</th>
                                                     <th style={{ width: 50, textAlign: 'center' }}>R₀</th><th>Prije</th>
                                                     <th style={{ width: 50, textAlign: 'center' }}>R₁</th><th>Nakon</th><th style={{ width: 40 }}></th>
@@ -1887,7 +1920,12 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     return (
                                                         <tbody key={ri.id}>
                                                             <tr onClick={() => handleEditRi(ri)} style={{ ...(showRiForm && riEditId === ri.id ? { background: 'var(--bg-input)' } : lastEditedRiId === ri.id ? { background: 'rgba(102,126,234,0.15)', transition: 'background 0.5s ease' } : {}), cursor: 'pointer' }}>
-                                                                <td><div style={{ display: 'flex', gap: 4 }}>
+                                                                <td onClick={(e) => e.stopPropagation()} style={{ paddingLeft: 8 }}><div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+                                                                    <input type="checkbox" checked={selectedRiIds.has(ri.id)} onChange={() => {
+                                                                        const next = new Set(selectedRiIds);
+                                                                        if (next.has(ri.id)) next.delete(ri.id); else next.add(ri.id);
+                                                                        setSelectedRiIds(next);
+                                                                    }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 15, height: 15 }} />
                                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Uredi stavku' : 'Edit item'} onClick={(e) => { e.stopPropagation(); handleEditRi(ri); }}>✏️</button>
                                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši stavku' : 'Delete item'} style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDeleteRi(ri.id); }}>🗑️</button>
                                                                 </div></td>
