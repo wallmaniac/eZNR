@@ -175,48 +175,37 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
             if (sistematizacija.zdravstveniZahtjevi?.length) sistContext += `\nZdravstveni zahtjevi: ${sistematizacija.zdravstveniZahtjevi.join(', ')}`;
         }
 
-        // Route through Next.js API proxy (server-side, 60s timeout, full fallback chain)
-        const res = await fetch('/api/analyze-questionnaire', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                workplaceName,
-                responseSummary,
-                sistContext,
-                hasSistematizacija: !!sistematizacija,
-            }),
+        // Route through Firebase Cloud Functions (5-minute timeout, full fallback chain)
+        const result = await callFirebaseFunction('analyzeQuestionnaire', {
+            workplaceName,
+            responseSummary,
+            sistContext,
+            sistematizacija
         });
 
-        const result = await res.json();
-
-        if (!res.ok || !result.success) {
-            throw new Error(result.error || `Server greska (${res.status})`);
+        if (!result.success || !result.analysis) {
+            throw new Error(result.error || `Greška pri analizi upitnika`);
         }
 
-        return { data: result.data, raw: JSON.stringify(result.data) };
+        return { data: result.analysis, raw: JSON.stringify(result.analysis) };
     } catch (err) {
         throw new Error(err.message || 'Nepoznata greska pri analizi upitnika');
     }
 };
 
 export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sistContext) => {
-    // Route through our Next.js API proxy (/api/generate-risk-table)
-    // This avoids browser CORS limits, hides the API key, and gives a full 60s server timeout.
+    // Route through Firebase Cloud Functions
+    // This avoids Vercel's 10-second timeout limit and uses Firebase's 5-minute timeout.
     try {
-        const res = await fetch('/api/generate-risk-table', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                jobTitle,
-                industry: industry || 'Opća djelatnost',
-                sistematizacijaKontekst: sistContext || '',
-            }),
+        const data = await callFirebaseFunction('generateRiskTable', {
+            jobTitle,
+            companyName: companyName || '',
+            industry: industry || 'Opća djelatnost',
+            sistematizacijaKontekst: sistContext || '',
         });
 
-        const data = await res.json();
-
-        if (!res.ok || !data.success || !data.items) {
-            throw new Error(data.error || `Server greška (${res.status})`);
+        if (!data.success || !data.items) {
+            throw new Error(data.error || `Greška pri generisanju tabele rizika`);
         }
 
         return data.items;
