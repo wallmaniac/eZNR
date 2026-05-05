@@ -18,7 +18,7 @@ export default function PrintTemplatePage() {
     const today = new Date().toLocaleDateString('bs-BA');
 
     return (
-        <div style={{ maxWidth: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm', background: 'white', color: 'black', fontFamily: 'serif', boxSizing: 'border-box' }}>
+        <div className="print-template-wrapper" style={{ maxWidth: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm', fontFamily: 'serif', boxSizing: 'border-box' }}>
             {type === 'ZOS' ? (
                 <>
                     <div style={{ textAlign: 'center', marginBottom: '10mm', fontWeight: 'bold' }}>
@@ -118,6 +118,10 @@ export default function PrintTemplatePage() {
             )}
 
             <style>{`
+                .print-template-wrapper {
+                    background-color: white !important;
+                    color: black !important;
+                }
                 @media print {
                     body { background: white !important; margin: 0; padding: 0; }
                     nav, header, footer, .sidebar, button { display: none !important; }

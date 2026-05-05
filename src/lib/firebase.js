@@ -24,6 +24,13 @@ if (getApps().length === 0) {
 let firestoreDb;
 try {
     if (typeof window !== 'undefined') {
+        // Suppress non-fatal Firestore multi-tab warnings
+        const originalError = console.error;
+        console.error = (...args) => {
+            if (typeof args[0] === 'string' && args[0].includes('Failed to obtain primary lease')) return;
+            originalError.apply(console, args);
+        };
+
         firestoreDb = initializeFirestore(app, {
             localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
         });
