@@ -1636,7 +1636,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <div className="card" style={{ marginBottom: 16 }}><div className="card-body">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                                     <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>STAVKE PROCJENE ({riskItems.length})</div>
-                                    <div style={{ display: 'flex', gap: 8 }}>
+                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                        {selectedRiIds.size > 0 && (
+                                            <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginRight: 8 }}>
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedRiIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
+                                                <button className="btn btn-danger btn-sm" onClick={handleBulkDeleteRi}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                            </div>
+                                        )}
                                         <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)} title="Uvezite prepoznate opasnosti i nedostatke iz odgovora radnika na online upitnike"
                                             style={{ background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             📋 Uvezi iz upitnika
@@ -1902,9 +1908,6 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                 if (selectedRiIds.size === riSorted.length) setSelectedRiIds(new Set());
                                                                 else setSelectedRiIds(new Set(riSorted.map(ri => ri.id)));
                                                             }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 16, height: 16 }} title="Označi sve" />
-                                                            {selectedRiIds.size > 0 && (
-                                                                <button className="btn btn-ghost btn-sm" onClick={handleBulkDeleteRi} title="Obriši označene" style={{ color: 'var(--danger)', padding: '0px 4px', minHeight: 'auto', height: 'auto', fontSize: '1rem' }}>🗑️</button>
-                                                            )}
                                                         </div>
                                                     </th><th>Radno mjesto</th><th>Opasnost</th>
                                                     <th style={{ width: 50, textAlign: 'center' }}>V</th><th style={{ width: 50, textAlign: 'center' }}>P</th>
