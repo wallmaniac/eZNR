@@ -97,12 +97,18 @@ export const fetchAiAutoConclusion = async (riskItems, formData) => {
             }]
         }],
     });
-    if (!data.text) {
-        throw new Error(data.error || 'Generisanje zaključka nije uspjelo');
+    if (!data) {
+        throw new Error('Generisanje zaključka nije uspjelo');
     }
     
+    // Sometimes the backend might return the text directly as a string instead of { text: '...' }
+    let finalText = typeof data === 'string' ? data : data.text;
+    
+    if (!finalText) {
+        throw new Error(data.error || 'Generisanje zaključka nije uspjelo');
+    }
+
     // Restore PII
-    let finalText = data.text;
     if (formData.nazivTvrtke) {
         finalText = finalText.replace(/\[Zaštićen Naziv Kompanije\]/g, formData.nazivTvrtke);
     }

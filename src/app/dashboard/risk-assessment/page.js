@@ -2086,7 +2086,33 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 );
                             })()}
 
-                            <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                                <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
+                                {highRisk.length > 0 && (
+                                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Dodijeli svima:' : 'Assign to all:'}</div>
+                                        <div style={{ display: 'flex', gap: 4 }}>
+                                            <input
+                                                id="bulkOdgovornaOsoba"
+                                                className="form-input"
+                                                style={{ fontSize: '0.75rem', padding: '4px 8px', width: 160 }}
+                                                list="workers-list"
+                                                placeholder={lang === 'bs' ? 'Odgovorna osoba' : 'Responsible person'}
+                                            />
+                                            <button className="btn btn-outline btn-sm" onClick={() => {
+                                                const val = document.getElementById('bulkOdgovornaOsoba').value;
+                                                if (val) {
+                                                    setRiskItems(prev => prev.map(ri => ri.rizik >= 6 ? { ...ri, odgovornaOsoba: val } : ri));
+                                                    setUnsaved(true);
+                                                    document.getElementById('bulkOdgovornaOsoba').value = '';
+                                                }
+                                            }} style={{ padding: '4px 10px', height: 'auto', minHeight: 'auto' }}>
+                                                {lang === 'bs' ? 'Primijeni' : 'Apply'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                             {highRisk.length === 0
                                 ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang === 'bs' ? 'Nema stavki sa rizikom ≥ 6. Sve je u prihvatljivom okviru.' : 'No items with risk ≥ 6.'}</div>
                                 : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
