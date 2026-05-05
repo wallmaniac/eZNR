@@ -412,7 +412,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             </span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={cancelBtnStyle}>
-                                    {t('cancel')}
+                                    {lang === 'bs' ? 'Odustani' : 'Cancel'}
                                 </button>
                                 <button
                                     onClick={handleSend}

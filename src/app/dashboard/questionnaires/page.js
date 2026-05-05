@@ -434,8 +434,8 @@ export default function QuestionnairesPage() {
                     <th style={tsRec('zaVrstu')} onClick={() => tRec('zaVrstu')}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}{siRec('zaVrstu')}</th>
                     <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
                     <th style={tsRec('rokIsteka')} onClick={() => tRec('rokIsteka')}>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}{siRec('rokIsteka')}</th>
-                    <th style={tsRec('prikaziNaPortalu')} onClick={() => tRec('prikaziNaPortalu')}>{lang === 'bs' ? 'Prika�i na portalu' : 'Show on portal'}{siRec('prikaziNaPortalu')}</th>
-                    <th style={tsRec('predlozak')} onClick={() => tRec('predlozak')}>{lang === 'bs' ? 'Predlo�ak' : 'Template'}{siRec('predlozak')}</th>
+                    <th style={tsRec('prikaziNaPortalu')} onClick={() => tRec('prikaziNaPortalu')}>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}{siRec('prikaziNaPortalu')}</th>
+                    <th style={tsRec('predlozak')} onClick={() => tRec('predlozak')}>{lang === 'bs' ? 'Predložak' : 'Template'}{siRec('predlozak')}</th>
                     <th style={tsRec('jezik')} onClick={() => tRec('jezik')}>{lang === 'bs' ? 'Jezik' : 'Language'}{siRec('jezik')}</th>
                   </tr>
                 </thead>
