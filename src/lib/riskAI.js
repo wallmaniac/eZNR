@@ -175,228 +175,53 @@ export const apiAnalyzeQuestionnaire = async (payload) => {
             if (sistematizacija.zdravstveniZahtjevi?.length) sistContext += `\nZdravstveni zahtjevi: ${sistematizacija.zdravstveniZahtjevi.join(', ')}`;
         }
 
-        const systemPrompt = `Ti si strucnjak za zastitu na radu (ZNR) u Bosni i Hercegovini.
-Analiziras zbirne odgovore iz upitnika SVIH radnika na ovom radnom mjestu i generises jedinstvene, konsolidovane stavke procjene rizika. Ne smijes duplirati opasnosti - ako se vise radnika zali na istu stvar, kreiraj samo jednu stavku rizika koja pokriva taj problem.
+        // Route through Next.js API proxy (server-side, 60s timeout, full fallback chain)
+        const res = await fetch('/api/analyze-questionnaire', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                workplaceName,
+                responseSummary,
+                sistContext,
+                hasSistematizacija: !!sistematizacija,
+            }),
+        });
 
-ZADATAK: Na osnovu grupnih odgovora iz upitnika${sistematizacija ? ' i sistematizacije radnog mjesta' : ''}, identifikuj sve jedinstvene opasnosti i stetnosti i za svaku procijeni vjerovatnocu (V) i posljedicu (P) na skali 1-5.
+        const result = await res.json();
 
-PRAVILA:
-- Odgovori ISKLJUCIVO u JSON formatu i ne koristi Markdown blokove. Sadrzaj mora poceti sa { i zavrsiti sa }.
-- Ne dupliraj stavke. Grupisi iste opasnosti koje je navelo vise radnika.
-- Za svaku identifikovanu jedinstvenu opasnost kreiraj zasebnu stavku.
-- Procijeni V (1-5) i P (1-5). Ako se mnogo radnika zali na nesto, povecaj V. Ako je opasno, povecaj P.
-- Ako postoji sistematizacija, koristi uvjete rada za identifikaciju opasnosti.
-- Predlozi postojece mjere (iz odgovora) i dodatne predlozene mjere.
-- Generisi 5-10 stavki, KRATKO i SAZETO.
-
-JSON FORMAT:
-{
-  "items": [
-    {
-      "opisOpasnosti": "Opis opasnosti",
-      "kategorija": "fizicka|kemijska|bioloska|ergonomska|psihosocijalna|mehanicka|elektricna",
-      "vjerovatnoca": 3,
-      "posljedica": 4,
-      "postojeceMjere": "Mjere koje su vec na snazi",
-      "predlozeneMjere": "Dodatne preporucene mjere",
-      "vjerovatnocaNakon": 2,
-      "posljedlicaNakon": 3,
-      "rokProvedbe": "30|60|90|180",
-      "obrazlozenje": "Kratko obrazlozenje zasto je rizik tako procijenjen na osnovu odgovora radnika."
-    }
-  ],
-  "ukupniKomentar": "Kratki sazetak analize na nivou grupe radnika"
-}`;
-
-        const userMsg = `RADNO MJESTO: ${workplaceName || 'Nepoznato'}
-
-ZBIRNI ODGOVORI SVIH RADNIKA IZ UPITNIKA:
-${responseSummary}${sistContext}
-
-Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mjesta' : ''} i generisi konsolidovane stavke procjene rizika u trazenom JSON formatu.`;
-
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("API ključ za AI nije konfigurisan.");
-
-        const geminiBody = {
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
-        };
-
-        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-        let lastError = null;
-
-        for (const model of models) {
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(geminiBody)
-                });
-
-                if (!res.ok) {
-                    if (res.status === 503 || res.status >= 500) {
-                        lastError = new Error(`Model ${model} je privremeno nedostupan.`);
-                        continue; // Try next model
-                    }
-                    throw new Error(`Greška na API-ju (${res.status})`);
-                }
-
-                const responseData = await res.json();
-                const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                
-                if (!text) {
-                    lastError = new Error("AI model nije vratio sadržaj.");
-                    continue;
-                }
-
-                const parsed = JSON.parse(text);
-                if (!parsed || !parsed.items) {
-                    lastError = new Error("AI model je vratio neispravan JSON format.");
-                    continue;
-                }
-
-                return { data: parsed, raw: text };
-            } catch (err) {
-                lastError = err;
-            }
+        if (!res.ok || !result.success) {
+            throw new Error(result.error || `Server greska (${res.status})`);
         }
 
-        throw new Error(lastError?.message || 'Svi AI modeli su trenutno nedostupni. Pokušajte ponovo kasnije.');
+        return { data: result.data, raw: JSON.stringify(result.data) };
     } catch (err) {
         throw new Error(err.message || 'Nepoznata greska pri analizi upitnika');
     }
 };
 
 export const apiGenerateRiskTable = async (jobTitle, companyName, industry, sistContext) => {
+    // Route through our Next.js API proxy (/api/generate-risk-table)
+    // This avoids browser CORS limits, hides the API key, and gives a full 60s server timeout.
     try {
-        const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
-        
-        const systemPrompt = `Ti si certificirani stručnjak za zaštitu na radu (ZNR) u Federaciji Bosne i Hercegovine, specijalizovan za izradu procjena rizika prema:
-- Zakon o zaštiti na radu FBiH (Službene novine FBiH 79/20)
-- Pravilnik o procjeni rizika
-- Pravilnik o sredstvima i opremi za ličnu zaštitu na radu
+        const res = await fetch('/api/generate-risk-table', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                jobTitle,
+                industry: industry || 'Opća djelatnost',
+                sistematizacijaKontekst: sistContext || '',
+            }),
+        });
 
-TVOJ ZADATAK: Za dato radno mjesto generiši REALNU tabelu procjene rizika sa 8-15 stavki (opasnosti).
+        const data = await res.json();
 
-KRITIČNA PRAVILA:
-1. Generiši SAMO opasnosti koje su STVARNO relevantne za dato radno mjesto. NE generiši opasnosti koje se ne odnose na opisane poslove.
-2. Ako je dostavljena SISTEMATIZACIJA RADNOG MJESTA, koristi ISKLJUČIVO te podatke kao osnovu za identifikaciju opasnosti.
-3. Ocjene V (vjerovatnoća) i P (posljedica) moraju biti KONZISTENTNE - iste opasnosti na istom radnom mjestu uvijek imaju istu ocjenu.
-4. Odgovori ISKLJUČIVO u JSON formatu (niz objekata), bez markdown blokova, komentara ili dodatnog teksta.
-5. Mjere moraju biti konkretne, provodive i u skladu sa FBiH zakonodavstvom.
-6. Ocjene NAKON primjene mjera moraju biti NIŽE od početnih i realistične.
-
-SKALA VJEROVATNOĆE (V):
-1 = Vrlo malo vjerovatno
-2 = Malo vjerovatno
-3 = Moguće
-4 = Vjerovatno
-5 = Vrlo vjerovatno
-
-SKALA POSLJEDICE (P):
-1 = Zanemariva
-2 = Mala
-3 = Umjerena
-4 = Ozbiljna
-5 = Katastrofalna
-
-OČEKIVANI JSON FORMAT:
-{
-  "items": [
-    {
-      "opisOpasnosti": "Konkretan opis opasnosti",
-      "vjerovatnoca": 3,
-      "posljedica": 4,
-      "postojeceMjere": "Konkretne postojeće mjere",
-      "predlozeneMjere": "Konkretne dodatne mjere",
-      "vjerovatnocaNakon": 2,
-      "posljedlicaNakon": 3,
-      "rokProvedbe": "90"
-    }
-  ]
-}`;
-
-        let userMsg = `RADNO MJESTO: ${jobTitle}\nFIRMA: ${sanitizedCompanyName}\nDJELATNOST: ${industry || 'Nije navedeno'}`;
-
-        if (sistContext) {
-            userMsg += `\n\nSISTEMATIZACIJA RADNOG MJESTA:\n${sistContext}`;
+        if (!res.ok || !data.success || !data.items) {
+            throw new Error(data.error || `Server greška (${res.status})`);
         }
 
-        userMsg += `\n\nVAŽNO: Generiši 8-15 stavki procjene rizika ISKLJUČIVO za poslove koje ovo radno mjesto STVARNO obavlja.`;
-
-        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
-        if (!apiKey) throw new Error("API ključ za AI nije konfigurisan.");
-
-        const geminiBody = {
-            system_instruction: { parts: [{ text: systemPrompt }] },
-            contents: [{ role: 'user', parts: [{ text: userMsg }] }],
-            generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
-        };
-
-        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-        let lastError = null;
-
-        for (const model of models) {
-            let retries = 3;
-            let delay = 1500;
-            
-            while (retries > 0) {
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(geminiBody)
-                    });
-
-                    if (!res.ok) {
-                        if (res.status === 503 || res.status === 429 || res.status >= 500) {
-                            lastError = new Error(`Model ${model} je privremeno nedostupan (${res.status}).`);
-                            retries--;
-                            if (retries > 0) {
-                                await new Promise(r => setTimeout(r, delay));
-                                delay *= 2; // Exponential backoff
-                                continue;
-                            } else {
-                                break; // Try next model
-                            }
-                        }
-                        throw new Error(`Greška na API-ju (${res.status})`);
-                    }
-
-                    const responseData = await res.json();
-                    const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                    
-                    if (!text) {
-                        lastError = new Error("AI model nije vratio sadržaj.");
-                        break; // Try next model
-                    }
-
-                    const parsed = JSON.parse(text);
-                    const items = Array.isArray(parsed) ? parsed : (parsed.items || [parsed]);
-                    
-                    if (!items || items.length === 0) {
-                        lastError = new Error("AI model je vratio neispravan JSON format.");
-                        break; // Try next model
-                    }
-
-                    return items;
-                } catch (err) {
-                    lastError = err;
-                    retries--;
-                    if (retries > 0) {
-                        await new Promise(r => setTimeout(r, delay));
-                        delay *= 2;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-
-        throw new Error(lastError?.message || 'Svi AI modeli su trenutno nedostupni. Pokušajte ponovo kasnije.');
+        return data.items;
     } catch (err) {
         throw new Error(err.message || 'Nepoznata greška pri generisanju rizika');
     }
 };
+
