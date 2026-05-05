@@ -863,8 +863,8 @@ export default function RiskAssessmentPage() {
 
     // ─── PDF Report Generator ───
     const handleGenerateReport = (overrideData = null, overrideItems = null, autoPrint = false) => {
-        const data = overrideData || formData;
-        const items = overrideItems || riskItems;
+        const data = (overrideData && !overrideData.nativeEvent) ? overrideData : formData;
+        const items = (overrideItems && !overrideItems.nativeEvent) ? overrideItems : riskItems;
         const itemsWithScores = items.filter(ri => ri.rizik > 0);
         const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
         const itemsWithAfter = items.filter(ri => ri.rizikNakon > 0);
@@ -937,13 +937,37 @@ tr:nth-child(even) { background: #fafafa; }
     <dt>Ovlaštena osoba:</dt><dd>${data.ovlOsobaIme || '—'} ${data.ovlOsobaKvalifikacije ? '(' + data.ovlOsobaKvalifikacije + ')' : ''}</dd>
 </div>
 
-<!-- SECTION 2: PROCESS -->
-<h2>2. Opis tehničko-tehnološkog procesa</h2>
+<!-- SECTION 2: SISTEMATIZACIJA -->
+<h2>2. Sistematizacija radnih mjesta</h2>
+${workplaces.filter(wp => items.some(ri => ri.radnoMjestoId === wp.id)).map(wp => {
+    const sist = sistematizacije.find(s => s.radnoMjestoId === wp.id);
+    if (!sist) return `<h3>${wp.naziv}</h3><p>Nema unesenih podataka o sistematizaciji.</p>`;
+    return `<h3>${wp.naziv} — ${sist.nazivPosla || wp.naziv}</h3>
+    <div class="info-grid">
+        <dt>Kategorija:</dt><dd>${sist.kategorijaRM || '—'}</dd>
+        <dt>Složenost:</dt><dd>${sist.slozenostPoslova || '—'}</dd>
+        <dt>Stručna sprema:</dt><dd>${sist.strucnaSprema || '—'}</dd>
+        <dt>Radno iskustvo:</dt><dd>${sist.radnoIskustvo || '—'}</dd>
+        <dt>Broj izvršilaca:</dt><dd>${sist.brojIzvrsilaca || 1}</dd>
+        <dt>Probni rad:</dt><dd>${sist.probniRad || '—'}</dd>
+    </div>
+    <p><strong>Opis poslova:</strong><br>${(sist.opisPoslova || '—').replace(/\n/g, '<br>')}</p>
+    <p><strong>Odgovornosti:</strong><br>${(sist.odgovornosti || '—').replace(/\n/g, '<br>')}</p>
+    <div class="info-grid">
+        <dt>Potrebna OZO:</dt><dd>${(sist.potrebnaOZO || []).join(', ') || '—'}</dd>
+        <dt>Radna oprema:</dt><dd>${(sist.radnaOprema || []).join(', ') || '—'}</dd>
+        <dt>Zdravstveni zahtjevi:</dt><dd>${(sist.zdravstveniZahtjevi || []).join(', ') || '—'}</dd>
+        <dt>Certifikati:</dt><dd>${(sist.certifikati || []).join(', ') || '—'}</dd>
+    </div>`;
+}).join('')}
+
+<!-- SECTION 3: PROCESS -->
+<h2>3. Opis tehničko-tehnološkog procesa</h2>
 <p>${(data.opisProcesa || 'Nije uneseno.').replace(/\n/g, '<br>')}</p>
 ${data.analizaOrganizacije ? `<h3>Analiza organizacije rada</h3><p>${data.analizaOrganizacije.replace(/\n/g, '<br>')}</p>` : ''}
 
-<!-- SECTION 3: RISK MATRIX RESULTS -->
-<h2>3. Procjena rizika — rezultati</h2>
+<!-- SECTION 4: RISK MATRIX RESULTS -->
+<h2>4. Procjena rizika — rezultati</h2>
 <p>Ukupno procijenjeno: <strong>${items.length}</strong> stavki na <strong>${[...new Set(items.map(r => r.radnoMjestoId))].length}</strong> radnih mjesta.</p>
 <table>
 <thead><tr><th>#</th><th>Radno mjesto</th><th>Opasnost / Štetnost</th><th>V₀</th><th>P₀</th><th>R₀</th><th>Nivo</th><th>V₁</th><th>P₁</th><th>R₁</th><th>Nivo nakon</th></tr></thead>
@@ -969,8 +993,8 @@ ${sorted.map((ri, i) => {
 </tbody>
 </table>
 
-<!-- SECTION 4: OVERALL GRADE -->
-<h2>4. Ukupna ocjena rizika</h2>
+<!-- SECTION 5: OVERALL GRADE -->
+<h2>5. Ukupna ocjena rizika</h2>
 <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0">
     <div class="grade-box" style="background:${gradeBefore ? rlBg(Math.round(avgBefore)) : '#f5f5f5'};border:2px solid ${gradeBefore ? rlColor(Math.round(avgBefore)) : '#ddd'}">
         <div style="font-size:8pt;color:#666;margin-bottom:4px">PRIJE MJERA</div>
@@ -982,8 +1006,8 @@ ${sorted.map((ri, i) => {
     ${gradeAfter && avgAfter < avgBefore ? '<div class="grade-box" style="background:#e8f5e9;border:2px solid #4caf50"><div style="font-size:8pt;color:#4caf50">SMANJENJE</div><div style="font-size:18pt;font-weight:900;color:#4caf50">↓ ' + ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%</div></div>' : ''}
 </div>
 
-<!-- SECTION 5: MEASURES -->
-${highRiskItems.length > 0 ? `<h2>5. Plan mjera za smanjenje rizika</h2>
+<!-- SECTION 6: MEASURES -->
+${highRiskItems.length > 0 ? `<h2>6. Plan mjera za smanjenje rizika</h2>
 <p>Stavke sa početnim rizikom R₀ ≥ 6 koje zahtijevaju dodatne mjere:</p>
 <table>
 <thead><tr><th>#</th><th>Opasnost</th><th>R₀</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>R₁</th><th>Odgovorna osoba</th><th>Rok</th></tr></thead>
@@ -996,8 +1020,8 @@ ${highRiskItems.map((ri, i) => {
 </tbody>
 </table>` : ''}
 
-<!-- SECTION 6: CONCLUSION -->
-<h2>${highRiskItems.length > 0 ? '6' : '5'}. Zaključak</h2>
+<!-- SECTION 7: CONCLUSION -->
+<h2>${highRiskItems.length > 0 ? '7' : '6'}. Zaključak</h2>
 <div class="conclusion">${(data.zakljucak || 'Zaključak nije unesen.').replace(/\n/g, '<br>')}</div>
 
 <div style="margin-top:60px;display:flex;justify-content:space-between">
@@ -2103,7 +2127,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 const val = document.getElementById('bulkOdgovornaOsoba').value;
                                                 if (val) {
                                                     setRiskItems(prev => prev.map(ri => ri.rizik >= 6 ? { ...ri, odgovornaOsoba: val } : ri));
-                                                    setUnsaved(true);
+                                                    markDirty();
                                                     document.getElementById('bulkOdgovornaOsoba').value = '';
                                                 }
                                             }} style={{ padding: '4px 10px', height: 'auto', minHeight: 'auto' }}>
@@ -2270,11 +2294,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button className="btn btn-outline" onClick={handleGenerateReport}
+                            <button className="btn btn-outline" onClick={() => handleGenerateReport()}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                 📄 {lang === 'bs' ? 'Preuzmi PDF' : 'Download PDF'}
                             </button>
-                            <button className="btn btn-outline" onClick={handleGenerateDocx}
+                            <button className="btn btn-outline" onClick={() => handleGenerateDocx()}
                                 style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                 📗 {lang === 'bs' ? 'Preuzmi Word (.docx)' : 'Download Word (.docx)'}
                             </button>
