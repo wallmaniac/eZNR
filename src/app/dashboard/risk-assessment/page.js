@@ -709,7 +709,7 @@ export default function RiskAssessmentPage() {
                         vjerovatnocaNakon: vN, posljedlicaNakon: pN,
                         rizikNakon: scoreAfter, nivoRizikaNakon: riskLevel(scoreAfter).label,
                         odgovornaOsoba: '', rokProvedbe: deadline.toISOString().split('T')[0],
-                        status: 'draft', aiGenerated: true,
+                        status: 'draft', aiGenerated: true, source: 'questionnaire',
                     });
                     created++;
                 });
@@ -1892,7 +1892,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                     <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši stavku' : 'Delete item'} style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDeleteRi(ri.id); }}>🗑️</button>
                                                                 </div></td>
                                                                 <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
-                                                                <td style={{ fontSize: '0.82rem' }}>{hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}</td>
+                                                                <td style={{ fontSize: '0.82rem' }}>
+                                                                    {hz ? `${hz.oznaka || ''} ${hz.naziv}` : (ri.opisOpasnosti || '—')}
+                                                                    {ri.aiGenerated && !ri.source && <span style={{ marginLeft: 6, fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(102,126,234,0.15)', color: '#667eea', borderRadius: 10, fontWeight: 600 }}>✨ AI</span>}
+                                                                    {ri.source === 'questionnaire' && <span style={{ marginLeft: 6, fontSize: '0.65rem', padding: '2px 6px', background: 'rgba(255,152,0,0.15)', color: '#ff9800', borderRadius: 10, fontWeight: 600 }}>📝 Upitnik AI</span>}
+                                                                </td>
                                                                 <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.vjerovatnoca}</td>
                                                                 <td style={{ textAlign: 'center', fontWeight: 600 }}>{ri.posljedica}</td>
                                                                 <td style={{ textAlign: 'center', fontWeight: 800, color: rl.color }}>{ri.rizik}</td>
