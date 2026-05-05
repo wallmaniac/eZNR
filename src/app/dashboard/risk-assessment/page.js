@@ -201,7 +201,8 @@ export default function RiskAssessmentPage() {
     // Import from questionnaire
     const [showImportModal, setShowImportModal] = useState(false);
     const [questionnaires, setQuestionnaires] = useState([]);
-    const [importLoading, setImportLoading] = useState(false);
+    const [importLoadingId, setImportLoadingId] = useState(null);
+    const [importedIds, setImportedIds] = useState(new Set());
     const [conclusionLoading, setConclusionLoading] = useState(false);
     // Sistematizacija + response counts
     const [sistematizacije, setSistematizacije] = useState([]);
@@ -682,7 +683,7 @@ export default function RiskAssessmentPage() {
             }
         }
 
-        setImportLoading(true);
+        setImportLoadingId(q.id);
         try {
             const wp = workplaces.find(w => w.id === q.radnoMjestoId);
             // Get sistematizacija for this workplace
@@ -737,12 +738,13 @@ export default function RiskAssessmentPage() {
                     created++;
                 });
                 loadRiskItems(editingId);
-                setShowImportModal(false);
+                setImportedIds(prev => new Set([...prev, q.id]));
+                showFlash();
             } else {
                 await alert('AI greška: ' + (error || 'Nepoznata greška') + (raw ? '\n\nRaw: ' + raw.substring(0, 200) : ''));
             }
         } catch (err) { await alert('Greška: ' + err.message); }
-        setImportLoading(false);
+        setImportLoadingId(null);
     };
 
     // ─── Auto-Generate Risk Items Table (Multi-Workplace) ───
@@ -2005,16 +2007,19 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                 {sist && <span style={{ color: '#11998e', marginLeft: 6 }}>📑 Sistematizacija</span>}
                                                             </div>
                                                         </div>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => handleImportFromQuestionnaire(q)} disabled={importLoading}
+                                                        <button 
+                                                            className={`btn btn-sm ${importedIds.has(q.id) ? 'btn-outline' : 'btn-primary'}`} 
+                                                            onClick={() => handleImportFromQuestionnaire(q)} 
+                                                            disabled={importLoadingId !== null || importedIds.has(q.id)}
                                                             style={{ minWidth: 90 }}>
-                                                            {importLoading ? '⏳' : '↓ Uvezi'}
+                                                            {importLoadingId === q.id ? '⏳ Uvozim...' : importedIds.has(q.id) ? '✔ Uvezeno' : '↓ Uvezi'}
                                                         </button>
                                                     </div>
                                                 );
                                             })}
                                         </div>
                                     )}
-                                    <button className="btn btn-ghost" onClick={() => setShowImportModal(false)} disabled={importLoading}>Zatvori</button>
+                                    <button className="btn btn-ghost" onClick={() => setShowImportModal(false)} disabled={importLoadingId !== null}>Zatvori</button>
                                 </div>
                             </div>
                         )}
