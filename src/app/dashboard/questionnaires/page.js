@@ -430,7 +430,7 @@ export default function QuestionnairesPage() {
                   <tr>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRecords.length && sortedRecords.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 100 }}>{t('actions')}</th>
-                    <th style={tsRec('naziv')} onClick={() => tRec('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{siRec('naziv')}</th>
+                    <th style={{ ...tsRec('naziv'), minWidth: 240 }} onClick={() => tRec('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{siRec('naziv')}</th>
                     <th style={tsRec('zaVrstu')} onClick={() => tRec('zaVrstu')}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}{siRec('zaVrstu')}</th>
                     <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
                     <th style={tsRec('rokIsteka')} onClick={() => tRec('rokIsteka')}>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}{siRec('rokIsteka')}</th>
@@ -586,7 +586,7 @@ export default function QuestionnairesPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
+                    <th style={{ minWidth: 240 }}>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
                     <th>{lang === 'bs' ? 'Oznaka' : 'Code'}</th>
                     <th>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</th>
                     <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Portal'}</th>
