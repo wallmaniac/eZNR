@@ -224,7 +224,7 @@ Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mje
             generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' },
         };
 
-        const models = ['gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
         let lastError = null;
 
         for (const model of models) {
