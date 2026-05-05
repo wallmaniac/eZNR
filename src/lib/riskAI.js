@@ -224,25 +224,46 @@ Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mje
             generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' },
         };
 
-        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(geminiBody)
-        });
+        const models = ['gemini-2.5-flash', 'gemini-1.5-pro', 'gemini-1.5-flash'];
+        let lastError = null;
 
-        if (!res.ok) {
-            throw new Error('AI servis je privremeno nedostupan. Pokušajte ponovo.');
+        for (const model of models) {
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(geminiBody)
+                });
+
+                if (!res.ok) {
+                    if (res.status === 503 || res.status >= 500) {
+                        lastError = new Error(`Model ${model} je privremeno nedostupan.`);
+                        continue; // Try next model
+                    }
+                    throw new Error(`Greška na API-ju (${res.status})`);
+                }
+
+                const responseData = await res.json();
+                const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                
+                if (!text) {
+                    lastError = new Error("AI model nije vratio sadržaj.");
+                    continue;
+                }
+
+                const parsed = JSON.parse(text);
+                if (!parsed || !parsed.items) {
+                    lastError = new Error("AI model je vratio neispravan JSON format.");
+                    continue;
+                }
+
+                return { data: parsed, raw: text };
+            } catch (err) {
+                lastError = err;
+            }
         }
 
-        const responseData = await res.json();
-        const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
-        if (!text) throw new Error("AI model nije vratio sadržaj.");
-
-        const parsed = JSON.parse(text);
-        if (!parsed || !parsed.items) throw new Error("AI model je vratio neispravan JSON format.");
-
-        return { data: parsed, raw: text };
+        throw new Error(lastError?.message || 'Svi AI modeli su trenutno nedostupni. Pokušajte ponovo kasnije.');
     } catch (err) {
         throw new Error(err.message || 'Nepoznata greska pri analizi upitnika');
     }
