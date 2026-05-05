@@ -127,13 +127,114 @@ export const apiGenerateRiskQuestionnaire = async (payload) => {
 
 export const apiAnalyzeQuestionnaire = async (payload) => {
     try {
-        const data = await callFirebaseFunction('analyzeQuestionnaire', payload);
-        if (!data.success || !data.analysis?.items) {
-            throw new Error(data.error || 'Nepoznata greška');
+        const { workplaceName, surveyJson, responses, sistematizacija } = payload;
+        
+        let allQuestions = [];
+        try {
+            const sj = typeof surveyJson === 'string' ? JSON.parse(surveyJson || '{}') : (surveyJson || {});
+            if (sj.questions && Array.isArray(sj.questions)) {
+                allQuestions = sj.questions.filter(q => q.type !== 'heading' && q.type !== 'html');
+            } else if (sj.pages && Array.isArray(sj.pages)) {
+                allQuestions = sj.pages.flatMap(p => p.elements || []);
+            }
+        } catch { /* ignore parse errors */ }
+
+        let responseSummary = '';
+        if (Array.isArray(responses) && responses.length > 0) {
+            responseSummary = allQuestions.map(q => {
+                const qId = q.id || q.name;
+                const allAns = responses.map(r => {
+                     const answers = r?.answers || r?.data || r || {};
+                     const ans = answers[qId];
+                     return ans !== undefined ? (Array.isArray(ans) ? ans.join(', ') : ans) : null;
+                }).filter(Boolean);
+                
+                const uniqueAns = [...new Set(allAns)];
+                return `Pitanje: ${q.title || q.name || qId}\nOdgovori radnika (sumirano): ${uniqueAns.length ? uniqueAns.join(' | ') : 'Bez odgovora'}`;
+            }).join('\n\n');
+        } else {
+            responseSummary = allQuestions.map(q => `Pitanje: ${q.title || q.name || q.id}\nOdgovori: (nema odgovora)`).join('\n\n');
         }
-        return { data: data.analysis, raw: data.raw };
-    } catch (firebaseError) {
-        throw new Error(firebaseError.message || 'Nepoznata greška pri analizi');
+
+        if (allQuestions.length === 0) {
+            responseSummary = `Radno mjesto: ${workplaceName || 'Nepoznato'}\nNapomena: Nema pitanja iz upitnika. Generisi genericke stavke procjene rizika za ovo radno mjesto.`;
+        }
+
+        let sistContext = '';
+        if (sistematizacija) {
+            sistContext = `\n\nSISTEMATIZACIJA RADNOG MJESTA:`;
+            if (sistematizacija.opisPoslova) sistContext += `\nOpis poslova: ${sistematizacija.opisPoslova}`;
+            if (sistematizacija.posebniUvjeti?.length) sistContext += `\nPosebni uvjeti: ${sistematizacija.posebniUvjeti.join(', ')}`;
+            if (sistematizacija.uvjetiRada) {
+                const uv = sistematizacija.uvjetiRada;
+                const parts = Object.entries(uv).filter(([, v]) => v?.length > 0).map(([k, v]) => `${k}: ${v.join(', ')}`);
+                if (parts.length) sistContext += `\nUvjeti rada: ${parts.join('; ')}`;
+            }
+            if (sistematizacija.potrebnaOZO?.length) sistContext += `\nPotrebna OZO: ${sistematizacija.potrebnaOZO.join(', ')}`;
+            if (sistematizacija.radnaOprema?.length) sistContext += `\nRadna oprema: ${sistematizacija.radnaOprema.join(', ')}`;
+            if (sistematizacija.zdravstveniZahtjevi?.length) sistContext += `\nZdravstveni zahtjevi: ${sistematizacija.zdravstveniZahtjevi.join(', ')}`;
+        }
+
+        const systemPrompt = `Ti si strucnjak za zastitu na radu (ZNR) u Bosni i Hercegovini.
+Analiziras zbirne odgovore iz upitnika SVIH radnika na ovom radnom mjestu i generises jedinstvene, konsolidovane stavke procjene rizika. Ne smijes duplirati opasnosti - ako se vise radnika zali na istu stvar, kreiraj samo jednu stavku rizika koja pokriva taj problem.
+
+ZADATAK: Na osnovu grupnih odgovora iz upitnika${sistematizacija ? ' i sistematizacije radnog mjesta' : ''}, identifikuj sve jedinstvene opasnosti i stetnosti i za svaku procijeni vjerovatnocu (V) i posljedicu (P) na skali 1-5.
+
+PRAVILA:
+- Odgovori ISKLJUCIVO u JSON formatu i ne koristi Markdown blokove. Sadrzaj mora poceti sa { i zavrsiti sa }.
+- Ne dupliraj stavke. Grupisi iste opasnosti koje je navelo vise radnika.
+- Za svaku identifikovanu jedinstvenu opasnost kreiraj zasebnu stavku.
+- Procijeni V (1-5) i P (1-5). Ako se mnogo radnika zali na nesto, povecaj V. Ako je opasno, povecaj P.
+- Ako postoji sistematizacija, koristi uvjete rada za identifikaciju opasnosti.
+- Predlozi postojece mjere (iz odgovora) i dodatne predlozene mjere.
+- Generisi 5-10 stavki, KRATKO i SAZETO.
+
+JSON FORMAT:
+{
+  "items": [
+    {
+      "opisOpasnosti": "Opis opasnosti",
+      "kategorija": "fizicka|kemijska|bioloska|ergonomska|psihosocijalna|mehanicka|elektricna",
+      "vjerovatnoca": 3,
+      "posljedica": 4,
+      "postojeceMjere": "Mjere koje su vec na snazi",
+      "predlozeneMjere": "Dodatne preporucene mjere",
+      "vjerovatnocaNakon": 2,
+      "posljedlicaNakon": 3,
+      "rokProvedbe": "30|60|90|180",
+      "obrazlozenje": "Kratko obrazlozenje zasto je rizik tako procijenjen na osnovu odgovora radnika."
+    }
+  ],
+  "ukupniKomentar": "Kratki sazetak analize na nivou grupe radnika"
+}`;
+
+        const userMsg = `RADNO MJESTO: ${workplaceName || 'Nepoznato'}
+
+ZBIRNI ODGOVORI SVIH RADNIKA IZ UPITNIKA:
+${responseSummary}${sistContext}
+
+Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mjesta' : ''} i generisi konsolidovane stavke procjene rizika u trazenom JSON formatu.`;
+
+        const res = await apiCallZia({
+            systemPrompt,
+            messages: [{ role: 'user', text: userMsg }]
+        });
+        
+        let text = res.text || '';
+        text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        
+        const start = text.indexOf('{');
+        const end = text.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+            text = text.substring(start, end + 1);
+        }
+
+        const parsed = JSON.parse(text);
+        if (!parsed || !parsed.items) throw new Error("Neispravan JSON format.");
+
+        return { data: parsed, raw: text };
+    } catch (err) {
+        throw new Error(err.message || 'Nepoznata greska pri analizi upitnika');
     }
 };
 
