@@ -217,7 +217,7 @@ Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mje
 
         const res = await apiCallZia({
             systemPrompt,
-            messages: [{ role: 'user', text: userMsg }]
+            messages: [{ role: 'user', parts: [{ text: userMsg }] }]
         });
         
         let text = res.text || '';
