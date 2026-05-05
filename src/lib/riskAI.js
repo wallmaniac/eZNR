@@ -215,22 +215,32 @@ ${responseSummary}${sistContext}
 
 Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mjesta' : ''} i generisi konsolidovane stavke procjene rizika u trazenom JSON formatu.`;
 
-        const res = await apiCallZia({
-            systemPrompt,
-            messages: [{ role: 'user', parts: [{ text: userMsg }] }]
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+        if (!apiKey) throw new Error("API ključ za AI nije konfigurisan.");
+
+        const geminiBody = {
+            system_instruction: { parts: [{ text: systemPrompt }] },
+            contents: [{ role: 'user', parts: [{ text: userMsg }] }],
+            generationConfig: { temperature: 0.3, maxOutputTokens: 8192, responseMimeType: 'application/json' },
+        };
+
+        const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(geminiBody)
         });
-        
-        let text = res.text || '';
-        text = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-        
-        const start = text.indexOf('{');
-        const end = text.lastIndexOf('}');
-        if (start >= 0 && end > start) {
-            text = text.substring(start, end + 1);
+
+        if (!res.ok) {
+            throw new Error('AI servis je privremeno nedostupan. Pokušajte ponovo.');
         }
 
+        const responseData = await res.json();
+        const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        if (!text) throw new Error("AI model nije vratio sadržaj.");
+
         const parsed = JSON.parse(text);
-        if (!parsed || !parsed.items) throw new Error("Neispravan JSON format.");
+        if (!parsed || !parsed.items) throw new Error("AI model je vratio neispravan JSON format.");
 
         return { data: parsed, raw: text };
     } catch (err) {
