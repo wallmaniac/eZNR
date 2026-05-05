@@ -11,9 +11,9 @@ export const maxDuration = 60;
 
 const MODELS = [
     'gemini-2.5-flash',
+    'gemini-2.0-flash',
     'gemini-2.5-flash-lite',
     'gemini-1.5-flash',
-    'gemini-1.5-pro',
 ];
 
 async function callGemini(model, systemPrompt, userMsg, apiKey) {
@@ -35,7 +35,7 @@ async function callGemini(model, systemPrompt, userMsg, apiKey) {
     });
 
     if (!res.ok) {
-        const isRetryable = res.status === 503 || res.status === 429 || res.status >= 500;
+        const isRetryable = res.status === 503 || res.status === 429 || res.status >= 500 || res.status === 404;
         const err = new Error(`Model ${model} vratio ${res.status}`);
         err.retryable = isRetryable;
         throw err;

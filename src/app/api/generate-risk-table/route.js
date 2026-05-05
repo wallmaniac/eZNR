@@ -11,9 +11,9 @@ export const maxDuration = 60;
 
 const MODELS = [
     'gemini-2.5-flash',
+    'gemini-2.0-flash',
     'gemini-2.5-flash-lite',
     'gemini-1.5-flash',
-    'gemini-1.5-pro',
 ];
 
 const SYSTEM_PROMPT = `Ti si certificirani stručnjak za zaštitu na radu (ZNR) u Federaciji Bosne i Hercegovine, specijalizovan za izradu procjena rizika prema:
@@ -69,7 +69,7 @@ async function callGemini(model, userMsg, apiKey) {
     });
 
     if (!res.ok) {
-        const isRetryable = res.status === 503 || res.status === 429 || res.status >= 500;
+        const isRetryable = res.status === 503 || res.status === 429 || res.status >= 500 || res.status === 404;
         const err = new Error(`Model ${model} vratio ${res.status}`);
         err.retryable = isRetryable;
         throw err;
