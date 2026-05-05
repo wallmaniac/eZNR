@@ -836,6 +836,9 @@ export default function RiskAssessmentPage() {
                         });
                         totalCreated++;
                     }
+                    
+                    // Added sleep to prevent blasting the API and hitting 429/503 limits
+                    await new Promise(r => setTimeout(r, 2000));
                 } catch (wpErr) {
                     errors.push(`${wp.naziv}: ${wpErr.message}`);
                 }

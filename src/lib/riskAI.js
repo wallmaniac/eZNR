@@ -339,40 +339,59 @@ OČEKIVANI JSON FORMAT:
         let lastError = null;
 
         for (const model of models) {
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(geminiBody)
-                });
+            let retries = 3;
+            let delay = 1500;
+            
+            while (retries > 0) {
+                try {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(geminiBody)
+                    });
 
-                if (!res.ok) {
-                    if (res.status === 503 || res.status >= 500) {
-                        lastError = new Error(`Model ${model} je privremeno nedostupan.`);
-                        continue;
+                    if (!res.ok) {
+                        if (res.status === 503 || res.status === 429 || res.status >= 500) {
+                            lastError = new Error(`Model ${model} je privremeno nedostupan (${res.status}).`);
+                            retries--;
+                            if (retries > 0) {
+                                await new Promise(r => setTimeout(r, delay));
+                                delay *= 2; // Exponential backoff
+                                continue;
+                            } else {
+                                break; // Try next model
+                            }
+                        }
+                        throw new Error(`Greška na API-ju (${res.status})`);
                     }
-                    throw new Error(`Greška na API-ju (${res.status})`);
-                }
 
-                const responseData = await res.json();
-                const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
-                
-                if (!text) {
-                    lastError = new Error("AI model nije vratio sadržaj.");
-                    continue;
-                }
+                    const responseData = await res.json();
+                    const text = responseData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                    
+                    if (!text) {
+                        lastError = new Error("AI model nije vratio sadržaj.");
+                        break; // Try next model
+                    }
 
-                const parsed = JSON.parse(text);
-                const items = Array.isArray(parsed) ? parsed : (parsed.items || [parsed]);
-                
-                if (!items || items.length === 0) {
-                    lastError = new Error("AI model je vratio neispravan JSON format.");
-                    continue;
-                }
+                    const parsed = JSON.parse(text);
+                    const items = Array.isArray(parsed) ? parsed : (parsed.items || [parsed]);
+                    
+                    if (!items || items.length === 0) {
+                        lastError = new Error("AI model je vratio neispravan JSON format.");
+                        break; // Try next model
+                    }
 
-                return items;
-            } catch (err) {
-                lastError = err;
+                    return items;
+                } catch (err) {
+                    lastError = err;
+                    retries--;
+                    if (retries > 0) {
+                        await new Promise(r => setTimeout(r, delay));
+                        delay *= 2;
+                    } else {
+                        break;
+                    }
+                }
             }
         }
 
