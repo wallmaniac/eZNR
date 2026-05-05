@@ -1105,6 +1105,7 @@ export default function TrainingsPage() {
    Training Dispatch Modal — sends training link to workers
    ═══════════════════════════════════════════════ */
 function TrainingDispatchModal({ isOpen, onClose, training }) {
+    const { t } = useLanguage();
     const { user, activeCompanyId } = useAuth();
     const officerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin';
     const activeCompany = getUserCompanies(user?.id).find(c => c.id === activeCompanyId);
