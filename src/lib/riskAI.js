@@ -224,7 +224,7 @@ Analiziraj ove zbirne odgovore${sistematizacija ? ' i sistematizaciju radnog mje
             generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
         };
 
-        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-pro'];
         let lastError = null;
 
         for (const model of models) {
@@ -335,7 +335,7 @@ OČEKIVANI JSON FORMAT:
             generationConfig: { temperature: 0.3, maxOutputTokens: 2048, responseMimeType: 'application/json' },
         };
 
-        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+        const models = ['gemini-2.5-flash', 'gemini-2.5-flash-lite', 'gemini-1.5-flash', 'gemini-1.5-pro'];
         let lastError = null;
 
         for (const model of models) {
