@@ -1,14 +1,12 @@
 'use client';
 
 // ============================================================================
-// EMAIL SERVICE — Resend dispatcher
-// Calls Firebase sendEmail function via server-side proxy.
+// EMAIL SERVICE - Resend dispatcher
+// Calls Next.js backend via /api/send-email (Resend).
 // ============================================================================
 
-import { callFirebaseFunction } from '@/lib/firebaseCallable';
-
 /**
- * Email is always configured — Resend API key is set server-side.
+ * Email is always configured - Resend API key is set server-side.
  */
 export function isEmailConfigured() {
     return true;
@@ -28,18 +26,24 @@ export async function sendEmail({
     isTraining = false,
 }) {
     try {
-        const res = await callFirebaseFunction('sendEmail', {
-            toEmail,
-            toName,
-            questionnaireName,
-            fillLink: link,
-            deadline,
-            senderName,
-            companyName,
-            isTraining,
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                toEmail,
+                toName,
+                questionnaireName,
+                fillLink: link,
+                deadline,
+                senderName,
+                companyName,
+                isTraining,
+            })
         });
+        
+        const res = await response.json();
 
-        return res.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
+        return response.ok ? { success: true } : { success: false, error: res.error || 'Greška pri slanju.' };
     } catch (err) {
         return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }
@@ -96,7 +100,7 @@ export async function sendBatchEmails(recipients, info, onProgress) {
         }
     }
 
-    onProgress?.(recipients.length, recipients.length, 'Završeno');
+    onProgress?.(recipients.length, recipients.length, 'Zavrseno');
     return { sent, failed, errors };
 }
 
@@ -114,19 +118,25 @@ export async function sendReminderEmail({
     isTraining = false,
 }) {
     try {
-        const res = await callFirebaseFunction('sendEmail', {
-            toEmail,
-            toName,
-            questionnaireName,
-            fillLink: link,
-            deadline,
-            senderName,
-            companyName,
-            isTraining,
-            isReminder: true,
+        const response = await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                toEmail,
+                toName,
+                questionnaireName,
+                fillLink: link,
+                deadline,
+                senderName,
+                companyName,
+                isTraining,
+                isReminder: true,
+            })
         });
+        
+        const res = await response.json();
 
-        return res.success ? { success: true } : { success: false, error: 'Greška pri slanju.' };
+        return response.ok ? { success: true } : { success: false, error: res.error || 'Greška pri slanju.' };
     } catch (err) {
         return { success: false, error: err?.message || 'Mrežna greška pri slanju emaila.' };
     }
