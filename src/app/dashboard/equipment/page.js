@@ -444,7 +444,7 @@ function EquipmentPageInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{lang === 'bs' ? 'Vrsta' : 'Type'}</label>
-                                        <select className="form-select" value={formData.vrsta} onChange={e => updateField('vrsta', e.target.value)}>
+                                        <select className="form-select" value={formData.vrsta} onChange={e = title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}> updateField('vrsta', e.target.value)}>
                                             <option value="">-</option>
                                             {equipmentTypes.map(et => <option key={et.id} value={et.naziv}>{et.naziv}</option>)}
                                         </select>
@@ -686,11 +686,11 @@ function EquipmentPageInner() {
                             {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                         </div>
                         <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                            { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
+                            { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
                             ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
                         ]} />
                         <PDFExportButton label={lang === 'bs' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                            { label: lang === 'bs' ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
+                            { label: lang === 'bs' ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
                             ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
                         ]} />
                         <SavedFlash />

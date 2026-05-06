@@ -136,7 +136,7 @@ export default function WorkerPPEPage() {
               {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
             <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-              { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
+              { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > generatePPEReport(sortedRows.map(r => r.id), lang) },
               ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
             ]} />
             <SavedFlash />

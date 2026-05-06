@@ -816,7 +816,7 @@ function WorkersPageInner() {
                                 {lang === 'bs' ? 'Ističe u' : 'Expiring in'}
                                 <select
                                     value={expiringSoonDays}
-                                    onChange={e => setExpiringSoonDays(Number(e.target.value))}
+                                    onChange={e = title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}> setExpiringSoonDays(Number(e.target.value))}
                                     disabled={!showExpiringSoon}
                                     style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '2px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
                                 >
@@ -1706,7 +1706,7 @@ function WorkersPageInner() {
                                 label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'}
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
-                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
+                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
                                     ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
                                 ]}
                             />
@@ -1714,7 +1714,7 @@ function WorkersPageInner() {
                                 label={lang === 'bs' ? '📊 Excel' : '📊 Excel'}
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
                                 options={[
-                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },
+                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () = title={lang === 'bs' ? 'Prikaži opcije za Excel izvoz' : 'Show Excel export options'} > setExcelExportMode('all') },
                                     ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
                                 ]}
                             />
