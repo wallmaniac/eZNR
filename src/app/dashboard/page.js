@@ -1388,7 +1388,11 @@ export default function DashboardPage() {
                         </h3>
 
                         <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-                            <button className="btn btn-primary btn-sm" onClick={() => router.push('/dashboard/workers')}>+ {t('add')}</button>
+                            <button className="btn btn-primary btn-sm" onClick={() => {
+                                if (activeTab === 'certs') router.push('/dashboard/worker-certificates');
+                                else if (activeTab === 'ppe') router.push('/dashboard/worker-ppe');
+                                else router.push('/dashboard/workers');
+                            }}>+ {t('add')}</button>
                         </div>
 
                         {/* Workers Table (for new/terminations tabs) */}
