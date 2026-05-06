@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 /* ═══════════════════════════════════════════════════════
    Custom Questionnaire Builder
@@ -83,6 +83,10 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
     const [questions, setQuestions] = useState(parseQuestions);
     const [selectedId, setSelectedId] = useState(null);
     const [activeTab, setActiveTab] = useState('designer'); // designer | preview | json
+
+    useEffect(() => {
+        setQuestions(parseQuestions());
+    }, [json, parseQuestions]);
 
     const saveQuestions = useCallback((updatedQuestions) => {
         setQuestions(updatedQuestions);
