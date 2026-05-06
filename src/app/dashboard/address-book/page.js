@@ -203,6 +203,7 @@ export default function AddressBookPage() {
                               <rect x="5" y="1" width="9" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
                               <rect x="2" y="4" width="9" height="11" rx="1.5" fill="var(--bg-card,#1e2030)" stroke="currentColor" strokeWidth="1.4" />
                             </svg>
+                          )}
                         </button>
                         <button
                           onClick={() => window.open(`mailto:${w.email}`)}

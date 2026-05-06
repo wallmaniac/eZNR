@@ -588,7 +588,6 @@ function EquipmentPageInner() {
                                                         <button className="btn btn-ghost btn-sm btn-icon" onClick={() => handleEditService(log)} title={lang === 'bs' ? 'Uredi servisni zapisnik' : 'Edit service log'}>✏️</button>
                                                         <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteService(log.id)} title={lang === 'bs' ? 'Obriši servisni zapisnik' : 'Delete service log'}>🗑️</button>
                                                     </div>
-                                                    </div>
                                                 </div>
                                             ))}
                                         </div>
