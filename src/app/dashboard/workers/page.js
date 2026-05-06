@@ -886,7 +886,7 @@ function WorkersPageInner() {
                                                             position: 'fixed',
                                                             top: certMenuPos.top,
                                                             left: certMenuPos.left,
-                                                            zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none'9,
+                                                            zIndex: 99999, userSelect: 'none', WebkitUserSelect: 'none',
                                                             background: 'var(--bg-card)',
                                                             border: '1px solid var(--border)',
                                                             borderRadius: 'var(--radius-md)',

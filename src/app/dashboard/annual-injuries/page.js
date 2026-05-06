@@ -485,7 +485,7 @@ export default function AnnualInjuriesPage() {
               position: 'fixed',
               top: dropdownPos.top,
               left: dropdownPos.left,
-              zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none'9,
+              zIndex: 99999, userSelect: 'none', WebkitUserSelect: 'none',
               minWidth: 150,
               background: 'var(--bg-card)',
               border: '1px solid var(--border)',
