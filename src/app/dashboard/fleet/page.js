@@ -523,11 +523,11 @@ function FleetInner() {
                                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={bs ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                             </div>
                             <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
-                                { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚐', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > generateFleetReport(sorted.map(v => v.id), lang) },
+                                { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
                             ]} />
                             <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38, flexShrink: 0 }} options={[
-                                { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > { setPrintSelection(sorted); setShowPrintModal(true); } },
+                                { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
                             ]} />
                             <SavedFlash />

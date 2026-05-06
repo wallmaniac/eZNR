@@ -324,7 +324,7 @@ export default function InjuriesPage() {
                   <div className="form-group">
                     <label className="form-label">{lang === 'bs' ? 'Vrijeme povrede' : 'Time of injury'}</label>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                      <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.vrijemePovrede || ':').split(':')[0] || '12'} onChange={e = title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}> set('vrijemePovrede', `${e.target.value}:${(formData.vrijemePovrede || ':').split(':')[1] || '00'}`)}>
+                      <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.vrijemePovrede || ':').split(':')[0] || '12'} onChange={e => set('vrijemePovrede', `${e.target.value}:${(formData.vrijemePovrede || ':').split(':')[1] || '00'}`)}>
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2, '0')}>{String(i).padStart(2, '0')}</option>)}
                       </select>
                       <span style={{ fontWeight: 700 }}>:</span>

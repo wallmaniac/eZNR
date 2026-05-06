@@ -252,7 +252,7 @@ function WorkerCertificatesInner() {
                 className="form-select"
                 style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
                 value={filterOrgUnit}
-                onChange={(e) = title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}> setFilterOrgUnit(e.target.value)}
+                onChange={(e) => setFilterOrgUnit(e.target.value)}
               >
                 <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
@@ -283,7 +283,7 @@ function WorkerCertificatesInner() {
                 <PDFExportButton 
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
-                { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
+                { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
