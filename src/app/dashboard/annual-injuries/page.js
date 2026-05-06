@@ -513,7 +513,7 @@ export default function AnnualInjuriesPage() {
             <select className="form-select" style={{ width: 100 }} value={year} onChange={e => setYear(e.target.value)}>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <button className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={handleGenerate}>
+            <button className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={handleGenerate} title={lang === 'bs' ? 'Kreiraj novi godišnji izvještaj' : 'Generate new annual report'}>
               + {lang === 'bs' ? 'Generiši novi izvještaj' : 'Generate new report'}
             </button>
           </div>
@@ -629,21 +629,21 @@ export default function AnnualInjuriesPage() {
 
         {/* Header bar */}
         <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <button className="btn btn-ghost btn-sm" onClick={handleBackToList} style={{ fontSize: '0.85rem' }}>
+          <button className="btn btn-ghost btn-sm" onClick={handleBackToList} style={{ fontSize: '0.85rem' }} title={lang === 'bs' ? 'Povratak na listu izvještaja' : 'Back to report list'}>
             ← {lang === 'bs' ? 'Nazad na listu' : 'Back to list'}
           </button>
           <h1 style={{ margin: 0, fontSize: '1.2rem' }}>📈 {t('annualInjuryReport')} — {year}.</h1>
           {activeReportId && <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>💾 {lang === 'bs' ? 'Sačuvano' : 'Saved'}</span>}
           {isDirty && <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>● {lang === 'bs' ? 'Nesačuvano' : 'Unsaved'}</span>}
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary btn-sm" onClick={handleSaveReport}>
-              💾 {lang === 'bs' ? 'Sačuvaj izvještaj' : 'Save report'}
+            <button className="btn btn-primary btn-sm" onClick={handleSaveReport} title={lang === 'bs' ? 'Sačuvaj izvještaj' : 'Save report'}>
+              💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}
             </button>
-            <button className="btn btn-outline btn-sm" onClick={printReport}>
-              🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
+            <button className="btn btn-outline btn-sm" onClick={printReport} title={lang === 'bs' ? 'Isprintaj izvještaj' : 'Print report'}>
+              🖨️ {lang === 'bs' ? 'Printaj' : 'Print'}
             </button>
             <div className="dropdown-container" style={{ position: 'relative' }}>
-              <button className="btn btn-outline btn-sm" onClick={() => setPdfDropdown(!pdfDropdown)}>
+              <button className="btn btn-outline btn-sm" onClick={() => setPdfDropdown(!pdfDropdown)} title={lang === 'bs' ? 'Preuzmi izvještaj' : 'Download report'}>
                 ⬇️ {lang === 'bs' ? 'Preuzmi ▾' : 'Download ▾'}
               </button>
               {pdfDropdown && (

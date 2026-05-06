@@ -94,7 +94,7 @@ export default function AddressBookPage() {
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Akcije dropdown */}
             <div style={{ position: 'relative' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => setActionMenu(m => !m)}>
+              <button className="btn btn-primary btn-sm" onClick={() => setActionMenu(m => !m)} title={lang === 'bs' ? 'Prikaži akcije imenika' : 'Show address book actions'}>
                 ⚡ {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
               </button>
               {actionMenu && (
@@ -132,9 +132,9 @@ export default function AddressBookPage() {
                 placeholder={lang === 'bs' ? 'Pretraži po imenu, emailu, org. jed...' : 'Search by name, email, org unit...'}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
               />
-              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
 
             {/* Selected badge */}
@@ -203,8 +203,14 @@ export default function AddressBookPage() {
                               <rect x="5" y="1" width="9" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.4" />
                               <rect x="2" y="4" width="9" height="11" rx="1.5" fill="var(--bg-card,#1e2030)" stroke="currentColor" strokeWidth="1.4" />
                             </svg>
-                          )}
                         </button>
+                        <button
+                          onClick={() => window.open(`mailto:${w.email}`)}
+                          title={lang === 'bs' ? 'Pošalji email radniku' : 'Send email to worker'}
+                          style={{ background: 'rgba(33,150,243,0.1)', border: 'none', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--info)' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(33,150,243,0.2)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(33,150,243,0.1)'}
+                        >✉️</button>
                       </span>
                     ) : '-'}
                   </td>
@@ -226,16 +232,15 @@ export default function AddressBookPage() {
               <span style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '0.85rem' }}>
                 ✉️ {selectedCount} {lang === 'bs' ? 'odabrano' : 'selected'}
               </span>
-              <button className="btn btn-primary btn-sm" onClick={() => openOutlook(false)}>
-                {lang === 'bs' ? 'Otvori email u Outlooku' : 'Open in Outlook'}
+              <button className="btn btn-primary btn-sm" onClick={() => openOutlook(false)} title={lang === 'bs' ? 'Pošalji email odabranim radnicima' : 'Send email to selected'}>
+                {lang === 'bs' ? 'Novi email (Outlook)' : 'New Email (Outlook)'}
               </button>
               <button className="btn btn-ghost btn-sm" onClick={() => {
-                const emails = sorted.filter(w => selected.has(w.id) && w.email).map(w => w.email).join(', ');
-                navigator.clipboard.writeText(emails);
-              }}>
-                📋 {lang === 'bs' ? 'Kopiraj emailove' : 'Copy emails'}
+                copyAllEmails(true);
+              }} title={lang === 'bs' ? 'Kopiraj odabrane emailove' : 'Copy selected emails'}>
+                📋 {lang === 'bs' ? 'Kopiraj emailove' : 'Copy Emails'}
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())} style={{ marginLeft: 'auto' }}>
+              <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())} style={{ marginLeft: 'auto' }} title={lang === 'bs' ? 'Poništi odabir radnika' : 'Clear selection'}>
                 ✕ {lang === 'bs' ? 'Poništi odabir' : 'Clear'}
               </button>
             </div>

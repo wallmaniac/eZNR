@@ -698,7 +698,7 @@ export default function DashboardPage() {
                     <div className="card-body">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 16 }}>
                             <div style={{ justifySelf: 'start' }}>
-                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth}>
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth} title={lang === 'bs' ? 'Prethodni mjesec' : 'Previous month'}>
                                     ◀ {!isMobile && (lang === 'bs' ? ' Prethodni' : ' Previous')}
                                 </button>
                             </div>
@@ -815,7 +815,7 @@ export default function DashboardPage() {
                             </div>
 
                             <div style={{ justifySelf: 'end' }}>
-                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth}>
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth} title={lang === 'bs' ? 'Sljedeći mjesec' : 'Next month'}>
                                     {!isMobile && (lang === 'bs' ? 'Sljedeći ' : 'Next ')}▶
                                 </button>
                             </div>
@@ -1392,7 +1392,7 @@ export default function DashboardPage() {
                                 if (activeTab === 'certs') router.push('/dashboard/worker-certificates');
                                 else if (activeTab === 'ppe') router.push('/dashboard/worker-ppe');
                                 else router.push('/dashboard/workers');
-                            }}>+ {t('add')}</button>
+                            }} title={lang === 'bs' ? 'Dodaj novi unos' : 'Add new entry'}>+ {t('add')}</button>
                         </div>
 
                         {/* Workers Table (for new/terminations tabs) */}
@@ -1433,7 +1433,8 @@ export default function DashboardPage() {
                                                 >
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
                                                         <button className="btn btn-primary btn-sm"
-                                                            onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}>
+                                                            onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}
+                                                            title={lang === 'bs' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === w.id && (
@@ -1491,7 +1492,7 @@ export default function DashboardPage() {
                                             return (
                                                 <tr key={c.id || idx}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === `cert-${c.id}` ? actionRef : null}>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)} title={lang === 'bs' ? 'Prikaži akcije za uvjerenje' : 'Show certificate actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === `cert-${c.id}` && (
@@ -1550,7 +1551,7 @@ export default function DashboardPage() {
                                             return (
                                                 <tr key={p.id || idx}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === `ppe-${p.id}` ? actionRef : null}>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)} title={lang === 'bs' ? 'Prikaži akcije za opremu' : 'Show PPE actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === `ppe-${p.id}` && (

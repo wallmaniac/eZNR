@@ -122,7 +122,7 @@ export default function WorkerPPEPage() {
         <PageHeader icon="🔍" title={t('workerPPE')} />
         <div className="card"><div className="card-body" style={{ padding: 0 }}>
           <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openModal}>
+            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openModal} title={lang === 'bs' ? 'Dodaj novu OZO' : 'Add new PPE'}>
               + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
             </button>
             <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
@@ -131,9 +131,9 @@ export default function WorkerPPEPage() {
                 placeholder={lang === 'bs' ? 'Pretraži po radniku, opremi...' : 'Search by worker, item...'}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }}
+                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
               />
-              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
             <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
               { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
@@ -142,10 +142,8 @@ export default function WorkerPPEPage() {
             <SavedFlash />
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:
-                </span>
-                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
+                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabranu OZO' : 'Delete selected PPE'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
             {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sortedRows.length} {t('records')}</span>}
@@ -172,15 +170,17 @@ export default function WorkerPPEPage() {
                           e.stopPropagation();
                           if (actionMenuId === r.id) { setActionMenuId(null); return; }
                           const rect = e.currentTarget.getBoundingClientRect();
-                          const spaceBelow = window.innerHeight - rect.bottom - 8;
-                          const spaceAbove = rect.top - 8;
-                          const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                          const spaceBelow = window.innerHeight - rect.bottom;
+                          const spaceAbove = rect.top;
+                          const flipUp = spaceBelow < 180 && spaceAbove > spaceBelow;
                           setMenuPos(flipUp
-                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                              ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                              : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                           );
                           setActionMenuId(r.id);
-                        }}>Akcije ▼</button>
+                        }} title={lang === 'bs' ? 'Prikaži akcije za OZO' : 'Show PPE actions'}>
+                          Akcije ▼
+                        </button>
                         {actionMenuId === r.id && (
                           <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />

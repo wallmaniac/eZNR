@@ -252,8 +252,8 @@ export default function FormOIR1Page() {
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleNew}>
-              + {lang === 'bs' ? 'Novi obrazac' : 'New form'}
+            <button className="btn btn-primary" onClick={handleNew} title={lang === 'bs' ? 'Dodaj novi OIR-1 obrazac' : 'Add new OIR-1 form'}>
+              + {lang === 'bs' ? 'Novi OIR-1' : 'New OIR-1'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
               <input
@@ -262,16 +262,14 @@ export default function FormOIR1Page() {
                 onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
               />
-              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
             {/* Grupne akcije bar */}
             {selectedIds.size > 0 && (
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
-                </span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabrane obrasce' : 'Delete selected forms'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
             {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
@@ -302,16 +300,19 @@ export default function FormOIR1Page() {
                       <td style={{ position: 'relative' }}>
                         <button className="btn btn-primary btn-sm" onClick={e => {
                           e.stopPropagation();
+                          if (actionMenuId === r.id) { setActionMenuId(null); return; }
                           const rect = e.currentTarget.getBoundingClientRect();
                           const spaceBelow = window.innerHeight - rect.bottom;
                           const spaceAbove = rect.top;
-                          const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                          const flipUp = spaceBelow < 180 && spaceAbove > spaceBelow;
                           setMenuPos(flipUp
-                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                              ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
+                              : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                           );
-                          setActionMenuId(prev => prev === r.id ? null : r.id);
-                        }}>{lang === 'bs' ? 'Akcije' : 'Actions'} ▼</button>
+                          setActionMenuId(r.id);
+                        }} title={lang === 'bs' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>
+                          Akcije ▼
+                        </button>
                         {actionMenuId === r.id && (
                           <>
                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -343,9 +344,9 @@ export default function FormOIR1Page() {
   // ── Form view ──
   return (
     <div className="animate-fadeIn">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
-        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang === 'bs' ? 'Uredi obrazac OIR-1' : 'Edit OIR-1 form') : (lang === 'bs' ? 'Novi obrazac OIR-1' : 'New OIR-1 form')}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
+        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang === 'bs' ? 'Uredi OIR-1' : 'Edit OIR-1') : (lang === 'bs' ? 'Novi OIR-1' : 'New OIR-1')}</h1>
       </div>
       <DialogRenderer />
 
@@ -488,10 +489,10 @@ export default function FormOIR1Page() {
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
                       <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }}>📎 {formData.docName}</button>
-                      <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={lang === 'bs' ? 'Pregled priloga' : 'View attachment'}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={lang === 'bs' ? 'Preuzmi prilog' : 'Download attachment'}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Ukloni prilog' : 'Remove attachment'}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
                       </div>
                   </div>
               ) : (

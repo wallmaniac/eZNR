@@ -697,7 +697,7 @@ export default function TrainingsPage() {
                 />
                 {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }}>←</button>
+                    <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
                     <h1 style={{ margin: 0, flex: 1 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
                     <button 
                         className="btn btn-outline btn-sm" 
@@ -828,7 +828,7 @@ export default function TrainingsPage() {
                                 <h2 style={{ color: 'white', fontSize: '1rem' }}>
                                     📝 Odgovori: {answerDetail.session.recipientName}
                                 </h2>
-                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)}>✕</button>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)} title={lang === 'bs' ? 'Zatvori' : 'Close'}>✕</button>
                             </div>
                             <div className="modal-body" style={{ padding: 20 }}>
                                 {answerDetail.response?.answers ? (
@@ -902,7 +902,7 @@ export default function TrainingsPage() {
         <div className="animate-fadeIn">
             <DialogRenderer />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={handleCancel}>←</button>
+                <button className="btn btn-ghost" onClick={handleCancel} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
                 <h1 style={{ margin: 0 }}>{editingId ? '✏️ Uredi obuku' : '🎬 Nova obuka'}</h1>
             </div>
 
@@ -1008,7 +1008,7 @@ export default function TrainingsPage() {
                         </div>
                     ))}
                     <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="btn btn-outline" onClick={addSlide}>+ Dodaj slajd</button>
+                        <button className="btn btn-outline" onClick={addSlide} title={lang === 'bs' ? 'Dodaj novi slajd' : 'Add new slide'}>+ Dodaj slajd</button>
                     </div>
                 </div>
             )}
@@ -1032,7 +1032,7 @@ export default function TrainingsPage() {
                                     <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />Generišem...</>
                                 ) : '✨ Generiraj test iz prezentacije'}
                             </button>
-                            <button className="btn btn-outline btn-sm" onClick={addQuestion}>+ Dodaj ručno</button>
+                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={lang === 'bs' ? 'Dodaj pitanje ručno' : 'Add question manually'}>+ Dodaj ručno</button>
                         </div>
                     </div>
 

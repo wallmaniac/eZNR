@@ -423,16 +423,16 @@ export default function InjuriesPage() {
         {/* Main card */}
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}><div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', height: 32 }} onClick={openNew}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
+              <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', height: 32 }} onClick={openNew} title={lang === 'bs' ? 'Dodaj novu povredu' : 'Add new injury'}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
               <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center', height: 36 }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                 <input
                   placeholder={lang === 'bs' ? 'Pretraži povrede...' : 'Search injuries...'}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                 />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
               </div>
               {orgUnits.length > 0 && (
                 <select
@@ -448,12 +448,10 @@ export default function InjuriesPage() {
               <SavedFlash />
               {/* ── Grupne akcije bar ── */}
               {selectedIds.size > 0 && (
-                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
-                  </span>
-                  <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabrane povrede' : 'Delete selected injuries'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                 </div>
               )}
               {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{filtered.length} {lang === 'bs' ? 'prijava' : 'reports'}</span>}
@@ -496,7 +494,7 @@ export default function InjuriesPage() {
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                               );
                               setActionMenuId(inj.id);
-                            }}>Akcije ▼</button>
+                            }} title={lang === 'bs' ? 'Prikaži akcije za povredu' : 'Show injury actions'}>Akcije ▼</button>
                             {actionMenuId === inj.id && (
                               <>
                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />

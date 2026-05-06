@@ -252,7 +252,7 @@ export default function MedicalExamsPage() {
             {/* ── Toolbar: New button LEFT, search RIGHT ── */}
             <div className="card"><div className="card-body" style={{ padding: 0 }}>
             <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                <button className="btn btn-primary" id="btn-new-exam" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>
+                <button className="btn btn-primary" id="btn-new-exam" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={bs ? 'Dodaj novi ljekarski pregled' : 'Add new medical exam'}>
                     + {bs ? 'Novi pregled' : 'New Exam'}
                 </button>
 
@@ -264,7 +264,7 @@ export default function MedicalExamsPage() {
                         value={searchQ}
                         onChange={e => setSearchQ(e.target.value)}
                     />
-                    {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                    {searchQ && <button onClick={() => setSearchQ('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={bs ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                 </div>
 
                 <select
@@ -272,6 +272,7 @@ export default function MedicalExamsPage() {
                     style={{ height: 38, padding: '0 12px', flexShrink: 0, fontSize: '0.85rem', width: 140, cursor: 'pointer' }}
                     value={filterTab}
                     onChange={(e) => setFilterTab(e.target.value)}
+                    title={bs ? 'Filtriraj preglede' : 'Filter exams'}
                 >
                     {tabs.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
                 </select>
@@ -283,8 +284,8 @@ export default function MedicalExamsPage() {
                         <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                             {selectedIds.size} {bs ? 'odabrano' : 'selected'}:
                         </span>
-                        <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
-                        <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                        <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={bs ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
+                        <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={bs ? 'Obriši odabrane preglede' : 'Delete selected exams'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                     </div>
                 )}
                 {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}>{exams.length} {bs ? 'zapisa' : 'records'}</span>}
@@ -344,7 +345,7 @@ export default function MedicalExamsPage() {
                                                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                                                         );
                                                         setActionMenuId(exam.id);
-                                                    }}>Akcije ▼</button>
+                                                    }} title={bs ? 'Prikaži akcije za pregled' : 'Show exam actions'}>Akcije ▼</button>
                                                     {actionMenuId === exam.id && (
                                                         <>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -358,7 +359,7 @@ export default function MedicalExamsPage() {
                                                     )}
                                                 </div>
                                             </td>
-                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }}>{exam._workerName}</button></td>
+                                            <td><button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + exam.workerId); }} title={bs ? 'Idi na profil radnika' : 'Go to worker profile'}>{exam._workerName}</button></td>
                                             <td style={{ fontSize: '0.82rem' }}>{examTypeLabel(exam.tipPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem' }}>{formatDate(exam.datumPregleda)}</td>
                                             <td style={{ fontSize: '0.85rem', fontWeight: days !== null && days < 0 ? 700 : 400, color: days !== null && days < 0 ? 'var(--danger)' : days !== null && days <= 90 ? 'var(--warning)' : 'inherit' }}>{exam.vrijediDo ? formatDate(exam.vrijediDo) : '—'}</td>
@@ -403,7 +404,7 @@ export default function MedicalExamsPage() {
                             <h2 style={{ color: 'white', margin: 0 }}>
                                 <Icon3D name="Ljekarski pregledi.png" size={48} /> {editingId ? (bs ? 'Uredi ljekarski pregled' : 'Edit Medical Exam') : (bs ? 'Novi ljekarski pregled' : 'New Medical Exam')}
                             </h2>
-                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={handleClose}>✕</button>
+                            <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={handleClose} title={bs ? 'Zatvori bez snimanja' : 'Close without saving'}>✕</button>
                         </div>
 
                         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -497,10 +498,10 @@ export default function MedicalExamsPage() {
 
                         <div className="modal-footer">
                             <button className="btn btn-ghost" onClick={async () => { if (isDirty) { const ok = await confirm(bs ? 'Imate nesačuvane podatke. Želite li odustati?' : 'You have unsaved data. Discard?'); if (!ok) return; } setShowForm(false); setEditingId(null); setIsDirty(false); }}>{t('cancel')}</button>
-                            <button className="btn btn-outline btn-sm" style={{ marginRight: 'auto' }} onClick={() => { sessionStorage.setItem('eznr_draft_medexam', JSON.stringify(form)); router.push('/dashboard/referral-ra1?openNew=1'); }}>
+                            <button className="btn btn-outline btn-sm" style={{ marginRight: 'auto' }} onClick={() => { sessionStorage.setItem('eznr_draft_medexam', JSON.stringify(form)); router.push('/dashboard/referral-ra1?openNew=1'); }} title={bs ? 'Kreiraj RA-1 uputnicu na osnovu ovih podataka' : 'Create RA-1 referral based on this data'}>
                                 📋 {bs ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                             </button>
-                            <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
+                            <button className="btn btn-primary" onClick={handleSave} title={bs ? 'Spremi ljekarski pregled' : 'Save medical exam'}>💾 {t('save')}</button>
                             <SavedFlash />
                         </div>
                     </div>

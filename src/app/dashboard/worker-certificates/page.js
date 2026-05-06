@@ -233,7 +233,7 @@ function WorkerCertificatesInner() {
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')}>
+              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')} title={lang === 'bs' ? 'Dodaj novo uvjerenje' : 'Add new certificate'}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
 
@@ -245,7 +245,7 @@ function WorkerCertificatesInner() {
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                 />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
               </div>
 
               <select
@@ -288,7 +288,7 @@ function WorkerCertificatesInner() {
               ]} />
 
               <div style={{ position: 'relative' }}>
-                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={() => setZapisniciOpen(prev => !prev)}>
+                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={() => setZapisniciOpen(prev => !prev)} title={lang === 'bs' ? 'Prikaži zapisnike i uvjerenja' : 'Show records and certificates'}>
                     🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
                  </button>
                  {zapisniciOpen && (
@@ -406,7 +406,7 @@ function WorkerCertificatesInner() {
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap', padding: '6px 12px' }} onClick={e => e.stopPropagation()}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4, justifyContent: 'center' }}>
                             <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                onClick={() => handleEdit(r.id)}>▶</button>
+                                onClick={() => handleEdit(r.id)} title={bs ? 'Uredi' : 'Edit'}>▶</button>
                             <button className="btn btn-primary btn-sm" onClick={e => {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 const spaceBelow = window.innerHeight - rect.bottom;
@@ -417,7 +417,7 @@ function WorkerCertificatesInner() {
                                     : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                                 );
                                 setActionMenuId(actionMenuId === r.id ? null : r.id);
-                            }}>
+                            }} title={bs ? 'Akcije' : 'Actions'}>
                                 {bs ? 'Akcije' : 'Actions'} ▼
                             </button>
                           </div>

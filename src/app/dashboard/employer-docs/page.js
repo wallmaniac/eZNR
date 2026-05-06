@@ -235,7 +235,7 @@ ${toPrint.map((d, i) => `<tr>
                     <div className="modal" style={{ maxWidth: 600 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
                             <h2>{editingId ? '✏️' : '+'} {bs ? 'Dokument' : 'Document'}</h2>
-                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                            <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)} title={bs ? 'Zatvori' : 'Close'}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-grid-2">
@@ -344,7 +344,7 @@ ${toPrint.map((d, i) => `<tr>
                                             <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={isChecked} onChange={() => toggleSelect(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
                                             <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }); setOpenMenuId(doc.id); }}>Akcije ▼</button>
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }); setOpenMenuId(doc.id); }} title={bs ? 'Prikaži akcije za dokument' : 'Show document actions'}>{bs ? 'Akcije ▼' : 'Actions ▼'}</button>
                                                     {openMenuId === doc.id && (
                                                         <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                             <button onClick={() => handleEdit(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✏️ Otvori</button>

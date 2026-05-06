@@ -338,16 +338,16 @@ export default function OrgUnitsPage() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={() => handleNew()}>+ {lang === 'bs' ? 'Nova org. jedinica' : 'New Org Unit'}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={() => handleNew()} title={lang === 'bs' ? 'Dodaj novog organizacijsku jedinicu' : 'Add new org unit'}>+ {lang === 'bs' ? 'Nova org. jedinica' : 'New Org Unit'}</button>
                         <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input
                                 placeholder={t('searchBtn') + '...'}
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }}
+                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                             />
-                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                         </div>
                         {selectedIds.size > 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
@@ -399,7 +399,7 @@ export default function OrgUnitsPage() {
                                                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                                                         );
                                                         setActionMenuId(actionMenuId === u.id ? null : u.id);
-                                                    }}>
+                                                    }} title={lang === 'bs' ? 'Prikaži akcije za jedinicu' : 'Show unit actions'}>
                                                         {t('actions')} ▼
                                                     </button>
                                                     {actionMenuId === u.id && (

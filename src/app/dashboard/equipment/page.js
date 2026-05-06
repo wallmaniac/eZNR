@@ -522,8 +522,8 @@ function EquipmentPageInner() {
                                     )}
 
                                     <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center' }}>
-                                        <button className="btn btn-primary btn-sm" onClick={handleNewService} disabled={!editingId}>
-                                            + {lang === 'bs' ? 'Novi servisni zapis' : 'New service record'}
+                                        <button className="btn btn-primary btn-sm" onClick={handleNewService} disabled={!editingId} title={lang === 'bs' ? 'Dodaj novi servisni zapisnik' : 'Add new service log'}>
+                                            + {lang === 'bs' ? 'Dodaj zapisnik' : 'New service record'}
                                         </button>
                                         {serviceLogs.length > 0 && (
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
@@ -585,8 +585,9 @@ function EquipmentPageInner() {
                                                         )}
                                                     </div>
                                                     <div style={{ display: 'flex', gap: 4 }}>
-                                                        <button className="btn btn-ghost btn-sm btn-icon" onClick={() => handleEditService(log)}>✏️</button>
-                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteService(log.id)}>🗑️</button>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" onClick={() => handleEditService(log)} title={lang === 'bs' ? 'Uredi servisni zapisnik' : 'Edit service log'}>✏️</button>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteService(log.id)} title={lang === 'bs' ? 'Obriši servisni zapisnik' : 'Delete service log'}>🗑️</button>
+                                                    </div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -678,12 +679,12 @@ function EquipmentPageInner() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova oprema' : 'New Equipment'}</button>
+                        <button className="btn btn-primary btn-sm" onClick={handleNew} title={lang === 'bs' ? 'Dodaj novu opremu' : 'Add new equipment'}>+ {lang === 'bs' ? 'Nova oprema' : 'New Equipment'}</button>
                         <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                         </div>
                         <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                             { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
@@ -707,8 +708,8 @@ function EquipmentPageInner() {
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                                 </span>
-                                <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); }}>🖨️ {lang === 'bs' ? 'Isprintaj QR' : 'Print QR'}</button>
-                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary btn-sm" onClick={() => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); }} title={lang === 'bs' ? 'Isprintaj QR kodove za odabrano' : 'Print QR codes for selected'}>🖨️ {lang === 'bs' ? 'Isprintaj QR' : 'Print QR'}</button>
+                                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabranu opremu' : 'Delete selected equipment'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                             </div>
                         )}
                     </div>
@@ -751,7 +752,7 @@ function EquipmentPageInner() {
                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                                                     );
                                                     setActionMenuId(actionMenuId === eq.id ? null : eq.id);
-                                                }}>
+                                                }} title={lang === 'bs' ? 'Prikaži akcije za opremu' : 'Show equipment actions'}>
                                                     {t('actions')} ▼
                                                 </button>
                                                 {actionMenuId === eq.id && (

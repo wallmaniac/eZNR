@@ -338,12 +338,12 @@ export default function WorkplacesPage() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {lang === 'bs' ? 'Novo radno mjesto' : 'New Workplace'}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={lang === 'bs' ? 'Dodaj novo radno mjesto' : 'Add new workplace'}>+ {lang === 'bs' ? 'Novo radno mjesto' : 'New Workplace'}</button>
                         <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
                             <input type="checkbox" checked={showActive} onChange={e => setShowActive(e.target.checked)} />
@@ -354,9 +354,9 @@ export default function WorkplacesPage() {
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:
                                 </span>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments}>📄 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments} title={lang === 'bs' ? 'Generiraj dokumente' : 'Generate documents'}>📄 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={lang === 'bs' ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabrana radna mjesta' : 'Delete selected workplaces'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
                             </div>
                         )}
                         {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}></span>}
@@ -396,7 +396,7 @@ export default function WorkplacesPage() {
                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                                                     );
                                                     setActionMenuId(actionMenuId === w.id ? null : w.id);
-                                                }}>
+                                                }} title={lang === 'bs' ? 'Prikaži akcije za radno mjesto' : 'Show workplace actions'}>
                                                     {t('actions')} ▼
                                                 </button>
                                                 {actionMenuId === w.id && (

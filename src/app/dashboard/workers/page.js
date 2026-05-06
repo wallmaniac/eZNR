@@ -1677,7 +1677,7 @@ function WorkersPageInner() {
                     <div className="card-body" style={{ padding: 0 }}>
                         {/* Toolbar */}
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew}>
+                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew} title={lang === 'bs' ? 'Dodaj novog radnika' : 'Add new worker'}>
                                 + {lang === 'bs' ? 'Novi radnik' : 'New worker'}
                             </button>
 
@@ -1689,7 +1689,7 @@ function WorkersPageInner() {
                                     onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                                 />
-                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
+                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                             </div>
 
                             <select
@@ -1738,7 +1738,7 @@ function WorkersPageInner() {
                                         }
                                         const subject = encodeURIComponent(lang === 'bs' ? 'Obavijest' : 'Notification');
                                         window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
-                                    }}>
+                                    }} title={lang === 'bs' ? 'Pošalji email' : 'Send email'}>
                                         ✉️ Email
                                     </button>
                                     <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={async () => {
@@ -1748,7 +1748,7 @@ function WorkersPageInner() {
                                             setSelectedIds(new Set());
                                             loadData();
                                         }
-                                    }}>
+                                    }} title={lang === 'bs' ? 'Obriši odabrane radnike' : 'Delete selected workers'}>
                                         🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
                                     </button>
                                     <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={lang === 'bs' ? 'Poništi odabir' : 'Clear selection'}>
@@ -1798,7 +1798,7 @@ function WorkersPageInner() {
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                            onClick={() => handleEdit(w)}>▶</button>
+                                                            onClick={() => handleEdit(w)} title={lang === 'bs' ? 'Uredi radnika' : 'Edit worker'}>▶</button>
                                                         <button className="btn btn-primary btn-sm" onClick={e => {
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             const spaceBelow = window.innerHeight - rect.bottom;
@@ -1809,7 +1809,7 @@ function WorkersPageInner() {
                                                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
                                                             );
                                                             setActionMenuId(actionMenuId === w.id ? null : w.id);
-                                                        }}>
+                                                        }} title={lang === 'bs' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                     </div>
