@@ -15,7 +15,7 @@ const STATUS_CONFIG = {
     expired: { label: 'Isteklo', labelEn: 'Expired', color: '#ef4444', icon: '⏰', bg: 'rgba(239,68,68,0.1)' },
 };
 
-export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs' }) {
+export default function QuestionnaireResults({ questionnaire, onBack, onReminderClick, lang = 'bs' }) {
     const [sessions, setSessions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -82,9 +82,18 @@ export default function QuestionnaireResults({ questionnaire, onBack, lang = 'bs
             {/* Header */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={onBack}>←</button>
-                <h1 style={{ margin: 0 }}>
+                <h1 style={{ margin: 0, flex: 1 }}>
                     📊 {lang === 'bs' ? 'Rezultati upitnika' : 'Questionnaire Results'}
                 </h1>
+                {onReminderClick && (
+                    <button 
+                        className="btn btn-outline btn-sm" 
+                        onClick={onReminderClick}
+                        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}
+                    >
+                        📩 {lang === 'bs' ? 'Pošalji podsjetnik' : 'Send Reminder'}
+                    </button>
+                )}
             </div>
             <p style={{ color: 'var(--text-muted)', marginBottom: 24, fontSize: '0.9rem' }}>
                 {questionnaire?.naziv || ''}

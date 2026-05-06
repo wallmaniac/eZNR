@@ -562,7 +562,13 @@ export default function QuestionnairesPage() {
                           const cs = completionStats[r.id];
                           const pct = cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
                           return (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div 
+                                onClick={(e) => { e.stopPropagation(); setResultsQuestionnaire(r); setView('results'); }}
+                                style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
+                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
+                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                title={lang === 'bs' ? 'Klikni za pregled rezultata' : 'Click to view results'}
+                            >
                               <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
                               </div>
@@ -733,11 +739,23 @@ export default function QuestionnairesPage() {
      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
   if (view === 'results' && resultsQuestionnaire) {
     return (
-      <QuestionnaireResults
-        questionnaire={resultsQuestionnaire}
-        onBack={() => { setView('list'); setResultsQuestionnaire(null); }}
-        lang={lang}
-      />
+      <>
+        <QuestionnaireResults
+          questionnaire={resultsQuestionnaire}
+          onBack={() => { setView('list'); setResultsQuestionnaire(null); }}
+          lang={lang}
+          onReminderClick={() => { setReminderQuestionnaire(resultsQuestionnaire); setReminderModalOpen(true); }}
+        />
+        {/* Reminder Modal */}
+        <ReminderModal
+          isOpen={reminderModalOpen}
+          onClose={() => { setReminderModalOpen(false); setReminderQuestionnaire(null); }}
+          questionnaire={reminderQuestionnaire}
+          lang={lang}
+          officerName={officerName}
+          companyName={companyName}
+        />
+      </>
     );
   }
 

@@ -593,7 +593,13 @@ export default function TrainingsPage() {
                                                     const cs = completionStats[r.id];
                                                     const pct = cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
                                                     return (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                                        <div 
+                                                            onClick={(e) => { e.stopPropagation(); openResults(r); }}
+                                                            style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
+                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
+                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                            title={lang === 'bs' ? 'Klikni za pregled rezultata' : 'Click to view results'}
+                                                        >
                                                             <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
                                                             </div>
@@ -652,10 +658,26 @@ export default function TrainingsPage() {
         return (
             <div className="animate-fadeIn">
                 <DialogRenderer />
+                {/* Training Reminder Modal */}
+                <ReminderModal
+                    isOpen={reminderOpen}
+                    onClose={() => { setReminderOpen(false); setReminderTraining(null); }}
+                    questionnaire={reminderTraining}
+                    isTraining={true}
+                    officerName={officerName}
+                    companyName={companyName}
+                />
                 {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }}>←</button>
-                    <h1 style={{ margin: 0 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
+                    <h1 style={{ margin: 0, flex: 1 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
+                    <button 
+                        className="btn btn-outline btn-sm" 
+                        onClick={() => { setReminderTraining(resultsTraining); setReminderOpen(true); }}
+                        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}
+                    >
+                        📩 {lang === 'bs' ? 'Pošalji podsjetnik' : 'Send Reminder'}
+                    </button>
                 </div>
 
                 {/* Stats */}
