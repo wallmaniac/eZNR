@@ -22,7 +22,7 @@ import { syncAllToFirebase, getSyncStats } from '@/lib/firebaseSync';
 import { seedMockDataConfig } from '@/lib/mockDataGenerator';
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
-import { isWebAuthnAvailable, hasStoredCredential, registerCredential } from '@/lib/webAuthn';
+import { isWebAuthnAvailable, hasStoredCredentialForUser, clearBiometricCredentialForUser, registerCredential } from '@/lib/webAuthn';
 import { uploadSecureFile } from '@/lib/storageService';
 import PageHeader from '@/components/PageHeader';
 import {
@@ -753,14 +753,13 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div>
-                {(typeof window !== 'undefined' && hasStoredCredential()) ? (
+                {(typeof window !== 'undefined' && user?.id && hasStoredCredentialForUser(user.id)) ? (
                   <button 
                     className="btn" 
                     onClick={async () => {
-                      const isConfirmed = await confirm(lang === 'bs' ? 'Da li ste sigurni da želite ukloniti sačuvani otisak s ovog uređaja?' : 'Remove saved fingerprint from device?');
+                      const isConfirmed = await confirm(lang === 'bs' ? 'Da li ste sigurni da želite ukloniti sačuvani otisak s ovog uređaja za ovaj nalog?' : 'Remove saved fingerprint from device for this account?');
                       if (!isConfirmed) return;
-                      localStorage.removeItem('eznr_webauthn_cred');
-                      localStorage.removeItem('eznr_webauthn_user');
+                      clearBiometricCredentialForUser(user.id);
                       window.dispatchEvent(new Event('storage')); // force react refresh if needed
                       setBiometricSuccess(lang === 'bs' ? 'Otisak uspješno uklonjen' : 'Fingerprint removed');
                     }}

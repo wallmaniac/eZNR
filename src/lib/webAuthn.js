@@ -1,10 +1,9 @@
 /**
  * WebAuthn helper — biometric login (fingerprint/face) for mobile.
- * Stores credential ID in localStorage. Works only on HTTPS.
+ * Stores credential IDs in localStorage. Works only on HTTPS.
  */
 
-const STORAGE_KEY = 'eznr_webauthn_cred';
-const USER_DATA_KEY = 'eznr_webauthn_user';
+const CREDENTIALS_KEY = 'eznr_webauthn_creds';
 
 // RP (relying party) info
 const RP = {
@@ -23,38 +22,59 @@ export function isWebAuthnAvailable() {
     );
 }
 
-/**
- * Check if a credential is already registered
- */
-export function hasStoredCredential() {
-    if (typeof window === 'undefined') return false;
-    return !!localStorage.getItem(STORAGE_KEY);
+// Migrate legacy single credential if it exists
+function migrateLegacyCredential() {
+    if (typeof window === 'undefined') return;
+    const legacyCred = localStorage.getItem('eznr_webauthn_cred');
+    const legacyUserStr = localStorage.getItem('eznr_webauthn_user');
+    if (legacyCred && legacyUserStr) {
+        try {
+            const legacyUser = JSON.parse(legacyUserStr);
+            const creds = getStoredCredentials();
+            if (!creds.some(c => c.userData.id === legacyUser.id)) {
+                creds.push({ credentialId: legacyCred, userData: legacyUser });
+                localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(creds));
+            }
+        } catch(e) {}
+        localStorage.removeItem('eznr_webauthn_cred');
+        localStorage.removeItem('eznr_webauthn_user');
+    }
 }
 
-/**
- * Get the stored user data associated with the biometric credential
- */
-export function getStoredBiometricUser() {
-    if (typeof window === 'undefined') return null;
+export function getStoredCredentials() {
+    if (typeof window === 'undefined') return [];
     try {
-        return JSON.parse(localStorage.getItem(USER_DATA_KEY));
+        return JSON.parse(localStorage.getItem(CREDENTIALS_KEY)) || [];
     } catch {
-        return null;
+        return [];
     }
 }
 
 /**
+ * Check if ANY credential is saved on the device
+ */
+export function hasStoredCredential() {
+    migrateLegacyCredential();
+    return getStoredCredentials().length > 0;
+}
+
+/**
+ * Check if a credential is saved for a specific user ID
+ */
+export function hasStoredCredentialForUser(userId) {
+    migrateLegacyCredential();
+    return getStoredCredentials().some(c => c.userData && c.userData.id === userId);
+}
+
+/**
  * Register a new credential (called after successful password login)
- * @param {string} userId 
- * @param {string} username
- * @param {object} userData — full user object to store for auto-login
  */
 export async function registerCredential(userId, username, userData) {
     if (!isWebAuthnAvailable()) {
         throw new Error('WebAuthn not available');
     }
+    migrateLegacyCredential();
 
-    // Create a challenge (in production this should come from the server)
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
 
@@ -74,7 +94,7 @@ export async function registerCredential(userId, username, userData) {
                 { type: 'public-key', alg: -257 },  // RS256
             ],
             authenticatorSelection: {
-                authenticatorAttachment: 'platform', // Built-in (fingerprint/face)
+                authenticatorAttachment: 'platform',
                 userVerification: 'required',
                 residentKey: 'preferred',
             },
@@ -83,25 +103,31 @@ export async function registerCredential(userId, username, userData) {
         },
     });
 
-    // Store credential ID for later authentication
     const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
-    localStorage.setItem(STORAGE_KEY, credentialId);
-    localStorage.setItem(USER_DATA_KEY, JSON.stringify(userData));
+    
+    // Add to list of credentials
+    let creds = getStoredCredentials();
+    // Remove existing credential for this user if they are re-enrolling
+    creds = creds.filter(c => c.userData.id !== userId);
+    creds.push({ credentialId, userData });
+    localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(creds));
 
     return credential;
 }
 
 /**
  * Authenticate with stored credential (biometric prompt)
- * Returns the stored user data on success, null on failure.
  */
 export async function authenticateCredential() {
     if (!isWebAuthnAvailable() || !hasStoredCredential()) {
         return null;
     }
 
-    const credentialId = localStorage.getItem(STORAGE_KEY);
-    const rawId = Uint8Array.from(atob(credentialId), c => c.charCodeAt(0));
+    const creds = getStoredCredentials();
+    const allowCredentials = creds.map(c => ({
+        type: 'public-key',
+        id: Uint8Array.from(atob(c.credentialId), ch => ch.charCodeAt(0))
+    }));
 
     const challenge = new Uint8Array(32);
     crypto.getRandomValues(challenge);
@@ -111,18 +137,16 @@ export async function authenticateCredential() {
             publicKey: {
                 challenge,
                 rpId: RP.id,
-                allowCredentials: [{
-                    type: 'public-key',
-                    id: rawId,
-                    // Remove strict 'internal' transport requirement to support synced/hybrid passkeys from Google PM or iCloud
-                }],
+                allowCredentials,
                 userVerification: 'required',
                 timeout: 60000,
             },
         });
 
         if (assertion) {
-            return getStoredBiometricUser();
+            const usedCredId = btoa(String.fromCharCode(...new Uint8Array(assertion.rawId)));
+            const match = creds.find(c => c.credentialId === usedCredId);
+            return match ? match.userData : null;
         }
     } catch (e) {
         console.warn('WebAuthn authentication failed:', e);
@@ -132,9 +156,20 @@ export async function authenticateCredential() {
 }
 
 /**
- * Remove stored biometric credentials
+ * Remove stored biometric credentials for a specific user
  */
-export function clearBiometricCredentials() {
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(USER_DATA_KEY);
+export function clearBiometricCredentialForUser(userId) {
+    migrateLegacyCredential();
+    let creds = getStoredCredentials();
+    creds = creds.filter(c => c.userData.id !== userId);
+    localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(creds));
+}
+
+/**
+ * Clear all biometric credentials on the device
+ */
+export function clearAllBiometricCredentials() {
+    localStorage.removeItem(CREDENTIALS_KEY);
+    localStorage.removeItem('eznr_webauthn_cred');
+    localStorage.removeItem('eznr_webauthn_user');
 }

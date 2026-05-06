@@ -4,7 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential } from '@/lib/webAuthn';
+import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential, clearAllBiometricCredentials } from '@/lib/webAuthn';
 
 export default function LoginPage() {
   const { t, lang, toggleLang } = useLanguage();
@@ -343,8 +343,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => {
-                  localStorage.removeItem('eznr_webauthn_cred');
-                  localStorage.removeItem('eznr_webauthn_user');
+                  clearAllBiometricCredentials();
                   localStorage.removeItem('eznr_biometric_declined');
                   setHasBiometric(false);
                 }}
