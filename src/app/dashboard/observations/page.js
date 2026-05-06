@@ -153,7 +153,7 @@ export default function ObservationsPage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <PageHeader icon={<Icon3D name="Obzervacije.png" size={64} />} title={bs ? 'Prijave Opasnosti' : 'Hazard Reports'} subtitle={`${items.length} ${bs ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}`} />
+            <PageHeader icon={<Icon3D name="⚠️" size={64} />} title={bs ? 'Prijave Opasnosti' : 'Hazard Reports'} subtitle={`${items.length} ${bs ? 'zabilježenih obzervacija s terena' : 'recorded field observations'}`} />
 
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
