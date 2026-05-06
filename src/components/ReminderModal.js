@@ -13,6 +13,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
     const [sending, setSending] = useState(false);
     const [result, setResult] = useState(null);
     const [progress, setProgress] = useState({ current: 0, total: 0 });
+    const [selectedTokens, setSelectedTokens] = useState(new Set());
 
     useEffect(() => {
         if (!isOpen || !questionnaire?.id) return;
@@ -23,7 +24,11 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
 
         const fetchFn = isTraining ? getSessionsForTraining : getSessionsForQuestionnaire;
         fetchFn(questionnaire.id)
-            .then(data => setSessions(data || []))
+            .then(data => {
+                const fetchedSessions = data || [];
+                setSessions(fetchedSessions);
+                setSelectedTokens(new Set(fetchedSessions.filter(s => s.status !== 'completed').map(s => s.token)));
+            })
             .catch(err => { console.error(err); setSessions([]); })
             .finally(() => setLoading(false));
     }, [isOpen, questionnaire?.id]);
@@ -32,9 +37,10 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
     const completed = sessions.filter(s => s.status === 'completed');
 
     const handleSendReminders = useCallback(async () => {
-        if (incomplete.length === 0) return;
+        const toSend = incomplete.filter(s => selectedTokens.has(s.token));
+        if (toSend.length === 0) return;
         setSending(true);
-        setProgress({ current: 0, total: incomplete.length });
+        setProgress({ current: 0, total: toSend.length });
 
         let sent = 0, failed = 0;
         const errors = [];
@@ -42,9 +48,9 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
             ? `${window.location.origin}/${isTraining ? 't' : 'q'}/`
             : `https://zastitanaradu.ba/${isTraining ? 't' : 'q'}/`;
 
-        for (let i = 0; i < incomplete.length; i++) {
-            const s = incomplete[i];
-            setProgress({ current: i, total: incomplete.length });
+        for (let i = 0; i < toSend.length; i++) {
+            const s = toSend[i];
+            setProgress({ current: i, total: toSend.length });
 
             const res = await sendReminderEmail({
                 toEmail: s.recipientEmail,
@@ -61,13 +67,13 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
             else { failed++; errors.push({ email: s.recipientEmail, error: res.error }); }
 
             // Rate limit
-            if (i < incomplete.length - 1) await new Promise(r => setTimeout(r, 250));
+            if (i < toSend.length - 1) await new Promise(r => setTimeout(r, 250));
         }
 
-        setProgress({ current: incomplete.length, total: incomplete.length });
+        setProgress({ current: toSend.length, total: toSend.length });
         setResult({ sent, failed, errors });
         setSending(false);
-    }, [incomplete, questionnaire, officerName, companyName]);
+    }, [incomplete, selectedTokens, questionnaire, officerName, companyName]);
 
     if (!isOpen) return null;
 
@@ -159,8 +165,29 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             {/* Incomplete list */}
                             {incomplete.length > 0 ? (
                                 <>
-                                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 8 }}>
-                                        {lang === 'bs' ? 'Nisu ispunili:' : 'Not completed:'}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                            {lang === 'bs' ? 'Nisu ispunili:' : 'Not completed:'}
+                                        </div>
+                                        <button 
+                                            type="button"
+                                            onClick={() => {
+                                                if (selectedTokens.size === incomplete.length) {
+                                                    setSelectedTokens(new Set());
+                                                } else {
+                                                    setSelectedTokens(new Set(incomplete.map(s => s.token)));
+                                                }
+                                            }}
+                                            style={{
+                                                background: 'none', border: 'none', color: 'var(--primary, #00BFA6)',
+                                                fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
+                                                textDecoration: 'underline'
+                                            }}
+                                        >
+                                            {selectedTokens.size === incomplete.length 
+                                                ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all')
+                                                : (lang === 'bs' ? 'Označi sve' : 'Select all')}
+                                        </button>
                                     </div>
                                     <div style={{
                                         maxHeight: 180, overflowY: 'auto', borderRadius: 10,
@@ -172,6 +199,17 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                                 padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10,
                                                 borderBottom: i < incomplete.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
                                             }}>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={selectedTokens.has(s.token)}
+                                                    onChange={(e) => {
+                                                        const newSet = new Set(selectedTokens);
+                                                        if (e.target.checked) newSet.add(s.token);
+                                                        else newSet.delete(s.token);
+                                                        setSelectedTokens(newSet);
+                                                    }}
+                                                    style={{ cursor: 'pointer', accentColor: 'var(--primary, #00BFA6)', width: 16, height: 16 }}
+                                                />
                                                 <span style={{ fontSize: '0.85rem' }}>
                                                     {s.status === 'opened' ? '👀' : '📩'}
                                                 </span>
@@ -270,15 +308,15 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     {!sending && !result && (
                         <>
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                {incomplete.length} {lang === 'bs' ? 'primatelja' : 'recipients'}
+                                {selectedTokens.size} {lang === 'bs' ? 'od' : 'of'} {incomplete.length} {lang === 'bs' ? 'odabrano' : 'selected'}
                             </span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={cancelBtn}>
                                     {lang === 'bs' ? 'Zatvori' : 'Close'}
                                 </button>
                                 {incomplete.length > 0 && (
-                                    <button onClick={handleSendReminders} style={sendBtn}>
-                                        📩 {lang === 'bs' ? `Pošalji podsjetnik (${incomplete.length})` : `Send reminders (${incomplete.length})`}
+                                    <button onClick={handleSendReminders} disabled={selectedTokens.size === 0} style={{...sendBtn, opacity: selectedTokens.size === 0 ? 0.5 : 1, cursor: selectedTokens.size === 0 ? 'not-allowed' : 'pointer'}}>
+                                        📩 {lang === 'bs' ? `Pošalji podsjetnik (${selectedTokens.size})` : `Send reminders (${selectedTokens.size})`}
                                     </button>
                                 )}
                             </div>
