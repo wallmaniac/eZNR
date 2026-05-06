@@ -1766,8 +1766,6 @@ export default function SettingsPage() {
                     {lang === 'bs' ? 'HARD WIPE DSC' : 'HARD WIPE COMPANY'}
                   </button>
                 </div>
-              </>
-            )}
 
               {syncResults && (
                 <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.15)', borderRadius: 8, fontSize: '0.7rem' }}>
@@ -1781,7 +1779,6 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-              )}
               )}
             </div>
             </>
