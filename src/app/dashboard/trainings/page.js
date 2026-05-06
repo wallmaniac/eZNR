@@ -583,7 +583,7 @@ export default function TrainingsPage() {
                                                             top: menuPos.top,
                                                             bottom: menuPos.bottom,
                                                             left: menuPos.left,
-                                                            zIndex: 9999,
+                                                            zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none',
                                                             background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                             minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',

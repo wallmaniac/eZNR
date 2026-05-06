@@ -349,7 +349,7 @@ export default function MedicalExamsPage() {
                                                     {actionMenuId === exam.id && (
                                                         <>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
-                                                            <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                            <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                 <button onClick={() => { setActionMenuId(null); handleEdit(exam); }} style={menuItemSt}>✏️ Otvori</button>
                                                                 <button onClick={() => { setActionMenuId(null); handleDuplicate(exam); }} style={menuItemSt}>📋 Kopiraj</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />

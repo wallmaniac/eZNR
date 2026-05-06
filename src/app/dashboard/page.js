@@ -730,7 +730,7 @@ export default function DashboardPage() {
                                     return (
                                         <div style={{
                                             position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
-                                            zIndex: 9999,
+                                            zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none',
                                             background: 'var(--bg-card)',
                                             border: '1px solid var(--border)',
                                             borderRadius: 'var(--radius-lg)',
@@ -1101,7 +1101,7 @@ export default function DashboardPage() {
                                                 )}
                                                 {workerDropOpen && (
                                                     <div style={{
-                                                        position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 9999,
+                                                        position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none',
                                                         background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                         borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)',
                                                         maxHeight: 220, overflowY: 'auto',

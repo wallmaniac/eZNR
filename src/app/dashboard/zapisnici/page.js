@@ -536,7 +536,7 @@ export default function ZapisniciPage() {
                                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onMouseDown={() => setActionMenuId(null)} />
                                                                     <div style={{
                                                                         position: 'fixed', top: menuPos.top, bottom: menuPos.bottom,
-                                                                        left: menuPos.left, zIndex: 9999,
+                                                                        left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none',
                                                                         background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                                         borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                                         minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',

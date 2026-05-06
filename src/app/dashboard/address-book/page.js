@@ -83,7 +83,7 @@ export default function AddressBookPage() {
     <>
       <div className="animate-fadeIn">
         {copyToast && (
-        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, background: 'var(--primary)', color: 'white', padding: '12px 20px', borderRadius: 10, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.25)', animation: 'fadeIn 0.2s' }}>
+        <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--primary)', color: 'white', padding: '12px 20px', borderRadius: 10, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.25)', animation: 'fadeIn 0.2s' }}>
           ✅ {lang === 'bs' ? 'Sve email adrese kopirane!' : 'All emails copied!'}
         </div>
       )}

@@ -886,7 +886,7 @@ function WorkersPageInner() {
                                                             position: 'fixed',
                                                             top: certMenuPos.top,
                                                             left: certMenuPos.left,
-                                                            zIndex: 99999,
+                                                            zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none'9,
                                                             background: 'var(--bg-card)',
                                                             border: '1px solid var(--border)',
                                                             borderRadius: 'var(--radius-md)',
@@ -1554,7 +1554,7 @@ function WorkersPageInner() {
 
                 {/* ── EXCEL EXPORT MODAL ── */}
                 {excelExportMode && (
-                    <div className="modal-overlay" onClick={() => setExcelExportMode(null)} style={{ zIndex: 9999 }}>
+                    <div className="modal-overlay" onClick={() => setExcelExportMode(null)} style={{ zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none' }}>
                         <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #107c41, #185c37)' }}>
                                 <h2 style={{ color: 'white', margin: 0 }}>📊 {lang === 'bs' ? 'Izvoz liste radnika (Excel)' : 'Export Worker List (Excel)'}</h2>
@@ -1816,7 +1816,7 @@ function WorkersPageInner() {
                                                     {actionMenuId === w.id && createPortal(
                                                         <>
                                                             <div onClick={() => setActionMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-                                                            <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                            <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
                                                                     <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                                                                         {w.ime} {w.prezime}

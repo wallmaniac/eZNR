@@ -424,7 +424,7 @@ function WorkerCertificatesInner() {
                           {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                               <>
                                 <div onClick={() => setActionMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-                                <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto', padding: '4px 0' }}>
+                                <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto', padding: '4px 0' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
                                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                                             {r.workerName} — {(r.naziv || r.ime || '').substring(0, 30)}
