@@ -251,6 +251,7 @@ function WorkerCertificatesInner() {
               <select
                 className="form-select"
                 style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
+                title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}
               >
@@ -281,6 +282,7 @@ function WorkerCertificatesInner() {
               </div>
 
                 <PDFExportButton 
+                title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
                 { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
@@ -417,8 +419,8 @@ function WorkerCertificatesInner() {
                                 const spaceAbove = rect.top;
                                 const flipUp = spaceBelow < 300 && spaceAbove > spaceBelow;
                                 setMenuPos(flipUp
-                                    ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                    : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                    ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                    : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                 );
                                 setActionMenuId(actionMenuId === r.id ? null : r.id);
                             }} title={bs ? 'Akcije' : 'Actions'}>
@@ -428,7 +430,7 @@ function WorkerCertificatesInner() {
                           {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                               <>
                                 <div onClick={() => setActionMenuId(null)} style={{ position: 'fixed', inset: 0, zIndex: 9998 }} />
-                                <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto', padding: '4px 0' }}>
+                                <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 240, maxHeight: menuPos.maxH, overflowY: 'auto', padding: '4px 0 8px 0' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
                                         <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                                             {r.workerName} — {(r.naziv || r.ime || '').substring(0, 30)}

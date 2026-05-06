@@ -209,7 +209,7 @@ export default function FireProtectionPage() {
         const flipUp = spaceBelow < 200;
         setMenuPos(flipUp
             ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
-            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow) });
+            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow - 15) });
         setActionMenuId(id);
     };
 
@@ -390,7 +390,7 @@ export default function FireProtectionPage() {
                                     <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)}
                                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 </div>
-                                <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
+                                <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                                     { label: bs ? 'Svi PP aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport(sortedExt.map(e => e.id), lang) },
                                     ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
                                 ]} />

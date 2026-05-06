@@ -137,7 +137,7 @@ export default function EvacuationDrillsPage() {
         const flipUp = spaceBelow < 200;
         setMenuPos(flipUp
             ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
-            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow) });
+            : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow - 15) });
         setActionMenuId(id);
     };
 

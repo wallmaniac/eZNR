@@ -685,7 +685,7 @@ function EquipmentPageInner() {
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                             {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                         </div>
-                        <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
+                        <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                             { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
                             ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
                         ]} />
@@ -694,7 +694,7 @@ function EquipmentPageInner() {
                             ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
                         ]} />
                         <SavedFlash />
-                        <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
+                        <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }}  title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
                             <option value="">{lang === 'bs' ? 'Svi odjeli (Sektori)' : 'All Departments'}</option>
                             {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                         </select>
@@ -747,8 +747,8 @@ function EquipmentPageInner() {
                                                     const spaceAbove = rect.top;
                                                     const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
                                                     setMenuPos(flipUp
-                                                        ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                                        : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                        ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                                        : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                     );
                                                     setActionMenuId(actionMenuId === eq.id ? null : eq.id);
                                                 }} title={lang === 'bs' ? 'Prikaži akcije za opremu' : 'Show equipment actions'}>

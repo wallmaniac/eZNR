@@ -108,7 +108,7 @@ export default function OrgUnitsPage() {
         workers.filter(w => w.aktivan !== false && (w.orgJedinicaId === unitId || w.orgJedinica === unitId));
 
     const handleNew = (parentId = null) => {
-        setFormData({ ...emptyOU, parentId, workplaceIds: [] });
+        setFormData({ ...emptyOU, parentId, workplaceIds: [], childUnitIds: [] });
         setEditingId(null);
         setShowForm(true);
         setActionMenuId(null);
@@ -116,7 +116,8 @@ export default function OrgUnitsPage() {
 
     const handleEdit = (unit) => {
         const wpIds = getAll(COLLECTIONS.WORKPLACES).filter(w => w.orgUnitId === unit.id).map(w => w.id);
-        setFormData({ ...unit, workplaceIds: wpIds });
+        const chIds = getAll(COLLECTIONS.ORG_UNITS).filter(u => u.parentId === unit.id).map(u => u.id);
+        setFormData({ ...unit, workplaceIds: wpIds, childUnitIds: chIds });
         setEditingId(unit.id);
         setShowForm(true);
         setActionMenuId(null);
@@ -160,6 +161,15 @@ export default function OrgUnitsPage() {
                 update(COLLECTIONS.WORKPLACES, wp.id, { ...wp, orgUnitId: savedId });
             } else if (!selectedWpIds.includes(wp.id) && wp.orgUnitId === savedId) {
                 update(COLLECTIONS.WORKPLACES, wp.id, { ...wp, orgUnitId: '' });
+            }
+        });
+        
+        const selectedChIds = formData.childUnitIds || [];
+        getAll(COLLECTIONS.ORG_UNITS).forEach(ou => {
+            if (selectedChIds.includes(ou.id) && ou.parentId !== savedId) {
+                update(COLLECTIONS.ORG_UNITS, ou.id, { ...ou, parentId: savedId });
+            } else if (!selectedChIds.includes(ou.id) && ou.parentId === savedId) {
+                update(COLLECTIONS.ORG_UNITS, ou.id, { ...ou, parentId: null });
             }
         });
         setShowForm(false);
@@ -285,14 +295,32 @@ export default function OrgUnitsPage() {
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                     <label className="form-label">{lang === 'bs' ? 'Radna mjesta u ovoj org. jedinici' : 'Workplaces in this org. unit'}</label>
-                                    <select multiple className="form-select" style={{ minHeight: 120 }} value={formData.workplaceIds || []} onChange={e => {
-                                        const selected = Array.from(e.target.selectedOptions, option => option.value);
-                                        updateField('workplaceIds', selected);
-                                    }}>
-                                        {getAll(COLLECTIONS.WORKPLACES).map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
-                                    </select>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                                        {lang === 'bs' ? 'Zadržite Ctrl (ili Cmd) za višestruki odabir' : 'Hold Ctrl (or Cmd) for multiple selection'}
+                                    <div style={{ maxHeight: 180, overflowY: 'auto', background: 'var(--bg-body)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
+                                        {getAll(COLLECTIONS.WORKPLACES).map(w => (
+                                            <label key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', borderRadius: 'var(--radius-sm)' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                                                <input type="checkbox" checked={(formData.workplaceIds || []).includes(w.id)} onChange={e => {
+                                                    const current = new Set(formData.workplaceIds || []);
+                                                    if (e.target.checked) current.add(w.id); else current.delete(w.id);
+                                                    updateField('workplaceIds', Array.from(current));
+                                                }} />
+                                                <span style={{ fontSize: '0.85rem' }}>{w.naziv}</span>
+                                            </label>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">{lang === 'bs' ? 'Podređene org. jedinice' : 'Child org. units'}</label>
+                                    <div style={{ maxHeight: 180, overflowY: 'auto', background: 'var(--bg-body)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
+                                        {getAll(COLLECTIONS.ORG_UNITS).filter(u => u.id !== editingId).map(u => (
+                                            <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', borderRadius: 'var(--radius-sm)' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                                                <input type="checkbox" checked={(formData.childUnitIds || []).includes(u.id)} onChange={e => {
+                                                    const current = new Set(formData.childUnitIds || []);
+                                                    if (e.target.checked) current.add(u.id); else current.delete(u.id);
+                                                    updateField('childUnitIds', Array.from(current));
+                                                }} />
+                                                <span style={{ fontSize: '0.85rem' }}>{u.naziv}</span>
+                                            </label>
+                                        ))}
                                     </div>
                                 </div>
                                 <div className="form-group">
@@ -419,8 +447,8 @@ export default function OrgUnitsPage() {
                                                         const spaceAbove = rect.top;
                                                         const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
                                                         setMenuPos(flipUp
-                                                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                         );
                                                         setActionMenuId(actionMenuId === u.id ? null : u.id);
                                                     }} title={lang === 'bs' ? 'Prikaži akcije za jedinicu' : 'Show unit actions'}>

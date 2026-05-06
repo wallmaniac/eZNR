@@ -341,8 +341,8 @@ export default function MedicalExamsPage() {
                                                         const spaceAbove = rect.top - 8;
                                                         const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
                                                         setMenuPos(flipUp
-                                                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                            ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                                            : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                         );
                                                         setActionMenuId(exam.id);
                                                     }} title={bs ? 'Prikaži akcije za pregled' : 'Show exam actions'}>Akcije ▼</button>

@@ -438,7 +438,7 @@ export default function InjuriesPage() {
                 <select
                   className="form-select"
                   style={{ height: 36, width: 150, flexShrink: 0, fontSize: '0.85rem', padding: '0 8px' }}
-                  value={filterOrgUnit}
+                   title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'} value={filterOrgUnit}
                   onChange={e => setFilterOrgUnit(e.target.value)}
                 >
                   <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All departments'}</option>
@@ -490,8 +490,8 @@ export default function InjuriesPage() {
                               const spaceAbove = rect.top - 8;
                               const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
                               setMenuPos(flipUp
-                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                               );
                               setActionMenuId(inj.id);
                             }} title={lang === 'bs' ? 'Prikaži akcije za povredu' : 'Show injury actions'}>Akcije ▼</button>

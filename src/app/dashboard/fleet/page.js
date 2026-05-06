@@ -522,7 +522,7 @@ function FleetInner() {
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={bs ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                             </div>
-                            <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
+                            <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
                                 { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
                             ]} />
@@ -577,7 +577,7 @@ function FleetInner() {
                                                             const flipUp = spaceBelow < 200;
                                                             setMenuPos(flipUp
                                                                 ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
-                                                                : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow) });
+                                                                : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow - 15) });
                                                             setActionMenuId(v.id);
                                                         }} title={bs ? 'Prikaži akcije za vozilo' : 'Show vehicle actions'}>{bs ? 'Akcije' : 'Actions'} ▼</button>
                                                         {actionMenuId === v.id && (
@@ -625,7 +625,7 @@ function FleetInner() {
                                                     >{bs ? st.bs : st.en} ▾</button>
                                                     {statusDropdownId === v.id && (<>
                                                         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setStatusDropdownId(null); }} />
-                                                        <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, padding: '4px 0' }}>
+                                                        <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, padding: '4px 0 8px 0' }}>
                                                             {Object.entries(STATUS_MAP).map(([key, s]) => (
                                                                 <button key={key} onClick={(e) => { e.stopPropagation(); update(COLLECTIONS.VEHICLES, v.id, { status: key }); setStatusDropdownId(null); loadData(); }}
                                                                     style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: v.status === key ? s.bg : 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.82rem', fontWeight: v.status === key ? 700 : 500, color: v.status === key ? s.color : 'var(--text)', textAlign: 'left', transition: 'background 0.12s' }}

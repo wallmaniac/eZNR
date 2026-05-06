@@ -93,8 +93,8 @@ export default function FileTypesPage() {
                     const spaceAbove = rect.top - 8;
                     const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow;
                     setMenuPos(flipUp
-                      ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                      : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) });
+                      ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                      : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) });
                     setActionMenuId(i.id);
                   }}>Akcije ▼</button>
                   {actionMenuId === i.id && (<>

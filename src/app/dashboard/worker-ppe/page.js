@@ -1,5 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
+import { createPortal } from 'react-dom';
 import { useState, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, formatDate, todayISO } from '@/lib/dataStore';
@@ -135,7 +136,7 @@ export default function WorkerPPEPage() {
               />
               {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
-            <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
+            <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
               { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
               ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
             ]} />
@@ -174,16 +175,16 @@ export default function WorkerPPEPage() {
                           const spaceAbove = rect.top;
                           const flipUp = spaceBelow < 180 && spaceAbove > spaceBelow;
                           setMenuPos(flipUp
-                              ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                              : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                              ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                              : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                           );
                           setActionMenuId(r.id);
                         }} title={lang === 'bs' ? 'Prikaži akcije za OZO' : 'Show PPE actions'}>
                           Akcije ▼
                         </button>
-                        {actionMenuId === r.id && (
-                          <>
-                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                        {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
+                            <>
+                              <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                             <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}>
                                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{r.workerName}</span>
@@ -195,8 +196,8 @@ export default function WorkerPPEPage() {
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                               <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {lang === 'bs' ? 'Izbriši' : 'Delete'}</button>
                             </div>
-                          </>
-                        )}
+                            </>, document.body
+                          )}
                       </div>
                     </td>
                     <td>

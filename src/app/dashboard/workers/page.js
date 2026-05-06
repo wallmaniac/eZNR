@@ -892,7 +892,7 @@ function WorkersPageInner() {
                                                             borderRadius: 'var(--radius-md)',
                                                             boxShadow: '0 8px 32px rgba(0,0,0,0.35)',
                                                             minWidth: 230,
-                                                            padding: '4px 0',
+                                                            padding: '4px 0 8px 0',
                                                         }}>
                                                             <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                                 onClick={() => { setCertMenuId(null); setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>
@@ -1696,6 +1696,7 @@ function WorkersPageInner() {
                                 className="form-select"
                                 style={{ height: 38, padding: '0 12px', width: 112, flexShrink: 0, fontSize: '0.85rem' }}
                                 value={filterOrgUnit}
+                                title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}
                                 onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
                             >
                                 <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All Departments'}</option>
@@ -1703,7 +1704,7 @@ function WorkersPageInner() {
                             </select>
 
                             <PDFExportButton
-                                label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'}
+                                label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'} title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
                                     { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
@@ -1805,8 +1806,8 @@ function WorkersPageInner() {
                                                             const spaceAbove = rect.top;
                                                             const flipUp = spaceBelow < 340 && spaceAbove > spaceBelow;
                                                             setMenuPos(flipUp
-                                                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                             );
                                                             setActionMenuId(actionMenuId === w.id ? null : w.id);
                                                         }} title={lang === 'bs' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>

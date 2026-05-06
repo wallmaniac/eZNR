@@ -449,13 +449,13 @@ export default function ReferralRA1Page() {
                               const spaceAbove = rect.top - 8;
                               const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
                               setMenuPos(flipUp
-                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove) }
-                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow) }
+                                ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
+                                : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                               );
                               setActionMenuId(r.id);
                             }} title={lang === 'bs' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>Akcije ▼</button>
-                            {actionMenuId === r.id && (
-                              <>
+                            {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
+                            <>
                               <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                               <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                 <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
@@ -464,8 +464,8 @@ export default function ReferralRA1Page() {
                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                 <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
                               </div>
-                              </>
-                            )}
+                            </>, document.body
+                          )}
                           </div>
                         </td>
                         <td>

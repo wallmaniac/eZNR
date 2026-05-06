@@ -247,7 +247,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                             const flipUp = spaceBelow < 150;
                                             setMenuPos(flipUp
                                                 ? { bottom: window.innerHeight - rect.top + 4, left: rect.left - 60, maxH: Math.max(120, rect.top - 8) }
-                                                : { top: rect.bottom + 4, left: rect.left - 60, maxH: Math.max(120, spaceBelow) });
+                                                : { top: rect.bottom + 4, left: rect.left - 60, maxH: Math.max(120, spaceBelow - 15) });
                                             setActionMenuId(h.id);
                                         }}>{bs ? 'Akcije' : 'Actions'} ▼</button>
 
