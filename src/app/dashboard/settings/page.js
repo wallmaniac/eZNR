@@ -34,7 +34,7 @@ import {
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { user, isAdmin, activeCompanyId, login, logout, changePassword, reauthenticate, changeEmail, changeName } = useAuth();
+  const { user, isAdmin, activeCompanyId, logout, changePassword, reauthenticate, changeEmail, changeName, updateUserContext } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -304,7 +304,7 @@ export default function SettingsPage() {
       email: profileData.email,
       phone: profileData.phone,
     });
-    login({ ...user, firstName: profileData.firstName, lastName: profileData.lastName, email: profileData.email });
+    updateUserContext({ firstName: profileData.firstName, lastName: profileData.lastName, email: profileData.email, phone: profileData.phone });
     clearDirty(); showSaved();
   };
 

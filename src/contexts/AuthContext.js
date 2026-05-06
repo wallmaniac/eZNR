@@ -233,6 +233,19 @@ export function AuthProvider({ children }) {
         await updateUserName(first, last);
     }, []);
 
+    const updateUserContext = useCallback((newData) => {
+        setUser(prev => ({ ...prev, ...newData }));
+        if (typeof window !== 'undefined') {
+            const ls = localStorage.getItem('eznr_user');
+            if (ls) {
+                try {
+                    const parsed = JSON.parse(ls);
+                    localStorage.setItem('eznr_user', JSON.stringify({ ...parsed, ...newData }));
+                } catch {}
+            }
+        }
+    }, []);
+
     // ── Presence heartbeat ────────────────────────────────────────────────────
     useEffect(() => {
         if (!user?.id) return;
@@ -274,6 +287,7 @@ export function AuthProvider({ children }) {
             reauthenticate,
             changeEmail,
             changeName,
+            updateUserContext,
         }}>
             {children}
         </AuthContext.Provider>
