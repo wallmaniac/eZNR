@@ -310,7 +310,7 @@ function ServiceRecordsInner() {
                                         onMouseLeave={e => e.currentTarget.style.background = ''}>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => {
+                                                <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                                     e.stopPropagation();
                                                     if (actionMenuId === d.id) { setActionMenuId(null); return; }
                                                     const rect = e.currentTarget.getBoundingClientRect();

@@ -534,8 +534,7 @@ export default function ZapisniciPage() {
                                                                 <>
                                                                     {/* Transparent backdrop — pointer-events none so menu buttons receive clicks */}
                                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onMouseDown={() => setActionMenuId(null)} />
-                                                                    <div style={{
-                                                                        position: 'fixed', top: menuPos.top, bottom: menuPos.bottom,
+                                                                    <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom,
                                                                         left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none',
                                                                         background: 'var(--bg-card)', border: '1px solid var(--border)',
                                                                         borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',

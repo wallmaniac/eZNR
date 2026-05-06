@@ -386,7 +386,7 @@ export default function WorkplacesPage() {
                                             onMouseLeave={e => e.currentTarget.style.background = ''}>
                                             <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(w.id)} onChange={() => toggleOne(w.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
                                             <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => {
+                                                <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                     const spaceBelow = window.innerHeight - rect.bottom;
                                                     const spaceAbove = rect.top;
@@ -402,7 +402,7 @@ export default function WorkplacesPage() {
                                                 {actionMenuId === w.id && (
                                                     <>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
-                                                    <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                    <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(w)} style={menuItemSt}>📂 {t('open')}</button>
                                                         <button onClick={() => openWorkersPanel(w)} style={menuItemSt}>👥 {lang === 'bs' ? 'Pregled radnika' : 'View workers'}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />

@@ -741,7 +741,7 @@ function EquipmentPageInner() {
                                         <tr key={eq.id} onClick={() => handleEdit(eq, 'podaci')} style={{ background: lastEditedId === eq.id ? 'rgba(102,126,234,0.15)' : undefined, transition: 'background 0.5s ease', cursor: 'pointer' }}>
                                             <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(eq.id)} onChange={() => toggleOne(eq.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
                                             <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onClick={e => {
+                                                <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                     const spaceBelow = window.innerHeight - rect.bottom;
                                                     const spaceAbove = rect.top;
@@ -757,7 +757,7 @@ function EquipmentPageInner() {
                                                 {actionMenuId === eq.id && (
                                                     <>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
-                                                    <div data-menu style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                    <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(eq, 'podaci')} style={menuItemSt}>📂 {t('open')}</button>
                                                         <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang === 'bs' ? 'Servisni zapisnici' : 'Service log'}</button>
                                                         <button onClick={() => { setActionMenuId(null); setPrintSelection([eq]); setShowPrintModal(true); }} style={menuItemSt}>🖨️ {lang === 'bs' ? 'Printaj QR kod' : 'Print QR code'}</button>

@@ -610,7 +610,7 @@ export default function ArchivePage() {
                                                 <div style={{ fontSize: '1.2rem' }}>{conf.emoji}</div>
                                                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: conf.color }}>{conf.label}</div>
                                             </div>
-                                            <button className="btn btn-primary btn-sm" onClick={e => { e.stopPropagation(); handleScanSelectWorker(w); }}>
+                                            <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => { e.stopPropagation(); handleScanSelectWorker(w); }}>
                                                 {lang === 'bs' ? 'Odaberi →' : 'Select →'}
                                             </button>
                                         </div>

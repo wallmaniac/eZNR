@@ -1210,7 +1210,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 Akcije ▼
                                             </button>
                                             {openMenuId === r.id && (
-                                                <div data-menu style={{
+                                                <div data-menu onMouseDown={(e) => e.preventDefault()} style={{
                                                     position: 'fixed',
                                                     top: menuPos.top,
                                                     bottom: menuPos.bottom,

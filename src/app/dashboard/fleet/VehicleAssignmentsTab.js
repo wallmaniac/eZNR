@@ -240,7 +240,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                 <td>{h.zavrsnaKilometraza ? `${h.zavrsnaKilometraza} km` : '—'}</td>
                                 <td onClick={e => e.stopPropagation()}>
                                     <div style={{ position: 'relative' }}>
-                                        <button className="btn btn-primary btn-sm" onClick={(e) => {
+                                        <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => {
                                             if (actionMenuId === h.id) { setActionMenuId(null); return; }
                                             const rect = e.currentTarget.getBoundingClientRect();
                                             const spaceBelow = window.innerHeight - rect.bottom - 8;
@@ -254,7 +254,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                         {actionMenuId === h.id && (
                                             <>
                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
-                                                <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
+                                                <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                     <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(h); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
                                                     <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); setEditingId(null); setForm({ workerId: h.workerId, workerIme: h.workerIme, datumZaduzenja: new Date().toISOString().split('T')[0], vrijemeZaduzenja: new Date().toTimeString().slice(0, 5), pocetnaKilometraza: h.zavrsnaKilometraza || '', datumRazduzenja: '', vrijemeRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(h.workerIme); setShowForm(true); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                     {!h.datumRazduzenja && <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleUnassign(h); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>↩️ {bs ? 'Razduži' : 'Unassign'}</button>}
