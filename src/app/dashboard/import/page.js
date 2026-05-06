@@ -35,7 +35,7 @@ const MEDEXAM_COLS = [
     'tipPregleda', 'datum', 'vrijediDo', 'rezultat', 'napomena'
 ];
 const OU_COLS = ['naziv', 'opis'];
-const WP_COLS = ['naziv', 'opis'];
+const WP_COLS = ['naziv', 'opis', 'orgJedinica'];
 const VEH_COLS = [
     'registracija', 'marka', 'model', 'godinaProizvodnje', 'tip', 'vin', 'boja',
     'datumRegistracije', 'registracijaIstice', 'datumTehnickogPregleda', 'tehnickiIstice',
@@ -66,7 +66,7 @@ function generateTemplate() {
     // Sheet 2: Radna Mjesta
     const wsWP = XLSX.utils.aoa_to_sheet([
         WP_COLS,
-        ['Serviser', 'Održavanje mašina i sistema'],
+        ['Serviser', 'Održavanje mašina i sistema', 'Produkcija'],
     ]);
     wsWP['!cols'] = WP_COLS.map(() => ({ wch: 25 }));
     XLSX.utils.book_append_sheet(wb, wsWP, 'RadnaMjesta');
@@ -182,6 +182,7 @@ function generateTemplate() {
         [],
         ['ORG JEDINICE & RADNA MJESTA:'],
         ['  - naziv mora biti tacan kako bi se radnici uspjesno povezali'],
+        ['  - Za Radna mjesta, mozete navesti naziv Organizacijske jedinice pod "orgJedinica"'],
     ]);
     wsI['!cols'] = [{ wch: 60 }];
     XLSX.utils.book_append_sheet(wb, wsI, 'Upute');
@@ -206,7 +207,7 @@ function generateExport(companyId) {
     // 0b. Radna Mjesta
     const wpRows = [WP_COLS];
     allWp.filter(wp => companyId === 'all' || wp.companyId === companyId).forEach(wp => {
-        wpRows.push([wp.naziv || '', wp.opis || '']);
+        wpRows.push([wp.naziv || '', wp.opis || '', (() => { const ou = allOU.find(x => x.id === wp.orgUnitId); return ou?.naziv || ''; })()]);
     });
     const wsWP = XLSX.utils.aoa_to_sheet(wpRows);
     wsWP['!cols'] = WP_COLS.map(() => ({ wch: 25 }));
@@ -533,7 +534,16 @@ export default function ImportPage() {
             if (allWorkplaces.some(w => w.companyId === companyId && w.naziv.toLowerCase() === naziv.toLowerCase())) {
                 wpSkipped++; return;
             }
-            newWP.push({ naziv, opis: String(row.opis || '').trim(), companyId });
+            newWP.push({
+                naziv, opis: String(row.opis || '').trim(), companyId,
+                orgUnitId: (() => {
+                    const oj = String(row.orgJedinica || '').trim();
+                    if (!oj) return '';
+                    const match = fuzzyMatch(getAll(COLLECTIONS.ORG_UNITS), oj);
+                    if (match) return match.id;
+                    return '';
+                })()
+            });
         });
         if (newWP.length > 0) await createMass(COLLECTIONS.WORKPLACES, newWP);
         wpCreated = newWP.length;

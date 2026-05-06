@@ -252,7 +252,7 @@ function WorkerCertificatesInner() {
                 className="form-select"
                 style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
                 value={filterOrgUnit}
-                onChange={(e) => setFilterOrgUnit(e.target.value)}
+                onChange={(e) = title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}> setFilterOrgUnit(e.target.value)}
               >
                 <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
@@ -283,22 +283,26 @@ function WorkerCertificatesInner() {
                 <PDFExportButton 
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
-                { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
+                { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () = title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} > import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
               <div style={{ position: 'relative' }}>
-                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={() => setZapisniciOpen(prev => !prev)} title={lang === 'bs' ? 'Prikaži zapisnike i uvjerenja' : 'Show records and certificates'}>
+                 <button className="btn btn-dark btn-sm" style={{ height: 38, cursor: 'pointer', padding: '0 12px' }} onClick={(e) => {
+                     const rect = e.currentTarget.getBoundingClientRect();
+                     setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
+                     setZapisniciOpen(prev => !prev);
+                 }} title={lang === 'bs' ? 'Prikaži zapisnike i uvjerenja' : 'Show records and certificates'}>
                     🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
                  </button>
-                 {zapisniciOpen && (
+                 {zapisniciOpen && typeof document !== 'undefined' && createPortal(
                    <>
                      <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
-                     <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 4, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
+                     <div style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
                         <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
                         <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
                      </div>
-                   </>
+                   </>, document.body
                  )}
               </div>
             </div>

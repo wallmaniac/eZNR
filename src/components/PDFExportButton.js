@@ -19,7 +19,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
  *   - label?: Custom button label (default: "📄 PDF Izvještaj")
  *   - single?: If true, acts as a single button (no dropdown)
  */
-export default function PDFExportButton({ options = [], label, single = false, buttonStyle = {} }) {
+export default function PDFExportButton({ options = [], label, single = false, buttonStyle = {}, title }) {
   const { lang } = useLanguage();
   const bs = lang === 'bs';
   const [open, setOpen] = useState(false);
@@ -144,6 +144,7 @@ export default function PDFExportButton({ options = [], label, single = false, b
         <button
           className="print-export-btn"
           onClick={handleOpen}
+          title={title}
           style={{ display: 'flex', alignItems: 'center', gap: 4, ...buttonStyle }}
         >
           {btnLabel} <span style={{ fontSize: '0.7rem', opacity: 0.7 }}>▾</span>

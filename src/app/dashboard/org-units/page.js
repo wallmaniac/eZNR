@@ -108,14 +108,15 @@ export default function OrgUnitsPage() {
         workers.filter(w => w.aktivan !== false && (w.orgJedinicaId === unitId || w.orgJedinica === unitId));
 
     const handleNew = (parentId = null) => {
-        setFormData({ ...emptyOU, parentId });
+        setFormData({ ...emptyOU, parentId, workplaceIds: [] });
         setEditingId(null);
         setShowForm(true);
         setActionMenuId(null);
     };
 
     const handleEdit = (unit) => {
-        setFormData({ ...unit });
+        const wpIds = getAll(COLLECTIONS.WORKPLACES).filter(w => w.orgUnitId === unit.id).map(w => w.id);
+        setFormData({ ...unit, workplaceIds: wpIds });
         setEditingId(unit.id);
         setShowForm(true);
         setActionMenuId(null);
@@ -145,11 +146,22 @@ export default function OrgUnitsPage() {
             await alert(lang === 'bs' ? 'Naziv je obavezno polje!' : 'Name is a required field!');
             return;
         }
+        let savedId = editingId;
         if (editingId) {
             update(COLLECTIONS.ORG_UNITS, editingId, formData);
         } else {
-            create(COLLECTIONS.ORG_UNITS, formData);
+            const newDoc = create(COLLECTIONS.ORG_UNITS, formData);
+            savedId = newDoc.id;
         }
+
+        const selectedWpIds = formData.workplaceIds || [];
+        getAll(COLLECTIONS.WORKPLACES).forEach(wp => {
+            if (selectedWpIds.includes(wp.id) && wp.orgUnitId !== savedId) {
+                update(COLLECTIONS.WORKPLACES, wp.id, { ...wp, orgUnitId: savedId });
+            } else if (!selectedWpIds.includes(wp.id) && wp.orgUnitId === savedId) {
+                update(COLLECTIONS.WORKPLACES, wp.id, { ...wp, orgUnitId: '' });
+            }
+        });
         setShowForm(false);
         loadData();
     };
@@ -270,6 +282,18 @@ export default function OrgUnitsPage() {
                                 <div className="form-group">
                                     <label className="form-label">{lang === 'bs' ? 'Skraćeni naziv (opcionalno)' : 'Short name (optional)'}</label>
                                     <input className="form-input" value={formData.skraceniNaziv} onChange={e => updateField('skraceniNaziv', e.target.value)} />
+                                </div>
+                                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                    <label className="form-label">{lang === 'bs' ? 'Radna mjesta u ovoj org. jedinici' : 'Workplaces in this org. unit'}</label>
+                                    <select multiple className="form-select" style={{ minHeight: 120 }} value={formData.workplaceIds || []} onChange={e => {
+                                        const selected = Array.from(e.target.selectedOptions, option => option.value);
+                                        updateField('workplaceIds', selected);
+                                    }}>
+                                        {getAll(COLLECTIONS.WORKPLACES).map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
+                                    </select>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 4 }}>
+                                        {lang === 'bs' ? 'Zadržite Ctrl (ili Cmd) za višestruki odabir' : 'Hold Ctrl (or Cmd) for multiple selection'}
+                                    </div>
                                 </div>
                                 <div className="form-group">
                                     <label className="form-label">{t('place')}</label>
