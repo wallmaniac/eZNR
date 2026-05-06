@@ -197,21 +197,32 @@ export default function QuestionnairesPage() {
     window.history.pushState({ upitnikView: 'form' }, '');
     setView('form');
   }, []);
-  const handleCancel = useCallback(() => {
-    window.history.back();
-  }, []);
+  const handleCancel = useCallback(async () => {
+    if (contextIsDirty) {
+      const ok = await confirm(
+        lang === 'bs' 
+        ? 'Imate nesačuvane promjene. Želite li zaista odustati?' 
+        : 'You have unsaved changes. Are you sure you want to discard them?'
+      );
+      if (!ok) return;
+    }
+    const wasDirty = contextIsDirty;
+    markClean();
+    setView('list');
+    window.history.go(wasDirty ? -2 : -1);
+  }, [contextIsDirty, confirm, lang, markClean]);
 
   // Browser back button handler
   useEffect(() => {
-    const handlePopState = () => {
-      if (view === 'form' && !contextIsDirty) {
+    const handlePopState = (e) => {
+      if (e.state?.upitnikView !== 'form') {
         setView('list');
         setOpenMenuId(null);
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [view, contextIsDirty]);
+  }, []);
 
   // Close dropdown when clicking outside — ignore the trigger button itself
   useEffect(() => {
@@ -271,9 +282,11 @@ export default function QuestionnairesPage() {
   const handleSave = () => {
     if (editingId) update(COLLECTIONS.QUESTIONNAIRES, editingId, formData);
     else create(COLLECTIONS.QUESTIONNAIRES, formData);
+    const wasDirty = contextIsDirty;
     markClean();
     loadData();
-    window.history.back();
+    setView('list');
+    window.history.go(wasDirty ? -2 : -1);
   };
 
   // Insert template

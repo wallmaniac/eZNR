@@ -169,10 +169,12 @@ export default function TrainingsPage() {
             const newItem = create(COLLECTIONS.TRAININGS, formData);
             savedId = newItem.id;
         }
+        const wasDirty = contextIsDirty;
         setLastEditedId(savedId);
         markClean();
         loadData();
-        window.history.back();
+        setView('list');
+        window.history.go(wasDirty ? -2 : -1);
     };
 
     const handleDelete = async (id) => {
@@ -180,20 +182,27 @@ export default function TrainingsPage() {
         if (await confirm('Obrisati ovu obuku?')) { remove(COLLECTIONS.TRAININGS, id); loadData(); }
     };
 
-    const handleCancel = () => {
+    const handleCancel = async () => {
+        if (contextIsDirty) {
+            const ok = await confirm(lang === 'bs' ? 'Imate nesačuvane promjene. Želite li zaista odustati?' : 'You have unsaved changes. Are you sure you want to discard them?');
+            if (!ok) return;
+        }
         if (editingId) setLastEditedId(editingId);
-        window.history.back();
+        const wasDirty = contextIsDirty;
+        markClean();
+        setView('list');
+        window.history.go(wasDirty ? -2 : -1);
     };
 
     useEffect(() => {
-        const handlePopState = () => {
-            if (view === 'form' && !contextIsDirty) {
+        const handlePopState = (e) => {
+            if (e.state?.view !== 'form') {
                 setView('list');
             }
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, [view, contextIsDirty]);
+    }, []);
 
     const handleDuplicate = (item) => {
         const dup = { ...EMPTY_TRAINING, ...item };
