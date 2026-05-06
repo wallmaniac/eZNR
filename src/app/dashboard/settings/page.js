@@ -34,7 +34,7 @@ import {
 
 export default function SettingsPage() {
   const { t, lang, toggleLang } = useLanguage();
-  const { user, isAdmin, activeCompanyId, logout, changePassword, reauthenticate, changeEmail, changeName, updateUserContext } = useAuth();
+  const { user, isAdmin, isSuperAdmin, activeCompanyId, logout, changePassword, reauthenticate, changeEmail, changeName, updateUserContext } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -1691,10 +1691,12 @@ export default function SettingsPage() {
               </div>
             )}
 
-            <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+            {isSuperAdmin && (
+              <>
+                <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
 
-            {/* ── Firebase Migration ── */}
-            <SectionHeader icon="☁️" title={lang === 'bs' ? 'Sinkronizacija sa Cloudom (Firebase)' : 'Cloud Synchronization'} />
+                {/* ── Firebase Migration ── */}
+                <SectionHeader icon="☁️" title={lang === 'bs' ? 'Sinkronizacija sa Cloudom (Firebase)' : 'Cloud Synchronization'} />
             <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--primary)' }}>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
                 {lang === 'bs' 
@@ -1745,8 +1747,6 @@ export default function SettingsPage() {
               </div>
               
 
-            {isAdmin && (
-              <>
                 <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
                 <SectionHeader icon="☠️" title={lang === 'bs' ? 'Opasna zona (Super Admin)' : 'Danger Zone'} />
                 <div style={{ padding: 16, borderRadius: 12, background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.3)' }}>
@@ -1782,7 +1782,10 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+              )}
             </div>
+            </>
+            )}
 
             <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />            {/* App version info */}
             <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)' }}>
