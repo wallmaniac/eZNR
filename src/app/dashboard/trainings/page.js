@@ -17,6 +17,7 @@ import { apiGenerateQuiz, apiParsePresentation } from '@/lib/trainingsAI';
 import PageHeader from '@/components/PageHeader';
 import { usePagination } from '@/hooks/usePagination';
 import Pagination from '@/components/Pagination';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 
 /* ═══════════════════════════════════════════════
@@ -135,13 +136,19 @@ export default function TrainingsPage() {
     }, [openMenuId]);
 
     // ── CRUD ─────────────────────────────────
-    const setF = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+    const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(async () => await handleSave());
+
+    const setF = (field, value) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+        markDirty();
+    };
 
     const handleNew = () => {
         setFormData({ ...EMPTY_TRAINING, slides: [EMPTY_SLIDE()], questions: [] });
         setEditingId(null);
         setActiveFormTab('slides');
         setView('form');
+        window.history.pushState({ view: 'form' }, '');
     };
 
     const handleEdit = (item) => {
@@ -150,6 +157,7 @@ export default function TrainingsPage() {
         setLastEditedId(null);
         setActiveFormTab('slides');
         setView('form');
+        window.history.pushState({ view: 'form' }, '');
     };
 
     const handleSave = async () => {
@@ -162,8 +170,9 @@ export default function TrainingsPage() {
             savedId = newItem.id;
         }
         setLastEditedId(savedId);
+        markClean();
         loadData();
-        setView('list');
+        window.history.back();
     };
 
     const handleDelete = async (id) => {
@@ -173,8 +182,18 @@ export default function TrainingsPage() {
 
     const handleCancel = () => {
         if (editingId) setLastEditedId(editingId);
-        setView('list');
+        window.history.back();
     };
+
+    useEffect(() => {
+        const handlePopState = () => {
+            if (view === 'form' && !contextIsDirty) {
+                setView('list');
+            }
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, [view, contextIsDirty]);
 
     const handleDuplicate = (item) => {
         const dup = { ...EMPTY_TRAINING, ...item };

@@ -16,6 +16,7 @@ import HelpTip from '@/components/HelpTip';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import { apiGenerateRiskQuestionnaire } from '@/lib/riskAI';
 import { callFirebaseFunction } from '@/lib/firebaseCallable';
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 
 import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
@@ -184,29 +185,33 @@ export default function QuestionnairesPage() {
     } catch { /* ignore */ }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const set = (field, value) => setFormData(prev => ({ ...prev, [field]: value }));
+  const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(() => handleSave());
+
+  const set = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    markDirty();
+  };
 
   // Navigate to form view (pushes history so browser back works)
   const goToForm = useCallback(() => {
     window.history.pushState({ upitnikView: 'form' }, '');
     setView('form');
   }, []);
-  const goToList = useCallback(() => {
-    setView('list');
-    setOpenMenuId(null);
+  const handleCancel = useCallback(() => {
+    window.history.back();
   }, []);
 
   // Browser back button handler
   useEffect(() => {
     const handlePopState = () => {
-      if (view === 'form') {
+      if (view === 'form' && !contextIsDirty) {
         setView('list');
         setOpenMenuId(null);
       }
     };
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [view]);
+  }, [view, contextIsDirty]);
 
   // Close dropdown when clicking outside — ignore the trigger button itself
   useEffect(() => {
@@ -266,7 +271,9 @@ export default function QuestionnairesPage() {
   const handleSave = () => {
     if (editingId) update(COLLECTIONS.QUESTIONNAIRES, editingId, formData);
     else create(COLLECTIONS.QUESTIONNAIRES, formData);
-    goToList(); loadData();
+    markClean();
+    loadData();
+    window.history.back();
   };
 
   // Insert template
@@ -762,7 +769,7 @@ export default function QuestionnairesPage() {
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => { window.history.back(); }}>←</button>
+        <button className="btn btn-ghost" onClick={handleCancel}>←</button>
         <h1 style={{ margin: 0 }}>
           ❓ {editingId
             ? (lang === 'bs' ? 'Uredi upitnik' : 'Edit questionnaire')
