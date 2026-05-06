@@ -15,6 +15,7 @@ import ReminderModal from '@/components/ReminderModal';
 import HelpTip from '@/components/HelpTip';
 import { getSessionsForQuestionnaire } from '@/lib/firebaseSync';
 import { apiGenerateRiskQuestionnaire } from '@/lib/riskAI';
+import { callFirebaseFunction } from '@/lib/firebaseCallable';
 
 import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
@@ -119,6 +120,7 @@ export default function QuestionnairesPage() {
   const [aiVrstaAnkete, setAiVrstaAnkete] = useState('Anketa za radno mjesto');
   const [aiCustomVrsta, setAiCustomVrsta] = useState('');
   const [aiJezik, setAiJezik] = useState('Bosanski');
+  const [translating, setTranslating] = useState(false);
 
   const filteredForList = search
     ? records.filter(r => (r.naziv || '').toLowerCase().includes(search.toLowerCase()))
@@ -375,6 +377,35 @@ export default function QuestionnairesPage() {
     </body></html>`;
     const w = window.open('', '_blank');
     if (w) { w.document.write(html); w.document.close(); }
+  };
+
+  const handleTranslate = async () => {
+    if (!formData.surveyJson) {
+        await alert('Upitnik nema dodanih pitanja za prijevod.');
+        return;
+    }
+    if (!formData.jezik) {
+        await alert('Prvo odaberite "Jezik upitnika" na koji želite prevesti.');
+        return;
+    }
+    const targetLang = formData.jezik;
+    if (await confirm(`Da li ste sigurni da želite prevesti sva pitanja i odgovore na '${targetLang}' pomoću AI?\n\nOva akcija može prepisati vaše trenutne tekstove u pitanjima.`)) {
+        setTranslating(true);
+        try {
+            const sj = typeof formData.surveyJson === 'string' ? JSON.parse(formData.surveyJson) : formData.surveyJson;
+            const res = await callFirebaseFunction('translateQuestionnaire', {
+                surveyJson: sj,
+                targetLanguage: targetLang
+            });
+            if (res.success && res.surveyJson) {
+                set('surveyJson', JSON.stringify(res.surveyJson));
+                await alert(`Uspješno prevedeno na ${targetLang}!`);
+            }
+        } catch (err) {
+            await alert('Greška pri prijevodu: ' + err.message);
+        }
+        setTranslating(false);
+    }
   };
 
   const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
@@ -975,6 +1006,16 @@ export default function QuestionnairesPage() {
                   <option value="Slovenački">Slovenščina</option>
                   <option value="Makedonski">Македонски</option>
                 </select>
+                {formData.surveyJson && formData.jezik && (
+                  <button 
+                    className="btn btn-outline btn-sm" 
+                    style={{ marginTop: 8, width: '100%', borderColor: 'var(--primary)', color: 'var(--primary)' }}
+                    onClick={handleTranslate}
+                    disabled={translating}
+                  >
+                    {translating ? '⏳ Prevodim...' : '🤖 Prevedi pitanja (AI)'}
+                  </button>
+                )}
               </div>
             </div>
           </div>
