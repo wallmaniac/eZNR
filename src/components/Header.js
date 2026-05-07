@@ -527,17 +527,17 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     <div style={island}>
                         <div ref={langRef} style={{ position: 'relative' }}>
                             <button onClick={() => { setShowLangMenu(v => !v); setShowProfile(false); setShowNotifs(false); setShowCompanyMenu(false); }}
-                                style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60 })}
+                                style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60, justifyContent: 'flex-start' })}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
                                 <img src={currentLang.flag} width={18} height={18} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                                 <span>{currentLang.label}</span>
                             </button>
                             {showLangMenu && (
-                                <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 140, padding: '6px' }}>
+                                <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, right: 'auto', minWidth: 130, padding: '6px' }}>
                                     {LANGUAGES.map(l => (
                                         <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
-                                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}
                                             onMouseEnter={e => { if(lang !== l.code) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
                                             onMouseLeave={e => { if(lang !== l.code) e.currentTarget.style.background = 'transparent'; }}>
                                             <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
