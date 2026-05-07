@@ -183,21 +183,21 @@ export default function LoginPage() {
       {/* Language switcher dropdown */}
       <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 999 }}>
         <button onClick={() => setShowLangMenu(!showLangMenu)} style={styles.langSwitcher}>
-          <span style={styles.langIcon}>{lang === 'hr' ? '🇭🇷' : lang === 'en' ? '🇬🇧' : '🇧🇦'}</span>
+          <img src={lang === 'hr' ? 'https://flagcdn.com/w40/hr.png' : lang === 'en' ? 'https://flagcdn.com/w40/gb.png' : 'https://flagcdn.com/w40/ba.png'} width={18} height={18} alt={lang} style={{ borderRadius: '50%', objectFit: 'cover' }} />
           <span>{lang === 'hr' ? 'HR' : lang === 'en' ? 'EN' : 'BA'}</span>
         </button>
         {showLangMenu && (
           <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'rgba(20,40,60,0.95)', backdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 6, minWidth: 120, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
             {[
-              { code: 'bs', label: 'BA', flag: '🇧🇦', title: 'Bosanski' },
-              { code: 'hr', label: 'HR', flag: '🇭🇷', title: 'Hrvatski' },
-              { code: 'en', label: 'EN', flag: '🇬🇧', title: 'English' }
+              { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
+              { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
+              { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' }
             ].map(l => (
               <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
                 style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'rgba(0,191,166,0.15)' : 'transparent', color: lang === l.code ? '#00BFA6' : 'rgba(255,255,255,0.8)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'all 0.15s' }}
                 onMouseEnter={e => { if(lang !== l.code) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#fff'; } }}
                 onMouseLeave={e => { if(lang !== l.code) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; } }}>
-                <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                 <span>{l.title}</span>
               </button>
             ))}

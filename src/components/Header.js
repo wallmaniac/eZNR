@@ -193,9 +193,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         : { label: lang === 'en' ? 'Safety Officer' : 'Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
 
     const LANGUAGES = [
-        { code: 'bs', label: 'BA', flag: '🇧🇦', title: 'Bosanski' },
-        { code: 'hr', label: 'HR', flag: '🇭🇷', title: 'Hrvatski' },
-        { code: 'en', label: 'EN', flag: '🇬🇧', title: 'English' }
+        { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
+        { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
+        { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' }
     ];
     const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
 
@@ -310,16 +310,16 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     <div ref={langRef} style={{ position: 'relative', display: 'flex' }}>
                         <button onClick={() => { setShowLangMenu(v => !v); setShowCompanyMenu(false); setShowNotifs(false); }}
-                            style={{ ...iBtn({ padding: '0 6px', fontSize: '0.75rem', fontWeight: 700, width: 'auto', minWidth: 46, height: 32, gap: 4 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
-                            <span style={{ fontSize: '1rem', lineHeight: 1 }}>{currentLang.flag}</span>
+                            style={{ ...iBtn({ padding: '0 6px', fontSize: '0.75rem', fontWeight: 700, width: 'auto', minWidth: 46, height: 32, gap: 6 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
+                            <img src={currentLang.flag} width={16} height={16} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                             <span>{currentLang.label}</span>
                         </button>
                         {showLangMenu && typeof document !== 'undefined' && createPortal(
-                            <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, right: 10, zIndex: 99999, background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)', boxShadow: '0 8px 30px rgba(0,0,0,0.2)', padding: '6px', minWidth: 120 }}>
+                            <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, right: 10, zIndex: 99999, background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)', boxShadow: '0 8px 30px rgba(0,0,0,0.2)', padding: '6px', minWidth: 130 }}>
                                 {LANGUAGES.map(l => (
                                     <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
                                         style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}>
-                                        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                                        <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                                         <span>{l.title}</span>
                                     </button>
                                 ))}
@@ -527,10 +527,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     <div style={island}>
                         <div ref={langRef} style={{ position: 'relative' }}>
                             <button onClick={() => { setShowLangMenu(v => !v); setShowProfile(false); setShowNotifs(false); setShowCompanyMenu(false); }}
-                                style={iBtn({ padding: '0 8px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 6, minWidth: 50 })}
+                                style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 8, minWidth: 60 })}
                                 onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                                 onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                                <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{currentLang.flag}</span>
+                                <img src={currentLang.flag} width={18} height={18} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                                 <span>{currentLang.label}</span>
                             </button>
                             {showLangMenu && (
@@ -540,7 +540,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}
                                             onMouseEnter={e => { if(lang !== l.code) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
                                             onMouseLeave={e => { if(lang !== l.code) e.currentTarget.style.background = 'transparent'; }}>
-                                            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                                            <img src={l.flag} width={18} height={18} alt={l.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
                                             <span>{l.title}</span>
                                         </button>
                                     ))}
