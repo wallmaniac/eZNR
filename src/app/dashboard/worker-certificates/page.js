@@ -301,8 +301,8 @@ function WorkerCertificatesInner() {
                    <>
                      <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
                      <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
-                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
-                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item">📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item">🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
                      </div>
                    </>, document.body
                  )}
@@ -440,24 +440,24 @@ function WorkerCertificatesInner() {
                                     {(() => {
                                         const _miSt = { width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontFamily: 'inherit' };
                                         return (<>
-                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                            <button style={_miSt} className="action-menu-item"
                                                 onClick={() => { setActionMenuId(null); handleEdit(r.id); }}>📂 {bs ? 'Otvori' : 'Open'}</button>
-                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                            <button style={_miSt} className="action-menu-item"
                                                 onClick={() => {
                                                     setActionMenuId(null);
                                                     const html = buildBulkPrintHtml([r], workers, lang);
                                                     const win = window.open('', '_blank', 'width=900,height=700');
                                                     if (win) { win.document.write(html); win.document.close(); }
                                                 }}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
-                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                            <button style={_miSt} className="action-menu-item"
                                                 onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/edit/${r.id}?tab=dokumenti`); }}>📁 {bs ? 'Dokumenti' : 'Documents'}</button>
                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                            <button style={_miSt} className="action-menu-item"
                                                 onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                            <button style={_miSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                            <button style={_miSt} className="action-menu-item"
                                                 onClick={() => { setActionMenuId(null); router.push(`/dashboard/worker-certificates/create?copyFrom=${r.id}&workerId=${r.workerId}`); }}>🔄 {bs ? 'Produži' : 'Renew'}</button>
                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                            <button style={{..._miSt, color: 'var(--danger)'}} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}
+                                            <button style={{..._miSt, color: 'var(--danger)'}} className="action-menu-item-danger"
                                                 onClick={async () => {
                                                     setActionMenuId(null);
                                                     const ok = await confirm(bs ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.');

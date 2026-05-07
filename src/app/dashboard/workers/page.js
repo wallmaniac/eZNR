@@ -1712,7 +1712,7 @@ function WorkersPageInner() {
                                 ]}
                             />
                             <PDFExportButton
-                                label={lang === 'bs' ? '📊 Excel' : '📊 Excel'}
+                                label={lang === 'bs' ? '📊 Excel' : '📊 Excel'} title={lang === 'bs' ? 'Prikaži Excel opcije' : 'Show Excel options'}
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
                                 options={[
                                     { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },

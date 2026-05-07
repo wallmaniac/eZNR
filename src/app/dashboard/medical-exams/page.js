@@ -88,12 +88,13 @@ export default function MedicalExamsPage() {
         if (next.has(id)) next.delete(id); else next.add(id);
         setSelectedIds(next);
     };
-    const handleDuplicate = async (it) => {
+    const handleDuplicate = (it) => {
         const copy = { ...it };
         delete copy.id; delete copy.createdAt; delete copy.updatedAt;
         copy.datum = new Date().toISOString().split('T')[0];
-        await create(COLLECTIONS.MEDICAL_EXAMS, copy);
-        reload();
+        setEditingId(null);
+        setForm(copy);
+        setShowForm(true);
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;

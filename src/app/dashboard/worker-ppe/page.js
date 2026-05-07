@@ -190,11 +190,11 @@ export default function WorkerPPEPage() {
                                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{r.workerName}</span>
                                   <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                               </div>
-                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✏️ {lang === 'bs' ? 'Uredi OZO' : 'Edit PPE'}</button>
-                              <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📂 {lang === 'bs' ? 'Otvori profil' : 'Open profile'}</button>
-                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}</button>
+                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} style={menuItemSt} className="action-menu-item">✏️ {lang === 'bs' ? 'Uredi OZO' : 'Edit PPE'}</button>
+                              <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} style={menuItemSt} className="action-menu-item">📂 {lang === 'bs' ? 'Otvori profil' : 'Open profile'}</button>
+                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} style={menuItemSt} className="action-menu-item">📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {lang === 'bs' ? 'Izbriši' : 'Delete'}</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} className="action-menu-item-danger">🗑️ {lang === 'bs' ? 'Izbriši' : 'Delete'}</button>
                             </div>
                             </>, document.body
                           )}
