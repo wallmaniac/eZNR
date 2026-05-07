@@ -3020,3 +3020,23 @@ button.btn-primary-glow {
   outline: none !important;
   cursor: pointer;
 }
+
+/* Action Menu Items (Dropdown buttons) */
+.action-menu-item {
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+.action-menu-item:hover {
+  background: var(--bg-table-row-hover) !important;
+}
+
+.action-menu-item-danger {
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+.action-menu-item-danger:hover {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+[data-theme='dark'] .action-menu-item-danger:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+}
