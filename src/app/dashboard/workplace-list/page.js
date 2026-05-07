@@ -22,17 +22,17 @@ export default function WorkplaceListPage() {
           <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
           <th onClick={() => toggleSort('oznaka')} style={thStyle('oznaka')}>{t('code')}{sortIcon('oznaka')}</th>
           <th>{t('orgUnit')}</th>
-          <th>{lang === 'bs' ? 'Stručna sprema' : 'Education'}</th>
-          <th>{lang === 'bs' ? 'Posebni uvjeti' : 'Special cond.'}</th>
+          <th>{lang !== 'en' ? 'Stručna sprema' : 'Education'}</th>
+          <th>{lang !== 'en' ? 'Posebni uvjeti' : 'Special cond.'}</th>
         </tr></thead><tbody>
-            {sorted.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{lang === 'bs' ? '✅ Nema radnih mjesta' : '✅ No workplaces'}</td></tr> : sorted.map((w, idx) => (
+            {sorted.length === 0 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{lang !== 'en' ? '✅ Nema radnih mjesta' : '✅ No workplaces'}</td></tr> : sorted.map((w, idx) => (
               <tr key={w.id} onClick={() => router.push(`/dashboard/workplaces?openItem=${w.id}&returnTo=/dashboard/workplace-list`)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
                 <td>{idx + 1}</td>
                 <td style={{ fontWeight: 600 }}>{w.naziv}</td>
                 <td><span className="badge badge-info">{w.oznaka}</span></td>
                 <td>{getOrgUnitName(w.orgUnitId)}</td>
                 <td>{w.strucnaSprema || '-'}</td>
-                <td>{w.posebniUvjetiRada ? <span className="badge badge-danger">{lang === 'bs' ? 'Da' : 'Yes'}</span> : <span className="badge badge-success">{lang === 'bs' ? 'Ne' : 'No'}</span>}</td>
+                <td>{w.posebniUvjetiRada ? <span className="badge badge-danger">{lang !== 'en' ? 'Da' : 'Yes'}</span> : <span className="badge badge-success">{lang !== 'en' ? 'Ne' : 'No'}</span>}</td>
               </tr>
             ))}
           </tbody></table></div>

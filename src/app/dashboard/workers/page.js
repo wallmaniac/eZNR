@@ -148,10 +148,10 @@ function WorkersPageInner() {
                 }]
             });
             loadData();
-            alert(lang === 'bs' ? `Zapisnik uspješno dodan za radnika ${w?.ime} ${w?.prezime}!` : `Document successfully added for ${w?.ime} ${w?.prezime}!`);
+            alert(lang !== 'en' ? `Zapisnik uspješno dodan za radnika ${w?.ime} ${w?.prezime}!` : `Document successfully added for ${w?.ime} ${w?.prezime}!`);
         } catch (err) {
             console.error(err);
-            alert(lang === 'bs' ? 'Greška pri učitavanju datoteke.' : 'Error reading file.');
+            alert(lang !== 'en' ? 'Greška pri učitavanju datoteke.' : 'Error reading file.');
         } finally {
             setUploadingDocForWorker(null);
             if (zosUploadRef.current) zosUploadRef.current.value = '';
@@ -346,7 +346,7 @@ function WorkersPageInner() {
 
     // Save certificate
     const handleSaveCert = async () => {
-        if (!certFormData.oznaka || !certFormData.ime) { await alert(lang === 'bs' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!'); return; }
+        if (!certFormData.oznaka || !certFormData.ime) { await alert(lang !== 'en' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!'); return; }
         if (certEditId) {
             update(COLLECTIONS.CERTIFICATES, certEditId, { ...certFormData, workerId: editingWorker });
         } else {
@@ -359,7 +359,7 @@ function WorkersPageInner() {
 
     // Save PPE
     const handleSavePpe = async () => {
-        if (!ppeFormData.naziv) { await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
+        if (!ppeFormData.naziv) { await alert(lang !== 'en' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
         if (ppeEditId) {
             update(COLLECTIONS.PPE_ASSIGNMENTS, ppeEditId, { ...ppeFormData, workerId: editingWorker });
         } else {
@@ -416,20 +416,20 @@ function WorkersPageInner() {
     };
 
     const handleDelete = async (id) => {
-        const ok = await confirm(lang === 'bs' ? 'Jeste li sigurni da želite obrisati ovog radnika?' : 'Are you sure you want to delete this worker?');
+        const ok = await confirm(lang !== 'en' ? 'Jeste li sigurni da želite obrisati ovog radnika?' : 'Are you sure you want to delete this worker?');
         if (ok) {
             removeWorkerCascade(id);
             setActionMenuId(null);
             loadData();
             if (typeof window !== 'undefined' && window.eznrToast) {
-                window.eznrToast(lang === 'bs' ? 'Radnik obrisan' : 'Worker deleted', 'info');
+                window.eznrToast(lang !== 'en' ? 'Radnik obrisan' : 'Worker deleted', 'info');
             }
         }
     };
 
     const handleSave = async (addNew = false) => {
         if (!formData.ime || !formData.prezime) {
-            await alert(lang === 'bs' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
+            await alert(lang !== 'en' ? 'Ime i prezime su obavezna polja!' : 'First name and last name are required!');
             return null;
         }
 
@@ -454,7 +454,7 @@ function WorkersPageInner() {
         isDirtyRef.current = false;
         // Toast feedback
         if (typeof window !== 'undefined' && window.eznrToast) {
-            window.eznrToast(lang === 'bs' ? `Radnik ${finalFormData.ime} ${finalFormData.prezime} spremljen ✅` : `Worker ${finalFormData.ime} ${finalFormData.prezime} saved ✅`, 'success');
+            window.eznrToast(lang !== 'en' ? `Radnik ${finalFormData.ime} ${finalFormData.prezime} spremljen ✅` : `Worker ${finalFormData.ime} ${finalFormData.prezime} saved ✅`, 'success');
         }
         // Clear refs BEFORE state changes so the openWorker watcher never re-fires
         openWorkerHandledRef.current = null;
@@ -516,8 +516,8 @@ function WorkersPageInner() {
             <div className="animate-fadeIn">
                 <PageHeader 
                     icon={<Icon3D name="Radnici.png" size={64} />} 
-                    title={editingWorker ? (lang === 'bs' ? 'Uredi radnika' : 'Edit Worker') : (lang === 'bs' ? 'Novi radnik' : 'New Worker')} 
-                    backBtn={{ onClick: handleBack, label: lang === 'bs' ? 'Radnici' : 'Workers' }} 
+                    title={editingWorker ? (lang !== 'en' ? 'Uredi radnika' : 'Edit Worker') : (lang !== 'en' ? 'Novi radnik' : 'New Worker')} 
+                    backBtn={{ onClick: handleBack, label: lang !== 'en' ? 'Radnici' : 'Workers' }} 
                 />
                 <DialogRenderer />
 
@@ -525,11 +525,11 @@ function WorkersPageInner() {
                 <div style={{ marginBottom: 20 }}>
                     <TabBar active={fullFormTab} onChange={setFullFormTab} 
                         tabs={[
-                            { key: 'osnovno', icon: '👤', label: lang === 'bs' ? 'Osnovno' : 'Basic' },
-                            { key: 'uvjerenja', icon: '📜', label: `${lang === 'bs' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
+                            { key: 'osnovno', icon: '👤', label: lang !== 'en' ? 'Osnovno' : 'Basic' },
+                            { key: 'uvjerenja', icon: '📜', label: `${lang !== 'en' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
                             { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
-                            { key: 'pregledi', icon: '👨‍⚕️', label: `${lang === 'bs' ? 'Pregledi' : 'Exams'} (${workerMedExams.length})` },
-                            { key: 'dokumenti', icon: '📁', label: `${lang === 'bs' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
+                            { key: 'pregledi', icon: '👨‍⚕️', label: `${lang !== 'en' ? 'Pregledi' : 'Exams'} (${workerMedExams.length})` },
+                            { key: 'dokumenti', icon: '📁', label: `${lang !== 'en' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
                         ]} 
                     />
                 </div>
@@ -551,7 +551,7 @@ function WorkersPageInner() {
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     {t('age')}
-                                    <InfoTip text={lang === 'bs' ? 'Automatski se računa na osnovu datuma rođenja.' : 'Auto-calculated based on date of birth.'} />
+                                    <InfoTip text={lang !== 'en' ? 'Automatski se računa na osnovu datuma rođenja.' : 'Auto-calculated based on date of birth.'} />
                                 </label>
                                 <div className="form-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-card)', color: formData.zivotnaDob ? 'var(--text)' : 'var(--text-muted)', cursor: 'not-allowed' }}>{formData.zivotnaDob || '—'}</div>
                             </div>
@@ -564,7 +564,7 @@ function WorkersPageInner() {
                             <div className="form-group">
                                 <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                                     {t('totalExperience')}
-                                    <InfoTip text={lang === 'bs' ? 'Automatski se računa: Staž do dolaska + radni staž u firmi (od Datum zaposlenja do Datum odlaska ili danas).' : 'Auto-calculated from: prior experience + work tenure since employment date.'} />
+                                    <InfoTip text={lang !== 'en' ? 'Automatski se računa: Staž do dolaska + radni staž u firmi (od Datum zaposlenja do Datum odlaska ili danas).' : 'Auto-calculated from: prior experience + work tenure since employment date.'} />
                                 </label>
                                 <div className="form-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-input)', color: formData.ukupniStaz ? 'var(--text)' : 'var(--text-muted)', cursor: 'not-allowed' }}>{formData.ukupniStaz || '—'}</div>
                             </div>
@@ -577,8 +577,8 @@ function WorkersPageInner() {
                             </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 20 }}>
-                            <TimePicker label={lang === 'bs' ? 'Radno vrijeme od' : 'Work from'} value={formData.radnoVrijemeOd} onChange={v => updateField('radnoVrijemeOd', v)} />
-                            <TimePicker label={lang === 'bs' ? 'Radno vrijeme do' : 'Work to'} value={formData.radnoVrijemeDo} onChange={v => updateField('radnoVrijemeDo', v)} />
+                            <TimePicker label={lang !== 'en' ? 'Radno vrijeme od' : 'Work from'} value={formData.radnoVrijemeOd} onChange={v => updateField('radnoVrijemeOd', v)} />
+                            <TimePicker label={lang !== 'en' ? 'Radno vrijeme do' : 'Work to'} value={formData.radnoVrijemeDo} onChange={v => updateField('radnoVrijemeDo', v)} />
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
@@ -595,7 +595,7 @@ function WorkersPageInner() {
                                     if (zosCerts.length > 0) {
                                         const oldWpName = getWorkplaceName(oldId);
                                         const newWpName = getWorkplaceName(v);
-                                        const ok = await confirm(lang === 'bs'
+                                        const ok = await confirm(lang !== 'en'
                                             ? `Promjena radnog mjesta (${oldWpName} → ${newWpName}) zahtijeva novo osposobljavanje.\n\n${zosCerts.length} ZOS uvjerenje(a) će biti označeno kao "Nevažeće".\n\nNastaviti?`
                                             : `Workplace change (${oldWpName} → ${newWpName}) requires new training.\n\n${zosCerts.length} ZOS certificate(s) will be marked as "Invalid".\n\nContinue?`);
                                         if (ok) {
@@ -607,7 +607,7 @@ function WorkersPageInner() {
                                                 });
                                             }
                                             setCertificates(getWorkerCertificates(editingWorker));
-                                            await alert(lang === 'bs'
+                                            await alert(lang !== 'en'
                                                 ? `⚠️ ${zosCerts.length} ZOS uvjerenje(a) označeno kao "Nevažeće". Radnik mora proći novo osposobljavanje za novo radno mjesto.`
                                                 : `⚠️ ${zosCerts.length} ZOS certificate(s) marked as "Invalid". Worker must undergo new training.`);
                                         } else {
@@ -636,20 +636,20 @@ function WorkersPageInner() {
                         {(() => { const _wp = workplaces.find(w => w.id === formData.radnoMjestoId); return _wp && (_wp.radnoVrijemeOd || _wp.radnoVrijemeDo) ? (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 2fr', gap: 16, marginBottom: 20, alignItems: 'end' }}>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label className="form-label">{lang === 'bs' ? 'Radno vrijeme od' : 'Work from'}</label>
+                                    <label className="form-label">{lang !== 'en' ? 'Radno vrijeme od' : 'Work from'}</label>
                                     <div className="form-input" style={{ cursor: 'not-allowed', background: 'var(--bg-input)', color: 'var(--text)' }}>{_wp.radnoVrijemeOd || '—'}</div>
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <label className="form-label">{lang === 'bs' ? 'Radno vrijeme do' : 'Work to'}</label>
+                                    <label className="form-label">{lang !== 'en' ? 'Radno vrijeme do' : 'Work to'}</label>
                                     <div className="form-input" style={{ cursor: 'not-allowed', background: 'var(--bg-input)', color: 'var(--text)' }}>{_wp.radnoVrijemeDo || '—'}</div>
                                 </div>
                             </div>
                         ) : null; })()}
 
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <label className="form-label">{lang === 'bs' ? 'Dodatni poslovi' : 'Additional jobs'}</label>
+                            <label className="form-label">{lang !== 'en' ? 'Dodatni poslovi' : 'Additional jobs'}</label>
                             <textarea className="form-textarea" value={formData.dodatniPoslovi || ''} onChange={e => updateField('dodatniPoslovi', e.target.value)}
-                                placeholder={lang === 'bs' ? 'Opišite dodatne poslove i obaveze koje radnik obavlja...' : 'Describe additional jobs...'} rows={2} />
+                                placeholder={lang !== 'en' ? 'Opišite dodatne poslove i obaveze koje radnik obavlja...' : 'Describe additional jobs...'} rows={2} />
                         </div>
                     </div>
                 </div>
@@ -679,7 +679,7 @@ function WorkersPageInner() {
                         <>
                             {hasNightShift && (
                                 <div style={{ background: 'rgba(239,83,80,0.15)', borderBottom: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px 16px', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                                    🌙 {lang === 'bs' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad radnog mjesta)' : 'Mandatory medical exam at least once every 2 years (Night-shift workplace)'}
+                                    🌙 {lang !== 'en' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad radnog mjesta)' : 'Mandatory medical exam at least once every 2 years (Night-shift workplace)'}
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -688,7 +688,7 @@ function WorkersPageInner() {
                                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={e => e.currentTarget.style.filter = ''}>
                                     <span style={{ fontSize: '1.4rem' }}>📋</span>
                                     <div>
-                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang === 'bs' ? 'Uvjerenja' : 'Certs'}</div>
+                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang !== 'en' ? 'Uvjerenja' : 'Certs'}</div>
                                         <div style={{ fontWeight: 700, fontSize: '0.9rem', color: _expC > 0 ? 'var(--danger)' : 'var(--success)' }}>{_valC} ✓{_expC > 0 && <span style={{ color: 'var(--danger)', marginLeft: 6 }}> {_expC} ⚠</span>}</div>
                                     </div>
                                 </div>
@@ -697,7 +697,7 @@ function WorkersPageInner() {
                                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={e => e.currentTarget.style.filter = ''}>
                                     <span style={{ fontSize: '1.4rem' }}>👨‍⚕️</span>
                                     <div>
-                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang === 'bs' ? 'Pregled' : 'Med. Exam'}</div>
+                                        <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang !== 'en' ? 'Pregled' : 'Med. Exam'}</div>
                                         <div style={{ fontWeight: 700, fontSize: '0.9rem', color: _mColor }}>{_lm ? (_mc === 'expired' ? 'Istekao!' : _mc === 'soon' ? `${_lmd}d` : 'Vrijedi') : 'Nema'}</div>
                                         {_lm && <div style={{ fontSize: '0.67rem', color: 'var(--text-muted)' }}>{formatDate(_lm.vrijediDo)}</div>}
                                     </div>
@@ -708,7 +708,7 @@ function WorkersPageInner() {
                                     <span style={{ fontSize: '1.4rem' }}>🦺</span>
                                     <div>
                                         <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>OZO</div>
-                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: ppeAssign.length > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>{ppeAssign.length} {lang === 'bs' ? 'zaduženja' : 'assigned'}</div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: ppeAssign.length > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>{ppeAssign.length} {lang !== 'en' ? 'zaduženja' : 'assigned'}</div>
                                     </div>
                                 </div>
                             </div>
@@ -720,12 +720,12 @@ function WorkersPageInner() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', cursor: 'pointer' }}>
                             <input type="checkbox" checked={formData.posebniUvjeti} onChange={e => updateField('posebniUvjeti', e.target.checked)} />
-                            {lang === 'bs' ? 'Radnik radi pod posebnim uvjetima' : 'Worker works under special conditions'}
+                            {lang !== 'en' ? 'Radnik radi pod posebnim uvjetima' : 'Worker works under special conditions'}
                         </label>
                     </div>
                     {formData.posebniUvjeti && (
                         <div className="alert alert-warning">
-                            ⚠️ {lang === 'bs'
+                            ⚠️ {lang !== 'en'
                                 ? 'Za pozicije sa posebnim uvjetima rada potrebno je provesti periodične ljekarske preglede.'
                                 : 'Positions with special working conditions require periodic medical examinations.'}
                         </div>
@@ -738,7 +738,7 @@ function WorkersPageInner() {
                         <Field label={t('street')} value={formData.ulica} onChange={v => updateField('ulica', v)} />
                         <Field label={t('houseNumber')} value={formData.kucniBroj} onChange={v => updateField('kucniBroj', v)} />
                         <SelectField label={t('place')} value={formData.mjestoId} onChange={v => updateField('mjestoId', v)}
-                            options={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj})` }))} placeholder={lang === 'bs' ? 'Odaberite mjesto' : 'Select place'} />
+                            options={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj})` }))} placeholder={lang !== 'en' ? 'Odaberite mjesto' : 'Select place'} />
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 16 }}>
                         <Field label={t('municipality')} value={formData.opcina} onChange={v => updateField('opcina', v)} />
@@ -777,7 +777,7 @@ function WorkersPageInner() {
                         <div className="form-group">
                             <label className="form-label">{t('note')}</label>
                             <textarea className="form-textarea" value={formData.napomena} onChange={e => updateField('napomena', e.target.value)}
-                                placeholder={lang === 'bs' ? 'Napomena...' : 'Note...'} rows={3} />
+                                placeholder={lang !== 'en' ? 'Napomena...' : 'Note...'} rows={3} />
                         </div>
                     </div>
                 </div>
@@ -799,7 +799,7 @@ function WorkersPageInner() {
                                 let wId = editingWorkerRef.current;
                                 if (!wId) {
                                     if (!formData.ime || !formData.prezime) {
-                                        await alert(lang === 'bs' ? 'Molimo unesite ime i prezime radnika prije dodavanja uvjerenja.' : 'Please enter worker name before adding a certificate.');
+                                        await alert(lang !== 'en' ? 'Molimo unesite ime i prezime radnika prije dodavanja uvjerenja.' : 'Please enter worker name before adding a certificate.');
                                         return;
                                     }
                                     wId = await handleSave(false);
@@ -813,17 +813,17 @@ function WorkersPageInner() {
                             </label>
                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', cursor: 'pointer', whiteSpace: 'nowrap' }}>
                                 <input type="checkbox" checked={showExpiringSoon} onChange={e => { setShowExpiringSoon(e.target.checked); if (e.target.checked) setShowOnlyValidCerts(false); }} />
-                                {lang === 'bs' ? 'Ističe u' : 'Expiring in'}
+                                {lang !== 'en' ? 'Ističe u' : 'Expiring in'}
                                 <select
                                     value={expiringSoonDays}
                                     onChange={e => setExpiringSoonDays(Number(e.target.value))}
                                     disabled={!showExpiringSoon}
                                     style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '2px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
                                 >
-                                    <option value={30}>30 {lang === 'bs' ? 'dana' : 'days'}</option>
-                                    <option value={60}>60 {lang === 'bs' ? 'dana' : 'days'}</option>
-                                    <option value={90}>90 {lang === 'bs' ? 'dana' : 'days'}</option>
-                                    <option value={180}>180 {lang === 'bs' ? 'dana' : 'days'}</option>
+                                    <option value={30}>30 {lang !== 'en' ? 'dana' : 'days'}</option>
+                                    <option value={60}>60 {lang !== 'en' ? 'dana' : 'days'}</option>
+                                    <option value={90}>90 {lang !== 'en' ? 'dana' : 'days'}</option>
+                                    <option value={180}>180 {lang !== 'en' ? 'dana' : 'days'}</option>
                                 </select>
                             </label>
                         </div>
@@ -832,13 +832,13 @@ function WorkersPageInner() {
                                 <thead>
                                     <tr>
                                         <th>{t('actions')}</th>
-                                        <th>{lang === 'bs' ? 'Oznaka' : 'Code'}</th>
+                                        <th>{lang !== 'en' ? 'Oznaka' : 'Code'}</th>
                                         <th>{t('date')}</th>
-                                        <th>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'}</th>
+                                        <th>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'}</th>
                                         <th>{t('name')}</th>
-                                        <th>{lang === 'bs' ? 'Tip uvjerenja' : 'Cert. type'}</th>
-                                        <th>{lang === 'bs' ? 'Upisao' : 'Entered by'}</th>
-                                        <th>{lang === 'bs' ? 'Sposobnost' : 'Capability'}</th>
+                                        <th>{lang !== 'en' ? 'Tip uvjerenja' : 'Cert. type'}</th>
+                                        <th>{lang !== 'en' ? 'Upisao' : 'Entered by'}</th>
+                                        <th>{lang !== 'en' ? 'Sposobnost' : 'Capability'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -878,7 +878,7 @@ function WorkersPageInner() {
                                                             setCertMenuId(c.id);
                                                         }}
                                                     >
-                                                        ⚙️ {lang === 'bs' ? 'Akcije' : 'Actions'} ▾
+                                                        ⚙️ {lang !== 'en' ? 'Akcije' : 'Actions'} ▾
                                                     </button>
                                                     {/* Portal: mount dropdown directly on document.body to escape all CSS transforms */}
                                                     {certMenuId === c.id && typeof document !== 'undefined' && createPortal(
@@ -896,15 +896,15 @@ function WorkersPageInner() {
                                                         }}>
                                                             <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                                 onClick={() => { setCertMenuId(null); setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>
-                                                                ✏️ <span>{lang === 'bs' ? 'Brza izmjena' : 'Quick edit'}</span>
+                                                                ✏️ <span>{lang !== 'en' ? 'Brza izmjena' : 'Quick edit'}</span>
                                                             </button>
                                                             <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                                 onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${returnToParam}`); }}>
-                                                                📄 <span>{lang === 'bs' ? 'Uredi potpuno' : 'Edit full form'}</span>
+                                                                📄 <span>{lang !== 'en' ? 'Uredi potpuno' : 'Edit full form'}</span>
                                                             </button>
                                                             <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8 }}
                                                                 onClick={() => { setCertMenuId(null); markClean(); router.push(`/dashboard/worker-certificates/create?copyFrom=${c.id}&returnTo=${returnToParam}`); }}>
-                                                                📋 <span>{lang === 'bs' ? 'Kopiraj uvjerenje' : 'Copy certificate'}</span>
+                                                                📋 <span>{lang !== 'en' ? 'Kopiraj uvjerenje' : 'Copy certificate'}</span>
                                                             </button>
                                                             {isZOS && (
                                                                 <>
@@ -919,23 +919,23 @@ function WorkersPageInner() {
                                                                             const companyFull = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
                                                                             printZosPdf({ company: companyFull, worker: wk, workplaceName: wpN, training: { naziv: c.izdanoIzObuke || c.ime }, officer: c.strucnjakZNR || c.upisao || '', date: c.datum || new Date().toISOString(), certOznaka: c.oznaka, testResult: c.rezultatTesta || '' });
                                                                         }}>
-                                                                        🖨️ <span>{lang === 'bs' ? 'Ispiši ZOS dokument' : 'Print ZOS document'}</span>
+                                                                        🖨️ <span>{lang !== 'en' ? 'Ispiši ZOS dokument' : 'Print ZOS document'}</span>
                                                                     </button>
                                                                 </>
                                                             )}
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
                                                             {!c.potpisanScan && (isZNR || isZOP) && (
                                                                 <div style={{ padding: '6px 14px', fontSize: '0.72rem', color: 'var(--warning)', background: 'rgba(245,158,11,0.05)', lineHeight: 1.4, borderBottom: '1px solid var(--border-light)' }}>
-                                                                    ⚠️ {lang === 'bs'
+                                                                    ⚠️ {lang !== 'en'
                                                                         ? `Priložiti ispunjen i potpisan ${isZOP ? 'Test ZOP' : 'Test ZNR'}.`
                                                                         : `Upload signed ${isZOP ? 'ZOP Test' : 'ZNR Test'}.`}
                                                                 </div>
                                                             )}
                                                             <label className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', margin: 0 }}>
-                                                                📎 <span>{c.potpisanScan ? (lang === 'bs' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (isZNR ? (lang === 'bs' ? 'Upload potpisan Test ZNR' : 'Upload signed ZNR Test') : isZOP ? (lang === 'bs' ? 'Upload potpisan Test ZOP' : 'Upload signed ZOP Test') : (lang === 'bs' ? 'Upload potpisan scan' : 'Upload signed scan'))}</span>
+                                                                📎 <span>{c.potpisanScan ? (lang !== 'en' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (isZNR ? (lang !== 'en' ? 'Upload potpisan Test ZNR' : 'Upload signed ZNR Test') : isZOP ? (lang !== 'en' ? 'Upload potpisan Test ZOP' : 'Upload signed ZOP Test') : (lang !== 'en' ? 'Upload potpisan scan' : 'Upload signed scan'))}</span>
                                                                 <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={async (e) => {
                                                                     const file = e.target.files?.[0]; if (!file) return;
-                                                                    if (file.size > 15000000) { alert(lang === 'bs' ? 'Max 15MB' : 'Max 15MB'); return; }
+                                                                    if (file.size > 15000000) { alert(lang !== 'en' ? 'Max 15MB' : 'Max 15MB'); return; }
                                                                     try {
                                                                         const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
                                                                         update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: uploadResult.url, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
@@ -961,13 +961,13 @@ function WorkersPageInner() {
                                                                         else { w.document.write(`<img src="${c.potpisanScan}" style="max-width:100%; margin:20px auto; display:block;" />`); }
                                                                         w.document.close();
                                                                     }}>
-                                                                    👁️ <span>{lang === 'bs' ? 'Prikaži potpisan dokument' : 'View signed document'}</span>
+                                                                    👁️ <span>{lang !== 'en' ? 'Prikaži potpisan dokument' : 'View signed document'}</span>
                                                                 </button>
                                                             )}
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '4px 0' }} />
                                                             <button className="btn btn-ghost" style={{ width: '100%', textAlign: 'left', padding: '8px 14px', fontSize: '0.84rem', borderRadius: 0, display: 'flex', alignItems: 'center', gap: 8, color: 'var(--danger)' }}
-                                                                onClick={async () => { setCertMenuId(null); const ok = await confirm(lang === 'bs' ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>
-                                                                🗑️ <span>{lang === 'bs' ? 'Obriši uvjerenje' : 'Delete certificate'}</span>
+                                                                onClick={async () => { setCertMenuId(null); const ok = await confirm(lang !== 'en' ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); setCertificates(getWorkerCertificates(editingWorker)); } }}>
+                                                                🗑️ <span>{lang !== 'en' ? 'Obriši uvjerenje' : 'Delete certificate'}</span>
                                                             </button>
                                                         </div>,
                                                         document.body
@@ -1001,7 +1001,7 @@ function WorkersPageInner() {
                 <div ref={ozoRef}>
                     <Accordion title={t('workerPPESection')} open={true} onToggle={() => {}}>
                         <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-                            <button className="btn btn-outline btn-sm" onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '' }); setShowPpeForm(true); }}>+ {lang === 'bs' ? 'Novo zaduženje' : 'New assignment'}</button>
+                            <button className="btn btn-outline btn-sm" onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '' }); setShowPpeForm(true); }}>+ {lang !== 'en' ? 'Novo zaduženje' : 'New assignment'}</button>
                         </div>
                         <div className="data-table-wrapper">
                             <table className="data-table">
@@ -1009,8 +1009,8 @@ function WorkersPageInner() {
                                     <tr>
                                         <th>{t('actions')}</th>
                                         <th>{t('name')}</th>
-                                        <th>{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</th>
-                                        <th>{lang === 'bs' ? 'Datum razduženja' : 'Return date'}</th>
+                                        <th>{lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</th>
+                                        <th>{lang !== 'en' ? 'Datum razduženja' : 'Return date'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1021,7 +1021,7 @@ function WorkersPageInner() {
                                             <td>
                                                 <div style={{ display: 'flex', gap: 4 }}>
                                                     <button className="btn btn-ghost btn-sm" onClick={() => { setPpeFormData({ ...p }); setPpeEditId(p.id); setShowPpeForm(true); }}>✏️</button>
-                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati zaduženje?' : 'Delete assignment?'); if (ok) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); setPpeAssign(getWorkerPPE(editingWorker)); } }}>🗑️</button>
+                                                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={async () => { const ok = await confirm(lang !== 'en' ? 'Obrisati zaduženje?' : 'Delete assignment?'); if (ok) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); setPpeAssign(getWorkerPPE(editingWorker)); } }}>🗑️</button>
                                                 </div>
                                             </td>
                                             <td style={{ fontWeight: 600 }}>{p.naziv}</td>
@@ -1039,38 +1039,38 @@ function WorkersPageInner() {
                 {fullFormTab === 'pregledi' && (<>
                 {/* Ljekarski pregledi */}
                 <div ref={medExamsRef}>
-                    <Accordion title={"👨‍⚕️ " + (lang === 'bs' ? 'Ljekarski pregledi' : 'Medical Exams')} open={true} onToggle={() => {}}>
+                    <Accordion title={"👨‍⚕️ " + (lang !== 'en' ? 'Ljekarski pregledi' : 'Medical Exams')} open={true} onToggle={() => {}}>
                         <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button className="btn btn-outline btn-sm" onClick={() => { markClean(); router.push('/dashboard/medical-exams?openNew=1&workerId=' + encodeURIComponent(editingWorker) + '&returnTo=worker'); }}>
-                                + {lang === 'bs' ? 'Novi pregled' : 'New Exam'}
+                                + {lang !== 'en' ? 'Novi pregled' : 'New Exam'}
                             </button>
                             <button className="btn btn-ghost btn-sm" onClick={() => { if (showMedExamForm) { sessionStorage.setItem('eznr_draft_workers_medexam', JSON.stringify({ workerId: editingWorker, form: medExamForm, editId: medExamEditId })); } markClean(); router.push('/dashboard/referral-ra1?openNew=1'); }}>
-                                📋 {lang === 'bs' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
+                                📋 {lang !== 'en' ? 'Nova uputnica RA-1' : 'New RA-1 Referral'}
                             </button>
                             <button className="btn btn-ghost btn-sm" style={{ marginLeft: 'auto', color: 'var(--primary)' }} onClick={() => { markClean(); router.push('/dashboard/medical-exams'); }}>
-                                {lang === 'bs' ? 'Svi pregledi →' : 'All exams →'}
+                                {lang !== 'en' ? 'Svi pregledi →' : 'All exams →'}
                             </button>
                         </div>
                         {workerMedExams.length === 0 ? (
                             <div style={{ padding: '16px 0', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                                {lang === 'bs' ? 'Nema evidentiranih ljekarskih pregleda za ovog radnika.' : 'No medical exams recorded for this worker.'}
+                                {lang !== 'en' ? 'Nema evidentiranih ljekarskih pregleda za ovog radnika.' : 'No medical exams recorded for this worker.'}
                             </div>
                         ) : (
                             <div className="data-table-wrapper">
                                 <table className="data-table">
                                     <thead><tr>
-                                        <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
-                                        <th>{lang === 'bs' ? 'Vrsta pregleda' : 'Type'}</th>
-                                        <th>{lang === 'bs' ? 'Datum' : 'Date'}</th>
-                                        <th>{lang === 'bs' ? 'Naredni pregled' : 'Next exam'}</th>
-                                        <th>{lang === 'bs' ? 'Rezultat' : 'Result'}</th>
-                                        <th>{lang === 'bs' ? 'Ustanova' : 'Institution'}</th>
+                                        <th>{lang !== 'en' ? 'Akcije' : 'Actions'}</th>
+                                        <th>{lang !== 'en' ? 'Vrsta pregleda' : 'Type'}</th>
+                                        <th>{lang !== 'en' ? 'Datum' : 'Date'}</th>
+                                        <th>{lang !== 'en' ? 'Naredni pregled' : 'Next exam'}</th>
+                                        <th>{lang !== 'en' ? 'Rezultat' : 'Result'}</th>
+                                        <th>{lang !== 'en' ? 'Ustanova' : 'Institution'}</th>
                                     </tr></thead>
                                     <tbody>
                                         {workerMedExams.sort((a, b) => (b.datumPregleda || '').localeCompare(a.datumPregleda || '')).map(me => {
                                             const days = me.vrijediDo ? Math.ceil((new Date(me.vrijediDo) - new Date()) / 86400000) : null;
                                             const badgeCls = days === null ? '' : days < 0 ? 'badge-danger' : days <= 90 ? 'badge-warning' : 'badge-success';
-                                            const badgeLabel = days === null ? (lang === 'bs' ? 'Bez roka' : 'No deadline') : days < 0 ? (lang === 'bs' ? 'Isteklo' : 'Expired') : formatDate(me.vrijediDo);
+                                            const badgeLabel = days === null ? (lang !== 'en' ? 'Bez roka' : 'No deadline') : days < 0 ? (lang !== 'en' ? 'Isteklo' : 'Expired') : formatDate(me.vrijediDo);
                                             const TMAP = { prethodni: 'Prethodni', 'periodicni': 'Periodički', vanredni: 'Vanredni', nocniRad: 'Noćni rad', ostalo: 'Ostalo' };
                                             const RCOL = { 'Sposoban': 'var(--success)', 'Uvjetno Sposoban': 'var(--warning)', 'Nesposoban': 'var(--danger)' };
                                             const openExamEdit = () => { setMedExamEditId(me.id); setMedExamForm({ tipPregleda: me.tipPregleda || 'prethodni', datumPregleda: me.datumPregleda || '', vrijediDo: me.vrijediDo || '', rezultat: me.rezultat || 'Sposoban', zdravstvenaUstanova: me.zdravstvenaUstanova || '', doktorIme: me.doktorIme || '', ogranicenja: me.ogranicenja || '', uputnicaBroj: me.uputnicaBroj || '' }); setShowMedExamForm(true); };
@@ -1083,8 +1083,8 @@ function WorkersPageInner() {
                                                 >
                                                     <td onClick={e => e.stopPropagation()}>
                                                         <div style={{ display: 'flex', gap: 4 }}>
-                                                            <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={openExamEdit}>✏️</button>
-                                                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={async () => { const ok = await confirm(lang === 'bs' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>🗑️</button>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Uredi' : 'Edit'} onClick={openExamEdit}>✏️</button>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Obriši' : 'Delete'} onClick={async () => { const ok = await confirm(lang !== 'en' ? 'Obrisati pregled?' : 'Delete exam?'); if (ok) { remove(COLLECTIONS.MEDICAL_EXAMS, me.id); setWorkerMedExams(getAll(COLLECTIONS.MEDICAL_EXAMS).filter(e => e.workerId === editingWorker)); } }}>🗑️</button>
                                                         </div>
                                                     </td>
                                                     <td style={{ fontSize: '0.82rem' }}>{TMAP[me.tipPregleda] || me.tipPregleda}</td>
@@ -1106,7 +1106,7 @@ function WorkersPageInner() {
                 {fullFormTab === 'dokumenti' && (<>
                 {/* ── Dokumenti ── */}
                 <div ref={dokumentiRef}>
-                    <Accordion title={`📁 ${lang === 'bs' ? 'Dokumenti' : 'Documents'}`} open={true} onToggle={() => {}}>
+                    <Accordion title={`📁 ${lang !== 'en' ? 'Dokumenti' : 'Documents'}`} open={true} onToggle={() => {}}>
                         {(() => {
                             // Collect all documents from this worker's certificates
                             const workerDocs = [];
@@ -1138,7 +1138,7 @@ function WorkersPageInner() {
                             const w = editingWorker ? getById(COLLECTIONS.WORKERS, editingWorker) : null;
                             if (w?.dokumenti && Array.isArray(w.dokumenti)) {
                                 w.dokumenti.forEach((d, i) => {
-                                    workerDocs.push({ id: `wdoc_${i}`, name: d.name || 'Dokument', url: d.url, data: d.data, type: d.type || '', size: d.size || 0, source: lang === 'bs' ? 'Direktno učitano' : 'Direct upload', date: d.date || '' });
+                                    workerDocs.push({ id: `wdoc_${i}`, name: d.name || 'Dokument', url: d.url, data: d.data, type: d.type || '', size: d.size || 0, source: lang !== 'en' ? 'Direktno učitano' : 'Direct upload', date: d.date || '' });
                                 });
                             }
 
@@ -1228,7 +1228,7 @@ function WorkersPageInner() {
                                     {/* Upload new document directly */}
                                     <div style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
                                         <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                                            📎 {lang === 'bs' ? 'Učitaj novi dokument' : 'Upload new document'}
+                                            📎 {lang !== 'en' ? 'Učitaj novi dokument' : 'Upload new document'}
                                             <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display: 'none' }} onChange={async (e) => {
                                                 const file = e.target.files?.[0];
                                                 if (!file || !editingWorker) return;
@@ -1246,30 +1246,30 @@ function WorkersPageInner() {
                                                             storagePath: uploadResult.storagePath,
                                                             size: uploadResult.size,
                                                             type: uploadResult.type,
-                                                            source: lang === 'bs' ? 'Direktno učitano' : 'Direct upload',
+                                                            source: lang !== 'en' ? 'Direktno učitano' : 'Direct upload',
                                                             date: new Date().toISOString().split('T')[0],
                                                         }]
                                                     });
                                                     loadData();
                                                     if (typeof window !== 'undefined' && window.eznrToast) {
-                                                        window.eznrToast(lang === 'bs' ? 'Dokument učitan!' : 'Document uploaded!', 'success');
+                                                        window.eznrToast(lang !== 'en' ? 'Dokument učitan!' : 'Document uploaded!', 'success');
                                                     }
                                                 } catch (err) {
                                                     console.error('[Upload] Dokument error:', err);
-                                                    alert(lang === 'bs' ? 'Greška pri učitavanju.' : 'Upload error.');
+                                                    alert(lang !== 'en' ? 'Greška pri učitavanju.' : 'Upload error.');
                                                 } finally {
                                                     e.target.value = '';
                                                 }
                                             }} />
                                         </label>
                                         <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                                            {workerDocs.length} {lang === 'bs' ? 'dokument(a)' : 'document(s)'}
+                                            {workerDocs.length} {lang !== 'en' ? 'dokument(a)' : 'document(s)'}
                                         </span>
                                     </div>
 
                                     {workerDocs.length === 0 ? (
                                         <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                            {lang === 'bs' ? 'Nema učitanih dokumenata za ovog radnika.' : 'No documents uploaded for this worker.'}
+                                            {lang !== 'en' ? 'Nema učitanih dokumenata za ovog radnika.' : 'No documents uploaded for this worker.'}
                                         </div>
                                     ) : (
                                         <div style={{ display: 'grid', gap: 8 }}>
@@ -1301,26 +1301,26 @@ function WorkersPageInner() {
                                                         </div>
                                                         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
                                                             {(isUrl || isPdf || isImg) && (
-                                                                <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Prikaži' : 'View'}
+                                                                <button className="btn btn-ghost btn-sm" title={lang !== 'en' ? 'Prikaži' : 'View'}
                                                                     onClick={() => openDoc(doc)} style={{ padding: '4px 6px', fontSize: '0.9rem' }}>
                                                                     👁️
                                                                 </button>
                                                             )}
-                                                            <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Preuzmi' : 'Download'}
+                                                            <button className="btn btn-ghost btn-sm" title={lang !== 'en' ? 'Preuzmi' : 'Download'}
                                                                 onClick={() => downloadDoc(doc)} style={{ padding: '4px 6px', fontSize: '0.9rem' }}>
                                                                 ⬇️
                                                             </button>
                                                             {(isUrl || isPdf || isImg) && (
-                                                                <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Isprintaj' : 'Print'}
+                                                                <button className="btn btn-ghost btn-sm" title={lang !== 'en' ? 'Isprintaj' : 'Print'}
                                                                     onClick={() => printDoc(doc)} style={{ padding: '4px 6px', fontSize: '0.9rem' }}>
                                                                     🖨️
                                                                 </button>
                                                             )}
                                                         
-                                                            <button className="btn btn-ghost btn-sm" title={lang === 'bs' ? 'Obriši' : 'Delete'}
+                                                            <button className="btn btn-ghost btn-sm" title={lang !== 'en' ? 'Obriši' : 'Delete'}
                                                                 onClick={async () => {
                                                                     if (doc.id?.startsWith('wdoc_')) {
-                                                                        const ok = await confirm(lang === 'bs' ? 'Obrisati dokument?' : 'Delete document?');
+                                                                        const ok = await confirm(lang !== 'en' ? 'Obrisati dokument?' : 'Delete document?');
                                                                         if (ok) {
                                                                             const wData = getById(COLLECTIONS.WORKERS, editingWorker);
                                                                             const idx = parseInt(doc.id.replace('wdoc_', ''), 10);
@@ -1330,7 +1330,7 @@ function WorkersPageInner() {
                                                                             loadData();
                                                                         }
                                                                     } else {
-                                                                        await alert(lang === 'bs' ? 'Ovaj dokument je vezan uz uvjerenje. Obriši ga iz uvjerenja.' : 'This document is linked to a certificate. Delete it from the certificate.');
+                                                                        await alert(lang !== 'en' ? 'Ovaj dokument je vezan uz uvjerenje. Obriši ga iz uvjerenja.' : 'This document is linked to a certificate. Delete it from the certificate.');
                                                                     }
                                                                 }} style={{ padding: '4px 6px', fontSize: '0.9rem', color: 'var(--danger)' }}>
                                                                 🗑️
@@ -1352,42 +1352,42 @@ function WorkersPageInner() {
                     <div className="modal-overlay" onClick={() => { setShowCertForm(false); setCertEditId(null); }}>
                         <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h2>📜 {certEditId ? (lang === 'bs' ? 'Uredi uvjerenje' : 'Edit Certificate') : (lang === 'bs' ? 'Novo uvjerenje' : 'New Certificate')}</h2>
+                                <h2>📜 {certEditId ? (lang !== 'en' ? 'Uredi uvjerenje' : 'Edit Certificate') : (lang !== 'en' ? 'Novo uvjerenje' : 'New Certificate')}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={() => { setShowCertForm(false); setCertEditId(null); }}>✕</button>
                             </div>
                             <div className="modal-body">
                                 <div className="form-grid-2">
                                     <div className="form-group">
-                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Oznaka' : 'Code'} * <InfoTip text="Interni broj ili evidencijski kod certifikata u registru poslodavca (npr. ZNR-001)" /></label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Oznaka' : 'Code'} * <InfoTip text="Interni broj ili evidencijski kod certifikata u registru poslodavca (npr. ZNR-001)" /></label>
                                         <input className="form-input" value={certFormData.oznaka} onChange={e => setCertFormData({ ...certFormData, oznaka: e.target.value })} placeholder="ZNR-001" />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Tip uvjerenja' : 'Cert. type'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Tip uvjerenja' : 'Cert. type'}</label>
                                         <select className="form-select" value={certFormData.tipUvjerenja} onChange={e => setCertFormData({ ...certFormData, tipUvjerenja: e.target.value })}>
                                             {certTypes.filter((ct, i, a) => a.findIndex(x => x.naziv === ct.naziv) === i).map(ct => <option key={ct.id} value={ct.oznaka}>{ct.naziv}</option>)}
                                         </select>
                                     </div>
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                         <label className="form-label">{t('name')} *</label>
-                                        <input className="form-input" value={certFormData.ime} onChange={e => setCertFormData({ ...certFormData, ime: e.target.value })} placeholder={lang === 'bs' ? 'Naziv osposobljavanja' : 'Certificate name'} />
+                                        <input className="form-input" value={certFormData.ime} onChange={e => setCertFormData({ ...certFormData, ime: e.target.value })} placeholder={lang !== 'en' ? 'Naziv osposobljavanja' : 'Certificate name'} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{t('date')}</label>
                                         <DateInput value={certFormData.datum} onChange={v => setCertFormData({ ...certFormData, datum: v })} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'} <InfoTip text="Aplikacija će promijeniti status u crveno kada ovaj datum istekne ili postane blizu isteka." /></label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <InfoTip text="Aplikacija će promijeniti status u crveno kada ovaj datum istekne ili postane blizu isteka." /></label>
                                         <DateInput value={certFormData.vrijediDo} onChange={v => setCertFormData({ ...certFormData, vrijediDo: v })} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Sposobnost' : 'Capability'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Sposobnost' : 'Capability'}</label>
                                         <select className="form-select" value={certFormData.sposobnost} onChange={e => setCertFormData({ ...certFormData, sposobnost: e.target.value })}>
-                                            <option value="Sposoban">{lang === 'bs' ? 'Sposoban' : 'Capable'}</option>
-                                            <option value="Nesposoban">{lang === 'bs' ? 'Nesposoban' : 'Not capable'}</option>
+                                            <option value="Sposoban">{lang !== 'en' ? 'Sposoban' : 'Capable'}</option>
+                                            <option value="Nesposoban">{lang !== 'en' ? 'Nesposoban' : 'Not capable'}</option>
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Upisao' : 'Entered by'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Upisao' : 'Entered by'}</label>
                                         <input className="form-input" value={certFormData.upisao} onChange={e => setCertFormData({ ...certFormData, upisao: e.target.value })} />
                                     </div>
                                 </div>
@@ -1406,36 +1406,36 @@ function WorkersPageInner() {
                     <div className="modal-overlay" onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>
                         <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
-                                <h2 style={{ color: 'white', margin: 0 }}>👨‍⚕️ {medExamEditId ? (lang === 'bs' ? 'Uredi pregled' : 'Edit Exam') : (lang === 'bs' ? 'Novi ljekarski pregled' : 'New Medical Exam')}</h2>
+                                <h2 style={{ color: 'white', margin: 0 }}>👨‍⚕️ {medExamEditId ? (lang !== 'en' ? 'Uredi pregled' : 'Edit Exam') : (lang !== 'en' ? 'Novi ljekarski pregled' : 'New Medical Exam')}</h2>
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>✕</button>
                             </div>
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div className="form-group">
-                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Vrsta pregleda' : 'Exam Type'} <InfoTip text="Dali se radnik prvi put u firmi zapošljava (Prethodni) ili obnavlja sposobnost jer je prošla godina (Periodični)" /></label>
+                                        <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Vrsta pregleda' : 'Exam Type'} <InfoTip text="Dali se radnik prvi put u firmi zapošljava (Prethodni) ili obnavlja sposobnost jer je prošla godina (Periodični)" /></label>
                                         <select className="form-select" value={medExamForm.tipPregleda} onChange={e => setMedExamForm(p => ({ ...p, tipPregleda: e.target.value }))}>
-                                            <option value="prethodni">{lang === 'bs' ? 'Prethodni pregled' : 'Pre-employment'}</option>
-                                            <option value="periodicni">{lang === 'bs' ? 'Periodicni pregled' : 'Periodic Exam'}</option>
-                                            <option value="vanredni">{lang === 'bs' ? 'Vanredni pregled' : 'Extraordinary'}</option>
-                                            <option value="nocniRad">{lang === 'bs' ? 'Pregled - nocni rad' : 'Night-work Exam'}</option>
-                                            <option value="ostalo">{lang === 'bs' ? 'Ostalo' : 'Other'}</option>
+                                            <option value="prethodni">{lang !== 'en' ? 'Prethodni pregled' : 'Pre-employment'}</option>
+                                            <option value="periodicni">{lang !== 'en' ? 'Periodicni pregled' : 'Periodic Exam'}</option>
+                                            <option value="vanredni">{lang !== 'en' ? 'Vanredni pregled' : 'Extraordinary'}</option>
+                                            <option value="nocniRad">{lang !== 'en' ? 'Pregled - nocni rad' : 'Night-work Exam'}</option>
+                                            <option value="ostalo">{lang !== 'en' ? 'Ostalo' : 'Other'}</option>
                                         </select>
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Broj uputnice (RA-1)' : 'Referral No.'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Broj uputnice (RA-1)' : 'Referral No.'}</label>
                                         <input className="form-input" placeholder="RA1-2026-001" value={medExamForm.uputnicaBroj} onChange={e => setMedExamForm(p => ({ ...p, uputnicaBroj: e.target.value }))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Datum pregleda *' : 'Exam Date *'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Datum pregleda *' : 'Exam Date *'}</label>
                                         <DateInput value={medExamForm.datumPregleda} onChange={v => setMedExamForm(p => ({ ...p, datumPregleda: v }))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Naredni pregled do' : 'Next Exam By'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Naredni pregled do' : 'Next Exam By'}</label>
                                         <DateInput value={medExamForm.vrijediDo} onChange={v => setMedExamForm(p => ({ ...p, vrijediDo: v }))} />
                                     </div>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Rezultat' : 'Result'} <InfoTip text="Mora se tačno poklapati sa nalazom i mišljenjem doktora medicine rada." /></label>
+                                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Rezultat' : 'Result'} <InfoTip text="Mora se tačno poklapati sa nalazom i mišljenjem doktora medicine rada." /></label>
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         {[{ v: 'Sposoban', c: 'var(--success)' }, { v: 'Uvjetno Sposoban', c: 'var(--warning)' }, { v: 'Nesposoban', c: 'var(--danger)' }].map(r => (
                                             <button key={r.v} type="button" onClick={() => setMedExamForm(p => ({ ...p, rezultat: r.v }))}
@@ -1447,17 +1447,17 @@ function WorkersPageInner() {
                                 </div>
                                 {(medExamForm.rezultat === 'Nesposoban' || medExamForm.rezultat === 'Uvjetno Sposoban') && (
                                     <div className="form-group">
-                                        <label className="form-label" style={{ color: 'var(--warning)' }}>⚠️ {lang === 'bs' ? 'Ograničenja' : 'Restrictions'}</label>
+                                        <label className="form-label" style={{ color: 'var(--warning)' }}>⚠️ {lang !== 'en' ? 'Ograničenja' : 'Restrictions'}</label>
                                         <textarea className="form-input" rows={2} value={medExamForm.ogranicenja} onChange={e => setMedExamForm(p => ({ ...p, ogranicenja: e.target.value }))} />
                                     </div>
                                 )}
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                     <div className="form-group">
-                                        <label className="form-label">🏥 {lang === 'bs' ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
-                                        <input className="form-input" placeholder={lang === 'bs' ? 'Dom zdravlja...' : 'Health center...'} value={medExamForm.zdravstvenaUstanova} onChange={e => setMedExamForm(p => ({ ...p, zdravstvenaUstanova: e.target.value }))} />
+                                        <label className="form-label">🏥 {lang !== 'en' ? 'Zdravstvena ustanova' : 'Health Institution'}</label>
+                                        <input className="form-input" placeholder={lang !== 'en' ? 'Dom zdravlja...' : 'Health center...'} value={medExamForm.zdravstvenaUstanova} onChange={e => setMedExamForm(p => ({ ...p, zdravstvenaUstanova: e.target.value }))} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">👨‍⚕️ {lang === 'bs' ? 'Doktor medicine rada' : 'Doctor'}</label>
+                                        <label className="form-label">👨‍⚕️ {lang !== 'en' ? 'Doktor medicine rada' : 'Doctor'}</label>
                                         <input className="form-input" placeholder="Dr. Ime Prezime" value={medExamForm.doktorIme} onChange={e => setMedExamForm(p => ({ ...p, doktorIme: e.target.value }))} />
                                     </div>
                                 </div>
@@ -1465,7 +1465,7 @@ function WorkersPageInner() {
                             <div className="modal-footer">
                                 <button className="btn btn-ghost" onClick={() => { setShowMedExamForm(false); setMedExamEditId(null); }}>{t('cancel')}</button>
                                 <button className="btn btn-primary" onClick={async () => {
-                                    if (!medExamForm.datumPregleda) { await alert(lang === 'bs' ? 'Unesite datum pregleda!' : 'Enter exam date!'); return; }
+                                    if (!medExamForm.datumPregleda) { await alert(lang !== 'en' ? 'Unesite datum pregleda!' : 'Enter exam date!'); return; }
                                     const w = workers.find(wk => wk.id === editingWorker);
                                     const payload = { ...medExamForm, workerId: editingWorker, radnikIme: w ? `${w.ime} ${w.prezime}` : '' };
                                     if (medExamEditId) { update(COLLECTIONS.MEDICAL_EXAMS, medExamEditId, payload); } else { create(COLLECTIONS.MEDICAL_EXAMS, payload); }
@@ -1481,7 +1481,7 @@ function WorkersPageInner() {
                     <div className="modal-overlay" onClick={() => { setShowPpeForm(false); setPpeEditId(null); }}>
                         <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h2>🦺 {ppeEditId ? (lang === 'bs' ? 'Uredi zaduženje' : 'Edit Assignment') : (lang === 'bs' ? 'Novo zaduženje OZO' : 'New PPE Assignment')}</h2>
+                                <h2>🦺 {ppeEditId ? (lang !== 'en' ? 'Uredi zaduženje' : 'Edit Assignment') : (lang !== 'en' ? 'Novo zaduženje OZO' : 'New PPE Assignment')}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={() => { setShowPpeForm(false); setPpeEditId(null); }}>✕</button>
                             </div>
                             <div className="modal-body">
@@ -1490,7 +1490,7 @@ function WorkersPageInner() {
                                     <select className="form-select" value={ppeFormData.naziv} onChange={async (e) => {
                                         const val = e.target.value;
                                         if (val === 'NEW_OZO') {
-                                            const newName = await prompt(lang === 'bs' ? 'Unesite naziv nove OZO:' : 'Enter name of new PPE:');
+                                            const newName = await prompt(lang !== 'en' ? 'Unesite naziv nove OZO:' : 'Enter name of new PPE:');
                                             if (newName && newName.trim()) {
                                                 const finalName = newName.trim();
                                                 create(COLLECTIONS.PPE_TYPES, { naziv: finalName });
@@ -1503,18 +1503,18 @@ function WorkersPageInner() {
                                             setPpeFormData({ ...ppeFormData, naziv: val });
                                         }
                                     }}>
-                                        <option value="">-- {lang === 'bs' ? 'Odaberite OZO' : 'Select PPE'} --</option>
-                                        <option value="NEW_OZO" style={{ fontWeight: 'bold', color: 'var(--primary)' }}>+ {lang === 'bs' ? 'Dodaj novu OZO...' : 'Add new PPE...'}</option>
+                                        <option value="">-- {lang !== 'en' ? 'Odaberite OZO' : 'Select PPE'} --</option>
+                                        <option value="NEW_OZO" style={{ fontWeight: 'bold', color: 'var(--primary)' }}>+ {lang !== 'en' ? 'Dodaj novu OZO...' : 'Add new PPE...'}</option>
                                         {ppeTypes.filter((pt, i, a) => a.findIndex(x => x.naziv === pt.naziv) === i).map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
                                     </select>
                                 </div>
                                 <div className="form-grid-2">
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</label>
                                         <DateInput value={ppeFormData.datumZaduzenja} onChange={v => setPpeFormData({ ...ppeFormData, datumZaduzenja: v })} />
                                     </div>
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Datum razduženja' : 'Return date'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Datum razduženja' : 'Return date'}</label>
                                         <DateInput value={ppeFormData.datumRazduzenja} onChange={v => setPpeFormData({ ...ppeFormData, datumRazduzenja: v })} />
                                     </div>
                                 </div>
@@ -1557,12 +1557,12 @@ function WorkersPageInner() {
                     <div className="modal-overlay" onClick={() => setExcelExportMode(null)} style={{ zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none' }}>
                         <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #107c41, #185c37)' }}>
-                                <h2 style={{ color: 'white', margin: 0 }}>📊 {lang === 'bs' ? 'Izvoz liste radnika (Excel)' : 'Export Worker List (Excel)'}</h2>
+                                <h2 style={{ color: 'white', margin: 0 }}>📊 {lang !== 'en' ? 'Izvoz liste radnika (Excel)' : 'Export Worker List (Excel)'}</h2>
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setExcelExportMode(null)}>✕</button>
                             </div>
                             <div className="modal-body">
                                 <p style={{ marginBottom: 16, fontSize: '0.9rem', color: 'var(--text-light)' }}>
-                                    {lang === 'bs'
+                                    {lang !== 'en'
                                         ? `Odaberite koje podatke želite uključiti u Excel tablicu (${excelExportMode === 'selected' ? 'odabrano ' + selectedIds.size : 'SVIH ' + filteredWorkers.length} radnika):`
                                         : `Select which data to include in the Excel table (${excelExportMode === 'selected' ? selectedIds.size + ' workers selected' : 'ALL ' + filteredWorkers.length + ' workers'}):`}
                                 </p>
@@ -1571,12 +1571,12 @@ function WorkersPageInner() {
                                         const all = {};
                                         Object.keys(exportColumns).forEach(k => all[k] = true);
                                         setExportColumns(all);
-                                    }}>{lang === 'bs' ? 'Odaberi sve' : 'Select all'}</button>
+                                    }}>{lang !== 'en' ? 'Odaberi sve' : 'Select all'}</button>
                                     <button className="btn btn-outline btn-sm" onClick={() => {
                                         const none = {};
                                         Object.keys(exportColumns).forEach(k => none[k] = false);
                                         setExportColumns(none);
-                                    }}>{lang === 'bs' ? 'Odznači sve' : 'Deselect all'}</button>
+                                    }}>{lang !== 'en' ? 'Odznači sve' : 'Deselect all'}</button>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px 16px', background: 'var(--bg-card)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
                                     {[
@@ -1667,7 +1667,7 @@ function WorkersPageInner() {
                                     XLSX.utils.book_append_sheet(wb, ws, "Lista radnika");
                                     XLSX.writeFile(wb, `Lista_radnika_${formatDate(new Date())}.xlsx`);
                                     setShowExportModal(false);
-                                }}>⬇️ {lang === 'bs' ? 'Preuzmi Excel' : 'Download Excel'}</button>
+                                }}>⬇️ {lang !== 'en' ? 'Preuzmi Excel' : 'Download Excel'}</button>
                             </div>
                         </div>
                     </div>
@@ -1677,46 +1677,46 @@ function WorkersPageInner() {
                     <div className="card-body" style={{ padding: 0 }}>
                         {/* Toolbar */}
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew} title={lang === 'bs' ? 'Dodaj novog radnika' : 'Add new worker'}>
-                                + {lang === 'bs' ? 'Novi radnik' : 'New worker'}
+                            <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 16px', flexShrink: 0 }} onClick={handleNew} title={lang !== 'en' ? 'Dodaj novog radnika' : 'Add new worker'}>
+                                + {lang !== 'en' ? 'Novi radnik' : 'New worker'}
                             </button>
 
                             <div className="search-bar" style={{ height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, flexShrink: 0, display: 'flex', alignItems: 'center' }}>
                                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                                 <input
-                                    placeholder={lang === 'bs' ? 'Pretraži radnike...' : 'Search workers...'}
+                                    placeholder={lang !== 'en' ? 'Pretraži radnike...' : 'Search workers...'}
                                     value={searchTerm}
                                     onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                                 />
-                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                             </div>
 
                             <select
                                 className="form-select"
                                 style={{ height: 38, padding: '0 12px', width: 112, flexShrink: 0, fontSize: '0.85rem' }}
                                 value={filterOrgUnit}
-                                title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}
+                                title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'}
                                 onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
                             >
-                                <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All Departments'}</option>
+                                <option value="">{lang !== 'en' ? 'Svi odjeli' : 'All Departments'}</option>
                                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                             </select>
 
                             <PDFExportButton
-                                label={lang === 'bs' ? '📄 PDF Izvještaj' : '📄 PDF Report'} title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
+                                label={lang !== 'en' ? '📄 PDF Izvještaj' : '📄 PDF Report'} title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
-                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
-                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
+                                    { label: lang !== 'en' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
+                                    ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
                                 ]}
                             />
                             <PDFExportButton
-                                label={lang === 'bs' ? '📊 Excel' : '📊 Excel'} title={lang === 'bs' ? 'Prikaži Excel opcije' : 'Show Excel options'}
+                                label={lang !== 'en' ? '📊 Excel' : '📊 Excel'} title={lang !== 'en' ? 'Prikaži Excel opcije' : 'Show Excel options'}
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
                                 options={[
-                                    { label: lang === 'bs' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },
-                                    ...(selectedIds.size > 0 ? [{ label: lang === 'bs' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
+                                    { label: lang !== 'en' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },
+                                    ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
                                 ]}
                             />
 
@@ -1728,31 +1728,31 @@ function WorkersPageInner() {
                             {selectedIds.size > 0 && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', background: 'rgba(0,191,166,0.06)', borderRadius: 20, border: '1px solid rgba(0,191,166,0.3)', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>
-                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                        {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}
                                     </span>
                                     <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={() => {
                                         const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
                                         const emails = selectedWorkers.map(w => w.email).filter(Boolean);
                                         if (emails.length === 0) {
-                                            alert(lang === 'bs' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
+                                            alert(lang !== 'en' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
                                             return;
                                         }
-                                        const subject = encodeURIComponent(lang === 'bs' ? 'Obavijest' : 'Notification');
+                                        const subject = encodeURIComponent(lang !== 'en' ? 'Obavijest' : 'Notification');
                                         window.open(`mailto:${emails.join(';')}?subject=${subject}`, '_blank');
-                                    }} title={lang === 'bs' ? 'Pošalji email' : 'Send email'}>
+                                    }} title={lang !== 'en' ? 'Pošalji email' : 'Send email'}>
                                         ✉️ Email
                                     </button>
                                     <button className="btn btn-sm" style={{ background: '#D32F2F', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={async () => {
-                                        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
+                                        const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} radnika? Ova radnja je nepovratna!` : `Delete ${selectedIds.size} workers? This cannot be undone!`);
                                         if (ok) {
                                             removeManyWorkersCascade([...selectedIds]);
                                             setSelectedIds(new Set());
                                             loadData();
                                         }
-                                    }} title={lang === 'bs' ? 'Obriši odabrane radnike' : 'Delete selected workers'}>
-                                        🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                    }} title={lang !== 'en' ? 'Obriši odabrane radnike' : 'Delete selected workers'}>
+                                        🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}
                                     </button>
-                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={lang === 'bs' ? 'Poništi odabir' : 'Clear selection'}>
+                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem', color: 'var(--text-muted)' }} onClick={() => setSelectedIds(new Set())} title={lang !== 'en' ? 'Poništi odabir' : 'Clear selection'}>
                                         ✕
                                     </button>
                                 </div>
@@ -1764,7 +1764,7 @@ function WorkersPageInner() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 40, textAlign: 'center' }} title={allPageSelected ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all') : (lang === 'bs' ? 'Odaberi sve na stranici' : 'Select all on page')}>
+                                        <th style={{ width: 40, textAlign: 'center' }} title={allPageSelected ? (lang !== 'en' ? 'Odznači sve' : 'Deselect all') : (lang !== 'en' ? 'Odaberi sve na stranici' : 'Select all on page')}>
                                             <input
                                                 type="checkbox"
                                                 checked={allPageSelected}
@@ -1779,7 +1779,7 @@ function WorkersPageInner() {
                                         <th>{t('oib')}</th>
                                         <th style={tsW('orgJedinicaId')} onClick={() => tW('orgJedinicaId')}>{t('orgUnit')}{siW('orgJedinicaId')}</th>
                                         <th style={tsW('radnoMjestoId')} onClick={() => tW('radnoMjestoId')}>{t('workplace')}{siW('radnoMjestoId')}</th>
-                                        <th style={{ width: 140, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Status ZNR/MBR' : 'Status'}</th>
+                                        <th style={{ width: 140, textAlign: 'center', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Status ZNR/MBR' : 'Status'}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1799,7 +1799,7 @@ function WorkersPageInner() {
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                                                         <button style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', cursor: 'pointer', fontSize: '0.8rem' }}
-                                                            onClick={() => handleEdit(w)} title={lang === 'bs' ? 'Uredi radnika' : 'Edit worker'}>▶</button>
+                                                            onClick={() => handleEdit(w)} title={lang !== 'en' ? 'Uredi radnika' : 'Edit worker'}>▶</button>
                                                         <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             const spaceBelow = window.innerHeight - rect.bottom;
@@ -1810,7 +1810,7 @@ function WorkersPageInner() {
                                                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                             );
                                                             setActionMenuId(actionMenuId === w.id ? null : w.id);
-                                                        }} title={lang === 'bs' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
+                                                        }} title={lang !== 'en' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                     </div>
@@ -1826,9 +1826,9 @@ function WorkersPageInner() {
                                                                 </div>
                                                                 <button style={_miSt} onClick={() => handleEdit(w)}>📂 {t('open')}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {lang === 'bs' ? 'Novo uvjerenje' : 'New cert'}</button>
-                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {lang === 'bs' ? 'Novi pregled' : 'New exam'}</button>
-                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {lang === 'bs' ? 'Nova povreda' : 'New injury'}</button>
+                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/worker-certificates/create?workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>📄 {lang !== 'en' ? 'Novo uvjerenje' : 'New cert'}</button>
+                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/medical-exams?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>👨‍⚕️ {lang !== 'en' ? 'Novi pregled' : 'New exam'}</button>
+                                                                <button style={_miSt} onClick={() => router.push(`/dashboard/injuries?openNew=1&workerId=${w.id}&returnTo=${encodeURIComponent('/dashboard/workers')}`)}>🚑 {lang !== 'en' ? 'Nova povreda' : 'New injury'}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={_miSt} onClick={() => router.push('/dashboard/form-ro1')}>📄 RO-1</button>
                                                                 <button style={_miSt} onClick={() => router.push('/dashboard/form-ro2')}>📄 RO-2</button>
@@ -1864,7 +1864,7 @@ function WorkersPageInner() {
                                                                                 }
                                                                             }
                                                                         }}>
-                                                                            🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}: {doc.docName || doc.fileName || doc.attachedFileName || doc.ime || 'Dokument'}
+                                                                            🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}: {doc.docName || doc.fileName || doc.attachedFileName || doc.ime || 'Dokument'}
                                                                         </button>
                                                                     ));
                                                                 })()}
@@ -1878,12 +1878,12 @@ function WorkersPageInner() {
                                                                             setActionMenuId(null);
                                                                             printZosPdf(w, zosCerts[0], { orgUnits, workplaces });
                                                                         }}>
-                                                                            🖨️ {lang === 'bs' ? 'Isprintaj ZOS' : 'Print ZOS'}
+                                                                            🖨️ {lang !== 'en' ? 'Isprintaj ZOS' : 'Print ZOS'}
                                                                         </button>
                                                                     );
                                                                 })()}
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>📁 {lang === 'bs' ? 'Dokumenti' : 'Documents'}</button>
+                                                                <button style={_miSt} onClick={() => { setActionMenuId(null); handleEdit(w); setTimeout(() => { setFullFormTab('dokumenti'); }, 100); }}>📁 {lang !== 'en' ? 'Dokumenti' : 'Documents'}</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                 <button style={{ ..._miSt, color: 'var(--danger)' }} onClick={() => handleDelete(w.id)}>🗑️ {t('delete')}</button>
                                                             </div>
@@ -1895,27 +1895,27 @@ function WorkersPageInner() {
                                                     <button
                                                         onClick={() => setViewWorkerId(w.id)}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
-                                                        title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
+                                                        title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.ime}</button>
                                                 </td>
                                                 <td style={{ fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'left' }}>
                                                     <button
                                                         onClick={() => setViewWorkerId(w.id)}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
-                                                        title={lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile'}
+                                                        title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.prezime}</button>
                                                 </td>
                                                 <td><code style={{ fontSize: '0.85rem' }}>{w.oib || w.jmbg}</code></td>
                                                 <td>
                                                     {w.orgJedinicaId ? (
-                                                        <button onClick={() => router.push('/dashboard/org-units')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={lang === 'bs' ? 'Otvori organizacijsku jedinicu' : 'Open org unit'}>
+                                                        <button onClick={() => router.push('/dashboard/org-units')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={lang !== 'en' ? 'Otvori organizacijsku jedinicu' : 'Open org unit'}>
                                                             {getOrgUnitName(w.orgJedinicaId)}
                                                         </button>
                                                     ) : '—'}
                                                 </td>
                                                 <td>
                                                     {w.radnoMjestoId ? (
-                                                        <button onClick={() => router.push('/dashboard/workplaces')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={lang === 'bs' ? 'Otvori radno mjesto' : 'Open workplace'}>
+                                                        <button onClick={() => router.push('/dashboard/workplaces')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }} title={lang !== 'en' ? 'Otvori radno mjesto' : 'Open workplace'}>
                                                             {getWorkplaceName(w.radnoMjestoId)}
                                                         </button>
                                                     ) : '—'}
@@ -1931,17 +1931,17 @@ function WorkersPageInner() {
                                                         const _soonM = _wM.some(mx => { if (!mx.vrijediDo) return false; const d = (new Date(mx.vrijediDo) - _today) / 86400000; return d >= 0 && d <= 60; });
 
                                                         let badgeCls = 'badge-success';
-                                                        let badgeTxt = lang === 'bs' ? 'U redu' : 'Ok';
+                                                        let badgeTxt = lang !== 'en' ? 'U redu' : 'Ok';
 
                                                         if (_expC || _expM) {
                                                             badgeCls = 'badge-danger';
-                                                            badgeTxt = lang === 'bs' ? 'Isteklo!' : 'Expired!';
+                                                            badgeTxt = lang !== 'en' ? 'Isteklo!' : 'Expired!';
                                                         } else if (_soonC || _soonM) {
                                                             badgeCls = 'badge-warning';
-                                                            badgeTxt = lang === 'bs' ? 'Uskoro ističe' : 'Expiring soon';
+                                                            badgeTxt = lang !== 'en' ? 'Uskoro ističe' : 'Expiring soon';
                                                         } else if (_wC.length === 0) {
                                                             badgeCls = '';
-                                                            badgeTxt = lang === 'bs' ? 'Nema podataka' : 'No data';
+                                                            badgeTxt = lang !== 'en' ? 'Nema podataka' : 'No data';
                                                         }
 
                                                         return <span className={`badge ${badgeCls}`} style={{ width: '100px', display: 'inline-flex', justifyContent: 'center' }}>{badgeTxt}</span>;

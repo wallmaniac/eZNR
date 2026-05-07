@@ -10,7 +10,7 @@ import PageHeader from '@/components/PageHeader';
 
 export default function AuthorizedCompaniesPage() {
   const { t, lang } = useLanguage();
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const { confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const [items, setItems] = useState([]);

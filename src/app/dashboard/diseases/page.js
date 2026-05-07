@@ -89,11 +89,11 @@ export default function DiseasesPage() {
 
   const handleSave = async () => {
     if (!formData.radnikId && !formData.radnikIme) {
-      await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Please select a worker!');
+      await alert(lang !== 'en' ? 'Odaberite radnika!' : 'Please select a worker!');
       return;
     }
     if (!formData.datum) {
-      await alert(lang === 'bs' ? 'Datum je obavezan!' : 'Date is required!');
+      await alert(lang !== 'en' ? 'Datum je obavezan!' : 'Date is required!');
       return;
     }
     if (editingId) {
@@ -108,7 +108,7 @@ export default function DiseasesPage() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati ovaj zapis?' : 'Delete this record?'); if (!ok) return;
+    const ok = await confirm(lang !== 'en' ? 'Obrisati ovaj zapis?' : 'Delete this record?'); if (!ok) return;
     remove(COLLECTIONS.DISEASES, id);
     loadData();
   };
@@ -137,7 +137,7 @@ export default function DiseasesPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
         for (let id of selectedIds) await remove(COLLECTIONS.DISEASES, id);
         setSelectedIds(new Set());
         loadData();
@@ -146,9 +146,9 @@ export default function DiseasesPage() {
 
   const statusBadge = (status) => {
     const map = {
-      prijavljena: { color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', label: lang === 'bs' ? 'Prijavljena' : 'Reported' },
-      u_obradi: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: lang === 'bs' ? 'U obradi' : 'Processing' },
-      zatvorena: { color: '#10B981', bg: 'rgba(16,185,129,0.1)', label: lang === 'bs' ? 'Zatvorena' : 'Closed' },
+      prijavljena: { color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', label: lang !== 'en' ? 'Prijavljena' : 'Reported' },
+      u_obradi: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: lang !== 'en' ? 'U obradi' : 'Processing' },
+      zatvorena: { color: '#10B981', bg: 'rgba(16,185,129,0.1)', label: lang !== 'en' ? 'Zatvorena' : 'Closed' },
     };
     const s = map[status] || map.prijavljena;
     return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{s.label}</span>;
@@ -163,7 +163,7 @@ export default function DiseasesPage() {
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 650 }} onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>🏥 {editingId ? (lang === 'bs' ? 'Uredi zapis' : 'Edit record') : t('diseaseReport')}</h2>
+                <h2>🏥 {editingId ? (lang !== 'en' ? 'Uredi zapis' : 'Edit record') : t('diseaseReport')}</h2>
                 <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
               </div>
               <div className="modal-body">
@@ -175,7 +175,7 @@ export default function DiseasesPage() {
                     <div style={{ position: 'relative' }}>
                       <input
                         className="form-input"
-                        placeholder={lang === 'bs' ? '🔍 Pretraži radnika...' : '🔍 Search worker...'}
+                        placeholder={lang !== 'en' ? '🔍 Pretraži radnika...' : '🔍 Search worker...'}
                         value={workerSearch}
                         onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('radnikId', ''); set('radnikIme', ''); }}
                         onFocus={() => setShowWorkerDropdown(true)}
@@ -190,7 +190,7 @@ export default function DiseasesPage() {
                         }}>
                           {filteredWorkers.length === 0 ? (
                             <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                              {lang === 'bs' ? 'Nema radnika' : 'No workers found'}
+                              {lang !== 'en' ? 'Nema radnika' : 'No workers found'}
                             </div>
                           ) : filteredWorkers.map(w => (
                             <button key={w.id}
@@ -213,7 +213,7 @@ export default function DiseasesPage() {
                     </div>
                     {formData.radnikId && (
                       <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>
-                        ✓ {lang === 'bs' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}
+                        ✓ {lang !== 'en' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}
                       </div>
                     )}
                   </div>
@@ -223,19 +223,19 @@ export default function DiseasesPage() {
                     <DateInput value={formData.datum} onChange={v => set('datum', v)} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Status' : 'Status'}</label>
+                    <label className="form-label">{lang !== 'en' ? 'Status' : 'Status'}</label>
                     <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
-                      <option value="prijavljena">{lang === 'bs' ? 'Prijavljena' : 'Reported'}</option>
-                      <option value="u_obradi">{lang === 'bs' ? 'U obradi' : 'Processing'}</option>
-                      <option value="zatvorena">{lang === 'bs' ? 'Zatvorena' : 'Closed'}</option>
+                      <option value="prijavljena">{lang !== 'en' ? 'Prijavljena' : 'Reported'}</option>
+                      <option value="u_obradi">{lang !== 'en' ? 'U obradi' : 'Processing'}</option>
+                      <option value="zatvorena">{lang !== 'en' ? 'Zatvorena' : 'Closed'}</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Dijagnoza' : 'Diagnosis'}</label>
+                    <label className="form-label">{lang !== 'en' ? 'Dijagnoza' : 'Diagnosis'}</label>
                     <input className="form-input" value={formData.dijagnoza} onChange={e => set('dijagnoza', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Uzrok' : 'Cause'}</label>
+                    <label className="form-label">{lang !== 'en' ? 'Uzrok' : 'Cause'}</label>
                     <input className="form-input" value={formData.uzrok} onChange={e => set('uzrok', e.target.value)} />
                   </div>
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -244,7 +244,7 @@ export default function DiseasesPage() {
                   </div>
                   <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <input type="checkbox" id="bolovanjeD" checked={formData.bolovanje} onChange={e => set('bolovanje', e.target.checked)} style={{ width: 16, height: 16 }} />
-                    <label htmlFor="bolovanjeD" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</label>
+                    <label htmlFor="bolovanjeD" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang !== 'en' ? 'Bolovanje' : 'Sick leave'}</label>
                   </div>
                 </div>
               </div>
@@ -258,24 +258,24 @@ export default function DiseasesPage() {
 
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}><div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {lang === 'bs' ? 'Nova bolest' : 'New Disease'}</button>
+              <button className="btn btn-primary btn-sm" onClick={openNew}>+ {lang !== 'en' ? 'Nova bolest' : 'New Disease'}</button>
               <SavedFlash />
               <input
                 className="form-input"
                 style={{ maxWidth: 280 }}
-                placeholder={lang === 'bs' ? '🔍 Pretraži...' : '🔍 Search...'}
+                placeholder={lang !== 'en' ? '🔍 Pretraži...' : '🔍 Search...'}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />
               {selectedIds.size > 0 && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                    {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                    {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                   </span>
-                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
                 </div>
               )}
-              {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
+              {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
             </div>
             <div className="data-table-wrapper">
               <table className="data-table">
@@ -285,9 +285,9 @@ export default function DiseasesPage() {
                     <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('radnikIme')} style={thStyle('radnikIme')}>{t('worker')}{sortIcon('radnikIme')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')}{sortIcon('datum')}</th>
-                    <th onClick={() => toggleSort('dijagnoza')} style={thStyle('dijagnoza')}>{lang === 'bs' ? 'Dijagnoza' : 'Diagnosis'}{sortIcon('dijagnoza')}</th>
-                    <th onClick={() => toggleSort('uzrok')} style={thStyle('uzrok')}>{lang === 'bs' ? 'Uzrok' : 'Cause'}{sortIcon('uzrok')}</th>
-                    <th>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</th>
+                    <th onClick={() => toggleSort('dijagnoza')} style={thStyle('dijagnoza')}>{lang !== 'en' ? 'Dijagnoza' : 'Diagnosis'}{sortIcon('dijagnoza')}</th>
+                    <th onClick={() => toggleSort('uzrok')} style={thStyle('uzrok')}>{lang !== 'en' ? 'Uzrok' : 'Cause'}{sortIcon('uzrok')}</th>
+                    <th>{lang !== 'en' ? 'Bolovanje' : 'Sick leave'}</th>
                     <th onClick={() => toggleSort('status')} style={thStyle('status')}>{t('status')}{sortIcon('status')}</th>
                   </tr>
                 </thead>
@@ -332,7 +332,7 @@ export default function DiseasesPage() {
                         <button
                           onClick={e => { e.stopPropagation(); if (d.radnikId) setViewWorkerId(d.radnikId); }}
                           style={{ background: 'none', border: 'none', cursor: d.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: d.radnikId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                          title={d.radnikId ? (lang === 'bs' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
+                          title={d.radnikId ? (lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
                         >{d.radnikIme || '—'}</button>
                       </td>
                       <td>{d.datum ? fmtDate(d.datum) : '—'}</td>

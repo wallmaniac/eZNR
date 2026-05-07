@@ -155,7 +155,7 @@ export default function ZapisniciPage() {
         // Open new form pre-filled with the copied item (minus id, idbKey, file refs)
         setForm({
             ...EMPTY_ZAP,
-            naziv: (lang === 'bs' ? 'Kopija — ' : 'Copy — ') + item.naziv,
+            naziv: (lang !== 'en' ? 'Kopija — ' : 'Copy — ') + item.naziv,
             broj: '', datum: new Date().toISOString().split('T')[0],
             vrsta: item.vrsta, napomena: item.napomena,
             // Note: file is NOT copied (lives in IDB under old key)
@@ -167,7 +167,7 @@ export default function ZapisniciPage() {
         setEmailTo('');
         setEmailSubject(`Zapisnik: ${item.naziv}${item.broj ? ` (${item.broj})` : ''}`);
         setEmailBody(
-            (lang === 'bs'
+            (lang !== 'en'
                 ? `Poštovani,\n\nU prilogu se nalazi zapisnik:\n\nNaziv: ${item.naziv}\nBroj: ${item.broj || '—'}\nDatum: ${fmtDate(item.datum)}\nVrsta: ${item.vrsta || '—'}${item.napomena ? `\nNapomena: ${item.napomena}` : ''}\n\nS poštovanjem`
                 : `Dear,\n\nPlease find the attached record:\n\nName: ${item.naziv}\nNo.: ${item.broj || '—'}\nDate: ${fmtDate(item.datum)}\nType: ${item.vrsta || '—'}${item.napomena ? `\nNote: ${item.napomena}` : ''}\n\nBest regards`
             )
@@ -176,14 +176,14 @@ export default function ZapisniciPage() {
     };
     const handleSendEmail = () => {
         const recipients = emailTo.split(/[,;\s]+/).filter(Boolean).join(',');
-        if (!recipients) { alert(lang === 'bs' ? 'Unesite bar jednu email adresu!' : 'Enter at least one email address!'); return; }
+        if (!recipients) { alert(lang !== 'en' ? 'Unesite bar jednu email adresu!' : 'Enter at least one email address!'); return; }
         const mailtoLink = `mailto:${recipients}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
         window.open(mailtoLink, '_blank');
         setEmailModal(null);
     };
 
     const handleSave = async () => {
-        if (!form.naziv.trim()) { await alert(lang === 'bs' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
+        if (!form.naziv.trim()) { await alert(lang !== 'en' ? 'Naziv je obavezan!' : 'Name is required!'); return; }
         setSaving(true);
         try {
             let fileFields = {
@@ -203,12 +203,12 @@ export default function ZapisniciPage() {
             else { create(COLLECTIONS.ZAPISNICI, payload); }
             reload(); setShowForm(false); setEditId(null); setForm({ ...EMPTY_ZAP }); setPendingFile(null);
         } catch (err) {
-            await alert(lang === 'bs' ? `Greška pri čuvanju: ${err?.message}` : `Save error: ${err?.message}`);
+            await alert(lang !== 'en' ? `Greška pri čuvanju: ${err?.message}` : `Save error: ${err?.message}`);
         } finally { setSaving(false); }
     };
 
     const handleDelete = async (item) => {
-        const ok = await confirm(lang === 'bs' ? `Obrisati "${item.naziv}"?` : `Delete "${item.naziv}"?`);
+        const ok = await confirm(lang !== 'en' ? `Obrisati "${item.naziv}"?` : `Delete "${item.naziv}"?`);
         if (!ok) return;
         if (item.idbKey) await idbDeleteFile(item.idbKey).catch(() => {});
         remove(COLLECTIONS.ZAPISNICI, item.id);
@@ -217,7 +217,7 @@ export default function ZapisniciPage() {
 
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        const ok = await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`);
+        const ok = await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} zapisa?` : `Delete ${selectedIds.size} records?`);
         if (!ok) return;
         for (const id of selectedIds) {
             const it = items.find(x => x.id === id);
@@ -230,12 +230,12 @@ export default function ZapisniciPage() {
     const handleDownload = async (item) => {
         if (!item.idbKey) return;
         try { await idbDownloadFile(item.idbKey, item.attachedFileName); }
-        catch { await alert(lang === 'bs' ? 'Datoteka nije dostupna.' : 'File not available.'); }
+        catch { await alert(lang !== 'en' ? 'Datoteka nije dostupna.' : 'File not available.'); }
     };
     const handleOpen = async (item) => {
         if (!item.idbKey) return;
         try { await idbOpenFile(item.idbKey); }
-        catch { await alert(lang === 'bs' ? 'Datoteka nije dostupna.' : 'File not available.'); }
+        catch { await alert(lang !== 'en' ? 'Datoteka nije dostupna.' : 'File not available.'); }
     };
     const handleCopy = (item) => navigator.clipboard.writeText(item.naziv || '').catch(() => {});
 
@@ -299,7 +299,7 @@ export default function ZapisniciPage() {
 
     const handleGenerate = async () => {
         const activeRows = rows.filter(r => r.keep && r.original !== r.correctedName);
-        if (!activeRows.length) { await alert(lang === 'bs' ? 'Nema izmjena.' : 'No changes.'); return; }
+        if (!activeRows.length) { await alert(lang !== 'en' ? 'Nema izmjena.' : 'No changes.'); return; }
         const replacements = activeRows.map(r => ({ original: r.original, corrected: r.correctedName }));
         const baseName = (docFile?.name || 'zapisnik').replace(/\.[^.]+$/, '');
         setGenerating(true);
@@ -326,9 +326,9 @@ export default function ZapisniciPage() {
             <DialogRenderer />
 
             {/* Header */}
-            <PageHeader icon="📋" title={lang === 'bs' ? 'Zapisnici' : 'Zapisnici'}
-                subtitle={`${items.length} ${lang === 'bs' ? 'zapisnika' : 'records'}`}
-                actions={activeTab === 'korekcija' && step !== 'upload' ? <button className="btn btn-ghost btn-sm" onClick={handleReset}>↺ {lang === 'bs' ? 'Novi dokument' : 'New document'}</button> : null}
+            <PageHeader icon="📋" title={lang !== 'en' ? 'Zapisnici' : 'Zapisnici'}
+                subtitle={`${items.length} ${lang !== 'en' ? 'zapisnika' : 'records'}`}
+                actions={activeTab === 'korekcija' && step !== 'upload' ? <button className="btn btn-ghost btn-sm" onClick={handleReset}>↺ {lang !== 'en' ? 'Novi dokument' : 'New document'}</button> : null}
             />
 
             {/* Tab bar */}
@@ -339,7 +339,7 @@ export default function ZapisniciPage() {
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setActiveTab(tab.id)}
                         className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}>
-                        {tab.icon} {lang === 'bs' ? tab.label_bs : tab.label_en}
+                        {tab.icon} {lang !== 'en' ? tab.label_bs : tab.label_en}
                     </button>
                 ))}
             </div>
@@ -351,40 +351,40 @@ export default function ZapisniciPage() {
                     {showForm && (
                         <div className="card" style={{ marginBottom: 20, border: '1px solid var(--primary)' }}>
                             <div className="card-header" style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--primary)' }}>
-                                {editId ? (lang === 'bs' ? '✏️ Uredi zapisnik' : '✏️ Edit record') : (lang === 'bs' ? '+ Novi zapisnik' : '+ New record')}
+                                {editId ? (lang !== 'en' ? '✏️ Uredi zapisnik' : '✏️ Edit record') : (lang !== 'en' ? '+ Novi zapisnik' : '+ New record')}
                             </div>
                             <div className="card-body">
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14, marginBottom: 14 }}>
                                     <div>
-                                        <div style={labelStyle}>{lang === 'bs' ? 'Naziv *' : 'Name *'}</div>
-                                        <input className="form-input" value={form.naziv} onChange={e => setF('naziv', e.target.value)} placeholder={lang === 'bs' ? 'Naziv zapisnika...' : 'Record name...'} autoFocus />
+                                        <div style={labelStyle}>{lang !== 'en' ? 'Naziv *' : 'Name *'}</div>
+                                        <input className="form-input" value={form.naziv} onChange={e => setF('naziv', e.target.value)} placeholder={lang !== 'en' ? 'Naziv zapisnika...' : 'Record name...'} autoFocus />
                                     </div>
                                     <div>
-                                        <div style={labelStyle}>{lang === 'bs' ? 'Broj zapisnika' : 'Record no.'}</div>
+                                        <div style={labelStyle}>{lang !== 'en' ? 'Broj zapisnika' : 'Record no.'}</div>
                                         <input className="form-input" value={form.broj} onChange={e => setF('broj', e.target.value)} placeholder="ZAP-001" />
                                     </div>
                                     <div>
-                                        <div style={labelStyle}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                                        <div style={labelStyle}>{lang !== 'en' ? 'Datum' : 'Date'}</div>
                                         <DateInput value={form.datum} onChange={v => setF('datum', v)} />
                                     </div>
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
                                     <div>
-                                        <div style={labelStyle}>{lang === 'bs' ? 'Vrsta' : 'Type'}</div>
+                                        <div style={labelStyle}>{lang !== 'en' ? 'Vrsta' : 'Type'}</div>
                                         <select className="form-select" value={form.vrsta} onChange={e => setF('vrsta', e.target.value)}>
                                             <option value="">—</option>
                                             {VRSTE.map(v => <option key={v} value={v}>{v}</option>)}
                                         </select>
                                     </div>
                                     <div>
-                                        <div style={labelStyle}>{lang === 'bs' ? 'Napomena' : 'Note'}</div>
+                                        <div style={labelStyle}>{lang !== 'en' ? 'Napomena' : 'Note'}</div>
                                         <input className="form-input" value={form.napomena} onChange={e => setF('napomena', e.target.value)} />
                                     </div>
                                 </div>
 
                                 {/* File attach */}
                                 <div style={{ marginBottom: 16 }}>
-                                    <div style={labelStyle}>{lang === 'bs' ? 'Priloži datoteku (opciono)' : 'Attach file (optional)'}</div>
+                                    <div style={labelStyle}>{lang !== 'en' ? 'Priloži datoteku (opciono)' : 'Attach file (optional)'}</div>
                                     <input ref={fileRef} type="file" accept=".pdf,.docx,.doc,.txt,.jpg,.png"
                                         style={{ display: 'none' }}
                                         onChange={e => { handleFileUpload(e.target.files[0]); e.target.value = ''; }} />
@@ -396,7 +396,7 @@ export default function ZapisniciPage() {
                                                 <button
                                                     onClick={() => handleOpen({ idbKey: form.idbKey, attachedFileName: form.attachedFileName })}
                                                     style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                                                    title={lang === 'bs' ? 'Klikni za pregledavanje / ispis' : 'Click to view / print'}
+                                                    title={lang !== 'en' ? 'Klikni za pregledavanje / ispis' : 'Click to view / print'}
                                                 >
                                                     {form.attachedFileName}
                                                 </button>
@@ -406,12 +406,12 @@ export default function ZapisniciPage() {
                                                     {pendingFile && <span style={{ marginLeft: 6, fontSize: '0.72rem', color: 'var(--text-muted)' }}>({(pendingFile.size/1024).toFixed(0)} KB)</span>}
                                                 </span>
                                             )}
-                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>{lang === 'bs' ? 'Zamijeni' : 'Replace'}</button>
+                                            <button className="btn btn-ghost btn-sm" style={{ color: 'var(--primary)' }} onClick={() => fileRef.current?.click()}>{lang !== 'en' ? 'Zamijeni' : 'Replace'}</button>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={handleRemoveFile}>✕</button>
                                         </div>
                                     ) : (
                                         <div onClick={() => fileRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: 14, textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                            📎 {lang === 'bs' ? 'Kliknite za upload dokumenta (PDF, DOCX, max 50MB)' : 'Click to upload document (PDF, DOCX, max 50MB)'}
+                                            📎 {lang !== 'en' ? 'Kliknite za upload dokumenta (PDF, DOCX, max 50MB)' : 'Click to upload document (PDF, DOCX, max 50MB)'}
                                         </div>
                                     )}
                                 </div>
@@ -432,12 +432,12 @@ export default function ZapisniciPage() {
                     <div className="card" style={{ marginBottom: 16 }}>
                         <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button className="btn btn-primary" onClick={handleNew}>
-                                + {lang === 'bs' ? 'Novi zapisnik' : 'New record'}
+                                + {lang !== 'en' ? 'Novi zapisnik' : 'New record'}
                             </button>
 
                             <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: 360 }}>
                                 <input
-                                    placeholder={lang === 'bs' ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
+                                    placeholder={lang !== 'en' ? '🔍 Pretraži zapisnike...' : '🔍 Search records...'}
                                     value={search} onChange={e => setSearch(e.target.value)}
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
                                 />
@@ -448,16 +448,16 @@ export default function ZapisniciPage() {
                             {selectedIds.size > 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                        {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} — Grupne akcije:
+                                        {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} — Grupne akcije:
                                     </span>
                                     <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>
-                                        🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                        🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}
                                     </button>
                                     <button className="btn btn-ghost btn-sm" onClick={() => setSelectedIds(new Set())}>✕</button>
                                 </div>
                             ) : (
                                 <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-                                    {filtered.length} {lang === 'bs' ? 'zapisa' : 'records'}
+                                    {filtered.length} {lang !== 'en' ? 'zapisa' : 'records'}
                                 </span>
                             )}
                         </div>
@@ -469,9 +469,9 @@ export default function ZapisniciPage() {
                             {sorted.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
                                     <div style={{ fontSize: '3rem', marginBottom: 12 }}>📋</div>
-                                    <div style={{ fontWeight: 600, marginBottom: 6 }}>{lang === 'bs' ? 'Nema zapisnika' : 'No records'}</div>
-                                    <div style={{ fontSize: '0.82rem', marginBottom: 16 }}>{lang === 'bs' ? 'Kreirajte prvi zapisnik klikom na gumb ispod.' : 'Create your first record using the button below.'}</div>
-                                    <button className="btn btn-primary" onClick={handleNew}>+ {lang === 'bs' ? 'Novi zapisnik' : 'New record'}</button>
+                                    <div style={{ fontWeight: 600, marginBottom: 6 }}>{lang !== 'en' ? 'Nema zapisnika' : 'No records'}</div>
+                                    <div style={{ fontSize: '0.82rem', marginBottom: 16 }}>{lang !== 'en' ? 'Kreirajte prvi zapisnik klikom na gumb ispod.' : 'Create your first record using the button below.'}</div>
+                                    <button className="btn btn-primary" onClick={handleNew}>+ {lang !== 'en' ? 'Novi zapisnik' : 'New record'}</button>
                                 </div>
                             ) : (
                                 <div className="data-table-wrapper">
@@ -485,12 +485,12 @@ export default function ZapisniciPage() {
                                                         style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
                                                     />
                                                 </th>
-                                                <th style={{ width: 100 }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
-                                                <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{sortIcon('naziv')}</th>
-                                                <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{lang === 'bs' ? 'Broj' : 'No.'}{sortIcon('broj')}</th>
-                                                <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                                                <th style={{ width: 200 }}>{lang === 'bs' ? 'Vrsta' : 'Type'}</th>
-                                                <th style={{ width: 70, textAlign: 'center' }}>{lang === 'bs' ? 'Dokument' : 'Document'}</th>
+                                                <th style={{ width: 100 }}>{lang !== 'en' ? 'Akcije' : 'Actions'}</th>
+                                                <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang !== 'en' ? 'Naziv' : 'Name'}{sortIcon('naziv')}</th>
+                                                <th onClick={() => toggleSort('broj')} style={{ ...thStyle('broj'), width: 120 }}>{lang !== 'en' ? 'Broj' : 'No.'}{sortIcon('broj')}</th>
+                                                <th onClick={() => toggleSort('datum')} style={{ ...thStyle('datum'), width: 110 }}>{lang !== 'en' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
+                                                <th style={{ width: 200 }}>{lang !== 'en' ? 'Vrsta' : 'Type'}</th>
+                                                <th style={{ width: 70, textAlign: 'center' }}>{lang !== 'en' ? 'Dokument' : 'Document'}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -527,7 +527,7 @@ export default function ZapisniciPage() {
                                                                     setActionMenuId(item.id);
                                                                 }}
                                                             >
-                                                                {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+                                                                {lang !== 'en' ? 'Akcije' : 'Actions'} ▼
                                                             </button>
 
                                                             {actionMenuId === item.id && (
@@ -540,15 +540,15 @@ export default function ZapisniciPage() {
                                                                         borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                                         minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                                     }}>
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang !== 'en' ? 'Otvori' : 'Open'}</button>
                                                                         {item.idbKey && <>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang === 'bs' ? 'Otvori zapisnik' : 'Open record'}</button>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang === 'bs' ? 'Preuzmi zapisnik' : 'Download record'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang !== 'en' ? 'Otvori zapisnik' : 'Open record'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang !== 'en' ? 'Preuzmi zapisnik' : 'Download record'}</button>
                                                                         </>}
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Duplicate'}</button>
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} style={menuItemSt}>✉️ {lang === 'bs' ? 'Pošalji email' : 'Send email'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} style={menuItemSt}>📋 {lang !== 'en' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} style={menuItemSt}>✉️ {lang !== 'en' ? 'Pošalji email' : 'Send email'}</button>
                                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
                                                                     </div>
                                                                 </>
                                                             )}
@@ -599,19 +599,19 @@ export default function ZapisniciPage() {
                 <div style={{ position: 'fixed', inset: 0, zIndex: 10000, background: 'rgba(0,0,0,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
                     <div className="card" style={{ width: '100%', maxWidth: 520, maxHeight: '90vh', overflowY: 'auto' }}>
                         <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <span style={{ fontWeight: 700 }}>✉️ {lang === 'bs' ? 'Pošalji zapisnik emailom' : 'Send record by email'}</span>
+                            <span style={{ fontWeight: 700 }}>✉️ {lang !== 'en' ? 'Pošalji zapisnik emailom' : 'Send record by email'}</span>
                             <button className="btn btn-ghost btn-icon" onClick={() => setEmailModal(null)}>✕</button>
                         </div>
                         <div className="card-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ padding: '10px 14px', borderRadius: 8, background: 'rgba(0,191,166,0.07)', border: '1px solid rgba(0,191,166,0.2)', fontSize: '0.82rem' }}>
                                 <strong>{emailModal.item.naziv}</strong>
                                 {emailModal.item.broj && <span style={{ marginLeft: 8, color: 'var(--text-muted)' }}>{emailModal.item.broj}</span>}
-                                {emailModal.item.idbKey && <div style={{ marginTop: 4, color: 'var(--text-muted)' }}>📎 {emailModal.item.attachedFileName} — {lang === 'bs' ? 'Dokument ćete priložiti ručno u email klientu.' : 'Attach the file manually in your email client.'}</div>}
+                                {emailModal.item.idbKey && <div style={{ marginTop: 4, color: 'var(--text-muted)' }}>📎 {emailModal.item.attachedFileName} — {lang !== 'en' ? 'Dokument ćete priložiti ručno u email klientu.' : 'Attach the file manually in your email client.'}</div>}
                             </div>
 
                             <div>
                                 <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                    {lang === 'bs' ? 'Primatelji (odvojite zarezom)' : 'Recipients (comma-separated)'}
+                                    {lang !== 'en' ? 'Primatelji (odvojite zarezom)' : 'Recipients (comma-separated)'}
                                 </div>
                                 <input className="form-input" value={emailTo} onChange={e => setEmailTo(e.target.value)}
                                     placeholder="ime@kompanija.ba, drugi@kompanija.ba" autoFocus />
@@ -619,23 +619,23 @@ export default function ZapisniciPage() {
 
                             <div>
                                 <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                    {lang === 'bs' ? 'Predmet' : 'Subject'}
+                                    {lang !== 'en' ? 'Predmet' : 'Subject'}
                                 </div>
                                 <input className="form-input" value={emailSubject} onChange={e => setEmailSubject(e.target.value)} />
                             </div>
 
                             <div>
                                 <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                    {lang === 'bs' ? 'Poruka' : 'Message'}
+                                    {lang !== 'en' ? 'Poruka' : 'Message'}
                                 </div>
                                 <textarea className="form-input" rows={8} value={emailBody} onChange={e => setEmailBody(e.target.value)} style={{ resize: 'vertical', fontFamily: 'var(--font-body)' }} />
                             </div>
 
                             <div style={{ display: 'flex', gap: 10 }}>
-                                <button className="btn btn-primary" onClick={handleSendEmail}>✉️ {lang === 'bs' ? 'Otvori email klijent' : 'Open email client'}</button>
+                                <button className="btn btn-primary" onClick={handleSendEmail}>✉️ {lang !== 'en' ? 'Otvori email klijent' : 'Open email client'}</button>
                                 <button className="btn btn-ghost" onClick={() => setEmailModal(null)}>{t('cancel')}</button>
                             </div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: -6 }}>💡 {lang === 'bs' ? 'Otvorit će se vaš email klijent (Outlook, Gmail...) s popunjenim podacima.' : 'This will open your email client (Outlook, Gmail...) with the fields pre-filled.'}</div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: -6 }}>💡 {lang !== 'en' ? 'Otvorit će se vaš email klijent (Outlook, Gmail...) s popunjenim podacima.' : 'This will open your email client (Outlook, Gmail...) with the fields pre-filled.'}</div>
                         </div>
                     </div>
                 </div>
@@ -660,9 +660,9 @@ export default function ZapisniciPage() {
                                 >
                                     <div style={{ fontSize: '3rem', marginBottom: 12 }}>{extracting ? '⏳' : dragging ? '📂' : '📋'}</div>
                                     <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: 6 }}>
-                                        {extracting ? (lang === 'bs' ? 'Čitanje dokumenta...' : 'Extracting text...')
-                                            : dragging ? (lang === 'bs' ? 'Ispusti zapisnik ovdje' : 'Drop here')
-                                            : (lang === 'bs' ? 'Prevuci zapisnik ili klikni za odabir' : 'Drag & drop or click to select')}
+                                        {extracting ? (lang !== 'en' ? 'Čitanje dokumenta...' : 'Extracting text...')
+                                            : dragging ? (lang !== 'en' ? 'Ispusti zapisnik ovdje' : 'Drop here')
+                                            : (lang !== 'en' ? 'Prevuci zapisnik ili klikni za odabir' : 'Drag & drop or click to select')}
                                     </div>
                                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>PDF, DOCX, TXT — max 20MB</div>
                                     {extractError && <div style={{ marginTop: 16, color: 'var(--danger)', fontWeight: 600 }}>⚠️ {extractError}</div>}
@@ -670,12 +670,12 @@ export default function ZapisniciPage() {
                                         onChange={e => { const f = e.target.files[0]; if (f) handleFileRead(f); e.target.value = ''; }} />
                                 </div>
                                 <div style={{ marginTop: 20, padding: '14px 16px', borderRadius: 'var(--radius-md)', background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', fontSize: '0.82rem' }}>
-                                    <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--secondary)' }}>💡 {lang === 'bs' ? 'Kako funkcioniše?' : 'How does it work?'}</div>
+                                    <div style={{ fontWeight: 700, marginBottom: 6, color: 'var(--secondary)' }}>💡 {lang !== 'en' ? 'Kako funkcioniše?' : 'How does it work?'}</div>
                                     <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.7, color: 'var(--text-muted)' }}>
-                                        <li>{lang === 'bs' ? 'Aplikacija iz dokumenta izvlači sva vlastita imena.' : 'App extracts all proper names from the document.'}</li>
-                                        <li>{lang === 'bs' ? 'Svako ime uspoređuje s radnicima koristeći fuzzy matching.' : 'Each name is compared against workers using fuzzy matching.'}</li>
-                                        <li>{lang === 'bs' ? 'Prikazuje tabelu s originalnim i ispravnim imenima — možete ih urediti.' : 'A table shows original and corrected names — editable.'}</li>
-                                        <li>{lang === 'bs' ? 'Generira ispravljen dokument (.docx ili .txt).' : 'Generates a corrected document (.docx or .txt).'}</li>
+                                        <li>{lang !== 'en' ? 'Aplikacija iz dokumenta izvlači sva vlastita imena.' : 'App extracts all proper names from the document.'}</li>
+                                        <li>{lang !== 'en' ? 'Svako ime uspoređuje s radnicima koristeći fuzzy matching.' : 'Each name is compared against workers using fuzzy matching.'}</li>
+                                        <li>{lang !== 'en' ? 'Prikazuje tabelu s originalnim i ispravnim imenima — možete ih urediti.' : 'A table shows original and corrected names — editable.'}</li>
+                                        <li>{lang !== 'en' ? 'Generira ispravljen dokument (.docx ili .txt).' : 'Generates a corrected document (.docx or .txt).'}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -689,11 +689,11 @@ export default function ZapisniciPage() {
                                 <div style={{ flex: 1 }}>
                                     <strong>{docFile?.name}</strong>
                                     <div style={{ color: 'var(--text-muted)', fontSize: '0.78rem', marginTop: 2 }}>
-                                        {lang === 'bs' ? `Pronađeno ${rows.length} potencijalnih imena · ${activeChanges} izmjena` : `Found ${rows.length} names · ${activeChanges} changes`}
+                                        {lang !== 'en' ? `Pronađeno ${rows.length} potencijalnih imena · ${activeChanges} izmjena` : `Found ${rows.length} names · ${activeChanges} changes`}
                                     </div>
                                 </div>
                                 <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
-                                    {generating ? '⏳' : '📥'} {lang === 'bs' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
+                                    {generating ? '⏳' : '📥'} {lang !== 'en' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
                                 </button>
                             </div>
 
@@ -704,10 +704,10 @@ export default function ZapisniciPage() {
                                             <thead>
                                                 <tr>
                                                     <th style={{ width: 40 }}>✓</th>
-                                                    <th>{lang === 'bs' ? 'Iz dokumenta' : 'From document'}</th>
-                                                    <th>{lang === 'bs' ? 'Radnik u sustavu' : 'Worker in system'}</th>
-                                                    <th style={{ width: 80, textAlign: 'center' }}>{lang === 'bs' ? 'Match' : 'Match'}</th>
-                                                    <th>{lang === 'bs' ? 'Ispravno ime' : 'Corrected name'}</th>
+                                                    <th>{lang !== 'en' ? 'Iz dokumenta' : 'From document'}</th>
+                                                    <th>{lang !== 'en' ? 'Radnik u sustavu' : 'Worker in system'}</th>
+                                                    <th style={{ width: 80, textAlign: 'center' }}>{lang !== 'en' ? 'Match' : 'Match'}</th>
+                                                    <th>{lang !== 'en' ? 'Ispravno ime' : 'Corrected name'}</th>
                                                     <th style={{ width: 50 }}></th>
                                                 </tr>
                                             </thead>
@@ -747,12 +747,12 @@ export default function ZapisniciPage() {
 
                             <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
                                 <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
-                                    {generating ? '⏳' : '📥'} {lang === 'bs' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
+                                    {generating ? '⏳' : '📥'} {lang !== 'en' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
                                     {activeChanges > 0 && <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>{activeChanges}</span>}
                                 </button>
-                                <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: true })))}>✓ {lang === 'bs' ? 'Označi sve' : 'Select all'}</button>
-                                <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: false })))}>✗ {lang === 'bs' ? 'Odznači sve' : 'Deselect all'}</button>
-                                <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{activeChanges} {lang === 'bs' ? 'izmjena' : 'changes'}</span>
+                                <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: true })))}>✓ {lang !== 'en' ? 'Označi sve' : 'Select all'}</button>
+                                <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: false })))}>✗ {lang !== 'en' ? 'Odznači sve' : 'Deselect all'}</button>
+                                <span style={{ marginLeft: 'auto', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{activeChanges} {lang !== 'en' ? 'izmjena' : 'changes'}</span>
                             </div>
                         </>
                     )}
@@ -761,9 +761,9 @@ export default function ZapisniciPage() {
                         <div className="card">
                             <div className="card-body" style={{ textAlign: 'center', padding: '60px 20px' }}>
                                 <div style={{ fontSize: '3.5rem', marginBottom: 16 }}>✅</div>
-                                <div style={{ fontWeight: 700, fontSize: '1.2rem', marginBottom: 8 }}>{lang === 'bs' ? 'Ispravljen dokument generisan!' : 'Corrected document generated!'}</div>
-                                <div style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{lang === 'bs' ? 'Datoteka je preuzeta.' : 'File downloaded.'}</div>
-                                <button className="btn btn-primary" onClick={handleReset}>↺ {lang === 'bs' ? 'Obradi novi dokument' : 'Process another'}</button>
+                                <div style={{ fontWeight: 700, fontSize: '1.2rem', marginBottom: 8 }}>{lang !== 'en' ? 'Ispravljen dokument generisan!' : 'Corrected document generated!'}</div>
+                                <div style={{ color: 'var(--text-muted)', marginBottom: 24 }}>{lang !== 'en' ? 'Datoteka je preuzeta.' : 'File downloaded.'}</div>
+                                <button className="btn btn-primary" onClick={handleReset}>↺ {lang !== 'en' ? 'Obradi novi dokument' : 'Process another'}</button>
                             </div>
                         </div>
                     )}

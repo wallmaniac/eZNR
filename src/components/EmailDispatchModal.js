@@ -210,7 +210,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                 }}>
                     <div>
                         <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text, #e2e8f0)' }}>
-                            📧 {lang === 'bs' ? 'Pošalji upitnik' : 'Send Questionnaire'}
+                            📧 {lang !== 'en' ? 'Pošalji upitnik' : 'Send Questionnaire'}
                         </h2>
                         <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)' }}>
                             {questionnaire?.naziv || ''}
@@ -231,18 +231,18 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Worker selection */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    👥 {lang === 'bs' ? 'Odaberite radnike' : 'Select workers'}
+                                    👥 {lang !== 'en' ? 'Odaberite radnike' : 'Select workers'}
                                 </label>
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                                     <input
                                         type="text"
-                                        placeholder={lang === 'bs' ? 'Pretraži radnike...' : 'Search workers...'}
+                                        placeholder={lang !== 'en' ? 'Pretraži radnike...' : 'Search workers...'}
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         style={searchInputStyle}
                                     />
                                     <button onClick={selectAll} style={selectAllBtnStyle}>
-                                        {lang === 'bs' ? 'Odaberi sve' : 'Select all'}
+                                        {lang !== 'en' ? 'Odaberi sve' : 'Select all'}
                                     </button>
                                 </div>
                                 <div style={{
@@ -251,7 +251,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                 }}>
                                     {filteredWorkers.length === 0 ? (
                                         <p style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted, #94a3b8)', fontSize: '0.85rem' }}>
-                                            {lang === 'bs' ? 'Nema radnika' : 'No workers'}
+                                            {lang !== 'en' ? 'Nema radnika' : 'No workers'}
                                         </p>
                                     ) : filteredWorkers.map(w => (
                                         <label key={w.id} style={{
@@ -274,7 +274,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                                     {w.ime} {w.prezime}
                                                 </div>
                                                 <div style={{ fontSize: '0.78rem', color: w.email ? 'var(--text-muted, #94a3b8)' : '#ef4444' }}>
-                                                    {w.email || (lang === 'bs' ? '(nema email)' : '(no email)')}
+                                                    {w.email || (lang !== 'en' ? '(nema email)' : '(no email)')}
                                                 </div>
                                             </div>
                                         </label>
@@ -285,12 +285,12 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Manual emails */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    ✉️ {lang === 'bs' ? 'Dodatni emailovi (ručni unos)' : 'Additional emails (manual)'}
+                                    ✉️ {lang !== 'en' ? 'Dodatni emailovi (ručni unos)' : 'Additional emails (manual)'}
                                 </label>
                                 <textarea
                                     value={manualEmails}
                                     onChange={e => setManualEmails(e.target.value)}
-                                    placeholder={lang === 'bs'
+                                    placeholder={lang !== 'en'
                                         ? 'Unesite email adrese, odvojene zarezom ili novim redom...'
                                         : 'Enter email addresses separated by commas or new lines...'}
                                     rows={3}
@@ -301,7 +301,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Deadline */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    📅 {lang === 'bs' ? 'Rok za ispunjavanje (opcionalno)' : 'Deadline (optional)'}
+                                    📅 {lang !== 'en' ? 'Rok za ispunjavanje (opcionalno)' : 'Deadline (optional)'}
                                 </label>
                                 <DateInput
                                     value={deadline}
@@ -312,17 +312,17 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Reply-To email */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    ↩️ {lang === 'bs' ? 'Vaš email (Reply-To — primaoci vide ovaj email)' : 'Your email (Reply-To — recipients see this)'}
+                                    ↩️ {lang !== 'en' ? 'Vaš email (Reply-To — primaoci vide ovaj email)' : 'Your email (Reply-To — recipients see this)'}
                                 </label>
                                 <input
                                     type="email"
                                     value={replyToEmail}
                                     onChange={e => setReplyToEmail(e.target.value)}
-                                    placeholder={lang === 'bs' ? 'npr. marko.maric@firma.ba' : 'e.g. officer@company.com'}
+                                    placeholder={lang !== 'en' ? 'npr. marko.maric@firma.ba' : 'e.g. officer@company.com'}
                                     style={searchInputStyle}
                                 />
                                 <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)' }}>
-                                    {lang === 'bs'
+                                    {lang !== 'en'
                                         ? 'Email će biti poslan s vašeg EmailJS naloga, ali primaoci će moći odgovoriti na ovaj email.'
                                         : 'Email is sent from your EmailJS account, but recipients can reply to this address.'}
                                 </p>
@@ -340,7 +340,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text, #e2e8f0)', margin: '0 0 8px' }}>
-                                {lang === 'bs' ? 'Slanje u tijeku...' : 'Sending...'}
+                                {lang !== 'en' ? 'Slanje u tijeku...' : 'Sending...'}
                             </p>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', margin: 0 }}>
                                 {progress.current}/{progress.total} — {progress.email}
@@ -366,17 +366,17 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                 {result.failed === 0 ? '✅' : '⚠️'}
                             </div>
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text, #e2e8f0)', margin: '0 0 12px' }}>
-                                {lang === 'bs' ? 'Slanje završeno' : 'Sending complete'}
+                                {lang !== 'en' ? 'Slanje završeno' : 'Sending complete'}
                             </h3>
                             <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginBottom: 16 }}>
                                 <div style={statBoxStyle('#10b981')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{result.sent}</div>
-                                    <div style={{ fontSize: '0.75rem' }}>{lang === 'bs' ? 'Poslano' : 'Sent'}</div>
+                                    <div style={{ fontSize: '0.75rem' }}>{lang !== 'en' ? 'Poslano' : 'Sent'}</div>
                                 </div>
                                 {result.failed > 0 && (
                                     <div style={statBoxStyle('#ef4444')}>
                                         <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{result.failed}</div>
-                                        <div style={{ fontSize: '0.75rem' }}>{lang === 'bs' ? 'Neuspjelo' : 'Failed'}</div>
+                                        <div style={{ fontSize: '0.75rem' }}>{lang !== 'en' ? 'Neuspjelo' : 'Failed'}</div>
                                     </div>
                                 )}
                             </div>
@@ -386,7 +386,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                     borderRadius: 10, padding: 14, marginTop: 12,
                                 }}>
                                     <p style={{ fontWeight: 600, fontSize: '0.85rem', color: '#ef4444', margin: '0 0 8px' }}>
-                                        {lang === 'bs' ? 'Greške:' : 'Errors:'}
+                                        {lang !== 'en' ? 'Greške:' : 'Errors:'}
                                     </p>
                                     {result.errors.map((e, i) => (
                                         <p key={i} style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '2px 0' }}>
@@ -408,11 +408,11 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                     {step === 'select' && (
                         <>
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)' }}>
-                                {totalRecipients} {lang === 'bs' ? 'primatelja' : 'recipients'}
+                                {totalRecipients} {lang !== 'en' ? 'primatelja' : 'recipients'}
                             </span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={cancelBtnStyle}>
-                                    {lang === 'bs' ? 'Odustani' : 'Cancel'}
+                                    {lang !== 'en' ? 'Odustani' : 'Cancel'}
                                 </button>
                                 <button
                                     onClick={handleSend}
@@ -423,14 +423,14 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                         cursor: totalRecipients === 0 ? 'not-allowed' : 'pointer',
                                     }}
                                 >
-                                    📤 {lang === 'bs' ? `Pošalji (${totalRecipients})` : `Send (${totalRecipients})`}
+                                    📤 {lang !== 'en' ? `Pošalji (${totalRecipients})` : `Send (${totalRecipients})`}
                                 </button>
                             </div>
                         </>
                     )}
                     {step === 'done' && (
                         <button onClick={onClose} style={{ ...sendBtnStyle, marginLeft: 'auto' }}>
-                            {lang === 'bs' ? 'Zatvori' : 'Close'}
+                            {lang !== 'en' ? 'Zatvori' : 'Close'}
                         </button>
                     )}
                 </div>

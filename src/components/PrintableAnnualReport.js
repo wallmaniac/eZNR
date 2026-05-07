@@ -135,7 +135,7 @@ export default function PrintableAnnualReport({
             </div>
 
             <div style={styles.title}>
-                {lang === 'bs' ? 'Godišnji izvještaj o stanju zaštite na radu' : 'Annual Occupational Safety Report'}
+                {lang !== 'en' ? 'Godišnji izvještaj o stanju zaštite na radu' : 'Annual Occupational Safety Report'}
             </div>
 
             <div style={styles.h2}>1. Opšti podaci</div>

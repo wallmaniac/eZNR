@@ -66,7 +66,7 @@ export default function InstallPWA() {
                     margin: '12px 0 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                 }}
             >
-                📱 {lang === 'bs' ? 'Instaliraj Aplikaciju' : 'Install App'}
+                📱 {lang !== 'en' ? 'Instaliraj Aplikaciju' : 'Install App'}
             </button>
             {isIOS && showIOSGuide && (
                 <div style={{
@@ -75,11 +75,11 @@ export default function InstallPWA() {
                     fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.7,
                 }}>
                     <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text)' }}>
-                        {lang === 'bs' ? 'Upute za iOS:' : 'iOS Instructions:'}
+                        {lang !== 'en' ? 'Upute za iOS:' : 'iOS Instructions:'}
                     </div>
-                    1️⃣ {lang === 'bs' ? 'Klikni na' : 'Tap the'} <strong style={{ fontSize: '1.1rem' }}>⬆️</strong> (Share)<br/>
-                    2️⃣ {lang === 'bs' ? 'Odaberi' : 'Select'} <strong>"{lang === 'bs' ? 'Dodaj na početni zaslon' : 'Add to Home Screen'}"</strong><br/>
-                    3️⃣ {lang === 'bs' ? 'Potvrdi sa "Dodaj"' : 'Confirm with "Add"'}
+                    1️⃣ {lang !== 'en' ? 'Klikni na' : 'Tap the'} <strong style={{ fontSize: '1.1rem' }}>⬆️</strong> (Share)<br/>
+                    2️⃣ {lang !== 'en' ? 'Odaberi' : 'Select'} <strong>"{lang !== 'en' ? 'Dodaj na početni zaslon' : 'Add to Home Screen'}"</strong><br/>
+                    3️⃣ {lang !== 'en' ? 'Potvrdi sa "Dodaj"' : 'Confirm with "Add"'}
                 </div>
             )}
         </div>

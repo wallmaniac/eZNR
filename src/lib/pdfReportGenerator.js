@@ -275,7 +275,7 @@ function wrapDocument(content, title, landscape = false, bs = true, accentColor 
  * 1. WORKERS REPORT — Summary of selected workers
  */
 export function generateWorkersReport(workerIds = [], lang = 'bs') {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allWorkers = getAll(COLLECTIONS.WORKERS);
   const orgUnits = getAll(COLLECTIONS.ORG_UNITS);
@@ -351,7 +351,7 @@ export function generateWorkersReport(workerIds = [], lang = 'bs') {
  * 2. CERTIFICATES REPORT — Certificate status overview
  */
 export function generateCertificatesReport(certIds = [], lang = 'bs') {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allCerts = getAll(COLLECTIONS.CERTIFICATES);
   const workers = getAll(COLLECTIONS.WORKERS);
@@ -416,7 +416,7 @@ export function generateCertificatesReport(certIds = [], lang = 'bs') {
  * 3. PPE REPORT — Personal Protective Equipment assignments
  */
 export function generatePPEReport(assignmentIds = [], lang = 'bs') {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allPPE = getAll(COLLECTIONS.PPE_ASSIGNMENTS);
   const workers = getAll(COLLECTIONS.WORKERS);
@@ -465,7 +465,7 @@ export function generatePPEReport(assignmentIds = [], lang = 'bs') {
  * 4. EQUIPMENT REPORT — Work equipment & inspection status
  */
 export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allEquip = getAll(COLLECTIONS.EQUIPMENT);
   let items = equipmentIds.length > 0
@@ -514,7 +514,7 @@ export function generateEquipmentReport(equipmentIds = [], lang = 'bs') {
  * 5. FLEET REPORT — Vehicle fleet status
  */
 export function generateFleetReport(vehicleIds = [], lang = 'bs') {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allVehicles = getAll(COLLECTIONS.VEHICLES);
   let vehicles = vehicleIds.length > 0
@@ -562,7 +562,7 @@ export function generateFleetReport(vehicleIds = [], lang = 'bs') {
  * 6. FIRE PROTECTION REPORT — Fire extinguishers & equipment
  */
 export function generateFireProtectionReport(itemIds = [], lang = 'bs', type = 'extinguishers') {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const company = getCompanyInfo();
   const allFE = getAll(type === 'hydrants' ? COLLECTIONS.HYDRANTS : COLLECTIONS.FIRE_EXTINGUISHERS);
   let items = itemIds.length > 0
@@ -630,11 +630,11 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
     // Removed sort to preserve input order
 
     doc.setFontSize(16);
-    doc.text(lang === 'bs' ? 'Izvještaj: Prijave Opasnosti' : 'Hazard Reports', 14, 20);
+    doc.text(lang !== 'en' ? 'Izvještaj: Prijave Opasnosti' : 'Hazard Reports', 14, 20);
     
     doc.setFontSize(10);
     doc.setTextColor(100);
-    doc.text(`${lang === 'bs' ? 'Datum generisanja' : 'Generated on'}: ${new Date().toLocaleDateString()}`, 14, 28);
+    doc.text(`${lang !== 'en' ? 'Datum generisanja' : 'Generated on'}: ${new Date().toLocaleDateString()}`, 14, 28);
     
     const tableData = obsList.map((o, i) => [
         i + 1,
@@ -649,10 +649,10 @@ export function generateObservationsReport(obsIds = [], lang = 'bs') {
         startY: 35,
         head: [[
             '#', 
-            lang === 'bs' ? 'Datum' : 'Date', 
-            lang === 'bs' ? 'Lokacija' : 'Location', 
-            lang === 'bs' ? 'Opis' : 'Description', 
-            lang === 'bs' ? 'Prijavio' : 'Reporter',
+            lang !== 'en' ? 'Datum' : 'Date', 
+            lang !== 'en' ? 'Lokacija' : 'Location', 
+            lang !== 'en' ? 'Opis' : 'Description', 
+            lang !== 'en' ? 'Prijavio' : 'Reporter',
             'Status'
         ]],
         body: tableData,

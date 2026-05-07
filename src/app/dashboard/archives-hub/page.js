@@ -14,7 +14,7 @@ import Icon3D from '@/components/Icon3D';
 
 export default function ArchivesHub() {
     const { lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const [tab, setTab] = useState('employer');
     
     return (

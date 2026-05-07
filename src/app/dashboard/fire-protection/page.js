@@ -44,7 +44,7 @@ const STATUS_MAP = {
 
 export default function FireProtectionPage() {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
@@ -390,7 +390,7 @@ export default function FireProtectionPage() {
                                     <input placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={extSearch} onChange={e => setExtSearch(e.target.value)}
                                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 </div>
-                                <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
+                                <PDFExportButton title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                                     { label: bs ? 'Svi PP aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport(sortedExt.map(e => e.id), lang) },
                                     ...(extSelectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${extSelectedIds.size})`, icon: '✓', onClick: () => generateFireProtectionReport(sortedExt.filter(e => extSelectedIds.has(e.id)).map(e => e.id), lang) }] : []),
                                 ]} />

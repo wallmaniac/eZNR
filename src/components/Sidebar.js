@@ -411,7 +411,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                     if (child.children) {
                                         const childGroupOpen = openMenus[child.key];
                                         const childGroupActive = child.children.some(gc => isActive(gc.path));
-                                        const childLabel = lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
+                                        const childLabel = lang !== 'en' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key));
                                         return (
                                             <div key={child.key}>
                                                 <button
@@ -469,7 +469,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             }}
                                         >
                                             <Icon3D name={child.icon} size={18} />
-                                            <span>{lang === 'bs' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
+                                            <span>{lang !== 'en' ? (child.label_bs || t(child.key)) : (child.label_en || t(child.key))}</span>
                                         </Link>
                                     );
                                 })}
@@ -718,7 +718,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                         color: mobileProfileTab === 'profile' ? 'var(--primary)' : 'var(--text-muted)',
                                         borderBottom: mobileProfileTab === 'profile' ? '2px solid var(--primary)' : '2px solid transparent',
                                         marginBottom: -1,
-                                    }}>👤 {lang === 'bs' ? 'Profil' : 'Profile'}</button>
+                                    }}>👤 {lang !== 'en' ? 'Profil' : 'Profile'}</button>
                                     {isAdmin && (
                                         <button onClick={() => setMobileProfileTab('admin')} style={{
                                             padding: '8px 16px', border: 'none', background: 'transparent', cursor: 'pointer',
@@ -726,7 +726,7 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             color: mobileProfileTab === 'admin' ? 'var(--primary)' : 'var(--text-muted)',
                                             borderBottom: mobileProfileTab === 'admin' ? '2px solid var(--primary)' : '2px solid transparent',
                                             marginBottom: -1,
-                                        }}>👑 {lang === 'bs' ? 'Administracija' : 'Administration'}</button>
+                                        }}>👑 {lang !== 'en' ? 'Administracija' : 'Administration'}</button>
                                     )}
                                 </div>
                             </div>
@@ -736,21 +736,21 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                 {mobileProfileTab === 'profile' && (
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                                         <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Ime i prezime' : 'Full Name'}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang !== 'en' ? 'Ime i prezime' : 'Full Name'}</div>
                                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.firstName} {user?.lastName}</div>
                                         </div>
                                         <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Email / Korisničko ime' : 'Email / Username'}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang !== 'en' ? 'Email / Korisničko ime' : 'Email / Username'}</div>
                                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.email || user?.username || '—'}</div>
                                         </div>
                                         <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Uloga' : 'Role'}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang !== 'en' ? 'Uloga' : 'Role'}</div>
                                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>
-                                                {user?.role === 'admin' || user?.role === 'superadmin' ? '👑 Administrator' : '👷 ' + (lang === 'bs' ? 'Stručnjak ZNR' : 'OSH Officer')}
+                                                {user?.role === 'admin' || user?.role === 'superadmin' ? '👑 Administrator' : '👷 ' + (lang !== 'en' ? 'Stručnjak ZNR' : 'OSH Officer')}
                                             </div>
                                         </div>
                                         <div style={{ padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
-                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang === 'bs' ? 'Aktivna kompanija' : 'Active Company'}</div>
+                                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 4 }}>{lang !== 'en' ? 'Aktivna kompanija' : 'Active Company'}</div>
                                             <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{user?.companyName || '—'}</div>
                                         </div>
                                         <InstallPWA />
@@ -758,13 +758,13 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                             width: '100%', padding: '12px', borderRadius: 10, border: '1px solid var(--border)',
                                             background: 'var(--bg-input)', color: 'var(--text)', cursor: 'pointer',
                                             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center',
-                                        }}>⚙️ {lang === 'bs' ? 'Sve postavke' : 'All Settings'}</button>
+                                        }}>⚙️ {lang !== 'en' ? 'Sve postavke' : 'All Settings'}</button>
                                         <button onClick={handleLogout} style={{
                                             width: '100%', padding: '12px', borderRadius: 10,
                                             background: 'rgba(244,67,54,0.1)', border: '1px solid rgba(244,67,54,0.2)',
                                             color: '#ef5350', cursor: 'pointer',
                                             fontFamily: 'var(--font-body)', fontWeight: 600, fontSize: '0.85rem', textAlign: 'center',
-                                        }}>🚪 {lang === 'bs' ? 'Odjavi se' : 'Log Out'}</button>
+                                        }}>🚪 {lang !== 'en' ? 'Odjavi se' : 'Log Out'}</button>
                                     </div>
                                 )}
                                 {mobileProfileTab === 'admin' && isAdmin && (
@@ -777,8 +777,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                         }}>
                                             <span style={{ fontSize: '1.3rem' }}>👥</span>
                                             <div>
-                                                <div>{lang === 'bs' ? 'Upravljanje korisnicima' : 'User Management'}</div>
-                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{lang === 'bs' ? 'Dodaj, uredi ili obriši korisničke račune' : 'Add, edit or delete user accounts'}</div>
+                                                <div>{lang !== 'en' ? 'Upravljanje korisnicima' : 'User Management'}</div>
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{lang !== 'en' ? 'Dodaj, uredi ili obriši korisničke račune' : 'Add, edit or delete user accounts'}</div>
                                             </div>
                                         </button>
                                         <button onClick={() => { setMobileProfileOpen(false); onMobileClose?.(); router.push('/dashboard/admin/companies'); }} style={{
@@ -789,8 +789,8 @@ export default function Sidebar({ collapsed, onToggle, isMobile = false, mobileO
                                         }}>
                                             <span style={{ fontSize: '1.3rem' }}>🏢</span>
                                             <div>
-                                                <div>{lang === 'bs' ? 'Upravljanje firmama' : 'Company Management'}</div>
-                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{lang === 'bs' ? 'Dodaj, uredi ili obriši podatke o firmama' : 'Add, edit or delete company data'}</div>
+                                                <div>{lang !== 'en' ? 'Upravljanje firmama' : 'Company Management'}</div>
+                                                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 400 }}>{lang !== 'en' ? 'Dodaj, uredi ili obriši podatke o firmama' : 'Add, edit or delete company data'}</div>
                                             </div>
                                         </button>
                                     </div>

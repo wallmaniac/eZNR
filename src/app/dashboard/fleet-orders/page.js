@@ -12,7 +12,7 @@ import PageHeader from '@/components/PageHeader';
 
 function FleetOrdersInner() {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();

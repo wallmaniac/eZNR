@@ -116,7 +116,7 @@ export function StazPicker({ label, value, onChange }) {
         <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-                <InfoTip text={lang === 'bs' ? "Staž prije dolaska u firmu: Godina / Mjeseci / Dana" : "Prior experience: Years / Months / Days"} />
+                <InfoTip text={lang !== 'en' ? "Staž prije dolaska u firmu: Godina / Mjeseci / Dana" : "Prior experience: Years / Months / Days"} />
                 {value && <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>{value.toUpperCase()}</span>}
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>

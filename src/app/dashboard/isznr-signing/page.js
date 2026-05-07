@@ -18,7 +18,7 @@ function generateSignatureHash() {
 
 export default function ISZNRSigningPage() {
   const { t, lang } = useLanguage();
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const { alert, confirm, DialogRenderer } = useDialog();
   const { user, activeCompanyId } = useAuth();
   const [documents, setDocuments] = useState([]);

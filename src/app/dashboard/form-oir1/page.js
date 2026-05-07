@@ -77,7 +77,7 @@ export default function FormOIR1Page() {
 
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.FORMS_OIR1, id);
       setSelectedIds(new Set());
       loadData();
@@ -145,7 +145,7 @@ export default function FormOIR1Page() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati obrazac?' : 'Delete form?');
+    const ok = await confirm(lang !== 'en' ? 'Obrisati obrazac?' : 'Delete form?');
     if (ok) { remove(COLLECTIONS.FORMS_OIR1, id); loadData(); }
   };
 
@@ -193,7 +193,7 @@ export default function FormOIR1Page() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 15 * 1024 * 1024) {
-      await alert(lang === 'bs' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
+      await alert(lang !== 'en' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
       return;
     }
     setFormData(prev => ({
@@ -253,27 +253,27 @@ export default function FormOIR1Page() {
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleNew} title={lang === 'bs' ? 'Dodaj novi OIR-1 obrazac' : 'Add new OIR-1 form'}>
-              + {lang === 'bs' ? 'Novi OIR-1' : 'New OIR-1'}
+            <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Dodaj novi OIR-1 obrazac' : 'Add new OIR-1 form'}>
+              + {lang !== 'en' ? 'Novi OIR-1' : 'New OIR-1'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
               <input
-                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
               />
-              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
             {/* Grupne akcije bar */}
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabrane obrasce' : 'Delete selected forms'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabrane obrasce' : 'Delete selected forms'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
           </div>
         </div>
 
@@ -284,12 +284,12 @@ export default function FormOIR1Page() {
                 <thead>
                 <tr>
                   <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === records.length && records.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
-                  <th>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
-                  <th onClick={() => toggleSort('datumDogadjaja')} style={thStyle('datumDogadjaja')}>{lang === 'bs' ? 'Datum događaja' : 'Event date'}{sortIcon('datumDogadjaja')}</th>
-                  <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang === 'bs' ? 'Lokacija' : 'Location'}{sortIcon('dogadjajNastaoU')}</th>
-                  <th onClick={() => toggleSort('_injured')} style={thStyle('_injured')}>{lang === 'bs' ? 'Ozlijeđeni' : 'Injured'}{sortIcon('_injured')}</th>
-                  <th onClick={() => toggleSort('podnositelj')} style={thStyle('podnositelj')}>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}{sortIcon('podnositelj')}</th>
-                  <th onClick={() => toggleSort('datumPrijave')} style={thStyle('datumPrijave')}>{lang === 'bs' ? 'Datum prijave' : 'Submit date'}{sortIcon('datumPrijave')}</th>
+                  <th>{lang !== 'en' ? 'Akcije' : 'Actions'}</th>
+                  <th onClick={() => toggleSort('datumDogadjaja')} style={thStyle('datumDogadjaja')}>{lang !== 'en' ? 'Datum događaja' : 'Event date'}{sortIcon('datumDogadjaja')}</th>
+                  <th onClick={() => toggleSort('dogadjajNastaoU')} style={thStyle('dogadjajNastaoU')}>{lang !== 'en' ? 'Lokacija' : 'Location'}{sortIcon('dogadjajNastaoU')}</th>
+                  <th onClick={() => toggleSort('_injured')} style={thStyle('_injured')}>{lang !== 'en' ? 'Ozlijeđeni' : 'Injured'}{sortIcon('_injured')}</th>
+                  <th onClick={() => toggleSort('podnositelj')} style={thStyle('podnositelj')}>{lang !== 'en' ? 'Podnositelj' : 'Submitter'}{sortIcon('podnositelj')}</th>
+                  <th onClick={() => toggleSort('datumPrijave')} style={thStyle('datumPrijave')}>{lang !== 'en' ? 'Datum prijave' : 'Submit date'}{sortIcon('datumPrijave')}</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -311,7 +311,7 @@ export default function FormOIR1Page() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                           );
                           setActionMenuId(r.id);
-                        }} title={lang === 'bs' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>
+                        }} title={lang !== 'en' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>
                           Akcije ▼
                         </button>
                         {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
@@ -346,14 +346,14 @@ export default function FormOIR1Page() {
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
-        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang === 'bs' ? 'Uredi OIR-1' : 'Edit OIR-1') : (lang === 'bs' ? 'Novi OIR-1' : 'New OIR-1')}</h1>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
+        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang !== 'en' ? 'Uredi OIR-1' : 'Edit OIR-1') : (lang !== 'en' ? 'Novi OIR-1' : 'New OIR-1')}</h1>
       </div>
       <DialogRenderer />
 
       {/* Page title */}
       <div style={{ marginBottom: 20, fontSize: '0.88rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-        {lang === 'bs'
+        {lang !== 'en'
           ? 'OBAVIJEST O DOGAĐAJU NA RADU KOJI JE IZAZVAO SMRT, TEŽU OZLJEDU KAO I OZLJEDU DVAJU ILI VIŠE ZAPOSLENIKA, NEOVISNO O TEŽINI OZLJEDE'
           : 'NOTICE OF WORKPLACE EVENT THAT CAUSED DEATH, SERIOUS INJURY OR INJURY OF TWO OR MORE WORKERS'}
       </div>
@@ -363,27 +363,27 @@ export default function FormOIR1Page() {
         {/* ═══ SECTION 1: General info ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'Obrazac OIR-1' : 'Form OIR-1'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'Obrazac OIR-1' : 'Form OIR-1'}</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Naziv nadležnog tijela inspekcije rada' : 'Labor inspection authority name'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Naziv nadležnog tijela inspekcije rada' : 'Labor inspection authority name'}</div>
               <input className="form-input" value={formData.nadleznoTijelo} onChange={e => set('nadleznoTijelo', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Adresa' : 'Address'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Adresa' : 'Address'}</div>
               <input className="form-input" value={formData.adresaTijela} onChange={e => set('adresaTijela', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Događaj na radu nastao je u' : 'The workplace event occurred in'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Događaj na radu nastao je u' : 'The workplace event occurred in'}</div>
               <input className="form-input" value={formData.dogadjajNastaoU} onChange={e => set('dogadjajNastaoU', e.target.value)} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '200px 140px', gap: 12 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Dana (datum)' : 'Date'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Dana (datum)' : 'Date'}</div>
                 <DateInput value={formData.datumDogadjaja} onChange={v => set('datumDogadjaja', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Vrijeme' : 'Time'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Vrijeme' : 'Time'}</div>
                 <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemeDogadjaja} onChange={e => set('vrijemeDogadjaja', e.target.value)} />
               </div>
             </div>
@@ -393,9 +393,9 @@ export default function FormOIR1Page() {
         {/* ═══ SECTION 2: Injured workers ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'PODACI O OZLIJEĐENIM ZAPOSLENICIMA' : 'INJURED EMPLOYEES DATA'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'PODACI O OZLIJEĐENIM ZAPOSLENICIMA' : 'INJURED EMPLOYEES DATA'}</div>
             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 14 }}>
-              {lang === 'bs'
+              {lang !== 'en'
                 ? 'Mjesto i adresa gdje se ozlijeđeni nalaze poslije događaja na radu'
                 : 'Location and address where injured workers are after the event'}
             </div>
@@ -404,12 +404,12 @@ export default function FormOIR1Page() {
               <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr', gap: 10, marginBottom: 10, alignItems: 'center' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>OR{idx + 1}:</div>
                 <select className="form-select" value={o.workerId} onChange={e => setInjured(idx, 'workerId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? 'Odaberite OR obrazac' : 'Select OR form'}</option>
+                  <option value="">{lang !== 'en' ? 'Odaberite OR obrazac' : 'Select OR form'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
                 </select>
-                <input className="form-input" placeholder={lang === 'bs' ? 'Mjesto/adresa nakon događaja' : 'Location after event'}
+                <input className="form-input" placeholder={lang !== 'en' ? 'Mjesto/adresa nakon događaja' : 'Location after event'}
                   value={o.mjesto} onChange={e => setInjured(idx, 'mjesto', e.target.value)} />
               </div>
             ))}
@@ -419,13 +419,13 @@ export default function FormOIR1Page() {
         {/* ═══ SECTION 3: Deceased workers ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'PODACI O POGINULIM ZAPOSLENICIMA' : 'DECEASED EMPLOYEES DATA'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'PODACI O POGINULIM ZAPOSLENICIMA' : 'DECEASED EMPLOYEES DATA'}</div>
 
             {formData.poginuli.map((p, idx) => (
               <div key={idx} style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: 10, marginBottom: 10, alignItems: 'center' }}>
                 <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>OR{idx + 1}:</div>
                 <select className="form-select" value={p.workerId} onChange={e => setDeceased(idx, 'workerId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? 'Odaberite OR obrazac' : 'Select OR form'}</option>
+                  <option value="">{lang !== 'en' ? 'Odaberite OR obrazac' : 'Select OR form'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
@@ -438,22 +438,22 @@ export default function FormOIR1Page() {
         {/* ═══ SECTION 4: Event description ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'Detalji događaja' : 'Event details'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'Detalji događaja' : 'Event details'}</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Opis događaja' : 'Event description'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Opis događaja' : 'Event description'}</div>
               <textarea className="form-input" rows={5} value={formData.opisDogadjaja} onChange={e => set('opisDogadjaja', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Rukovoditelj' : 'Manager'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Rukovoditelj' : 'Manager'}</div>
               <textarea className="form-input" rows={3} value={formData.rukovoditelj} onChange={e => set('rukovoditelj', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Primjenjene mjere' : 'Applied measures'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Primjenjene mjere' : 'Applied measures'}</div>
               <textarea className="form-input" rows={3} value={formData.primjenjeneMjere} onChange={e => set('primjenjeneMjere', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Prisutni zaposlenici' : 'Present employees (witnesses)'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Prisutni zaposlenici' : 'Present employees (witnesses)'}</div>
               <textarea className="form-input" rows={3} value={formData.prisutniZaposlenici} onChange={e => set('prisutniZaposlenici', e.target.value)} />
             </div>
           </div>
@@ -462,19 +462,19 @@ export default function FormOIR1Page() {
         {/* ═══ SECTION 5: Filing ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'Podnositelj prijave' : 'Filing information'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'Podnositelj prijave' : 'Filing information'}</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Podnositelj' : 'Submitter'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Podnositelj' : 'Submitter'}</div>
               <input className="form-input" value={formData.podnositelj} onChange={e => set('podnositelj', e.target.value)} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px', gap: 16 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Mjesto prijave' : 'Filing location'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Mjesto prijave' : 'Filing location'}</div>
                 <input className="form-input" value={formData.mjestoPrijave} onChange={e => set('mjestoPrijave', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Datum prijave' : 'Filing date'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Datum prijave' : 'Filing date'}</div>
                 <DateInput value={formData.datumPrijave} onChange={v => set('datumPrijave', v)} />
               </div>
             </div>
@@ -484,21 +484,21 @@ export default function FormOIR1Page() {
         {/* ═══ Document Upload ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang === 'bs' ? 'Prilog' : 'Attachment'}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang !== 'en' ? 'Prilog' : 'Attachment'}</div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">📎 {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
+              <label className="form-label">📎 {lang !== 'en' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
                       <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }}>📎 {formData.docName}</button>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={lang === 'bs' ? 'Pregled priloga' : 'View attachment'}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={lang === 'bs' ? 'Preuzmi prilog' : 'Download attachment'}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Ukloni prilog' : 'Remove attachment'}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={lang !== 'en' ? 'Pregled priloga' : 'View attachment'}>👁 {lang !== 'en' ? 'Otvori' : 'Open'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={lang !== 'en' ? 'Preuzmi prilog' : 'Download attachment'}>↓ {lang !== 'en' ? 'Preuzmi' : 'Download'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Ukloni prilog' : 'Remove attachment'}>✕ {lang !== 'en' ? 'Ukloni' : 'Remove'}</button>
                       </div>
                   </div>
               ) : (
                   <div onClick={() => docInputRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '16px', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      📂 {lang === 'bs' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
+                      📂 {lang !== 'en' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
                   </div>
               )}
               <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
@@ -510,7 +510,7 @@ export default function FormOIR1Page() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Sačuvaj obrazac' : 'Save form'}
+              💾 {lang !== 'en' ? 'Sačuvaj obrazac' : 'Save form'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
               ↩ {t('cancel')}

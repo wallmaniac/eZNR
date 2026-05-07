@@ -16,7 +16,7 @@ const emptyDoc = {
 
 export default function ISZNRDocumentsPage() {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     

@@ -13,7 +13,7 @@ import { apiExtractQuestionsFromDocument } from '@/lib/testGeneratorAI';
 
 export default function TestGenerator() {
     const { lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { activeCompanyId } = useAuth();
 
     const [testType, setTestType] = useState('ZOP');

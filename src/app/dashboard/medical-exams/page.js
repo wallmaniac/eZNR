@@ -65,7 +65,7 @@ export default function MedicalExamsPage() {
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const EXAM_TYPES = useMemo(() => getExamTypes(country), [country]);
     const medCitation = useMemo(() => getCitation(country, 'medical'), [country]);
     const medPravilnik = useMemo(() => getMedicalPravilnik(country), [country]);
@@ -109,7 +109,7 @@ export default function MedicalExamsPage() {
     };
     const handleDeleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+        if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
             for (let id of selectedIds) await remove(COLLECTIONS.MEDICAL_EXAMS, id);
             setSelectedIds(new Set());
             reload();

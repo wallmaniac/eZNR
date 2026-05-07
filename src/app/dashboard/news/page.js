@@ -254,7 +254,7 @@ export default function NewsPage() {
 
     return (
         <div className="animate-fadeIn">
-            <PageHeader icon="📰" title={lang === 'bs' ? 'Početna' : 'Home'} />
+            <PageHeader icon="📰" title={lang !== 'en' ? 'Početna' : 'Home'} />
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
@@ -594,7 +594,7 @@ function FormsTab({ lang }) {
                     <div className="card-body">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                             <span style={{ fontSize: '1.4rem' }}>{cat.icon}</span>
-                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{lang === 'bs' ? cat.title : cat.title_en}</h3>
+                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{lang !== 'en' ? cat.title : cat.title_en}</h3>
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 16, paddingLeft: 36, fontStyle: 'italic' }}>
                             📌 {cat.legal}
@@ -623,7 +623,7 @@ function FormsTab({ lang }) {
                                                 onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                                                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                                             >
-                                                📂 {lang === 'bs' ? 'Popuni obrazac' : 'Fill form'}
+                                                📂 {lang !== 'en' ? 'Popuni obrazac' : 'Fill form'}
                                             </a>
                                             {form.printBlank && (
                                                 <button onClick={() => handlePrintBlank(form.printBlank)} style={{
@@ -635,7 +635,7 @@ function FormsTab({ lang }) {
                                                     onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                                                     onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}
                                                 >
-                                                    🖨️ {lang === 'bs' ? 'Preuzmi prazan' : 'Download blank'}
+                                                    🖨️ {lang !== 'en' ? 'Preuzmi prazan' : 'Download blank'}
                                                 </button>
                                             )}
                                         </div>

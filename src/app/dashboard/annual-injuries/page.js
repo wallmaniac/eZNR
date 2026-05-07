@@ -103,7 +103,7 @@ export default function AnnualInjuriesPage() {
   const teskePovreda = useMemo(() => yearInjuries.filter(x => x.tip === 'teska'), [yearInjuries]);
   const kolektivnePovreda = useMemo(() => yearInjuries.filter(x => x.kolektivna), [yearInjuries]);
 
-  const MONTHS = lang === 'bs' ? MONTHS_BS : MONTHS_EN;
+  const MONTHS = lang !== 'en' ? MONTHS_BS : MONTHS_EN;
   const deadline = `15. januar ${Number(year) + 1}. godine`;
 
   // ── LIVE STATS (Updates dynamically based on selected year) ──
@@ -150,7 +150,7 @@ export default function AnnualInjuriesPage() {
     setIsDirty(false);
     markClean();
     setSavedReports(getAll(COLLECTIONS.ANNUAL_REPORTS));
-    await alert(lang === 'bs' ? '✅ Izvještaj uspješno sačuvan!' : '✅ Report saved successfully!');
+    await alert(lang !== 'en' ? '✅ Izvještaj uspješno sačuvan!' : '✅ Report saved successfully!');
   };
 
   // ── Handle Browser / App Back Button ──
@@ -159,7 +159,7 @@ export default function AnnualInjuriesPage() {
       // Occurs when user hits "Back" (browser or app's top-left button)
       if (view === 'editor') {
         if (isDirty) {
-          const ok = await confirm(lang === 'bs'
+          const ok = await confirm(lang !== 'en'
             ? 'Imate nesačuvane promjene. Želite li sačuvati izvještaj prije napuštanja?'
             : 'You have unsaved changes. Would you like to save the report before leaving?');
           if (ok) {
@@ -179,7 +179,7 @@ export default function AnnualInjuriesPage() {
   // ── Generate new report ──
   const handleGenerate = async () => {
     if (isDirty) {
-      const ok = await confirm(lang === 'bs'
+      const ok = await confirm(lang !== 'en'
         ? 'Imate nesačuvane promjene. Generisanje novog izvještaja će resetovati podatke. Nastaviti?'
         : 'You have unsaved changes. Generating a new report will reset the data. Continue?');
       if (!ok) return;
@@ -208,7 +208,7 @@ export default function AnnualInjuriesPage() {
 
   // ── Delete saved report ──
   const handleDeleteReport = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati sačuvan izvještaj?' : 'Delete this saved report?');
+    const ok = await confirm(lang !== 'en' ? 'Obrisati sačuvan izvještaj?' : 'Delete this saved report?');
     if (!ok) return;
     remove(COLLECTIONS.ANNUAL_REPORTS, id);
     setSavedReports(getAll(COLLECTIONS.ANNUAL_REPORTS));
@@ -267,7 +267,7 @@ export default function AnnualInjuriesPage() {
       await html2pdf().set(opt).from(el).save();
     } catch (err) {
       console.error('PDF generation error:', err);
-      await alert(lang === 'bs' ? 'Greška pri generisanju PDF-a.' : 'PDF generation error.');
+      await alert(lang !== 'en' ? 'Greška pri generisanju PDF-a.' : 'PDF generation error.');
     } finally {
       if (el.contains(tempStyle)) el.removeChild(tempStyle);
     }
@@ -402,7 +402,7 @@ export default function AnnualInjuriesPage() {
       XLSX.writeFile(wb, `Pregled_povreda_${year}.xlsx`);
     } catch (err) {
       console.error('Excel export error', err);
-      await alert(lang === 'bs' ? 'Greška pri generisanju Excela.' : 'Excel generation error.');
+      await alert(lang !== 'en' ? 'Greška pri generisanju Excela.' : 'Excel generation error.');
     }
   }, [year, lang]);
 
@@ -513,8 +513,8 @@ export default function AnnualInjuriesPage() {
             <select className="form-select" style={{ width: 100 }} value={year} onChange={e => setYear(e.target.value)}>
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
-            <button className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={handleGenerate} title={lang === 'bs' ? 'Kreiraj novi godišnji izvještaj' : 'Generate new annual report'}>
-              + {lang === 'bs' ? 'Generiši novi izvještaj' : 'Generate new report'}
+            <button className="btn btn-primary btn-sm" style={{ whiteSpace: 'nowrap' }} onClick={handleGenerate} title={lang !== 'en' ? 'Kreiraj novi godišnji izvještaj' : 'Generate new annual report'}>
+              + {lang !== 'en' ? 'Generiši novi izvještaj' : 'Generate new report'}
             </button>
           </div>
 
@@ -548,26 +548,26 @@ export default function AnnualInjuriesPage() {
           <div className="card">
             <div className="card-body">
               <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: 12, paddingBottom: 6, borderBottom: '1px solid var(--border-light)' }}>
-                {lang === 'bs' ? 'Sačuvani izvještaji' : 'Saved reports'} ({savedReports.length})
+                {lang !== 'en' ? 'Sačuvani izvještaji' : 'Saved reports'} ({savedReports.length})
               </div>
 
               {savedReports.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--text-muted)' }}>
                   <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>📋</div>
-                  <p>{lang === 'bs' ? 'Nema sačuvanih izvještaja.' : 'No saved reports.'}</p>
-                  <p style={{ fontSize: '0.82rem', marginTop: 8 }}>{lang === 'bs' ? 'Odaberite godinu i kliknite "Generiši novi izvještaj" za kreiranje.' : 'Select a year and click "Generate new report" to create one.'}</p>
+                  <p>{lang !== 'en' ? 'Nema sačuvanih izvještaja.' : 'No saved reports.'}</p>
+                  <p style={{ fontSize: '0.82rem', marginTop: 8 }}>{lang !== 'en' ? 'Odaberite godinu i kliknite "Generiši novi izvještaj" za kreiranje.' : 'Select a year and click "Generate new report" to create one.'}</p>
                 </div>
               ) : (
                 <div className="data-table-wrapper">
                   <table className="data-table">
                     <thead>
                       <tr>
-                        <th style={{ width: 130 }}>{lang === 'bs' ? 'Akcije' : 'Actions'}</th>
-                        <th>{lang === 'bs' ? 'Godina' : 'Year'}</th>
-                        <th>{lang === 'bs' ? 'Firma' : 'Company'}</th>
-                        <th>{lang === 'bs' ? 'Povreda' : 'Injuries'}</th>
-                        <th>{lang === 'bs' ? 'Sačuvano' : 'Saved'}</th>
-                        <th>{lang === 'bs' ? 'Zadnja izmjena' : 'Last modified'}</th>
+                        <th style={{ width: 130 }}>{lang !== 'en' ? 'Akcije' : 'Actions'}</th>
+                        <th>{lang !== 'en' ? 'Godina' : 'Year'}</th>
+                        <th>{lang !== 'en' ? 'Firma' : 'Company'}</th>
+                        <th>{lang !== 'en' ? 'Povreda' : 'Injuries'}</th>
+                        <th>{lang !== 'en' ? 'Sačuvano' : 'Saved'}</th>
+                        <th>{lang !== 'en' ? 'Zadnja izmjena' : 'Last modified'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -575,13 +575,13 @@ export default function AnnualInjuriesPage() {
                         <tr key={r.id} onClick={() => handleLoadReport(r)} style={{ cursor: 'pointer' }}>
                           <td onClick={e => e.stopPropagation()}>
                             <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
-                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Uredi' : 'Edit'} onClick={() => handleLoadReport(r)}>✏️</button>
-                              <button className="btn btn-ghost btn-sm btn-icon" title={lang === 'bs' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => printReport(), 800); }}>🖨️</button>
+                              <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Uredi' : 'Edit'} onClick={() => handleLoadReport(r)}>✏️</button>
+                              <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Isprintaj' : 'Print'} onClick={() => { handleLoadReport(r); setTimeout(() => printReport(), 800); }}>🖨️</button>
                               
                               <div className="dropdown-container" style={{ position: 'relative' }}>
                                 <button
                                   className="btn btn-ghost btn-sm btn-icon"
-                                  title={lang === 'bs' ? 'Preuzmi' : 'Download'}
+                                  title={lang !== 'en' ? 'Preuzmi' : 'Download'}
                                   onClick={e => {
                                     const rect = e.currentTarget.getBoundingClientRect();
                                     // prefer upward; dropdown is ~120px tall
@@ -593,7 +593,7 @@ export default function AnnualInjuriesPage() {
                                 >⬇️</button>
                               </div>
                               
-                              <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
+                              <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
                             </div>
                           </td>
                           <td style={{ fontWeight: 700, fontSize: '1rem' }}>{r.year}</td>
@@ -629,22 +629,22 @@ export default function AnnualInjuriesPage() {
 
         {/* Header bar */}
         <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
-          <button className="btn btn-ghost btn-sm" onClick={handleBackToList} style={{ fontSize: '0.85rem' }} title={lang === 'bs' ? 'Povratak na listu izvještaja' : 'Back to report list'}>
-            ← {lang === 'bs' ? 'Nazad na listu' : 'Back to list'}
+          <button className="btn btn-ghost btn-sm" onClick={handleBackToList} style={{ fontSize: '0.85rem' }} title={lang !== 'en' ? 'Povratak na listu izvještaja' : 'Back to report list'}>
+            ← {lang !== 'en' ? 'Nazad na listu' : 'Back to list'}
           </button>
           <h1 style={{ margin: 0, fontSize: '1.2rem' }}>📈 {t('annualInjuryReport')} — {year}.</h1>
-          {activeReportId && <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>💾 {lang === 'bs' ? 'Sačuvano' : 'Saved'}</span>}
-          {isDirty && <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>● {lang === 'bs' ? 'Nesačuvano' : 'Unsaved'}</span>}
+          {activeReportId && <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>💾 {lang !== 'en' ? 'Sačuvano' : 'Saved'}</span>}
+          {isDirty && <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>● {lang !== 'en' ? 'Nesačuvano' : 'Unsaved'}</span>}
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary btn-sm" onClick={handleSaveReport} title={lang === 'bs' ? 'Sačuvaj izvještaj' : 'Save report'}>
-              💾 {lang === 'bs' ? 'Sačuvaj' : 'Save'}
+            <button className="btn btn-primary btn-sm" onClick={handleSaveReport} title={lang !== 'en' ? 'Sačuvaj izvještaj' : 'Save report'}>
+              💾 {lang !== 'en' ? 'Sačuvaj' : 'Save'}
             </button>
-            <button className="btn btn-outline btn-sm" onClick={printReport} title={lang === 'bs' ? 'Isprintaj izvještaj' : 'Print report'}>
-              🖨️ {lang === 'bs' ? 'Printaj' : 'Print'}
+            <button className="btn btn-outline btn-sm" onClick={printReport} title={lang !== 'en' ? 'Isprintaj izvještaj' : 'Print report'}>
+              🖨️ {lang !== 'en' ? 'Printaj' : 'Print'}
             </button>
             <div className="dropdown-container" style={{ position: 'relative' }}>
-              <button className="btn btn-outline btn-sm" onClick={() => setPdfDropdown(!pdfDropdown)} title={lang === 'bs' ? 'Preuzmi izvještaj' : 'Download report'}>
-                ⬇️ {lang === 'bs' ? 'Preuzmi ▾' : 'Download ▾'}
+              <button className="btn btn-outline btn-sm" onClick={() => setPdfDropdown(!pdfDropdown)} title={lang !== 'en' ? 'Preuzmi izvještaj' : 'Download report'}>
+                ⬇️ {lang !== 'en' ? 'Preuzmi ▾' : 'Download ▾'}
               </button>
               {pdfDropdown && (
                 <div onClick={e => e.stopPropagation()} className="dropdown-menu" style={{ position: 'absolute', top: 'calc(100% + 4px)', right: 0, minWidth: 160, zIndex: 200, padding: 4 }}>

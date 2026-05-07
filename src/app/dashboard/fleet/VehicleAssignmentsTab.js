@@ -6,7 +6,7 @@ import DateInput from '@/components/DateInput';
 
 export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments, workers, reloadData }) {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { confirm, prompt, DialogRenderer } = useDialog();
 
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};

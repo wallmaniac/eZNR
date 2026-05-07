@@ -10,7 +10,7 @@ import TestGenerator from './TestGenerator';
 import PageHeader from '@/components/PageHeader';
 export default function TestsZopZnrPage() {
     const { lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { activeCompanyId } = useAuth();
     const [loading, setLoading] = useState(null);
     const [activeTab, setActiveTab] = useState('DOWNLOAD'); // DOWNLOAD or GENERATOR

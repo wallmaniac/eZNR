@@ -77,7 +77,7 @@ export default function InjuriesPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.INJURIES, id);
       setSelectedIds(new Set());
       loadData();
@@ -177,11 +177,11 @@ export default function InjuriesPage() {
 
   const handleSave = async () => {
     if (!formData.radnikId && !formData.radnikIme) {
-      await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Please select a worker!');
+      await alert(lang !== 'en' ? 'Odaberite radnika!' : 'Please select a worker!');
       return;
     }
     if (!formData.datum) {
-      await alert(lang === 'bs' ? 'Datum je obavezan!' : 'Date is required!');
+      await alert(lang !== 'en' ? 'Datum je obavezan!' : 'Date is required!');
       return;
     }
     if (editingId) {
@@ -200,7 +200,7 @@ export default function InjuriesPage() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati ovu prijavu?' : 'Delete this report?');
+    const ok = await confirm(lang !== 'en' ? 'Obrisati ovu prijavu?' : 'Delete this report?');
     if (!ok) return;
     remove(COLLECTIONS.INJURIES, id);
     loadData();
@@ -223,9 +223,9 @@ export default function InjuriesPage() {
 
   const tipBadge = (tip) => {
     const map = {
-      laka: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: lang === 'bs' ? 'Laka' : 'Minor' },
-      teska: { color: '#EF4444', bg: 'rgba(239,68,68,0.1)', label: lang === 'bs' ? 'Teška' : 'Severe' },
-      smrtna: { color: '#7C3AED', bg: 'rgba(124,58,237,0.1)', label: lang === 'bs' ? 'Smrtna' : 'Fatal' },
+      laka: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: lang !== 'en' ? 'Laka' : 'Minor' },
+      teska: { color: '#EF4444', bg: 'rgba(239,68,68,0.1)', label: lang !== 'en' ? 'Teška' : 'Severe' },
+      smrtna: { color: '#7C3AED', bg: 'rgba(124,58,237,0.1)', label: lang !== 'en' ? 'Smrtna' : 'Fatal' },
     };
     const s = map[tip] || map.laka;
     return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{s.label}</span>;
@@ -233,9 +233,9 @@ export default function InjuriesPage() {
 
   const statusBadge = (status) => {
     const map = {
-      prijavljena: { color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', label: lang === 'bs' ? 'Prijavljena' : 'Reported' },
-      u_obradi: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: lang === 'bs' ? 'U obradi' : 'Processing' },
-      zatvorena: { color: '#10B981', bg: 'rgba(16,185,129,0.1)', label: lang === 'bs' ? 'Zatvorena' : 'Closed' },
+      prijavljena: { color: '#3B82F6', bg: 'rgba(59,130,246,0.1)', label: lang !== 'en' ? 'Prijavljena' : 'Reported' },
+      u_obradi: { color: '#F59E0B', bg: 'rgba(245,158,11,0.1)', label: lang !== 'en' ? 'U obradi' : 'Processing' },
+      zatvorena: { color: '#10B981', bg: 'rgba(16,185,129,0.1)', label: lang !== 'en' ? 'Zatvorena' : 'Closed' },
     };
     const s = map[status] || map.prijavljena;
     return <span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: s.bg, color: s.color }}>{s.label}</span>;
@@ -251,15 +251,15 @@ export default function InjuriesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <PageHeader icon="🩹" title={lang === 'bs' ? 'Povrede na radu' : 'Work Injuries'} />
+        <PageHeader icon="🩹" title={lang !== 'en' ? 'Povrede na radu' : 'Work Injuries'} />
 
         {/* Stats row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
           {[
-            { label: lang === 'bs' ? 'Ukupno' : 'Total', value: total, color: 'var(--primary)' },
-            { label: lang === 'bs' ? 'Teške' : 'Severe', value: teske, color: '#EF4444' },
-            { label: lang === 'bs' ? 'Smrtne' : 'Fatal', value: smrtne, color: '#7C3AED' },
-            { label: lang === 'bs' ? 'Otvorene' : 'Open', value: otvorene, color: '#F59E0B' },
+            { label: lang !== 'en' ? 'Ukupno' : 'Total', value: total, color: 'var(--primary)' },
+            { label: lang !== 'en' ? 'Teške' : 'Severe', value: teske, color: '#EF4444' },
+            { label: lang !== 'en' ? 'Smrtne' : 'Fatal', value: smrtne, color: '#7C3AED' },
+            { label: lang !== 'en' ? 'Otvorene' : 'Open', value: otvorene, color: '#F59E0B' },
           ].map((s, i) => (
             <div key={i} className="card" style={{ textAlign: 'center' }}>
               <div className="card-body" style={{ padding: '16px 12px' }}>
@@ -275,7 +275,7 @@ export default function InjuriesPage() {
           <div className="modal-overlay" onClick={handleClose}>
             <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
               <div className="modal-header">
-                <h2>🩹 {editingId ? (lang === 'bs' ? 'Uredi prijavu' : 'Edit report') : (lang === 'bs' ? 'Prijava povrede na radu' : 'Injury Report')}</h2>
+                <h2>🩹 {editingId ? (lang !== 'en' ? 'Uredi prijavu' : 'Edit report') : (lang !== 'en' ? 'Prijava povrede na radu' : 'Injury Report')}</h2>
                 <button className="btn btn-ghost btn-icon" onClick={handleClose}>✕</button>
               </div>
               <div className="modal-body">
@@ -287,7 +287,7 @@ export default function InjuriesPage() {
                     <div style={{ position: 'relative' }}>
                       <input
                         className="form-input"
-                        placeholder={lang === 'bs' ? '🔍 Pretraži radnika...' : '🔍 Search worker...'}
+                        placeholder={lang !== 'en' ? '🔍 Pretraži radnika...' : '🔍 Search worker...'}
                         value={workerSearch}
                         onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('radnikId', ''); set('radnikIme', ''); }}
                         onFocus={() => setShowWorkerDropdown(true)}
@@ -296,7 +296,7 @@ export default function InjuriesPage() {
                       {showWorkerDropdown && (
                         <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-lg)', zIndex: 100, maxHeight: 220, overflowY: 'auto' }}>
                           {filteredWorkers.length === 0 ? (
-                            <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang === 'bs' ? 'Nema radnika' : 'No workers found'}</div>
+                            <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang !== 'en' ? 'Nema radnika' : 'No workers found'}</div>
                           ) : filteredWorkers.map(w => (
                             <button key={w.id}
                               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
@@ -314,7 +314,7 @@ export default function InjuriesPage() {
                         </div>
                       )}
                     </div>
-                    {formData.radnikId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {lang === 'bs' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}</div>}
+                    {formData.radnikId && <div style={{ marginTop: 6, fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>✓ {lang !== 'en' ? 'Odabrano' : 'Selected'}: {formData.radnikIme}</div>}
                   </div>
 
                   <div className="form-group">
@@ -322,7 +322,7 @@ export default function InjuriesPage() {
                     <DateInput value={formData.datum} onChange={v => set('datum', v)} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Vrijeme povrede' : 'Time of injury'}</label>
+                    <label className="form-label">{lang !== 'en' ? 'Vrijeme povrede' : 'Time of injury'}</label>
                     <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                       <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.vrijemePovrede || ':').split(':')[0] || '12'} onChange={e => set('vrijemePovrede', `${e.target.value}:${(formData.vrijemePovrede || ':').split(':')[1] || '00'}`)}>
                         {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2, '0')}>{String(i).padStart(2, '0')}</option>)}
@@ -334,68 +334,68 @@ export default function InjuriesPage() {
                     </div>
                   </div>
                   <div className="form-group">
-                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Tip povrede' : 'Injury type'} <HelpTip text="Odaberite klasifikaciju obavezno u apsolutnom slaganju sa zvaničnim ljekarskim nalazom hitne pomoći/doma zdravlja." /></label>
+                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Tip povrede' : 'Injury type'} <HelpTip text="Odaberite klasifikaciju obavezno u apsolutnom slaganju sa zvaničnim ljekarskim nalazom hitne pomoći/doma zdravlja." /></label>
                     <select className="form-select" value={formData.tip} onChange={e => set('tip', e.target.value)}>
-                      <option value="laka">{lang === 'bs' ? 'Laka' : 'Minor'}</option>
-                      <option value="teska">{lang === 'bs' ? 'Teška' : 'Severe'}</option>
-                      <option value="smrtna">{lang === 'bs' ? 'Smrtna' : 'Fatal'}</option>
+                      <option value="laka">{lang !== 'en' ? 'Laka' : 'Minor'}</option>
+                      <option value="teska">{lang !== 'en' ? 'Teška' : 'Severe'}</option>
+                      <option value="smrtna">{lang !== 'en' ? 'Smrtna' : 'Fatal'}</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Status' : 'Status'}</label>
+                    <label className="form-label">{lang !== 'en' ? 'Status' : 'Status'}</label>
                     <select className="form-select" value={formData.status} onChange={e => set('status', e.target.value)}>
-                      <option value="prijavljena">{lang === 'bs' ? 'Prijavljena' : 'Reported'}</option>
-                      <option value="u_obradi">{lang === 'bs' ? 'U obradi' : 'Processing'}</option>
-                      <option value="zatvorena">{lang === 'bs' ? 'Zatvorena' : 'Closed'}</option>
+                      <option value="prijavljena">{lang !== 'en' ? 'Prijavljena' : 'Reported'}</option>
+                      <option value="u_obradi">{lang !== 'en' ? 'U obradi' : 'Processing'}</option>
+                      <option value="zatvorena">{lang !== 'en' ? 'Zatvorena' : 'Closed'}</option>
                     </select>
                   </div>
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label className="form-label">{t('location')}</label>
-                    <input className="form-input" value={formData.lokacija} onChange={e => set('lokacija', e.target.value)} placeholder={lang === 'bs' ? 'Npr. Hala 2, Skladište...' : 'E.g. Hall 2, Warehouse...'} />
+                    <input className="form-input" value={formData.lokacija} onChange={e => set('lokacija', e.target.value)} placeholder={lang !== 'en' ? 'Npr. Hala 2, Skladište...' : 'E.g. Hall 2, Warehouse...'} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">{lang === 'bs' ? 'Povrijeđeni dio tijela' : 'Injured body part'}</label>
+                    <label className="form-label">{lang !== 'en' ? 'Povrijeđeni dio tijela' : 'Injured body part'}</label>
                     <input className="form-input" value={formData.povredjeniDio} onChange={e => set('povredjeniDio', e.target.value)} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Uzrok povrede' : 'Cause of injury'} <HelpTip text="Zbog čega je došlo do incidenta? Npr. 'Nepažnja radnika', 'Nekorištenje zaštitnog šljema', 'Kvar mašine'." /></label>
+                    <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Uzrok povrede' : 'Cause of injury'} <HelpTip text="Zbog čega je došlo do incidenta? Npr. 'Nepažnja radnika', 'Nekorištenje zaštitnog šljema', 'Kvar mašine'." /></label>
                     <input className="form-input" value={formData.uzrokPovrede} onChange={e => set('uzrokPovrede', e.target.value)} />
                   </div>
                   <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                     <label className="form-label">{t('description')}</label>
-                    <textarea className="form-input" rows={3} value={formData.opisPovrede} onChange={e => set('opisPovrede', e.target.value)} placeholder={lang === 'bs' ? 'Opis okolnosti povrede...' : 'Describe the circumstances of the injury...'} />
+                    <textarea className="form-input" rows={3} value={formData.opisPovrede} onChange={e => set('opisPovrede', e.target.value)} placeholder={lang !== 'en' ? 'Opis okolnosti povrede...' : 'Describe the circumstances of the injury...'} />
                   </div>
                   <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <input type="checkbox" id="prvaPomoc" checked={formData.prvaPomoć} onChange={e => set('prvaPomoć', e.target.checked)} style={{ width: 16, height: 16 }} />
-                    <label htmlFor="prvaPomoc" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Pružena prva pomoć' : 'First aid provided'}</label>
+                    <label htmlFor="prvaPomoc" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang !== 'en' ? 'Pružena prva pomoć' : 'First aid provided'}</label>
                   </div>
                   <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <input type="checkbox" id="bolovanje" checked={formData.bolovanje} onChange={e => set('bolovanje', e.target.checked)} style={{ width: 16, height: 16 }} />
-                    <label htmlFor="bolovanje" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang === 'bs' ? 'Bolovanje' : 'Sick leave'}</label>
+                    <label htmlFor="bolovanje" style={{ cursor: 'pointer', fontWeight: 500 }}>{lang !== 'en' ? 'Bolovanje' : 'Sick leave'}</label>
                   </div>
 
                   {/* ── Godišnji izvještaj fields ── */}
                   <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', marginTop: 4, paddingTop: 12 }}>
                     <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: 10 }}>
-                      {lang === 'bs' ? 'Podaci za godišnji izvještaj' : 'Annual report data'}
+                      {lang !== 'en' ? 'Podaci za godišnji izvještaj' : 'Annual report data'}
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                       <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                         <input type="checkbox" id="kolektivna" checked={formData.kolektivna} onChange={e => set('kolektivna', e.target.checked)} style={{ width: 16, height: 16 }} />
-                        <label htmlFor="kolektivna" style={{ cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{lang === 'bs' ? 'Kolektivna povreda' : 'Collective injury'} <HelpTip text="Označiti isključivo ukoliko su u istom događaju povrijeđena minimalno 2 radnika." /></label>
+                        <label htmlFor="kolektivna" style={{ cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}>{lang !== 'en' ? 'Kolektivna povreda' : 'Collective injury'} <HelpTip text="Označiti isključivo ukoliko su u istom događaju povrijeđena minimalno 2 radnika." /></label>
                       </div>
                       {formData.kolektivna && (
                         <div className="form-group">
-                          <label className="form-label">{lang === 'bs' ? 'Broj stradalih' : 'Number of victims'}</label>
+                          <label className="form-label">{lang !== 'en' ? 'Broj stradalih' : 'Number of victims'}</label>
                           <input className="form-input" type="number" min="2" value={formData.brojStradalih} onChange={e => set('brojStradalih', e.target.value)} placeholder="2" />
                         </div>
                       )}
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                        <label className="form-label">{lang === 'bs' ? 'Prijava MUP stanici / Kantonalnoj inspekciji (broj i datum)' : 'Report to police / inspection (number & date)'}</label>
-                        <input className="form-input" value={formData.prijavaOrgan} onChange={e => set('prijavaOrgan', e.target.value)} placeholder={lang === 'bs' ? 'Npr. Br. 12345/2026 od 15.03.2026.' : 'E.g. No. 12345/2026 dated 15.03.2026'} />
+                        <label className="form-label">{lang !== 'en' ? 'Prijava MUP stanici / Kantonalnoj inspekciji (broj i datum)' : 'Report to police / inspection (number & date)'}</label>
+                        <input className="form-input" value={formData.prijavaOrgan} onChange={e => set('prijavaOrgan', e.target.value)} placeholder={lang !== 'en' ? 'Npr. Br. 12345/2026 od 15.03.2026.' : 'E.g. No. 12345/2026 dated 15.03.2026'} />
                       </div>
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                        <label className="form-label">{lang === 'bs' ? 'Napomena (za godišnji izvještaj)' : 'Notes (for annual report)'}</label>
+                        <label className="form-label">{lang !== 'en' ? 'Napomena (za godišnji izvještaj)' : 'Notes (for annual report)'}</label>
                         <input className="form-input" value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
                       </div>
                     </div>
@@ -409,9 +409,9 @@ export default function InjuriesPage() {
                     className="btn btn-outline btn-sm"
                     style={{ marginRight: 'auto' }}
                     onClick={() => { setShowForm(false); router.push(`/dashboard/medical-exams?openNew=1&workerId=${formData.radnikId}`); }}
-                    title={lang === 'bs' ? 'Otvori formu za novi ljekarski pregled za ovog radnika' : 'Open new medical exam form for this worker'}
+                    title={lang !== 'en' ? 'Otvori formu za novi ljekarski pregled za ovog radnika' : 'Open new medical exam form for this worker'}
                   >
-                    👨‍⚕️ {lang === 'bs' ? 'Pregled za radnika' : 'Exam for worker'}
+                    👨‍⚕️ {lang !== 'en' ? 'Pregled za radnika' : 'Exam for worker'}
                   </button>
                 )}
                 <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
@@ -423,25 +423,25 @@ export default function InjuriesPage() {
         {/* Main card */}
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}><div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', height: 32 }} onClick={openNew} title={lang === 'bs' ? 'Dodaj novu povredu' : 'Add new injury'}>+ {lang === 'bs' ? 'Nova povreda' : 'New Injury'}</button>
+              <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem', height: 32 }} onClick={openNew} title={lang !== 'en' ? 'Dodaj novu povredu' : 'Add new injury'}>+ {lang !== 'en' ? 'Nova povreda' : 'New Injury'}</button>
               <div className="search-bar" style={{ flex: 1, maxWidth: 350, display: 'flex', alignItems: 'center', height: 36 }}>
                 <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                 <input
-                  placeholder={lang === 'bs' ? 'Pretraži povrede...' : 'Search injuries...'}
+                  placeholder={lang !== 'en' ? 'Pretraži povrede...' : 'Search injuries...'}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                 />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
               </div>
               {orgUnits.length > 0 && (
                 <select
                   className="form-select"
                   style={{ height: 36, width: 150, flexShrink: 0, fontSize: '0.85rem', padding: '0 8px' }}
-                   title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'} value={filterOrgUnit}
+                   title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'} value={filterOrgUnit}
                   onChange={e => setFilterOrgUnit(e.target.value)}
                 >
-                  <option value="">{lang === 'bs' ? 'Svi odjeli' : 'All departments'}</option>
+                  <option value="">{lang !== 'en' ? 'Svi odjeli' : 'All departments'}</option>
                   {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                 </select>
               )}
@@ -449,12 +449,12 @@ export default function InjuriesPage() {
               {/* ── Grupne akcije bar ── */}
               {selectedIds.size > 0 && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabrane povrede' : 'Delete selected injuries'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
+                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabrane povrede' : 'Delete selected injuries'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
                 </div>
               )}
-              {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{filtered.length} {lang === 'bs' ? 'prijava' : 'reports'}</span>}
+              {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{filtered.length} {lang !== 'en' ? 'prijava' : 'reports'}</span>}
             </div>
             <div className="data-table-wrapper">
               <table className="data-table" style={{ width: '100%' }}>
@@ -464,7 +464,7 @@ export default function InjuriesPage() {
                     <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('radnikIme')} style={thStyle('radnikIme')}>{t('worker')}{sortIcon('radnikIme')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')}{sortIcon('datum')}</th>
-                    <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{lang === 'bs' ? 'Tip' : 'Type'}{sortIcon('tip')}</th>
+                    <th onClick={() => toggleSort('tip')} style={thStyle('tip')}>{lang !== 'en' ? 'Tip' : 'Type'}{sortIcon('tip')}</th>
                     <th onClick={() => toggleSort('lokacija')} style={thStyle('lokacija')}>{t('location')}{sortIcon('lokacija')}</th>
                     <th>{t('description')}</th>
                     <th onClick={() => toggleSort('status')} style={thStyle('status')}>{t('status')}{sortIcon('status')}</th>
@@ -494,22 +494,22 @@ export default function InjuriesPage() {
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                               );
                               setActionMenuId(inj.id);
-                            }} title={lang === 'bs' ? 'Prikaži akcije za povredu' : 'Show injury actions'}>Akcije ▼</button>
+                            }} title={lang !== 'en' ? 'Prikaži akcije za povredu' : 'Show injury actions'}>Akcije ▼</button>
                             {actionMenuId === inj.id && (
                               <>
                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                                 <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                  <button onClick={() => { setActionMenuId(null); openEdit(inj); }} style={menuItemSt}>✏️ {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                                  <button onClick={() => { setActionMenuId(null); openCopy(inj); }} style={menuItemSt}>📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}</button>
+                                  <button onClick={() => { setActionMenuId(null); openEdit(inj); }} style={menuItemSt}>✏️ {lang !== 'en' ? 'Otvori' : 'Open'}</button>
+                                  <button onClick={() => { setActionMenuId(null); openCopy(inj); }} style={menuItemSt}>📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
                                   <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                  <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang === 'bs' ? 'Izbriši' : 'Delete'}</button>
+                                  <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang !== 'en' ? 'Izbriši' : 'Delete'}</button>
                                 </div>
                               </>
                             )}
                           </div>
                         </td>
                         <td style={{ fontWeight: 600 }}>
-                          <button onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }} style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} title={inj.radnikId ? (lang === 'bs' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}>{inj.radnikIme || '—'}</button>
+                          <button onClick={e => { e.stopPropagation(); if (inj.radnikId) router.push('/dashboard/workers?openWorker=' + inj.radnikId); }} style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} title={inj.radnikId ? (lang !== 'en' ? 'Otvori stranicu radnika' : 'Open worker page') : ''}>{inj.radnikIme || '—'}</button>
                         </td>
                         <td>{inj.datum ? fmtDate(inj.datum) : '—'}</td>
                         <td>{tipBadge(inj.tip)}</td>

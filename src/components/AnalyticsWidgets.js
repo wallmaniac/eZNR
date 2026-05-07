@@ -147,16 +147,16 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
     }, [certs]);
 
     const certSegments = [
-        { label: lang === 'bs' ? 'Važeća' : 'Valid', value: certStats.valid, color: 'var(--success)' },
-        { label: lang === 'bs' ? 'Ističe ≤30d' : 'Expiring ≤30d', value: certStats.expiringSoon, color: 'var(--warning)' },
-        { label: lang === 'bs' ? 'Istekla' : 'Expired', value: certStats.expired, color: 'var(--danger)' },
+        { label: lang !== 'en' ? 'Važeća' : 'Valid', value: certStats.valid, color: 'var(--success)' },
+        { label: lang !== 'en' ? 'Ističe ≤30d' : 'Expiring ≤30d', value: certStats.expiringSoon, color: 'var(--warning)' },
+        { label: lang !== 'en' ? 'Istekla' : 'Expired', value: certStats.expired, color: 'var(--danger)' },
     ];
 
     // ── Injuries per Month (last 12 months) ─────────────────────────────────
     const injuryMonths = useMemo(() => {
         const allIncidents = [...(injuries || []), ...(diseases || [])];
         const months = [];
-        const monthLabels = lang === 'bs'
+        const monthLabels = lang !== 'en'
             ? ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
             : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -178,11 +178,11 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
         const items = (riskItems || []).filter(ri => ri.procjenaId && activeIds.has(ri.procjenaId) && ri.rizik > 0);
 
         const buckets = [
-            { label: lang === 'bs' ? 'Neznatan' : 'Negligible', min: 1, max: 5, color: '#4caf50' },
-            { label: lang === 'bs' ? 'Dopustiv' : 'Tolerable', min: 6, max: 10, color: '#ffc107' },
-            { label: lang === 'bs' ? 'Umjeren' : 'Moderate', min: 11, max: 15, color: '#ff9800' },
-            { label: lang === 'bs' ? 'Znatan' : 'Significant', min: 16, max: 20, color: '#f44336' },
-            { label: lang === 'bs' ? 'Nedopustiv' : 'Intolerable', min: 21, max: 25, color: '#b71c1c' },
+            { label: lang !== 'en' ? 'Neznatan' : 'Negligible', min: 1, max: 5, color: '#4caf50' },
+            { label: lang !== 'en' ? 'Dopustiv' : 'Tolerable', min: 6, max: 10, color: '#ffc107' },
+            { label: lang !== 'en' ? 'Umjeren' : 'Moderate', min: 11, max: 15, color: '#ff9800' },
+            { label: lang !== 'en' ? 'Znatan' : 'Significant', min: 16, max: 20, color: '#f44336' },
+            { label: lang !== 'en' ? 'Nedopustiv' : 'Intolerable', min: 21, max: 25, color: '#b71c1c' },
         ];
 
         return buckets.map(b => ({
@@ -224,7 +224,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             const element = document.getElementById('print-document-container');
             const opt = {
                 margin: 0,
-                filename: lang === 'bs' ? 'Godisnji_Izvjestaj_ZNR.pdf' : 'Annual_Safety_Report.pdf',
+                filename: lang !== 'en' ? 'Godisnji_Izvjestaj_ZNR.pdf' : 'Annual_Safety_Report.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -233,11 +233,11 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             await html2pdf().from(element).set(opt).save();
 
             if (window.eznrToast) {
-                window.eznrToast(lang === 'bs' ? 'Izvještaj uspješno preuzet!' : 'Report downloaded safely!', 'success');
+                window.eznrToast(lang !== 'en' ? 'Izvještaj uspješno preuzet!' : 'Report downloaded safely!', 'success');
             }
         } catch (err) {
             console.error('PDF export failed', err);
-            if (window.eznrToast) window.eznrToast(lang === 'bs' ? 'Greška pri izradi PDF-a.' : 'Error generating PDF.', 'error');
+            if (window.eznrToast) window.eznrToast(lang !== 'en' ? 'Greška pri izradi PDF-a.' : 'Error generating PDF.', 'error');
         }
     };
 
@@ -246,7 +246,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             {/* Action Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {lang === 'bs' ? 'Automatska analitika iz stvarnih podataka' : 'Automated analytics from live data'}
+                    {lang !== 'en' ? 'Automatska analitika iz stvarnih podataka' : 'Automated analytics from live data'}
                 </span>
                 <button 
                     onClick={handleDownloadPDF}
@@ -257,23 +257,23 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         display: 'flex', alignItems: 'center', gap: 6
                     }}
                 >
-                    📑 {lang === 'bs' ? 'Godišnji izvještaj (PDF)' : 'Annual Report (PDF)'}
+                    📑 {lang !== 'en' ? 'Godišnji izvještaj (PDF)' : 'Annual Report (PDF)'}
                 </button>
             </div>
 
             <div id="analytics-dashboard-export" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '10px 0' }}>
                 {/* PDF Header (only visible strictly during html2canvas, or just visually clean) */}
                 <h2 style={{ fontSize: '1.2rem', marginBottom: 4, display: 'none' }} className="pdf-only-header">
-                    {lang === 'bs' ? 'Godišnji izvještaj Zaštite na radu' : 'Annual Occupational Safety Report'}
+                    {lang !== 'en' ? 'Godišnji izvještaj Zaštite na radu' : 'Annual Occupational Safety Report'}
                 </h2>
 
                 {/* Mini stats row */}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <MiniStat icon="👷" label={lang === 'bs' ? 'Aktivni radnici' : 'Active workers'} value={activeWorkerCount} color="var(--primary)" />
-                    <MiniStat icon="⚙️" label={lang === 'bs' ? 'Usklađenost opreme' : 'Equipment compliance'} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
-                    <MiniStat icon="⚠️" label={lang === 'bs' ? 'Prosj. rizik' : 'Avg. risk score'} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
+                    <MiniStat icon="👷" label={lang !== 'en' ? 'Aktivni radnici' : 'Active workers'} value={activeWorkerCount} color="var(--primary)" />
+                    <MiniStat icon="⚙️" label={lang !== 'en' ? 'Usklađenost opreme' : 'Equipment compliance'} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
+                    <MiniStat icon="⚠️" label={lang !== 'en' ? 'Prosj. rizik' : 'Avg. risk score'} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
                     {medOverdue > 0 && (
-                        <MiniStat icon="🩺" label={lang === 'bs' ? 'Prekoračeni pregledi' : 'Overdue exams'} value={medOverdue} color="var(--danger)" />
+                        <MiniStat icon="🩺" label={lang !== 'en' ? 'Prekoračeni pregledi' : 'Overdue exams'} value={medOverdue} color="var(--danger)" />
                     )}
                 </div>
 
@@ -288,8 +288,8 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         <div className="card" style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center' }}>
                             <DonutChart
                                 segments={certSegments}
-                                label={lang === 'bs' ? 'Status uvjerenja' : 'Certificate Status'}
-                                subLabel={lang === 'bs' ? 'ukupno' : 'total'}
+                                label={lang !== 'en' ? 'Status uvjerenja' : 'Certificate Status'}
+                                subLabel={lang !== 'en' ? 'ukupno' : 'total'}
                             />
                         </div>
                     )}
@@ -298,7 +298,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                     <div className="card" style={{ padding: '20px 16px' }}>
                         <BarChart
                             data={injuryMonths}
-                            title={lang === 'bs' ? 'Povrede i bolesti (12 mj.)' : 'Injuries & Diseases (12 mo.)'}
+                            title={lang !== 'en' ? 'Povrede i bolesti (12 mj.)' : 'Injuries & Diseases (12 mo.)'}
                             barColor={(d) => d.value >= 3 ? 'var(--danger)' : d.value >= 1 ? 'var(--warning)' : 'var(--border)'}
                             height={150}
                         />
@@ -309,7 +309,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         <div className="card" style={{ padding: '20px 16px' }}>
                             <BarChart
                                 data={riskDistribution}
-                                title={lang === 'bs' ? 'Distribucija rizika' : 'Risk Distribution'}
+                                title={lang !== 'en' ? 'Distribucija rizika' : 'Risk Distribution'}
                                 barColor={(d) => d.color}
                                 height={150}
                             />

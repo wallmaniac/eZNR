@@ -798,7 +798,7 @@ export default function ImportPage() {
 
     return (
         <div className="animate-fadeIn" style={{ maxWidth: 860, margin: '0 auto' }}>
-            <PageHeader icon="📥" title="Excel Import/Export" subtitle={lang === 'bs' ? 'Uvezi podatke iz Excel-a ili preuzmi (exportuj) sve podatke aktivne firme u Excel formatu.' : 'Import data from Excel or download (export) all active company data in Excel format.'} />
+            <PageHeader icon="📥" title="Excel Import/Export" subtitle={lang !== 'en' ? 'Uvezi podatke iz Excel-a ili preuzmi (exportuj) sve podatke aktivne firme u Excel formatu.' : 'Import data from Excel or download (export) all active company data in Excel format.'} />
 
             {fileError && (
                 <div style={{ background: 'rgba(244,67,54,0.08)', border: '1px solid rgba(244,67,54,0.3)', borderRadius: 8, padding: '10px 14px', marginBottom: 16, color: '#D32F2F', fontSize: '0.85rem' }}>
@@ -814,7 +814,7 @@ export default function ImportPage() {
                         color: step === s ? 'white' : 'var(--text-muted)',
                         transition: 'all 0.2s',
                     }}>
-                        {i + 1}. {s === 'upload' ? (lang === 'bs' ? 'Upload' : 'Upload') : s === 'preview' ? (lang === 'bs' ? 'Pregled' : 'Preview') : (lang === 'bs' ? 'Gotovo' : 'Done')}
+                        {i + 1}. {s === 'upload' ? (lang !== 'en' ? 'Upload' : 'Upload') : s === 'preview' ? (lang !== 'en' ? 'Pregled' : 'Preview') : (lang !== 'en' ? 'Gotovo' : 'Done')}
                     </div>
                 ))}
             </div>
@@ -826,20 +826,20 @@ export default function ImportPage() {
                     <div className="card">
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
                             <div>
-                                <div style={{ fontWeight: 700, marginBottom: 4 }}>📋 {lang === 'bs' ? 'Korak 1: Preuzimanje Excela' : 'Step 1: Download Excel'}</div>
+                                <div style={{ fontWeight: 700, marginBottom: 4 }}>📋 {lang !== 'en' ? 'Korak 1: Preuzimanje Excela' : 'Step 1: Download Excel'}</div>
                                 <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                    {lang === 'bs'
+                                    {lang !== 'en'
                                         ? 'Preuzmite prazan predložak za unos ILI izvezite (export) postojeće podatke.'
                                         : 'Download empty template for new data OR export existing data.'}
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
                                 <button className="btn btn-outline" onClick={generateTemplate} style={{ whiteSpace: 'nowrap' }}>
-                                    ⬇️ {lang === 'bs' ? 'Prazan template' : 'Empty template'}
+                                    ⬇️ {lang !== 'en' ? 'Prazan template' : 'Empty template'}
                                 </button>
                                 
                                 <button className="btn btn-primary" onClick={() => generateExport(activeCompanyId)} style={{ whiteSpace: 'nowrap' }}>
-                                    📤 {lang === 'bs' ? 'Export podataka' : 'Export data'}
+                                    📤 {lang !== 'en' ? 'Export podataka' : 'Export data'}
                                 </button>
                             </div>
                         </div>
@@ -863,10 +863,10 @@ export default function ImportPage() {
                     >
                         <div style={{ fontSize: '3rem', marginBottom: 12 }}>📂</div>
                         <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 6 }}>
-                            {lang === 'bs' ? 'Korak 2: Uploadajte popunjeni Excel' : 'Step 2: Upload your filled Excel'}
+                            {lang !== 'en' ? 'Korak 2: Uploadajte popunjeni Excel' : 'Step 2: Upload your filled Excel'}
                         </div>
                         <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                            {isUploading ? (lang === 'bs' ? '⚙️ Učitavanje u toku...' : '⚙️ Processing file...') : (lang === 'bs' ? 'Kliknite ili prevucite .xlsx dokument ovdje' : 'Click or drag & drop .xlsx file here')}
+                            {isUploading ? (lang !== 'en' ? '⚙️ Učitavanje u toku...' : '⚙️ Processing file...') : (lang !== 'en' ? 'Kliknite ili prevucite .xlsx dokument ovdje' : 'Click or drag & drop .xlsx file here')}
                         </div>
                         <input
                             ref={fileRef}
@@ -880,7 +880,7 @@ export default function ImportPage() {
                     {/* Company warning if needed */}
                     {activeCompanyId === 'all' && (
                         <div style={{ background: 'rgba(255,152,0,0.08)', border: '1px solid rgba(255,152,0,0.3)', borderRadius: 8, padding: '10px 14px', fontSize: '0.85rem', color: 'var(--warning)' }}>
-                            ⚠️ {lang === 'bs' ? `Podaci će biti uvezeni za prvu firmu u vašoj listi. Odaberite aktivnu firmu u headeru za preciznost.` : `Data will be imported to the first company. Select an active company in the header for accuracy.`}
+                            ⚠️ {lang !== 'en' ? `Podaci će biti uvezeni za prvu firmu u vašoj listi. Odaberite aktivnu firmu u headeru za preciznost.` : `Data will be imported to the first company. Select an active company in the header for accuracy.`}
                         </div>
                     )}
                 </div>
@@ -892,16 +892,16 @@ export default function ImportPage() {
                     {/* Summary cards */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12 }}>
                         {[
-                            { label: lang === 'bs' ? 'Org. Jedinice' : 'Org Units', count: (preview.ouRows || []).length, icon: '🏢', color: '#3F51B5' },
-                            { label: lang === 'bs' ? 'Radna mjesta' : 'Workplaces', count: (preview.wpRows || []).length, icon: '📍', color: '#00BCD4' },
-                            { label: lang === 'bs' ? 'Radnika' : 'Workers', count: preview.workers.length, icon: '👷', color: 'var(--primary)' },
-                            { label: lang === 'bs' ? 'Uvjerenja' : 'Certificates', count: preview.certs.length, icon: '📜', color: '#9C27B0' },
+                            { label: lang !== 'en' ? 'Org. Jedinice' : 'Org Units', count: (preview.ouRows || []).length, icon: '🏢', color: '#3F51B5' },
+                            { label: lang !== 'en' ? 'Radna mjesta' : 'Workplaces', count: (preview.wpRows || []).length, icon: '📍', color: '#00BCD4' },
+                            { label: lang !== 'en' ? 'Radnika' : 'Workers', count: preview.workers.length, icon: '👷', color: 'var(--primary)' },
+                            { label: lang !== 'en' ? 'Uvjerenja' : 'Certificates', count: preview.certs.length, icon: '📜', color: '#9C27B0' },
                             { label: 'OZO / PPE', count: preview.ppe.length, icon: '🦺', color: '#FF9800' },
-                            { label: lang === 'bs' ? 'Oprema' : 'Equipment', count: (preview.equip || []).length, icon: '⚙️', color: '#607D8B' },
-                            { label: lang === 'bs' ? 'Ljekarski' : 'Medical', count: (preview.medExams || []).length, icon: '🩺', color: '#E91E63' },
-                            { label: lang === 'bs' ? 'Vozila' : 'Vehicles', count: (preview.vRows || []).length, icon: '🚗', color: '#F44336' },
-                            { label: lang === 'bs' ? 'PP Aparati' : 'Fire Extinguishers', count: (preview.fRows || []).length, icon: '🧯', color: '#E53935' },
-                            { label: lang === 'bs' ? 'Hidranti' : 'Hydrants', count: (preview.hRows || []).length, icon: '🚰', color: '#1E88E5' },
+                            { label: lang !== 'en' ? 'Oprema' : 'Equipment', count: (preview.equip || []).length, icon: '⚙️', color: '#607D8B' },
+                            { label: lang !== 'en' ? 'Ljekarski' : 'Medical', count: (preview.medExams || []).length, icon: '🩺', color: '#E91E63' },
+                            { label: lang !== 'en' ? 'Vozila' : 'Vehicles', count: (preview.vRows || []).length, icon: '🚗', color: '#F44336' },
+                            { label: lang !== 'en' ? 'PP Aparati' : 'Fire Extinguishers', count: (preview.fRows || []).length, icon: '🧯', color: '#E53935' },
+                            { label: lang !== 'en' ? 'Hidranti' : 'Hydrants', count: (preview.hRows || []).length, icon: '🚰', color: '#1E88E5' },
                         ].filter(x => x.count > 0).map(({ label, count, icon, color }) => (
                             <div key={label} className="card" style={{ textAlign: 'center', padding: 16 }}>
                                 <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{icon}</div>
@@ -1016,7 +1016,7 @@ export default function ImportPage() {
                         const isExp = expanded[sec.key];
                         const rows = isExp ? sec.data : sec.data.slice(0, 5);
                         const remaining = sec.data.length - 5;
-                        const title = lang === 'bs' ? sec.title_bs : sec.title_en;
+                        const title = lang !== 'en' ? sec.title_bs : sec.title_en;
                         return (
                             <div key={sec.key} className="card">
                                 <div className="card-body">
@@ -1027,7 +1027,7 @@ export default function ImportPage() {
                                                 onClick={() => toggleExpand(sec.key)}
                                                 style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, whiteSpace: 'nowrap' }}
                                             >
-                                                {isExp ? (lang === 'bs' ? '▲ Sakrij' : '▲ Collapse') : `▼ ${lang === 'bs' ? `Prikaži sve (${sec.data.length})` : `Show all (${sec.data.length})`}`}
+                                                {isExp ? (lang !== 'en' ? '▲ Sakrij' : '▲ Collapse') : `▼ ${lang !== 'en' ? `Prikaži sve (${sec.data.length})` : `Show all (${sec.data.length})`}`}
                                             </button>
                                         )}
                                     </div>
@@ -1045,7 +1045,7 @@ export default function ImportPage() {
                                                                 onClick={() => toggleExpand(sec.key)}
                                                                 style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}
                                                             >
-                                                                ▼ {lang === 'bs' ? `...i još ${remaining} reda` : `...and ${remaining} more`}
+                                                                ▼ {lang !== 'en' ? `...i još ${remaining} reda` : `...and ${remaining} more`}
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -1059,9 +1059,9 @@ export default function ImportPage() {
                     })}
 
                     <div style={{ display: 'flex', gap: 12 }}>
-                        <button className="btn btn-ghost" onClick={reset}>← {lang === 'bs' ? 'Nazad' : 'Back'}</button>
+                        <button className="btn btn-ghost" onClick={reset}>← {lang !== 'en' ? 'Nazad' : 'Back'}</button>
                         <button className="btn btn-primary" onClick={handleImport} disabled={importing}>
-                            {importing ? '⏳ ' : '📥 '}{lang === 'bs' ? 'Pokreni import' : 'Start import'}
+                            {importing ? '⏳ ' : '📥 '}{lang !== 'en' ? 'Pokreni import' : 'Start import'}
                         </button>
                     </div>
                 </div>
@@ -1071,27 +1071,27 @@ export default function ImportPage() {
             {step === 'done' && result && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', textAlign: 'center' }}>
                     <div style={{ fontSize: '4rem' }}>✅</div>
-                    <h2>{lang === 'bs' ? 'Import završen!' : 'Import complete!'}</h2>
+                    <h2>{lang !== 'en' ? 'Import završen!' : 'Import complete!'}</h2>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 12, width: '100%', maxWidth: 700 }}>
                         {[
-                            { label: lang === 'bs' ? 'Org. kreirano' : 'Org created', val: result.ouCreated || 0, color: '#3F51B5' },
-                            { label: lang === 'bs' ? 'Mjesta kreirano' : 'WP created', val: result.wpCreated || 0, color: '#00BCD4' },
-                            { label: lang === 'bs' ? 'Radnika kreirano' : 'Workers created', val: result.wCreated, color: 'var(--primary)' },
-                            { label: lang === 'bs' ? 'Radnika preskočeno' : 'Workers skipped', val: result.wSkipped, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'Uvjerenja kreirano' : 'Certs created', val: result.cCreated, color: '#9C27B0' },
-                            { label: lang === 'bs' ? 'Uvjerenja preskočeno' : 'Certs skipped', val: result.cSkipped, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'OZO kreirano' : 'PPE created', val: result.pCreated, color: '#FF9800' },
-                            { label: lang === 'bs' ? 'OZO preskočeno' : 'PPE skipped', val: result.pSkipped, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'Oprema kreirano' : 'Equipment created', val: result.eCreated || 0, color: '#607D8B' },
-                            { label: lang === 'bs' ? 'Oprema preskočeno' : 'Equipment skipped', val: result.eSkipped || 0, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'Ljekarski kreirano' : 'Medical created', val: result.mCreated || 0, color: '#E91E63' },
-                            { label: lang === 'bs' ? 'Ljekarski preskočeno' : 'Medical skipped', val: result.mSkipped || 0, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'Vozila kreirano' : 'Vehicles created', val: result.vCreated || 0, color: '#F44336' },
-                            { label: lang === 'bs' ? 'Vozila preskočeno' : 'Vehicles skipped', val: result.vSkipped || 0, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'PP Aparati kreirano' : 'Ext. created', val: result.fCreated || 0, color: '#E53935' },
-                            { label: lang === 'bs' ? 'PP Aparati preskočeno' : 'Ext. skipped', val: result.fSkipped || 0, color: 'var(--text-muted)' },
-                            { label: lang === 'bs' ? 'Hidranti kreirano' : 'Hydrants created', val: result.hCreated || 0, color: '#1E88E5' },
-                            { label: lang === 'bs' ? 'Hidranti preskočeno' : 'Hydrants skipped', val: result.hSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'Org. kreirano' : 'Org created', val: result.ouCreated || 0, color: '#3F51B5' },
+                            { label: lang !== 'en' ? 'Mjesta kreirano' : 'WP created', val: result.wpCreated || 0, color: '#00BCD4' },
+                            { label: lang !== 'en' ? 'Radnika kreirano' : 'Workers created', val: result.wCreated, color: 'var(--primary)' },
+                            { label: lang !== 'en' ? 'Radnika preskočeno' : 'Workers skipped', val: result.wSkipped, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'Uvjerenja kreirano' : 'Certs created', val: result.cCreated, color: '#9C27B0' },
+                            { label: lang !== 'en' ? 'Uvjerenja preskočeno' : 'Certs skipped', val: result.cSkipped, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'OZO kreirano' : 'PPE created', val: result.pCreated, color: '#FF9800' },
+                            { label: lang !== 'en' ? 'OZO preskočeno' : 'PPE skipped', val: result.pSkipped, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'Oprema kreirano' : 'Equipment created', val: result.eCreated || 0, color: '#607D8B' },
+                            { label: lang !== 'en' ? 'Oprema preskočeno' : 'Equipment skipped', val: result.eSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'Ljekarski kreirano' : 'Medical created', val: result.mCreated || 0, color: '#E91E63' },
+                            { label: lang !== 'en' ? 'Ljekarski preskočeno' : 'Medical skipped', val: result.mSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'Vozila kreirano' : 'Vehicles created', val: result.vCreated || 0, color: '#F44336' },
+                            { label: lang !== 'en' ? 'Vozila preskočeno' : 'Vehicles skipped', val: result.vSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'PP Aparati kreirano' : 'Ext. created', val: result.fCreated || 0, color: '#E53935' },
+                            { label: lang !== 'en' ? 'PP Aparati preskočeno' : 'Ext. skipped', val: result.fSkipped || 0, color: 'var(--text-muted)' },
+                            { label: lang !== 'en' ? 'Hidranti kreirano' : 'Hydrants created', val: result.hCreated || 0, color: '#1E88E5' },
+                            { label: lang !== 'en' ? 'Hidranti preskočeno' : 'Hydrants skipped', val: result.hSkipped || 0, color: 'var(--text-muted)' },
                         ].filter(x => x.val > 0).map(({ label, val, color }) => (
                             <div key={label} className="card" style={{ padding: 14, textAlign: 'center' }}>
                                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color }}>{val}</div>
@@ -1110,8 +1110,8 @@ export default function ImportPage() {
                     )}
 
                     <div style={{ display: 'flex', gap: 12 }}>
-                        <button className="btn btn-ghost" onClick={reset}>📥 {lang === 'bs' ? 'Novi import' : 'New import'}</button>
-                        <a href="/dashboard/workers" className="btn btn-primary">👷 {lang === 'bs' ? 'Idi na Radnike' : 'Go to Workers'}</a>
+                        <button className="btn btn-ghost" onClick={reset}>📥 {lang !== 'en' ? 'Novi import' : 'New import'}</button>
+                        <a href="/dashboard/workers" className="btn btn-primary">👷 {lang !== 'en' ? 'Idi na Radnike' : 'Go to Workers'}</a>
                     </div>
                 </div>
             )}

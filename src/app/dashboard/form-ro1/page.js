@@ -100,7 +100,7 @@ export default function FormRO1Page() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.FORMS_RO1, id);
       setSelectedIds(new Set());
       loadData();
@@ -147,13 +147,13 @@ export default function FormRO1Page() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati uputnicu?' : 'Delete referral?');
+    const ok = await confirm(lang !== 'en' ? 'Obrisati uputnicu?' : 'Delete referral?');
     if (ok) { remove(COLLECTIONS.FORMS_RO1, id); loadData(); }
   };
 
   const handleSave = async () => {
     if (!formData.workerId) {
-      await alert(lang === 'bs' ? 'Odaberite radnika!' : 'Select a worker!');
+      await alert(lang !== 'en' ? 'Odaberite radnika!' : 'Select a worker!');
       return;
     }
     
@@ -230,28 +230,28 @@ export default function FormRO1Page() {
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-body" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary" onClick={handleNew} title={lang === 'bs' ? 'Dodaj novi RO-1 obrazac' : 'Add new RO-1 form'}>
-              + {lang === 'bs' ? 'Novi RO-1' : 'New RO-1'}
+            <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Dodaj novi RO-1 obrazac' : 'Add new RO-1 form'}>
+              + {lang !== 'en' ? 'Novi RO-1' : 'New RO-1'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
               <input
-                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
               />
-              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
             
             {/* Grupne akcije bar */}
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang === 'bs' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabrane obrasce' : 'Delete selected forms'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabrane obrasce' : 'Delete selected forms'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
           </div>
         </div>
 
@@ -263,10 +263,10 @@ export default function FormRO1Page() {
                   <tr>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 90 }}>{t('actions')}</th>
-                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
-                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th onClick={() => toggleSort('broj')} style={thStyle('broj')}>{lang === 'bs' ? 'Br.' : 'No.'}{sortIcon('broj')}</th>
-                    <th>{lang === 'bs' ? 'Pravilnik' : 'Regulation'}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang !== 'en' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang !== 'en' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
+                    <th onClick={() => toggleSort('broj')} style={thStyle('broj')}>{lang !== 'en' ? 'Br.' : 'No.'}{sortIcon('broj')}</th>
+                    <th>{lang !== 'en' ? 'Pravilnik' : 'Regulation'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -293,7 +293,7 @@ export default function FormRO1Page() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                             );
                             setActionMenuId(r.id);
-                          }} title={lang === 'bs' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>Akcije ▼</button>
+                          }} title={lang !== 'en' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>Akcije ▼</button>
                           {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                             <>
                               <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -340,7 +340,7 @@ export default function FormRO1Page() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 15 * 1024 * 1024) {
-      await alert(lang === 'bs' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
+      await alert(lang !== 'en' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
       return;
     }
     setFormData(prev => ({
@@ -378,8 +378,8 @@ export default function FormRO1Page() {
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
-        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang === 'bs' ? 'Uredi uputnicu RO-1' : 'Edit RO-1') : (lang === 'bs' ? 'Nova uputnica RO-1' : 'New RO-1')}</h1>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
+        <h1 style={{ margin: 0 }}>📄 {editingId ? (lang !== 'en' ? 'Uredi uputnicu RO-1' : 'Edit RO-1') : (lang !== 'en' ? 'Nova uputnica RO-1' : 'New RO-1')}</h1>
       </div>
       <DialogRenderer />
 
@@ -389,22 +389,22 @@ export default function FormRO1Page() {
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
-              {lang === 'bs' ? 'Uputnica za utvrđivanje zdravstvene sposobnosti radnika (Obrazac RO-1)' : 'Worker health fitness referral (Form RO-1)'}
+              {lang !== 'en' ? 'Uputnica za utvrđivanje zdravstvene sposobnosti radnika (Obrazac RO-1)' : 'Worker health fitness referral (Form RO-1)'}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr', gap: 16, marginBottom: 16 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Broj' : 'Number'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Broj' : 'Number'}</div>
                 <input className="form-input" value={formData.broj} onChange={e => set('broj', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Datum' : 'Date'}</div>
                 <DateInput value={formData.datum} onChange={v => set('datum', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Radnik' : 'Worker'} *</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Radnik' : 'Worker'} *</div>
                 <select className="form-select" value={formData.workerId} onChange={e => handleWorkerChange(e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                  <option value="">{lang !== 'en' ? '— Odaberite radnika —' : '— Select worker —'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
@@ -416,9 +416,9 @@ export default function FormRO1Page() {
               <div style={{ padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 16 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>Matični broj:</span> <strong>{worker.jmbg || '—'}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Prezime, ime, ime oca:' : 'Name:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang === 'bs' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Prezime, ime, ime oca:' : 'Name:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
                 </div>
               </div>
             )}
@@ -433,7 +433,7 @@ export default function FormRO1Page() {
             {/* Pravilnik Da/Ne */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontSize: '0.84rem', color: 'var(--text)', marginBottom: 8 }}>
-                {lang === 'bs'
+                {lang !== 'en'
                   ? 'Poslovi su prema Pravilniku o poslovima s posebnim uvjetima rada, odnosno općem aktu organizacije s posebnim uvjetima rada:'
                   : 'Jobs are per Regulation on special working conditions:'}
               </div>
@@ -446,9 +446,9 @@ export default function FormRO1Page() {
                 </label>
                 {formData.posloviPravilnik && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Ako DA prema članku 3. točka' : 'If YES, per article 3 point'}</span>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Ako DA prema članku 3. točka' : 'If YES, per article 3 point'}</span>
                     <input className="form-input" style={{ width: 120 }} value={formData.posloviTocka} onChange={e => set('posloviTocka', e.target.value)} />
-                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Pravilnika o poslovima s posebnim uvjetima rada.' : 'of the Regulation.'}</span>
+                    <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Pravilnika o poslovima s posebnim uvjetima rada.' : 'of the Regulation.'}</span>
                   </div>
                 )}
               </div>
@@ -456,16 +456,16 @@ export default function FormRO1Page() {
 
             {/* Job description */}
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Kratki opis poslova i zadataka' : 'Brief job description'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Kratki opis poslova i zadataka' : 'Brief job description'}</div>
               <textarea className="form-input" rows={3} value={formData.kratakOpisPoslova} onChange={e => set('kratakOpisPoslova', e.target.value)} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Strojevi i alati (1)' : 'Machines & tools (1)'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Strojevi i alati (1)' : 'Machines & tools (1)'}</div>
                 <input className="form-input" value={formData.strojeviIAlati} onChange={e => set('strojeviIAlati', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Predmet rada (materijali) (2)' : 'Work subject (materials) (2)'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Predmet rada (materijali) (2)' : 'Work subject (materials) (2)'}</div>
                 <input className="form-input" value={formData.predmetRada} onChange={e => set('predmetRada', e.target.value)} />
               </div>
             </div>
@@ -475,67 +475,67 @@ export default function FormRO1Page() {
         {/* ═══ SECTION 3: Working conditions ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'Uvjeti na radnom mjestu' : 'Workplace conditions'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'Uvjeti na radnom mjestu' : 'Workplace conditions'}</div>
 
             {/* Mjesto rada */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'Mjesto rada' : 'Workplace location'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Mjesto rada' : 'Workplace location'}</div>
               <div style={checkGroup}>
-                <Chk field="mjestoZatvoreno" label={lang === 'bs' ? 'u zatvorenom' : 'indoors'} />
-                <Chk field="mjestoOtvoreno" label={lang === 'bs' ? 'na otvorenom' : 'outdoors'} />
-                <Chk field="mjestoNaVisini" label={lang === 'bs' ? 'na visini' : 'at height'} />
-                <Chk field="mjestoUJami" label={lang === 'bs' ? 'u jami' : 'in pit'} />
-                <Chk field="mjestoUVodi" label={lang === 'bs' ? 'u vodi' : 'in water'} />
-                <Chk field="mjestoPodVodom" label={lang === 'bs' ? 'pod vodom' : 'underwater'} />
-                <Chk field="mjestoUMokrom" label={lang === 'bs' ? 'u mokrom' : 'in wet'} />
+                <Chk field="mjestoZatvoreno" label={lang !== 'en' ? 'u zatvorenom' : 'indoors'} />
+                <Chk field="mjestoOtvoreno" label={lang !== 'en' ? 'na otvorenom' : 'outdoors'} />
+                <Chk field="mjestoNaVisini" label={lang !== 'en' ? 'na visini' : 'at height'} />
+                <Chk field="mjestoUJami" label={lang !== 'en' ? 'u jami' : 'in pit'} />
+                <Chk field="mjestoUVodi" label={lang !== 'en' ? 'u vodi' : 'in water'} />
+                <Chk field="mjestoPodVodom" label={lang !== 'en' ? 'pod vodom' : 'underwater'} />
+                <Chk field="mjestoUMokrom" label={lang !== 'en' ? 'u mokrom' : 'in wet'} />
               </div>
             </div>
 
             {/* Organizacija rada */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'Organizacija rada' : 'Work organization'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Organizacija rada' : 'Work organization'}</div>
               <div style={checkGroup}>
-                <Chk field="orgSmjene" label={lang === 'bs' ? 'u smjenama' : 'in shifts'} />
-                <Chk field="orgNocniRad" label={lang === 'bs' ? 'noćni rad' : 'night work'} />
-                <Chk field="orgTerenskiRad" label={lang === 'bs' ? 'terenski rad' : 'field work'} />
-                <Chk field="orgRadiSaStrankama" label={lang === 'bs' ? 'radi sa strankama' : 'with clients'} />
-                <Chk field="orgRadiSam" label={lang === 'bs' ? 'radi sam' : 'works alone'} />
-                <Chk field="orgRadiSGrupom" label={lang === 'bs' ? 'radi s grupom' : 'works in group'} />
-                <Chk field="orgBrziTempo" label={lang === 'bs' ? 'brzi tempo rada' : 'fast pace'} />
-                <Chk field="orgRitamOdreden" label={lang === 'bs' ? 'ritam određen' : 'fixed rhythm'} />
-                <Chk field="orgRadiNaTraci" label={lang === 'bs' ? 'radi na traci' : 'assembly line'} />
-                <Chk field="orgMonotonija" label={lang === 'bs' ? 'monotonija' : 'monotony'} />
+                <Chk field="orgSmjene" label={lang !== 'en' ? 'u smjenama' : 'in shifts'} />
+                <Chk field="orgNocniRad" label={lang !== 'en' ? 'noćni rad' : 'night work'} />
+                <Chk field="orgTerenskiRad" label={lang !== 'en' ? 'terenski rad' : 'field work'} />
+                <Chk field="orgRadiSaStrankama" label={lang !== 'en' ? 'radi sa strankama' : 'with clients'} />
+                <Chk field="orgRadiSam" label={lang !== 'en' ? 'radi sam' : 'works alone'} />
+                <Chk field="orgRadiSGrupom" label={lang !== 'en' ? 'radi s grupom' : 'works in group'} />
+                <Chk field="orgBrziTempo" label={lang !== 'en' ? 'brzi tempo rada' : 'fast pace'} />
+                <Chk field="orgRitamOdreden" label={lang !== 'en' ? 'ritam određen' : 'fixed rhythm'} />
+                <Chk field="orgRadiNaTraci" label={lang !== 'en' ? 'radi na traci' : 'assembly line'} />
+                <Chk field="orgMonotonija" label={lang !== 'en' ? 'monotonija' : 'monotony'} />
               </div>
             </div>
 
             {/* Položaj tijela */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'Položaj i akt. tijela' : 'Body position & activity'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Položaj i akt. tijela' : 'Body position & activity'}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 16px', marginBottom: 10 }}>
-                <Chk field="polStojeci" label={lang === 'bs' ? 'Stojeći' : 'Standing'} />
-                <Chk field="polUcestaloSagibanje" label={lang === 'bs' ? 'Učestalo sagibanje' : 'Frequent bending'} />
-                <Chk field="polUspinjanjeLjestvama" label={lang === 'bs' ? 'uspinjanje ljestvama' : 'climbing ladders'} />
-                <Chk field="polSjedeci" label={lang === 'bs' ? 'Sjedeći' : 'Sitting'} />
-                <Chk field="polZakretanjeTrupa" label={lang === 'bs' ? 'zakretanje trupa' : 'torso rotation'} />
-                <Chk field="polUspinjanjeStepen" label={lang === 'bs' ? 'uspinjanje stepenicama' : 'climbing stairs'} />
-                <Chk field="polUPokretu" label={lang === 'bs' ? 'u pokretu' : 'in motion'} />
-                <Chk field="polKlecanje" label={lang === 'bs' ? 'klečanje' : 'kneeling'} />
+                <Chk field="polStojeci" label={lang !== 'en' ? 'Stojeći' : 'Standing'} />
+                <Chk field="polUcestaloSagibanje" label={lang !== 'en' ? 'Učestalo sagibanje' : 'Frequent bending'} />
+                <Chk field="polUspinjanjeLjestvama" label={lang !== 'en' ? 'uspinjanje ljestvama' : 'climbing ladders'} />
+                <Chk field="polSjedeci" label={lang !== 'en' ? 'Sjedeći' : 'Sitting'} />
+                <Chk field="polZakretanjeTrupa" label={lang !== 'en' ? 'zakretanje trupa' : 'torso rotation'} />
+                <Chk field="polUspinjanjeStepen" label={lang !== 'en' ? 'uspinjanje stepenicama' : 'climbing stairs'} />
+                <Chk field="polUPokretu" label={lang !== 'en' ? 'u pokretu' : 'in motion'} />
+                <Chk field="polKlecanje" label={lang !== 'en' ? 'klečanje' : 'kneeling'} />
                 <div />
-                <Chk field="polKombinirano" label={lang === 'bs' ? 'kombinirano' : 'combined'} />
+                <Chk field="polKombinirano" label={lang !== 'en' ? 'kombinirano' : 'combined'} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'Dizanje tereta:' : 'Lifting:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang !== 'en' ? 'Dizanje tereta:' : 'Lifting:'}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.dizanjeTereta} onChange={e => set('dizanjeTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'Prenošenje tereta:' : 'Carrying:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang !== 'en' ? 'Prenošenje tereta:' : 'Carrying:'}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.prenosenjeTereta} onChange={e => set('prenosenjeTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang === 'bs' ? 'Guranje tereta:' : 'Pushing:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang !== 'en' ? 'Guranje tereta:' : 'Pushing:'}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.guranjeTereta} onChange={e => set('guranjeTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
@@ -544,47 +544,47 @@ export default function FormRO1Page() {
 
             {/* Sensory */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'U poslu je važan' : 'Important in work'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'U poslu je važan' : 'Important in work'}</div>
               <div style={checkGroup}>
-                <Chk field="vidNaDaljinu" label={lang === 'bs' ? 'vid na daljinu' : 'distance vision'} />
-                <Chk field="vidNaBlizinu" label={lang === 'bs' ? 'vid na blizinu' : 'near vision'} />
-                <Chk field="raspoznavanjeBoja" label={lang === 'bs' ? 'raspoznavanje boja' : 'color recognition'} />
-                <Chk field="dobarSluh" label={lang === 'bs' ? 'dobar sluh' : 'good hearing'} />
-                <Chk field="jasanGovor" label={lang === 'bs' ? 'jasan govor' : 'clear speech'} />
+                <Chk field="vidNaDaljinu" label={lang !== 'en' ? 'vid na daljinu' : 'distance vision'} />
+                <Chk field="vidNaBlizinu" label={lang !== 'en' ? 'vid na blizinu' : 'near vision'} />
+                <Chk field="raspoznavanjeBoja" label={lang !== 'en' ? 'raspoznavanje boja' : 'color recognition'} />
+                <Chk field="dobarSluh" label={lang !== 'en' ? 'dobar sluh' : 'good hearing'} />
+                <Chk field="jasanGovor" label={lang !== 'en' ? 'jasan govor' : 'clear speech'} />
               </div>
             </div>
 
             {/* Uvjeti rada */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang === 'bs' ? 'Uvjeti rada' : 'Working conditions'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Uvjeti rada' : 'Working conditions'}</div>
               <div style={checkGroup}>
-                <Chk field="uvjetiVisokaTemp" label={lang === 'bs' ? 'visoka temperatura' : 'high temp'} />
-                <Chk field="uvjetiVisokaVlaznost" label={lang === 'bs' ? 'visoka vlažnost' : 'high humidity'} />
-                <Chk field="uvjetiNiskaTemp" label={lang === 'bs' ? 'niska temperatura' : 'low temp'} />
-                <Chk field="uvjetiBuka" label={lang === 'bs' ? 'buka' : 'noise'} />
-                <Chk field="uvjetiVibracijeStroja" label={lang === 'bs' ? 'Vibracije stroja' : 'Machine vibrations'} />
-                <Chk field="uvjetiVibracijePoda" label={lang === 'bs' ? 'vibracije poda' : 'floor vibrations'} />
-                <Chk field="uvjetiPoviseniTlak" label={lang === 'bs' ? 'Povišeni tlak' : 'increased pressure'} />
-                <Chk field="uvjetiIzlozenostOzljedama" label={lang === 'bs' ? 'Izloženost ozljedama' : 'injury risk'} />
-                <Chk field="uvjetiZracenje" label={lang === 'bs' ? 'Zračenje' : 'Radiation'} />
-                <Chk field="uvjetiIonizacija" label={lang === 'bs' ? 'Ionizirajuća' : 'Ionizing'} />
-                <Chk field="uvjetiMikrovalna" label={lang === 'bs' ? 'Mikrovalna' : 'Microwave'} />
-                <Chk field="uvjetiUltravioletna" label={lang === 'bs' ? 'Ultravioletna' : 'UV'} />
-                <Chk field="uvjetiInfracrvena" label={lang === 'bs' ? 'Infracrvena' : 'Infrared'} />
+                <Chk field="uvjetiVisokaTemp" label={lang !== 'en' ? 'visoka temperatura' : 'high temp'} />
+                <Chk field="uvjetiVisokaVlaznost" label={lang !== 'en' ? 'visoka vlažnost' : 'high humidity'} />
+                <Chk field="uvjetiNiskaTemp" label={lang !== 'en' ? 'niska temperatura' : 'low temp'} />
+                <Chk field="uvjetiBuka" label={lang !== 'en' ? 'buka' : 'noise'} />
+                <Chk field="uvjetiVibracijeStroja" label={lang !== 'en' ? 'Vibracije stroja' : 'Machine vibrations'} />
+                <Chk field="uvjetiVibracijePoda" label={lang !== 'en' ? 'vibracije poda' : 'floor vibrations'} />
+                <Chk field="uvjetiPoviseniTlak" label={lang !== 'en' ? 'Povišeni tlak' : 'increased pressure'} />
+                <Chk field="uvjetiIzlozenostOzljedama" label={lang !== 'en' ? 'Izloženost ozljedama' : 'injury risk'} />
+                <Chk field="uvjetiZracenje" label={lang !== 'en' ? 'Zračenje' : 'Radiation'} />
+                <Chk field="uvjetiIonizacija" label={lang !== 'en' ? 'Ionizirajuća' : 'Ionizing'} />
+                <Chk field="uvjetiMikrovalna" label={lang !== 'en' ? 'Mikrovalna' : 'Microwave'} />
+                <Chk field="uvjetiUltravioletna" label={lang !== 'en' ? 'Ultravioletna' : 'UV'} />
+                <Chk field="uvjetiInfracrvena" label={lang !== 'en' ? 'Infracrvena' : 'Infrared'} />
               </div>
             </div>
 
             {/* Text hazard fields */}
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Prašina' : 'Dust'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Prašina' : 'Dust'}</div>
               <input className="form-input" value={formData.prasina} onChange={e => set('prasina', e.target.value)} />
             </div>
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Kemijski agensi' : 'Chemical agents'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Kemijski agensi' : 'Chemical agents'}</div>
               <input className="form-input" value={formData.kemijskiAgensi} onChange={e => set('kemijskiAgensi', e.target.value)} />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Biotički agensi' : 'Biological agents'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Biotički agensi' : 'Biological agents'}</div>
               <input className="form-input" value={formData.biotickiAgensi} onChange={e => set('biotickiAgensi', e.target.value)} />
             </div>
           </div>
@@ -593,21 +593,21 @@ export default function FormRO1Page() {
         {/* ═══ Document Upload ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang === 'bs' ? 'Prilog' : 'Attachment'}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang !== 'en' ? 'Prilog' : 'Attachment'}</div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">📎 {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
+              <label className="form-label">📎 {lang !== 'en' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
                       <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }}>📎 {formData.docName}</button>
                       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={lang === 'bs' ? 'Pregled priloga' : 'View attachment'}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={lang === 'bs' ? 'Preuzmi prilog' : 'Download attachment'}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={lang === 'bs' ? 'Ukloni prilog' : 'Remove attachment'}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={lang !== 'en' ? 'Pregled priloga' : 'View attachment'}>👁 {lang !== 'en' ? 'Otvori' : 'Open'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={lang !== 'en' ? 'Preuzmi prilog' : 'Download attachment'}>↓ {lang !== 'en' ? 'Preuzmi' : 'Download'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Ukloni prilog' : 'Remove attachment'}>✕ {lang !== 'en' ? 'Ukloni' : 'Remove'}</button>
                       </div>
                   </div>
               ) : (
                   <div onClick={() => docInputRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '16px', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      📂 {lang === 'bs' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
+                      📂 {lang !== 'en' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
                   </div>
               )}
               <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
@@ -619,10 +619,10 @@ export default function FormRO1Page() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Sačuvaj uputnicu' : 'Save referral'}
+              💾 {lang !== 'en' ? 'Sačuvaj uputnicu' : 'Save referral'}
             </button>
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
-              💾 {lang === 'bs' ? 'Sačuvaj i nova' : 'Save & new'}
+              💾 {lang !== 'en' ? 'Sačuvaj i nova' : 'Save & new'}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
               ↩ {t('cancel')}

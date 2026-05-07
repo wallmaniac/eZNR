@@ -7,7 +7,7 @@ import DateInput from '@/components/DateInput';
 
 export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData }) {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { confirm } = useDialog();
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
     const docs = vehicle.dokumenti || [];

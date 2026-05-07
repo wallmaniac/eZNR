@@ -105,7 +105,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                 }}>
                     <div>
                         <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'var(--text, #e2e8f0)' }}>
-                            📩 {lang === 'bs' ? 'Pošalji podsjetnik' : 'Send Reminders'}
+                            📩 {lang !== 'en' ? 'Pošalji podsjetnik' : 'Send Reminders'}
                         </h2>
                         <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)' }}>
                             {questionnaire?.naziv || ''}
@@ -129,7 +129,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                {lang === 'bs' ? 'Učitavanje sesija...' : 'Loading sessions...'}
+                                {lang !== 'en' ? 'Učitavanje sesija...' : 'Loading sessions...'}
                             </p>
                         </div>
                     )}
@@ -137,7 +137,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     {!loading && sessions.length === 0 && (
                         <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '2rem', marginBottom: 12 }}>📭</div>
-                            <p>{lang === 'bs'
+                            <p>{lang !== 'en'
                                 ? (isTraining ? 'Nema poslatih sesija za ovu obuku.' : 'Nema poslatih sesija za ovaj upitnik.')
                                 : (isTraining ? 'No sessions sent for this training.' : 'No sessions sent for this questionnaire.')}
                         </p>
@@ -150,15 +150,15 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
                                 <div style={statBox('#22c55e')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{completed.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang === 'bs' ? 'Završeno' : 'Done'}</div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang !== 'en' ? 'Završeno' : 'Done'}</div>
                                 </div>
                                 <div style={statBox('#f59e0b')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{incomplete.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang === 'bs' ? 'Čeka' : 'Pending'}</div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang !== 'en' ? 'Čeka' : 'Pending'}</div>
                                 </div>
                                 <div style={statBox('#6366f1')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{sessions.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang === 'bs' ? 'Ukupno' : 'Total'}</div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{lang !== 'en' ? 'Ukupno' : 'Total'}</div>
                                 </div>
                             </div>
 
@@ -167,7 +167,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                 <>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                                         <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                            {lang === 'bs' ? 'Nisu ispunili:' : 'Not completed:'}
+                                            {lang !== 'en' ? 'Nisu ispunili:' : 'Not completed:'}
                                         </div>
                                         <button 
                                             type="button"
@@ -185,8 +185,8 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                             }}
                                         >
                                             {selectedTokens.size === incomplete.length 
-                                                ? (lang === 'bs' ? 'Odznači sve' : 'Deselect all')
-                                                : (lang === 'bs' ? 'Označi sve' : 'Select all')}
+                                                ? (lang !== 'en' ? 'Odznači sve' : 'Deselect all')
+                                                : (lang !== 'en' ? 'Označi sve' : 'Select all')}
                                         </button>
                                     </div>
                                     <div style={{
@@ -229,7 +229,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             ) : (
                                 <div style={{ textAlign: 'center', padding: '20px 0', color: 'var(--text-muted)' }}>
                                     <div style={{ fontSize: '2rem', marginBottom: 8 }}>🎉</div>
-                                    <p style={{ fontWeight: 600 }}>{lang === 'bs'
+                                    <p style={{ fontWeight: 600 }}>{lang !== 'en'
                                         ? (isTraining ? 'Svi su završili obuku!' : 'Svi su ispunili upitnik!')
                                         : 'Everyone completed!'}
                                 </p>
@@ -247,7 +247,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                 animation: 'spin 0.8s linear infinite', margin: '0 auto 16px',
                             }} />
                             <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>
-                                {lang === 'bs' ? 'Slanje podsjetnika...' : 'Sending reminders...'}
+                                {lang !== 'en' ? 'Slanje podsjetnika...' : 'Sending reminders...'}
                             </p>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
                                 {progress.current}/{progress.total}
@@ -272,17 +272,17 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                         <div style={{ textAlign: 'center', padding: '30px 0' }}>
                             <div style={{ fontSize: '3rem', marginBottom: 12 }}>{result.failed === 0 ? '✅' : '⚠️'}</div>
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 12px' }}>
-                                {lang === 'bs' ? 'Podsjetnici poslani' : 'Reminders sent'}
+                                {lang !== 'en' ? 'Podsjetnici poslani' : 'Reminders sent'}
                             </h3>
                             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
                                 <div style={statBox('#22c55e')}>
                                     <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>{result.sent}</div>
-                                    <div style={{ fontSize: '0.72rem' }}>{lang === 'bs' ? 'Poslano' : 'Sent'}</div>
+                                    <div style={{ fontSize: '0.72rem' }}>{lang !== 'en' ? 'Poslano' : 'Sent'}</div>
                                 </div>
                                 {result.failed > 0 && (
                                     <div style={statBox('#ef4444')}>
                                         <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>{result.failed}</div>
-                                        <div style={{ fontSize: '0.72rem' }}>{lang === 'bs' ? 'Neuspjelo' : 'Failed'}</div>
+                                        <div style={{ fontSize: '0.72rem' }}>{lang !== 'en' ? 'Neuspjelo' : 'Failed'}</div>
                                     </div>
                                 )}
                             </div>
@@ -308,15 +308,15 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     {!sending && !result && (
                         <>
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                {selectedTokens.size} {lang === 'bs' ? 'od' : 'of'} {incomplete.length} {lang === 'bs' ? 'odabrano' : 'selected'}
+                                {selectedTokens.size} {lang !== 'en' ? 'od' : 'of'} {incomplete.length} {lang !== 'en' ? 'odabrano' : 'selected'}
                             </span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={cancelBtn}>
-                                    {lang === 'bs' ? 'Zatvori' : 'Close'}
+                                    {lang !== 'en' ? 'Zatvori' : 'Close'}
                                 </button>
                                 {incomplete.length > 0 && (
                                     <button onClick={handleSendReminders} disabled={selectedTokens.size === 0} style={{...sendBtn, opacity: selectedTokens.size === 0 ? 0.5 : 1, cursor: selectedTokens.size === 0 ? 'not-allowed' : 'pointer'}}>
-                                        📩 {lang === 'bs' ? `Pošalji podsjetnik (${selectedTokens.size})` : `Send reminders (${selectedTokens.size})`}
+                                        📩 {lang !== 'en' ? `Pošalji podsjetnik (${selectedTokens.size})` : `Send reminders (${selectedTokens.size})`}
                                     </button>
                                 )}
                             </div>
@@ -324,7 +324,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     )}
                     {result && (
                         <button onClick={onClose} style={{ ...sendBtn, marginLeft: 'auto' }}>
-                            {lang === 'bs' ? 'Zatvori' : 'Close'}
+                            {lang !== 'en' ? 'Zatvori' : 'Close'}
                         </button>
                     )}
                 </div>

@@ -13,7 +13,7 @@ import { useDialog } from '@/hooks/useDialog';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
 function buildBulkPrintHtml(selectedRows, workers, lang) {
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const pages = selectedRows.map((r, idx) => {
     const w = workers.find(x => x.id === r.workerId) || {};
     const isLast = idx === selectedRows.length - 1;
@@ -221,7 +221,7 @@ function WorkerCertificatesInner() {
     });
   };
 
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
 
   return (
     <>
@@ -233,7 +233,7 @@ function WorkerCertificatesInner() {
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')} title={lang === 'bs' ? 'Dodaj novo uvjerenje' : 'Add new certificate'}>
+              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')} title={lang !== 'en' ? 'Dodaj novo uvjerenje' : 'Add new certificate'}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
 
@@ -245,13 +245,13 @@ function WorkerCertificatesInner() {
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                 />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
               </div>
 
               <select
                 className="form-select"
                 style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
-                title={lang === 'bs' ? 'Filtriraj po odjelu' : 'Filter by department'}
+                title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}
               >
@@ -282,7 +282,7 @@ function WorkerCertificatesInner() {
               </div>
 
                 <PDFExportButton 
-                title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
+                title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
                 { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
@@ -294,7 +294,7 @@ function WorkerCertificatesInner() {
                      const rect = e.currentTarget.getBoundingClientRect();
                      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
                      setZapisniciOpen(prev => !prev);
-                 }} title={lang === 'bs' ? 'Prikaži zapisnike i uvjerenja' : 'Show records and certificates'}>
+                 }} title={lang !== 'en' ? 'Prikaži zapisnike i uvjerenja' : 'Show records and certificates'}>
                     🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
                  </button>
                  {zapisniciOpen && typeof document !== 'undefined' && createPortal(

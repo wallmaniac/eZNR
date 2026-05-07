@@ -14,7 +14,7 @@ import PageHeader from '@/components/PageHeader';
 function FleetDocumentsInner() {
     const { t, lang } = useLanguage();
     const { activeCompanyId } = useAuth();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();

@@ -21,7 +21,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
  */
 export default function PDFExportButton({ options = [], label, single = false, buttonStyle = {}, title }) {
   const { lang } = useLanguage();
-  const bs = lang === 'bs';
+  const bs = lang !== 'en';
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0, width: 220, right: 0 });

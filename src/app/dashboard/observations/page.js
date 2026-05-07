@@ -14,7 +14,7 @@ import PageHeader from '@/components/PageHeader';
 
 export default function ObservationsPage() {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { isAdmin, activeCompanyId } = useAuth();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();

@@ -58,8 +58,8 @@ export default function OfflineIndicator() {
         }}>
             <span style={{ fontSize: '0.9rem' }}>{offline ? '📡' : '✅'}</span>
             {offline
-                ? (lang === 'bs' ? 'Nema internet konekcije' : 'No internet connection')
-                : (lang === 'bs' ? 'Ponovo online' : 'Back online')
+                ? (lang !== 'en' ? 'Nema internet konekcije' : 'No internet connection')
+                : (lang !== 'en' ? 'Ponovo online' : 'Back online')
             }
         </div>
     );

@@ -161,7 +161,7 @@ export default function TrainingsPage() {
     };
 
     const handleSave = async () => {
-        if (!formData.naziv.trim()) { await alert(lang === 'bs' ? 'Unesite naziv obuke.' : 'Enter training name.'); return; }
+        if (!formData.naziv.trim()) { await alert(lang !== 'en' ? 'Unesite naziv obuke.' : 'Enter training name.'); return; }
         let savedId = editingId;
         if (editingId) {
             update(COLLECTIONS.TRAININGS, editingId, formData);
@@ -184,7 +184,7 @@ export default function TrainingsPage() {
 
     const handleCancel = async () => {
         if (contextIsDirty) {
-            const ok = await confirm(lang === 'bs' ? 'Imate nesačuvane promjene. Želite li zaista odustati?' : 'You have unsaved changes. Are you sure you want to discard them?');
+            const ok = await confirm(lang !== 'en' ? 'Imate nesačuvane promjene. Želite li zaista odustati?' : 'You have unsaved changes. Are you sure you want to discard them?');
             if (!ok) return;
         }
         if (editingId) setLastEditedId(editingId);
@@ -319,25 +319,25 @@ export default function TrainingsPage() {
                 const existingCount = (formData.slides || []).length;
                 const newCount = data.slides.length;
                 const action = await choose(
-                    lang === 'bs'
+                    lang !== 'en'
                         ? `Dokument ima ${newCount} slajdova. Trenutno već postoji ${existingCount} slajdova.\nŠto želite uraditi?`
                         : `Document has ${newCount} slides. You already have ${existingCount} slide(s).\nWhat would you like to do?`,
                     [
                         {
-                            label: lang === 'bs' ? `🔄 Zamijeni sve (zadrži samo novih ${newCount})` : `🔄 Replace all (keep only new ${newCount})`,
+                            label: lang !== 'en' ? `🔄 Zamijeni sve (zadrži samo novih ${newCount})` : `🔄 Replace all (keep only new ${newCount})`,
                             value: 'replace',
                             primary: true,
                         },
                         {
-                            label: lang === 'bs' ? `➕ Dodaj na kraj (ukupno ${existingCount + newCount} slajdova)` : `➕ Append to end (total ${existingCount + newCount} slides)`,
+                            label: lang !== 'en' ? `➕ Dodaj na kraj (ukupno ${existingCount + newCount} slajdova)` : `➕ Append to end (total ${existingCount + newCount} slides)`,
                             value: 'append',
                         },
                         {
-                            label: lang === 'bs' ? 'Odustani' : 'Cancel',
+                            label: lang !== 'en' ? 'Odustani' : 'Cancel',
                             value: null,
                         },
                     ],
-                    lang === 'bs' ? '📂 Uvoz slajdova' : '📂 Import Slides'
+                    lang !== 'en' ? '📂 Uvoz slajdova' : '📂 Import Slides'
                 );
                 if (action === null || action === undefined) return; // cancelled
                 if (action === 'append') {
@@ -429,7 +429,7 @@ export default function TrainingsPage() {
     const autoCreateCertificate = async (session) => {
         const worker = findWorkerBySession(session);
         if (!worker) {
-            await alert(lang === 'bs'
+            await alert(lang !== 'en'
                 ? `Radnik "${session.recipientName}" nije pronađen u bazi. Uvjerenje se ne može automatski kreirati.`
                 : `Worker "${session.recipientName}" not found in database. Certificate cannot be auto-created.`);
             return;
@@ -454,7 +454,7 @@ export default function TrainingsPage() {
             ogranicenja: `Obuka: ${resultsTraining?.naziv || ''}. Rezultat testa: ${session.grade?.percentage || 0}%. Radno mjesto: ${wpName || 'nije specificirano'}.`,
         };
         create(COLLECTIONS.CERTIFICATES, certData);
-        const shouldPrint = await confirm(lang === 'bs'
+        const shouldPrint = await confirm(lang !== 'en'
             ? `✅ Uvjerenje kreirano za ${worker.ime} ${worker.prezime}!\n\nŽelite li odmah ispisati/preuzeti ZOS dokument?`
             : `✅ Certificate created for ${worker.ime} ${worker.prezime}!\n\nDo you want to print/download the ZOS document now?`);
         if (shouldPrint) {
@@ -522,8 +522,8 @@ export default function TrainingsPage() {
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                             <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ Nova obuka</button>
-                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOS', '_blank')}>📝 {lang === 'bs' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>🔥 {lang === 'bs' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOS', '_blank')}>📝 {lang !== 'en' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open('/print-template?type=ZOP', '_blank')}>🔥 {lang !== 'en' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                             <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
                                 <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder="Pretraži obuke..." value={search} onChange={e => setSearch(e.target.value)}
@@ -544,7 +544,7 @@ export default function TrainingsPage() {
                                         <th>Naziv obuke</th>
                                         <th>Slajdova</th>
                                         <th>Pitanja</th>
-                                        <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
+                                        <th>{lang !== 'en' ? 'Ispunjenost' : 'Completion'}</th>
                                         <th>Prag prolaza</th>
                                         <th>Kreirano</th>
                                     </tr>
@@ -626,7 +626,7 @@ export default function TrainingsPage() {
                                                             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
                                                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
                                                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                            title={lang === 'bs' ? 'Klikni za pregled rezultata' : 'Click to view results'}
+                                                            title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}
                                                         >
                                                             <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
@@ -697,14 +697,14 @@ export default function TrainingsPage() {
                 />
                 {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
+                    <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
                     <h1 style={{ margin: 0, flex: 1 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
                     <button 
                         className="btn btn-outline btn-sm" 
                         onClick={() => { setReminderTraining(resultsTraining); setReminderOpen(true); }}
                         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}
                     >
-                        📩 {lang === 'bs' ? 'Pošalji podsjetnik' : 'Send Reminder'}
+                        📩 {lang !== 'en' ? 'Pošalji podsjetnik' : 'Send Reminder'}
                     </button>
                 </div>
 
@@ -828,7 +828,7 @@ export default function TrainingsPage() {
                                 <h2 style={{ color: 'white', fontSize: '1rem' }}>
                                     📝 Odgovori: {answerDetail.session.recipientName}
                                 </h2>
-                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)} title={lang === 'bs' ? 'Zatvori' : 'Close'}>✕</button>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)} title={lang !== 'en' ? 'Zatvori' : 'Close'}>✕</button>
                             </div>
                             <div className="modal-body" style={{ padding: 20 }}>
                                 {answerDetail.response?.answers ? (
@@ -902,7 +902,7 @@ export default function TrainingsPage() {
         <div className="animate-fadeIn">
             <DialogRenderer />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={handleCancel} title={lang === 'bs' ? 'Nazad' : 'Back'}>←</button>
+                <button className="btn btn-ghost" onClick={handleCancel} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
                 <h1 style={{ margin: 0 }}>{editingId ? '✏️ Uredi obuku' : '🎬 Nova obuka'}</h1>
             </div>
 
@@ -1008,7 +1008,7 @@ export default function TrainingsPage() {
                         </div>
                     ))}
                     <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="btn btn-outline" onClick={addSlide} title={lang === 'bs' ? 'Dodaj novi slajd' : 'Add new slide'}>+ Dodaj slajd</button>
+                        <button className="btn btn-outline" onClick={addSlide} title={lang !== 'en' ? 'Dodaj novi slajd' : 'Add new slide'}>+ Dodaj slajd</button>
                     </div>
                 </div>
             )}
@@ -1032,7 +1032,7 @@ export default function TrainingsPage() {
                                     <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />Generišem...</>
                                 ) : '✨ Generiraj test iz prezentacije'}
                             </button>
-                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={lang === 'bs' ? 'Dodaj pitanje ručno' : 'Add question manually'}>+ Dodaj ručno</button>
+                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={lang !== 'en' ? 'Dodaj pitanje ručno' : 'Add question manually'}>+ Dodaj ručno</button>
                         </div>
                     </div>
 
@@ -1139,7 +1139,7 @@ export default function TrainingsPage() {
             {/* Bottom Save */}
             <div className="card" style={{ marginTop: 16 }}>
                 <div className="card-body" style={{ display: 'flex', gap: 10 }}>
-                    <button className="btn btn-primary" onClick={handleSave}>💾 {lang === 'bs' ? 'Sačuvaj obuku' : 'Save training'}</button>
+                    <button className="btn btn-primary" onClick={handleSave}>💾 {lang !== 'en' ? 'Sačuvaj obuku' : 'Save training'}</button>
                     <button className="btn btn-ghost" onClick={handleCancel}>{t('cancel')}</button>
                     {editingId && (
                         <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}

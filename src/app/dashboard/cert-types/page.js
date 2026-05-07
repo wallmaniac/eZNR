@@ -40,7 +40,7 @@ export default function CertTypesPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
         for (let id of selectedIds) await remove(COLLECTIONS.CERT_TYPES, id);
         setSelectedIds(new Set());
         loadData();
@@ -54,7 +54,7 @@ export default function CertTypesPage() {
     if (editingId) update(COLLECTIONS.CERT_TYPES, editingId, formData); else create(COLLECTIONS.CERT_TYPES, formData);
     setShowForm(false); loadData(); showFlash();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang === 'bs' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.CERT_TYPES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(lang !== 'en' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.CERT_TYPES, id); loadData(); } };
 
   const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
@@ -62,7 +62,7 @@ export default function CertTypesPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <PageHeader icon="🎓" title={t('certTypes')} subtitle={`${sorted.length} ${lang === 'bs' ? 'zapisa' : 'records'}`} />
+        <PageHeader icon="🎓" title={t('certTypes')} subtitle={`${sorted.length} ${lang !== 'en' ? 'zapisa' : 'records'}`} />
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 500 }} onClick={e => e.stopPropagation()}>
@@ -70,8 +70,8 @@ export default function CertTypesPage() {
               <div className="modal-body">
                 <div className="form-group" style={{ marginBottom: 16 }}><label className="form-label">{t('name')} *</label><input className="form-input" value={formData.naziv} onChange={e => setFormData({ ...formData, naziv: e.target.value })} /></div>
                 <div className="form-grid-2">
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Oznaka' : 'Code'}</label><input className="form-input" value={formData.oznaka} onChange={e => setFormData({ ...formData, oznaka: e.target.value })} /></div>
-                  <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Trajanje (mjeseci)' : 'Duration (months)'}</label><input className="form-input" type="number" value={formData.trajanjeMjeseci} onChange={e => setFormData({ ...formData, trajanjeMjeseci: Number(e.target.value) })} /></div>
+                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Oznaka' : 'Code'}</label><input className="form-input" value={formData.oznaka} onChange={e => setFormData({ ...formData, oznaka: e.target.value })} /></div>
+                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Trajanje (mjeseci)' : 'Duration (months)'}</label><input className="form-input" type="number" value={formData.trajanjeMjeseci} onChange={e => setFormData({ ...formData, trajanjeMjeseci: Number(e.target.value) })} /></div>
                 </div>
               </div>
               <div className="modal-footer"><button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button><button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button></div>
@@ -80,24 +80,24 @@ export default function CertTypesPage() {
         )}
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Novi tip uvjerenja' : 'New Cert Type'}</button>
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang !== 'en' ? 'Novi tip uvjerenja' : 'New Cert Type'}</button>
             <SavedFlash />
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                      {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                      {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                   </span>
-                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
           </div>
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
             <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
             <th style={{ width: 90 }}>{t('actions')}</th>
             <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
-            <th onClick={() => toggleSort('oznaka')} style={thStyle('oznaka')}>{lang === 'bs' ? 'Oznaka' : 'Code'}{sortIcon('oznaka')}</th>
-            <th onClick={() => toggleSort('trajanjeMjeseci')} style={thStyle('trajanjeMjeseci')}>{lang === 'bs' ? 'Trajanje' : 'Duration'}{sortIcon('trajanjeMjeseci')}</th>
+            <th onClick={() => toggleSort('oznaka')} style={thStyle('oznaka')}>{lang !== 'en' ? 'Oznaka' : 'Code'}{sortIcon('oznaka')}</th>
+            <th onClick={() => toggleSort('trajanjeMjeseci')} style={thStyle('trajanjeMjeseci')}>{lang !== 'en' ? 'Trajanje' : 'Duration'}{sortIcon('trajanjeMjeseci')}</th>
           </tr></thead>
             <tbody>{sorted.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : sorted.map(i => (
               <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
@@ -133,7 +133,7 @@ export default function CertTypesPage() {
                 </td>
                 <td style={{ fontWeight: 600 }}>{i.naziv}</td>
                 <td><span className="badge badge-info">{i.oznaka}</span></td>
-                <td>{i.trajanjeMjeseci} {lang === 'bs' ? 'mj.' : 'mo.'}</td>
+                <td>{i.trajanjeMjeseci} {lang !== 'en' ? 'mj.' : 'mo.'}</td>
               </tr>
             ))}</tbody></table></div>
         </div></div>

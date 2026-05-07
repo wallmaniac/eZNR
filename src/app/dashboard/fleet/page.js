@@ -51,7 +51,7 @@ const TYPE_MAP = {
 
 function FleetInner() {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const searchParams = useSearchParams();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -522,7 +522,7 @@ function FleetInner() {
                                     style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
                                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={bs ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
                             </div>
-                            <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
+                            <PDFExportButton title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
                                 { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
                                 ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
                             ]} />

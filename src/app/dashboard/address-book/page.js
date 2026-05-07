@@ -84,42 +84,42 @@ export default function AddressBookPage() {
       <div className="animate-fadeIn">
         {copyToast && (
         <div style={{ position: 'fixed', top: 24, right: 24, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--primary)', color: 'white', padding: '12px 20px', borderRadius: 10, fontWeight: 600, boxShadow: '0 4px 20px rgba(0,0,0,0.25)', animation: 'fadeIn 0.2s' }}>
-          ✅ {lang === 'bs' ? 'Sve email adrese kopirane!' : 'All emails copied!'}
+          ✅ {lang !== 'en' ? 'Sve email adrese kopirane!' : 'All emails copied!'}
         </div>
       )}
-      <PageHeader icon="📒" title={t('addressBook')} subtitle={`${sorted.length} ${lang === 'bs' ? 'zapisa' : 'records'}`} />
+      <PageHeader icon="📒" title={t('addressBook')} subtitle={`${sorted.length} ${lang !== 'en' ? 'zapisa' : 'records'}`} />
         <div className="card"><div className="card-body">
 
           {/* Toolbar */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
             {/* Akcije dropdown */}
             <div style={{ position: 'relative' }}>
-              <button className="btn btn-primary btn-sm" onClick={() => setActionMenu(m => !m)} title={lang === 'bs' ? 'Prikaži akcije imenika' : 'Show address book actions'}>
-                ⚡ {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+              <button className="btn btn-primary btn-sm" onClick={() => setActionMenu(m => !m)} title={lang !== 'en' ? 'Prikaži akcije imenika' : 'Show address book actions'}>
+                ⚡ {lang !== 'en' ? 'Akcije' : 'Actions'} ▼
               </button>
               {actionMenu && (
                 <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, minWidth: 260, zIndex: 100 }}
                   onMouseLeave={() => setActionMenu(false)}>
                   <button className="dropdown-item" onClick={() => { openOutlook(false); setActionMenu(false); }}
                     disabled={selectedCount === 0} style={{ opacity: selectedCount === 0 ? 0.45 : 1 }}>
-                    ✉️ {lang === 'bs' ? `Email odabranima (${selectedCount})` : `Email selected (${selectedCount})`}
+                    ✉️ {lang !== 'en' ? `Email odabranima (${selectedCount})` : `Email selected (${selectedCount})`}
                   </button>
                   <button className="dropdown-item" onClick={() => { openOutlook(true); setActionMenu(false); }}>
-                    📨 {lang === 'bs' ? 'Email svim radnicima' : 'Email all workers'}
+                    📨 {lang !== 'en' ? 'Email svim radnicima' : 'Email all workers'}
                   </button>
                   <div className="dropdown-divider" />
                   <button className="dropdown-item" onClick={() => { copyAllEmails(); setActionMenu(false); }}>
-                    📋 {lang === 'bs' ? 'Kopiraj sve email adrese' : 'Copy all emails'}
+                    📋 {lang !== 'en' ? 'Kopiraj sve email adrese' : 'Copy all emails'}
                   </button>
                   <button className="dropdown-item" onClick={() => { exportCSV(); setActionMenu(false); }}>
-                    📥 {lang === 'bs' ? 'Izvezi u CSV' : 'Export to CSV'}
+                    📥 {lang !== 'en' ? 'Izvezi u CSV' : 'Export to CSV'}
                   </button>
                   <div className="dropdown-divider" />
                   <button className="dropdown-item" onClick={() => { setSelected(new Set(sorted.map(w => w.id))); setActionMenu(false); }}>
-                    ☑️ {lang === 'bs' ? 'Odaberi sve' : 'Select all'}
+                    ☑️ {lang !== 'en' ? 'Odaberi sve' : 'Select all'}
                   </button>
                   <button className="dropdown-item" onClick={() => { setSelected(new Set()); setActionMenu(false); }}>
-                    ⬜ {lang === 'bs' ? 'Poništi odabir' : 'Deselect all'}
+                    ⬜ {lang !== 'en' ? 'Poništi odabir' : 'Deselect all'}
                   </button>
                 </div>
               )}
@@ -129,18 +129,18 @@ export default function AddressBookPage() {
             <div className="search-bar" style={{ flex: 1, maxWidth: 400, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input
-                placeholder={lang === 'bs' ? 'Pretraži po imenu, emailu, org. jed...' : 'Search by name, email, org unit...'}
+                placeholder={lang !== 'en' ? 'Pretraži po imenu, emailu, org. jed...' : 'Search by name, email, org unit...'}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
               />
-              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
 
             {/* Selected badge */}
             {selectedCount > 0 && (
               <span className="badge badge-primary" style={{ fontSize: '0.85rem', padding: '4px 10px' }}>
-                {selectedCount} {lang === 'bs' ? 'odabrano' : 'selected'}
+                {selectedCount} {lang !== 'en' ? 'odabrano' : 'selected'}
               </span>
             )}
 
@@ -151,7 +151,7 @@ export default function AddressBookPage() {
 
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
             <th style={{ width: 36 }}>
-              <input type="checkbox" checked={allSelected} onChange={toggleAll} title={lang === 'bs' ? 'Odaberi sve' : 'Select all'} />
+              <input type="checkbox" checked={allSelected} onChange={toggleAll} title={lang !== 'en' ? 'Odaberi sve' : 'Select all'} />
             </th>
             <th style={thStyle('ime')} onClick={() => toggleSort('ime')}>{t('workerName')}{sortIcon('ime')}</th>
             <th style={thStyle('prezime')} onClick={() => toggleSort('prezime')}>{t('workerSurname')}{sortIcon('prezime')}</th>
@@ -183,7 +183,7 @@ export default function AddressBookPage() {
                         <span style={{ color: 'var(--text)', fontSize: 'inherit' }}>{w.email}</span>
                         <button
                           onClick={() => copyEmail(w.email, w.id)}
-                          title={copiedEmail === w.id ? (lang === 'bs' ? 'Kopirano!' : 'Copied!') : (lang === 'bs' ? 'Kopiraj email' : 'Copy email')}
+                          title={copiedEmail === w.id ? (lang !== 'en' ? 'Kopirano!' : 'Copied!') : (lang !== 'en' ? 'Kopiraj email' : 'Copy email')}
                           style={{
                             background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
                             color: copiedEmail === w.id ? '#22c55e' : 'var(--text-muted)',
@@ -207,7 +207,7 @@ export default function AddressBookPage() {
                         </button>
                         <button
                           onClick={() => window.open(`mailto:${w.email}`)}
-                          title={lang === 'bs' ? 'Pošalji email radniku' : 'Send email to worker'}
+                          title={lang !== 'en' ? 'Pošalji email radniku' : 'Send email to worker'}
                           style={{ background: 'rgba(33,150,243,0.1)', border: 'none', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--info)' }}
                           onMouseEnter={e => e.currentTarget.style.background = 'rgba(33,150,243,0.2)'}
                           onMouseLeave={e => e.currentTarget.style.background = 'rgba(33,150,243,0.1)'}
@@ -231,18 +231,18 @@ export default function AddressBookPage() {
               border: '1px solid var(--primary)', borderStyle: 'dashed',
             }}>
               <span style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '0.85rem' }}>
-                ✉️ {selectedCount} {lang === 'bs' ? 'odabrano' : 'selected'}
+                ✉️ {selectedCount} {lang !== 'en' ? 'odabrano' : 'selected'}
               </span>
-              <button className="btn btn-primary btn-sm" onClick={() => openOutlook(false)} title={lang === 'bs' ? 'Pošalji email odabranim radnicima' : 'Send email to selected'}>
-                {lang === 'bs' ? 'Novi email (Outlook)' : 'New Email (Outlook)'}
+              <button className="btn btn-primary btn-sm" onClick={() => openOutlook(false)} title={lang !== 'en' ? 'Pošalji email odabranim radnicima' : 'Send email to selected'}>
+                {lang !== 'en' ? 'Novi email (Outlook)' : 'New Email (Outlook)'}
               </button>
               <button className="btn btn-ghost btn-sm" onClick={() => {
                 copyAllEmails(true);
-              }} title={lang === 'bs' ? 'Kopiraj odabrane emailove' : 'Copy selected emails'}>
-                📋 {lang === 'bs' ? 'Kopiraj emailove' : 'Copy Emails'}
+              }} title={lang !== 'en' ? 'Kopiraj odabrane emailove' : 'Copy selected emails'}>
+                📋 {lang !== 'en' ? 'Kopiraj emailove' : 'Copy Emails'}
               </button>
-              <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())} style={{ marginLeft: 'auto' }} title={lang === 'bs' ? 'Poništi odabir radnika' : 'Clear selection'}>
-                ✕ {lang === 'bs' ? 'Poništi odabir' : 'Clear'}
+              <button className="btn btn-ghost btn-sm" onClick={() => setSelected(new Set())} style={{ marginLeft: 'auto' }} title={lang !== 'en' ? 'Poništi odabir radnika' : 'Clear selection'}>
+                ✕ {lang !== 'en' ? 'Poništi odabir' : 'Clear'}
               </button>
             </div>
           )}

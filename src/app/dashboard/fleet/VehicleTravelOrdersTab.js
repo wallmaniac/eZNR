@@ -6,7 +6,7 @@ import DateInput from '@/components/DateInput';
 
 export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, reloadData }) {
     const { t, lang } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const { confirm } = useDialog();
     const vehicle = vehicles.find(v => v.id === vehicleId) || {};
     const getOrders = () => getRawAll(COLLECTIONS.TRAVEL_ORDERS).filter(o => o.vehicleId === vehicleId);

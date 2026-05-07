@@ -53,7 +53,7 @@ function AlertsWidget({ groups, total, lang }) {
             <div className="card" style={{ border: '1px solid rgba(244,67,54,0.18)', background: 'rgba(244,67,54,0.015)' }}>
                 <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                     <span style={{ fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.85rem', color: 'var(--danger)', flexShrink: 0 }}>
-                        🚨 {total} {lang === 'bs' ? 'stavki zahtijeva pažnju' : 'items need attention'}
+                        🚨 {total} {lang !== 'en' ? 'stavki zahtijeva pažnju' : 'items need attention'}
                     </span>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1 }}>
                         {groups.map(g => {
@@ -100,7 +100,7 @@ function AlertsWidget({ groups, total, lang }) {
                             animation: 'fadeIn 0.15s ease',
                         }}>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: g.color, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                {g.icon} {g.label} — {lang === 'bs' ? 'Odaberite stavku:' : 'Select an item:'}
+                                {g.icon} {g.label} — {lang !== 'en' ? 'Odaberite stavku:' : 'Select an item:'}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 6 }}>
                                 {g.items.map((item, idx) => (
@@ -367,10 +367,10 @@ export default function DashboardPage() {
 
     const getTabTitle = () => {
         switch (activeTab) {
-            case 'new': return lang === 'bs' ? 'Radnici zaposleni u posljednjih 30 dana' : 'Workers employed in last 30 days';
-            case 'terminations': return lang === 'bs' ? 'Prestanci radnog odnosa' : 'Terminations';
-            case 'certs': return lang === 'bs' ? 'Uvjerenja i osposobljavanja' : 'Certificates and training';
-            case 'ppe': return lang === 'bs' ? 'Osobna zaštitna sredstva' : 'Personal protective equipment';
+            case 'new': return lang !== 'en' ? 'Radnici zaposleni u posljednjih 30 dana' : 'Workers employed in last 30 days';
+            case 'terminations': return lang !== 'en' ? 'Prestanci radnog odnosa' : 'Terminations';
+            case 'certs': return lang !== 'en' ? 'Uvjerenja i osposobljavanja' : 'Certificates and training';
+            case 'ppe': return lang !== 'en' ? 'Osobna zaštitna sredstva' : 'Personal protective equipment';
             default: return '';
         }
     };
@@ -380,9 +380,9 @@ export default function DashboardPage() {
 
     const MONTH_LABELS_BS = ['Januar', 'Februar', 'Mart', 'April', 'Maj', 'Juni', 'Juli', 'August', 'Septembar', 'Oktobar', 'Novembar', 'Decembar'];
     const MONTH_LABELS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const monthName = `${(lang === 'bs' ? MONTH_LABELS_BS : MONTH_LABELS_EN)[month]} ${year}`;
+    const monthName = `${(lang !== 'en' ? MONTH_LABELS_BS : MONTH_LABELS_EN)[month]} ${year}`;
     
-    const dayNames = lang === 'bs'
+    const dayNames = lang !== 'en'
         ? ['Pon', 'Uto', 'Sri', 'Čet', 'Pet', 'Sub', 'Ned']
         : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -502,7 +502,7 @@ export default function DashboardPage() {
     };
 
     const handleDeleteWorker = async (worker) => {
-        const ok = await confirm(lang === 'bs'
+        const ok = await confirm(lang !== 'en'
             ? `Obrisati radnika ${worker.ime} ${worker.prezime}? Svi povezani podaci (uvjerenja, OZO, događaji) će biti obrisani.`
             : `Delete worker ${worker.ime} ${worker.prezime}? All associated data (certs, PPE, events) will be deleted.`);
         if (ok) {
@@ -547,7 +547,7 @@ export default function DashboardPage() {
         setDiseasesData(getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids));
         setNotifSettings(getNotificationSettings() || {});
         if (typeof window !== 'undefined' && window.eznrToast) {
-            window.eznrToast(lang === 'bs' ? 'Podaci osvježeni' : 'Data refreshed', 'success', 2000);
+            window.eznrToast(lang !== 'en' ? 'Podaci osvježeni' : 'Data refreshed', 'success', 2000);
         }
     };
 
@@ -559,29 +559,29 @@ export default function DashboardPage() {
                 position={lpMenu.pos}
                 onClose={() => setLpMenu({ open: false, pos: null, worker: null })}
                 items={lpMenu.worker ? [
-                    { icon: '👤', label: lang === 'bs' ? 'Otvori profil' : 'Open profile', onClick: () => handleWorkerAction('open', lpMenu.worker) },
-                    { icon: '📜', label: lang === 'bs' ? 'Uvjerenja' : 'Certificates', onClick: () => handleWorkerAction('certs', lpMenu.worker) },
-                    { icon: '🦺', label: lang === 'bs' ? 'OZO oprema' : 'PPE', onClick: () => handleWorkerAction('ppe', lpMenu.worker) },
-                    { icon: '🏥', label: lang === 'bs' ? 'Ljekarski' : 'Medical', onClick: () => router.push('/dashboard/medical-exams') },
-                    { icon: '🗑️', label: lang === 'bs' ? 'Obriši' : 'Delete', onClick: () => handleWorkerAction('delete', lpMenu.worker), danger: true },
+                    { icon: '👤', label: lang !== 'en' ? 'Otvori profil' : 'Open profile', onClick: () => handleWorkerAction('open', lpMenu.worker) },
+                    { icon: '📜', label: lang !== 'en' ? 'Uvjerenja' : 'Certificates', onClick: () => handleWorkerAction('certs', lpMenu.worker) },
+                    { icon: '🦺', label: lang !== 'en' ? 'OZO oprema' : 'PPE', onClick: () => handleWorkerAction('ppe', lpMenu.worker) },
+                    { icon: '🏥', label: lang !== 'en' ? 'Ljekarski' : 'Medical', onClick: () => router.push('/dashboard/medical-exams') },
+                    { icon: '🗑️', label: lang !== 'en' ? 'Obriši' : 'Delete', onClick: () => handleWorkerAction('delete', lpMenu.worker), danger: true },
                 ] : []}
             />
 
             {/* Stats Cards — now clickable */}
-            <CollapsibleWidget id="stats" title={lang === 'bs' ? 'Pregled' : 'Overview'} icon="📊" isMobile={isMobile}>
+            <CollapsibleWidget id="stats" title={lang !== 'en' ? 'Pregled' : 'Overview'} icon="📊" isMobile={isMobile}>
                 <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)', gap: 10, marginBottom: 24 }}>
                     <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} />
                     <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} />
-                    <StatCard icon="⏰" label={lang === 'bs' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} />
+                    <StatCard icon="⏰" label={lang !== 'en' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} />
                     <StatCard icon="⚙️" label={t('workEquipment')} value={stats.activeEquip} color="#607D8B" onClick={() => handleStatClick('/dashboard/equipment')} />
                     {stats.totalExpired > 0 && (
-                        <StatCard icon="🚨" label={lang === 'bs' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert />
+                        <StatCard icon="🚨" label={lang !== 'en' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert />
                     )}
                 </div>
             </CollapsibleWidget>
 
             {/* ── Actionable Alerts Widget ── */}
-            <CollapsibleWidget id="alerts" title={lang === 'bs' ? 'Upozorenja' : 'Alerts'} icon="🚨" isMobile={isMobile}>
+            <CollapsibleWidget id="alerts" title={lang !== 'en' ? 'Upozorenja' : 'Alerts'} icon="🚨" isMobile={isMobile}>
                 {(() => {
                     const now = new Date();
                     const d30 = 30 * 86400000;
@@ -622,7 +622,7 @@ export default function DashboardPage() {
                     const groups = [
                         expiredCertsRaw.length > 0 && {
                             key: 'expCert', icon: '📜', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
-                            label: lang === 'bs' ? 'Istekla uvjerenja' : 'Expired certificates',
+                            label: lang !== 'en' ? 'Istekla uvjerenja' : 'Expired certificates',
                             items: expiredCertsRaw,
                             onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
                             itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
@@ -630,7 +630,7 @@ export default function DashboardPage() {
                         },
                         expiringCertsRaw.length > 0 && {
                             key: 'expirCert', icon: '⏰', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                            label: lang === 'bs' ? 'Ističe za 30 dana' : 'Expiring in 30 days',
+                            label: lang !== 'en' ? 'Ističe za 30 dana' : 'Expiring in 30 days',
                             items: expiringCertsRaw,
                             onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
                             itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
@@ -638,7 +638,7 @@ export default function DashboardPage() {
                         },
                         overdueMedRaw.length > 0 && {
                             key: 'med', icon: '🩺', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
-                            label: lang === 'bs' ? 'Prekoračeni med. pregledi' : 'Overdue medical exams',
+                            label: lang !== 'en' ? 'Prekoračeni med. pregledi' : 'Overdue medical exams',
                             items: overdueMedRaw,
                             onItemClick: m => router.push('/dashboard/medical-exams'),
                             itemLabel: m => <><strong>{m.wName || '?'}</strong>{m.tipPregleda ? ` — ${m.tipPregleda}` : ''}</>,
@@ -646,7 +646,7 @@ export default function DashboardPage() {
                         },
                         equipDueRaw.length > 0 && {
                             key: 'equip', icon: '⚙️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                            label: lang === 'bs' ? 'Zakašnjeli pregledi opreme' : 'Overdue equipment inspections',
+                            label: lang !== 'en' ? 'Zakašnjeli pregledi opreme' : 'Overdue equipment inspections',
                             items: equipDueRaw,
                             onItemClick: e => router.push('/dashboard/equipment'),
                             itemLabel: e => <>{e.naziv}</>,
@@ -654,7 +654,7 @@ export default function DashboardPage() {
                         },
                         riskMeasuresDueRaw.length > 0 && {
                             key: 'riskDue', icon: '🛡️', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
-                            label: lang === 'bs' ? 'Istekli rokovi mjera (Procjena)' : 'Overdue risk measures',
+                            label: lang !== 'en' ? 'Istekli rokovi mjera (Procjena)' : 'Overdue risk measures',
                             items: riskMeasuresDueRaw,
                             onItemClick: r => router.push('/dashboard/risk-assessment'),
                             itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
@@ -662,7 +662,7 @@ export default function DashboardPage() {
                         },
                         riskMeasuresSoonRaw.length > 0 && {
                             key: 'riskSoon', icon: '🛡️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                            label: lang === 'bs' ? 'Mjere ističu za 30 dana' : 'Measures expiring in 30 days',
+                            label: lang !== 'en' ? 'Mjere ističu za 30 dana' : 'Measures expiring in 30 days',
                             items: riskMeasuresSoonRaw,
                             onItemClick: r => router.push('/dashboard/risk-assessment'),
                             itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
@@ -678,7 +678,7 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Analytics Charts */}
-            <CollapsibleWidget id="analytics" title={lang === 'bs' ? 'Analitika' : 'Analytics'} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={true}>
+            <CollapsibleWidget id="analytics" title={lang !== 'en' ? 'Analitika' : 'Analytics'} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={true}>
                 <AnalyticsWidgets
                     workers={workers}
                     certs={certs}
@@ -693,13 +693,13 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Calendar */}
-            <CollapsibleWidget id="calendar" title={lang === 'bs' ? 'Kalendar' : 'Calendar'} icon="📅" isMobile={isMobile}>
+            <CollapsibleWidget id="calendar" title={lang !== 'en' ? 'Kalendar' : 'Calendar'} icon="📅" isMobile={isMobile}>
                 <div className="card" style={{ marginBottom: 24 }}>
                     <div className="card-body">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 16 }}>
                             <div style={{ justifySelf: 'start' }}>
-                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth} title={lang === 'bs' ? 'Prethodni mjesec' : 'Previous month'}>
-                                    ◀ {!isMobile && (lang === 'bs' ? ' Prethodni' : ' Previous')}
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth} title={lang !== 'en' ? 'Prethodni mjesec' : 'Previous month'}>
+                                    ◀ {!isMobile && (lang !== 'en' ? ' Prethodni' : ' Previous')}
                                 </button>
                             </div>
 
@@ -723,7 +723,7 @@ export default function DashboardPage() {
                                 </h2>
 
                                 {showMonthPicker && (() => {
-                                    const MONTH_LABELS = lang === 'bs'
+                                    const MONTH_LABELS = lang !== 'en'
                                         ? ['Jan', 'Feb', 'Mar', 'Apr', 'Maj', 'Jun', 'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dec']
                                         : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                                     const now = new Date();
@@ -801,13 +801,13 @@ export default function DashboardPage() {
                                                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 6, transition: 'color 0.12s' }}
                                                     onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
                                                     onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-                                                >{lang === 'bs' ? 'Poništi' : 'Clear'}</button>
+                                                >{lang !== 'en' ? 'Poništi' : 'Clear'}</button>
                                                 <button
                                                     onClick={() => { setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1)); setShowMonthPicker(false); }}
                                                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, padding: '2px 6px', borderRadius: 6, transition: 'opacity 0.12s' }}
                                                     onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
                                                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                                                >{lang === 'bs' ? 'Ovaj mjesec' : 'This month'}</button>
+                                                >{lang !== 'en' ? 'Ovaj mjesec' : 'This month'}</button>
                                             </div>
                                         </div>
                                     );
@@ -815,8 +815,8 @@ export default function DashboardPage() {
                             </div>
 
                             <div style={{ justifySelf: 'end' }}>
-                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth} title={lang === 'bs' ? 'Sljedeći mjesec' : 'Next month'}>
-                                    {!isMobile && (lang === 'bs' ? 'Sljedeći ' : 'Next ')}▶
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth} title={lang !== 'en' ? 'Sljedeći mjesec' : 'Next month'}>
+                                    {!isMobile && (lang !== 'en' ? 'Sljedeći ' : 'Next ')}▶
                                 </button>
                             </div>
                         </div>
@@ -905,7 +905,7 @@ export default function DashboardPage() {
                                                     {!ev.auto && (
                                                         <button
                                                             onClick={(e) => handleDeleteEvent(ev, e)}
-                                                            title={lang === 'bs' ? 'Obriši događaj' : 'Delete event'}
+                                                            title={lang !== 'en' ? 'Obriši događaj' : 'Delete event'}
                                                             style={{
                                                                 background: 'none', border: 'none', cursor: 'pointer',
                                                                 padding: '0 2px', lineHeight: 1, fontSize: '0.7rem',
@@ -928,14 +928,14 @@ export default function DashboardPage() {
                         </div>
 
                         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem', flexWrap: 'wrap' }}>
-                            <Legend color="var(--info)" bg="rgba(33,150,243,0.12)" label={lang === 'bs' ? '📜 Uvjerenja' : '📜 Certificates'} />
-                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang === 'bs' ? '🔧 Servis' : '🔧 Service'} />
+                            <Legend color="var(--info)" bg="rgba(33,150,243,0.12)" label={lang !== 'en' ? '📜 Uvjerenja' : '📜 Certificates'} />
+                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang !== 'en' ? '🔧 Servis' : '🔧 Service'} />
                             <Legend color="var(--warning)" bg="rgba(255,152,0,0.12)" label="🦺 ZS" />
-                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang === 'bs' ? '⚙️ Oprema' : '⚙️ Equipment'} />
-                            <Legend color="#9C27B0" bg="rgba(156,39,176,0.12)" label={lang === 'bs' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
-                            <Legend color="#6A1B9A" bg="#F3E5F5" label={lang === 'bs' ? '📄 Dokumenti' : '📄 Documents'} />
-                            <Legend color="var(--danger)" bg="rgba(244,67,54,0.12)" label={lang === 'bs' ? '⚠️ Isteklo' : '⚠️ Expired'} />
-                            <Legend color="var(--warning)" bg="#FFF8E1" label={lang === 'bs' ? '⏰ Uskoro' : '⏰ Soon'} />
+                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang !== 'en' ? '⚙️ Oprema' : '⚙️ Equipment'} />
+                            <Legend color="#9C27B0" bg="rgba(156,39,176,0.12)" label={lang !== 'en' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
+                            <Legend color="#6A1B9A" bg="#F3E5F5" label={lang !== 'en' ? '📄 Dokumenti' : '📄 Documents'} />
+                            <Legend color="var(--danger)" bg="rgba(244,67,54,0.12)" label={lang !== 'en' ? '⚠️ Isteklo' : '⚠️ Expired'} />
+                            <Legend color="var(--warning)" bg="#FFF8E1" label={lang !== 'en' ? '⏰ Uskoro' : '⏰ Soon'} />
                         </div>
                     </div>
                 </div>
@@ -945,16 +945,16 @@ export default function DashboardPage() {
                     <div className="modal-overlay" onClick={() => setDayDetailDate(null)}>
                         <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
-                                <h2 style={{ color: 'white' }}>📅 {new Date(dayDetailDate + 'T12:00:00').toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
+                                <h2 style={{ color: 'white' }}>📅 {new Date(dayDetailDate + 'T12:00:00').toLocaleDateString(lang !== 'en' ? 'bs-BA' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setDayDetailDate(null)}>✕</button>
                             </div>
                             <div className="modal-body" style={{ maxHeight: 400, overflowY: 'auto' }}>
                                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase' }}>
-                                    {dayDetailEvents.length} {lang === 'bs' ? 'događaj(a)' : 'event(s)'}
+                                    {dayDetailEvents.length} {lang !== 'en' ? 'događaj(a)' : 'event(s)'}
                                 </div>
                                 {dayDetailEvents.map((ev, idx) => {
                                     const tipIcon = ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ev.tip === 'risk' ? '🛡️' : '📌';
-                                    const tipLabel = ev.tip === 'cert' ? (lang === 'bs' ? 'Uvjerenje' : 'Certificate') : ev.tip === 'ppe' ? 'OZO' : ev.tip === 'equip' ? (lang === 'bs' ? 'Oprema' : 'Equipment') : ev.tip === 'doc' ? (lang === 'bs' ? 'Dokument' : 'Document') : ev.tip === 'service' ? 'Servis' : ev.tip === 'risk' ? (lang === 'bs' ? 'Mjera rizika' : 'Risk Measure') : (lang === 'bs' ? 'Događaj' : 'Event');
+                                    const tipLabel = ev.tip === 'cert' ? (lang !== 'en' ? 'Uvjerenje' : 'Certificate') : ev.tip === 'ppe' ? 'OZO' : ev.tip === 'equip' ? (lang !== 'en' ? 'Oprema' : 'Equipment') : ev.tip === 'doc' ? (lang !== 'en' ? 'Dokument' : 'Document') : ev.tip === 'service' ? 'Servis' : ev.tip === 'risk' ? (lang !== 'en' ? 'Mjera rizika' : 'Risk Measure') : (lang !== 'en' ? 'Događaj' : 'Event');
                                     const isExpired = ev.datum && new Date(ev.datum) < new Date();
                                     return (
                                         <div key={ev.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, marginBottom: 6, background: isExpired ? 'rgba(198,40,40,0.06)' : 'rgba(0,191,166,0.04)', border: '1px solid ' + (isExpired ? 'rgba(198,40,40,0.15)' : 'var(--border-light)'), cursor: 'pointer', transition: 'all 0.15s' }}
@@ -965,8 +965,8 @@ export default function DashboardPage() {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{ev.opis || tipLabel}</div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
-                                                    <span style={{ background: isExpired ? 'rgba(244,67,54,0.12)' : 'rgba(33,150,243,0.12)', color: isExpired ? 'var(--danger)' : 'var(--info)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (lang === 'bs' ? 'Isteklo' : 'Expired') : tipLabel}</span>
-                                                    {ev.auto && <span style={{ background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', padding: '1px 6px', borderRadius: 4 }}>{lang === 'bs' ? 'Auto' : 'Auto'}</span>}
+                                                    <span style={{ background: isExpired ? 'rgba(244,67,54,0.12)' : 'rgba(33,150,243,0.12)', color: isExpired ? 'var(--danger)' : 'var(--info)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (lang !== 'en' ? 'Isteklo' : 'Expired') : tipLabel}</span>
+                                                    {ev.auto && <span style={{ background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', padding: '1px 6px', borderRadius: 4 }}>{lang !== 'en' ? 'Auto' : 'Auto'}</span>}
                                                     {ev.companyName && <span style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 6px', borderRadius: 4 }}>🏢 {ev.companyName}</span>}
                                                 </div>
                                             </div>
@@ -985,7 +985,7 @@ export default function DashboardPage() {
                                         ppeNaziv: '', ppeDatum: dayDetailDate, ppeKolicina: 1, machineId: '',
                                     });
                                     setEventFormError(''); setShowEventForm(true);
-                                }}>➕ {lang === 'bs' ? 'Novi događaj' : 'New event'}</button>
+                                }}>➕ {lang !== 'en' ? 'Novi događaj' : 'New event'}</button>
                             </div>
                         </div>
                     </div>
@@ -995,7 +995,7 @@ export default function DashboardPage() {
                     <div className="modal-overlay" onClick={() => setShowEventForm(false)}>
                         <div className="modal" style={{ maxWidth: 540 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
-                                <h2>📅 {lang === 'bs' ? 'Novi događaj' : 'New Event'} — {formatDate(eventFormDate)}</h2>
+                                <h2>📅 {lang !== 'en' ? 'Novi događaj' : 'New Event'} — {formatDate(eventFormDate)}</h2>
                                 <button className="btn btn-ghost btn-icon" onClick={() => setShowEventForm(false)}>✕</button>
                             </div>
                             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -1010,21 +1010,21 @@ export default function DashboardPage() {
 
                                 {/* Event type */}
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Tip događaja' : 'Event type'}</label>
+                                    <label className="form-label">{lang !== 'en' ? 'Tip događaja' : 'Event type'}</label>
                                     <select className="form-select" value={eventFormData.tip}
                                         onChange={e => setEventFormData(prev => ({ ...prev, tip: e.target.value }))}>
-                                        <option value="cert">{lang === 'bs' ? '📜 Uvjerenja / Osposobljavanje' : '📜 Certificates / Training'}</option>
-                                        <option value="service">{lang === 'bs' ? '🔧 Servis / Održavanje' : '🔧 Service / Maintenance'}</option>
-                                        <option value="ppe">{lang === 'bs' ? '🦺 Zaštitna oprema (OZO)' : '🦺 PPE'}</option>
-                                        <option value="equip">{lang === 'bs' ? '⚙️ Radna oprema / Objekti' : '⚙️ Equipment'}</option>
-                                        <option value="doc">{lang === 'bs' ? '📋 Dokumentacija' : '📋 Documentation'}</option>
-                                        <option value="other">{lang === 'bs' ? 'Ostalo' : 'Other'}</option>
+                                        <option value="cert">{lang !== 'en' ? '📜 Uvjerenja / Osposobljavanje' : '📜 Certificates / Training'}</option>
+                                        <option value="service">{lang !== 'en' ? '🔧 Servis / Održavanje' : '🔧 Service / Maintenance'}</option>
+                                        <option value="ppe">{lang !== 'en' ? '🦺 Zaštitna oprema (OZO)' : '🦺 PPE'}</option>
+                                        <option value="equip">{lang !== 'en' ? '⚙️ Radna oprema / Objekti' : '⚙️ Equipment'}</option>
+                                        <option value="doc">{lang !== 'en' ? '📋 Dokumentacija' : '📋 Documentation'}</option>
+                                        <option value="other">{lang !== 'en' ? 'Ostalo' : 'Other'}</option>
                                     </select>
                                 </div>
 
                                 {/* Company selector */}
                                 <div className="form-group">
-                                    <label className="form-label">🏢 {lang === 'bs' ? 'Firma' : 'Company'}</label>
+                                    <label className="form-label">🏢 {lang !== 'en' ? 'Firma' : 'Company'}</label>
                                     <select className="form-select" value={eventFormData.companyId}
                                         onChange={e => setEventFormData(prev => ({ ...prev, companyId: e.target.value, workerId: '' }))}>
                                         {companies.filter(c => (user?.companyIds || []).includes(c.id)).map(c => (
@@ -1036,10 +1036,10 @@ export default function DashboardPage() {
                                 {/* Machine selector for Service */}
                                 {eventFormData.tip === 'service' && (
                                     <div className="form-group">
-                                        <label className="form-label">⚙️ {lang === 'bs' ? 'Stroj / Oprema' : 'Machine / Equipment'}</label>
+                                        <label className="form-label">⚙️ {lang !== 'en' ? 'Stroj / Oprema' : 'Machine / Equipment'}</label>
                                         <select className="form-select" value={eventFormData.machineId}
                                             onChange={e => setEventFormData(prev => ({ ...prev, machineId: e.target.value }))}>
-                                            <option value="">{lang === 'bs' ? '— Odaberi stroj —' : '— Select machine —'}</option>
+                                            <option value="">{lang !== 'en' ? '— Odaberi stroj —' : '— Select machine —'}</option>
                                             {equipment.filter(e => !eventFormData.companyId || e.companyId === eventFormData.companyId).map(eq => (
                                                 <option key={eq.id} value={eq.id}>{eq.naziv} ({eq.invBroj || eq.serijskiBroj})</option>
                                             ))}
@@ -1066,7 +1066,7 @@ export default function DashboardPage() {
                                     return (
                                         <div className="form-group">
                                             <label className="form-label">
-                                                👤 {lang === 'bs' ? 'Radnik (opcionalno)' : 'Worker (optional)'}
+                                                👤 {lang !== 'en' ? 'Radnik (opcionalno)' : 'Worker (optional)'}
                                             </label>
                                             <div ref={workerDropRef} style={{ position: 'relative' }}>
                                                 <div style={{
@@ -1084,7 +1084,7 @@ export default function DashboardPage() {
                                                             if (!e.target.value) setEventFormData(prev => ({ ...prev, workerId: '' }));
                                                         }}
                                                         onFocus={() => setWorkerDropOpen(true)}
-                                                        placeholder={selectedWorker ? (selectedWorker.prezime + ' ' + selectedWorker.ime) : (lang === 'bs' ? 'Pretraži radnika...' : 'Search worker...')}
+                                                        placeholder={selectedWorker ? (selectedWorker.prezime + ' ' + selectedWorker.ime) : (lang !== 'en' ? 'Pretraži radnika...' : 'Search worker...')}
                                                         style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '10px 12px', fontSize: '0.9rem', fontFamily: 'var(--font-body)', color: 'var(--text)' }}
                                                     />
                                                     {(eventFormData.workerId || workerSearch) && (
@@ -1111,10 +1111,10 @@ export default function DashboardPage() {
                                                             style={{ padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', fontStyle: 'italic' }}
                                                             onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.07)'}
                                                             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                        >— {lang === 'bs' ? 'Bez radnika' : 'No worker'} —</div>
+                                                        >— {lang !== 'en' ? 'Bez radnika' : 'No worker'} —</div>
                                                         {filtered.length === 0 && (
                                                             <div style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                                                                {lang === 'bs' ? 'Nema rezultata' : 'No results'}
+                                                                {lang !== 'en' ? 'Nema rezultata' : 'No results'}
                                                             </div>
                                                         )}
                                                         {filtered.map(w => (
@@ -1144,13 +1144,13 @@ export default function DashboardPage() {
                                     <>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                             <div className="form-group">
-                                                <label className="form-label">{lang === 'bs' ? 'Naziv uvjerenja *' : 'Certificate name *'}</label>
+                                                <label className="form-label">{lang !== 'en' ? 'Naziv uvjerenja *' : 'Certificate name *'}</label>
                                                 <input className="form-input" value={eventFormData.certNaziv}
                                                     onChange={e => setEventFormData(prev => ({ ...prev, certNaziv: e.target.value }))}
-                                                    placeholder={lang === 'bs' ? 'npr. Osposobljavanje ZNR' : 'e.g. OHS Training'} />
+                                                    placeholder={lang !== 'en' ? 'npr. Osposobljavanje ZNR' : 'e.g. OHS Training'} />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">{lang === 'bs' ? 'Tip uvjerenja' : 'Certificate type'}</label>
+                                                <label className="form-label">{lang !== 'en' ? 'Tip uvjerenja' : 'Certificate type'}</label>
                                                 <select className="form-select" value={eventFormData.certTip}
                                                     onChange={e => {
                                                         const ct = certTypes.find(c => c.naziv === e.target.value);
@@ -1159,36 +1159,36 @@ export default function DashboardPage() {
                                                             : eventFormData.certVrijediDo;
                                                         setEventFormData(prev => ({ ...prev, certTip: e.target.value, certNaziv: ct?.naziv || prev.certNaziv, certOznaka: ct?.oznaka || prev.certOznaka, certVrijediDo: vrijediDo }));
                                                     }}>
-                                                    <option value="">{lang === 'bs' ? '— Odaberi —' : '— Select —'}</option>
+                                                    <option value="">{lang !== 'en' ? '— Odaberi —' : '— Select —'}</option>
                                                     {certTypes.filter((ct, idx, arr) => arr.findIndex(x => x.naziv === ct.naziv) === idx).map(ct => <option key={ct.id} value={ct.naziv}>{ct.naziv}</option>)}
                                                 </select>
                                             </div>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                                             <div className="form-group">
-                                                <label className="form-label">{lang === 'bs' ? 'Oznaka' : 'Code'}</label>
+                                                <label className="form-label">{lang !== 'en' ? 'Oznaka' : 'Code'}</label>
                                                 <input className="form-input" value={eventFormData.certOznaka}
                                                     onChange={e => setEventFormData(prev => ({ ...prev, certOznaka: e.target.value }))}
                                                     placeholder="ZNR-001" />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">{lang === 'bs' ? 'Datum izdavanja' : 'Issue date'}</label>
+                                                <label className="form-label">{lang !== 'en' ? 'Datum izdavanja' : 'Issue date'}</label>
                                                 <DateInput value={eventFormData.certDatum}
                                                     onChange={v => setEventFormData(prev => ({ ...prev, certDatum: v }))} />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">{lang === 'bs' ? 'Vrijedi do' : 'Valid until'}</label>
+                                                <label className="form-label">{lang !== 'en' ? 'Vrijedi do' : 'Valid until'}</label>
                                                 <DateInput value={eventFormData.certVrijediDo}
                                                     onChange={v => setEventFormData(prev => ({ ...prev, certVrijediDo: v }))} />
                                             </div>
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang === 'bs' ? 'Sposobnost' : 'Fitness'}</label>
+                                            <label className="form-label">{lang !== 'en' ? 'Sposobnost' : 'Fitness'}</label>
                                             <select className="form-select" value={eventFormData.certSposobnost}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, certSposobnost: e.target.value }))}>
-                                                <option value="Sposoban">{lang === 'bs' ? 'Sposoban' : 'Fit'}</option>
-                                                <option value="Nesposoban">{lang === 'bs' ? 'Nesposoban' : 'Unfit'}</option>
-                                                <option value="Uvjetno sposoban">{lang === 'bs' ? 'Uvjetno sposoban' : 'Conditionally fit'}</option>
+                                                <option value="Sposoban">{lang !== 'en' ? 'Sposoban' : 'Fit'}</option>
+                                                <option value="Nesposoban">{lang !== 'en' ? 'Nesposoban' : 'Unfit'}</option>
+                                                <option value="Uvjetno sposoban">{lang !== 'en' ? 'Uvjetno sposoban' : 'Conditionally fit'}</option>
                                             </select>
                                         </div>
                                     </>
@@ -1198,26 +1198,26 @@ export default function DashboardPage() {
                                 {eventFormData.tip === 'ppe' && (
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 80px', gap: 12 }}>
                                         <div className="form-group">
-                                            <label className="form-label">{lang === 'bs' ? 'Naziv OZO *' : 'PPE name *'}</label>
+                                            <label className="form-label">{lang !== 'en' ? 'Naziv OZO *' : 'PPE name *'}</label>
                                             <select className="form-select" value={eventFormData.ppeNaziv}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, ppeNaziv: e.target.value }))}>
-                                                <option value="">{lang === 'bs' ? '— Odaberi —' : '— Select —'}</option>
+                                                <option value="">{lang !== 'en' ? '— Odaberi —' : '— Select —'}</option>
                                                 {ppeTypes.map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
-                                                <option value="__custom">{lang === 'bs' ? 'Unesi ručno...' : 'Enter manually...'}</option>
+                                                <option value="__custom">{lang !== 'en' ? 'Unesi ručno...' : 'Enter manually...'}</option>
                                             </select>
                                             {eventFormData.ppeNaziv === '__custom' && (
                                                 <input className="form-input" style={{ marginTop: 6 }}
-                                                    placeholder={lang === 'bs' ? 'Naziv OZO...' : 'PPE name...'}
+                                                    placeholder={lang !== 'en' ? 'Naziv OZO...' : 'PPE name...'}
                                                     onChange={e => setEventFormData(prev => ({ ...prev, ppeNaziv: e.target.value }))} />
                                             )}
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
+                                            <label className="form-label">{lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</label>
                                             <DateInput value={eventFormData.ppeDatum}
                                                 onChange={v => setEventFormData(prev => ({ ...prev, ppeDatum: v }))} />
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang === 'bs' ? 'Kol.' : 'Qty'}</label>
+                                            <label className="form-label">{lang !== 'en' ? 'Kol.' : 'Qty'}</label>
                                             <input className="form-input" type="number" min="1" value={eventFormData.ppeKolicina}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, ppeKolicina: parseInt(e.target.value) || 1 }))} />
                                         </div>
@@ -1227,17 +1227,17 @@ export default function DashboardPage() {
                                 {/* Description + count for non-cert/ppe */}
                                 <div className="form-group">
                                     <label className="form-label">
-                                        {lang === 'bs' ? 'Opis događaja' : 'Event description'}
-                                        {(eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe') ? ' *' : ` (${lang === 'bs' ? 'opcionalno' : 'optional'})`}
+                                        {lang !== 'en' ? 'Opis događaja' : 'Event description'}
+                                        {(eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe') ? ' *' : ` (${lang !== 'en' ? 'opcionalno' : 'optional'})`}
                                     </label>
                                     <input className="form-input" value={eventFormData.opis}
                                         onChange={e => setEventFormData(prev => ({ ...prev, opis: e.target.value }))}
-                                        placeholder={lang === 'bs' ? 'Opis događaja...' : 'Event description...'} />
+                                        placeholder={lang !== 'en' ? 'Opis događaja...' : 'Event description...'} />
                                 </div>
 
                                 {eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe' && (
                                     <div className="form-group">
-                                        <label className="form-label">{lang === 'bs' ? 'Broj radnika' : 'Number of workers'}</label>
+                                        <label className="form-label">{lang !== 'en' ? 'Broj radnika' : 'Number of workers'}</label>
                                         <input className="form-input" type="number" min="1" value={eventFormData.count}
                                             onChange={e => setEventFormData(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))} />
                                     </div>
@@ -1246,7 +1246,7 @@ export default function DashboardPage() {
                                 {/* Info banner when worker linked */}
                                 {eventFormData.workerId && (eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
-                                        ✅ {lang === 'bs'
+                                        ✅ {lang !== 'en'
                                             ? `Zapis će biti dodan i u ${eventFormData.tip === 'cert' ? 'Popis uvjerenja' : 'Zaštitnu opremu'} radnika.`
                                             : `Record will also be added to worker's ${eventFormData.tip === 'cert' ? 'certificates list' : 'PPE list'}.`}
                                     </div>
@@ -1261,10 +1261,10 @@ export default function DashboardPage() {
                                         ppeNaziv, ppeDatum, ppeKolicina } = eventFormData;
 
                                     // Validation
-                                    if (tip === 'cert' && !certNaziv.trim() && !certTip) { setEventFormError(lang === 'bs' ? 'Naziv ili tip uvjerenja je obavezan!' : 'Certificate name or type is required!'); return; }
-                                    if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(lang === 'bs' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
-                                    if (tip === 'service' && !machineId) { setEventFormError(lang === 'bs' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
-                                    if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { setEventFormError(lang === 'bs' ? 'Opis je obavezan!' : 'Description is required!'); return; }
+                                    if (tip === 'cert' && !certNaziv.trim() && !certTip) { setEventFormError(lang !== 'en' ? 'Naziv ili tip uvjerenja je obavezan!' : 'Certificate name or type is required!'); return; }
+                                    if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(lang !== 'en' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
+                                    if (tip === 'service' && !machineId) { setEventFormError(lang !== 'en' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
+                                    if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { setEventFormError(lang !== 'en' ? 'Opis je obavezan!' : 'Description is required!'); return; }
 
                                     // Auto-generate description
                                     let autoOpis = opis;
@@ -1274,7 +1274,7 @@ export default function DashboardPage() {
                                     // 1. Build service description if needed
                                     if (tip === 'service' && !opis) {
                                         const m = equipment.find(e => e.id === machineId);
-                                        autoOpis = `${lang === 'bs' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`;
+                                        autoOpis = `${lang !== 'en' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`;
                                     }
                                     // Create calendar event (company-scoped)
                                     createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId, workerId: workerId || '' }, companyId);
@@ -1320,12 +1320,12 @@ export default function DashboardPage() {
                     <div className="modal-overlay" onClick={() => setDeleteEventTarget(null)}>
                         <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #C62828, #B71C1C)' }}>
-                                <h2 style={{ color: 'white' }}>🗑️ {lang === 'bs' ? 'Obriši događaj' : 'Delete event'}</h2>
+                                <h2 style={{ color: 'white' }}>🗑️ {lang !== 'en' ? 'Obriši događaj' : 'Delete event'}</h2>
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setDeleteEventTarget(null)}>✕</button>
                             </div>
                             <div className="modal-body">
                                 <p style={{ marginBottom: 12, color: 'var(--text-dark)' }}>
-                                    {lang === 'bs' ? 'Sigurno želiš obrisati ovaj događaj s kalendara?' : 'Are you sure you want to delete this event from the calendar?'}
+                                    {lang !== 'en' ? 'Sigurno želiš obrisati ovaj događaj s kalendara?' : 'Are you sure you want to delete this event from the calendar?'}
                                 </p>
                                 <div style={{ background: '#f8f9fa', borderRadius: 8, padding: '10px 14px', border: '1px solid #eee' }}>
                                     <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>
@@ -1337,7 +1337,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                    ⚠️ {lang === 'bs'
+                                    ⚠️ {lang !== 'en'
                                         ? 'Ovo briše samo unos s kalendara. Uvjerenja ili zaštitna oprema radnika ostaju nepromijenjeni.'
                                         : 'This only removes the calendar entry. Worker certificates or PPE records remain unchanged.'}
                                 </p>
@@ -1348,7 +1348,7 @@ export default function DashboardPage() {
                                 </button>
                                 <button className="btn btn-danger" onClick={confirmDeleteEvent}
                                     style={{ background: '#D32F2F', color: 'white', border: 'none' }}>
-                                    🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                    🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}
                                 </button>
                             </div>
                         </div>
@@ -1358,7 +1358,7 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Quick Tabs */}
-            <CollapsibleWidget id="workers" title={lang === 'bs' ? 'Radnici & Podaci' : 'Workers & Data'} icon="👷" isMobile={isMobile}>
+            <CollapsibleWidget id="workers" title={lang !== 'en' ? 'Radnici & Podaci' : 'Workers & Data'} icon="👷" isMobile={isMobile}>
                 <div className="card">
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 0, borderBottom: '3px solid var(--primary)', marginBottom: 20, overflowX: 'auto' }}>
@@ -1392,7 +1392,7 @@ export default function DashboardPage() {
                                 if (activeTab === 'certs') router.push('/dashboard/worker-certificates');
                                 else if (activeTab === 'ppe') router.push('/dashboard/worker-ppe');
                                 else router.push('/dashboard/workers');
-                            }} title={lang === 'bs' ? 'Dodaj novi unos' : 'Add new entry'}>+ {t('add')}</button>
+                            }} title={lang !== 'en' ? 'Dodaj novi unos' : 'Add new entry'}>+ {t('add')}</button>
                         </div>
 
                         {/* Workers Table (for new/terminations tabs) */}
@@ -1434,7 +1434,7 @@ export default function DashboardPage() {
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
                                                         <button className="btn btn-primary btn-sm"
                                                             onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}
-                                                            title={lang === 'bs' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
+                                                            title={lang !== 'en' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === w.id && (
@@ -1444,7 +1444,7 @@ export default function DashboardPage() {
                                                                 <button className="dropdown-item" onClick={() => handleWorkerAction('ppe', w)}>🦺 {t('personalProtective')}</button>
                                                                 <div className="dropdown-divider" />
                                                                 <button className="dropdown-item" onClick={() => handleWorkerAction('print', w)}>🖨️ {t('print')}</button>
-                                                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleWorkerAction('delete', w)}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                                                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleWorkerAction('delete', w)}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1478,7 +1478,7 @@ export default function DashboardPage() {
                                     <thead>
                                         <tr>
                                             <th>{t('actions')}</th>
-                                            <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
+                                            <th>{lang !== 'en' ? 'Radnik' : 'Worker'}</th>
                                             <th>{t('name')}</th>
                                             <th>{t('certCode')}</th>
                                             <th>{t('certDate')}</th>
@@ -1492,15 +1492,15 @@ export default function DashboardPage() {
                                             return (
                                                 <tr key={c.id || idx}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === `cert-${c.id}` ? actionRef : null}>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)} title={lang === 'bs' ? 'Prikaži akcije za uvjerenje' : 'Show certificate actions'}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)} title={lang !== 'en' ? 'Prikaži akcije za uvjerenje' : 'Show certificate actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === `cert-${c.id}` && (
                                                             <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, zIndex: 50 }}>
                                                                 <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`); }}>📂 {t('open')}</button>
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang === 'bs' ? 'Profil radnika' : 'Worker profile'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang !== 'en' ? 'Profil radnika' : 'Worker profile'}</button>
                                                                 <div className="dropdown-divider" />
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-certificates'); }}>📜 {lang === 'bs' ? 'Sva uvjerenja' : 'All certificates'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-certificates'); }}>📜 {lang !== 'en' ? 'Sva uvjerenja' : 'All certificates'}</button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1508,14 +1508,14 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                                            title={worker ? (lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
                                                         >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (lang === 'bs' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}
                                                         >{c.naziv || c.ime || '—'}</button>
                                                     </td>
                                                     <td><span className="badge badge-info">{c.oznaka}</span></td>
@@ -1539,10 +1539,10 @@ export default function DashboardPage() {
                                     <thead>
                                         <tr>
                                             <th>{t('actions')}</th>
-                                            <th>{lang === 'bs' ? 'Radnik' : 'Worker'}</th>
+                                            <th>{lang !== 'en' ? 'Radnik' : 'Worker'}</th>
                                             <th>{t('name')}</th>
-                                            <th>{lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</th>
-                                            <th>{lang === 'bs' ? 'Količina' : 'Quantity'}</th>
+                                            <th>{lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</th>
+                                            <th>{lang !== 'en' ? 'Količina' : 'Quantity'}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1551,15 +1551,15 @@ export default function DashboardPage() {
                                             return (
                                                 <tr key={p.id || idx}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === `ppe-${p.id}` ? actionRef : null}>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)} title={lang === 'bs' ? 'Prikaži akcije za opremu' : 'Show PPE actions'}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `ppe-${p.id}` ? null : `ppe-${p.id}`)} title={lang !== 'en' ? 'Prikaži akcije za opremu' : 'Show PPE actions'}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === `ppe-${p.id}` && (
                                                             <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, zIndex: 50 }}>
                                                                 <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=ozo`); }}>📂 {t('open')}</button>
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang === 'bs' ? 'Profil radnika' : 'Worker profile'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang !== 'en' ? 'Profil radnika' : 'Worker profile'}</button>
                                                                 <div className="dropdown-divider" />
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-ppe'); }}>🦺 {lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-ppe'); }}>🦺 {lang !== 'en' ? 'Sva OZO zaduženja' : 'All PPE assignments'}</button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1567,14 +1567,14 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                                            title={worker ? (lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
                                                         >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (lang === 'bs' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}
                                                         >{p.naziv || '—'}</button>
                                                     </td>
                                                     <td>{formatDate(p.datumZaduzenja)}</td>

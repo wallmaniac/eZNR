@@ -25,7 +25,7 @@ export default function GenericPage({ title, icon, translationKey, children }) {
                             <div className="empty-state-icon">{icon}</div>
                             <div className="empty-state-title">{t('noRecords')}</div>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                {lang === 'bs' ? 'Kliknite "Novi" da dodate prvi zapis.' : 'Click "New" to add the first record.'}
+                                {lang !== 'en' ? 'Kliknite "Novi" da dodate prvi zapis.' : 'Click "New" to add the first record.'}
                             </p>
                             <button className="btn btn-primary" style={{ marginTop: 16 }}>+ {t('add')}</button>
                         </div>

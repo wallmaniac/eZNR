@@ -102,7 +102,7 @@ export default function AdminUsersPage() {
                 refreshData();
             } else {
                 if (!payload.email || !payload.password) {
-                    await alert(lang === 'bs' ? 'Email i lozinka su obavezni za novog korisnika.' : 'Email and password are required for a new user.');
+                    await alert(lang !== 'en' ? 'Email i lozinka su obavezni za novog korisnika.' : 'Email and password are required for a new user.');
                     setIsSaving(false);
                     return;
                 }
@@ -110,7 +110,7 @@ export default function AdminUsersPage() {
                 // Check if user already exists in Firestore cache
                 const existingInDb = users.find(u => u.email === payload.email);
                 if (existingInDb) {
-                    await alert(lang === 'bs' ? 'Korisnik sa ovom email adresom već postoji u bazi.' : 'User with this email already exists in the database.');
+                    await alert(lang !== 'en' ? 'Korisnik sa ovom email adresom već postoji u bazi.' : 'User with this email already exists in the database.');
                     setIsSaving(false);
                     return;
                 }
@@ -147,7 +147,7 @@ export default function AdminUsersPage() {
 
     const handleDelete = async (u) => {
         if (u.id === user?.id) return;
-        const ok = await confirm(lang === 'bs' ? `Obrisati korisnika ${u.firstName} ${u.lastName}?` : `Delete user ${u.firstName} ${u.lastName}?`); if (ok) {
+        const ok = await confirm(lang !== 'en' ? `Obrisati korisnika ${u.firstName} ${u.lastName}?` : `Delete user ${u.firstName} ${u.lastName}?`); if (ok) {
             remove(COLLECTIONS.USERS, u.id);
             refreshData();
         }
@@ -178,11 +178,11 @@ export default function AdminUsersPage() {
             {/* Header — stack on mobile */}
             <PageHeader 
                 icon="👤" 
-                title={lang === 'bs' ? 'Upravljanje korisnicima' : 'User Management'} 
-                subtitle={lang === 'bs' ? 'Kreirajte, uređujte i upravljajte korisničkim računima' : 'Create, edit and manage user accounts'} 
+                title={lang !== 'en' ? 'Upravljanje korisnicima' : 'User Management'} 
+                subtitle={lang !== 'en' ? 'Kreirajte, uređujte i upravljajte korisničkim računima' : 'Create, edit and manage user accounts'} 
                 actions={
                     <button className="btn btn-primary btn-sm" onClick={openNew} style={{ flexShrink: 0 }}>
-                        ➕ {lang === 'bs' ? 'Novi korisnik' : 'New User'}
+                        ➕ {lang !== 'en' ? 'Novi korisnik' : 'New User'}
                     </button>
                 }
             />
@@ -190,10 +190,10 @@ export default function AdminUsersPage() {
             {/* Stats — 2x2 on mobile */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
                 {[
-                    { label: lang === 'bs' ? 'Ukupno' : 'Total', value: filteredUsers.length, icon: '👥', color: 'var(--primary)' },
+                    { label: lang !== 'en' ? 'Ukupno' : 'Total', value: filteredUsers.length, icon: '👥', color: 'var(--primary)' },
                     ...(isSuperAdmin ? [{ label: 'Superadmin', value: filteredUsers.filter(u => u.role === 'superadmin').length, icon: '👑', color: '#7B1FA2' }] : []),
-                    { label: lang === 'bs' ? 'Stručnjaci ZNR i Admini' : 'Officers & Admins', value: filteredUsers.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
-                    { label: lang === 'bs' ? 'Aktivni' : 'Active', value: filteredUsers.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
+                    { label: lang !== 'en' ? 'Stručnjaci ZNR i Admini' : 'Officers & Admins', value: filteredUsers.filter(u => u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin').length, icon: '🛡️', color: 'var(--info)' },
+                    { label: lang !== 'en' ? 'Aktivni' : 'Active', value: filteredUsers.filter(u => u.aktivan !== false).length, icon: '✅', color: 'var(--success)' },
                 ].map((s, i) => (
                     <div key={i} className="card" style={{ borderLeft: `4px solid ${s.color}` }}>
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px' }}>
@@ -216,7 +216,7 @@ export default function AdminUsersPage() {
                             className="form-input"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            placeholder={lang === 'bs' ? 'Pretraži korisnike (ime, prezime, email)...' : 'Search users...'}
+                            placeholder={lang !== 'en' ? 'Pretraži korisnike (ime, prezime, email)...' : 'Search users...'}
                             style={{ paddingLeft: 34, borderRadius: 'var(--radius-full)', width: '100%', boxSizing: 'border-box' }}
                         />
                         {searchTerm && (
@@ -229,7 +229,7 @@ export default function AdminUsersPage() {
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                         <select className="form-input" value={filterCompany} onChange={e => setFilterCompany(e.target.value)}
                             style={{ flex: 1, minWidth: 120, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
-                            <option value="all">🏢 {lang === 'bs' ? 'Sve firme' : 'All companies'}</option>
+                            <option value="all">🏢 {lang !== 'en' ? 'Sve firme' : 'All companies'}</option>
                             {companies.map(c => (
                                 <option key={c.id} value={c.id}>{c.naziv}</option>
                             ))}
@@ -237,9 +237,9 @@ export default function AdminUsersPage() {
                         {isSuperAdmin && (
                             <select className="form-input" value={filterRole} onChange={e => setFilterRole(e.target.value)}
                                 style={{ flex: 1, minWidth: 110, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
-                                <option value="all">👥 {lang === 'bs' ? 'Sve uloge' : 'All roles'}</option>
+                                <option value="all">👥 {lang !== 'en' ? 'Sve uloge' : 'All roles'}</option>
                                 <option value="superadmin">👑 Superadmin</option>
-                                <option value="officer">🛡️ {lang === 'bs' ? 'Stručnjak ZNR' : 'Officer'}</option>
+                                <option value="officer">🛡️ {lang !== 'en' ? 'Stručnjak ZNR' : 'Officer'}</option>
                                 <option value="admin">⚙️ Admin</option>
                             </select>
                         )}
@@ -254,7 +254,7 @@ export default function AdminUsersPage() {
             {filteredUsers.length === 0 ? (
                 <div className="card">
                     <div className="card-body" style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                        {searchTerm ? (lang === 'bs' ? 'Nema rezultata pretrage' : 'No search results') : t('noRecords')}
+                        {searchTerm ? (lang !== 'en' ? 'Nema rezultata pretrage' : 'No search results') : t('noRecords')}
                     </div>
                 </div>
             ) : (
@@ -338,28 +338,28 @@ export default function AdminUsersPage() {
                     <div className="modal" style={{ maxWidth: 520 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, #7B1FA2, #E040FB)' }}>
                             <h2 style={{ color: 'white' }}>
-                                {editUser ? '✏️' : '➕'} {editUser ? (lang === 'bs' ? 'Uredi korisnika' : 'Edit User') : (lang === 'bs' ? 'Novi korisnik' : 'New User')}
+                                {editUser ? '✏️' : '➕'} {editUser ? (lang !== 'en' ? 'Uredi korisnika' : 'Edit User') : (lang !== 'en' ? 'Novi korisnik' : 'New User')}
                             </h2>
                             <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowModal(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Ime' : 'First name'} *</label>
+                                    <label className="form-label">{lang !== 'en' ? 'Ime' : 'First name'} *</label>
                                     <input className="form-input" value={formData.firstName} onChange={e => setFormData(p => ({ ...p, firstName: e.target.value }))} required />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Prezime' : 'Last name'}</label>
+                                    <label className="form-label">{lang !== 'en' ? 'Prezime' : 'Last name'}</label>
                                     <input className="form-input" value={formData.lastName} onChange={e => setFormData(p => ({ ...p, lastName: e.target.value }))} />
                                 </div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Korisničko ime' : 'Username'} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>({lang === 'bs' ? 'opcionalno' : 'optional'})</span></label>
+                                    <label className="form-label">{lang !== 'en' ? 'Korisničko ime' : 'Username'} <span style={{ color: 'var(--text-muted)', fontWeight: 400, fontSize: '0.75rem' }}>({lang !== 'en' ? 'opcionalno' : 'optional'})</span></label>
                                     <input className="form-input" value={formData.username || ''} onChange={e => setFormData(p => ({ ...p, username: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{editUser ? (lang === 'bs' ? 'Nova lozinka' : 'New password') : (lang === 'bs' ? 'Lozinka' : 'Password')} {!editUser && '*'}</label>
+                                    <label className="form-label">{editUser ? (lang !== 'en' ? 'Nova lozinka' : 'New password') : (lang !== 'en' ? 'Lozinka' : 'Password')} {!editUser && '*'}</label>
                                     <div style={{ position: 'relative' }}>
                                         <input 
                                             className="form-input" 
@@ -377,7 +377,7 @@ export default function AdminUsersPage() {
                                                 background: 'none', border: 'none', cursor: 'pointer', 
                                                 fontSize: '1.1rem', opacity: 0.6, padding: 4 
                                             }}
-                                            title={showPassword ? (lang === 'bs' ? 'Sakrij lozinku' : 'Hide password') : (lang === 'bs' ? 'Prikaži lozinku' : 'Show password')}
+                                            title={showPassword ? (lang !== 'en' ? 'Sakrij lozinku' : 'Hide password') : (lang !== 'en' ? 'Prikaži lozinku' : 'Show password')}
                                         >
                                             {showPassword ? '👁️' : '👁️‍🗨️'}
                                         </button>
@@ -390,9 +390,9 @@ export default function AdminUsersPage() {
                                     <input className="form-input" type="email" value={formData.email} onChange={e => setFormData(p => ({ ...p, email: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang === 'bs' ? 'Uloga' : 'Role'}</label>
+                                    <label className="form-label">{lang !== 'en' ? 'Uloga' : 'Role'}</label>
                                     <select className="form-input" value={formData.role} onChange={e => setFormData(p => ({ ...p, role: e.target.value }))} disabled={!isSuperAdmin}>
-                                        <option value="officer">{lang === 'bs' ? '🛡️ Stručnjak ZNR' : '🛡️ Safety Officer'}</option>
+                                        <option value="officer">{lang !== 'en' ? '🛡️ Stručnjak ZNR' : '🛡️ Safety Officer'}</option>
                                         {isSuperAdmin && <option value="admin">⚙️ Admin</option>}
                                         {isSuperAdmin && <option value="superadmin">👑 Superadmin</option>}
                                     </select>
@@ -401,7 +401,7 @@ export default function AdminUsersPage() {
 
                             {/* Company assignment */}
                             <div style={{ marginTop: 16 }}>
-                                <label className="form-label" style={{ marginBottom: 8 }}>{lang === 'bs' ? 'Firme kojima ima pristup' : 'Companies with access'}</label>
+                                <label className="form-label" style={{ marginBottom: 8 }}>{lang !== 'en' ? 'Firme kojima ima pristup' : 'Companies with access'}</label>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                     {companies.map(c => (
                                         <button key={c.id} type="button"
@@ -422,7 +422,7 @@ export default function AdminUsersPage() {
 
                             <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <input type="checkbox" checked={formData.aktivan} onChange={e => setFormData(p => ({ ...p, aktivan: e.target.checked }))} />
-                                <label style={{ fontSize: '0.85rem' }}>{lang === 'bs' ? 'Aktivan račun' : 'Active account'}</label>
+                                <label style={{ fontSize: '0.85rem' }}>{lang !== 'en' ? 'Aktivan račun' : 'Active account'}</label>
                             </div>
                         </div>
                         <div className="modal-footer">
@@ -445,16 +445,16 @@ export default function AdminUsersPage() {
                         </div>
                         <div className="modal-body">
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
-                                {showCompanyDetail.skraceniNaziv && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{lang === 'bs' ? 'Skraćeni naziv' : 'Short name'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.skraceniNaziv}</div></div>}
+                                {showCompanyDetail.skraceniNaziv && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>{lang !== 'en' ? 'Skraćeni naziv' : 'Short name'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.skraceniNaziv}</div></div>}
                                 {showCompanyDetail.oib && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>OIB / JIB</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.oib}</div></div>}
-                                {showCompanyDetail.mjesto && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>📍 {lang === 'bs' ? 'Lokacija' : 'Location'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.adresa ? `${showCompanyDetail.adresa}, ` : ''}{showCompanyDetail.mjesto}</div></div>}
-                                {showCompanyDetail.telefon && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>📞 {lang === 'bs' ? 'Telefon' : 'Phone'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.telefon}</div></div>}
+                                {showCompanyDetail.mjesto && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>📍 {lang !== 'en' ? 'Lokacija' : 'Location'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.adresa ? `${showCompanyDetail.adresa}, ` : ''}{showCompanyDetail.mjesto}</div></div>}
+                                {showCompanyDetail.telefon && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>📞 {lang !== 'en' ? 'Telefon' : 'Phone'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.telefon}</div></div>}
                                 {showCompanyDetail.email && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>📧 Email</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.email}</div></div>}
-                                {showCompanyDetail.direktor && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>👤 {lang === 'bs' ? 'Direktor' : 'Director'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.direktor}</div></div>}
+                                {showCompanyDetail.direktor && <div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>👤 {lang !== 'en' ? 'Direktor' : 'Director'}</div><div style={{ fontWeight: 600 }}>{showCompanyDetail.direktor}</div></div>}
                             </div>
                             <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 12 }}>
                                 <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 8 }}>
-                                    👥 {lang === 'bs' ? 'Korisnici u ovoj firmi' : 'Users in this company'}
+                                    👥 {lang !== 'en' ? 'Korisnici u ovoj firmi' : 'Users in this company'}
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     {users.filter(u => (u.companyIds || []).includes(showCompanyDetail.id)).map(u => (
@@ -480,9 +480,9 @@ export default function AdminUsersPage() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setShowCompanyDetail(null)}>{lang === 'bs' ? 'Zatvori' : 'Close'}</button>
+                            <button className="btn btn-ghost" onClick={() => setShowCompanyDetail(null)}>{lang !== 'en' ? 'Zatvori' : 'Close'}</button>
                             <button className="btn btn-primary" onClick={() => { setShowCompanyDetail(null); router.push('/dashboard/admin/companies'); }}>
-                                🏢 {lang === 'bs' ? 'Upravljanje firmama' : 'Company Management'}
+                                🏢 {lang !== 'en' ? 'Upravljanje firmama' : 'Company Management'}
                             </button>
                         </div>
                     </div>

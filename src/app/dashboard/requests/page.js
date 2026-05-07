@@ -87,7 +87,7 @@ export default function RequestsPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} stavki?` : `Delete ${selectedIds.size} items?`)) {
       for (let id of selectedIds) await remove(COLLECTIONS.REQUESTS, id);
       setSelectedIds(new Set());
       loadData();
@@ -135,7 +135,7 @@ export default function RequestsPage() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati zahtjevnicu?' : 'Delete request?');
+    const ok = await confirm(lang !== 'en' ? 'Obrisati zahtjevnicu?' : 'Delete request?');
     if (ok) { remove(COLLECTIONS.REQUESTS, id); loadData(); }
   };
 
@@ -179,7 +179,7 @@ export default function RequestsPage() {
   };
 
   const handleDeleteItem = async (idx) => {
-    const ok = await confirm(lang === 'bs' ? 'Obrisati stavku?' : 'Delete item?');
+    const ok = await confirm(lang !== 'en' ? 'Obrisati stavku?' : 'Delete item?');
     if (ok) {
       setFormData(prev => ({
         ...prev,
@@ -234,21 +234,21 @@ export default function RequestsPage() {
             <div style={{ ...sectionTitle, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span>
                 {editingItemIdx !== null
-                  ? (lang === 'bs' ? 'Uredi stavku zahtjevnice' : 'Edit request item')
-                  : (lang === 'bs' ? 'Nova stavka zahtjevnice' : 'New request item')}
+                  ? (lang !== 'en' ? 'Uredi stavku zahtjevnice' : 'Edit request item')
+                  : (lang !== 'en' ? 'Nova stavka zahtjevnice' : 'New request item')}
               </span>
               <button className="btn btn-ghost btn-icon" onClick={() => setShowItemForm(false)} style={{ marginLeft: 8 }}>✕</button>
             </div>
 
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Opisno' : 'Description'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Opisno' : 'Description'}</div>
               <input className="form-input" value={itemData.opisno} onChange={e => setItem('opisno', e.target.value)} />
             </div>
 
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang === 'bs' ? 'Zaštitno sredstvo' : 'Protective equipment'}</div>
+              <div style={labelSt}>{lang !== 'en' ? 'Zaštitno sredstvo' : 'Protective equipment'}</div>
               <select className="form-select" value={itemData.zastitnoSredstvoId} onChange={e => setItem('zastitnoSredstvoId', e.target.value)}>
-                <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                <option value="">{lang !== 'en' ? '— Odaberite —' : '— Select —'}</option>
                 {ppeTypes.map(p => (
                   <option key={p.id} value={p.id}>{p.naziv || p.name || p.id}</option>
                 ))}
@@ -261,15 +261,15 @@ export default function RequestsPage() {
                 <input className="form-input" type="number" min="1" value={itemData.redBr} onChange={e => setItem('redBr', Number(e.target.value))} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Veličina' : 'Size'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Veličina' : 'Size'}</div>
                 <input className="form-input" value={itemData.velicina} onChange={e => setItem('velicina', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Jed. mjera' : 'Unit'}</div>
-                <input className="form-input" value={itemData.jedMjera} onChange={e => setItem('jedMjera', e.target.value)} placeholder={lang === 'bs' ? 'npr. kom, par' : 'e.g. pcs, pair'} />
+                <div style={labelSt}>{lang !== 'en' ? 'Jed. mjera' : 'Unit'}</div>
+                <input className="form-input" value={itemData.jedMjera} onChange={e => setItem('jedMjera', e.target.value)} placeholder={lang !== 'en' ? 'npr. kom, par' : 'e.g. pcs, pair'} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Komada' : 'Qty'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Komada' : 'Qty'}</div>
                 <input className="form-input" type="number" min="1" value={itemData.komada} onChange={e => setItem('komada', Number(e.target.value))} />
               </div>
             </div>
@@ -298,11 +298,11 @@ export default function RequestsPage() {
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-body" style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={handleNew}>
-              + {lang === 'bs' ? 'Nova zahtjevnica' : 'New request'}
+              + {lang !== 'en' ? 'Nova zahtjevnica' : 'New request'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
               <input
-                placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'}
+                placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%' }}
@@ -314,13 +314,13 @@ export default function RequestsPage() {
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                  {selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                  {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
                 </span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang === 'bs' ? 'zapisa' : 'records'}</span>}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{records.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
           </div>
         </div>
 
@@ -332,11 +332,11 @@ export default function RequestsPage() {
                   <tr>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 90 }}>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Br.' : 'No.'}</th>
-                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang === 'bs' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}{sortIcon('_workerName')}</th>
-                    <th>{lang === 'bs' ? 'Org. jedinica' : 'Org. unit'}</th>
-                    <th>{lang === 'bs' ? 'Stavke' : 'Items'}</th>
+                    <th>{lang !== 'en' ? 'Br.' : 'No.'}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang !== 'en' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang !== 'en' ? 'Zatražio / Radnik' : 'Requested by'}{sortIcon('_workerName')}</th>
+                    <th>{lang !== 'en' ? 'Org. jedinica' : 'Org. unit'}</th>
+                    <th>{lang !== 'en' ? 'Stavke' : 'Items'}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -405,7 +405,7 @@ export default function RequestsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 15 * 1024 * 1024) {
-      await alert(lang === 'bs' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
+      await alert(lang !== 'en' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
       return;
     }
     setFormData(prev => ({
@@ -443,7 +443,7 @@ export default function RequestsPage() {
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <button className="btn btn-ghost" onClick={() => setShowForm(false)}>←</button>
-        <h1 style={{ margin: 0 }}>📝 {editingId ? (lang === 'bs' ? 'Uredi zahtjevnicu' : 'Edit request') : (lang === 'bs' ? 'Nova zahtjevnica' : 'New request')}</h1>
+        <h1 style={{ margin: 0 }}>📝 {editingId ? (lang !== 'en' ? 'Uredi zahtjevnicu' : 'Edit request') : (lang !== 'en' ? 'Nova zahtjevnica' : 'New request')}</h1>
       </div>
       <DialogRenderer />
       {renderItemForm()}
@@ -453,34 +453,34 @@ export default function RequestsPage() {
         {/* ═══ Main form fields ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'Zahtjevnica' : 'Request'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'Zahtjevnica' : 'Request'}</div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr 160px 1fr', gap: 12, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Zahtjevnica broj' : 'Request No.'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Zahtjevnica broj' : 'Request No.'}</div>
                 <input className="form-input" value={formData.zahtjevnicaBroj} onChange={e => set('zahtjevnicaBroj', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Datum' : 'Date'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Datum' : 'Date'}</div>
                 <DateInput value={formData.datum} onChange={v => set('datum', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Zatražio / Radnik' : 'Requested by'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Zatražio / Radnik' : 'Requested by'}</div>
                 <select className="form-select" value={formData.workerId} onChange={e => set('workerId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  <option value="">{lang !== 'en' ? '— Odaberite —' : '— Select —'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Mjesto troška' : 'Cost center'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Mjesto troška' : 'Cost center'}</div>
                 <input className="form-input" value={formData.mjestoTroska} onChange={e => set('mjestoTroska', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Organizacijska jedinica' : 'Org. unit'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Organizacijska jedinica' : 'Org. unit'}</div>
                 <select className="form-select" value={formData.orgJedinicaId} onChange={e => set('orgJedinicaId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  <option value="">{lang !== 'en' ? '— Odaberite —' : '— Select —'}</option>
                   {orgUnits.map(o => (
                     <option key={o.id} value={o.id}>{o.naziv}</option>
                   ))}
@@ -490,25 +490,25 @@ export default function RequestsPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Odobrio' : 'Approved by'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Odobrio' : 'Approved by'}</div>
                 <select className="form-select" value={formData.odobrioId} onChange={e => set('odobrioId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
+                  <option value="">{lang !== 'en' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Skladištar' : 'Storekeeper'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Skladištar' : 'Storekeeper'}</div>
                 <select className="form-select" value={formData.skladistarId} onChange={e => set('skladistarId', e.target.value)}>
-                  <option value="">{lang === 'bs' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
+                  <option value="">{lang !== 'en' ? 'Izaberite ili unesite' : 'Select or enter'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Napomena' : 'Note'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Napomena' : 'Note'}</div>
                 <textarea className="form-input" rows={2} value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
               </div>
             </div>
@@ -520,13 +520,13 @@ export default function RequestsPage() {
           <div className="card-body">
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <div style={{ ...sectionTitle, marginBottom: 0, background: 'var(--bg-dark, #333)', color: '#fff', padding: '8px 16px', borderRadius: 'var(--radius-md)', fontSize: '0.82rem' }}>
-                {lang === 'bs' ? 'Tražena zaštitna sredstva' : 'Requested protective equipment'}
+                {lang !== 'en' ? 'Tražena zaštitna sredstva' : 'Requested protective equipment'}
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
               <button className="btn btn-primary btn-sm" onClick={handleNewItem}>
-                + {lang === 'bs' ? 'Nova stavka zahtjevnice' : 'New request item'}
+                + {lang !== 'en' ? 'Nova stavka zahtjevnice' : 'New request item'}
               </button>
             </div>
 
@@ -535,18 +535,18 @@ export default function RequestsPage() {
                 <thead>
                   <tr>
                     <th>{t('actions')}</th>
-                    <th>{lang === 'bs' ? 'Osobna zaštitna oprema / Opisno' : 'PPE / Description'}</th>
-                    <th>{lang === 'bs' ? 'Šifra' : 'Code'}</th>
+                    <th>{lang !== 'en' ? 'Osobna zaštitna oprema / Opisno' : 'PPE / Description'}</th>
+                    <th>{lang !== 'en' ? 'Šifra' : 'Code'}</th>
                     <th>RedBr</th>
-                    <th>{lang === 'bs' ? 'Veličina' : 'Size'}</th>
-                    <th>{lang === 'bs' ? 'Jed. mjera' : 'Unit'}</th>
-                    <th>{lang === 'bs' ? 'Komada' : 'Qty'}</th>
+                    <th>{lang !== 'en' ? 'Veličina' : 'Size'}</th>
+                    <th>{lang !== 'en' ? 'Jed. mjera' : 'Unit'}</th>
+                    <th>{lang !== 'en' ? 'Komada' : 'Qty'}</th>
                   </tr>
                 </thead>
                 <tbody style={{ overflow: 'visible' }}>
                   {formData.stavke.length === 0 ? (
                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 24, color: 'var(--text-muted)' }}>
-                      {lang === 'bs' ? 'Nema stavki. Dodajte novu stavku zahtjevnice.' : 'No items. Add a new request item.'}
+                      {lang !== 'en' ? 'Nema stavki. Dodajte novu stavku zahtjevnice.' : 'No items. Add a new request item.'}
                     </td></tr>
                   ) : formData.stavke.map((s, idx) => (
                     <tr key={idx}>
@@ -573,21 +573,21 @@ export default function RequestsPage() {
         {/* ═══ Document Upload ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang === 'bs' ? 'Prilog' : 'Attachment'}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang !== 'en' ? 'Prilog' : 'Attachment'}</div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">📎 {lang === 'bs' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
+              <label className="form-label">📎 {lang !== 'en' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
                       <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }}>📎 {formData.docName}</button>
                       <div style={{ display: 'flex', gap: 6, marginLeft: 'auto' }}>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }}>👁 {lang === 'bs' ? 'Otvori' : 'Open'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }}>↓ {lang === 'bs' ? 'Preuzmi' : 'Download'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }}>✕ {lang === 'bs' ? 'Ukloni' : 'Remove'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }}>👁 {lang !== 'en' ? 'Otvori' : 'Open'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }}>↓ {lang !== 'en' ? 'Preuzmi' : 'Download'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }}>✕ {lang !== 'en' ? 'Ukloni' : 'Remove'}</button>
                       </div>
                   </div>
               ) : (
                   <div onClick={() => docInputRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '16px', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      📂 {lang === 'bs' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
+                      📂 {lang !== 'en' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
                   </div>
               )}
               <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
@@ -599,7 +599,7 @@ export default function RequestsPage() {
         <div className="card">
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-primary" onClick={handleSave}>
-              💾 {lang === 'bs' ? 'Sačuvaj zahtjevnicu' : 'Save request'}
+              💾 {lang !== 'en' ? 'Sačuvaj zahtjevnicu' : 'Save request'}
             </button>
             <SavedFlash />
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>

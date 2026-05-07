@@ -282,11 +282,11 @@ export function UvjerenjeFormPage() {
         if (isSavingRef.current) return;
 
         if (!isSingleWorkerMode && selectedWorkerIds.size === 0) {
-            await alert(lang === 'bs' ? 'Molimo odaberite barem jednog radnika!' : 'Please select at least one worker!');
+            await alert(lang !== 'en' ? 'Molimo odaberite barem jednog radnika!' : 'Please select at least one worker!');
             return;
         }
         if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId) {
-            await alert(lang === 'bs' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
+            await alert(lang !== 'en' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
             return;
         }
 
@@ -353,7 +353,7 @@ export function UvjerenjeFormPage() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 30, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={() => router.back()}>←</button>
                 <Icon3D name="Uvjerenja.png" size={50} />
-                <h1 style={{ margin: 0 }}>{lang === 'bs' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
+                <h1 style={{ margin: 0 }}>{lang !== 'en' ? 'Uvjerenje radnicima' : 'Worker Certificates'}</h1>
             </div>
             <DialogRenderer />
 
@@ -366,10 +366,10 @@ export function UvjerenjeFormPage() {
                 }}>
                     <span style={{ fontSize: '1.2rem' }}>📋</span>
                     <div>
-                        <strong>{lang === 'bs' ? 'Kopiranje uvjerenja' : 'Copying certificate'}</strong>
+                        <strong>{lang !== 'en' ? 'Kopiranje uvjerenja' : 'Copying certificate'}</strong>
                         {formData.tipUvjerenjaIme && <span> — {formData.tipUvjerenjaIme}</span>}
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                            {lang === 'bs'
+                            {lang !== 'en'
                                 ? 'Odaberite jednog ili više radnika kojima želite dodijeliti ovo uvjerenje.'
                                 : 'Select one or more workers to assign this certificate to.'}
                         </div>
@@ -381,8 +381,8 @@ export function UvjerenjeFormPage() {
             {preselectedWorkerId && (
                 <div style={{ background: 'var(--bg-card)', padding: '12px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 20 }}>
                     <div style={{ flex: '1 1 200px' }}>
-                        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--primary)' }}>{lang === 'bs' ? 'Odabran alat za jednog radnika' : 'Single worker mode active'}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang === 'bs' ? 'Novo uvjerenje će biti izdato samo radniku:' : 'Certificate will only be issued to:'} <b>{getWorkerName(preselectedWorkerId) || ''}</b></div>
+                        <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--primary)' }}>{lang !== 'en' ? 'Odabran alat za jednog radnika' : 'Single worker mode active'}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Novo uvjerenje će biti izdato samo radniku:' : 'Certificate will only be issued to:'} <b>{getWorkerName(preselectedWorkerId) || ''}</b></div>
                     </div>
                     <button 
                         onClick={() => setIsSingleWorkerMode(!isSingleWorkerMode)}
@@ -390,8 +390,8 @@ export function UvjerenjeFormPage() {
                         style={{ padding: '4px 10px', fontSize: '0.75rem' }}
                     >
                         {isSingleWorkerMode 
-                            ? (lang === 'bs' ? '▼ Prikaži listu radnika' : '▼ Show workers list') 
-                            : (lang === 'bs' ? '▲ Sakrij listu radnika' : '▲ Hide workers list')
+                            ? (lang !== 'en' ? '▼ Prikaži listu radnika' : '▼ Show workers list') 
+                            : (lang !== 'en' ? '▲ Sakrij listu radnika' : '▲ Hide workers list')
                         }
                     </button>
                 </div>
@@ -401,12 +401,12 @@ export function UvjerenjeFormPage() {
             <div className="card">
                 <div className="card-body">
                     <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 20 }}>
-                        {lang === 'bs' ? 'Podaci o uvjerenju' : 'Certificate details'}
+                        {lang !== 'en' ? 'Podaci o uvjerenju' : 'Certificate details'}
                     </div>
 
                     {/* Row 0: Radnik Dropdown */}
                     <div style={{ marginBottom: 16, position: 'relative' }} ref={workerRef}>
-                        <div style={labelStyle}>{lang === 'bs' ? 'Djelatnik (Radnik)' : 'Worker'} *</div>
+                        <div style={labelStyle}>{lang !== 'en' ? 'Djelatnik (Radnik)' : 'Worker'} *</div>
                         <div
                             style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
                             onClick={() => setShowWorkerDropdown(v => !v)}
@@ -414,7 +414,7 @@ export function UvjerenjeFormPage() {
                             <span style={{ flex: 1, fontSize: '0.88rem', color: selectedWorkerIds.size ? 'var(--text)' : 'var(--text-muted)' }}>
                                 {selectedWorkerIds.size > 0 
                                     ? getWorkerName(Array.from(selectedWorkerIds)[0])
-                                    : (lang === 'bs' ? 'Odaberite radnika...' : 'Select worker...')}
+                                    : (lang !== 'en' ? 'Odaberite radnika...' : 'Select worker...')}
                             </span>
                             {selectedWorkerIds.size > 0 && (
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem', padding: '0 2px' }}
@@ -436,7 +436,7 @@ export function UvjerenjeFormPage() {
                                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getWorkplaceName(w.radnoMjestoId)} • {getOrgUnitName(w.orgJedinicaId)}</div>
                                     </div>
                                 ))}
-                                {filteredWorkers.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang === 'bs' ? 'Nema rezultata' : 'No results'}</div>}
+                                {filteredWorkers.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang !== 'en' ? 'Nema rezultata' : 'No results'}</div>}
                             </div>
                         )}
                     </div>
@@ -450,19 +450,19 @@ export function UvjerenjeFormPage() {
                                 className="form-input"
                                 value={formData.oznaka}
                                 onChange={e => set('oznaka', e.target.value)}
-                                placeholder={lang === 'bs' ? 'Šifra / referentni broj' : 'Code / reference number'}
+                                placeholder={lang !== 'en' ? 'Šifra / referentni broj' : 'Code / reference number'}
                             />
                         </div>
 
                         {/* Tip uvjerenja - searchable dropdown */}
                         <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={tipRef}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Tip uvjerenja' : 'Certificate type'} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
+                                <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Tip uvjerenja' : 'Certificate type'} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
                                 <button
                                     className="btn btn-ghost btn-sm"
                                     style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
                                     onClick={() => setShowNewTypeForm(true)}
-                                    title={lang === 'bs' ? 'Dodaj novi tip' : 'Add new type'}
+                                    title={lang !== 'en' ? 'Dodaj novi tip' : 'Add new type'}
                                 >+</button>
                             </div>
                             <div
@@ -475,7 +475,7 @@ export function UvjerenjeFormPage() {
                                 onClick={() => setShowTipDropdown(v => !v)}
                             >
                                 <span style={{ flex: 1, fontSize: '0.88rem', color: formData.tipUvjerenjaIme ? 'var(--text)' : 'var(--text-muted)' }}>
-                                    {formData.tipUvjerenjaIme || (lang === 'bs' ? 'Odaberite tip...' : 'Select type...')}
+                                    {formData.tipUvjerenjaIme || (lang !== 'en' ? 'Odaberite tip...' : 'Select type...')}
                                 </span>
                                 {formData.tipUvjerenjaIme && (
                                     <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem', padding: '0 2px' }}
@@ -513,7 +513,7 @@ export function UvjerenjeFormPage() {
                                     ))}
                                     {filteredTips.length === 0 && (
                                         <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                            {lang === 'bs' ? 'Nema rezultata' : 'No results'}
+                                            {lang !== 'en' ? 'Nema rezultata' : 'No results'}
                                         </div>
                                     )}
                                     <div
@@ -522,7 +522,7 @@ export function UvjerenjeFormPage() {
                                         onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
                                         onMouseLeave={e => e.currentTarget.style.background = ''}
                                     >
-                                        + {lang === 'bs' ? 'Ostalo...' : 'Other...'}
+                                        + {lang !== 'en' ? 'Ostalo...' : 'Other...'}
                                     </div>
                                 </div>
                             )}
@@ -532,13 +532,13 @@ export function UvjerenjeFormPage() {
                                     <input
                                         className="form-input"
                                         style={{ flex: 1, fontSize: '0.85rem' }}
-                                        placeholder={lang === 'bs' ? 'Naziv novog tipa...' : 'New type name...'}
+                                        placeholder={lang !== 'en' ? 'Naziv novog tipa...' : 'New type name...'}
                                         value={newTypeName}
                                         onChange={e => setNewTypeName(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') handleAddNewType(); if (e.key === 'Escape') { setShowNewTypeForm(false); setNewTypeName(''); } }}
                                         autoFocus
                                     />
-                                    <button className="btn btn-primary btn-sm" onClick={handleAddNewType}>{lang === 'bs' ? 'Dodaj' : 'Add'}</button>
+                                    <button className="btn btn-primary btn-sm" onClick={handleAddNewType}>{lang !== 'en' ? 'Dodaj' : 'Add'}</button>
                                     <button className="btn btn-ghost btn-sm" onClick={() => { setShowNewTypeForm(false); setNewTypeName(''); }}>✕</button>
                                 </div>
                             )}
@@ -546,7 +546,7 @@ export function UvjerenjeFormPage() {
 
                         {/* Sposoban/Nesposoban */}
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Sposoban/Nesposoban' : 'Capable/Incapable'}</div>
+                            <div style={labelStyle}>{lang !== 'en' ? 'Sposoban/Nesposoban' : 'Capable/Incapable'}</div>
                             <div style={{ paddingTop: 6 }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.9rem' }}>
                                     <input
@@ -556,8 +556,8 @@ export function UvjerenjeFormPage() {
                                         style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
                                     />
                                     {formData.sposoban
-                                        ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ {lang === 'bs' ? 'Sposoban' : 'Capable'}</span>
-                                        : <span style={{ color: 'var(--danger)', fontWeight: 600 }}>✗ {lang === 'bs' ? 'Nesposoban' : 'Incapable'}</span>
+                                        ? <span style={{ color: 'var(--success)', fontWeight: 600 }}>✓ {lang !== 'en' ? 'Sposoban' : 'Capable'}</span>
+                                        : <span style={{ color: 'var(--danger)', fontWeight: 600 }}>✗ {lang !== 'en' ? 'Nesposoban' : 'Incapable'}</span>
                                     }
                                 </label>
                             </div>
@@ -567,11 +567,11 @@ export function UvjerenjeFormPage() {
                     {/* Row 2: Datum | Vrijedi do */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Datum' : 'Date'} <HelpTip text="Datum donošenja zapisnika/ljekarskog nalaza" /></div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Datum' : 'Date'} <HelpTip text="Datum donošenja zapisnika/ljekarskog nalaza" /></div>
                             <DateInput value={formData.datum} onChange={v => set('datum', v)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang === 'bs' ? 'Vrijedi do' : 'Valid until'} <HelpTip text="Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu." /></div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <HelpTip text="Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu." /></div>
                             <DateInput value={formData.vrijediDo} onChange={v => set('vrijediDo', v)} />
                         </div>
                     </div>
@@ -581,12 +581,12 @@ export function UvjerenjeFormPage() {
                         {/* Ispitivac searchable dropdown */}
                         <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={ispitivacRef}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                <div style={labelStyle}>{lang === 'bs' ? 'Ispitivač' : 'Examiner'}</div>
+                                <div style={labelStyle}>{lang !== 'en' ? 'Ispitivač' : 'Examiner'}</div>
                                 <button
                                     className="btn btn-ghost btn-sm"
                                     style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
                                     onClick={e => { e.preventDefault(); setShowNewExaminerForm(true); setShowIspitivacDropdown(false); }}
-                                    title={lang === 'bs' ? 'Dodaj novog ispitivača' : 'Add new examiner'}
+                                    title={lang !== 'en' ? 'Dodaj novog ispitivača' : 'Add new examiner'}
                                 >+</button>
                             </div>
                             <div
@@ -596,7 +596,7 @@ export function UvjerenjeFormPage() {
                                 <span style={{ flex: 1, fontSize: '0.88rem', color: formData.ispitivacId ? 'var(--text)' : 'var(--text-muted)' }}>
                                     {formData.ispitivacId
                                         ? getExaminerLabel(examiners.find(e => e.id === formData.ispitivacId) || {})
-                                        : (lang === 'bs' ? 'Odaberite ispitivača' : 'Select examiner')}
+                                        : (lang !== 'en' ? 'Odaberite ispitivača' : 'Select examiner')}
                                 </span>
                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>▾</span>
                             </div>
@@ -615,7 +615,7 @@ export function UvjerenjeFormPage() {
                                     </div>
                                     {filteredIspitivac.length === 0 ? (
                                         <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                                            {lang === 'bs' ? 'Nema ispitivača. Dodajte ih u Ispitivači.' : 'No examiners. Add them in Examiners.'}
+                                            {lang !== 'en' ? 'Nema ispitivača. Dodajte ih u Ispitivači.' : 'No examiners. Add them in Examiners.'}
                                         </div>
                                     ) : filteredIspitivac.map(ex => (
                                         <div
@@ -634,27 +634,27 @@ export function UvjerenjeFormPage() {
                             {showNewExaminerForm && (
                                 <div style={{ marginTop: 8, padding: 14, background: 'var(--bg-input)', border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)' }}>
                                     <div style={{ fontWeight: 700, fontSize: '0.8rem', color: 'var(--primary)', marginBottom: 10 }}>
-                                        + {lang === 'bs' ? 'Novi ispitivač' : 'New examiner'}
+                                        + {lang !== 'en' ? 'Novi ispitivač' : 'New examiner'}
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
                                         <div>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Ime *' : 'Name *'}</div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang !== 'en' ? 'Ime *' : 'Name *'}</div>
                                             <input className="form-input" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
                                                 value={newExaminerData.ime} onChange={e => setNewExaminerData(d => ({ ...d, ime: e.target.value }))} autoFocus
                                                 onKeyDown={e => { if (e.key === 'Enter') handleSaveNewExaminer(); if (e.key === 'Escape') setShowNewExaminerForm(false); }} />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Zvanje' : 'Title'}</div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang !== 'en' ? 'Zvanje' : 'Title'}</div>
                                             <input className="form-input" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
                                                 value={newExaminerData.zvanje} onChange={e => setNewExaminerData(d => ({ ...d, zvanje: e.target.value }))} />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Telefon' : 'Phone'}</div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang !== 'en' ? 'Telefon' : 'Phone'}</div>
                                             <input className="form-input" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
                                                 value={newExaminerData.telefon} onChange={e => setNewExaminerData(d => ({ ...d, telefon: e.target.value }))} />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang === 'bs' ? 'Ovlaštena tvrtka' : 'Auth. company'}</div>
+                                            <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 3 }}>{lang !== 'en' ? 'Ovlaštena tvrtka' : 'Auth. company'}</div>
                                             <select className="form-select" style={{ padding: '6px 10px', fontSize: '0.85rem' }}
                                                 value={newExaminerData.ovlaštenaTvrtkaId} onChange={e => setNewExaminerData(d => ({ ...d, ovlaštenaTvrtkaId: e.target.value }))}>
                                                 <option value="">-</option>
@@ -664,14 +664,14 @@ export function UvjerenjeFormPage() {
                                     </div>
                                     <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
                                         <button className="btn btn-ghost btn-sm" onClick={() => setShowNewExaminerForm(false)}>{t('cancel')}</button>
-                                        <button className="btn btn-primary btn-sm" onClick={handleSaveNewExaminer}>+ {lang === 'bs' ? 'Dodaj ispitivača' : 'Add examiner'}</button>
+                                        <button className="btn btn-primary btn-sm" onClick={handleSaveNewExaminer}>+ {lang !== 'en' ? 'Dodaj ispitivača' : 'Add examiner'}</button>
                                     </div>
                                 </div>
                             )}
                         </div>
 
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Stručnjak ZNR' : 'ZNR Specialist'}</div>
+                            <div style={labelStyle}>{lang !== 'en' ? 'Stručnjak ZNR' : 'ZNR Specialist'}</div>
                             <input className="form-input" value={formData.strucnjakZNR} onChange={e => set('strucnjakZNR', e.target.value)} />
                         </div>
                     </div>
@@ -679,11 +679,11 @@ export function UvjerenjeFormPage() {
                     {/* Row 4: Upisao | Cijena */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Upisao' : 'Entered by'}</div>
+                            <div style={labelStyle}>{lang !== 'en' ? 'Upisao' : 'Entered by'}</div>
                             <input className="form-input" value={formData.upisao} onChange={e => set('upisao', e.target.value)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Cijena' : 'Price'}</div>
+                            <div style={labelStyle}>{lang !== 'en' ? 'Cijena' : 'Price'}</div>
                             <input
                                 className="form-input"
                                 type="number"
@@ -700,14 +700,14 @@ export function UvjerenjeFormPage() {
                     {/* Row 5: Izdano za radno mjesto | Ograničenja */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Izdano za radno mjesto' : 'Issued for workplace'}</div>
+                            <div style={labelStyle}>{lang !== 'en' ? 'Izdano za radno mjesto' : 'Issued for workplace'}</div>
                             <select className="form-select" value={formData.vydanoZaRadnoMjesto || ''} onChange={e => set('vydanoZaRadnoMjesto', e.target.value)}>
-                                <option value="">{lang === 'bs' ? '— Odaberite radno mjesto —' : '— Select workplace —'}</option>
+                                <option value="">{lang !== 'en' ? '— Odaberite radno mjesto —' : '— Select workplace —'}</option>
                                 {workplaces.map(wp => <option key={wp.id} value={wp.naziv}>{wp.naziv}</option>)}
                             </select>
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang === 'bs' ? 'Ograničenja / Napomena' : 'Restrictions / Note'}</div>
+                            <div style={labelStyle}>{lang !== 'en' ? 'Ograničenja / Napomena' : 'Restrictions / Note'}</div>
                             <textarea className="form-input" rows={3} value={formData.ogranicenja} onChange={e => set('ogranicenja', e.target.value)} style={{ resize: 'vertical' }} />
                         </div>
                     </div>
@@ -715,12 +715,12 @@ export function UvjerenjeFormPage() {
                     {/* Attachments section */}
                     <div style={{ borderTop: '1px solid var(--border-light)', paddingTop: 20, marginBottom: 24 }}>
                         <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-                            {lang === 'bs' ? 'Datoteka/e' : 'Attachments'}
+                            {lang !== 'en' ? 'Datoteka/e' : 'Attachments'}
                         </div>
                         <div className="form-grid-2">
                             <div>
                                 <div style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang === 'bs' ? 'Priloži datoteku' : 'Upload file'}</div>
+                                    <div style={labelStyle}>{lang !== 'en' ? 'Priloži datoteku' : 'Upload file'}</div>
                                     <input
                                         type="file"
                                         className="form-input"
@@ -739,7 +739,7 @@ export function UvjerenjeFormPage() {
                                                 set('attachedFileType', result.type);
                                             } catch (err) {
                                                 console.error('[Upload] Attachment error:', err);
-                                                alert(lang === 'bs' ? `Greška pri učitavanju: ${err.message}` : `Upload failed: ${err.message}`);
+                                                alert(lang !== 'en' ? `Greška pri učitavanju: ${err.message}` : `Upload failed: ${err.message}`);
                                             } finally {
                                                 e.target.value = '';
                                             }
@@ -762,14 +762,14 @@ export function UvjerenjeFormPage() {
                                     )}
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 0 }}>
-                                    <div style={labelStyle}>{lang === 'bs' ? 'Opis datoteke' : 'File description'}</div>
+                                    <div style={labelStyle}>{lang !== 'en' ? 'Opis datoteke' : 'File description'}</div>
                                     <input className="form-input" value={formData.fileOpis} onChange={e => set('fileOpis', e.target.value)} />
                                 </div>
                             </div>
                             <div className="form-group" style={{ marginBottom: 0 }}>
-                                <div style={labelStyle}>{lang === 'bs' ? 'Vrsta datoteke' : 'File type'}</div>
+                                <div style={labelStyle}>{lang !== 'en' ? 'Vrsta datoteke' : 'File type'}</div>
                                 <select className="form-select" value={formData.vrstaDateotekeId} onChange={e => set('vrstaDateotekeId', e.target.value)}>
-                                    <option value="">{lang === 'bs' ? 'Odaberite vrstu datoteke' : 'Select file type'}</option>
+                                    <option value="">{lang !== 'en' ? 'Odaberite vrstu datoteke' : 'Select file type'}</option>
                                     {FILE_TYPE_OPTIONS.map(ft => <option key={ft} value={ft}>{ft}</option>)}
                                 </select>
                             </div>
@@ -811,13 +811,13 @@ export function UvjerenjeFormPage() {
                                         testResult: formData.rezultatTesta || '',
                                     });
                                 }}>
-                                    🖨️ {lang === 'bs' ? 'Ispiši ZOS' : 'Print ZOS'}
+                                    🖨️ {lang !== 'en' ? 'Ispiši ZOS' : 'Print ZOS'}
                                 </button>
                             );
                         })()}
                         {selectedWorkerIds.size > 0 && (
                             <span style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
-                                💡 {lang === 'bs'
+                                💡 {lang !== 'en'
                                     ? `Uvjerenje će biti dodijeljeno ${selectedWorkerIds.size} radnik(u/a)`
                                     : `Certificate will be assigned to ${selectedWorkerIds.size} worker(s)`}
                             </span>

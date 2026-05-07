@@ -200,7 +200,7 @@ export default function QuestionnairesPage() {
   const handleCancel = useCallback(async () => {
     if (contextIsDirty) {
       const ok = await confirm(
-        lang === 'bs' 
+        lang !== 'en' 
         ? 'Imate nesačuvane promjene. Želite li zaista odustati?' 
         : 'You have unsaved changes. Are you sure you want to discard them?'
       );
@@ -277,7 +277,7 @@ export default function QuestionnairesPage() {
   };
   const handleDelete = async (id) => {
     setOpenMenuId(null);
-    if (await confirm(lang === 'bs' ? 'Obrisati upitnik?' : 'Delete questionnaire?')) { remove(COLLECTIONS.QUESTIONNAIRES, id); loadData(); }
+    if (await confirm(lang !== 'en' ? 'Obrisati upitnik?' : 'Delete questionnaire?')) { remove(COLLECTIONS.QUESTIONNAIRES, id); loadData(); }
   };
   const handleSave = () => {
     if (editingId) update(COLLECTIONS.QUESTIONNAIRES, editingId, formData);
@@ -456,19 +456,19 @@ export default function QuestionnairesPage() {
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary btn-sm" onClick={handleNew}>
-              + {lang === 'bs' ? 'Novi' : 'New'}
+              + {lang !== 'en' ? 'Novi' : 'New'}
             </button>
             <button className="btn btn-outline btn-sm" onClick={() => setShowAiModal(true)}
               style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-              🤖 {lang === 'bs' ? 'Generiši za radno mjesto' : 'Generate for workplace'}
+              🤖 {lang !== 'en' ? 'Generiši za radno mjesto' : 'Generate for workplace'}
             </button>
             <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
-              <input placeholder={lang === 'bs' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
+              <input placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-              <button className="btn btn-ghost btn-sm">{lang === 'bs' ? 'Traži' : 'Search'}</button>
+              <button className="btn btn-ghost btn-sm">{lang !== 'en' ? 'Traži' : 'Search'}</button>
             </div>
             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>
-              {filtered.length} {lang === 'bs' ? 'zapisa' : 'records'}
+              {filtered.length} {lang !== 'en' ? 'zapisa' : 'records'}
             </span>
           </div>
         </div>
@@ -481,13 +481,13 @@ export default function QuestionnairesPage() {
                   <tr>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRecords.length && sortedRecords.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 100 }}>{t('actions')}</th>
-                    <th style={{ ...tsRec('naziv'), minWidth: 240 }} onClick={() => tRec('naziv')}>{lang === 'bs' ? 'Naziv' : 'Name'}{siRec('naziv')}</th>
-                    <th style={tsRec('zaVrstu')} onClick={() => tRec('zaVrstu')}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}{siRec('zaVrstu')}</th>
-                    <th>{lang === 'bs' ? 'Ispunjenost' : 'Completion'}</th>
-                    <th style={tsRec('rokIsteka')} onClick={() => tRec('rokIsteka')}>{lang === 'bs' ? 'Rok isteka' : 'Expiry'}{siRec('rokIsteka')}</th>
-                    <th style={tsRec('prikaziNaPortalu')} onClick={() => tRec('prikaziNaPortalu')}>{lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}{siRec('prikaziNaPortalu')}</th>
-                    <th style={tsRec('predlozak')} onClick={() => tRec('predlozak')}>{lang === 'bs' ? 'Predložak' : 'Template'}{siRec('predlozak')}</th>
-                    <th style={tsRec('jezik')} onClick={() => tRec('jezik')}>{lang === 'bs' ? 'Jezik' : 'Language'}{siRec('jezik')}</th>
+                    <th style={{ ...tsRec('naziv'), minWidth: 240 }} onClick={() => tRec('naziv')}>{lang !== 'en' ? 'Naziv' : 'Name'}{siRec('naziv')}</th>
+                    <th style={tsRec('zaVrstu')} onClick={() => tRec('zaVrstu')}>{lang !== 'en' ? 'Vrsta ankete' : 'Survey type'}{siRec('zaVrstu')}</th>
+                    <th>{lang !== 'en' ? 'Ispunjenost' : 'Completion'}</th>
+                    <th style={tsRec('rokIsteka')} onClick={() => tRec('rokIsteka')}>{lang !== 'en' ? 'Rok isteka' : 'Expiry'}{siRec('rokIsteka')}</th>
+                    <th style={tsRec('prikaziNaPortalu')} onClick={() => tRec('prikaziNaPortalu')}>{lang !== 'en' ? 'Prikaži na portalu' : 'Show on portal'}{siRec('prikaziNaPortalu')}</th>
+                    <th style={tsRec('predlozak')} onClick={() => tRec('predlozak')}>{lang !== 'en' ? 'Predložak' : 'Template'}{siRec('predlozak')}</th>
+                    <th style={tsRec('jezik')} onClick={() => tRec('jezik')}>{lang !== 'en' ? 'Jezik' : 'Language'}{siRec('jezik')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -520,7 +520,7 @@ export default function QuestionnairesPage() {
                               setOpenMenuId(r.id);
                             }}
                           >
-                            {lang === 'bs' ? 'Akcije' : 'Actions'} ▼
+                            {lang !== 'en' ? 'Akcije' : 'Actions'} ▼
                           </button>
                           {openMenuId === r.id && (
                             <div data-akcije-menu style={{
@@ -534,32 +534,32 @@ export default function QuestionnairesPage() {
                               minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                             }}>
                               <button onClick={() => handleEdit(r)} style={menuItemStyle}>
-                                📝 {lang === 'bs' ? 'Otvori' : 'Open'}
+                                📝 {lang !== 'en' ? 'Otvori' : 'Open'}
                               </button>
                               <button onClick={() => handleDuplicate(r)} style={menuItemStyle}>
-                                📋 {lang === 'bs' ? 'Dupliciraj' : 'Duplicate'}
+                                📋 {lang !== 'en' ? 'Dupliciraj' : 'Duplicate'}
                               </button>
                               <button onClick={() => handleTogglePortal(r)} style={menuItemStyle}>
-                                {r.prikaziNaPortalu ? '🔒' : '🌐'} {lang === 'bs'
+                                {r.prikaziNaPortalu ? '🔒' : '🌐'} {lang !== 'en'
                                   ? (r.prikaziNaPortalu ? 'Sakrij s portala' : 'Prikaži na portalu')
                                   : (r.prikaziNaPortalu ? 'Hide from portal' : 'Show on portal')}
                               </button>
                               <button onClick={() => handlePrintQuestionnaire(r)} style={menuItemStyle}>
-                                🖨️ {lang === 'bs' ? 'Isprintaj' : 'Print'}
+                                🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}
                               </button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                               <button onClick={() => { setOpenMenuId(null); setDispatchQuestionnaire(r); setDispatchModalOpen(true); }} style={menuItemStyle}>
-                                📧 {lang === 'bs' ? 'Pošalji' : 'Send'}
+                                📧 {lang !== 'en' ? 'Pošalji' : 'Send'}
                               </button>
                               <button onClick={() => { setOpenMenuId(null); setReminderQuestionnaire(r); setReminderModalOpen(true); }} style={menuItemStyle}>
-                                📩 {lang === 'bs' ? 'Pošalji podsjetnik' : 'Send Reminder'}
+                                📩 {lang !== 'en' ? 'Pošalji podsjetnik' : 'Send Reminder'}
                               </button>
                               <button onClick={() => { setOpenMenuId(null); setResultsQuestionnaire(r); setView('results'); }} style={menuItemStyle}>
-                                📊 {lang === 'bs' ? 'Rezultati' : 'Results'}
+                                📊 {lang !== 'en' ? 'Rezultati' : 'Results'}
                               </button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                               <button onClick={() => handleDelete(r.id)} style={{ ...menuItemStyle, color: 'var(--danger)' }}>
-                                🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                                🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}
                               </button>
                             </div>
                           )}
@@ -587,7 +587,7 @@ export default function QuestionnairesPage() {
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
                                 onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
                                 onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                title={lang === 'bs' ? 'Klikni za pregled rezultata' : 'Click to view results'}
+                                title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}
                             >
                               <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
@@ -604,12 +604,12 @@ export default function QuestionnairesPage() {
                           const days = Math.ceil((new Date(r.rokIsteka) - new Date()) / (1000*60*60*24));
                           const col = days < 0 ? 'var(--danger)' : days <= 30 ? 'var(--danger)' : days <= 90 ? 'var(--warning)' : 'var(--success)';
                           const label = days < 0
-                            ? (lang === 'bs' ? `Isteklo ${Math.abs(days)}d` : `Expired ${Math.abs(days)}d ago`)
-                            : (lang === 'bs' ? `Za ${days}d` : `In ${days}d`);
+                            ? (lang !== 'en' ? `Isteklo ${Math.abs(days)}d` : `Expired ${Math.abs(days)}d ago`)
+                            : (lang !== 'en' ? `Za ${days}d` : `In ${days}d`);
                           return <span style={{ fontSize: '0.78rem', fontWeight: 600, color: col }}>{label}</span>;
                         })() : <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>—</span>}
                       </td>
-                      <td>{r.prikaziNaPortalu ? (lang === 'bs' ? 'Da' : 'Yes') : (lang === 'bs' ? 'Ne' : 'No')}</td>
+                      <td>{r.prikaziNaPortalu ? (lang !== 'en' ? 'Da' : 'Yes') : (lang !== 'en' ? 'Ne' : 'No')}</td>
                       <td>
                         {r.predlozak && <span style={{ color: 'var(--primary)', fontSize: '1.1rem' }}>✔</span>}
                       </td>
@@ -624,15 +624,15 @@ export default function QuestionnairesPage() {
 
         {/* ═══ Built-in Templates (eZNR-ovi ugrađeni primjeri) ═══ */}
         <h2 style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          ❓ {lang === 'bs' ? 'eZNR-ovi ugrađeni primjeri:' : 'Built-in Templates:'}
+          ❓ {lang !== 'en' ? 'eZNR-ovi ugrađeni primjeri:' : 'Built-in Templates:'}
         </h2>
 
         <div className="card" style={{ marginBottom: 8 }}>
           <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
-              <input placeholder={lang === 'bs' ? 'Pretraži predloške...' : 'Search templates...'} value={templateSearch} onChange={e => setTemplateSearch(e.target.value)}
+              <input placeholder={lang !== 'en' ? 'Pretraži predloške...' : 'Search templates...'} value={templateSearch} onChange={e => setTemplateSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-              <button className="btn btn-ghost btn-sm">{lang === 'bs' ? 'Traži' : 'Search'}</button>
+              <button className="btn btn-ghost btn-sm">{lang !== 'en' ? 'Traži' : 'Search'}</button>
             </div>
           </div>
         </div>
@@ -643,10 +643,10 @@ export default function QuestionnairesPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ minWidth: 240 }}>{lang === 'bs' ? 'Naziv' : 'Name'}</th>
-                    <th>{lang === 'bs' ? 'Oznaka' : 'Code'}</th>
-                    <th>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</th>
-                    <th>{lang === 'bs' ? 'Prikaži na portalu' : 'Portal'}</th>
+                    <th style={{ minWidth: 240 }}>{lang !== 'en' ? 'Naziv' : 'Name'}</th>
+                    <th>{lang !== 'en' ? 'Oznaka' : 'Code'}</th>
+                    <th>{lang !== 'en' ? 'Vrsta ankete' : 'Survey type'}</th>
+                    <th>{lang !== 'en' ? 'Prikaži na portalu' : 'Portal'}</th>
                     <th>{t('actions')}</th>
                   </tr>
                 </thead>
@@ -663,7 +663,7 @@ export default function QuestionnairesPage() {
                       </td>
                       <td>
                         <button className="btn btn-primary btn-sm" onClick={() => handleInsertTemplate(tpl)}>
-                          {lang === 'bs' ? 'Umetni' : 'Insert'}
+                          {lang !== 'en' ? 'Umetni' : 'Insert'}
                         </button>
                       </td>
                     </tr>
@@ -680,30 +680,30 @@ export default function QuestionnairesPage() {
             onClick={(e) => { if (e.target === e.currentTarget) setShowAiModal(false); }}>
             <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 400, maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span>🤖 {lang === 'bs' ? 'AI Generator upitnika za procjenu rizika' : 'AI Risk Assessment Questionnaire Generator'}</span>
+                <span>🤖 {lang !== 'en' ? 'AI Generator upitnika za procjenu rizika' : 'AI Risk Assessment Questionnaire Generator'}</span>
                 <button className="btn btn-ghost btn-icon" onClick={() => setShowAiModal(false)} style={{ marginLeft: 'auto' }}>✕</button>
               </div>
               <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16, lineHeight: 1.5 }}>
                 AI će generisati upitnik specifičan za odabrano radno mjesto, pokrivajući opasnosti, zaštitnu opremu, osposobljavanje, radnu opremu i zdravstvene preglede.
               </div>
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang === 'bs' ? 'Odaberite radno mjesto' : 'Select workplace'}</div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang !== 'en' ? 'Odaberite radno mjesto' : 'Select workplace'}</div>
                 <select className="form-select" value={selectedWpId} onChange={e => setSelectedWpId(e.target.value)} style={{ width: '100%' }}>
-                  <option value="">— {lang === 'bs' ? 'Odaberite radno mjesto' : 'Select workplace'} —</option>
+                  <option value="">— {lang !== 'en' ? 'Odaberite radno mjesto' : 'Select workplace'} —</option>
                   {aiWorkplaces.map(wp => <option key={wp.id} value={wp.id}>{wp.naziv}</option>)}
                 </select>
               </div>
               <div style={{ marginBottom: 16 }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}</div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang !== 'en' ? 'Vrsta ankete' : 'Survey type'}</div>
                 <select className="form-select" value={aiVrstaAnkete} onChange={e => setAiVrstaAnkete(e.target.value)} style={{ width: '100%' }}>
                   {ZA_VRSTU_OPTIONS.filter(o => !['Djelatnik', 'DokumentTip', 'Posao', 'Tenant'].includes(o)).map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
                 {aiVrstaAnkete === 'Ostalo' && (
-                  <input className="form-input" style={{ width: '100%', marginTop: 8 }} placeholder={lang === 'bs' ? 'Upišite vrstu ankete...' : 'Type survey type...'} value={aiCustomVrsta} onChange={e => setAiCustomVrsta(e.target.value)} />
+                  <input className="form-input" style={{ width: '100%', marginTop: 8 }} placeholder={lang !== 'en' ? 'Upišite vrstu ankete...' : 'Type survey type...'} value={aiCustomVrsta} onChange={e => setAiCustomVrsta(e.target.value)} />
                 )}
               </div>
               <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang === 'bs' ? 'Jezik ankete' : 'Survey language'}</div>
+                <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>{lang !== 'en' ? 'Jezik ankete' : 'Survey language'}</div>
                 <select className="form-select" value={aiJezik} onChange={e => setAiJezik(e.target.value)} style={{ width: '100%' }}>
                   <option value="Bosanski">Bosanski</option>
                   <option value="Hrvatski">Hrvatski</option>
@@ -785,8 +785,8 @@ export default function QuestionnairesPage() {
         <button className="btn btn-ghost" onClick={handleCancel}>←</button>
         <h1 style={{ margin: 0 }}>
           ❓ {editingId
-            ? (lang === 'bs' ? 'Uredi upitnik' : 'Edit questionnaire')
-            : (lang === 'bs' ? 'Novi upitnik' : 'New questionnaire')}
+            ? (lang !== 'en' ? 'Uredi upitnik' : 'Edit questionnaire')
+            : (lang !== 'en' ? 'Novi upitnik' : 'New questionnaire')}
         </h1>
       </div>
       <DialogRenderer />
@@ -807,19 +807,19 @@ export default function QuestionnairesPage() {
         {/* ═══ Detalji upitnika ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang === 'bs' ? 'Detalji upitnika' : 'Questionnaire Details'}</div>
+            <div style={sectionTitle}>{lang !== 'en' ? 'Detalji upitnika' : 'Questionnaire Details'}</div>
 
             {/* Row 1: Naziv, Oznaka */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Naziv' : 'Name'} <HelpTip text="Puno ime upitnika/ankete koje će se prikazivati u listi i na emailu koji se šalje radnicima." />
+                  {lang !== 'en' ? 'Naziv' : 'Name'} <HelpTip text="Puno ime upitnika/ankete koje će se prikazivati u listi i na emailu koji se šalje radnicima." />
                 </div>
                 <input className="form-input" value={formData.naziv} onChange={e => set('naziv', e.target.value)} />
               </div>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Oznaka' : 'Code'} <HelpTip text="Kratka interna šifra upitnika (npr. ZOS-TEST, AI-ANKETA). Koristi se za brzo pretraživanje i identifikaciju u listama." />
+                  {lang !== 'en' ? 'Oznaka' : 'Code'} <HelpTip text="Kratka interna šifra upitnika (npr. ZOS-TEST, AI-ANKETA). Koristi se za brzo pretraživanje i identifikaciju u listama." />
                 </div>
                 <input className="form-input" value={formData.oznaka} onChange={e => set('oznaka', e.target.value)} />
               </div>
@@ -829,7 +829,7 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Vrsta ankete' : 'Survey type'}
+                  {lang !== 'en' ? 'Vrsta ankete' : 'Survey type'}
                   <HelpTip text="Kategorizira upitnik po namjeni. Odaberite odgovarajuću vrstu ili 'Ostalo' za vlastitu kategoriju. Koristi se za filtriranje i AI generisanje." />
                 </div>
                 {/* Vrsta ankete: dropdown + optional free-text when Ostalo is picked */}
@@ -846,14 +846,14 @@ export default function QuestionnairesPage() {
                         // When 'Ostalo' is picked, zaVrstu = 'Ostalo' (not '') so dropdownVal stays 'Ostalo'
                         set('zaVrstu', e.target.value);
                       }}>
-                        <option value="">{lang === 'bs' ? '\u2014 Odaberite \u2014' : '\u2014 Select \u2014'}</option>
+                        <option value="">{lang !== 'en' ? '\u2014 Odaberite \u2014' : '\u2014 Select \u2014'}</option>
                         {ZA_VRSTU_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                       </select>
                       {dropdownVal === 'Ostalo' && (
                         <input
                           className="form-input"
                           style={{ marginTop: 8 }}
-                          placeholder={lang === 'bs' ? 'Unesite naziv vrste ankete (opcionalno)...' : 'Type survey type (optional)...'}
+                          placeholder={lang !== 'en' ? 'Unesite naziv vrste ankete (opcionalno)...' : 'Type survey type (optional)...'}
                           value={formData.zaVrstu === 'Ostalo' ? '' : formData.zaVrstu}
                           onChange={e => set('zaVrstu', e.target.value.trim() || 'Ostalo')}
                         />
@@ -864,7 +864,7 @@ export default function QuestionnairesPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Prikaži na portalu' : 'Show on portal'}
+                  {lang !== 'en' ? 'Prikaži na portalu' : 'Show on portal'}
                   <HelpTip text="Kada je uključeno, upitnik je dostupan radnicima direktno na javnom portalu (bez slanja emaila). Radnici mogu popuniti sami." />
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
@@ -873,7 +873,7 @@ export default function QuestionnairesPage() {
               </div>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Dodaj u prilog procjeni rizika' : 'Add to risk assessment'}
+                  {lang !== 'en' ? 'Dodaj u prilog procjeni rizika' : 'Add to risk assessment'}
                   <HelpTip text="Rezultati ovog upitnika automatski se dodaju kao prilog u procjenu rizika za odgovarajuće radno mjesto." />
                 </div>
                 <select className="form-select" value={formData.dodajUPrilogProcjeniRizika} onChange={e => set('dodajUPrilogProcjeniRizika', e.target.value)}>
@@ -886,14 +886,14 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px 200px 250px', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Email adresa za rezultate' : 'Email for results'}
+                  {lang !== 'en' ? 'Email adresa za rezultate' : 'Email for results'}
                   <HelpTip text="Na ovu email adresu šalje se obavijest sa rezultatima svaki put kad radnik završi upitnik. Ostavite prazno ako ne trebate obavijesti." />
                 </div>
                 <input className="form-input" type="email" value={formData.emailZaRezultate} onChange={e => set('emailZaRezultate', e.target.value)} />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Pošalji kopiju korisniku' : 'Send copy to user'}
+                  {lang !== 'en' ? 'Pošalji kopiju korisniku' : 'Send copy to user'}
                   <HelpTip text="Radnik koji popuni upitnik dobiva kopiju svojih odgovora i rezultata na email koji je unio pri ispunjavanju." />
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -902,7 +902,7 @@ export default function QuestionnairesPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Prikaži rezultate nakon rješavanja' : 'Show results after'}
+                  {lang !== 'en' ? 'Prikaži rezultate nakon rješavanja' : 'Show results after'}
                   <HelpTip text="Nakon što radnik pošalje upitnik, odmah mu se prikazuje rezultat (koliko je % odgovora tačno i prolaz/ne prolaz)." />
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -911,7 +911,7 @@ export default function QuestionnairesPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Prikaži samo zadovoljava/nezadovoljava' : 'Show only pass/fail'}
+                  {lang !== 'en' ? 'Prikaži samo zadovoljava/nezadovoljava' : 'Show only pass/fail'}
                   <HelpTip text="Radnik vidi samo 'Zadovoljava' ili 'Ne zadovoljava' — bez postotka i bez detalja. Korisno za jednostavne provjere znanja." />
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -924,7 +924,7 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '200px 200px 1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Automatski upis u evidenciju' : 'Auto-record'}
+                  {lang !== 'en' ? 'Automatski upis u evidenciju' : 'Auto-record'}
                   <HelpTip text="Kada radnik uspješno završi upitnik (tj. prođe prag prolaza), automatski se kreira zapis u evidenciji osposobljavanja za tog radnika." />
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -933,17 +933,17 @@ export default function QuestionnairesPage() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Koristi prag prolaza' : 'Use pass threshold'}
+                  {lang !== 'en' ? 'Koristi prag prolaza' : 'Use pass threshold'}
                   <HelpTip text="'Da (test)' — upitnik se tretira kao TEST s prolaznim pragom (ocjenjuje se). 'Ne (anketa)' — upitnik je anketa bez ocjenjivanja, svaki odgovor je ispravan." />
                 </div>
                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                   <input type="checkbox" className="form-checkbox" checked={formData.koristiPragProlaza !== false} onChange={e => set('koristiPragProlaza', e.target.checked)} />
-                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{formData.koristiPragProlaza !== false ? (lang === 'bs' ? 'Da (test)' : 'Yes (test)') : (lang === 'bs' ? 'Ne (anketa)' : 'No (survey)')}</span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{formData.koristiPragProlaza !== false ? (lang !== 'en' ? 'Da (test)' : 'Yes (test)') : (lang !== 'en' ? 'Ne (anketa)' : 'No (survey)')}</span>
                 </label>
               </div>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Prag prolaza (%)' : 'Pass threshold (%)'}
+                  {lang !== 'en' ? 'Prag prolaza (%)' : 'Pass threshold (%)'}
                   <HelpTip text="Minimalni postotak tačnih odgovora potreban za prolaz. Npr. 70 znači da radnik mora tačno odgovoriti na barem 70% pitanja. Aktivno samo kada je 'Koristi prag prolaza' uključeno." />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: formData.koristiPragProlaza !== false ? 1 : 0.35, pointerEvents: formData.koristiPragProlaza !== false ? 'auto' : 'none' }}>
@@ -953,13 +953,13 @@ export default function QuestionnairesPage() {
                     style={{ maxWidth: 100 }} />
                   <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>%</span>
                   <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginLeft: 4 }}>
-                    ({lang === 'bs' ? 'npr. 70 znači 70% tačnih odgovora za prolaz' : 'e.g. 70 means 70% correct to pass'})
+                    ({lang !== 'en' ? 'npr. 70 znači 70% tačnih odgovora za prolaz' : 'e.g. 70 means 70% correct to pass'})
                   </span>
                 </div>
               </div>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Izlazni tip dokumenta' : 'Output doc type'}
+                  {lang !== 'en' ? 'Izlazni tip dokumenta' : 'Output doc type'}
                   <HelpTip text="Tip dokumenta koji se generiše kao rezultat popunjenog upitnika. Trenutno je polje informativno — document generacija je u pripremi." />
                 </div>
                 <select className="form-select" value={formData.izlazniTipDokumenta} onChange={e => set('izlazniTipDokumenta', e.target.value)}>
@@ -970,7 +970,7 @@ export default function QuestionnairesPage() {
                 </select>
               </div>
               <div>
-                <div style={labelSt}>{lang === 'bs' ? 'Zadani ispis za dokument' : 'Default print for doc'}</div>
+                <div style={labelSt}>{lang !== 'en' ? 'Zadani ispis za dokument' : 'Default print for doc'}</div>
                 <input className="form-input" value={formData.zadaniIspisZaDokument} onChange={e => set('zadaniIspisZaDokument', e.target.value)} />
               </div>
             </div>
@@ -979,14 +979,14 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Naslov emaila' : 'Email Subject'}
+                  {lang !== 'en' ? 'Naslov emaila' : 'Email Subject'}
                   <HelpTip text="Naslov (subject) emaila koji se šalje radnicima kada im proslijedite upitnik. Ako ostavite prazno, koristi se automatski generisani naslov." />
                 </div>
                 <input className="form-input" value={formData.emailSubject} onChange={e => set('emailSubject', e.target.value)} />
               </div>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Sadržaj emaila' : 'Email Body'}
+                  {lang !== 'en' ? 'Sadržaj emaila' : 'Email Body'}
                   <HelpTip text="Tekst poruke u emailu koji radnik prima sa linkom za popunjavanje upitnika. Ako ostavite prazno, koristi se standardna poruka." />
                 </div>
                 <textarea className="form-input" rows={2} value={formData.emailBody} onChange={e => set('emailBody', e.target.value)} />
@@ -997,14 +997,14 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Rok isteka (opcionalno)' : 'Expiry date (optional)'}
+                  {lang !== 'en' ? 'Rok isteka (opcionalno)' : 'Expiry date (optional)'}
                   <HelpTip text="Datum do kojeg je moguće popuniti ovaj upitnik. Nakon tog datuma, link za popunjavanje prestaje biti aktivan. Ostavite prazno ako nema roka." />
                 </div>
                 <DateInput value={formData.rokIsteka || ''} onChange={v => set('rokIsteka', v)} />
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 2 }}>
                 <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                  {lang === 'bs' ? 'Poslanim upitnicima ističe rok na ovaj datum.' : 'Sent questionnaires expire on this date.'}
+                  {lang !== 'en' ? 'Poslanim upitnicima ističe rok na ovaj datum.' : 'Sent questionnaires expire on this date.'}
                 </span>
               </div>
             </div>
@@ -1013,14 +1013,14 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Poruka za uspješno rješavanje' : 'Success message'}
+                  {lang !== 'en' ? 'Poruka za uspješno rješavanje' : 'Success message'}
                   <HelpTip text="Tekst koji se prikazuje radniku na ekranu kada uspješno prođe upitnik (dostigao prag prolaza). Npr. 'Čestitamo, položili ste test!'" />
                 </div>
                 <textarea className="form-input" rows={2} value={formData.porukaUspjesno} onChange={e => set('porukaUspjesno', e.target.value)} />
               </div>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Poruka za nedovoljan broj točnih odgovora' : 'Failure message'}
+                  {lang !== 'en' ? 'Poruka za nedovoljan broj točnih odgovora' : 'Failure message'}
                   <HelpTip text="Tekst koji se prikazuje radniku kada nije dostigao prag prolaza. Npr. 'Niste položili, molimo ponovite obuku i pokušajte ponovo.'" />
                 </div>
                 <textarea className="form-input" rows={2} value={formData.porukaNedovoljno} onChange={e => set('porukaNedovoljno', e.target.value)} />
@@ -1031,11 +1031,11 @@ export default function QuestionnairesPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: 16, marginBottom: 14 }}>
               <div>
                 <div style={{ ...labelSt, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                  {lang === 'bs' ? 'Jezik upitnika' : 'Questionnaire language'}
+                  {lang !== 'en' ? 'Jezik upitnika' : 'Questionnaire language'}
                   <HelpTip text="Jezik na kojem je napisan upitnik. Koristi se pri AI generisanju i slanju emailova radnicima." />
                 </div>
                 <select className="form-select" value={formData.jezik || ''} onChange={e => set('jezik', e.target.value)}>
-                  <option value="">{lang === 'bs' ? '— Odaberite —' : '— Select —'}</option>
+                  <option value="">{lang !== 'en' ? '— Odaberite —' : '— Select —'}</option>
                   <option value="Bosanski">Bosanski</option>
                   <option value="Hrvatski">Hrvatski</option>
                   <option value="Srpski">Srpski</option>
@@ -1070,7 +1070,7 @@ export default function QuestionnairesPage() {
             </button>
             {editingId && (
               <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }} onClick={() => { handleDelete(editingId); setView('list'); }}>
-                🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}
+                🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}
               </button>
             )}
           </div>

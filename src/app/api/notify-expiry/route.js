@@ -304,7 +304,7 @@ export async function GET(request) {
                     if (settings?.emailNotifFleet !== false) {
                         const rows = cap(vehiclesSnap.docs.flatMap(doc => {
                             const v = doc.data();
-                            return [{ label: lang === 'bs' ? 'Registracija' : 'Registration', date: v.registracijaIstice }, { label: lang === 'bs' ? 'Tehnički pregled' : 'Technical inspection', date: v.tehnickiIstice }, { label: lang === 'bs' ? 'Osiguranje' : 'Insurance', date: v.osiguranjeIstice }]
+                            return [{ label: lang !== 'en' ? 'Registracija' : 'Registration', date: v.registracijaIstice }, { label: lang !== 'en' ? 'Tehnički pregled' : 'Technical inspection', date: v.tehnickiIstice }, { label: lang !== 'en' ? 'Osiguranje' : 'Insurance', date: v.osiguranjeIstice }]
                                 .reduce((acc, chk) => {
                                     const days = daysUntil(chk.date);
                                     if (days !== null && days <= threshold) acc.push({ _days: days, [t(lang, 'vehicle')]: `${v.registracija || ''} ${v.marka || ''}`.trim(), [t(lang, 'type')]: chk.label, [t(lang, 'expires')]: fmtDate(chk.date) });

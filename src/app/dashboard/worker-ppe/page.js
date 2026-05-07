@@ -60,7 +60,7 @@ export default function WorkerPPEPage() {
   };
   const handleDeleteSelected = async () => {
     if (selectedIds.size === 0) return;
-    if (await confirm(lang === 'bs' ? `Obrisati ${selectedIds.size} zaduženja?` : `Delete ${selectedIds.size} assignments?`)) {
+    if (await confirm(lang !== 'en' ? `Obrisati ${selectedIds.size} zaduženja?` : `Delete ${selectedIds.size} assignments?`)) {
       for (let id of selectedIds) remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
       setSelectedIds(new Set());
       setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
@@ -68,7 +68,7 @@ export default function WorkerPPEPage() {
   };
 
   const handleDelete = async (id) => {
-    if (await confirm(lang === 'bs' ? 'Obrisati zaduženje?' : 'Delete assignment?')) {
+    if (await confirm(lang !== 'en' ? 'Obrisati zaduženje?' : 'Delete assignment?')) {
       remove(COLLECTIONS.PPE_ASSIGNMENTS, id);
       setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
     }
@@ -123,28 +123,28 @@ export default function WorkerPPEPage() {
         <PageHeader icon="🔍" title={t('workerPPE')} />
         <div className="card"><div className="card-body" style={{ padding: 0 }}>
           <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openModal} title={lang === 'bs' ? 'Dodaj novu OZO' : 'Add new PPE'}>
-              + {lang === 'bs' ? 'Dodaj OZO' : 'Add PPE'}
+            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openModal} title={lang !== 'en' ? 'Dodaj novu OZO' : 'Add new PPE'}>
+              + {lang !== 'en' ? 'Dodaj OZO' : 'Add PPE'}
             </button>
             <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
               <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
               <input
-                placeholder={lang === 'bs' ? 'Pretraži po radniku, opremi...' : 'Search by worker, item...'}
+                placeholder={lang !== 'en' ? 'Pretraži po radniku, opremi...' : 'Search by worker, item...'}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
               />
-              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang === 'bs' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+              {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
             </div>
-            <PDFExportButton title={lang === 'bs' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-              { label: lang === 'bs' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
-              ...(selectedIds.size > 0 ? [{ label: `${lang === 'bs' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
+            <PDFExportButton title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
+              { label: lang !== 'en' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
+              ...(selectedIds.size > 0 ? [{ label: `${lang !== 'en' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
             ]} />
             <SavedFlash />
             {selectedIds.size > 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang === 'bs' ? 'odabrano' : 'selected'}:</span>
-                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={lang === 'bs' ? 'Obriši odabranu OZO' : 'Delete selected PPE'}>🗑️ {lang === 'bs' ? 'Obriši' : 'Delete'}</button>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
+                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabranu OZO' : 'Delete selected PPE'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
               </div>
             )}
             {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sortedRows.length} {t('records')}</span>}
@@ -156,7 +156,7 @@ export default function WorkerPPEPage() {
             <th style={thStyle('workerName')} onClick={() => toggleSort('workerName')}>{t('worker')}{sortIcon('workerName')}</th>
             <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
             <th style={thStyle('datumZaduzenja')} onClick={() => toggleSort('datumZaduzenja')}>{t('assignmentDate')}{sortIcon('datumZaduzenja')}</th>
-            <th style={thStyle('kolicina')} onClick={() => toggleSort('kolicina')}>{lang === 'bs' ? 'Količina' : 'Quantity'}{sortIcon('kolicina')}</th>
+            <th style={thStyle('kolicina')} onClick={() => toggleSort('kolicina')}>{lang !== 'en' ? 'Količina' : 'Quantity'}{sortIcon('kolicina')}</th>
           </tr></thead><tbody>
               {sortedRows.length === 0
                 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
@@ -179,7 +179,7 @@ export default function WorkerPPEPage() {
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                           );
                           setActionMenuId(r.id);
-                        }} title={lang === 'bs' ? 'Prikaži akcije za OZO' : 'Show PPE actions'}>
+                        }} title={lang !== 'en' ? 'Prikaži akcije za OZO' : 'Show PPE actions'}>
                           Akcije ▼
                         </button>
                         {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
@@ -190,18 +190,18 @@ export default function WorkerPPEPage() {
                                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{r.workerName}</span>
                                   <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                               </div>
-                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} style={menuItemSt} className="action-menu-item">✏️ {lang === 'bs' ? 'Uredi OZO' : 'Edit PPE'}</button>
-                              <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} style={menuItemSt} className="action-menu-item">📂 {lang === 'bs' ? 'Otvori profil' : 'Open profile'}</button>
-                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} style={menuItemSt} className="action-menu-item">📋 {lang === 'bs' ? 'Kopiraj' : 'Copy'}</button>
+                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} style={menuItemSt} className="action-menu-item">✏️ {lang !== 'en' ? 'Uredi OZO' : 'Edit PPE'}</button>
+                              <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} style={menuItemSt} className="action-menu-item">📂 {lang !== 'en' ? 'Otvori profil' : 'Open profile'}</button>
+                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} style={menuItemSt} className="action-menu-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} className="action-menu-item-danger">🗑️ {lang === 'bs' ? 'Izbriši' : 'Delete'}</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} className="action-menu-item-danger">🗑️ {lang !== 'en' ? 'Izbriši' : 'Delete'}</button>
                             </div>
                             </>, document.body
                           )}
                       </div>
                     </td>
                     <td>
-                      <button style={clickableName} onClick={() => { if (r.workerId) setViewWorkerId(r.workerId); }} title={lang === 'bs' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile'}>
+                      <button style={clickableName} onClick={() => { if (r.workerId) setViewWorkerId(r.workerId); }} title={lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile'}>
                         {r.workerName}
                       </button>
                     </td>
@@ -225,22 +225,22 @@ export default function WorkerPPEPage() {
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Icon3D name="OZO.png" size={56} />
-                <h2 style={{ color: 'white', margin: 0 }}>{editingId ? (lang === 'bs' ? 'Uredi OZO' : 'Edit PPE') : (lang === 'bs' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment')}</h2>
+                <h2 style={{ color: 'white', margin: 0 }}>{editingId ? (lang !== 'en' ? 'Uredi OZO' : 'Edit PPE') : (lang !== 'en' ? 'Dodaj osobnu zaštitnu opremu' : 'Add personal protective equipment')}</h2>
               </div>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowAddModal(false)}>✕</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div className="form-group">
-                <label className="form-label">👤 {lang === 'bs' ? 'Radnik *' : 'Worker *'}</label>
+                <label className="form-label">👤 {lang !== 'en' ? 'Radnik *' : 'Worker *'}</label>
                 <select className="form-select" value={addForm.workerId} onChange={e => setAddForm(f => ({ ...f, workerId: e.target.value }))}>
-                  <option value="">{lang === 'bs' ? '— Odaberi radnika —' : '— Select worker —'}</option>
+                  <option value="">{lang !== 'en' ? '— Odaberi radnika —' : '— Select worker —'}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                   ))}
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">🦺 {lang === 'bs' ? 'Naziv opreme *' : 'Equipment name *'}</label>
+                <label className="form-label">🦺 {lang !== 'en' ? 'Naziv opreme *' : 'Equipment name *'}</label>
                 {/* Select from catalogue */}
                 <select
                   className="form-select"
@@ -251,7 +251,7 @@ export default function WorkerPPEPage() {
                   }}
                   style={{ marginBottom: 6 }}
                 >
-                  <option value="__custom__">{lang === 'bs' ? '— Odaberi iz kataloga ili unesi ručno —' : '— Select from catalogue or enter manually —'}</option>
+                  <option value="__custom__">{lang !== 'en' ? '— Odaberi iz kataloga ili unesi ručno —' : '— Select from catalogue or enter manually —'}</option>
                   {ppeTypes.sort((a, b) => (a.naziv || '').localeCompare(b.naziv || '')).map(p => (
                     <option key={p.id} value={p.naziv}>{p.naziv}</option>
                   ))}
@@ -261,16 +261,16 @@ export default function WorkerPPEPage() {
                   className="form-input"
                   value={addForm.naziv}
                   onChange={e => setAddForm(f => ({ ...f, naziv: e.target.value }))}
-                  placeholder={lang === 'bs' ? 'ili upiši naziv ručno...' : 'or type a custom name...'}
+                  placeholder={lang !== 'en' ? 'ili upiši naziv ručno...' : 'or type a custom name...'}
                 />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
                 <div className="form-group">
-                  <label className="form-label">📅 {lang === 'bs' ? 'Datum zaduženja' : 'Assignment date'}</label>
+                  <label className="form-label">📅 {lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</label>
                   <DateInput value={addForm.datumZaduzenja} onChange={v => setAddForm(f => ({ ...f, datumZaduzenja: v }))} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">{lang === 'bs' ? 'Količina' : 'Quantity'}</label>
+                  <label className="form-label">{lang !== 'en' ? 'Količina' : 'Quantity'}</label>
                   <input className="form-input" type="number" min="1" value={addForm.kolicina} onChange={e => setAddForm(f => ({ ...f, kolicina: parseInt(e.target.value) || 1 }))} />
                 </div>
               </div>

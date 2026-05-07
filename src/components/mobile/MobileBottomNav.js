@@ -15,11 +15,11 @@ export default function MobileBottomNav({ onMenuOpen }) {
     const [searchOpen, setSearchOpen] = useState(false);
 
     const tabs = [
-        { key: 'dashboard', icon: '📊', label: lang === 'bs' ? 'Početna' : 'Home', path: '/dashboard' },
-        { key: 'workers', icon: '👷', label: lang === 'bs' ? 'Radnici' : 'Workers', path: '/dashboard/workers' },
-        { key: 'certs', icon: '📜', label: lang === 'bs' ? 'Uvjerenja' : 'Certs', path: '/dashboard/worker-certificates' },
-        { key: 'search', icon: '🔍', label: lang === 'bs' ? 'Pretraži' : 'Search', action: 'search' },
-        { key: 'menu', icon: '☰', label: lang === 'bs' ? 'Meni' : 'Menu', action: 'menu' },
+        { key: 'dashboard', icon: '📊', label: lang !== 'en' ? 'Početna' : 'Home', path: '/dashboard' },
+        { key: 'workers', icon: '👷', label: lang !== 'en' ? 'Radnici' : 'Workers', path: '/dashboard/workers' },
+        { key: 'certs', icon: '📜', label: lang !== 'en' ? 'Uvjerenja' : 'Certs', path: '/dashboard/worker-certificates' },
+        { key: 'search', icon: '🔍', label: lang !== 'en' ? 'Pretraži' : 'Search', action: 'search' },
+        { key: 'menu', icon: '☰', label: lang !== 'en' ? 'Meni' : 'Menu', action: 'menu' },
     ];
 
     const isActive = useCallback((path) => {

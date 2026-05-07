@@ -102,7 +102,7 @@ export default function PublicObservationForm() {
         const file = e.target.files[0];
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-            setErrorMsg(lang === 'bs' ? 'Možete odabrati samo slike.' : 'You can only select images.');
+            setErrorMsg(lang !== 'en' ? 'Možete odabrati samo slike.' : 'You can only select images.');
             return;
         }
 
@@ -114,7 +114,7 @@ export default function PublicObservationForm() {
             const objUrl = URL.createObjectURL(compressed);
             setImagePreview(objUrl);
         } catch (err) {
-            setErrorMsg(lang === 'bs' ? 'Greška pri obradi slike.' : 'Error processing image.');
+            setErrorMsg(lang !== 'en' ? 'Greška pri obradi slike.' : 'Error processing image.');
         }
     };
 
@@ -122,7 +122,7 @@ export default function PublicObservationForm() {
         e.preventDefault();
         setErrorMsg('');
         if (!formData.opis.trim() || !formData.lokacija.trim()) {
-            setErrorMsg(lang === 'bs' ? 'Popunite obavezna polja: Kratki opis i Tačna lokacija.' : 'Description and location are mandatory.');
+            setErrorMsg(lang !== 'en' ? 'Popunite obavezna polja: Kratki opis i Tačna lokacija.' : 'Description and location are mandatory.');
             return;
         }
 
@@ -231,7 +231,7 @@ export default function PublicObservationForm() {
             setSuccess(true);
         } catch (err) {
             console.error(err);
-            setErrorMsg(lang === 'bs' ? 'Desila se greška pri slanju. Pokušajte ponovo.' : 'An error occurred. Please try again.');
+            setErrorMsg(lang !== 'en' ? 'Desila se greška pri slanju. Pokušajte ponovo.' : 'An error occurred. Please try again.');
         } finally {
             setSubmitting(false);
         }
@@ -243,10 +243,10 @@ export default function PublicObservationForm() {
             <div style={{ maxWidth: 500, margin: '0 auto', textAlign: 'center', marginBottom: 24, marginTop: 24 }}>
                 {companyInfo.logo && <img src={companyInfo.logo} style={{ height: 60, objectFit: 'contain', marginBottom: 16 }} alt="Logo" />}
                 <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text)', margin: '0 0 8px 0' }}>
-                    {lang === 'bs' ? 'Prijava Opasnosti' : 'Hazard Report'}
+                    {lang !== 'en' ? 'Prijava Opasnosti' : 'Hazard Report'}
                 </h1>
                 <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0 }}>
-                    {lang === 'bs' 
+                    {lang !== 'en' 
                         ? 'Sistem sigurnosnih opažanja na terenu.' 
                         : 'Field hazard observation system.'}
                 </p>
@@ -260,12 +260,12 @@ export default function PublicObservationForm() {
                 {success ? (
                     <div className="animate-fadeIn" style={{ textAlign: 'center', padding: '40px 0' }}>
                         <div style={{ fontSize: 64, marginBottom: 16 }}>✅</div>
-                        <h2 style={{ color: 'var(--success)' }}>{lang === 'bs' ? 'Uspješno poslano!' : 'Sent successfully!'}</h2>
+                        <h2 style={{ color: 'var(--success)' }}>{lang !== 'en' ? 'Uspješno poslano!' : 'Sent successfully!'}</h2>
                         <p style={{ color: 'var(--text-muted)' }}>
-                            {lang === 'bs' ? 'Hvala što brinete o sigurnosti. Prijava je dojavljena administraciji.' : 'Thank you for caring for safety. The administration has been notified.'}
+                            {lang !== 'en' ? 'Hvala što brinete o sigurnosti. Prijava je dojavljena administraciji.' : 'Thank you for caring for safety. The administration has been notified.'}
                         </p>
                         <button className="btn btn-outline" style={{ marginTop: 24 }} onClick={() => window.location.reload()}>
-                            {lang === 'bs' ? 'Prijavi novu opasnost' : 'Report another hazard'}
+                            {lang !== 'en' ? 'Prijavi novu opasnost' : 'Report another hazard'}
                         </button>
                     </div>
                 ) : (
@@ -277,10 +277,10 @@ export default function PublicObservationForm() {
                         )}
 
                         <div className="form-group">
-                            <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Kratki opis problema *' : 'Short description *'}</label>
+                            <label className="form-label" style={{ fontWeight: 600 }}>{lang !== 'en' ? 'Kratki opis problema *' : 'Short description *'}</label>
                             <input 
                                 className="form-input" 
-                                placeholder={lang === 'bs' ? 'Npr. Odrezana žica blizu vode...' : 'E.g. Cut wire near water...'} 
+                                placeholder={lang !== 'en' ? 'Npr. Odrezana žica blizu vode...' : 'E.g. Cut wire near water...'} 
                                 value={formData.opis}
                                 onChange={e => setFormData({...formData, opis: e.target.value})}
                                 required
@@ -288,10 +288,10 @@ export default function PublicObservationForm() {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Tačna lokacija *' : 'Exact location *'}</label>
+                            <label className="form-label" style={{ fontWeight: 600 }}>{lang !== 'en' ? 'Tačna lokacija *' : 'Exact location *'}</label>
                             <input 
                                 className="form-input" 
-                                placeholder={lang === 'bs' ? 'Npr. Mašina br. 84, Pogon 2' : 'E.g. Machine 84, Unit 2'} 
+                                placeholder={lang !== 'en' ? 'Npr. Mašina br. 84, Pogon 2' : 'E.g. Machine 84, Unit 2'} 
                                 value={formData.lokacija}
                                 onChange={e => setFormData({...formData, lokacija: e.target.value})}
                                 required
@@ -299,17 +299,17 @@ export default function PublicObservationForm() {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Vaše ime (opcionalno)' : 'Your name (optional)'}</label>
+                            <label className="form-label" style={{ fontWeight: 600 }}>{lang !== 'en' ? 'Vaše ime (opcionalno)' : 'Your name (optional)'}</label>
                             <input 
                                 className="form-input" 
-                                placeholder={lang === 'bs' ? 'Npr. Edin, da bi vas mogli kontaktirati' : 'E.g. John, for contact purposes'} 
+                                placeholder={lang !== 'en' ? 'Npr. Edin, da bi vas mogli kontaktirati' : 'E.g. John, for contact purposes'} 
                                 value={formData.ime}
                                 onChange={e => setFormData({...formData, ime: e.target.value})}
                             />
                         </div>
 
                         <div className="form-group" style={{ display: orgUnits.length > 0 ? 'block' : 'none' }}>
-                                <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Odjel / Sektor (opcionalno)' : 'Department (optional)'}</label>
+                                <label className="form-label" style={{ fontWeight: 600 }}>{lang !== 'en' ? 'Odjel / Sektor (opcionalno)' : 'Department (optional)'}</label>
                                 <select 
                                     className="form-select" 
                                     value={formData.orgJedinicaId}
@@ -321,7 +321,7 @@ export default function PublicObservationForm() {
                             </div>
 
                             <div className="form-group">
-                            <label className="form-label" style={{ fontWeight: 600 }}>{lang === 'bs' ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
+                            <label className="form-label" style={{ fontWeight: 600 }}>{lang !== 'en' ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
                             <div 
                                 style={{ 
                                     border: '2px dashed var(--primary)', 
@@ -344,7 +344,7 @@ export default function PublicObservationForm() {
                                                 onClick={() => fileInputCameraRef.current?.click()} 
                                                 style={{ flex: 1, padding: '8px 4px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             >
-                                                {lang === 'bs' ? 'Slikaj Kamerom' : 'Take Photo'}
+                                                {lang !== 'en' ? 'Slikaj Kamerom' : 'Take Photo'}
                                             </button>
                                             <button 
                                                 type="button" 
@@ -352,7 +352,7 @@ export default function PublicObservationForm() {
                                                 onClick={() => fileInputGalleryRef.current?.click()} 
                                                 style={{ flex: 1, padding: '8px 4px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                             >
-                                                {lang === 'bs' ? 'Iz Galerije' : 'From Gallery'}
+                                                {lang !== 'en' ? 'Iz Galerije' : 'From Gallery'}
                                             </button>
                                         </div>
                                     </div>
@@ -360,7 +360,7 @@ export default function PublicObservationForm() {
                             </div>
                             {imagePreview && (
                                 <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8, color: 'var(--danger)', margin: '8px auto', display: 'block' }} onClick={() => { setImageFile(null); setImagePreview(null); }}>
-                                    {lang === 'bs' ? 'Ukloni sliku' : 'Remove photo'}
+                                    {lang !== 'en' ? 'Ukloni sliku' : 'Remove photo'}
                                 </button>
                             )}
                             <input 
@@ -386,7 +386,7 @@ export default function PublicObservationForm() {
                             style={{ width: '100%', padding: '16px', fontSize: '1rem', marginTop: 12, background: 'var(--primary)', color: 'white', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                             disabled={submitting}
                         >
-                            {submitting ? (lang === 'bs' ? 'Slanje u toku...' : 'Sending...') : (lang === 'bs' ? 'Pošalji Prijavu' : 'Submit Report')}
+                            {submitting ? (lang !== 'en' ? 'Slanje u toku...' : 'Sending...') : (lang !== 'en' ? 'Pošalji Prijavu' : 'Submit Report')}
                         </button>
                     </form>
                 )}

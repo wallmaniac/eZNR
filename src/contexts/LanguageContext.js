@@ -66,9 +66,9 @@ export function CountryAutoSwitch() {
 
     useEffect(() => {
         // Auto-switch language based on jurisdiction
-        if (country === 'HR') {
+        if (country?.toUpperCase() === 'HR') {
             setLang('hr');
-        } else {
+        } else if (country?.toUpperCase() === 'BA') {
             setLang('bs');
         }
     }, [country, setLang]);

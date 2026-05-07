@@ -139,10 +139,10 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         
         // Add multi-tenant context awareness
         const activeCompName = activeCompanyId === 'all' 
-            ? (lang === 'bs' ? 'Sve dodijeljene firme (Agregatni prikaz)' : 'All assigned companies (Aggregate view)')
+            ? (lang !== 'en' ? 'Sve dodijeljene firme (Agregatni prikaz)' : 'All assigned companies (Aggregate view)')
             : (userCompanies?.find(c => c.id === activeCompanyId)?.naziv || activeCompanyId);
             
-        lines.push(lang === 'bs' 
+        lines.push(lang !== 'en' 
             ? `TRENUTNI KONTEKST FIRME: ${activeCompName}. Prilikom davanja odgovora o radnicima ili incidentima obavezno uzmi u obzir iz koje su firme ako je odabrano više firmi.`
             : `CURRENT COMPANY CONTEXT: ${activeCompName}. When answering queries about workers or incidents, be sure to consider which company they belong to if multiple companies are selected.`
         );
@@ -155,7 +155,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         const injuryBol = injuries.filter(i => i.bolovanje && i.status !== 'zatvorena').map(i => ({ id: i.radnikId, src: 'injury' }));
         const diseaseBol = diseases.filter(d => d.bolovanje && d.status !== 'zatvorena').map(d => ({ id: d.radnikId, src: 'disease' }));
         const allBol = [...injuryBol, ...diseaseBol].filter((b, i, arr) => b.id && arr.findIndex(x => x.id === b.id) === i);
-        lines.push(lang === 'bs'
+        lines.push(lang !== 'en'
             ? `\nRADNICI NA BOLOVANJU (${allBol.length}): ${allBol.length === 0 ? 'Nema.' : allBol.map(b => `W[${b.id}] (${b.src === 'injury' ? 'povreda' : 'bolest'})`).join(', ')}`
             : `\nWORKERS ON SICK LEAVE (${allBol.length}): ${allBol.length === 0 ? 'None.' : allBol.map(b => `W[${b.id}] (${b.src === 'injury' ? 'injury' : 'disease'})`).join(', ')}`
         );
@@ -163,7 +163,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Calendar Events
         const upcomingEvents = calendarEvents.filter(e => e.datum && new Date(e.datum) >= today).sort((a,b) => new Date(a.datum) - new Date(b.datum));
         if (upcomingEvents.length > 0) {
-            lines.push(lang === 'bs'
+            lines.push(lang !== 'en'
                 ? `\nPREDSTOJEĆI DOGAĐAJI U KALENDARU (${upcomingEvents.length}): ${upcomingEvents.slice(0, 5).map(e => `${e.datum}: ${e.opis || e.tip}`).join('; ')}`
                 : `\nUPCOMING CALENDAR EVENTS (${upcomingEvents.length}): ${upcomingEvents.slice(0, 5).map(e => `${e.datum}: ${e.opis || e.tip}`).join('; ')}`
             );
@@ -174,13 +174,13 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         const soonCerts = certificates.filter(c => c.vrijediDo && new Date(c.vrijediDo) >= today && new Date(c.vrijediDo) <= in30);
         
         if (expiredCerts.length > 0) {
-            lines.push(lang === 'bs'
+            lines.push(lang !== 'en'
                 ? `ISTEKLA UVJERENJA (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (isteklo: ${c.vrijediDo})`).join('; ')}`
                 : `EXPIRED CERTIFICATES (${expiredCerts.length}): ${expiredCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (expired: ${c.vrijediDo})`).join('; ')}`
             );
         }
         if (soonCerts.length > 0) {
-            lines.push(lang === 'bs'
+            lines.push(lang !== 'en'
                 ? `UVJERENJA KOJA USKORO ISTIČU - 30 DANA (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (ističe: ${c.vrijediDo})`).join('; ')}`
                 : `CERTIFICATES EXPIRING SOON - 30 DAYS (${soonCerts.length}): ${soonCerts.slice(0, 8).map(c => `${c.ime || c.oznaka} — W[${c.workerId}] (expires: ${c.vrijediDo})`).join('; ')}`
             );
@@ -189,11 +189,11 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Medical Exams
         const overdueMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today);
         const soonMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) >= today && new Date(m.vrijediDo) <= in60);
-        if (overdueMed.length > 0) lines.push(lang === 'bs'
+        if (overdueMed.length > 0) lines.push(lang !== 'en'
             ? `PREKORAČENI LJEKARSKI PREGLEDI (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `W[${m.workerId}] (isteklo: ${m.vrijediDo})`).join('; ')}`
             : `OVERDUE MEDICAL EXAMS (${overdueMed.length}): ${overdueMed.slice(0, 6).map(m => `W[${m.workerId}] (expired: ${m.vrijediDo})`).join('; ')}`
         );
-        if (soonMed.length > 0) lines.push(lang === 'bs'
+        if (soonMed.length > 0) lines.push(lang !== 'en'
             ? `LJEKARSKI PREGLEDI USKORO (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (ističe: ${m.vrijediDo})`).join('; ')}`
             : `MEDICAL EXAMS DUE SOON (${soonMed.length}): ${soonMed.slice(0, 6).map(m => `W[${m.workerId}] (expires: ${m.vrijediDo})`).join('; ')}`
         );
@@ -201,7 +201,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Employer Docs
         const docsObj = employerDocs.map(d => `${d.naziv} (Vrijedi do: ${d.datumIsteka || 'Nema roka'})`);
         if (docsObj.length > 0) {
-            lines.push(lang === 'bs'
+            lines.push(lang !== 'en'
                 ? `\nNORMATIVNI AKTI POSLODAVCA: ${docsObj.join('; ')}`
                 : `\nEMPLOYER DOCUMENTATION: ${docsObj.join('; ')}`
             );
@@ -210,13 +210,13 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Risk Assessments
         const activeAssessments = riskAssessments.filter(r => r.nazivProcjene);
         if (activeAssessments.length > 0) {
-            lines.push(lang === 'bs' 
+            lines.push(lang !== 'en' 
                 ? `\nAKTIVNE PROCJENE RIZIKA (${activeAssessments.length}): ${activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', ')}`
                 : `\nACTIVE RISK ASSESSMENTS (${activeAssessments.length}): ${activeAssessments.map(r => r.nazivTvrtke + ' - ' + r.nazivProcjene).join(', ')}`
             );
             const highRisks = riskItems.filter(ri => ri.rizik >= 16); // 16-20 Znatan, 21-25 Nedopustiv
             if (highRisks.length > 0) {
-                lines.push(lang === 'bs'
+                lines.push(lang !== 'en'
                     ? `KRITIČNI RIZICI (Znatan i Nedopustiv) (${highRisks.length}): ${highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; ')}`
                     : `CRITICAL RISKS (High and Unacceptable) (${highRisks.length}): ${highRisks.slice(0, 10).map(ri => ri.opisOpasnosti + ' (' + ri.nivoRizika + ', R=' + ri.rizik + ')').join('; ')}`
                 );
@@ -226,11 +226,11 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Overdue equipment
         const overdueEquip = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
         const soonEquip = equipment.filter(e => e.iduci && new Date(e.iduci) >= today && new Date(e.iduci) <= in60);
-        if (overdueEquip.length > 0) lines.push(lang === 'bs'
+        if (overdueEquip.length > 0) lines.push(lang !== 'en'
             ? `OPREMA S PREKORAČENIM PREGLEDOM (${overdueEquip.length}): ${overdueEquip.slice(0, 6).map(e => `${e.naziv} (trebalo do: ${e.iduci})`).join('; ')}`
             : `EQUIPMENT WITH OVERDUE INSPECTION (${overdueEquip.length}): ${overdueEquip.slice(0, 6).map(e => `${e.naziv} (was due: ${e.iduci})`).join('; ')}`
         );
-        if (soonEquip.length > 0) lines.push(lang === 'bs'
+        if (soonEquip.length > 0) lines.push(lang !== 'en'
             ? `OPREMA ČIJI PREGLED USKORO DOSPIJEVA - 60 DANA (${soonEquip.length}): ${soonEquip.slice(0, 6).map(e => `${e.naziv} (do: ${e.iduci})`).join('; ')}`
             : `EQUIPMENT INSPECTION DUE SOON - 60 DAYS (${soonEquip.length}): ${soonEquip.slice(0, 6).map(e => `${e.naziv} (due: ${e.iduci})`).join('; ')}`
         );
@@ -238,12 +238,12 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // Fleet
         const activeVehicles = vehicles.filter(v => v.status === 'aktivan' || v.status === 'servis');
         if (activeVehicles.length > 0) {
-            lines.push(lang === 'bs' 
+            lines.push(lang !== 'en' 
                 ? `\nVOZNI PARK (${activeVehicles.length} vozila): ${activeVehicles.map(v => `[ID:${v.id}] ${v.marka} ${v.model} (${v.registracija}, Vozač: ${v.vozacIme || 'Nema'})`).join('; ')}`
                 : `\nFLEET (${activeVehicles.length} vehicles): ${activeVehicles.map(v => `[ID:${v.id}] ${v.marka} ${v.model} (${v.registracija}, Driver: ${v.vozacIme || 'None'})`).join('; ')}`
             );
             const expiredReg = activeVehicles.filter(v => v.registracijaIstice && new Date(v.registracijaIstice) < today);
-            if (expiredReg.length > 0) lines.push(lang === 'bs' 
+            if (expiredReg.length > 0) lines.push(lang !== 'en' 
                 ? `ISTEKLE REGISTRACIJE VOZILA (${expiredReg.length}): ${expiredReg.map(v => `${v.registracija} (isteklo: ${v.registracijaIstice})`).join('; ')}`
                 : `EXPIRED VECHICLE REGISTRATIONS (${expiredReg.length}): ${expiredReg.map(v => `${v.registracija} (expired: ${v.registracijaIstice})`).join('; ')}`
             );
@@ -251,14 +251,14 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
 
         // Fire Extinguishers
         const overdueFire = fireExtinguishers.filter(f => f.datumSljedecegIspitivanja && new Date(f.datumSljedecegIspitivanja) < today);
-        if (overdueFire.length > 0) lines.push(lang === 'bs'
+        if (overdueFire.length > 0) lines.push(lang !== 'en'
             ? `VATROGASNI APARATI PREKORAČEN PREGLED (${overdueFire.length}): ${overdueFire.slice(0, 6).map(f => `${f.serijskiBroj} na lokaciji ${f.lokacija || 'Nepoznato'}`).join('; ')}`
             : `OVERDUE FIRE EXTINGUISHERS (${overdueFire.length}): ${overdueFire.slice(0, 6).map(f => `${f.serijskiBroj} at ${f.lokacija || 'Unknown'}`).join('; ')}`
         );
 
         // Recent injuries
         const recentInj = injuries.filter(i => i.datum && new Date(i.datum) >= new Date(Date.now() - 90 * 86400000)).sort((a, b) => new Date(b.datum) - new Date(a.datum));
-        if (recentInj.length > 0) lines.push(lang === 'bs'
+        if (recentInj.length > 0) lines.push(lang !== 'en'
             ? `NEDAVNE POVREDE (90 dana, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `W[${i.radnikId}] ${i.datum} ${i.tip}${i.bolovanje ? ' BOLOVANJE' : ''}`).join('; ')}`
             : `RECENT INJURIES (90 days, ${recentInj.length}): ${recentInj.slice(0, 6).map(i => `W[${i.radnikId}] ${i.datum} ${i.tip}${i.bolovanje ? ' SICK LEAVE' : ''}`).join('; ')}`
         );
@@ -278,7 +278,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
                 const compStr = compMatch ? ` [Firma: ${compMatch.name}]` : '';
                 return `W[${w.id}]${wp ? ` → ${wp}` : ''}${ou ? ` (${ou})` : ''}${compStr}`;
             });
-            lines.push(lang === 'bs'
+            lines.push(lang !== 'en'
                 ? `\nSVI AKTIVNI RADNICI (${activeWorkerList.length}) sa radnim mjestima:\n${rosterLines.join('\n')}`
                 : `\nALL ACTIVE WORKERS (${activeWorkerList.length}) with positions:\n${rosterLines.join('\n')}`
             );
@@ -296,7 +296,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             }).filter(Boolean);
 
             if (wpWorkers.length > 0) {
-                lines.push(lang === 'bs'
+                lines.push(lang !== 'en'
                     ? `\nRADNA MJESTA → RADNICI:\n${wpWorkers.join('\n')}`
                     : `\nWORKPLACES → WORKERS:\n${wpWorkers.join('\n')}`
                 );
@@ -315,7 +315,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
             }).filter(Boolean);
 
             if (ouWorkers.length > 0) {
-                lines.push(lang === 'bs'
+                lines.push(lang !== 'en'
                     ? `\nORGANIZACIJSKE JEDINICE → RADNICI:\n${ouWorkers.join('\n')}`
                     : `\nORG UNITS → WORKERS:\n${ouWorkers.join('\n')}`
                 );
@@ -325,14 +325,14 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         // ── Questionnaires ─────────────────────────────────────────────────────
         if (questionnaires.length > 0) {
             const qList = questionnaires.map(q => `ID:${q.id} "${q.naziv || '(bez naziva)'}"${q.zaVrstu ? ` [${q.zaVrstu}]` : ''}`).join('; ');
-            lines.push(lang === 'bs'
+            lines.push(lang !== 'en'
                 ? `\nUPITNICI (${questionnaires.length}): ${qList}`
                 : `\nQUESTIONNAIRES (${questionnaires.length}): ${qList}`);
         }
 
         // Stats
         const activeWorkers = workers.filter(w => w.aktivan !== false).length;
-        lines.push(lang === 'bs'
+        lines.push(lang !== 'en'
             ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja, ${questionnaires.length} upitnika`
             : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment, ${certificates.length} certificates, ${questionnaires.length} questionnaires`
         );
@@ -344,18 +344,18 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
 function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies) {
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
-        ? (lang === 'bs' ? `Korisnik se trenutno nalazi na: ${currentPage.label_bs} — ${currentPage.desc_bs}` : `User is currently on: ${currentPage.label_en} — ${currentPage.desc_en}`)
+        ? (lang !== 'en' ? `Korisnik se trenutno nalazi na: ${currentPage.label_bs} — ${currentPage.desc_bs}` : `User is currently on: ${currentPage.label_en} — ${currentPage.desc_en}`)
         : '';
 
     const pagesText = APP_KNOWLEDGE.pages
-        .map(p => lang === 'bs'
+        .map(p => lang !== 'en'
             ? `• ${p.label_bs} (${p.path}): ${p.desc_bs}`
             : `• ${p.label_en} (${p.path}): ${p.desc_en}`)
         .join('\n');
 
-    const today = new Date().toLocaleDateString(lang === 'bs' ? 'bs-BA' : 'en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    const today = new Date().toLocaleDateString(lang !== 'en' ? 'bs-BA' : 'en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-    if (lang === 'bs') {
+    if (lang !== 'en') {
         return `Ti si Zia, napredni AI AGENT za eZNR — digitalnu platformu za zaštitu na radu u Bosni i Hercegovini. Razgovaraš na bosanskom jeziku. Danas je ${today}.
 
 NISI SAMO CHATBOT I NAVIGATOR — TI SI NAPREDNI ANALITIČAR PODATAKA (DATA ANALYST). 
@@ -553,60 +553,60 @@ function buildDynamicSuggestions(lang, pathname) {
         const overdueEq = equipment.filter(e => e.iduci && new Date(e.iduci) < today);
 
         // ALWAYS show urgent issues first
-        if (expired.length > 0) chips.push(lang === 'bs'
+        if (expired.length > 0) chips.push(lang !== 'en'
             ? { label: `🔴 ${expired.length} istekla uvjerenja`, text: 'Koji radnici imaju istekla uvjerenja?' }
             : { label: `🔴 ${expired.length} expired certs`, text: 'Which workers have expired certificates?' });
-        if (expiring.length > 0) chips.push(lang === 'bs'
+        if (expiring.length > 0) chips.push(lang !== 'en'
             ? { label: `📜 ${expiring.length} uvjerenja uskoro iste`, text: 'Prikaži mi uvjerenja koja uskoro ističu.' }
             : { label: `📜 ${expiring.length} certs expiring soon`, text: 'Show me certificates expiring soon.' });
-        if (sickLeave.length > 0) chips.push(lang === 'bs'
+        if (sickLeave.length > 0) chips.push(lang !== 'en'
             ? { label: `🏥 ${sickLeave.length} na bolovanju`, text: 'Ko je trenutno na bolovanju?' }
             : { label: `🏥 ${sickLeave.length} on sick leave`, text: 'Who is currently on sick leave?' });
-        if (overdueEq.length > 0) chips.push(lang === 'bs'
+        if (overdueEq.length > 0) chips.push(lang !== 'en'
             ? { label: `⚠️ ${overdueEq.length} pregleda opreme kasni`, text: 'Koja oprema ima prekoračen pregled?' }
             : { label: `⚠️ ${overdueEq.length} equipment overdue`, text: 'Which equipment has overdue inspection?' });
 
         // Context-aware suggestions based on current page
         if (pathname === '/dashboard/workers') {
-            chips.push(lang === 'bs' ? { label: '👷 Dodaj novog radnika', text: 'Otvori formu za dodavanje novog radnika.' } : { label: '👷 Add new worker', text: 'Open the form to add a new worker.' });
-            chips.push(lang === 'bs' ? { label: '📊 Statistika radnika', text: 'Koliko ukupno imamo radnika po odjelima?' } : { label: '📊 Worker stats', text: 'How many workers do we have per department?' });
+            chips.push(lang !== 'en' ? { label: '👷 Dodaj novog radnika', text: 'Otvori formu za dodavanje novog radnika.' } : { label: '👷 Add new worker', text: 'Open the form to add a new worker.' });
+            chips.push(lang !== 'en' ? { label: '📊 Statistika radnika', text: 'Koliko ukupno imamo radnika po odjelima?' } : { label: '📊 Worker stats', text: 'How many workers do we have per department?' });
         } else if (pathname === '/dashboard/equipment') {
-            chips.push(lang === 'bs' ? { label: '📅 Idući pregledi', text: 'Kojoj opremi najprije ističe pregled?' } : { label: '📅 Upcoming exams', text: 'Which equipment needs inspection next?' });
+            chips.push(lang !== 'en' ? { label: '📅 Idući pregledi', text: 'Kojoj opremi najprije ističe pregled?' } : { label: '📅 Upcoming exams', text: 'Which equipment needs inspection next?' });
         } else if (pathname === '/dashboard/injuries') {
-            chips.push(lang === 'bs' ? { label: '🚑 Prijavi tešku povredu', text: 'Želim prijaviti tešku povredu na radu.' } : { label: '🚑 Report severe injury', text: 'I want to report a severe injury.' });
-            chips.push(lang === 'bs' ? { label: '✅ Zatvori bolovanje', text: 'Radnik se vratio, zatvori mu bolovanje.' } : { label: '✅ Close sick leave', text: 'Worker returned, close their sick leave.' });
-            chips.push(lang === 'bs' ? { label: '📅 Promijeni godinu svima', text: 'Želim prebaciti sve povrede u 2026. godinu.' } : { label: '📅 Change all years', text: 'Set all injuries to year 2026.' });
+            chips.push(lang !== 'en' ? { label: '🚑 Prijavi tešku povredu', text: 'Želim prijaviti tešku povredu na radu.' } : { label: '🚑 Report severe injury', text: 'I want to report a severe injury.' });
+            chips.push(lang !== 'en' ? { label: '✅ Zatvori bolovanje', text: 'Radnik se vratio, zatvori mu bolovanje.' } : { label: '✅ Close sick leave', text: 'Worker returned, close their sick leave.' });
+            chips.push(lang !== 'en' ? { label: '📅 Promijeni godinu svima', text: 'Želim prebaciti sve povrede u 2026. godinu.' } : { label: '📅 Change all years', text: 'Set all injuries to year 2026.' });
         } else if (pathname === '/dashboard/worker-ppe' || pathname === '/dashboard/ppe') {
-            chips.push(lang === 'bs' ? { label: '🦺 Zaduži šljem', text: 'Želim zadužiti zaštitni šljem radniku.' } : { label: '🦺 Assign helmet', text: 'I want to assign a safety helmet to a worker.' });
-            chips.push(lang === 'bs' ? { label: '🧤 Zaduži rukavice', text: 'Radnik je zadužio zaštitne rukavice.' } : { label: '🧤 Assign gloves', text: 'Worker received safety gloves.' });
+            chips.push(lang !== 'en' ? { label: '🦺 Zaduži šljem', text: 'Želim zadužiti zaštitni šljem radniku.' } : { label: '🦺 Assign helmet', text: 'I want to assign a safety helmet to a worker.' });
+            chips.push(lang !== 'en' ? { label: '🧤 Zaduži rukavice', text: 'Radnik je zadužio zaštitne rukavice.' } : { label: '🧤 Assign gloves', text: 'Worker received safety gloves.' });
         } else if (pathname === '/dashboard/questionnaires') {
-            chips.push(lang === 'bs' ? { label: '📧 Pošalji anketu', text: 'Želim poslati upitnik radnicima.' } : { label: '📧 Send survey', text: 'I want to send a questionnaire to workers.' });
+            chips.push(lang !== 'en' ? { label: '📧 Pošalji anketu', text: 'Želim poslati upitnik radnicima.' } : { label: '📧 Send survey', text: 'I want to send a questionnaire to workers.' });
         } else if (pathname === '/dashboard/archive') {
-            chips.push(lang === 'bs' ? { label: '📄 Analiza PDF-a', text: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.' } : { label: '📄 PDF Analysis', text: 'Analyze the contents of a document I upload.' });
+            chips.push(lang !== 'en' ? { label: '📄 Analiza PDF-a', text: 'Analiziraj mi sadržaj ovog dokumenta kojeg uslikam.' } : { label: '📄 PDF Analysis', text: 'Analyze the contents of a document I upload.' });
         } else if (pathname === '/dashboard/medical-exams') {
-            chips.push(lang === 'bs' ? { label: '⚕️ Dodaj pregled', text: 'Želim upisati novi periodični ljekarski pregled.' } : { label: '⚕️ Add exam', text: 'I want to record a new periodic medical exam.' });
-            chips.push(lang === 'bs' ? { label: '📅 Kome ističe?', text: 'Kome sve ljekarski pregled ističe u narednih mjesec dana?' } : { label: '📅 Expiring soon', text: 'Whose medical exams are expiring in the next month?' });
+            chips.push(lang !== 'en' ? { label: '⚕️ Dodaj pregled', text: 'Želim upisati novi periodični ljekarski pregled.' } : { label: '⚕️ Add exam', text: 'I want to record a new periodic medical exam.' });
+            chips.push(lang !== 'en' ? { label: '📅 Kome ističe?', text: 'Kome sve ljekarski pregled ističe u narednih mjesec dana?' } : { label: '📅 Expiring soon', text: 'Whose medical exams are expiring in the next month?' });
         } else if (pathname === '/dashboard/fleet') {
-            chips.push(lang === 'bs' ? { label: '🚗 Novo vozilo', text: 'Želim dodati novo vozilo u vozni park.' } : { label: '🚗 New vehicle', text: 'I want to add a new vehicle to the fleet.' });
-            chips.push(lang === 'bs' ? { label: '🔑 Zaduži vozilo', text: 'Želim zadužiti vozilo određenom radniku.' } : { label: '🔑 Assign vehicle', text: 'I want to assign a vehicle to a worker.' });
+            chips.push(lang !== 'en' ? { label: '🚗 Novo vozilo', text: 'Želim dodati novo vozilo u vozni park.' } : { label: '🚗 New vehicle', text: 'I want to add a new vehicle to the fleet.' });
+            chips.push(lang !== 'en' ? { label: '🔑 Zaduži vozilo', text: 'Želim zadužiti vozilo određenom radniku.' } : { label: '🔑 Assign vehicle', text: 'I want to assign a vehicle to a worker.' });
         } else if (pathname === '/dashboard/fire-protection') {
-            chips.push(lang === 'bs' ? { label: '🧯 Zaostali servisi', text: 'Koji protupožarni aparati već kasne sa servisom?' } : { label: '🧯 Overdue services', text: 'Which fire extinguishers are overdue for service?' });
+            chips.push(lang !== 'en' ? { label: '🧯 Zaostali servisi', text: 'Koji protupožarni aparati već kasne sa servisom?' } : { label: '🧯 Overdue services', text: 'Which fire extinguishers are overdue for service?' });
         } else if (pathname === '/dashboard/employer-docs') {
-            chips.push(lang === 'bs' ? { label: '📄 Traženje akta', text: 'Da li imamo važeći Pravilnik o zaštiti od požara?' } : { label: '📄 Find document', text: 'Do we have a valid Fire Protection Rulebook?' });
+            chips.push(lang !== 'en' ? { label: '📄 Traženje akta', text: 'Da li imamo važeći Pravilnik o zaštiti od požara?' } : { label: '📄 Find document', text: 'Do we have a valid Fire Protection Rulebook?' });
         } else if (pathname === '/dashboard/risk-assessment') {
-            chips.push(lang === 'bs' ? { label: '⚠️ Kritični rizici', text: 'Koja radna mjesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?' } : { label: '⚠️ Critical risks', text: 'Which workplaces have High or Unacceptable risks (R ≥ 16)?' });
-            chips.push(lang === 'bs' ? { label: '📋 Propisane mjere', text: 'Koje su propisane mjere za smanjenje znatnih rizika?' } : { label: '📋 Prescribed measures', text: 'What are the prescribed measures to reduce high risks?' });
+            chips.push(lang !== 'en' ? { label: '⚠️ Kritični rizici', text: 'Koja radna mjesta kod nas imaju Znatan ili Nedopustiv rizik (R ≥ 16)?' } : { label: '⚠️ Critical risks', text: 'Which workplaces have High or Unacceptable risks (R ≥ 16)?' });
+            chips.push(lang !== 'en' ? { label: '📋 Propisane mjere', text: 'Koje su propisane mjere za smanjenje znatnih rizika?' } : { label: '📋 Prescribed measures', text: 'What are the prescribed measures to reduce high risks?' });
         } else if (pathname === '/dashboard/zapisnici') {
-            chips.push(lang === 'bs' ? { label: '📝 Novi zapisnik', text: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.' } : { label: '📝 Draft minute', text: 'Draft a new meeting minute for today regarding the purchase of helmets.' });
+            chips.push(lang !== 'en' ? { label: '📝 Novi zapisnik', text: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.' } : { label: '📝 Draft minute', text: 'Draft a new meeting minute for today regarding the purchase of helmets.' });
         } else if (pathname === '/dashboard') {
-            chips.push(lang === 'bs' ? { label: '📅 Novi podsjetnik', text: 'Dodaj podsjetnik u kalendar za idući ponedjeljak.' } : { label: '📅 New reminder', text: 'Add a calendar reminder for next Monday.' });
+            chips.push(lang !== 'en' ? { label: '📅 Novi podsjetnik', text: 'Dodaj podsjetnik u kalendar za idući ponedjeljak.' } : { label: '📅 New reminder', text: 'Add a calendar reminder for next Monday.' });
         }
 
     } catch { /* ignore */ }
 
     // Fallback actions if we don't have enough chips
     if (chips.length < 4) {
-        if (lang === 'bs') {
+        if (lang !== 'en') {
             chips.push({ label: '📊 Pregled stanja', text: 'Daj mi pregled trenutnog stanja zaštite na radu.' });
             chips.push({ label: '📋 Obavezna dokumentacija', text: 'Koja je obavezna dokumentacija za poslodavca?' });
             chips.push({ label: 'ℹ️ Šta sve možeš?', text: 'Šta sve mogu uraditi sa tobom?' });
@@ -897,7 +897,7 @@ export default function AIAssistant() {
             setIsMinimized(false);
             
             // Welcome message for file analysis
-            const welcomeMsg = lang === 'bs' 
+            const welcomeMsg = lang !== 'en' 
                 ? `📄 Učitao sam dokument **${name}**. Šta te zanima iz njega? (Možeš me tražiti sažetak, objašnjenje ili specifične podatke).`
                 : `📄 I've loaded the document **${name}**. What would you like to know? (You can ask for a summary, explanation, or specific data).`;
             setMessages(prev => [...prev.filter(m => !m.isSystemWelcome), { role: 'assistant', content: welcomeMsg, timestamp: new Date(), isSystemWelcome: true }]);
@@ -1074,7 +1074,7 @@ export default function AIAssistant() {
             setAttachments([{ name, type, data, preview: null }]);
             setIsOpen(true);
             setIsMinimized(false);
-            const msg = lang === 'bs' ? `Prikačio sam datoteku **${name}**. Şta želiš da uradim s njom?` : `I attached **${name}**. What should I do with it?`;
+            const msg = lang !== 'en' ? `Prikačio sam datoteku **${name}**. Şta želiš da uradim s njom?` : `I attached **${name}**. What should I do with it?`;
             setMessages(prev => [...prev, { role: 'assistant', content: msg, timestamp: new Date() }]);
         };
         window.addEventListener('ziaLoadFile', handleLoadFile);
@@ -1131,22 +1131,22 @@ export default function AIAssistant() {
 
                 let welcome;
                 if (total === 0) {
-                    welcome = lang === 'bs'
+                    welcome = lang !== 'en'
                         ? `Zdravo! Ja sam **Zia** ✨\n\nSve izgleda uredno — nema ničeg hitnog.\n\nMogu navigirati do stranica, analizirati podatke ili pokrenuti slanje upitnika. Šta trebate?`
                         : `Hello! I'm **Zia** ✨\n\nEverything looks good — nothing urgent right now.\n\nI can navigate pages, analyse data, or trigger questionnaire dispatch. What do you need?`;
                 } else {
                     const items = [];
-                    if (expired > 0) items.push(lang === 'bs' ? `🔴 **${expired}** istekla uvjerenja` : `🔴 **${expired}** expired certificates`);
-                    if (soonCerts > 0) items.push(lang === 'bs' ? `⏰ **${soonCerts}** uvjerenja ističe u 30 dana` : `⏰ **${soonCerts}** certificates expiring in 30 days`);
-                    if (overdueEq > 0) items.push(lang === 'bs' ? `⚠️ **${overdueEq}** pregleda opreme u zakašnjenju` : `⚠️ **${overdueEq}** equipment inspections overdue`);
-                    if (sickLeave > 0) items.push(lang === 'bs' ? `🏥 **${sickLeave}** radnika na bolovanju` : `🏥 **${sickLeave}** workers on sick leave`);
-                    welcome = lang === 'bs'
+                    if (expired > 0) items.push(lang !== 'en' ? `🔴 **${expired}** istekla uvjerenja` : `🔴 **${expired}** expired certificates`);
+                    if (soonCerts > 0) items.push(lang !== 'en' ? `⏰ **${soonCerts}** uvjerenja ističe u 30 dana` : `⏰ **${soonCerts}** certificates expiring in 30 days`);
+                    if (overdueEq > 0) items.push(lang !== 'en' ? `⚠️ **${overdueEq}** pregleda opreme u zakašnjenju` : `⚠️ **${overdueEq}** equipment inspections overdue`);
+                    if (sickLeave > 0) items.push(lang !== 'en' ? `🏥 **${sickLeave}** radnika na bolovanju` : `🏥 **${sickLeave}** workers on sick leave`);
+                    welcome = lang !== 'en'
                         ? `Zdravo! Ja sam **Zia** ✨\n\nImate **${total}** stvari koje zahtijevaju pažnju:\n• ${items.join('\n• ')}\n\nŠta želite uraditi?`
                         : `Hello! I'm **Zia** ✨\n\nYou have **${total}** items needing attention:\n• ${items.join('\n• ')}\n\nWhat would you like to do?`;
                 }
                 setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
             } catch {
-                const welcome = lang === 'bs'
+                const welcome = lang !== 'en'
                     ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nŠta trebate uraditi?`
                     : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nWhat do you need to get done?`;
                 setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
@@ -1459,7 +1459,7 @@ export default function AIAssistant() {
             if (retryTimerRef.current) clearInterval(retryTimerRef.current);
             setRetryCountdown(0);
             pendingRetryRef.current = null;
-            const quotaMsg = lang === 'bs'
+            const quotaMsg = lang !== 'en'
                 ? `🚫 **Dnevna kvota iscrpljena.** Vaš API ključ je dostigao besplatni dnevni limit.
 
 **Šta uraditi:**
@@ -1546,10 +1546,10 @@ export default function AIAssistant() {
                 let reply;
                 try {
                     const finalResult = await callZiaAPI(historyWithResult, systemPrompt, ZIA_TOOLS);
-                    reply = unmaskPIIOutput(finalResult.text) || unmaskPIIOutput(toolResult.message || toolResult.error || (lang === 'bs' ? 'Urađeno.' : 'Done.'));
+                    reply = unmaskPIIOutput(finalResult.text) || unmaskPIIOutput(toolResult.message || toolResult.error || (lang !== 'en' ? 'Urađeno.' : 'Done.'));
                 } catch {
                     // If second call fails (rate limit etc), use the tool result message
-                    reply = unmaskPIIOutput(toolResult.message || toolResult.error || (lang === 'bs' ? 'Urađeno.' : 'Done.'));
+                    reply = unmaskPIIOutput(toolResult.message || toolResult.error || (lang !== 'en' ? 'Urađeno.' : 'Done.'));
                 }
 
                 chatHistoryRef.current = [...historyWithResult, { role: 'model', parts: [{ text: reply }] }];
@@ -1561,7 +1561,7 @@ export default function AIAssistant() {
             }
 
             // ── Normal text response ──────────────────────────────────────────
-            const reply = unmaskPIIOutput(result.text) || (lang === 'bs' ? 'Nema odgovora.' : 'No response.');
+            const reply = unmaskPIIOutput(result.text) || (lang !== 'en' ? 'Nema odgovora.' : 'No response.');
             chatHistoryRef.current = [...newHistory, { role: 'model', parts: [{ text: reply }] }];
             setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date() }]);
             if (isMinimized) setHasNewMessage(true);
@@ -1572,7 +1572,7 @@ export default function AIAssistant() {
             console.warn('Zia API error:', err.message);
             if (err.isRateLimit) {
                 const waitSec = 10; // Changed to 10s per user request (reduced from 30)
-                const countdownMsg = lang === 'bs'
+                const countdownMsg = lang !== 'en'
                     ? `⏳ Limit zahtjeva dostignut. Pokušavam ponovo za **${waitSec}s**...`
                     : `⏳ Rate limit reached. Auto-retrying in **${waitSec}s**...`;
                 setMessages(prev => [...prev, { role: 'assistant', content: countdownMsg, timestamp: new Date(), isRetryMsg: true }]);
@@ -1580,7 +1580,7 @@ export default function AIAssistant() {
                 startRetryCountdown(waitSec, text, newHistory);
                 return;
             }
-            const errText = lang === 'bs' ? `⚠️ Greška: ${err.message}` : `⚠️ Error: ${err.message}`;
+            const errText = lang !== 'en' ? `⚠️ Greška: ${err.message}` : `⚠️ Error: ${err.message}`;
             setMessages(prev => [...prev, { role: 'assistant', content: errText, timestamp: new Date() }]);
             setIsLoading(false);
         }
@@ -1599,7 +1599,7 @@ export default function AIAssistant() {
             accumulatedTranscriptRef.current = '';
         }
         const attachedFiles = [...attachments];
-        const displayText = text.trim() || (attachedFiles.length > 0 ? (lang === 'bs' ? '[Prilog]' : '[Attachment]') : '');
+        const displayText = text.trim() || (attachedFiles.length > 0 ? (lang !== 'en' ? '[Prilog]' : '[Attachment]') : '');
         const userMessage = {
             role: 'user',
             content: displayText,
@@ -1623,7 +1623,7 @@ export default function AIAssistant() {
             const ok = file.type.startsWith('image/') || file.type === 'application/pdf' || file.type.startsWith('text/');
             // Keep under 4MB to avoid Vercel 4.5MB Serverless Function payload limits
             if (!ok || file.size > 4_000_000) {
-                alert(lang === 'bs' ? `Fajl ${file.name} je prevelik (Maks 4MB) ili format nije podržan.` : `File ${file.name} is too large (Max 4MB) or format not supported.`);
+                alert(lang !== 'en' ? `Fajl ${file.name} je prevelik (Maks 4MB) ili format nije podržan.` : `File ${file.name} is too large (Max 4MB) or format not supported.`);
                 return;
             }
             const reader = new FileReader();
@@ -1665,7 +1665,7 @@ export default function AIAssistant() {
         
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert(lang === 'bs' ? 'Vaš preglednik ne podržava glasovni unos (preporučujemo Chrome/Edge).' : 'Your browser does not support speech recognition (use Chrome/Edge).');
+            alert(lang !== 'en' ? 'Vaš preglednik ne podržava glasovni unos (preporučujemo Chrome/Edge).' : 'Your browser does not support speech recognition (use Chrome/Edge).');
             return;
         }
 
@@ -1676,7 +1676,7 @@ export default function AIAssistant() {
 
         const startRecognition = () => {
             const recognition = new SpeechRecognition();
-            recognition.lang = lang === 'bs' ? 'bs-BA' : 'en-US';
+            recognition.lang = lang !== 'en' ? 'bs-BA' : 'en-US';
             recognition.interimResults = true;
             recognition.continuous = false; // single-shot prevents Android duplication
             recognition.maxAlternatives = 1;
@@ -1728,7 +1728,7 @@ export default function AIAssistant() {
         chatHistoryRef.current = [];
         setShowSuggestions(true);
         // Re-show welcome
-        const welcome = lang === 'bs'
+        const welcome = lang !== 'en'
             ? `Zdravo! Ja sam **Zia**, vaš AI agent za eZNR. ✨\n\nMogu navigirati do stranica, pokrenuti slanje upitnika i analizirati vaše podatke. Šta trebate uraditi?`
             : `Hello! I'm **Zia**, your AI agent for eZNR. ✨\n\nI can navigate pages, trigger questionnaire dispatch, and analyse your data. What do you need to get done?`;
         setMessages([{ role: 'assistant', content: welcome, timestamp: new Date() }]);
@@ -1796,7 +1796,7 @@ export default function AIAssistant() {
     }}
     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
     onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.filter = 'none'; }}
-                    title={lang === 'bs' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia'}
+                    title={lang !== 'en' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia'}
                 >
                     <span style={{ fontSize: '0.9rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', marginBottom: 4 }}>✨</span>
     <span style={{ writingMode: 'vertical-rl', textOrientation: 'upright', fontSize: '0.6rem', fontWeight: 800, letterSpacing: 2 }}>ZIA</span>
@@ -1857,22 +1857,22 @@ export default function AIAssistant() {
                                     {retryCountdown > 0
                                         ? (
                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                               {lang === 'bs' ? `Pokušavalac za ${retryCountdown}s` : `Retry in ${retryCountdown}s`}
-                                               <button onClick={(e) => { e.stopPropagation(); if (retryTimerRef.current) clearInterval(retryTimerRef.current); retryTimerRef.current = null; setRetryCountdown(0); pendingRetryRef.current = null; setIsLoading(false); }} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 4, fontSize: '0.6rem', padding: '2px 5px', cursor: 'pointer', opacity: 0.85, color: 'inherit', fontWeight: 600 }}>{lang === 'bs' ? 'Otkaži' : 'Cancel'}</button>
+                                               {lang !== 'en' ? `Pokušavalac za ${retryCountdown}s` : `Retry in ${retryCountdown}s`}
+                                               <button onClick={(e) => { e.stopPropagation(); if (retryTimerRef.current) clearInterval(retryTimerRef.current); retryTimerRef.current = null; setRetryCountdown(0); pendingRetryRef.current = null; setIsLoading(false); }} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 4, fontSize: '0.6rem', padding: '2px 5px', cursor: 'pointer', opacity: 0.85, color: 'inherit', fontWeight: 600 }}>{lang !== 'en' ? 'Otkaži' : 'Cancel'}</button>
                                            </div>
                                         )
                                         : isLoading
-                                            ? (lang === 'bs' ? 'Tipka...' : 'Typing...')
-                                            : (lang === 'bs' ? 'Online • AI Agent' : 'Online • AI Agent')}
+                                            ? (lang !== 'en' ? 'Tipka...' : 'Typing...')
+                                            : (lang !== 'en' ? 'Online • AI Agent' : 'Online • AI Agent')}
                                 </div>
                             </div>
                         </div>
                         <div style={chatStyles.headerActions}>
-                            <button onClick={clearChat} style={chatStyles.actionBtn} title={lang === 'bs' ? 'Novi razgovor' : 'New conversation'}>↺</button>
-                            <button onClick={handleMinimize} style={chatStyles.actionBtn} title={lang === 'bs' ? 'Minimiziraj' : 'Minimize'}>
+                            <button onClick={clearChat} style={chatStyles.actionBtn} title={lang !== 'en' ? 'Novi razgovor' : 'New conversation'}>↺</button>
+                            <button onClick={handleMinimize} style={chatStyles.actionBtn} title={lang !== 'en' ? 'Minimiziraj' : 'Minimize'}>
                                 {isMinimized ? '▲' : '▼'}
                             </button>
-                            <button onClick={handleClose} style={{ ...chatStyles.actionBtn, ...chatStyles.closeBtn }} title={lang === 'bs' ? 'Zatvori' : 'Close'}>✕</button>
+                            <button onClick={handleClose} style={{ ...chatStyles.actionBtn, ...chatStyles.closeBtn }} title={lang !== 'en' ? 'Zatvori' : 'Close'}>✕</button>
                         </div>
                     </div>
 
@@ -1889,7 +1889,7 @@ export default function AIAssistant() {
                                 {isDragging && (
                                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,191,166,0.12)', border: '2px dashed #00BFA6', borderRadius: 12, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8, color: '#00BFA6', fontWeight: 700, fontSize: '0.95rem', pointerEvents: 'none' }}>
                                         <span style={{ fontSize: '2rem' }}>📎</span>
-                                        {lang === 'bs' ? 'Ispustite datoteke ovdje' : 'Drop files here'}
+                                        {lang !== 'en' ? 'Ispustite datoteke ovdje' : 'Drop files here'}
                                     </div>
                                 )}
                                 {messages.map((msg, idx) => (
@@ -1945,7 +1945,7 @@ export default function AIAssistant() {
                             {showSuggestions && messages.length <= 1 && (
                                 <div style={chatStyles.suggestions}>
                                     <div style={chatStyles.suggestionsLabel}>
-                                        {lang === 'bs' ? 'Česta pitanja:' : 'Quick questions:'}
+                                        {lang !== 'en' ? 'Česta pitanja:' : 'Quick questions:'}
                                     </div>
                                     <div style={chatStyles.suggestionsGrid}>
                                         {suggestions.map((s, idx) => (
@@ -1986,7 +1986,7 @@ export default function AIAssistant() {
                                     <button
                                         onClick={() => fileInputRef.current?.click()}
                                         disabled={isLoading}
-                                        title={lang === 'bs' ? 'Priloži datoteku' : 'Attach file'}
+                                        title={lang !== 'en' ? 'Priloži datoteku' : 'Attach file'}
                                         style={{ flexShrink: 0, width: 30, height: 30, borderRadius: '50%', border: '1.5px solid var(--border)', background: 'var(--bg-input)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: 'var(--text-muted)', transition: 'all 0.15s', marginRight: 4 }}
                                         onMouseEnter={e => { e.currentTarget.style.borderColor = '#00BFA6'; e.currentTarget.style.color = '#00BFA6'; }}
                                         onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
@@ -1995,7 +1995,7 @@ export default function AIAssistant() {
                                         ref={inputRef}
                                         id="ai-assistant-input"
                                         style={chatStyles.input}
-                                        placeholder={lang === 'bs' ? 'Postavite pitanje Zia...' : 'Ask Zia a question...'}
+                                        placeholder={lang !== 'en' ? 'Postavite pitanje Zia...' : 'Ask Zia a question...'}
                                         value={inputValue}
                                         onChange={e => setInputValue(e.target.value)}
                                         onKeyDown={handleKeyDown}
@@ -2009,7 +2009,7 @@ export default function AIAssistant() {
                                     <button
                                         onClick={handleMicClick}
                                         disabled={isLoading && !isRecording}
-                                        title={lang === 'bs' ? (isRecording ? 'Završi snimanje' : 'Glasovni unos') : (isRecording ? 'Stop recording' : 'Voice input')}
+                                        title={lang !== 'en' ? (isRecording ? 'Završi snimanje' : 'Glasovni unos') : (isRecording ? 'Stop recording' : 'Voice input')}
                                         style={{
                                             flexShrink: 0,
                                             width: isRecording ? 'auto' : 34,
@@ -2040,14 +2040,14 @@ export default function AIAssistant() {
                                             ...chatStyles.sendBtn,
                                             opacity: ((!inputValue.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) ? 0.4 : 1,
                                         }}
-                                        title={lang === 'bs' ? 'Pošalji' : 'Send'}
+                                        title={lang !== 'en' ? 'Pošalji' : 'Send'}
                                     >
                                         ➤
                                     </button>
                                 </div>
                                 <div style={chatStyles.inputFooter}>
-                                    {lang === 'bs' ? 'Pokretano sa Google Gemini' : 'Powered by Google Gemini'} ·{' '}
-                                    {lang === 'bs' ? 'Enter za slanje • + za prilog' : 'Enter to send • + to attach'}
+                                    {lang !== 'en' ? 'Pokretano sa Google Gemini' : 'Powered by Google Gemini'} ·{' '}
+                                    {lang !== 'en' ? 'Enter za slanje • + za prilog' : 'Enter to send • + to attach'}
                                 </div>
                             </div>
                         </>
@@ -2070,7 +2070,7 @@ export default function AIAssistant() {
                             transition: 'transform 0.15s',
                             color: 'white',
                         }}
-                        title={lang === 'bs' ? 'Zatvori Zia' : 'Close Zia'}
+                        title={lang !== 'en' ? 'Zatvori Zia' : 'Close Zia'}
                         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
                         onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
                     >

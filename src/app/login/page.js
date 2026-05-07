@@ -71,12 +71,12 @@ export default function LoginPage() {
       if (isRegister) {
         // ── Registration via Firebase Auth ──
         if (formData.password !== formData.confirmPassword) {
-          setLoginError(lang === 'bs' ? 'Lozinke se ne poklapaju!' : 'Passwords do not match!');
+          setLoginError(lang !== 'en' ? 'Lozinke se ne poklapaju!' : 'Passwords do not match!');
           setIsLoading(false);
           return;
         }
         if (formData.password.length < 6) {
-          setLoginError(lang === 'bs' ? 'Lozinka mora imati najmanje 6 znakova!' : 'Password must be at least 6 characters!');
+          setLoginError(lang !== 'en' ? 'Lozinka mora imati najmanje 6 znakova!' : 'Password must be at least 6 characters!');
           setIsLoading(false);
           return;
         }
@@ -103,19 +103,19 @@ export default function LoginPage() {
       console.error('Auth error:', err);
       const code = err?.code || err?.message || '';
       if (code.includes('user-not-found') || code === 'USER_PROFILE_NOT_FOUND') {
-        setLoginError(lang === 'bs' ? 'Korisnik nije pronađen.' : 'User not found.');
+        setLoginError(lang !== 'en' ? 'Korisnik nije pronađen.' : 'User not found.');
       } else if (code.includes('wrong-password') || code.includes('invalid-credential')) {
-        setLoginError(lang === 'bs' ? 'Pogrešna lozinka!' : 'Wrong password!');
+        setLoginError(lang !== 'en' ? 'Pogrešna lozinka!' : 'Wrong password!');
       } else if (code.includes('email-already-in-use')) {
-        setLoginError(lang === 'bs' ? 'Email je već registriran!' : 'Email already registered!');
+        setLoginError(lang !== 'en' ? 'Email je već registriran!' : 'Email already registered!');
       } else if (code.includes('invalid-email')) {
-        setLoginError(lang === 'bs' ? 'Neispravan email format!' : 'Invalid email format!');
+        setLoginError(lang !== 'en' ? 'Neispravan email format!' : 'Invalid email format!');
       } else if (code.includes('weak-password')) {
-        setLoginError(lang === 'bs' ? 'Lozinka je preslaba (min 6 znakova)!' : 'Password too weak (min 6 chars)!');
+        setLoginError(lang !== 'en' ? 'Lozinka je preslaba (min 6 znakova)!' : 'Password too weak (min 6 chars)!');
       } else if (code === 'ACCOUNT_DEACTIVATED') {
-        setLoginError(lang === 'bs' ? 'Račun je deaktiviran. Kontaktirajte administratora.' : 'Account deactivated. Contact admin.');
+        setLoginError(lang !== 'en' ? 'Račun je deaktiviran. Kontaktirajte administratora.' : 'Account deactivated. Contact admin.');
       } else {
-        setLoginError(lang === 'bs' ? 'Greška pri prijavi. Pokušajte ponovo.' : 'Login failed. Please try again.');
+        setLoginError(lang !== 'en' ? 'Greška pri prijavi. Pokušajte ponovo.' : 'Login failed. Please try again.');
       }
       setIsLoading(false);
       return;
@@ -147,10 +147,10 @@ export default function LoginPage() {
         const qs = new URLSearchParams(window.location.search);
         router.push(qs.get('redirect') || '/dashboard');
       } else {
-        setLoginError(lang === 'bs' ? 'Biometrijska prijava otkazana ili neuspješna.' : 'Biometric login canceled or failed.');
+        setLoginError(lang !== 'en' ? 'Biometrijska prijava otkazana ili neuspješna.' : 'Biometric login canceled or failed.');
       }
     } catch (e) {
-      setLoginError(lang === 'bs' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
+      setLoginError(lang !== 'en' ? 'Biometrijska prijava nije uspjela.' : 'Biometric login failed.');
     }
     setIsLoading(false);
   };
@@ -249,7 +249,7 @@ export default function LoginPage() {
             <input
               className="form-input" style={styles.input}
               name="username" value={formData.username} onChange={handleChange}
-              placeholder={isRegister ? 'email@example.com' : (lang === 'bs' ? 'Email adresa' : 'Email address')}
+              placeholder={isRegister ? 'email@example.com' : (lang !== 'en' ? 'Email adresa' : 'Email address')}
               type={isRegister ? 'email' : 'text'}
               required autoComplete="username"
             />
@@ -294,16 +294,16 @@ export default function LoginPage() {
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '1.5rem', marginBottom: 8 }}>✅</div>
                   <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)', marginBottom: 8 }}>
-                    {lang === 'bs' ? 'Email za resetiranje lozinke je poslan!' : 'Password reset email sent!'}
+                    {lang !== 'en' ? 'Email za resetiranje lozinke je poslan!' : 'Password reset email sent!'}
                   </div>
                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => { setShowForgotPassword(false); setForgotSent(false); setForgotEmail(''); }}>
-                    {lang === 'bs' ? 'Zatvori' : 'Close'}
+                    {lang !== 'en' ? 'Zatvori' : 'Close'}
                   </button>
                 </div>
               ) : (
                 <>
                   <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.7)', marginBottom: 8, fontWeight: 600 }}>
-                    {lang === 'bs' ? 'Unesite email za resetiranje lozinke:' : 'Enter email to reset password:'}
+                    {lang !== 'en' ? 'Unesite email za resetiranje lozinke:' : 'Enter email to reset password:'}
                   </div>
                   <div style={{ display: 'flex', gap: 8 }}>
                     <input
@@ -317,11 +317,11 @@ export default function LoginPage() {
                         await forgotPassword(forgotEmail);
                         setForgotSent(true);
                       } catch (err) {
-                        setLoginError(lang === 'bs' ? 'Email nije pronađen.' : 'Email not found.');
+                        setLoginError(lang !== 'en' ? 'Email nije pronađen.' : 'Email not found.');
                         setShowForgotPassword(false);
                       }
                     }}>
-                      {lang === 'bs' ? 'Pošalji' : 'Send'}
+                      {lang !== 'en' ? 'Pošalji' : 'Send'}
                     </button>
                   </div>
                   <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, fontSize: '0.75rem' }}
@@ -358,7 +358,7 @@ export default function LoginPage() {
                   cursor: 'pointer', fontFamily: 'var(--font-heading)',
                 }}
               >
-                🔐 {lang === 'bs' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
+                🔐 {lang !== 'en' ? 'Prijava otiskom prsta' : 'Login with fingerprint'}
               </button>
               <button
                 type="button"
@@ -373,7 +373,7 @@ export default function LoginPage() {
                   padding: '4px', textAlign: 'center', margin: '0 auto'
                 }}
               >
-                {lang === 'bs' ? 'Ukloni sačuvani otisak s uređaja' : 'Remove saved fingerprint from device'}
+                {lang !== 'en' ? 'Ukloni sačuvani otisak s uređaja' : 'Remove saved fingerprint from device'}
               </button>
             </div>
           )}
@@ -392,10 +392,10 @@ export default function LoginPage() {
               }}>
                 <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔐</div>
                 <div style={{ fontSize: '1rem', fontWeight: 700, color: 'white', marginBottom: 8, fontFamily: 'var(--font-heading)' }}>
-                  {lang === 'bs' ? 'Omogući brzu prijavu?' : 'Enable quick login?'}
+                  {lang !== 'en' ? 'Omogući brzu prijavu?' : 'Enable quick login?'}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.6)', marginBottom: 20, lineHeight: 1.5 }}>
-                  {lang === 'bs'
+                  {lang !== 'en'
                     ? 'Koristite otisak prsta za brzu prijavu na ovom uređaju sljedeći put (izbjegnite stalno unošenje lozinke).'
                     : 'Use fingerprint for quick login next time.'}
                 </div>
@@ -406,7 +406,7 @@ export default function LoginPage() {
                       background: 'transparent', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                       fontSize: '0.85rem', fontWeight: 600, fontFamily: 'var(--font-heading)',
                     }}>
-                    {lang === 'bs' ? 'Ne sada' : 'Not now'}
+                    {lang !== 'en' ? 'Ne sada' : 'Not now'}
                   </button>
                   <button onClick={handleAcceptBiometric}
                     className="btn btn-primary"
@@ -414,7 +414,7 @@ export default function LoginPage() {
                       flex: 1, padding: '12px', borderRadius: 12,
                       fontSize: '0.85rem', fontWeight: 700, justifyContent: 'center',
                     }}>
-                    ✅ {lang === 'bs' ? 'Omogući' : 'Enable'}
+                    ✅ {lang !== 'en' ? 'Omogući' : 'Enable'}
                   </button>
                 </div>
               </div>

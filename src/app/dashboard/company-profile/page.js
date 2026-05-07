@@ -10,7 +10,7 @@ import Icon3D from '@/components/Icon3D';
 
 export default function CompanyProfileHub() {
     const { lang, t } = useLanguage();
-    const bs = lang === 'bs';
+    const bs = lang !== 'en';
     const [tab, setTab] = useState('org');
     
     return (
