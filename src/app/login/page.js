@@ -7,11 +7,12 @@ import Image from 'next/image';
 import { isWebAuthnAvailable, hasStoredCredential, registerCredential, authenticateCredential, clearAllBiometricCredentials } from '@/lib/webAuthn';
 
 export default function LoginPage() {
-  const { t, lang, toggleLang } = useLanguage();
+  const { t, lang, setLang } = useLanguage();
   const { login, register, isAuthenticated, forgotPassword } = useAuth();
   const router = useRouter();
 
   const [isRegister, setIsRegister] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [formData, setFormData] = useState({
     username: '',
@@ -179,11 +180,30 @@ export default function LoginPage() {
       <div style={styles.bgGlow1} />
       <div style={styles.bgGlow2} />
 
-      {/* Language switcher */}
-      <button onClick={toggleLang} style={styles.langSwitcher}>
-        <span style={styles.langIcon}>🌐</span>
-        {lang === 'bs' ? 'HR' : lang === 'hr' ? 'EN' : 'BS'}
-      </button>
+      {/* Language switcher dropdown */}
+      <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 999 }}>
+        <button onClick={() => setShowLangMenu(!showLangMenu)} style={styles.langSwitcher}>
+          <span style={styles.langIcon}>{lang === 'hr' ? '🇭🇷' : lang === 'en' ? '🇬🇧' : '🇧🇦'}</span>
+          <span>{lang === 'hr' ? 'HR' : lang === 'en' ? 'EN' : 'BA'}</span>
+        </button>
+        {showLangMenu && (
+          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'rgba(20,40,60,0.95)', backdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 6, minWidth: 120, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+            {[
+              { code: 'bs', label: 'BA', flag: '🇧🇦', title: 'Bosanski' },
+              { code: 'hr', label: 'HR', flag: '🇭🇷', title: 'Hrvatski' },
+              { code: 'en', label: 'EN', flag: '🇬🇧', title: 'English' }
+            ].map(l => (
+              <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'rgba(0,191,166,0.15)' : 'transparent', color: lang === l.code ? '#00BFA6' : 'rgba(255,255,255,0.8)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'all 0.15s' }}
+                onMouseEnter={e => { if(lang !== l.code) { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.color = '#fff'; } }}
+                onMouseLeave={e => { if(lang !== l.code) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.8)'; } }}>
+                <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                <span>{l.title}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* ── Single centered card ── */}
       <div style={styles.card}>

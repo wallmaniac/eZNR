@@ -13,7 +13,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { matchesSearch } from '@/lib/dateUtils';
 
 export default function Header({ sidebarCollapsed, isMobile = false, onMobileMenuToggle }) {
-    const { t, lang, toggleLang } = useLanguage();
+    const { t, lang, setLang } = useLanguage();
     const { user, logout, isAdmin, isSuperAdmin, activeCompanyId, userCompanies, switchCompany } = useAuth();
     const { isDark, toggleTheme } = useTheme();
     const router = useRouter();
@@ -22,6 +22,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const [showProfile, setShowProfile] = useState(false);
     const [showNotifs, setShowNotifs] = useState(false);
     const [showCompanyMenu, setShowCompanyMenu] = useState(false);
+    const [showLangMenu, setShowLangMenu] = useState(false);
     const [showNewCompanyModal, setShowNewCompanyModal] = useState(false);
     const [switchingCompany, setSwitchingCompany] = useState(false);
     const [mobileExpanded, setMobileExpanded] = useState(true);
@@ -31,6 +32,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const notifRef = useRef(null);
     const searchRef = useRef(null);
     const companyRef = useRef(null);
+    const langRef = useRef(null);
 
     // Companies list — source of truth depending on role
     // AuthContext safely loads ALL companies for Superadmin and ASSIGNED companies for Officer natively from Firestore.
@@ -64,6 +66,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 setShowCompanyMenu(false);
                 setCompanySearchTerm(''); // Reset search on close
             }
+            if (langRef.current && !langRef.current.contains(e.target)) setShowLangMenu(false);
         };
         const handleKeyDown = (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -189,12 +192,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
         ? { label: 'Admin', bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: 'white' }
         : { label: lang === 'en' ? 'Safety Officer' : 'Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
 
-    // Language toggle helpers — cycle: bs → hr → en → bs
-    const LANG_LABELS = { bs: 'BS', hr: 'HR', en: 'EN' };
-    const LANG_NEXT = { bs: 'hr', hr: 'en', en: 'bs' };
-    const LANG_TOOLTIP = { bs: 'Prebaci na Hrvatski', hr: 'Switch to English', en: 'Prebaci na Bosanski' };
-    const nextLangLabel = LANG_LABELS[LANG_NEXT[lang] || 'bs'];
-    const langTooltip = LANG_TOOLTIP[lang] || '';
+    const LANGUAGES = [
+        { code: 'bs', label: 'BA', flag: '🇧🇦', title: 'Bosanski' },
+        { code: 'hr', label: 'HR', flag: '🇭🇷', title: 'Hrvatski' },
+        { code: 'en', label: 'EN', flag: '🇬🇧', title: 'English' }
+    ];
+    const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
 
     /* ─── Shared micro-styles ─── */
     const island = {
@@ -305,10 +308,26 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
 
-                    <button onClick={toggleLang} title={langTooltip}
-                        style={{ ...iBtn({ padding: '0 6px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 36, height: 32 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
-                        {nextLangLabel}
-                    </button>
+                    <div ref={langRef} style={{ position: 'relative', display: 'flex' }}>
+                        <button onClick={() => { setShowLangMenu(v => !v); setShowCompanyMenu(false); setShowNotifs(false); }}
+                            style={{ ...iBtn({ padding: '0 6px', fontSize: '0.75rem', fontWeight: 700, width: 'auto', minWidth: 46, height: 32, gap: 4 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
+                            <span style={{ fontSize: '1rem', lineHeight: 1 }}>{currentLang.flag}</span>
+                            <span>{currentLang.label}</span>
+                        </button>
+                        {showLangMenu && typeof document !== 'undefined' && createPortal(
+                            <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, right: 10, zIndex: 99999, background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border)', boxShadow: '0 8px 30px rgba(0,0,0,0.2)', padding: '6px', minWidth: 120 }}>
+                                {LANGUAGES.map(l => (
+                                    <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
+                                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}>
+                                        <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                                        <span>{l.title}</span>
+                                    </button>
+                                ))}
+                            </div>,
+                            document.body
+                        )}
+                    </div>
+
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                         style={{ ...iBtn({ fontSize: '0.95rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
                         {isDark ? '☀️' : '🌙'}
@@ -506,12 +525,28 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* ══ RIGHT ISLAND: Lang + Theme | Notifs + Profile ══ */}
                     <div style={island}>
-                        <button onClick={toggleLang} title={langTooltip}
-                            style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 5, minWidth: 50 })}
-                            onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
-                            onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                            🌐 {nextLangLabel}
-                        </button>
+                        <div ref={langRef} style={{ position: 'relative' }}>
+                            <button onClick={() => { setShowLangMenu(v => !v); setShowProfile(false); setShowNotifs(false); setShowCompanyMenu(false); }}
+                                style={iBtn({ padding: '0 8px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 6, minWidth: 50 })}
+                                onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
+                                onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
+                                <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>{currentLang.flag}</span>
+                                <span>{currentLang.label}</span>
+                            </button>
+                            {showLangMenu && (
+                                <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, minWidth: 140, padding: '6px' }}>
+                                    {LANGUAGES.map(l => (
+                                        <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
+                                            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'var(--bg-badge)' : 'transparent', color: lang === l.code ? 'var(--primary-dark)' : 'var(--text)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'background 0.15s' }}
+                                            onMouseEnter={e => { if(lang !== l.code) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
+                                            onMouseLeave={e => { if(lang !== l.code) e.currentTarget.style.background = 'transparent'; }}>
+                                            <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                                            <span>{l.title}</span>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
                         <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                             style={{ position: 'relative', width: 50, height: 26, borderRadius: 13, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, margin: '0 3px', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', transition: 'background 0.4s, border-color 0.4s' }}>
                             <span style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', left: isDark ? 4 : 'auto', right: isDark ? 'auto' : 4, fontSize: '0.48rem', opacity: 0.55, pointerEvents: 'none' }}>{isDark ? '✨' : '☀️'}</span>

@@ -130,6 +130,7 @@ export default function LandingPage() {
   const t = T[lang] || T.bs;
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -186,10 +187,26 @@ export default function LandingPage() {
             <a href="#moduli">{t.navModules}</a>
             <a href="#kontakt">{t.navContact}</a>
             
-            <div className="lang-switcher">
-              <button onClick={() => setLang("bs")} className={lang === "bs" ? "active" : ""}>BA</button>
-              <button onClick={() => setLang("hr")} className={lang === "hr" ? "active" : ""}>HR</button>
-              <button onClick={() => setLang("en")} className={lang === "en" ? "active" : ""}>EN</button>
+            <div style={{ position: 'relative' }}>
+              <button onClick={() => setShowLangMenu(!showLangMenu)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', borderRadius: 20, padding: '6px 12px', color: 'white', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
+                <span>{lang === 'hr' ? '🇭🇷' : lang === 'en' ? '🇬🇧' : '🇧🇦'}</span>
+                <span>{lang === 'hr' ? 'HR' : lang === 'en' ? 'EN' : 'BA'}</span>
+              </button>
+              {showLangMenu && (
+                <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'rgba(15,25,35,0.95)', backdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 6, minWidth: 120, zIndex: 100 }}>
+                  {[
+                    { code: 'bs', label: 'BA', flag: '🇧🇦', title: 'Bosanski' },
+                    { code: 'hr', label: 'HR', flag: '🇭🇷', title: 'Hrvatski' },
+                    { code: 'en', label: 'EN', flag: '🇬🇧', title: 'English' }
+                  ].map(l => (
+                    <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', width: '100%', border: 'none', background: lang === l.code ? 'rgba(0,191,166,0.15)' : 'transparent', color: lang === l.code ? '#00BFA6' : 'white', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500 }}>
+                      <span style={{ fontSize: '1.2rem', lineHeight: 1 }}>{l.flag}</span>
+                      <span>{l.title}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             
             <Link href="/login" className="btn-login">{t.login}</Link>
@@ -210,9 +227,16 @@ export default function LandingPage() {
           <a href="#moduli" onClick={() => setMobileMenu(false)}>{t.navModules}</a>
           <a href="#kontakt" onClick={() => setMobileMenu(false)}>{t.navContact}</a>
           <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
-            <button onClick={() => {setLang("bs"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'bs' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>BA</button>
-            <button onClick={() => {setLang("hr"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'hr' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>HR</button>
-            <button onClick={() => {setLang("en"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'en' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>EN</button>
+            {[
+              { code: 'bs', label: 'BA', flag: '🇧🇦' },
+              { code: 'hr', label: 'HR', flag: '🇭🇷' },
+              { code: 'en', label: 'EN', flag: '🇬🇧' }
+            ].map(l => (
+              <button key={l.code} onClick={() => {setLang(l.code); setMobileMenu(false)}} 
+                style={{display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: lang === l.code ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none', fontWeight: 600}}>
+                <span style={{ fontSize: '1.1rem' }}>{l.flag}</span> {l.label}
+              </button>
+            ))}
           </div>
           <Link href="/login" className="btn-login" onClick={() => setMobileMenu(false)} style={{marginTop: 20}}>{t.login}</Link>
         </div>
