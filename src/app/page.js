@@ -84,6 +84,45 @@ const T = {
     termsUrl: "/legal/terms-en.html",
     privacyUrl: "/legal/privacy-en.html",
   },
+  hr: {
+    navApp: "Platforma",
+    navModules: "Mogućnosti",
+    navContact: "Kontakt",
+    login: "Prijava",
+    badge: "🚀 Sljedeća generacija za ZNR",
+    heroTitle: "Nova era zaštite na radu u vašem pregledniku",
+    heroSub: "eZNR je jedino rješenje koje vam je potrebno za potpunu tehničku, pravnu i operativnu zaštitu na radu. Modernizirajte i ubrzajte svoje poslovanje danas.",
+    ctaPrimary: "Zatražite Demo",
+    ctaSecondary: "Saznajte više",
+    videoTitle: "Upoznajte eZNR u akciji",
+    videoSub: "Pogledajte kako izgleda svakodnevni rad u najnaprednijoj aplikaciji za zaštitu na radu.",
+    modulesTitle: "Sveobuhvatni Ekosustav",
+    m1T: "Popis opreme",
+    m1D: "Upravljajte svom opremom na jednom mjestu, s pametnim upozorenjima o isteku pregleda i atesta. Zaboravite na Excel tablice.",
+    m2T: "Zia AI Asistent",
+    m2D: "Pitajte našeg pametnog AI agenta o zakonima ili radnicima. Zia čita vašu bazu u stvarnom vremenu i daje precizne, kontekstualne odgovore.",
+    m3T: "Certifikati i Uvjerenja",
+    m3D: "Izradite ZOS i ZOP zapisnike te pratite rokove važenja liječničkih uvjerenja. Sustav će vas automatski obavijestiti prije isteka.",
+    m4T: "Izrada procjene rizika",
+    m4D: "Kreirajte detaljne, zakonski usklađene procjene rizika za radna mjesta uz pomoć umjetne inteligencije i izvezite ih izravno u DOCX format.",
+    m5T: "Mobilna aplikacija",
+    m5D: "eZNR je u potpunosti dostupan i optimiziran za vaš pametni telefon. Brzo pristupite podacima, dodajte slike i izvršite provjere izravno na terenu.",
+    contactTitle: "Obratite nam se!",
+    contactSub: "Kontaktirajte nas za personaliziranu prezentaciju sustava i saznajte kako možemo značajno unaprijediti vaš proces zaštite na radu.",
+    fName: "Ime i Prezime",
+    fCompany: "Naziv Tvrtke",
+    fEmail: "Poslovni e-mail",
+    fPhone: "Telefon za kontakt",
+    fSubmit: "Pošalji Upit",
+    fAlert: "Vaš upit je poslan! Uskoro ćemo Vas kontaktirati.",
+    footerDesc: "Enterprise Occupational Safety & Health System.",
+    footerDistLabel: "Ekskluzivni distributer za Bosnu i Hercegovinu:",
+    footerDist: "zastitanaradu.ba",
+    footerTerms: "Uvjeti korištenja",
+    footerPrivacy: "Politika privatnosti",
+    termsUrl: "/legal/terms-bs.html",
+    privacyUrl: "/legal/privacy-bs.html",
+  },
 };
 
 export default function LandingPage() {
@@ -149,6 +188,7 @@ export default function LandingPage() {
             
             <div className="lang-switcher">
               <button onClick={() => setLang("bs")} className={lang === "bs" ? "active" : ""}>BA</button>
+              <button onClick={() => setLang("hr")} className={lang === "hr" ? "active" : ""}>HR</button>
               <button onClick={() => setLang("en")} className={lang === "en" ? "active" : ""}>EN</button>
             </div>
             
@@ -171,6 +211,7 @@ export default function LandingPage() {
           <a href="#kontakt" onClick={() => setMobileMenu(false)}>{t.navContact}</a>
           <div style={{ display: 'flex', gap: 10, marginTop: 10 }}>
             <button onClick={() => {setLang("bs"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'bs' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>BA</button>
+            <button onClick={() => {setLang("hr"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'hr' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>HR</button>
             <button onClick={() => {setLang("en"); setMobileMenu(false)}} style={{padding: '8px 16px', background: lang === 'en' ? '#00BFA6' : '#222', borderRadius: 8, color: 'white', border: 'none'}}>EN</button>
           </div>
           <Link href="/login" className="btn-login" onClick={() => setMobileMenu(false)} style={{marginTop: 20}}>{t.login}</Link>

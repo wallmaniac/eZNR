@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import './globals.css';
-import { LanguageProvider } from '@/contexts/LanguageContext';
+import { LanguageProvider, CountryAutoSwitch } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
@@ -52,6 +52,7 @@ export default function RootLayout({ children }) {
           <ThemeProvider>
             <LanguageProvider>
               <CountryProvider>
+                <CountryAutoSwitch />
                 <ToastProvider>
                   <Suspense fallback={null}>
                     {children}

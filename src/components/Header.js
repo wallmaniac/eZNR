@@ -187,7 +187,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
     const roleBadge = isAdmin
         ? { label: 'Admin', bg: 'linear-gradient(135deg, #7B1FA2, #E040FB)', color: 'white' }
-        : { label: lang === 'bs' ? 'Stručnjak ZNR' : 'Safety Officer', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
+        : { label: lang === 'en' ? 'Safety Officer' : 'Stručnjak ZNR', bg: 'linear-gradient(135deg, var(--primary), var(--secondary))', color: 'white' };
+
+    // Language toggle helpers — cycle: bs → hr → en → bs
+    const LANG_LABELS = { bs: 'BS', hr: 'HR', en: 'EN' };
+    const LANG_NEXT = { bs: 'hr', hr: 'en', en: 'bs' };
+    const LANG_TOOLTIP = { bs: 'Prebaci na Hrvatski', hr: 'Switch to English', en: 'Prebaci na Bosanski' };
+    const nextLangLabel = LANG_LABELS[LANG_NEXT[lang] || 'bs'];
+    const langTooltip = LANG_TOOLTIP[lang] || '';
 
     /* ─── Shared micro-styles ─── */
     const island = {
@@ -298,9 +305,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
 
-                    <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
+                    <button onClick={toggleLang} title={langTooltip}
                         style={{ ...iBtn({ padding: '0 6px', fontSize: '0.7rem', fontWeight: 700, width: 'auto', minWidth: 36, height: 32 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
-                        {lang === 'bs' ? 'EN' : 'BS'}
+                        {nextLangLabel}
                     </button>
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                         style={{ ...iBtn({ fontSize: '0.95rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
@@ -499,11 +506,11 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                     {/* ══ RIGHT ISLAND: Lang + Theme | Notifs + Profile ══ */}
                     <div style={island}>
-                        <button onClick={toggleLang} title={lang === 'bs' ? 'Switch to English' : 'Prebaci na Bosanski'}
+                        <button onClick={toggleLang} title={langTooltip}
                             style={iBtn({ padding: '0 10px', fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.4px', width: 'auto', gap: 5, minWidth: 50 })}
                             onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>
-                            🌐 {lang === 'bs' ? 'EN' : 'BS'}
+                            🌐 {nextLangLabel}
                         </button>
                         <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
                             style={{ position: 'relative', width: 50, height: 26, borderRadius: 13, border: isDark ? '1.5px solid rgba(100,160,220,0.3)' : '1.5px solid rgba(255,180,0,0.3)', cursor: 'pointer', padding: 0, flexShrink: 0, margin: '0 3px', background: isDark ? 'linear-gradient(135deg,#1b3d5e,#0c1d30)' : 'linear-gradient(135deg,#a8d8ea,#FFC947)', transition: 'background 0.4s, border-color 0.4s' }}>

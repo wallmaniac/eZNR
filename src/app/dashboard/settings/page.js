@@ -33,7 +33,7 @@ import {
 } from '@/lib/brandingService';
 
 export default function SettingsPage() {
-  const { t, lang, toggleLang } = useLanguage();
+  const { t, lang, setLang, toggleLang } = useLanguage();
   const { user, isAdmin, isSuperAdmin, activeCompanyId, logout, changePassword, reauthenticate, changeEmail, changeName, updateUserContext } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const searchParams = useSearchParams();
@@ -206,7 +206,10 @@ export default function SettingsPage() {
         });
       }
       if (isAdmin) {
-        const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => u.role === 'officer' && (u.companyIds || []).includes(activeCompanyId));
+        const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => 
+          (u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin') && 
+          (u.companyIds || []).includes(activeCompanyId)
+        );
         setAssignedOfficers(hasAccess.map(o => o.id));
       }
       // Load branding
@@ -1590,8 +1593,9 @@ export default function SettingsPage() {
             <div className="form-grid-2">
               <div className="form-group">
                 <label className="form-label">{t('language')}</label>
-                <select className="form-select" value={lang} onChange={() => toggleLang()}>
+                <select className="form-select" value={lang} onChange={e => setLang(e.target.value)}>
                   <option value="bs">🇧🇦 Bosanski</option>
+                  <option value="hr">🇭🇷 Hrvatski</option>
                   <option value="en">🇬🇧 English</option>
                 </select>
               </div>

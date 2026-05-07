@@ -182,7 +182,7 @@ export default function LoginPage() {
       {/* Language switcher */}
       <button onClick={toggleLang} style={styles.langSwitcher}>
         <span style={styles.langIcon}>🌐</span>
-        {lang === 'bs' ? 'EN' : 'BS'}
+        {lang === 'bs' ? 'HR' : lang === 'hr' ? 'EN' : 'BS'}
       </button>
 
       {/* ── Single centered card ── */}
