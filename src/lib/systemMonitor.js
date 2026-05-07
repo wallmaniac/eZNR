@@ -8,6 +8,7 @@
 
 import { getAll, COLLECTIONS, formatDate } from './dataStore';
 import { callFirebaseFunction } from '@/lib/firebaseCallable';
+import { getCitation } from '@/lib/lawConfig';
 
 // ============================================================================
 // APP VERSION & CHANGELOG
@@ -298,6 +299,8 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
 
     const allCompanies = getAll(COLLECTIONS.COMPANIES);
     const getCompName = (id) => allCompanies.find(c => c.id === id)?.skraceniNaziv || allCompanies.find(c => c.id === id)?.naziv || '';
+    const activeCompany = companyId && companyId !== 'all' ? allCompanies.find(c => c.id === companyId) : null;
+    const country = activeCompany?.country || 'BA';
 
     // Filter data by company if provided
     const filterByCompany = (items) => {
@@ -461,7 +464,7 @@ export function getUserNotifications(companyId, userCompanyIds = []) {
             notifications.push(addCompanyBadge({
                 id: 'user_med_expired', severity: 'urgent', category: 'medical', icon: '',
                 title: medExpired + ' ljekarskih pregleda isteklo!',
-                message: 'Zakonska obaveza poslodavca - zakaz. preglede hitno (cl. 44. ZZNA 79/20).',
+                message: `Zakonska obaveza poslodavca - zakaz. preglede hitno (${getCitation(country, 'medical')}).`,
                 actionLabel: 'Pregledi', actionUrl: '/dashboard/medical-exams', path: '/dashboard/medical-exams',
             }, medExpItem || {}));
         }

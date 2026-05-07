@@ -585,7 +585,7 @@ function WorkersPageInner() {
                             <SelectField label={t('workplace')} value={formData.radnoMjestoId} onChange={async (v) => {
                                 const oldId = formData.radnoMjestoId;
                                 updateField('radnoMjestoId', v);
-                                // Auto-invalidate ZOS when Radno mjesto changes (Član 34. Zakona o ZNR FBiH)
+                                // Auto-invalidate ZOS when Radno mjesto changes (jurisdiction-aware, see lawConfig.js)
                                 if (editingWorker && oldId && v && oldId !== v) {
                                     const allCerts = getWorkerCertificates(editingWorker);
                                     const zosCerts = allCerts.filter(c =>
@@ -679,7 +679,7 @@ function WorkersPageInner() {
                         <>
                             {hasNightShift && (
                                 <div style={{ background: 'rgba(239,83,80,0.15)', borderBottom: '1px solid var(--danger)', color: 'var(--danger)', padding: '10px 16px', borderRadius: 'var(--radius-md)', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-                                    🌙 Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad radnog mjesta - čl. 40 FBiH)
+                                    🌙 {lang === 'bs' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad radnog mjesta)' : 'Mandatory medical exam at least once every 2 years (Night-shift workplace)'}
                                 </div>
                             )}
                             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>

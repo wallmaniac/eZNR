@@ -13,11 +13,13 @@ import { generateSafeWordDoc } from '@/lib/riskExportDocx';
 import { riskLevel, fetchAiOpisProcesa, fetchAiMeasures, fetchAiDocAnalyze, fetchAiAutoConclusion, apiAnalyzeQuestionnaire, apiGenerateRiskTable } from '@/lib/riskAI';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { useAuth } from '@/contexts/AuthContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { apiGenerateSistematizacija } from '@/lib/sistematizacijaAI';
+import { getDefaultPravniOsnov, getRiskAssessmentLabel } from '@/lib/lawConfig';
 
 import PageHeader from '@/components/PageHeader';
 /* ═══════════════════════════════════════════════
-   5×5 Risk Matrix — Procjena rizika (FBiH ZNR)
+   5×5 Risk Matrix — Procjena rizika (multi-jurisdictional)
    ═══════════════════════════════════════════════ */
 
 const EMPTY_PROCJENA = {
@@ -141,6 +143,7 @@ export default function RiskAssessmentPage() {
     const { markDirty, markClean, isDirty: contextIsDirty } = useUnsavedChanges(async () => await handleSave());
     const isDirtyRef = useRef(false);
     const { activeCompanyId } = useAuth();
+    const country = useCountry();
     const activeCompany = getById(COLLECTIONS.COMPANIES, activeCompanyId) || {};
     // Sistematizacija tab state
     const [sistEditData, setSistEditData] = useState(null);
@@ -1427,7 +1430,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     }} disabled={isLoading} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
                                                         {isLoading ? '⏳ Generiše...' : '🤖 AI Generiši'}
                                                     </button>
-                                                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.72rem' }} onClick={() => setSistEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: 'Čl. 118. Zakona o radu FBiH', uvjetiRada: {}, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
+                                                    <button className="btn btn-outline btn-sm" style={{ fontSize: '0.72rem' }} onClick={() => setSistEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: getDefaultPravniOsnov(country), uvjetiRada: {}, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
                                                         ✏️ Ručno
                                                     </button>
                                                 </div>

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, COLLECTIONS,
@@ -30,6 +31,7 @@ function isNightShift(odStr, doStr) {
 
 export default function WorkplacesPage() {
     const { t, lang } = useLanguage();
+    const country = useCountry();
     const { alert, confirm, DialogRenderer } = useDialog();
     const router = useRouter();
     const [items, setItems] = useState([]);
@@ -305,8 +307,8 @@ export default function WorkplacesPage() {
                                     <div style={{ alignSelf: 'flex-end', paddingBottom: 6, minWidth: 160 }}>
                                         {isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo) && (
                                             <div style={{ background: 'rgba(239,83,80,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 600 }}>
-                                                🌙 Nocni rad (čl. 40 FBiH)
-                                                <div style={{ fontSize: '0.7rem', fontWeight: 400, marginTop: 2 }}>Zakon FBiH čl. 40: Obvezni ljekarski najmanje 1x u 2 godine.</div>
+                                                🌙 {lang === 'bs' ? 'Noćni rad' : 'Night work'}
+                                                <div style={{ fontSize: '0.7rem', fontWeight: 400, marginTop: 2 }}>{lang === 'bs' ? 'Obvezni ljekarski najmanje 1x u 2 godine.' : 'Mandatory medical exam at least once every 2 years.'}</div>
                                             </div>
                                         )}
                                     </div>

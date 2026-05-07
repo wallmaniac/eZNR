@@ -5,6 +5,7 @@
  * - Keeps API key server-side (not exposed to browser)
  * - Handles multi-model fallback with exponential backoff
  * - Avoids browser CORS/timeout limitations
+ * - Country-aware: adapts legal references for BA (BiH) or HR (Croatia)
  */
 
 export const maxDuration = 60;
@@ -16,7 +17,8 @@ const MODELS = [
     'gemini-1.5-flash',
 ];
 
-const SYSTEM_PROMPT = `Ti si certificirani stručnjak za zaštitu na radu (ZNR) u Federaciji Bosne i Hercegovine, specijalizovan za izradu procjena rizika prema:
+const SYSTEM_PROMPTS = {
+    BA: `Ti si certificirani stručnjak za zaštitu na radu (ZNR) u Federaciji Bosne i Hercegovine, specijalizovan za izradu procjena rizika prema:
 - Zakon o zaštiti na radu FBiH (Službene novine FBiH 79/20)
 - Pravilnik o procjeni rizika
 - Pravilnik o sredstvima i opremi za ličnu zaštitu na radu
@@ -48,12 +50,48 @@ OČEKIVANI JSON FORMAT:
       "rokProvedbe": "90"
     }
   ]
-}`;
+}`,
 
-async function callGemini(model, userMsg, apiKey) {
+    HR: `Ti si certificirani stručnjak zaštite na radu (ZNR) u Republici Hrvatskoj, specijaliziran za izradu procjena rizika prema:
+- Zakon o zaštiti na radu (Narodne novine 71/14, 118/14, 154/14, 94/18, 96/18)
+- Pravilnik o izradi procjene rizika (NN 112/14, 129/19)
+- Pravilnik o uporabi osobne zaštitne opreme (NN 5/21)
+
+TVOJ ZADATAK: Za zadano radno mjesto generiraj REALNU tablicu procjene rizika sa 8-15 stavki (opasnosti).
+
+KRITIČNA PRAVILA:
+1. Generiraj SAMO opasnosti koje su STVARNO relevantne za zadano radno mjesto.
+2. Ako je dostavljena SISTEMATIZACIJA RADNOG MJESTA, koristi ISKLJUČIVO te podatke kao osnovu.
+3. Ocjene V (vjerojatnost) i P (posljedica) moraju biti KONZISTENTNE.
+4. Odgovori ISKLJUČIVO u JSON formatu, bez markdown blokova ili dodatnog teksta.
+5. Mjere moraju biti konkretne i u skladu s hrvatskim zakonodavstvom.
+6. Ocjene NAKON primjene mjera moraju biti NIŽE od početnih.
+
+SKALA VJEROJATNOSTI (V): 1=Vrlo malo vjerojatno, 2=Malo vjerojatno, 3=Moguće, 4=Vjerojatno, 5=Vrlo vjerojatno
+SKALA POSLJEDICE (P): 1=Zanemariva, 2=Mala, 3=Umjerena, 4=Ozbiljna, 5=Katastrofalna
+
+OČEKIVANI JSON FORMAT:
+{
+  "items": [
+    {
+      "opisOpasnosti": "Konkretan opis opasnosti",
+      "vjerovatnoca": 3,
+      "posljedica": 4,
+      "postojeceMjere": "Konkretne postojeće mjere",
+      "predlozeneMjere": "Konkretne dodatne mjere",
+      "vjerovatnocaNakon": 2,
+      "posljedlicaNakon": 3,
+      "rokProvedbe": "90"
+    }
+  ]
+}`,
+};
+
+async function callGemini(model, userMsg, apiKey, country = 'BA') {
+    const systemPrompt = SYSTEM_PROMPTS[country] || SYSTEM_PROMPTS.BA;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
     const body = {
-        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        system_instruction: { parts: [{ text: systemPrompt }] },
         contents: [{ role: 'user', parts: [{ text: userMsg }] }],
         generationConfig: {
             temperature: 0.3,
@@ -88,7 +126,7 @@ async function callGemini(model, userMsg, apiKey) {
 
 export async function POST(req) {
     try {
-        const { jobTitle, industry, sistematizacijaKontekst } = await req.json();
+        const { jobTitle, industry, sistematizacijaKontekst, country } = await req.json();
 
         if (!jobTitle) {
             return Response.json({ success: false, error: 'jobTitle je obavezan.' }, { status: 400 });
@@ -98,6 +136,8 @@ export async function POST(req) {
         if (!apiKey) {
             return Response.json({ success: false, error: 'Gemini API kljuc nije konfigurisan.' }, { status: 500 });
         }
+
+        const resolvedCountry = country === 'HR' ? 'HR' : 'BA';
 
         let userMsg = `RADNO MJESTO: ${jobTitle}\nDJELATNOST: ${industry || 'Nije navedeno'}`;
         if (sistematizacijaKontekst) {
@@ -113,7 +153,7 @@ export async function POST(req) {
 
             while (retries > 0) {
                 try {
-                    const items = await callGemini(model, userMsg, apiKey);
+                    const items = await callGemini(model, userMsg, apiKey, resolvedCountry);
                     return Response.json({ success: true, items, model });
                 } catch (err) {
                     lastError = err;

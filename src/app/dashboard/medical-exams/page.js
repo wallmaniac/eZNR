@@ -2,6 +2,7 @@
 import DateInput from '@/components/DateInput';
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -11,20 +12,26 @@ import Pagination from '@/components/Pagination';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';
+import { getCitation, getMedicalPravilnik, getFullCitation } from '@/lib/lawConfig';
 
-// ── Legal basis ────────────────────────────────────────────────────────────────
-// Zakon o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)
-// Pravilnik o postupku raspoređivanja radnika na poslove sa povećanim rizikom
-//   i o postupku prethodnih i periodičnih ljekarskih pregleda (Sl. novine FBiH br. 9/23)
+// ── Legal basis (dynamic per jurisdiction) ──────────────────────────────────
+// BA: Zakon o ZNR FBiH (79/20) + Pravilnik (9/23)
+// HR: Zakon o ZNR (NN 71/14) + Pravilnik (NN 5/84)
 // ──────────────────────────────────────────────────────────────────────────────
 
-const EXAM_TYPES = [
-    { value: 'prethodni', labelBs: 'Prethodni pregled', labelEn: 'Pre-employment Exam', info: 'Čl. 44. Zakona o ZNR FBiH — prije raspoređivanja na radno mjesto' },
-    { value: 'periodični', labelBs: 'Periodični pregled', labelEn: 'Periodic Exam', info: 'Prilog III Pravilnika (Sl. novine FBiH 9/23) — rokovi po vrsti opasnosti' },
-    { value: 'vanredni', labelBs: 'Vanredni pregled', labelEn: 'Extraordinary Exam', info: 'Nakon promjene zdravstvenog stanja, nesreće ili dugog bolovanja' },
-    { value: 'nocniRad', labelBs: 'Pregled - noćni rad', labelEn: 'Night-work Exam', info: 'Čl. 44. st. 3 — min. svake 2 godine za noćne radnike' },
-    { value: 'ostalo', labelBs: 'Ostalo', labelEn: 'Other', info: '' },
-];
+const getExamTypes = (country) => {
+    const medCit = getCitation(country, 'medical');
+    const nightCit = getCitation(country, 'medicalNight');
+    const mp = getMedicalPravilnik(country);
+    const mpRef = mp ? `${mp.name} (${mp.gazette})` : '';
+    return [
+        { value: 'prethodni', labelBs: 'Prethodni pregled', labelEn: 'Pre-employment Exam', info: `${medCit} — prije raspoređivanja na radno mjesto` },
+        { value: 'periodični', labelBs: 'Periodični pregled', labelEn: 'Periodic Exam', info: mpRef ? `${mpRef} — rokovi po vrsti opasnosti` : '' },
+        { value: 'vanredni', labelBs: 'Vanredni pregled', labelEn: 'Extraordinary Exam', info: 'Nakon promjene zdravstvenog stanja, nesreće ili dugog bolovanja' },
+        { value: 'nocniRad', labelBs: 'Pregled - noćni rad', labelEn: 'Night-work Exam', info: `${nightCit} — min. svake 2 godine za noćne radnike` },
+        { value: 'ostalo', labelBs: 'Ostalo', labelEn: 'Other', info: '' },
+    ];
+};
 
 const RESULTS = [
     { value: 'Sposoban', labelBs: 'Sposoban', labelEn: 'Fit', color: 'var(--success)' },
@@ -54,10 +61,14 @@ const emptyForm = {
 
 export default function MedicalExamsPage() {
     const { t, lang } = useLanguage();
+    const country = useCountry();
     const router = useRouter();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const bs = lang === 'bs';
+    const EXAM_TYPES = useMemo(() => getExamTypes(country), [country]);
+    const medCitation = useMemo(() => getCitation(country, 'medical'), [country]);
+    const medPravilnik = useMemo(() => getMedicalPravilnik(country), [country]);
 
     const [exams, setExams] = useState(() => getAll(COLLECTIONS.MEDICAL_EXAMS));
     const [workers] = useState(() => getAll(COLLECTIONS.WORKERS));
@@ -247,7 +258,7 @@ export default function MedicalExamsPage() {
             <PageHeader 
                 icon={<Icon3D name="Ljekarski pregledi.png" size={64} />} 
                 title={bs ? 'Ljekarski pregledi' : 'Medical Examinations'} 
-                subtitle={`${stats.total} ${bs ? 'zapisa' : 'records'} · ${bs ? 'Zakon o ZNR FBiH (79/20) + Pravilnik (9/23)' : 'BiH OSH Law (79/20) + Rulebook (9/23)'}`}
+                subtitle={`${stats.total} ${bs ? 'zapisa' : 'records'} · ${getFullCitation(country)}${medPravilnik ? ` + ${medPravilnik.name}` : ''}`}
             />
 
             {/* ── Toolbar: New button LEFT, search RIGHT ── */}
@@ -298,8 +309,8 @@ export default function MedicalExamsPage() {
             <div style={{ padding: '8px 14px', borderRadius: 'var(--radius-sm)', marginBottom: 12, background: 'rgba(33,150,243,0.05)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
                 <strong style={{ color: 'var(--text)' }}>⚖️</strong>{' '}
                 {bs
-                    ? 'Preglede obavlja specijalist medicine rada. Radnik koji ne obavi periodični pregled ne može nastaviti s radom. Troškove snosi poslodavac (čl. 44. ZZNA 79/20).'
-                    : 'Exams performed by occupational medicine specialist. Workers who skip periodic exams cannot continue working. Costs paid by employer (Art. 44 OSH Law 79/20).'}
+                    ? `Preglede obavlja specijalist medicine rada. Radnik koji ne obavi periodični pregled ne može nastaviti s radom. Troškove snosi poslodavac (${medCitation}).`
+                    : `Exams performed by occupational medicine specialist. Workers who skip periodic exams cannot continue working. Costs paid by employer (${medCitation}).`}
             </div>
 
             {/* ── Table ── */}
@@ -393,8 +404,8 @@ export default function MedicalExamsPage() {
             {/* ── Periodicity note ── */}
             <div style={{ marginTop: 10, padding: '8px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.05)', border: '1px solid rgba(245,158,11,0.2)', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
                 📋 {bs
-                    ? 'Rokovi periodičnih pregleda (Prilog III Pravilnika 9/23) razlikuju se po vrsti ojasnosti. Noćni radnici — min. svake 2 godine.'
-                    : 'Periodic exam intervals (Annex III, Rulebook 9/23) vary by hazard type. Night workers — min. every 2 years.'}
+                    ? `Rokovi periodičnih pregleda${medPravilnik ? ` (${medPravilnik.gazette})` : ''} razlikuju se po vrsti opasnosti. Noćni radnici — min. svake 2 godine.`
+                    : `Periodic exam intervals${medPravilnik ? ` (${medPravilnik.gazette})` : ''} vary by hazard type. Night workers — min. every 2 years.`}
             </div>
 
             {/* ── Form modal ── */}
@@ -410,7 +421,7 @@ export default function MedicalExamsPage() {
 
                         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.06)', border: '1px solid rgba(33,150,243,0.18)', fontSize: '0.73rem', color: 'var(--text-muted)' }}>
-                                ⚖️ {bs ? 'Preglede obavlja specijalist medicine rada. Troškove snosi poslodavac (čl. 44. ZZNA 79/20).' : 'Exams performed by occupational medicine specialist. Employer bears costs (Art. 44 OSH Law 79/20).'}
+                                ⚖️ {bs ? `Preglede obavlja specijalist medicine rada. Troškove snosi poslodavac (${medCitation}).` : `Exams performed by occupational medicine specialist. Employer bears costs (${medCitation}).`}
                             </div>
 
                             <div className="form-group">

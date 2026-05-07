@@ -4,6 +4,7 @@ import { LanguageProvider } from '@/contexts/LanguageContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { ToastProvider } from '@/contexts/ToastContext';
+import { CountryProvider } from '@/contexts/CountryContext';
 
 // App completely relies on client-side state hooks, HTML is static skeleton
 
@@ -50,11 +51,13 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <ThemeProvider>
             <LanguageProvider>
-              <ToastProvider>
-                <Suspense fallback={null}>
-                  {children}
-                </Suspense>
-              </ToastProvider>
+              <CountryProvider>
+                <ToastProvider>
+                  <Suspense fallback={null}>
+                    {children}
+                  </Suspense>
+                </ToastProvider>
+              </CountryProvider>
             </LanguageProvider>
           </ThemeProvider>
         </AuthProvider>

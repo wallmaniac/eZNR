@@ -1,11 +1,14 @@
 'use client';
 
+import { LAWS, getArticleWord } from '@/lib/lawConfig';
+
 /**
  * ZOS PDF Generator
  * Generates a formal "Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način"
- * document compliant with BiH FBiH Zakon o zaštiti na radu (Sl. novine FBiH 79/20)
+ * document compliant with the active company's jurisdiction (BA or HR)
  * 
- * Fields per law: Član 48 + 49 + Pravilnik o načinu i uvjetima obavljanja poslova ZNR
+ * BA: Član 48 + 49 Zakona o ZNR FBiH (Sl. novine FBiH 79/20)
+ * HR: Članak 27-30 Zakona o ZNR (NN 71/14)
  */
 
 export function generateZosPdf({
@@ -19,6 +22,9 @@ export function generateZosPdf({
     testResult,    // string e.g. "85%"
 }) {
     const formattedDate = date ? new Date(date).toLocaleDateString('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '__.__.____.';
+    const country = company.country || 'BA';
+    const osh = LAWS[country]?.osh || LAWS.BA.osh;
+    const artWord = getArticleWord(country);
     const logoHtml = company.logo
         ? `<img src="${company.logo}" style="max-height:60px; max-width:180px; object-fit:contain;" />`
         : '';
@@ -219,7 +225,7 @@ export function generateZosPdf({
     
     <!-- TITLE -->
     <div class="doc-title">Zapisnik o ocjeni osposobljenosti<br>radnika za rad na siguran način</div>
-    <div class="doc-subtitle">Obrazac ZOS — u skladu sa Zakonom o zaštiti na radu FBiH ("Sl. novine FBiH" br. 79/20)</div>
+    <div class="doc-subtitle">Obrazac ZOS — u skladu sa ${osh.name} ("${osh.gazette}")</div>
     <div class="doc-ref">Broj: ${certOznaka || '________'} &nbsp;&nbsp;|&nbsp;&nbsp; Datum: ${formattedDate}</div>
     
     <!-- SECTION 1: WORKER DATA -->
@@ -253,7 +259,7 @@ export function generateZosPdf({
             Tijekom osposobljavanja radnik je upoznat sa: tehničko-tehnološkim procesom rada, 
             opasnostima koje ugrožavaju sigurnost na radu, pravilnim korištenjem sredstava rada 
             i zaštitne opreme, mjerama zaštite na radu, te pravima i dužnostima u provođenju 
-            propisa zaštite na radu (Član 49. Zakona o zaštiti na radu FBiH).
+            propisa zaštite na radu (${artWord} ${osh.articles.trainingAssessment}. ${osh.shortName}).
         </p>
     </div>
     
@@ -289,7 +295,7 @@ export function generateZosPdf({
     </div>
     
     <div class="legal-ref">
-        Član 34., 48. i 49. Zakona o zaštiti na radu FBiH ("Službene novine FBiH" br. 79/20)
+        ${artWord} ${osh.articles.training}. ${osh.name} ("${osh.gazette}")
     </div>
     
     <!-- SIGNATURES -->

@@ -1,11 +1,13 @@
 'use client';
 import { useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { LAWS } from '@/lib/lawConfig';
 
 export default function PrintTemplatePage() {
     const searchParams = useSearchParams();
     const type = searchParams.get('type') || 'ZOS'; // ZOS or ZOP
     const workerName = searchParams.get('worker') || '_________________________';
+    const country = searchParams.get('country') || 'BA';
 
     useEffect(() => {
         // Automatically open print dialog a moment after loading
@@ -35,7 +37,7 @@ export default function PrintTemplatePage() {
                         </ol>
 
                         <p>
-                            Na osnovu člana 26. Zakona o zaštiti na radu ("Službene novine Federacije BiH", broj 79/20) 
+                            Na osnovu {LAWS[country]?.osh?.articleWord || 'Člana'} {LAWS[country]?.osh?.articles?.trainingObligation || '26'}. {LAWS[country]?.osh?.name || 'Zakona o zaštiti na radu'} ("{LAWS[country]?.osh?.gazette || ''}") 
                             i Pravilnika o načinu, postupku i rokovima vršenja periodičnih pregleda i ispitivanja iz oblasti zaštite na radu, 
                             komisija donosi ocjenu da je radnik/ca:
                         </p>
@@ -83,7 +85,7 @@ export default function PrintTemplatePage() {
                         </ol>
 
                         <p>
-                            Na osnovu zakonskih propisa iz oblasti Zaštite od požara ("Službene novine Federacije BiH"),
+                            Na osnovu zakonskih propisa iz oblasti Zaštite od požara ({LAWS[country]?.fire?.name || 'Zakon o zaštiti od požara'}, "{LAWS[country]?.fire?.gazette || ''}"),
                             komisija donosi ocjenu da je opće i posebno poznavanje mjera zaštite od požara usvojio/la radnik/ca:
                         </p>
 

@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -8,6 +9,7 @@ import HelpTip from '@/components/HelpTip';
 import { apiGenerateSistematizacija, apiParseSistematizacija } from '@/lib/sistematizacijaAI';
 import { useAuth } from '@/contexts/AuthContext';
 import PageHeader from '@/components/PageHeader';
+import { getDefaultPravniOsnov } from '@/lib/lawConfig';
 
 
 /* ═══════════════════════════════════════════════
@@ -20,6 +22,7 @@ const COND_LABELS = { fizicki: 'Fizički', kemijski: 'Kemijski', bioloski: 'Biol
 
 export default function SistematizacijaPage() {
     const { t, lang } = useLanguage();
+    const country = useCountry();
     const { alert, confirm, DialogRenderer } = useDialog();
     const [workplaces, setWorkplaces] = useState([]);
     const [sistematizacije, setSistematizacije] = useState([]);
@@ -330,7 +333,7 @@ export default function SistematizacijaPage() {
                                                 📄 {lang === 'bs' ? 'Učitaj dokument' : 'Upload document'}
                                                 <input type="file" accept=".txt,.pdf,.doc,.docx" style={{ display: 'none' }} onChange={e => handleFileUpload(wp, e)} />
                                             </label>
-                                            <button className="btn btn-outline btn-sm" onClick={() => setEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: 'Čl. 118. Zakona o radu FBiH', uvjetiRada: { fizicki: [], kemijski: [], bioloski: [], ergonomski: [], psihosocijalni: [] }, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
+                                            <button className="btn btn-outline btn-sm" onClick={() => setEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: getDefaultPravniOsnov(country), uvjetiRada: { fizicki: [], kemijski: [], bioloski: [], ergonomski: [], psihosocijalni: [] }, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
                                                 ✏️ {lang === 'bs' ? 'Ručno' : 'Manual'}
                                             </button>
                                         </div>
@@ -452,7 +455,7 @@ export default function SistematizacijaPage() {
                             </div>
                             <div>
                                 <div style={labelSt}>PRAVNI OSNOV</div>
-                                <input className="form-input" value={editData.pravniOsnov || ''} onChange={e => setEditData(p => ({ ...p, pravniOsnov: e.target.value }))} placeholder="Čl. 118. Zakona o radu FBiH" style={{ fontSize: '0.78rem' }} />
+                                <input className="form-input" value={editData.pravniOsnov || ''} onChange={e => setEditData(p => ({ ...p, pravniOsnov: e.target.value }))} placeholder={getDefaultPravniOsnov(country)} style={{ fontSize: '0.78rem' }} />
                             </div>
                         </div>
 

@@ -77,7 +77,7 @@ export default function SettingsPage() {
   const [biometricSuccess, setBiometricSuccess] = useState('');
 
   // Company state
-  const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '' });
+  const [companyData, setCompanyData] = useState({ naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '', postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '', country: 'BA' });
   const [assignedOfficers, setAssignedOfficers] = useState([]);
   // Branding state
   const [pdfAccentColor, setPdfAccentColor] = useState(EZNR_DEFAULTS.accentColor);
@@ -202,6 +202,7 @@ export default function SettingsPage() {
           telefon: company.telefon || '', email: company.email || '',
           direktor: company.direktor || '', strucnoLice: company.strucnoLice || '',
           logo: company.logo || '', parentId: company.parentId || '',
+          country: company.country || 'BA',
         });
       }
       if (isAdmin) {
@@ -850,7 +851,33 @@ export default function SettingsPage() {
                   <div className="form-group"><label className="form-label">{lang === 'bs' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyDirty(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
                 </div>
 
-                
+                {/* ── Područje djelovanja (Jurisdiction) ── */}
+                <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4 }}>🌍 {lang === 'bs' ? 'Područje djelovanja' : 'Jurisdiction'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
+                    {lang === 'bs' ? 'Odaberite državu u kojoj firma posluje. Ovo određuje koje zakone i pravilnike aplikacija koristi.' : 'Select the country where the company operates. This determines which laws and regulations the app uses.'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    {[{ code: 'BA', flag: '🇧🇦', label: 'Bosna i Hercegovina', law: 'Zakon o ZNR FBiH (79/20)' }, { code: 'HR', flag: '🇭🇷', label: 'Republika Hrvatska', law: 'Zakon o ZNR (NN 71/14)' }].map(opt => (
+                      <button key={opt.code} type="button" onClick={() => setCompanyDirty(p => ({ ...p, country: opt.code }))}
+                        style={{
+                          flex: 1, padding: '12px 14px', borderRadius: 'var(--radius-md, 10px)', cursor: 'pointer',
+                          border: `2px solid ${companyData.country === opt.code ? 'var(--primary)' : 'var(--border)'}`,
+                          background: companyData.country === opt.code ? 'rgba(0,191,166,0.08)' : 'transparent',
+                          display: 'flex', alignItems: 'center', gap: 10, transition: 'all 0.2s',
+                        }}>
+                        <span style={{ fontSize: '1.5rem' }}>{opt.flag}</span>
+                        <div style={{ textAlign: 'left' }}>
+                          <div style={{ fontWeight: companyData.country === opt.code ? 700 : 500, fontSize: '0.88rem', color: companyData.country === opt.code ? 'var(--primary)' : 'var(--text)' }}>
+                            {companyData.country === opt.code ? '✓ ' : ''}{opt.label}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{opt.law}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {companyData.parentId && (
                     <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'rgba(0,191,166,0.05)', border: '1px solid var(--primary)' }}>
                         <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4, color: 'var(--primary)' }}>🔗 {lang === 'bs' ? 'Dio Holdinga' : 'Part of Holding'}</div>
