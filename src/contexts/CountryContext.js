@@ -16,13 +16,13 @@ import { getById, COLLECTIONS } from '@/lib/dataStore';
 const CountryContext = createContext('BA');
 
 export function CountryProvider({ children }) {
-    const { activeCompanyId } = useAuth();
+    const { activeCompanyId, activeCompany } = useAuth();
 
     const country = useMemo(() => {
         if (!activeCompanyId || activeCompanyId === 'all') return 'BA';
-        const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
-        return company?.country || 'BA';
-    }, [activeCompanyId]);
+        // Use activeCompany from AuthContext because regular users don't have access to the global companies cache
+        return activeCompany?.country || 'BA';
+    }, [activeCompanyId, activeCompany]);
 
     return (
         <CountryContext.Provider value={country}>
