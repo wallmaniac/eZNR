@@ -80,21 +80,21 @@ const LAW_LINKS_MAP = {
         {
             category: 'Zakoni — Republika Hrvatska', icon: '🛡️',
             items: [
-                { name: 'Zakon o zaštiti na radu — NN 71/14, 118/14, 94/18, 96/18 ✓ VAŽEĆI', url: 'https://www.zakon.hr/z/242/Zakon-o-za%C5%A1titi-na-radu' },
+                { name: 'Zakon o zaštiti na radu — NN 71/14, 118/14, 94/18, 96/18 ✓ VAŽEĆI', url: 'https://www.zakon.hr/z/167/Zakon-o-za%C5%A1titi-na-radu' },
                 { name: 'Zakon o radu — NN 93/14, 127/17, 98/19, 151/22, 64/23', url: 'https://www.zakon.hr/z/307/Zakon-o-radu' },
-                { name: 'Zakon o zaštiti od požara — NN 92/10, 114/22', url: 'https://www.zakon.hr/z/367/Zakon-o-za%C5%A1titi-od-po%C5%BEara' },
-                { name: 'Zakon o inspektoratu rada — NN 19/14, 18/23', url: 'https://www.zakon.hr/z/718/Zakon-o-Inspektoratu-rada' },
+                { name: 'Zakon o zaštiti od požara — NN 92/10, 114/22', url: 'https://www.zakon.hr/z/349/Zakon-o-za%C5%A1titi-od-po%C5%BEara' },
+                { name: 'Zakon o državnom inspektoratu — NN 115/18, 117/21, 66/23', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2018_12_115_2243.html' },
             ]
         },
         {
             category: 'Pravilnici — Zaštita na radu', icon: '📜',
             items: [
-                { name: 'Pravilnik o izradi procjene rizika — NN 112/14, 129/19', url: 'https://www.zakon.hr/z/768/Pravilnik-o-izradi-procjene-rizika' },
-                { name: 'Pravilnik o osposobljavanju iz zaštite na radu — NN 142/21', url: 'https://www.zakon.hr/z/2827/Pravilnik-o-osposobljavanju-iz-za%C5%A1tite-na-radu' },
-                { name: 'Pravilnik o uporabi osobne zaštitne opreme — NN 5/21', url: 'https://www.zakon.hr/z/2590/Pravilnik-o-uporabi-osobnih-za%C5%A1titnih-sredstava' },
-                { name: 'Pravilnik o poslovima s posebnim uvjetima rada — NN 5/84', url: 'https://www.zakon.hr/z/426/Pravilnik-o-poslovima-s-posebnim-uvjetima-rada' },
-                { name: 'Pravilnik o pregledu i ispitivanju radne opreme — NN 16/16, 120/22', url: 'https://www.zakon.hr/z/936/Pravilnik-o-pregledu-i-ispitivanju-radne-opreme' },
-                { name: 'Pravilnik o sigurnosti i zdravlju pri radu s računalom — NN 73/21', url: 'https://www.zakon.hr/z/2734/Pravilnik-o-sigurnosti-i-zdravlju-pri-radu-s-ra%C4%8Dunalom' },
+                { name: 'Pravilnik o izradi procjene rizika — NN 112/14, 129/19', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2014_09_112_2154.html' },
+                { name: 'Pravilnik o osposobljavanju iz zaštite na radu — NN 142/21', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2021_12_142_2422.html' },
+                { name: 'Pravilnik o uporabi osobne zaštitne opreme — NN 5/21', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2021_01_5_70.html' },
+                { name: 'Pravilnik o poslovima s posebnim uvjetima rada — NN 5/84', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/1984_02_5_88.html' },
+                { name: 'Pravilnik o pregledu i ispitivanju radne opreme — NN 16/16, 120/22', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2016_02_16_452.html' },
+                { name: 'Pravilnik o sigurnosti i zdravlju pri radu s računalom — NN 73/21', url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2021_06_73_1370.html' },
             ]
         },
         {

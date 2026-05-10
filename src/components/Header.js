@@ -229,7 +229,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             {isMobile && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, height: 56, zIndex: 300,
-                    display: 'flex', alignItems: 'center', gap: 4, padding: '0 6px',
+                    display: 'flex', alignItems: 'center', gap: 3, padding: '0 5px',
                     background: 'var(--bg-header, var(--bg-page))',
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
@@ -241,7 +241,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip */}
-                    <div ref={companyRef} style={{ position: 'relative', flex: '1 1 100px', minWidth: 0, display: 'flex' }}>
+                    <div ref={companyRef} style={{ position: 'relative', flex: '1 1 60px', minWidth: 0, maxWidth: 'calc(100vw - 240px)', display: 'flex' }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowNotifs(false); }}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 4,
@@ -308,7 +308,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         )}
                     </div>
 
-                    <div ref={langRef} style={{ position: 'relative', display: 'flex' }}>
+                    <div ref={langRef} style={{ position: 'relative', display: 'flex', flexShrink: 0 }}>
                         <button onClick={() => { setShowLangMenu(v => !v); setShowCompanyMenu(false); setShowNotifs(false); }}
                             style={{ ...iBtn({ padding: '0 6px', fontSize: '0.75rem', fontWeight: 700, width: 'auto', minWidth: 46, height: 32, gap: 6 }), color: 'var(--text-muted)', border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
                             <img src={currentLang.flag} width={16} height={16} alt={currentLang.label} style={{ borderRadius: '50%', objectFit: 'cover' }} />
@@ -329,7 +329,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     </div>
 
                     <button onClick={toggleTheme} title={isDark ? 'Light mode' : 'Dark mode'}
-                        style={{ ...iBtn({ fontSize: '0.95rem', width: 36, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>
+                        style={{ ...iBtn({ fontSize: '0.95rem', width: 34, height: 32, padding: 0 }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)', flexShrink: 0 }}>
                         {isDark ? '☀️' : '🌙'}
                     </button>
 

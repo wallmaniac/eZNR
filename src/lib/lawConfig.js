@@ -133,21 +133,21 @@ export const PRAVILNICI = {
       name: 'Pravilnik o uporabi osobne zaštitne opreme',
       gazette: 'NN 5/21',
       year: 2021,
-      url: 'https://www.zakon.hr/z/2795/Pravilnik-o-uporabi-osobnih-za%C5%A1titnih-sredstava',
+      url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2021_01_5_70.html',
     },
     {
       id: 'risk',
       name: 'Pravilnik o izradi procjene rizika',
       gazette: 'NN 112/14, 129/19',
       year: 2019,
-      url: 'https://www.zakon.hr/z/730/Pravilnik-o-izradi-procjene-rizika',
+      url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2014_09_112_2154.html',
     },
     {
       id: 'znr-specialist',
       name: 'Pravilnik o ovlaštenjima za poslove zaštite na radu',
       gazette: 'NN 58/22, 9/24',
       year: 2024,
-      url: 'https://www.zakon.hr/z/2861/Pravilnik-o-ovla%C5%A1tenjima-za-poslove-za%C5%A1tite-na-radu',
+      url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/2022_05_58_835.html',
     },
     {
       id: 'training',
@@ -162,7 +162,7 @@ export const PRAVILNICI = {
       gazette: 'NN 5/84',
       gazetteShort: 'NN 5/84',
       year: 1984,
-      url: 'https://www.zakon.hr/z/545/Pravilnik-o-poslovima-s-posebnim-uvjetima-rada',
+      url: 'https://narodne-novine.nn.hr/clanci/sluzbeni/1984_02_5_88.html',
     },
     {
       id: 'medical-periodic',

@@ -146,6 +146,26 @@ export const COMPANY_SCOPED = [
     'zapisnici', 'serviceLog', 'activityLog', 'nightWork', 'safety_observations',
 ];
 
+// ── Two-tier loading strategy ────────────────────────────────────────────────
+// CORE: Loaded FIRST and awaited before the UI becomes interactive.
+//   These power the dashboard home, sidebar counters, and navigation.
+// DEFERRED: Loaded in the background AFTER core is ready.
+//   Pages that need these will get data asynchronously via eznr:data-synced.
+const CORE_COLLECTIONS = [
+    'workers', 'orgUnits', 'workplaces',
+    'certificates', 'ppeAssignments', 'equipment',
+    'calendarEvents', 'employerDocs', 'medicalExams',
+    'injuries', 'diseases',
+    'vehicles', 'riskAssessments', 'riskItems',
+];
+
+const DEFERRED_COLLECTIONS = COMPANY_SCOPED.filter(
+    c => !CORE_COLLECTIONS.includes(c)
+);
+
+// Track which deferred collections have been initialized
+const _deferredLoaded = new Set();
+
 // Global collections (shared reference data, at root level)
 const GLOBAL_COLLECTIONS = [
     'countries', 'counties', 'places', 'doctors',
@@ -179,9 +199,58 @@ function _getUserCompanyIds() {
 // ============================================================================
 
 /**
+ * Set up an onSnapshot listener for a single collection.
+ * Returns a Promise that resolves after the first snapshot.
+ */
+function _attachCollectionListener(colName, companyId) {
+    return new Promise((resolve) => {
+        try {
+            const targets = companyId === 'all' ? _getUserCompanyIds() : [companyId];
+
+            if (targets.length === 0) {
+                _cache[colName] = [];
+                return resolve();
+            }
+
+            let completed = 0;
+            if (!_cache[colName]) _cache[colName] = [];
+
+            targets.forEach(targetId => {
+                const colRef = fsCollection(db, `companies/${targetId}/${colName}`);
+                const unsub = onSnapshot(colRef, (snap) => {
+                    const newDocs = snap.docs.map(d => ({ id: d.id, companyId: targetId, ...d.data() }));
+
+                    // Merge data: remove old entries for THIS target company, then add new
+                    _cache[colName] = [
+                        ...(_cache[colName] || []).filter(item => item.companyId !== targetId),
+                        ...newDocs
+                    ];
+
+                    _notifyListeners();
+                    if (typeof window !== 'undefined') {
+                        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+                    }
+
+                    completed++;
+                    if (completed === targets.length) resolve();
+                }, (err) => {
+                    console.warn(`[dataStore] ⚠️ Snapshot error ${colName} [${targetId}]:`, err.message);
+                    completed++;
+                    if (completed === targets.length) resolve();
+                });
+                _snapshotUnsubs.push(unsub);
+            });
+        } catch (err) {
+            console.warn(`[dataStore] ⚠️ Failed sync setup for ${colName}:`, err.message);
+            if (!_cache[colName]) _cache[colName] = [];
+            resolve();
+        }
+    });
+}
+
+/**
  * Load all data for a company from Firestore.
- * Called once on login / company switch.
- * Returns a promise that resolves when all data is cached.
+ * Uses two-tier strategy: CORE collections are awaited, DEFERRED load in background.
  */
 export async function loadCompanyData(companyId) {
     if (!companyId || companyId === _activeCompanyId && _isLoaded) return;
@@ -194,59 +263,20 @@ export async function loadCompanyData(companyId) {
 
     // Detach any previous onSnapshot listeners
     _detachListeners();
+    _deferredLoaded.clear();
 
     _loadPromise = (async () => {
         try {
             console.log(`[dataStore] 📦 Loading data for company ${companyId}...`);
             const start = performance.now();
 
-            // Load company-scoped collections using onSnapshot for real-time background sync
-            const companyLoads = COMPANY_SCOPED.map((colName) => {
-                return new Promise((resolve) => {
-                    try {
-                        const targets = companyId === 'all' ? _getUserCompanyIds() : [companyId];
+            // ── Phase 1: CORE collections (awaited — blocks UI spinner) ──────
+            // Initialize empty caches for ALL company-scoped collections
+            COMPANY_SCOPED.forEach(col => { _cache[col] = []; });
 
-                        if (targets.length === 0) {
-                            _cache[colName] = [];
-                            return resolve();
-                        }
-
-                        let completed = 0;
-                        if (!_cache[colName] || companyId === _activeCompanyId) _cache[colName] = []; // initialize empty
-
-                        targets.forEach(targetId => {
-                            const colRef = fsCollection(db, `companies/${targetId}/${colName}`);
-                            const unsub = onSnapshot(colRef, (snap) => {
-                                const newDocs = snap.docs.map(d => ({ id: d.id, companyId: targetId, ...d.data() }));
-
-                                // Merge data: remove old entries for THIS target company, then push new ones natively
-                                _cache[colName] = [
-                                    ...(_cache[colName] || []).filter(item => item.companyId !== targetId),
-                                    ...newDocs
-                                ];
-
-                                _notifyListeners();
-                                if (typeof window !== 'undefined') {
-                                    window.dispatchEvent(new CustomEvent('eznr:data-synced'));
-                                }
-
-                                completed++;
-                                // Only resolve after all initial snapshots return to unblock the main screen
-                                if (completed === targets.length) resolve();
-                            }, (err) => {
-                                console.warn(`[dataStore] ⚠️ Snapshot error ${colName} [${targetId}]:`, err.message);
-                                completed++;
-                                if (completed === targets.length) resolve();
-                            });
-                            _snapshotUnsubs.push(unsub);
-                        });
-                    } catch (err) {
-                        console.warn(`[dataStore] ⚠️ Failed sync setup for ${colName}:`, err.message);
-                        if (!_cache[colName]) _cache[colName] = [];
-                        resolve();
-                    }
-                });
-            });
+            const coreLoads = CORE_COLLECTIONS.map(colName =>
+                _attachCollectionListener(colName, companyId)
+            );
 
             // Load global collections in parallel (non-blocking)
             const globalLoads = GLOBAL_COLLECTIONS.map(async (colName) => {
@@ -255,7 +285,6 @@ export async function loadCompanyData(companyId) {
                     const snap = await getDocs(colRef);
                     _cache[colName] = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-                    // Dispatch sync event individually so dependent UI (dropdowns) populate lazily
                     if (typeof window !== 'undefined') {
                         window.dispatchEvent(new CustomEvent('eznr:data-synced'));
                     }
@@ -276,28 +305,45 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // CRITICAL: Wait for company-scoped data before declaring loaded (with 3s timeout for slow mobile)
-            const companyTimeout = new Promise(r => setTimeout(r, 3000));
-            // Start meta loads in parallel immediately (don't wait for company data)
+            // CRITICAL: Wait for CORE data before declaring loaded (with 3s timeout for slow mobile)
+            const coreTimeout = new Promise(r => setTimeout(r, 3000));
             const metaPromise = Promise.all([...globalLoads, ...metaLoads]).then(() => {
-                console.log('[dataStore] 📡 All real-time modules & global references established.');
-                // Fire sync event so UI pages (admin/users) refresh when users data is ready
+                console.log('[dataStore] 📡 Global references & meta established.');
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('eznr:data-synced'));
                 }
             });
-            await Promise.race([Promise.all(companyLoads), companyTimeout]);
+            await Promise.race([Promise.all(coreLoads), coreTimeout]);
 
-            // Allow global + meta to initialize gracefully in the background
-            metaPromise.catch(() => {});
-
-            const elapsed = ((performance.now() - start) / 1000).toFixed(2);
-            const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
-            console.log(`[dataStore] ✅ Fast boot finished in ${elapsed}s (${totalDocs} docs), background tasks running.`);
+            const coreElapsed = ((performance.now() - start) / 1000).toFixed(2);
+            const coreDocs = CORE_COLLECTIONS.reduce((sum, col) => sum + (_cache[col]?.length || 0), 0);
+            console.log(`[dataStore] ✅ Core boot in ${coreElapsed}s (${coreDocs} docs from ${CORE_COLLECTIONS.length} collections). UI unblocked.`);
 
             _isLoaded = true;
             _isLoading = false;
             _notifyListeners();
+
+            // ── Phase 2: DEFERRED collections (background, non-blocking) ─────
+            // Small stagger to avoid flooding Firestore with 20+ listeners at once
+            const BATCH_SIZE = 5;
+            for (let i = 0; i < DEFERRED_COLLECTIONS.length; i += BATCH_SIZE) {
+                const batch = DEFERRED_COLLECTIONS.slice(i, i + BATCH_SIZE);
+                // Don't await — fire and forget
+                Promise.all(batch.map(colName => {
+                    return _attachCollectionListener(colName, companyId).then(() => {
+                        _deferredLoaded.add(colName);
+                    });
+                })).catch(() => {});
+                // Yield to event loop between batches
+                await new Promise(r => setTimeout(r, 50));
+            }
+
+            // Allow global + meta to initialize gracefully
+            metaPromise.catch(() => {});
+
+            const totalElapsed = ((performance.now() - start) / 1000).toFixed(2);
+            const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
+            console.log(`[dataStore] 🏁 Full boot complete in ${totalElapsed}s (${totalDocs} total docs, ${DEFERRED_COLLECTIONS.length} deferred).`);
         } catch (err) {
             console.error('[dataStore] ❌ Fatal load error:', err);
             _isLoading = false;
@@ -305,6 +351,20 @@ export async function loadCompanyData(companyId) {
     })();
 
     return _loadPromise;
+}
+
+/**
+ * Ensure a specific collection is loaded (useful for pages that need deferred data).
+ * Returns immediately if data is already available, otherwise waits for the listener.
+ */
+export async function ensureCollection(colName) {
+    // If it's a core collection or already loaded, return immediately
+    if (CORE_COLLECTIONS.includes(colName) || _deferredLoaded.has(colName)) return;
+    // If not yet loaded, attach listener and wait
+    if (_activeCompanyId && DEFERRED_COLLECTIONS.includes(colName)) {
+        await _attachCollectionListener(colName, _activeCompanyId);
+        _deferredLoaded.add(colName);
+    }
 }
 
 /**

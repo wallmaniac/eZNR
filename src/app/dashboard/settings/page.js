@@ -50,6 +50,7 @@ export default function SettingsPage() {
 
   // Mobile Tabs scroll indicator state
   const tabsWrapperRef = useRef(null);
+  const originalCountryRef = useRef('BA'); // tracks initial country to detect changes on save
   const [canScrollRight, setCanScrollRight] = useState(false);
 
   useEffect(() => {
@@ -205,6 +206,7 @@ export default function SettingsPage() {
           logo: company.logo || '', parentId: company.parentId || '',
           country: company.country || 'BA',
         });
+        originalCountryRef.current = company.country || 'BA';
       }
       if (isAdmin) {
         const hasAccess = getRawAll(COLLECTIONS.USERS).filter(u => 
@@ -382,6 +384,18 @@ export default function SettingsPage() {
       const payload = { ...companyData, branding: newBranding };
       update(COLLECTIONS.COMPANIES, activeCompanyId, payload);
       applyUIBranding(activeCompanyId);
+
+      // Invalidate news cache when jurisdiction changes (BA↔HR)
+      const oldCountry = originalCountryRef.current;
+      const newCountry = companyData.country || 'BA';
+      if (oldCountry !== newCountry) {
+        try {
+          localStorage.removeItem(`eznr_news_cache_${oldCountry}`);
+          localStorage.removeItem(`eznr_news_cache_${newCountry}`);
+        } catch { /* localStorage may be unavailable */ }
+        originalCountryRef.current = newCountry;
+      }
+
       clearDirty(); showSaved();
     } catch(err) {
       console.error('Save failed:', err);
