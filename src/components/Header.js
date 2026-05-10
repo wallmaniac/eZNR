@@ -236,9 +236,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 }}>
                     {/* Back / Forward */}
                     <button onClick={handleBack} title={lang !== 'en' ? 'Nazad' : 'Back'}
-                        style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.85rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
+                        style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
                     <button onClick={() => router.forward?.() || window.history.forward()} title={lang !== 'en' ? 'Naprijed' : 'Forward'}
-                        style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.85rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
+                        style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip */}
                     <div ref={companyRef} style={{ position: 'relative', flex: '1 1 auto', minWidth: 0, display: 'flex' }}>
@@ -280,7 +280,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 {/* Officer: aggregate mode */}
                                 {!isSuperAdmin && !companySearchTerm && (
                                     <>
-                                        <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); router.push('/dashboard'); }}
+                                        <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
                                             style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
                                             {activeCompanyId === 'all' ? '✅' : '🌐'} {lang !== 'en' ? 'Sve firme' : 'All companies'}
                                         </button>
@@ -293,7 +293,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     </div>
                                 )}
                                 {filteredCompaniesForMenu.map(c => (
-                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); router.push('/dashboard'); }}
+                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }}
                                         style={{ fontWeight: c.id === activeCompanyId ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
                                         {c.id === activeCompanyId ? '✅' : '🏛️'} {c.naziv || c.skraceniNaziv}
                                     </button>
@@ -445,7 +445,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     {/* Officer: "Sve firme" aggregate mode */}
                                     {!isSuperAdmin && !companySearchTerm && (
                                         <>
-                                            <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); router.push('/dashboard'); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
+                                            <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
                                                 <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang !== 'en' ? 'Sve firme' : 'All companies'}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Kombinirani prikaz' : 'Combined view'}</div></div>
                                             </button>
                                             <div className="dropdown-divider" />
@@ -463,7 +463,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                             const parent = c.parentId ? companies.find(p => p.id === c.parentId) : null;
                                             const isHolding = companies.some(sub => sub.parentId === c.id);
                                             return (
-                                                <button key={c.id} className="dropdown-item" onClick={async () => { setShowCompanyMenu(false); switchCompany(c.id); router.push('/dashboard'); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
+                                                <button key={c.id} className="dropdown-item" onClick={async () => { setShowCompanyMenu(false); await switchCompany(c.id); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
                                                     <span>{c.id === activeCompanyId ? '✅' : (isHolding ? '🏢' : (parent ? '🔗' : '🏛️'))}</span>
                                                     <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
                                                         <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
