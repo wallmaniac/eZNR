@@ -234,6 +234,12 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     backdropFilter: 'blur(20px)',
                     borderBottom: '1px solid var(--border-light)',
                 }}>
+                    {/* Back / Forward */}
+                    <button onClick={handleBack} title={lang !== 'en' ? 'Nazad' : 'Back'}
+                        style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.85rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
+                    <button onClick={() => router.forward?.() || window.history.forward()} title={lang !== 'en' ? 'Naprijed' : 'Forward'}
+                        style={{ ...iBtn({ width: 32, height: 32, fontSize: '0.85rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
+
                     {/* Company chip */}
                     <div ref={companyRef} style={{ position: 'relative', flex: '1 1 auto', minWidth: 0, display: 'flex' }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowNotifs(false); }}
