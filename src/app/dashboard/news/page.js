@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { fmtDateTime } from '@/lib/dateUtils';
 import { apiFetchNews } from '@/lib/newsAPI';
 import { getAll, COLLECTIONS, getById, getUserCompanies } from '@/lib/dataStore';
@@ -8,8 +9,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { generateZosPdf } from '@/lib/zosPdfGenerator';
 import { generateObrazac1, generateObrazac2, generateUputnica, openFormPrintWindow } from '@/lib/obrasciPdfGenerator';
 import PageHeader from '@/components/PageHeader';
-
-// No localStorage cache — server caches for 2h, so every page load is fresh within 2h
 
 const TIP_CONFIG = {
     zakon: { color: 'var(--info)', bg: '#1565C015', label: 'ZAKON', icon: '⚖️' },
@@ -21,103 +20,202 @@ const TIP_CONFIG = {
     smjernice: { color: '#558B2F', bg: '#558B2F15', label: 'SMJERNICE', icon: '📋' },
 };
 
-const LAW_LINKS = [
-    {
-        category: 'Zakoni — FBiH', icon: '🛡️',
-        items: [
-            { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-na-radu.html' },
-            { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-radu.html' },
-            { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.msb.gov.ba/dokumenti/10ZAKON_O_VATROGASTVU_FBIH.pdf' },
-        ]
-    },
-    {
-        category: 'Zakoni — Republika Srpska', icon: '🛡️',
-        items: [
-            { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/republika-srpska/zakon-o-zastiti-na-radu.html' },
-            { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21, 112/23, 39/24', url: 'https://www.paragraf.ba/propisi/republika-srpska/zakon-o-radu.html' },
-            { name: 'Sl. glasnik RS — zvanični portal (slglasnik.org)', url: 'https://slglasnik.org' },
-        ]
-    },
-    {
-        category: 'Pravilnici i podzakonski akti — FBiH', icon: '📜',
-        items: [
-            { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.paragraf.ba/propisi/fbih/pravilnik-o-upotrebi-sredstava-i-opreme-licne-zastite-na-radu.html' },
-            { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.basic.com.ba/asset/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf' },
-            { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.akta.ba/legislativa/134526/pravilnik-o-nacinu-i-uvjetima-obavljanja-poslova-zastite-na-radu-kod-poslodavca' },
-        ]
-    },
-    {
-        category: 'EU Direktive (harmonizacija s BiH) ✓', icon: '🇪🇺',
-        items: [
-            { name: 'Direktiva 89/391/EEZ — Okvirna direktiva (transponirana u Zakon FBiH 79/20)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391' },
-            { name: 'Direktiva 89/654/EEZ — Minimalni zahtjevi za radna mjesta', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0654' },
-            { name: 'Direktiva 2009/104/EZ — Radna oprema (zamjenjuje 89/655)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32009L0104' },
-            { name: 'Direktiva 89/656/EEZ — Osobna zaštitna oprema (transponirana u Pravilnik 42/25)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0656' },
-            { name: 'Direktiva 92/85/EEZ — Zaštita trudnica na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31992L0085' },
-            { name: 'Direktiva 2003/10/EZ — Buka na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32003L0010' },
-            { name: 'Direktiva 2002/44/EZ — Vibracije', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32002L0044' },
-            { name: 'Direktiva 98/24/EZ — Kemijski agensi na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31998L0024' },
-        ]
-    },
-    {
-        category: 'Korisni linkovi — Institucije i portali ✓', icon: '🔗',
-        items: [
-            { name: 'Sl. glasnik RS — slglasnik.org (e-RP registar propisa)', url: 'https://slglasnik.org' },
-            { name: 'Federalna inspekcija rada (FUZIP FBiH) — fuzip.gov.ba', url: 'https://fuzip.gov.ba/inspektorati/federalni-inspektorat-rada/' },
-            { name: 'Inspektorat RS — inspekcija rada — inspektorat.vladars.rs', url: 'https://inspektorat.vladars.rs' },
-            { name: 'Federalno ministarstvo rada i socijalne politike FBiH', url: 'https://fmrsp.gov.ba' },
-            { name: 'Narodna skupština RS — zakoni i propisi', url: 'https://www.narodnaskupstinars.net' },
-            { name: 'Paragraf.ba — Pravna baza BiH (FBiH + RS zakoni)', url: 'https://www.paragraf.ba' },
-            { name: 'ILO — Međunarodna organizacija rada (BiH — ILOSTAT statistike)', url: 'https://ilostat.ilo.org/data/country-profiles/bih/' },
-            { name: 'EUR-Lex — EU direktive o zaštiti na radu (pretraživač)', url: 'https://eur-lex.europa.eu/search.html?text=safety+health+workers&scope=EURLEX&type=quick&lang=hr' },
-        ]
-    },
-];
+// ============================================================================
+// JURISDICTION-SPECIFIC LAW LINKS
+// ============================================================================
+const LAW_LINKS_MAP = {
+    BA: [
+        {
+            category: 'Zakoni — FBiH', icon: '🛡️',
+            items: [
+                { name: 'Zakon o zaštiti na radu FBiH — Sl. novine FBiH br. 79/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-zastiti-na-radu.html' },
+                { name: 'Zakon o radu FBiH — Sl. novine FBiH br. 26/16, 89/18, 44/22', url: 'https://www.paragraf.ba/propisi/fbih/zakon-o-radu.html' },
+                { name: 'Zakon o zaštiti od požara i vatrogastvu FBiH — Sl. novine FBiH br. 64/09, 45/22', url: 'https://www.msb.gov.ba/dokumenti/10ZAKON_O_VATROGASTVU_FBIH.pdf' },
+            ]
+        },
+        {
+            category: 'Zakoni — Republika Srpska', icon: '🛡️',
+            items: [
+                { name: 'Zakon o zaštiti na radu RS — Sl. glasnik RS br. 1/08, 13/10, 37/12, 70/20 ✓ VAŽEĆI', url: 'https://www.paragraf.ba/propisi/republika-srpska/zakon-o-zastiti-na-radu.html' },
+                { name: 'Zakon o radu RS — Sl. glasnik RS br. 1/16, 66/18, 91/21, 119/21, 112/23, 39/24', url: 'https://www.paragraf.ba/propisi/republika-srpska/zakon-o-radu.html' },
+                { name: 'Sl. glasnik RS — zvanični portal (slglasnik.org)', url: 'https://slglasnik.org' },
+            ]
+        },
+        {
+            category: 'Pravilnici i podzakonski akti — FBiH', icon: '📜',
+            items: [
+                { name: '🆕 Pravilnik o upotrebi OZO — Sl. novine FBiH br. 42/25 (jun 2025.)', url: 'https://www.paragraf.ba/propisi/fbih/pravilnik-o-upotrebi-sredstava-i-opreme-licne-zastite-na-radu.html' },
+                { name: 'Pravila o procjeni rizika — Sl. novine FBiH br. 23/21', url: 'https://www.basic.com.ba/asset/pravila_o_procjeni_rizika_sluzbene_novine_fbih_broj_23_21.pdf' },
+                { name: 'Pravilnik o uvjetima i načinu obavljanja poslova ZNR — Sl. novine FBiH br. 34/21', url: 'https://www.akta.ba/legislativa/134526/pravilnik-o-nacinu-i-uvjetima-obavljanja-poslova-zastite-na-radu-kod-poslodavca' },
+            ]
+        },
+        {
+            category: 'EU Direktive (harmonizacija s BiH) ✓', icon: '🇪🇺',
+            items: [
+                { name: 'Direktiva 89/391/EEZ — Okvirna direktiva (transponirana u Zakon FBiH 79/20)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391' },
+                { name: 'Direktiva 89/654/EEZ — Minimalni zahtjevi za radna mjesta', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0654' },
+                { name: 'Direktiva 2009/104/EZ — Radna oprema (zamjenjuje 89/655)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32009L0104' },
+                { name: 'Direktiva 89/656/EEZ — Osobna zaštitna oprema (transponirana u Pravilnik 42/25)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0656' },
+                { name: 'Direktiva 92/85/EEZ — Zaštita trudnica na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31992L0085' },
+                { name: 'Direktiva 2003/10/EZ — Buka na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32003L0010' },
+                { name: 'Direktiva 2002/44/EZ — Vibracije', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32002L0044' },
+                { name: 'Direktiva 98/24/EZ — Kemijski agensi na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31998L0024' },
+            ]
+        },
+        {
+            category: 'Korisni linkovi — Institucije i portali ✓', icon: '🔗',
+            items: [
+                { name: 'Sl. glasnik RS — slglasnik.org (e-RP registar propisa)', url: 'https://slglasnik.org' },
+                { name: 'Federalna inspekcija rada (FUZIP FBiH) — fuzip.gov.ba', url: 'https://fuzip.gov.ba/inspektorati/federalni-inspektorat-rada/' },
+                { name: 'Inspektorat RS — inspekcija rada — inspektorat.vladars.rs', url: 'https://inspektorat.vladars.rs' },
+                { name: 'Federalno ministarstvo rada i socijalne politike FBiH', url: 'https://fmrsp.gov.ba' },
+                { name: 'Narodna skupština RS — zakoni i propisi', url: 'https://www.narodnaskupstinars.net' },
+                { name: 'Paragraf.ba — Pravna baza BiH (FBiH + RS zakoni)', url: 'https://www.paragraf.ba' },
+                { name: 'ILO — Međunarodna organizacija rada (BiH — ILOSTAT statistike)', url: 'https://ilostat.ilo.org/data/country-profiles/bih/' },
+                { name: 'EUR-Lex — EU direktive o zaštiti na radu (pretraživač)', url: 'https://eur-lex.europa.eu/search.html?text=safety+health+workers&scope=EURLEX&type=quick&lang=hr' },
+            ]
+        },
+    ],
+    HR: [
+        {
+            category: 'Zakoni — Republika Hrvatska', icon: '🛡️',
+            items: [
+                { name: 'Zakon o zaštiti na radu — NN 71/14, 118/14, 94/18, 96/18 ✓ VAŽEĆI', url: 'https://www.zakon.hr/z/242/Zakon-o-za%C5%A1titi-na-radu' },
+                { name: 'Zakon o radu — NN 93/14, 127/17, 98/19, 151/22, 64/23', url: 'https://www.zakon.hr/z/307/Zakon-o-radu' },
+                { name: 'Zakon o zaštiti od požara — NN 92/10, 114/22', url: 'https://www.zakon.hr/z/367/Zakon-o-za%C5%A1titi-od-po%C5%BEara' },
+                { name: 'Zakon o inspektoratu rada — NN 19/14, 18/23', url: 'https://www.zakon.hr/z/718/Zakon-o-Inspektoratu-rada' },
+            ]
+        },
+        {
+            category: 'Pravilnici — Zaštita na radu', icon: '📜',
+            items: [
+                { name: 'Pravilnik o izradi procjene rizika — NN 112/14, 129/19', url: 'https://www.zakon.hr/z/768/Pravilnik-o-izradi-procjene-rizika' },
+                { name: 'Pravilnik o osposobljavanju iz zaštite na radu — NN 142/21', url: 'https://www.zakon.hr/z/2827/Pravilnik-o-osposobljavanju-iz-za%C5%A1tite-na-radu' },
+                { name: 'Pravilnik o uporabi osobne zaštitne opreme — NN 5/21', url: 'https://www.zakon.hr/z/2590/Pravilnik-o-uporabi-osobnih-za%C5%A1titnih-sredstava' },
+                { name: 'Pravilnik o poslovima s posebnim uvjetima rada — NN 5/84', url: 'https://www.zakon.hr/z/426/Pravilnik-o-poslovima-s-posebnim-uvjetima-rada' },
+                { name: 'Pravilnik o pregledu i ispitivanju radne opreme — NN 16/16, 120/22', url: 'https://www.zakon.hr/z/936/Pravilnik-o-pregledu-i-ispitivanju-radne-opreme' },
+                { name: 'Pravilnik o sigurnosti i zdravlju pri radu s računalom — NN 73/21', url: 'https://www.zakon.hr/z/2734/Pravilnik-o-sigurnosti-i-zdravlju-pri-radu-s-ra%C4%8Dunalom' },
+            ]
+        },
+        {
+            category: 'EU Direktive (transponirane u zakonodavstvo RH) ✓', icon: '🇪🇺',
+            items: [
+                { name: 'Direktiva 89/391/EEZ — Okvirna direktiva (transponirana u ZoZNR NN 71/14)', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0391' },
+                { name: 'Direktiva 89/654/EEZ — Minimalni zahtjevi za radna mjesta', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0654' },
+                { name: 'Direktiva 2009/104/EZ — Radna oprema', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32009L0104' },
+                { name: 'Direktiva 89/656/EEZ — Osobna zaštitna oprema', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31989L0656' },
+                { name: 'Direktiva 2003/10/EZ — Buka na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A32003L0010' },
+                { name: 'Direktiva 98/24/EZ — Kemijski agensi na radu', url: 'https://eur-lex.europa.eu/legal-content/HR/TXT/?uri=CELEX%3A31998L0024' },
+            ]
+        },
+        {
+            category: 'Korisni linkovi — Institucije i portali ✓', icon: '🔗',
+            items: [
+                { name: 'HZZZSR — Hrvatski zavod za zaštitu zdravlja i sigurnost na radu', url: 'https://hzzzsr.hr' },
+                { name: 'Ministarstvo rada, mirovinskog sustava, obitelji i socijalne politike', url: 'https://mrosp.gov.hr' },
+                { name: 'Državni inspektorat — Inspektorat rada', url: 'https://dirh.gov.hr' },
+                { name: 'Zakon.hr — Pravna baza RH (pročišćeni tekstovi)', url: 'https://www.zakon.hr' },
+                { name: 'Narodne novine — Službeni list RH', url: 'https://narodne-novine.nn.hr' },
+                { name: 'zastita.info — Stručni portal za zaštitu na radu', url: 'https://zastita.info' },
+                { name: 'EUR-Lex — EU direktive o zaštiti na radu (pretraživač)', url: 'https://eur-lex.europa.eu/search.html?text=safety+health+workers&scope=EURLEX&type=quick&lang=hr' },
+            ]
+        },
+    ],
+};
 
-const FORM_CATEGORIES = [
-    {
-        title: 'Prijave povreda i oboljenja',
-        title_en: 'Injury & Disease Reporting',
-        icon: '🚑',
-        legal: 'Pravilnik o sadržaju i načinu podnošenja izvještaja — Sl. novine FBiH br. 9/23',
-        items: [
-            { name: 'Obrazac br. 1 — Izvještaj o povredi na radu', shortName: 'Prijava povrede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Pravilnik 9/23, Čl. 2', printBlank: 'obrazac1' },
-            { name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Pravilnik 9/23, Čl. 3', printBlank: 'obrazac2' },
-            { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 63. Zakona 79/20' },
-        ]
-    },
-    {
-        title: 'Ljekarske uputnice i nalazi',
-        title_en: 'Medical Referrals & Reports',
-        icon: '🩺',
-        legal: 'Pravilnik o raspoređivanju radnika na poslove s povećanim rizikom — Sl. novine FBiH',
-        items: [
-            { name: 'Uputnica za prethodni ljekarski pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 1 Pravilnika', printBlank: 'uputnica-prethodni' },
-            { name: 'Uputnica za periodični ljekarski pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 3 Pravilnika', printBlank: 'uputnica-periodicni' },
-            { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Obrazac br. 2 Pravilnika' },
-            { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Obrazac br. 4 Pravilnika' },
-        ]
-    },
-    {
-        title: 'Zapisnici o osposobljavanju',
-        title_en: 'Training Records',
-        icon: '📝',
-        legal: 'Čl. 34., 48., 49. Zakona o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)',
-        items: [
-            { name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način', shortName: 'Zapisnik ZOS', icon: '📝', route: '/dashboard/trainings', type: 'page', desc: 'Čl. 48-49 Zakona 79/20', printBlank: 'zos' },
-            { name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara', shortName: 'Zapisnik ZOP', icon: '🔥', route: '/dashboard/trainings', type: 'page', desc: 'Zakon o zaštiti od požara FBiH 64/09', printBlank: 'zop' },
-        ]
-    },
-    {
-        title: 'Evidencije i ostali obrasci',
-        title_en: 'Records & Other Forms',
-        icon: '📊',
-        legal: 'Zakon o radu FBiH (Sl. novine FBiH br. 26/16) + Pravilnik 92/16',
-        items: [
-            { name: 'Evidencija noćnog rada (NR1)', shortName: 'Noćni rad (NR1)', icon: '🌙', route: '/dashboard/night-work', type: 'page', desc: 'Pravilnik 92/16, Čl. 36-38 ZoR' },
-        ]
-    },
-];
+// ============================================================================
+// JURISDICTION-SPECIFIC FORM CATEGORIES
+// ============================================================================
+const FORM_CATEGORIES_MAP = {
+    BA: [
+        {
+            title: 'Prijave povreda i oboljenja',
+            title_en: 'Injury & Disease Reporting',
+            icon: '🚑',
+            legal: 'Pravilnik o sadržaju i načinu podnošenja izvještaja — Sl. novine FBiH br. 9/23',
+            items: [
+                { name: 'Obrazac br. 1 — Izvještaj o povredi na radu', shortName: 'Prijava povrede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Pravilnik 9/23, Čl. 2', printBlank: 'obrazac1' },
+                { name: 'Obrazac br. 2 — Izvještaj o profesionalnom oboljenju', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Pravilnik 9/23, Čl. 3', printBlank: 'obrazac2' },
+                { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 63. Zakona 79/20' },
+            ]
+        },
+        {
+            title: 'Ljekarske uputnice i nalazi',
+            title_en: 'Medical Referrals & Reports',
+            icon: '🩺',
+            legal: 'Pravilnik o raspoređivanju radnika na poslove s povećanim rizikom — Sl. novine FBiH',
+            items: [
+                { name: 'Uputnica za prethodni ljekarski pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 1 Pravilnika', printBlank: 'uputnica-prethodni' },
+                { name: 'Uputnica za periodični ljekarski pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Obrazac br. 3 Pravilnika', printBlank: 'uputnica-periodicni' },
+                { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Obrazac br. 2 Pravilnika' },
+                { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Obrazac br. 4 Pravilnika' },
+            ]
+        },
+        {
+            title: 'Zapisnici o osposobljavanju',
+            title_en: 'Training Records',
+            icon: '📝',
+            legal: 'Čl. 34., 48., 49. Zakona o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)',
+            items: [
+                { name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način', shortName: 'Zapisnik ZOS', icon: '📝', route: '/dashboard/trainings', type: 'page', desc: 'Čl. 48-49 Zakona 79/20', printBlank: 'zos' },
+                { name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara', shortName: 'Zapisnik ZOP', icon: '🔥', route: '/dashboard/trainings', type: 'page', desc: 'Zakon o zaštiti od požara FBiH 64/09', printBlank: 'zop' },
+            ]
+        },
+        {
+            title: 'Evidencije i ostali obrasci',
+            title_en: 'Records & Other Forms',
+            icon: '📊',
+            legal: 'Zakon o radu FBiH (Sl. novine FBiH br. 26/16) + Pravilnik 92/16',
+            items: [
+                { name: 'Evidencija noćnog rada (NR1)', shortName: 'Noćni rad (NR1)', icon: '🌙', route: '/dashboard/night-work', type: 'page', desc: 'Pravilnik 92/16, Čl. 36-38 ZoR' },
+            ]
+        },
+    ],
+    HR: [
+        {
+            title: 'Prijave ozljeda i oboljenja',
+            title_en: 'Injury & Disease Reporting',
+            icon: '🚑',
+            legal: 'Pravilnik o evidenciji, ispravama, izvještajima i knjizi nadz. iz ZNR — NN 52/84',
+            items: [
+                { name: 'Obrazac br. 1 — Prijava ozljede na radu', shortName: 'Prijava ozljede (OR)', icon: '🩹', route: '/dashboard/injuries', type: 'page', desc: 'Čl. 65. ZoZNR (NN 71/14)', printBlank: 'obrazac1' },
+                { name: 'Obrazac br. 2 — Prijava profesionalne bolesti', shortName: 'Profesionalna bolest (PB)', icon: '🫁', route: '/dashboard/diseases', type: 'page', desc: 'Čl. 65. ZoZNR (NN 71/14)', printBlank: 'obrazac2' },
+                { name: 'Obrazac OIR-1 — Obavijest o događaju na radu', shortName: 'Obavijest (OIR-1)', icon: '📑', route: '/dashboard/form-oir1', type: 'page', desc: 'Čl. 65. ZoZNR (NN 71/14)' },
+            ]
+        },
+        {
+            title: 'Liječničke uputnice i nalazi',
+            title_en: 'Medical Referrals & Reports',
+            icon: '🩺',
+            legal: 'Pravilnik o poslovima s posebnim uvjetima rada — NN 5/84',
+            items: [
+                { name: 'Uputnica za prethodni liječnički pregled', shortName: 'Uputnica (prethodni)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Čl. 36. ZoZNR (NN 71/14)', printBlank: 'uputnica-prethodni' },
+                { name: 'Uputnica za periodični liječnički pregled', shortName: 'Uputnica (periodični)', icon: '📋', route: '/dashboard/referral-ra1', type: 'page', desc: 'Čl. 36. ZoZNR (NN 71/14)', printBlank: 'uputnica-periodicni' },
+                { name: 'Obrazac RO1 — Liječnički nalaz (ocjena radne sposobnosti)', shortName: 'Liječnički nalaz (RO1)', icon: '🏥', route: '/dashboard/form-ro1', type: 'page', desc: 'Pravilnik NN 5/84' },
+                { name: 'Obrazac RO2 — Potvrda o privremenoj nesposobnosti', shortName: 'Privremena nesposobnost (RO2)', icon: '📄', route: '/dashboard/form-ro2', type: 'page', desc: 'Pravilnik NN 5/84' },
+            ]
+        },
+        {
+            title: 'Zapisnici o osposobljavanju',
+            title_en: 'Training Records',
+            icon: '📝',
+            legal: 'Pravilnik o osposobljavanju iz zaštite na radu — NN 142/21',
+            items: [
+                { name: 'Zapisnik ZOS — Ocjena osposobljenosti za rad na siguran način', shortName: 'Zapisnik ZOS', icon: '📝', route: '/dashboard/trainings', type: 'page', desc: 'Čl. 27-30 ZoZNR (NN 71/14)', printBlank: 'zos' },
+                { name: 'Zapisnik ZOP — Ocjena osposobljenosti za zaštitu od požara', shortName: 'Zapisnik ZOP', icon: '🔥', route: '/dashboard/trainings', type: 'page', desc: 'Zakon o zaštiti od požara (NN 92/10)', printBlank: 'zop' },
+            ]
+        },
+        {
+            title: 'Evidencije i ostali obrasci',
+            title_en: 'Records & Other Forms',
+            icon: '📊',
+            legal: 'Zakon o radu (NN 93/14, 151/22, 64/23)',
+            items: [
+                { name: 'Evidencija noćnog rada (NR1)', shortName: 'Noćni rad (NR1)', icon: '🌙', route: '/dashboard/night-work', type: 'page', desc: 'Čl. 69-72 ZoR (NN 93/14)' },
+            ]
+        },
+    ],
+};
 
 // Parse "DD.MM.YYYY." → Date for sorting
 function parseBSDate(str) {
@@ -127,22 +225,30 @@ function parseBSDate(str) {
 }
 
 // Guess a useful URL from izvor text when Gemini doesn't provide one
-function guessSourceUrl(izvor, naslov) {
+function guessSourceUrl(izvor, naslov, country = 'BA') {
     const src = (izvor || '').toLowerCase();
+    // HR sources
+    if (src.includes('narodne novine') || src.includes('nn ') || src.includes('nn.hr')) return 'https://narodne-novine.nn.hr';
+    if (src.includes('zakon.hr')) return 'https://www.zakon.hr';
+    if (src.includes('hzzzsr')) return 'https://hzzzsr.hr';
+    if (src.includes('mrosp') || src.includes('ministarstvo rada')) return 'https://mrosp.gov.hr';
+    // BA sources
     if (src.includes('sl. novine fbih') || src.includes('sllist') || src.includes('federaln')) return 'https://www.sllist.ba';
     if (src.includes('sl. glasnik rs') || src.includes('slglasnik') || src.includes('republicka') || src.includes('republika srpska')) return 'https://www.slglasnikrs.ba';
+    // Shared
     if (src.includes('ilo')) return 'https://www.ilo.org/budapest';
     if (src.includes('eu') || src.includes('direktiv') || src.includes('eur-lex')) return 'https://eur-lex.europa.eu';
     if (src.includes('inspektorat') || src.includes('vladars')) return 'https://inspektorat.vladars.net';
     if (src.includes('ministarstvo') || src.includes('fbihvlada') || src.includes('fbih')) return 'https://www.fbihvlada.gov.ba';
-    // Fallback: Google search for the headline
-    return `https://www.google.com/search?q=${encodeURIComponent((naslov || '') + ' Bosna Hercegovina')}`;
+    // Fallback
+    const suffix = country === 'HR' ? 'Hrvatska' : 'Bosna Hercegovina';
+    return `https://www.google.com/search?q=${encodeURIComponent((naslov || '') + ' ' + suffix)}`;
 }
 
-function NewsCard({ item }) {
+function NewsCard({ item, country }) {
     const cfg = TIP_CONFIG[item.tip] || TIP_CONFIG.obavijest;
-    const titleUrl = item.url || guessSourceUrl(item.izvor, item.naslov);
-    const sourceUrl = guessSourceUrl(item.izvor, item.naslov);
+    const titleUrl = item.url || guessSourceUrl(item.izvor, item.naslov, country);
+    const sourceUrl = guessSourceUrl(item.izvor, item.naslov, country);
 
     return (
         <div className="card" style={{ borderLeft: `4px solid ${cfg.color}`, transition: 'transform 0.15s, box-shadow 0.15s' }}
@@ -181,7 +287,7 @@ function NewsCard({ item }) {
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: cfg.color, textDecoration: 'none', fontWeight: 600 }}>
                                 {item.url ? 'Više informacija →' : '🔍 Pretraži temu →'}
                             </a>
-                            <a href={`https://www.google.com/search?q=${encodeURIComponent((item.naslov || '') + ' site:sllist.ba OR site:slglasnikrs.ba OR site:fbihvlada.gov.ba')}`}
+                            <a href={`https://www.google.com/search?q=${encodeURIComponent((item.naslov || '') + (country === 'HR' ? ' site:zakon.hr OR site:nn.hr OR site:hzzzsr.hr' : ' site:sllist.ba OR site:slglasnikrs.ba OR site:fbihvlada.gov.ba'))}`}
                                 target="_blank" rel="noopener noreferrer"
                                 style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', color: 'var(--text-muted)', textDecoration: 'none', fontWeight: 500 }}>
                                 ✔ Provjeri tačnost
@@ -196,6 +302,7 @@ function NewsCard({ item }) {
 
 export default function NewsPage() {
     const { t, lang } = useLanguage();
+    const country = useCountry(); // 'BA' or 'HR'
     const [activeTab, setActiveTab] = useState('news');
     const [news, setNews] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -204,34 +311,39 @@ export default function NewsPage() {
     const [source, setSource] = useState(null); // 'gemini' | 'static' | null
     const [nextRefresh, setNextRefresh] = useState(null);
 
+    const cacheKey = `eznr_news_cache_${country}`;
+
     // On mount: load from localStorage ONLY — never auto-call the API
     useEffect(() => {
         try {
-            const raw = localStorage.getItem('eznr_news_cache');
+            const raw = localStorage.getItem(cacheKey);
             if (raw) {
                 const cached = JSON.parse(raw);
                 setNews(cached.news || []);
                 setLastUpdated(cached.ts ? new Date(cached.ts) : null);
                 setFromCache(true);
                 setSource(cached.source || 'cache');
+            } else {
+                setNews([]);
+                setLastUpdated(null);
+                setFromCache(false);
+                setSource(null);
             }
-            // If no cache exists at all, show empty state — user must click Osvježi
         } catch { /* ignore */ }
-    }, []);
+    }, [cacheKey]);
 
-    // Override fetchNews to also persist to localStorage
+    // Fetch news with jurisdiction context
     const fetchAndCache = useCallback(async (force = false) => {
         setLoading(true);
         try {
-            const data = await apiFetchNews(force);
+            const data = await apiFetchNews(force, country);
             const freshNews = data.news || [];
             setNews(freshNews);
             setLastUpdated(new Date());
             setFromCache(false);
             setSource(data.source || null);
             setNextRefresh(data.nextRefresh ?? null);
-            // Persist to localStorage so next visit shows cached news immediately
-            localStorage.setItem('eznr_news_cache', JSON.stringify({
+            localStorage.setItem(cacheKey, JSON.stringify({
                 news: freshNews,
                 ts: new Date().toISOString(),
                 source: data.source || null,
@@ -241,7 +353,7 @@ export default function NewsPage() {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [country, cacheKey]);
 
 
     const tabs = [
@@ -286,7 +398,7 @@ export default function NewsPage() {
                                 </span>
                             )}
                             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                Zaštita na radu · Bosna i Hercegovina
+                                Zaštita na radu · {country === 'HR' ? 'Republika Hrvatska' : 'Bosna i Hercegovina'}
                             </span>
                         </div>
                         <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -332,7 +444,7 @@ export default function NewsPage() {
                     {/* News cards — sorted newest → oldest */}
                     {!loading && news.length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                            {[...news].sort((a, b) => parseBSDate(b.datum) - parseBSDate(a.datum)).map((item, i) => <NewsCard key={i} item={item} />)}
+                            {[...news].sort((a, b) => parseBSDate(b.datum) - parseBSDate(a.datum)).map((item, i) => <NewsCard key={i} item={item} country={country} />)}
                         </div>
                     )}
 
@@ -350,8 +462,12 @@ export default function NewsPage() {
 
                     <div style={{ marginTop: 20, padding: '10px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 8 }}>
                         {source === 'gemini'
-                            ? '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona BiH. Uvijek provjerite Sl. novine FBiH i Sl. glasnik RS za zvanične informacije.'
-                            : '📚 Prikazane informacije temelje se na važećim propisima ZNR u BiH. Uvijek provjerite originalne izvore za aktualne izmjene.'}
+                            ? (country === 'HR'
+                                ? '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona RH. Uvijek provjerite Narodne novine i zakon.hr za službene informacije.'
+                                : '🤖 Vijesti generira Google Gemini AI na osnovu javno dostupnih zakona BiH. Uvijek provjerite Sl. novine FBiH i Sl. glasnik RS za zvanične informacije.')
+                            : (country === 'HR'
+                                ? '📚 Prikazane informacije temelje se na važećim propisima ZNR u RH. Uvijek provjerite originalne izvore za aktualne izmjene.'
+                                : '📚 Prikazane informacije temelje se na važećim propisima ZNR u BiH. Uvijek provjerite originalne izvore za aktualne izmjene.')}
                     </div>
                 </div>
             )}
@@ -364,9 +480,13 @@ export default function NewsPage() {
                     <div className="card" style={{ background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))', border: 'none' }}>
                         <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                             <div style={{ flex: 1 }}>
-                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'white', marginBottom: 4 }}>⚖️ Zakonodavstvo ZNR u BiH — kompletan pregled</div>
+                                <div style={{ fontWeight: 800, fontSize: '1rem', color: 'white', marginBottom: 4 }}>
+                                    ⚖️ {country === 'HR' ? 'Zakonodavstvo ZNR u RH — kompletan pregled' : 'Zakonodavstvo ZNR u BiH — kompletan pregled'}
+                                </div>
                                 <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.82)' }}>
-                                    Svi zakoni, pravilnici (uključujući novi OZO pravilnik 42/25), EU direktive i institucioni linkovi — na jednom mjestu.
+                                    {country === 'HR'
+                                        ? 'Svi zakoni, pravilnici, EU direktive i institucioni linkovi — na jednom mjestu.'
+                                        : 'Svi zakoni, pravilnici (uključujući novi OZO pravilnik 42/25), EU direktive i institucioni linkovi — na jednom mjestu.'}
                                 </div>
                             </div>
                             <a href="/dashboard/znr-zakonodavstvo"
@@ -376,7 +496,7 @@ export default function NewsPage() {
                         </div>
                     </div>
 
-                    {LAW_LINKS.map((cat, idx) => (
+                    {(LAW_LINKS_MAP[country] || LAW_LINKS_MAP.BA).map((cat, idx) => (
                         <div key={idx} className="card">
                             <div className="card-body">
                                 <h3 style={{ marginBottom: 14, display: 'flex', alignItems: 'center', gap: 10, fontSize: '1rem' }}>
@@ -408,7 +528,7 @@ export default function NewsPage() {
 
             {/* ── FORMS TAB ── */}
             {activeTab === 'forms' && (
-                <FormsTab lang={lang} />
+                <FormsTab lang={lang} country={country} />
             )}
 
             <style>{`
@@ -422,7 +542,7 @@ export default function NewsPage() {
 /* ═══════════════════════════════════════════════════════════════════════════════
    FormsTab — Categorized official forms with blank template downloads
    ═══════════════════════════════════════════════════════════════════════════════ */
-function FormsTab({ lang }) {
+function FormsTab({ lang, country }) {
     const { activeCompanyId, user } = useAuth();
 
     /** Generate a blank ZOS template and open in a print window */
@@ -577,19 +697,19 @@ function FormsTab({ lang }) {
                     <span style={{ fontSize: '2.2rem' }}>📋</span>
                     <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'white', marginBottom: 4 }}>
-                            Službeni obrasci ZNR — Bosna i Hercegovina
+                            Službeni obrasci ZNR — {country === 'HR' ? 'Republika Hrvatska' : 'Bosna i Hercegovina'}
                         </div>
                         <div style={{ fontSize: '0.82rem', color: 'rgba(255,255,255,0.75)', lineHeight: 1.5 }}>
-                            Svi obrasci su usklađeni sa Zakonom o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20),
-                            Pravilnikom 9/23, Zakonom o zaštiti od požara (64/09) i Zakonom o radu (26/16).
-                            Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.
+                            {country === 'HR'
+                                ? 'Svi obrasci su usklađeni sa Zakonom o zaštiti na radu (NN 71/14, 118/14, 94/18, 96/18), Pravilnikom o osposobljavanju (NN 142/21) i Zakonom o radu (NN 93/14). Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.'
+                                : 'Svi obrasci su usklađeni sa Zakonom o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20), Pravilnikom 9/23, Zakonom o zaštiti od požara (64/09) i Zakonom o radu (26/16). Popunite i isprintajte ili preuzmite prazne obrasce za ručno popunjavanje.'}
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Categories */}
-            {FORM_CATEGORIES.map((cat, catIdx) => (
+            {(FORM_CATEGORIES_MAP[country] || FORM_CATEGORIES_MAP.BA).map((cat, catIdx) => (
                 <div key={catIdx} className="card">
                     <div className="card-body">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
@@ -651,10 +771,19 @@ function FormsTab({ lang }) {
             <div style={{ padding: '12px 16px', borderRadius: 'var(--radius-md)', background: 'var(--bg-input)', fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                 <span style={{ flexShrink: 0 }}>⚖️</span>
                 <span>
-                    Svi obrasci temelje se na važećim propisima FBiH. Pravilnik 9/23 zamjenjuje ranije obrasce za prijavu povreda.
-                    Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (79/20) i Zakonom o zaštiti od požara (64/09).
-                    Za zvanične tekstove propisa pogledajte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> ili
-                    Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                    {country === 'HR'
+                        ? <>
+                            Svi obrasci temelje se na važećim propisima RH. Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (NN 71/14) i Zakonom o zaštiti od požara (NN 92/10).
+                            Za službene tekstove propisa pogledajte <a href="https://www.zakon.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>zakon.hr</a> ili
+                            Narodne novine na <a href="https://narodne-novine.nn.hr" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>nn.hr</a>.
+                          </>
+                        : <>
+                            Svi obrasci temelje se na važećim propisima FBiH. Pravilnik 9/23 zamjenjuje ranije obrasce za prijavu povreda.
+                            Zapisnici ZOS i ZOP su usklađeni sa Zakonom o zaštiti na radu (79/20) i Zakonom o zaštiti od požara (64/09).
+                            Za zvanične tekstove propisa pogledajte <a href="https://www.paragraf.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>paragraf.ba</a> ili
+                            Službene novine FBiH na <a href="https://www.sllist.ba" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary)', fontWeight: 600 }}>sllist.ba</a>.
+                          </>
+                    }
                 </span>
             </div>
         </div>

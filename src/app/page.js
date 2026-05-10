@@ -322,7 +322,7 @@ export default function LandingPage() {
               </div>
               <ul className="feature-list bento-list bento-list-vertical">
                  <li>✓ Razumije kontekst vaših podataka</li>
-                 <li>✓ Poznaje zakone BiH</li>
+                 <li>✓ Poznaje zakone Zaštite na radu</li>
                  <li>✓ Chat uživo</li>
               </ul>
             </div>

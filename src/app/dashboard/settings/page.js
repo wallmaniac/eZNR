@@ -25,6 +25,7 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { isWebAuthnAvailable, hasStoredCredentialForUser, clearBiometricCredentialForUser, registerCredential } from '@/lib/webAuthn';
 import { uploadSecureFile } from '@/lib/storageService';
 import PageHeader from '@/components/PageHeader';
+import { runCountryMigration } from '@/lib/migrateCountry';
 import {
   ACCENT_PRESETS, SIDEBAR_PRESETS, EZNR_DEFAULTS,
   PDF_DEFAULTS, UI_DEFAULTS, WATERMARK_POSITIONS, LOGO_POSITIONS,
@@ -1682,10 +1683,7 @@ export default function SettingsPage() {
           <div className="card-body">
             <h3 style={{ marginBottom: 20 }}>🛡️ {lang !== 'en' ? 'Postavke sistema' : 'System Settings'}</h3>
 
-            <SectionHeader icon="🔐" title={lang !== 'en' ? 'Registracija i pristup' : 'Registration & Access'} />
-            <Toggle checked={appSettings.allowRegistration} onChange={v => updateApp('allowRegistration', v)} label={lang !== 'en' ? 'Omogući registraciju' : 'Allow registration'} description={lang !== 'en' ? 'Dozvolite novim korisnicima da se sami registriraju' : 'Allow new users to self-register'} />
-            <Toggle checked={appSettings.requireApproval} onChange={v => updateApp('requireApproval', v)} label={lang !== 'en' ? 'Potrebna admin potvrda' : 'Require admin approval'} description={lang !== 'en' ? 'Novi korisnici moraju biti odobreni od admina' : 'New accounts must be approved by admin'} />
-            <Toggle checked={appSettings.googleSignIn} onChange={v => updateApp('googleSignIn', v)} label={lang !== 'en' ? 'Google prijava' : 'Google sign-in'} description={lang !== 'en' ? 'Dozvolite prijavu putem Google računa' : 'Allow login via Google account'} />
+
 
             <SectionHeader icon="🔒" title={lang !== 'en' ? 'Sigurnost' : 'Security'} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0' }}>
@@ -1778,26 +1776,6 @@ export default function SettingsPage() {
               </div>
               
 
-                <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
-                <SectionHeader icon="☠️" title={lang !== 'en' ? 'Opasna zona (Super Admin)' : 'Danger Zone'} />
-                <div style={{ padding: 16, borderRadius: 12, background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.3)' }}>
-                  <div style={{ fontSize: '0.85rem', color: '#D32F2F', marginBottom: 16, fontWeight: 500 }}>
-                    {lang !== 'en' 
-                      ? 'PAŽNJA: Hard Wipe briše sve podatke za trenutno aktivnu kompaniju direktno sa Firebase Clouda. Ovo je nepovratno.' 
-                      : 'WARNING: Hard Wipe completely deletes all data for the currently active company directly from Firebase. This cannot be undone.'}
-                  </div>
-                  <button 
-                    type="button" 
-                    className="btn btn-primary" 
-                    onClick={handleWipeDev}
-                    disabled={wiping || !activeCompanyId}
-                    style={{ background: '#D32F2F', borderColor: '#D32F2F' }}
-                  >
-                    {wiping ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☠️'} 
-                    {lang !== 'en' ? 'HARD WIPE DSC' : 'HARD WIPE COMPANY'}
-                  </button>
-                </div>
-
               {syncResults && (
                 <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.15)', borderRadius: 8, fontSize: '0.7rem' }}>
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>Detalji sinkronizacije:</div>
@@ -1811,6 +1789,31 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+            </div>
+
+            <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+            {/* ── Country Migration ── */}
+            <SectionHeader icon="🌍" title={lang !== 'en' ? 'Migracija jurisdikcije (BA/HR)' : 'Jurisdiction Migration (BA/HR)'} />
+            <CountryMigrationPanel lang={lang} />
+
+            <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
+            <SectionHeader icon="☠️" title={lang !== 'en' ? 'Opasna zona (Super Admin)' : 'Danger Zone'} />
+            <div style={{ padding: 16, borderRadius: 12, background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.3)' }}>
+              <div style={{ fontSize: '0.85rem', color: '#D32F2F', marginBottom: 16, fontWeight: 500 }}>
+                {lang !== 'en' 
+                  ? 'PAŽNJA: Hard Wipe briše sve podatke za trenutno aktivnu kompaniju direktno sa Firebase Clouda. Ovo je nepovratno.' 
+                  : 'WARNING: Hard Wipe completely deletes all data for the currently active company directly from Firebase. This cannot be undone.'}
+              </div>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={handleWipeDev}
+                disabled={wiping || !activeCompanyId}
+                style={{ background: '#D32F2F', borderColor: '#D32F2F' }}
+              >
+                {wiping ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☠️'} 
+                {lang !== 'en' ? 'HARD WIPE DSC' : 'HARD WIPE COMPANY'}
+              </button>
             </div>
             </>
             )}
@@ -2092,6 +2095,68 @@ export default function SettingsPage() {
         </div>
       )}
 
+    </div>
+  );
+}
+
+/** Country migration panel — admin tool to set missing `country` on legacy companies */
+function CountryMigrationPanel({ lang }) {
+  const [migrating, setMigrating] = useState(false);
+  const [result, setResult] = useState(null);
+  const [selectedCountry, setSelectedCountry] = useState('BA');
+
+  const handleDryRun = async () => {
+    setMigrating(true); setResult(null);
+    try {
+      const r = await runCountryMigration(false, selectedCountry);
+      setResult({ ...r, mode: 'dry-run' });
+    } catch (e) { setResult({ error: e.message }); }
+    setMigrating(false);
+  };
+
+  const handleExecute = async () => {
+    setMigrating(true); setResult(null);
+    try {
+      const r = await runCountryMigration(true, selectedCountry);
+      setResult({ ...r, mode: 'execute' });
+    } catch (e) { setResult({ error: e.message }); }
+    setMigrating(false);
+  };
+
+  return (
+    <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
+      <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+        {lang !== 'en'
+          ? 'Skenira sve kompanije u Firestore-u i postavlja polje "country" na one koje ga nemaju. Koristite DRY RUN za pregled bez pisanja.'
+          : 'Scans all company documents in Firestore and sets the "country" field on those missing it. Use DRY RUN to preview without writing.'}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+        <select className="form-select" value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} style={{ width: 100, height: 38 }}>
+          <option value="BA">🇧🇦 BA</option>
+          <option value="HR">🇭🇷 HR</option>
+        </select>
+        <button className="btn" onClick={handleDryRun} disabled={migrating} style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontWeight: 600, fontSize: '0.8rem' }}>
+          {migrating ? '⏳' : '🔍'} DRY RUN
+        </button>
+        <button className="btn btn-primary" onClick={handleExecute} disabled={migrating} style={{ fontWeight: 600, fontSize: '0.8rem' }}>
+          {migrating ? '⏳' : '🚀'} {lang !== 'en' ? 'Izvrši migraciju' : 'Execute Migration'}
+        </button>
+      </div>
+      {result && (
+        <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: result.error ? 'rgba(244,67,54,0.08)' : 'rgba(76,175,80,0.08)', border: `1px solid ${result.error ? 'rgba(244,67,54,0.3)' : 'rgba(76,175,80,0.3)'}`, fontSize: '0.82rem' }}>
+          {result.error ? (
+            <div style={{ color: 'var(--danger)' }}>❌ {result.error}</div>
+          ) : (
+            <>
+              <div><strong>{result.mode === 'dry-run' ? '🔍 DRY RUN' : '✅ MIGRATED'}</strong></div>
+              <div>{lang !== 'en' ? 'Ukupno kompanija' : 'Total companies'}: <strong>{result.total}</strong></div>
+              <div>{lang !== 'en' ? 'Već postavljeno' : 'Already set'}: <strong>{result.alreadySet}</strong></div>
+              {result.wouldMigrate != null && <div>{lang !== 'en' ? 'Za migraciju' : 'Would migrate'}: <strong>{result.wouldMigrate}</strong></div>}
+              {result.migrated > 0 && <div style={{ color: 'var(--success)', fontWeight: 700, marginTop: 4 }}>{lang !== 'en' ? 'Migrirano' : 'Migrated'}: {result.migrated}</div>}
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
