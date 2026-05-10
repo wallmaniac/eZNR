@@ -207,7 +207,8 @@ export function AuthProvider({ children }) {
             setActiveCompany(null);
         }
         if (companyId) {
-            await switchCompanyData(companyId);
+            // Do NOT await to immediately unblock the UI. DataStore handles async population.
+            switchCompanyData(companyId).catch(console.error);
         }
         setLoading(false);
     }, [userCompanies]);
