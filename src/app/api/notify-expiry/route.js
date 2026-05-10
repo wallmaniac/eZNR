@@ -132,34 +132,98 @@ function buildEmailBody({ companyName, sections, lang, today }) {
     const todayStr = fmtDate(today.toISOString().split('T')[0]);
     const sectionsHtml = sections.join('');
     if (!sectionsHtml.trim()) return null;
-    return `<!DOCTYPE html><html lang="${lang || 'bs'}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>eZNR — ${t(lang, 'titleDig')}</title></head>
-<body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0">
-  <tr><td align="center">
-    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%">
-      <tr><td style="background:linear-gradient(135deg, #020617, #0f172a);border-radius:16px 16px 0 0;padding:40px 20px;text-align:center">
-        <img src="${APP_URL}/logo-transparent.png" alt="eZNR" width="380" style="display:inline-block;width:100%;max-width:380px;height:auto" />
-      </td></tr>
-      <tr><td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:14px 40px;text-align:center">
-        <p style="margin:0;font-size:14px;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:2px">⏰ ${t(lang, 'titleDig')}</p>
-      </td></tr>
-      <tr><td style="background:#fff;padding:36px 40px 28px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0">
-        <p style="margin:0 0 6px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700">${t(lang, 'company')}</p>
-        <h1 style="margin:0 0 4px;font-size:20px;font-weight:800;color:#1e293b">${companyName}</h1>
-        <p style="margin:0 0 28px;font-size:13px;color:#64748b">${t(lang, 'generated')}: ${todayStr}</p>
-        <p style="margin:0 0 24px;font-size:14px;color:#475569;line-height:1.7">${t(lang, 'intro')}</p>
-        ${sectionsHtml}
-        <div style="text-align:center;margin:28px 0">
-          <a href="${APP_URL}/dashboard" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 40px;border-radius:12px">${t(lang, 'openApp')}</a>
-        </div>
-      </td></tr>
-      <tr><td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 16px 16px;padding:20px 40px;text-align:center">
-        <p style="margin:0 0 4px;font-size:12px;color:#64748b">${t(lang, 'autoEmail')}</p>
-        <p style="margin:0;font-size:11px;color:#94a3b8">${t(lang, 'disableOpt')}</p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table></body></html>`;
+
+    return `<!DOCTYPE html>
+<html lang="${lang || 'bs'}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eZNR — ${t(lang, 'titleDig')}</title>
+</head>
+<body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0;">
+    <tr>
+      <td align="center">
+        <!--[if mso]>
+        <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+        <tr>
+        <td align="center" valign="top" width="600">
+        <![endif]-->
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+          
+          <!-- Header logo image -->
+          <tr>
+            <td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;">
+              <img src="${APP_URL}/email-header.png" 
+                   alt="eZNR — Digitalna platforma za zaštitu na radu" 
+                   width="600" 
+                   style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;" />
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="background:#ffffff;padding:40px 30px 32px;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;text-align:left;">
+              <p style="margin:0 0 8px;font-size:12px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;font-weight:700;">
+                ⏰ ${t(lang, 'titleDig')}
+              </p>
+              <h1 style="margin:0 0 24px;font-size:22px;font-weight:800;color:#1e293b;line-height:1.35;">
+                ${companyName}
+              </h1>
+              
+              <p style="margin:0 0 10px;font-size:15px;color:#475569;line-height:1.75;">
+                ${t(lang, 'intro')}
+              </p>
+              <p style="margin:0 0 28px;font-size:13px;color:#64748b;font-weight:600;">
+                ${t(lang, 'generated')}: ${todayStr}
+              </p>
+
+              <!-- Sections (Tables) -->
+              ${sectionsHtml}
+
+              <!-- CTA -->
+              <div style="text-align:center;margin:36px 0;">
+                <p style="margin:0 0 16px;font-size:14px;color:#64748b;font-weight:600;">
+                  👇 Pritisnite dugme ispod za pristup aplikaciji:
+                </p>
+                <a href="${APP_URL}/dashboard" 
+                   style="display:block;background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#6366f1 100%);
+                          color:#ffffff;font-size:20px;font-weight:800;text-decoration:none;
+                          padding:22px 20px;border-radius:16px;letter-spacing:0.3px;
+                          box-shadow:0 6px 32px rgba(99,102,241,0.55),0 2px 8px rgba(79,70,229,0.4);
+                          border:3px solid rgba(255,255,255,0.25);
+                          max-width:480px;margin:0 auto;">
+                  ${t(lang, 'openApp')}
+                </a>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:0 0 16px 16px;padding:22px 30px;text-align:center;">
+              <p style="margin:0 0 6px;font-size:12px;color:#64748b;font-weight:600;">
+                ${t(lang, 'autoEmail')}
+              </p>
+              <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
+                ${t(lang, 'disableOpt')}
+              </p>
+            </td>
+          </tr>
+
+        </table>
+        <!--[if mso]>
+        </td>
+        </tr>
+        </table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>`;
 }
 
 // ─── Main GET handler (Vercel Cron calls this) ────────────────────────────────
