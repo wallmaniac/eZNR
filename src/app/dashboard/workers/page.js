@@ -1893,14 +1893,28 @@ function WorkersPageInner() {
                                                 </td>
                                                 <td style={{ fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'left' }}>
                                                     <button
-                                                        onClick={() => setViewWorkerId(w.id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                                                                handleEdit(w);
+                                                            } else {
+                                                                setViewWorkerId(w.id);
+                                                            }
+                                                        }}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
                                                         title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.ime}</button>
                                                 </td>
                                                 <td style={{ fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'left' }}>
                                                     <button
-                                                        onClick={() => setViewWorkerId(w.id)}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+                                                                handleEdit(w);
+                                                            } else {
+                                                                setViewWorkerId(w.id);
+                                                            }
+                                                        }}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
                                                         title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}
                                                     >{w.prezime}</button>
@@ -1988,7 +2002,7 @@ function WorkersPageInner() {
                                 handleEdit(found);
                                 const url = new URL(window.location);
                                 url.searchParams.set('openWorker', viewWorkerId);
-                                window.history.pushState(null, '', url.toString());
+                                window.history.replaceState(null, '', url.toString());
                             }
                         }}
                     />
