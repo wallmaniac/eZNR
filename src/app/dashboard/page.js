@@ -1622,12 +1622,13 @@ export default function DashboardPage() {
         </div>
     );
 
-    // Wrap in PullToRefresh on mobile
-    return isMobile ? (
+    // Always wrap in PullToRefresh to maintain stable DOM depth and prevent layout shift.
+    // The component inherently only responds to touch events anyway.
+    return (
         <PullToRefresh onRefresh={reloadAllData}>
             {dashboardContent}
         </PullToRefresh>
-    ) : dashboardContent;
+    );
 }
 
 function StatCard({ icon, label, value, color, onClick, isAlert }) {

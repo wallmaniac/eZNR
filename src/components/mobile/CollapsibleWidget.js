@@ -45,51 +45,50 @@ export default function CollapsibleWidget({
         });
     }, [id]);
 
-    // Desktop: render children directly without wrapper unless explicitly requested
-    if (!isMobile && !alwaysCollapsible) return children;
+    const isDesktop = !isMobile && !alwaysCollapsible;
 
     return (
-        <div style={{ marginBottom: collapsed ? 8 : 0 }}>
-            {/* Collapse/expand header bar */}
-            <button
-                onClick={toggle}
-                style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    width: '100%',
-                    padding: '10px 14px',
-                    border: '1px solid var(--border-light)',
-                    borderRadius: collapsed ? 12 : '12px 12px 0 0',
-                    background: collapsed
-                        ? 'rgba(0,191,166,0.06)'
-                        : 'rgba(0,191,166,0.03)',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    marginBottom: collapsed ? 0 : -1,
-                }}
-            >
-                <span style={{ fontSize: '1rem' }}>{icon}</span>
-                <span style={{
-                    flex: 1, textAlign: 'left',
-                    fontSize: '0.82rem', fontWeight: 700,
-                    fontFamily: 'var(--font-heading)',
-                    color: 'var(--text)',
-                }}>{title}</span>
-                <span style={{
-                    fontSize: '0.7rem',
-                    color: 'var(--text-muted)',
-                    transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
-                    transition: 'transform 0.2s',
-                }}>▼</span>
-            </button>
+        <div style={{ marginBottom: (collapsed && !isDesktop) ? 8 : 0 }}>
+            {/* Collapse/expand header bar - ONLY ON MOBILE */}
+            {!isDesktop && (
+                <button
+                    onClick={toggle}
+                    style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        width: '100%',
+                        padding: '10px 14px',
+                        border: '1px solid var(--border-light)',
+                        borderRadius: collapsed ? 12 : '12px 12px 0 0',
+                        background: collapsed ? 'rgba(0,191,166,0.06)' : 'rgba(0,191,166,0.03)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        marginBottom: collapsed ? 0 : -1,
+                    }}
+                >
+                    <span style={{ fontSize: '1rem' }}>{icon}</span>
+                    <span style={{
+                        flex: 1, textAlign: 'left',
+                        fontSize: '0.82rem', fontWeight: 700,
+                        fontFamily: 'var(--font-heading)',
+                        color: 'var(--text)',
+                    }}>{title}</span>
+                    <span style={{
+                        fontSize: '0.7rem',
+                        color: 'var(--text-muted)',
+                        transform: collapsed ? 'rotate(0deg)' : 'rotate(180deg)',
+                        transition: 'transform 0.2s',
+                    }}>▼</span>
+                </button>
+            )}
 
-            {/* Content: animated collapse */}
+            {/* Content: always wrapped so DOM tree never changes depth */}
             <div style={{
-                maxHeight: collapsed ? 0 : 5000,
-                overflow: 'hidden',
-                opacity: collapsed ? 0 : 1,
-                transition: collapsed
+                maxHeight: isDesktop ? 'none' : (collapsed ? 0 : 5000),
+                overflow: isDesktop ? 'visible' : 'hidden',
+                opacity: isDesktop ? 1 : (collapsed ? 0 : 1),
+                transition: isDesktop ? 'none' : (collapsed
                     ? 'max-height 0.3s ease, opacity 0.2s ease'
-                    : 'max-height 0.5s ease, opacity 0.3s ease 0.1s',
+                    : 'max-height 0.5s ease, opacity 0.3s ease 0.1s'),
             }}>
                 {children}
             </div>
