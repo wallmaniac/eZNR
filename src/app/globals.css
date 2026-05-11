@@ -151,11 +151,9 @@
   --info: #42A5F5;
 }
 
-/* Smooth theme transition on everything */
-*,
-*::before,
-*::after {
-  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease, box-shadow 0.2s ease;
+/* Smooth theme transition disabled on * to prevent mount flicker */
+body {
+  transition: background-color 0.2s ease, color 0.15s ease;
 }
 
 /* But NOT on transforms/animations — avoid janky hover effects */
@@ -195,8 +193,23 @@
 
 @media (hover: hover) {
   [data-theme="dark"] .dropdown-item:hover {
-  background: var(--bg-table-row-hover);
-}
+    background: var(--bg-table-row-hover);
+  }
+  .hover-underline:hover {
+    text-decoration: underline !important;
+  }
+  .hover-translate-x:hover {
+    transform: translateX(4px) !important;
+  }
+  .hover-opacity-1:hover {
+    opacity: 1 !important;
+  }
+  .hover-opacity-075:hover {
+    opacity: 0.75 !important;
+  }
+  .hover-text-danger:hover {
+    color: var(--danger) !important;
+  }
 }
 
 [data-theme="dark"] .badge-success {
