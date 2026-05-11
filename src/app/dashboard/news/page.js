@@ -230,7 +230,7 @@ function guessSourceUrl(izvor, naslov, country = 'BA') {
     const src = (izvor || '').toLowerCase();
     
     // HR reliable sources
-    if (src.includes('narodne novine') || src.includes('nn ') || src.includes('nn.hr')) return 'https://narodne-novine.nn.hr/search.html';
+    if (src.includes('narodne novine') || src.includes('nn ') || src.includes('nn.hr')) return 'https://narodne-novine.nn.hr';
     if (src.includes('zakon.hr')) return 'https://www.zakon.hr';
     if (src.includes('hzzzsr')) return 'https://hzzzsr.hr';
     if (src.includes('mrosp')) return 'https://mrosp.gov.hr';

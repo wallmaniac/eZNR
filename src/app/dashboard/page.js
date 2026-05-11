@@ -204,7 +204,13 @@ export default function DashboardPage() {
         // Debounced handler for data-synced events (500ms collapse window)
         const debouncedUpdate = () => {
             if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
-            syncTimerRef.current = setTimeout(() => setDs(gatherData()), 500);
+            syncTimerRef.current = setTimeout(() => {
+                const newData = gatherData();
+                setDs(prev => {
+                    if (JSON.stringify(prev) === JSON.stringify(newData)) return prev;
+                    return newData;
+                });
+            }, 500);
         };
 
         window.addEventListener('eznr:data-synced', debouncedUpdate);
