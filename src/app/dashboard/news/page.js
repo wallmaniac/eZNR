@@ -130,7 +130,8 @@ const LAW_LINKS_MAP = {
 const FORM_CATEGORIES_MAP = {
     BA: [
         {
-            title: 'Prijave povreda i oboljenja',
+            title_bs: 'Prijave povreda i oboljenja',
+            title_hr: 'Prijave ozljeda i oboljenja',
             title_en: 'Injury & Disease Reporting',
             icon: '🚑',
             legal: 'Pravilnik o sadržaju i načinu podnošenja izvještaja — Sl. novine FBiH br. 9/23',
@@ -141,7 +142,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
-            title: 'Ljekarske uputnice i nalazi',
+            title_bs: 'Ljekarske uputnice i nalazi',
+            title_hr: 'Liječničke uputnice i nalazi',
             title_en: 'Medical Referrals & Reports',
             icon: '🩺',
             legal: 'Pravilnik o raspoređivanju radnika na poslove s povećanim rizikom — Sl. novine FBiH',
@@ -153,7 +155,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
-            title: 'Zapisnici o osposobljavanju',
+            title_bs: 'Zapisnici o osposobljavanju',
+            title_hr: 'Zapisnici o osposobljavanju',
             title_en: 'Training Records',
             icon: '📝',
             legal: 'Čl. 34., 48., 49. Zakona o zaštiti na radu FBiH (Sl. novine FBiH br. 79/20)',
@@ -163,7 +166,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
-            title: 'Evidencije i ostali obrasci',
+            title_bs: 'Evidencije i ostali obrasci',
+            title_hr: 'Evidencije i ostali obrasci',
             title_en: 'Records & Other Forms',
             icon: '📊',
             legal: 'Zakon o radu FBiH (Sl. novine FBiH br. 26/16) + Pravilnik 92/16',
@@ -174,7 +178,8 @@ const FORM_CATEGORIES_MAP = {
     ],
     HR: [
         {
-            title: 'Prijave ozljeda i oboljenja',
+            title_bs: 'Prijave povreda i oboljenja',
+            title_hr: 'Prijave ozljeda i oboljenja',
             title_en: 'Injury & Disease Reporting',
             icon: '🚑',
             legal: 'Pravilnik o evidenciji, ispravama, izvještajima i knjizi nadz. iz ZNR — NN 52/84',
@@ -185,7 +190,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
-            title: 'Liječničke uputnice i nalazi',
+            title_bs: 'Ljekarske uputnice i nalazi',
+            title_hr: 'Liječničke uputnice i nalazi',
             title_en: 'Medical Referrals & Reports',
             icon: '🩺',
             legal: 'Pravilnik o poslovima s posebnim uvjetima rada — NN 5/84',
@@ -197,7 +203,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
-            title: 'Zapisnici o osposobljavanju',
+            title_bs: 'Zapisnici o osposobljavanju',
+            title_hr: 'Zapisnici o osposobljavanju',
             title_en: 'Training Records',
             icon: '📝',
             legal: 'Pravilnik o osposobljavanju iz zaštite na radu — NN 142/21',
@@ -207,7 +214,8 @@ const FORM_CATEGORIES_MAP = {
             ]
         },
         {
-            title: 'Evidencije i ostali obrasci',
+            title_bs: 'Evidencije i ostali obrasci',
+            title_hr: 'Evidencije i ostali obrasci',
             title_en: 'Records & Other Forms',
             icon: '📊',
             legal: 'Zakon o radu (NN 93/14, 151/22, 64/23)',
@@ -725,7 +733,7 @@ function FormsTab({ lang, country }) {
                     <div className="card-body">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
                             <span style={{ fontSize: '1.4rem' }}>{cat.icon}</span>
-                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{lang !== 'en' ? cat.title : cat.title_en}</h3>
+                            <h3 style={{ margin: 0, fontSize: '1rem' }}>{lang === 'en' ? cat.title_en : (lang === 'hr' ? cat.title_hr : cat.title_bs)}</h3>
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: 16, paddingLeft: 36, fontStyle: 'italic' }}>
                             📌 {cat.legal}
