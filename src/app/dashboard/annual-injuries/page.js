@@ -544,7 +544,7 @@ export default function AnnualInjuriesPage() {
     styleEl.id = '__izvj_print_css__';
     styleEl.textContent = `
       @media print {
-        body> *:not(#__izvj_print__) { display: none !important; }
+        body > *:not(#__izvj_print__) { display: none !important; }
         #__izvj_print__ {
           display: block !important;
           position: static !important;
@@ -554,13 +554,20 @@ export default function AnnualInjuriesPage() {
           color: #111;
           background: #fff;
           padding: 0;
+          width: 100% !important;
+          max-width: 100% !important;
+          box-sizing: border-box !important;
         }
-        #__izvj_print__ table { width: 100%; max-width: 100%; table-layout: fixed; word-wrap: break-word; border-collapse: collapse; font-size: 7.5pt; margin-top: 14px; }
-        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555; padding: 4px 5px; overflow-wrap: break-word; white-space: normal !important; }
-        #__izvj_print__ th { background: #e8e8e8; font-weight: 700; text-align: center; }
-        #__izvj_print__ td { vertical-align: top; }
-        #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset; display: block; }
-        @page { size: landscape; margin: 12mm; }
+        #__izvj_print__ .data-table-wrapper {
+          overflow: visible !important;
+          width: 100% !important;
+        }
+        #__izvj_print__ table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; word-wrap: break-word !important; border-collapse: collapse !important; font-size: 7.5pt !important; margin-top: 14px !important; }
+        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555 !important; padding: 4px 5px !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important; }
+        #__izvj_print__ th { background: #e8e8e8 !important; font-weight: 700 !important; text-align: center !important; }
+        #__izvj_print__ td { vertical-align: top !important; }
+        #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset !important; display: block !important; width: 100% !important; box-sizing: border-box !important; }
+        @page { size: A4 landscape !important; margin: 10mm !important; }
       }
     `;
     document.head.appendChild(styleEl);
