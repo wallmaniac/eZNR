@@ -366,9 +366,9 @@ export default function AnnualInjuriesPage() {
     const tempStyle = document.createElement('style');
     tempStyle.textContent = `
       .card, .card-body { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; color: #000 !important; }
-      table { width: 100% !important; max-width: 100% !important; table-layout: fixed; }
-      th, td { white-space: normal !important; word-break: break-word !important; border: 1px solid #888 !important; padding: 5px !important; color: #000 !important; background: #fff !important; }
-      th { background-color: #f0f0f0 !important; font-weight: bold !important; color: #000 !important; }
+      table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
+      th, td { white-space: normal !important; overflow-wrap: break-word !important; word-break: normal !important; hyphens: auto !important; border: 1px solid #111 !important; padding: 4px 5px !important; color: #000 !important; background: #fff !important; }
+      th { background-color: #f0f0f0 !important; font-weight: bold !important; color: #000 !important; text-align: center !important; }
       span { color: #000 !important; }
     `;
     el.appendChild(tempStyle);
@@ -563,9 +563,9 @@ export default function AnnualInjuriesPage() {
           width: 100% !important;
         }
         #__izvj_print__ table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; word-wrap: break-word !important; border-collapse: collapse !important; font-size: 7.5pt !important; margin-top: 14px !important; }
-        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #555 !important; padding: 4px 5px !important; overflow-wrap: break-word !important; word-break: break-word !important; white-space: normal !important; }
-        #__izvj_print__ th { background: #e8e8e8 !important; font-weight: 700 !important; text-align: center !important; }
-        #__izvj_print__ td { vertical-align: top !important; }
+        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #111 !important; padding: 4px 5px !important; overflow-wrap: break-word !important; word-break: normal !important; hyphens: auto !important; white-space: normal !important; }
+        #__izvj_print__ th { background: #e8e8e8 !important; font-weight: 700 !important; text-align: center !important; color: #111 !important; }
+        #__izvj_print__ td { vertical-align: top !important; color: #111 !important; }
         #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset !important; display: block !important; width: 100% !important; box-sizing: border-box !important; }
         @page { size: A4 landscape !important; margin: 10mm !important; }
       }
@@ -914,23 +914,23 @@ export default function AnnualInjuriesPage() {
                   <table className="data-table" style={{ fontSize: '0.8rem', fontFamily: 'Georgia, serif' }}>
                     <thead>
                       <tr>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '4%' }}>{tLocal.table_rb}</th>
-                        <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)', width: '16%' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '3%' }}>{tLocal.table_rb}</th>
+                        <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)', width: '21%' }}>
                           {tLocal.table_death}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%', whiteSpace: 'pre-line' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '19%', whiteSpace: 'pre-line' }}>
                           {tLocal.table_personal}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>
                           {tLocal.table_location}
                         </th>
                         <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
                           {tLocal.table_cause}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '14%' }}>
                           {tLocal.table_report}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '11%' }}>
                           {tLocal.table_note}
                         </th>
                       </tr>
