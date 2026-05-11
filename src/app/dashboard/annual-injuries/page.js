@@ -366,9 +366,10 @@ export default function AnnualInjuriesPage() {
     const tempStyle = document.createElement('style');
     tempStyle.textContent = `
       .card, .card-body { border: none !important; box-shadow: none !important; padding: 0 !important; background: #fff !important; color: #000 !important; }
-      table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; }
-      th, td { white-space: normal !important; overflow-wrap: break-word !important; word-break: normal !important; hyphens: auto !important; border: 1px solid #111 !important; padding: 4px 5px !important; color: #000 !important; background: #fff !important; }
-      th { background-color: #f0f0f0 !important; font-weight: bold !important; color: #000 !important; text-align: center !important; }
+      table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; border: 1px solid #000 !important; }
+      th, td { white-space: normal !important; overflow-wrap: normal !important; word-break: normal !important; hyphens: none !important; border: 1px solid #000 !important; padding: 4px 5px !important; color: #000 !important; background: #fff !important; }
+      th { background-color: #f0f0f0 !important; font-weight: bold !important; color: #000 !important; text-align: center !important; font-size: 6.5pt !important; padding: 2px !important; }
+      td { font-size: 7.5pt !important; }
       span { color: #000 !important; }
     `;
     el.appendChild(tempStyle);
@@ -562,10 +563,10 @@ export default function AnnualInjuriesPage() {
           overflow: visible !important;
           width: 100% !important;
         }
-        #__izvj_print__ table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; word-wrap: break-word !important; border-collapse: collapse !important; font-size: 7.5pt !important; margin-top: 14px !important; }
-        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #111 !important; padding: 4px 5px !important; overflow-wrap: break-word !important; word-break: normal !important; hyphens: auto !important; white-space: normal !important; }
-        #__izvj_print__ th { background: #e8e8e8 !important; font-weight: 700 !important; text-align: center !important; color: #111 !important; }
-        #__izvj_print__ td { vertical-align: top !important; color: #111 !important; }
+        #__izvj_print__ table { width: 100% !important; max-width: 100% !important; table-layout: fixed !important; border-collapse: collapse !important; font-size: 7.5pt !important; margin-top: 14px !important; border: 1px solid #000 !important; }
+        #__izvj_print__ th, #__izvj_print__ td { border: 1px solid #000 !important; border-color: #000 !important; padding: 4px 5px !important; overflow-wrap: normal !important; word-break: normal !important; hyphens: none !important; white-space: normal !important; }
+        #__izvj_print__ th { background: #e8e8e8 !important; font-weight: 700 !important; text-align: center !important; color: #000 !important; font-size: 6.5pt !important; padding: 2px !important; }
+        #__izvj_print__ td { vertical-align: top !important; color: #000 !important; }
         #__izvj_print__ .card, #__izvj_print__ .card-body { all: unset !important; display: block !important; width: 100% !important; box-sizing: border-box !important; }
         @page { size: A4 landscape !important; margin: 10mm !important; }
       }
@@ -915,10 +916,10 @@ export default function AnnualInjuriesPage() {
                     <thead>
                       <tr>
                         <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '3%' }}>{tLocal.table_rb}</th>
-                        <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)', width: '21%' }}>
+                        <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)', width: '24%' }}>
                           {tLocal.table_death}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '19%', whiteSpace: 'pre-line' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '16%', whiteSpace: 'pre-line' }}>
                           {tLocal.table_personal}
                         </th>
                         <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '12%' }}>
@@ -927,10 +928,10 @@ export default function AnnualInjuriesPage() {
                         <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
                           {tLocal.table_cause}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '14%' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
                           {tLocal.table_report}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '11%' }}>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>
                           {tLocal.table_note}
                         </th>
                       </tr>
