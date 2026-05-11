@@ -145,7 +145,7 @@ function ServiceRecordsInner() {
     const handleDocUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 15 * 1024 * 1024) {
+        if (file.size> 15 * 1024 * 1024) {
             await alert(bs ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
             return;
         }
@@ -262,8 +262,7 @@ function ServiceRecordsInner() {
                                             transition: 'all 0.15s',
                                         }}
                                             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                                        >
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                                             📂 {bs ? 'Kliknite za upload dokumenta (PDF, slike)' : 'Click to upload document (PDF, images)'}
                                         </div>
                                     )}
@@ -305,9 +304,7 @@ function ServiceRecordsInner() {
                                 {sorted.length === 0 ? (
                                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sorted.map(d => (
-                                    <tr key={d.id} onClick={() => openInEquipment(d.equipmentId)} style={{ cursor: 'pointer' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                    <tr key={d.id} onClick={() => openInEquipment(d.equipmentId)} style={{ cursor: 'pointer' }}>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
                                                 <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
@@ -324,10 +321,10 @@ function ServiceRecordsInner() {
                                                 {actionMenuId === d.id && (<>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                     <div style={{ position: 'fixed', ...menuPos, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, overflowY: 'auto' }}>
-                                                        <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEditService(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
-                                                        {d.docData && <button onClick={(e) => { e.stopPropagation(); openDocInTab(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📎 {bs ? 'Otvori prilog' : 'Open Attachment'}</button>}
+                                                        <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEditService(d); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                                                        {d.docData && <button onClick={(e) => { e.stopPropagation(); openDocInTab(d); }} className="dropdown-item">📎 {bs ? 'Otvori prilog' : 'Open Attachment'}</button>}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteService(d.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteService(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                     </div>
                                                 </>)}
                                             </div>

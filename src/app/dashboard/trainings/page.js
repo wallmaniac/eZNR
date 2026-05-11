@@ -91,7 +91,7 @@ export default function TrainingsPage() {
         recs.forEach(tr => {
             getSessionsForTraining(tr.id)
                 .then(sessions => {
-                    if (sessions && sessions.length > 0) {
+                    if (sessions && sessions.length> 0) {
                         setCompletionStats(prev => ({
                             ...prev,
                             [tr.id]: {
@@ -129,7 +129,7 @@ export default function TrainingsPage() {
         const checkVisible = () => {
             if (!menuButtonRef.current) return;
             const rect = menuButtonRef.current.getBoundingClientRect();
-            if (rect.bottom < 0 || rect.top > window.innerHeight) setOpenMenuId(null);
+            if (rect.bottom < 0 || rect.top> window.innerHeight) setOpenMenuId(null);
         };
         window.addEventListener('scroll', checkVisible, true);
         return () => window.removeEventListener('scroll', checkVisible, true);
@@ -226,7 +226,7 @@ export default function TrainingsPage() {
     const moveSlide = (idx, dir) => {
         const slides = [...formData.slides];
         const newIdx = idx + dir;
-        if (newIdx < 0 || newIdx >= slides.length) return;
+        if (newIdx < 0 || newIdx>= slides.length) return;
         [slides[idx], slides[newIdx]] = [slides[newIdx], slides[idx]];
         setF('slides', slides);
     };
@@ -276,7 +276,7 @@ export default function TrainingsPage() {
                 return;
             }
 
-            if (data.questions?.length > 0) {
+            if (data.questions?.length> 0) {
                 const withIds = data.questions.map(q => ({ ...q, id: genId() }));
                 setF('questions', withIds);
                 setActiveFormTab('quiz');
@@ -490,7 +490,7 @@ export default function TrainingsPage() {
             <div class="sn">Slajd ${i + 1}: ${s.naslov || ''}</div>
             <div class="sc">${s.sadrzaj || ''}</div>
           </div>`).join('')}
-          ${questions.length > 0 ? `<hr /><h2>TEST ZNANJA</h2>
+          ${questions.length> 0 ? `<hr /><h2>TEST ZNANJA</h2>
           ${questions.map((q, i) => `<div class="q">
             <div class="qt">${i + 1}. ${q.pitanje || ''}</div>
             ${(q.opcije || []).map((o, j) => `<div class="opt">${String.fromCharCode(65 + j)}) ${o}</div>`).join('')}
@@ -568,7 +568,7 @@ export default function TrainingsPage() {
                                                             menuButtonRef.current = e.currentTarget;
                                                             const spaceBelow = window.innerHeight - rect.bottom - 8;
                                                             const spaceAbove = rect.top - 8;
-                                                            const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow;
+                                                            const flipUp = spaceBelow < 200 && spaceAbove> spaceBelow;
                                                             setMenuPos(flipUp
                                                                 ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -588,20 +588,20 @@ export default function TrainingsPage() {
                                                             borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                             minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                         }}>
-                                                            <button onClick={() => handleEdit(r)} style={menuItemSt}>📝 Uredi</button>
-                                                            <button onClick={() => handleDuplicate(r)} style={menuItemSt}>📋 Dupliciraj</button>
+                                                            <button onClick={() => handleEdit(r)} className="dropdown-item">📝 Uredi</button>
+                                                            <button onClick={() => handleDuplicate(r)} className="dropdown-item">📋 Dupliciraj</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} style={menuItemSt}>📧 Pošalji radnicima</button>
-                                                            <button onClick={() => { setOpenMenuId(null); setReminderTraining(r); setReminderOpen(true); }} style={menuItemSt}>📩 Pošalji podsjetnik</button>
-                                                            <button onClick={() => openResults(r)} style={menuItemSt}>📊 Rezultati</button>
+                                                            <button onClick={() => { setOpenMenuId(null); openDispatch(r); }} className="dropdown-item">📧 Pošalji radnicima</button>
+                                                            <button onClick={() => { setOpenMenuId(null); setReminderTraining(r); setReminderOpen(true); }} className="dropdown-item">📩 Pošalji podsjetnik</button>
+                                                            <button onClick={() => openResults(r)} className="dropdown-item">📊 Rezultati</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handleDelete(r.id)} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Obriši</button>
+                                                            <button onClick={() => handleDelete(r.id)} className="dropdown-item text-danger">🗑️ Obriši</button>
                                                             {/* Print sub-options — last */}
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <div style={{ padding: '5px 14px 2px', fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>🖨️ Isprintaj</div>
-                                                            {(r.slides?.length > 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} style={{ ...menuItemSt, paddingLeft: 24 }}>🎬 Prezentaciju</button>}
-                                                            {(r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'test')} style={{ ...menuItemSt, paddingLeft: 24 }}>📝 Test</button>}
-                                                            {(r.slides?.length > 0 && r.questions?.length > 0) && <button onClick={() => handlePrintTraining(r, 'both')} style={{ ...menuItemSt, paddingLeft: 24 }}>📚 Prezentaciju + Test</button>}
+                                                            {(r.slides?.length> 0) && <button onClick={() => handlePrintTraining(r, 'prezentacija')} className="dropdown-item" style={{ paddingLeft: 24 }}>🎬 Prezentaciju</button>}
+                                                            {(r.questions?.length> 0) && <button onClick={() => handlePrintTraining(r, 'test')} className="dropdown-item" style={{ paddingLeft: 24 }}>📝 Test</button>}
+                                                            {(r.slides?.length> 0 && r.questions?.length> 0) && <button onClick={() => handlePrintTraining(r, 'both')} className="dropdown-item" style={{ paddingLeft: 24 }}>📚 Prezentaciju + Test</button>}
                                                         </div>
                                                     )}
                                                 </div>
@@ -619,15 +619,14 @@ export default function TrainingsPage() {
                                             <td>
                                                 {completionStats[r.id] ? (() => {
                                                     const cs = completionStats[r.id];
-                                                    const pct = cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
+                                                    const pct = cs.total> 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
                                                     return (
                                                         <div 
                                                             onClick={(e) => { e.stopPropagation(); openResults(r); }}
                                                             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                            title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}
-                                                        >
+                                                            
+                                                            
+                                                            title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}>
                                                             <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
                                                             </div>
@@ -702,8 +701,7 @@ export default function TrainingsPage() {
                     <button 
                         className="btn btn-outline btn-sm" 
                         onClick={() => { setReminderTraining(resultsTraining); setReminderOpen(true); }}
-                        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}
-                    >
+                        style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
                         📩 {lang !== 'en' ? 'Pošalji podsjetnik' : 'Send Reminder'}
                     </button>
                 </div>
@@ -740,8 +738,7 @@ export default function TrainingsPage() {
                                                         <button
                                                             onClick={() => setViewWorkerId(matchedWorker.id)}
                                                             style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'solid' }}
-                                                            title="Klikni za pregled profila"
-                                                        >{s.recipientName || '—'}</button>
+                                                            title="Klikni za pregled profila">{s.recipientName || '—'}</button>
                                                     ) : (
                                                         <span style={{ fontWeight: 600 }}>{s.recipientName || '—'}</span>
                                                     )}
@@ -750,8 +747,7 @@ export default function TrainingsPage() {
                                                     <button
                                                         onClick={() => copyEmail(s.recipientEmail)}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontFamily: 'inherit', padding: '2px 4px', color: copiedEmail === s.recipientEmail ? '#22c55e' : 'var(--text)', borderRadius: 4, transition: 'all 0.15s' }}
-                                                        title="Klikni za kopiranje"
-                                                    >
+                                                        title="Klikni za kopiranje">
                                                         {copiedEmail === s.recipientEmail ? '✅ Kopirano!' : `📋 ${s.recipientEmail}`}
                                                     </button>
                                                 </td>
@@ -779,13 +775,11 @@ export default function TrainingsPage() {
                                                         {s.status === 'completed' && (
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem' }}
                                                                 onClick={() => viewSessionAnswers(s)}
-                                                                disabled={loadingAnswers}
-                                                            >📝 Odgovori</button>
+                                                                disabled={loadingAnswers}>📝 Odgovori</button>
                                                         )}
                                                         {s.grade?.passed && (
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem', color: 'var(--success)' }}
-                                                                onClick={() => autoCreateCertificate(s)}
-                                                            >📜 Uvjerenje</button>
+                                                                onClick={() => autoCreateCertificate(s)}>📜 Uvjerenje</button>
                                                         )}
                                                         {s.grade?.passed && (
                                                             <button className="btn btn-ghost btn-sm" style={{ fontSize: '0.72rem' }}
@@ -805,8 +799,7 @@ export default function TrainingsPage() {
                                                                         certOznaka: `ZOS-${Date.now().toString(36).toUpperCase()}`,
                                                                         testResult: s.grade ? `${s.grade.percentage}%` : '',
                                                                     });
-                                                                }}
-                                                            >🖨️ ZOS</button>
+                                                                }}>🖨️ ZOS</button>
                                                         )}
                                                     </div>
                                                 </td>
@@ -1339,7 +1332,7 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                                     <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{result.sent}</div>
                                     <div style={{ fontSize: '0.75rem' }}>Poslano</div>
                                 </div>
-                                {result.failed > 0 && (
+                                {result.failed> 0 && (
                                     <div style={{ padding: '12px 24px', borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444' }}>
                                         <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{result.failed}</div>
                                         <div style={{ fontSize: '0.75rem' }}>Neuspjelo</div>

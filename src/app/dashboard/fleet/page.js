@@ -113,7 +113,7 @@ function FleetInner() {
     });
 
     useEffect(() => {
-        if (deepLinkId && vehicles.length > 0 && !showForm) {
+        if (deepLinkId && vehicles.length> 0 && !showForm) {
             const openTab = typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('tab') : null;
             const rec = vehicles.find(v => v.id === deepLinkId);
             if (rec) {
@@ -443,8 +443,8 @@ function FleetInner() {
                                                         <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{bs ? 'Nema radnika' : 'No workers'}</div>
                                                     ) : filteredWorkers.slice(0, 15).map(w => (
                                                         <button key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                            
+                                                            
                                                             onClick={() => handleWorkerSelect(w)}>
                                                             <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>
                                                                 {w.ime?.[0]}{w.prezime?.[0]}
@@ -524,14 +524,14 @@ function FleetInner() {
                             </div>
                             <PDFExportButton title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38, flexShrink: 0 }} options={[
                                 { label: bs ? 'Sva vozila' : 'All vehicles', icon: '🚐', onClick: () => generateFleetReport(sorted.map(v => v.id), lang) },
-                                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
+                                ...(selectedIds.size> 0 ? [{ label: `${bs ? 'Odabrana' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateFleetReport(sorted.filter(v => selectedIds.has(v.id)).map(v => v.id), lang) }] : []),
                             ]} />
                             <PDFExportButton label={bs ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38, flexShrink: 0 }} options={[
                                 { label: bs ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sorted); setShowPrintModal(true); } },
-                                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
+                                ...(selectedIds.size> 0 ? [{ label: `${bs ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sorted.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
                             ]} />
                             <SavedFlash />
-                            {selectedIds.size > 0 && (
+                            {selectedIds.size> 0 && (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
                                     <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={bs ? 'Obriši odabrana vozila' : 'Delete selected vehicles'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
@@ -543,7 +543,7 @@ function FleetInner() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                        <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                         <th style={{ width: 90 }}>{t('actions')}</th>
                                         <th onClick={() => toggleSort('registracija')} style={thStyle('registracija')}>{bs ? 'Registracija' : 'Registration'}{sortIcon('registracija')}</th>
                                         <th onClick={() => toggleSort('marka')} style={thStyle('marka')}>{bs ? 'Marka/Model' : 'Brand/Model'}{sortIcon('marka')}</th>
@@ -561,9 +561,7 @@ function FleetInner() {
                                     ) : paged.map(v => {
                                         const st = STATUS_MAP[v.status] || STATUS_MAP.aktivan;
                                         return (
-                                            <tr key={v.id} onClick={() => openEdit(v)} style={{ cursor: 'pointer' }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                            <tr key={v.id} onClick={() => openEdit(v)} style={{ cursor: 'pointer' }}>
                                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                     <input type="checkbox" checked={selectedIds.has(v.id)} onChange={() => toggleOne(v.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                                 </td>
@@ -584,11 +582,11 @@ function FleetInner() {
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                                    <button onClick={() => { setActionMenuId(null); openEdit(v); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...v }; delete copy.id; copy.registracija = ''; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.VEHICLES, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([v]); setShowPrintModal(true); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj QR kod' : 'Print QR code'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); openEdit(v); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...v }; delete copy.id; copy.registracija = ''; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.VEHICLES, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); setPrintSelection([v]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {bs ? 'Printaj QR kod' : 'Print QR code'}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(v.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(v.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>
                                                             </>
                                                         )}
@@ -621,16 +619,13 @@ function FleetInner() {
                                                         style={{ padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1px solid ${st.color}33`, cursor: 'pointer', transition: 'all 0.15s', minWidth: 80 }}
                                                         onMouseEnter={e => { e.currentTarget.style.opacity = '0.8'; e.currentTarget.style.transform = 'scale(1.05)'; }}
                                                         onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
-                                                        title={bs ? 'Klikni za promjenu statusa' : 'Click to change status'}
-                                                    >{bs ? st.bs : st.en} ▾</button>
+                                                        title={bs ? 'Klikni za promjenu statusa' : 'Click to change status'}>{bs ? st.bs : st.en} ▾</button>
                                                     {statusDropdownId === v.id && (<>
                                                         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setStatusDropdownId(null); }} />
                                                         <div style={{ position: 'fixed', top: statusMenuPos.top, bottom: statusMenuPos.bottom, left: statusMenuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, padding: '4px 0 8px 0' }}>
                                                             {Object.entries(STATUS_MAP).map(([key, s]) => (
                                                                 <button key={key} onClick={(e) => { e.stopPropagation(); update(COLLECTIONS.VEHICLES, v.id, { status: key }); setStatusDropdownId(null); loadData(); }}
-                                                                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: v.status === key ? s.bg : 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.82rem', fontWeight: v.status === key ? 700 : 500, color: v.status === key ? s.color : 'var(--text)', textAlign: 'left', transition: 'background 0.12s' }}
-                                                                    onMouseEnter={e => e.currentTarget.style.background = s.bg}
-                                                                    onMouseLeave={e => e.currentTarget.style.background = v.status === key ? s.bg : 'none'}>
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', background: v.status === key ? s.bg : 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.82rem', fontWeight: v.status === key ? 700 : 500, color: v.status === key ? s.color : 'var(--text)', textAlign: 'left', transition: 'background 0.12s' }}>
                                                                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
                                                                     {bs ? s.bs : s.en}
                                                                     {v.status === key && <span style={{ marginLeft: 'auto', fontSize: '0.75rem' }}>✓</span>}

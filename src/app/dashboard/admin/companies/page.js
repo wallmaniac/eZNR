@@ -88,7 +88,7 @@ export default function AdminCompaniesPage() {
 
     const handleDelete = async (c) => {
         const usersInCompany = users.filter(u => (u.companyIds || []).includes(c.id));
-        if (usersInCompany.length > 0) {
+        if (usersInCompany.length> 0) {
             await alert(lang !== 'en'
                 ? `Ne možete obrisati firmu "${c.naziv}" jer ima ${usersInCompany.length} korisnika.`
                 : `Cannot delete company "${c.naziv}" — it has ${usersInCompany.length} users.`);
@@ -108,7 +108,7 @@ export default function AdminCompaniesPage() {
             setLogoError(lang !== 'en' ? 'Samo slike su dozvoljene.' : 'Only images are allowed.');
             return;
         }
-        if (file.size > 500000) {
+        if (file.size> 500000) {
             setLogoError(lang !== 'en' ? 'Logo mora biti manji od 500KB' : 'Logo must be under 500KB');
             return;
         }
@@ -348,7 +348,7 @@ export default function AdminCompaniesPage() {
                                 </div>
                             </div>
 
-                            {editCompany && assignableUsers.length > 0 && (
+                            {editCompany && assignableUsers.length> 0 && (
                               <div style={{ marginTop: 20, padding: 14, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
                                 <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12 }}>👮 {lang !== 'en' ? 'Dodijeljeni korisnici (Admini i Stručnjaci)' : 'Assigned Users (Admins and Officers)'}</div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -375,8 +375,7 @@ export default function AdminCompaniesPage() {
                                           fontWeight: isAssigned ? 700 : 600, fontSize: '0.75rem',
                                           transition: 'all 0.2s',
                                           opacity: isInherited ? 0.75 : 1
-                                        }}
-                                      >
+                                        }}>
                                         <span>{isInherited ? '🔗' : (isDirectlyAssigned ? '✅' : '➕')}</span>
                                         {officer.firstName} {officer.lastName}
                                       </button>

@@ -68,7 +68,7 @@ export default function AnnualInjuriesPage() {
   // ── Years dropdown: include current year ──
   const years = useMemo(() => {
     const yrs = [];
-    for (let y = currentYear; y >= currentYear - 4; y--) yrs.push(y);
+    for (let y = currentYear; y>= currentYear - 4; y--) yrs.push(y);
     return yrs;
   }, [currentYear]);
 
@@ -392,7 +392,7 @@ export default function AnnualInjuriesPage() {
           const cell = ws[addr];
           if (cell && cell.v != null) {
             const len = String(cell.v).length;
-            if (len > maxLen) maxLen = len;
+            if (len> maxLen) maxLen = len;
           }
         }
         colWidths.push({ wch: Math.min(maxLen + 2, 50) }); // cap at 50 chars
@@ -426,7 +426,7 @@ export default function AnnualInjuriesPage() {
     styleEl.id = '__izvj_print_css__';
     styleEl.textContent = `
       @media print {
-        body > *:not(#__izvj_print__) { display: none !important; }
+        body> *:not(#__izvj_print__) { display: none !important; }
         #__izvj_print__ {
           display: block !important;
           position: static !important;
@@ -492,8 +492,7 @@ export default function AnnualInjuriesPage() {
               borderRadius: 'var(--radius-md)',
               boxShadow: 'var(--shadow-lg)',
               padding: 4,
-            }}
-          >
+            }}>
             {(() => {
               const r = savedReports.find(x => x.id === listPdfDropdown);
               if (!r) return null;
@@ -589,8 +588,7 @@ export default function AnnualInjuriesPage() {
                                     const top = spaceBelow < 130 ? rect.top - 130 : rect.bottom + 4;
                                     setDropdownPos({ top, left: rect.left });
                                     setListPdfDropdown(listPdfDropdown === r.id ? null : r.id);
-                                  }}
-                                >⬇️</button>
+                                  }}>⬇️</button>
                               </div>
                               
                               <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Obriši' : 'Delete'} onClick={() => handleDeleteReport(r.id)}>🗑️</button>
@@ -916,10 +914,10 @@ export default function AnnualInjuriesPage() {
                       {byMonth.map(m => (
                         <tr key={m.month}>
                           <td style={{ fontWeight: 600 }}>{MONTHS[m.month]}</td>
-                          <td>{m.laka > 0 ? <span style={{ color: '#F59E0B', fontWeight: 700 }}>{m.laka}</span> : '0'}</td>
-                          <td>{m.teska > 0 ? <span style={{ color: '#EF4444', fontWeight: 700 }}>{m.teska}</span> : '0'}</td>
-                          <td>{m.smrtna > 0 ? <span style={{ color: '#7C3AED', fontWeight: 700 }}>{m.smrtna}</span> : '0'}</td>
-                          <td>{m.kolektivna > 0 ? <span style={{ color: '#10B981', fontWeight: 700 }}>{m.kolektivna}</span> : '0'}</td>
+                          <td>{m.laka> 0 ? <span style={{ color: '#F59E0B', fontWeight: 700 }}>{m.laka}</span> : '0'}</td>
+                          <td>{m.teska> 0 ? <span style={{ color: '#EF4444', fontWeight: 700 }}>{m.teska}</span> : '0'}</td>
+                          <td>{m.smrtna> 0 ? <span style={{ color: '#7C3AED', fontWeight: 700 }}>{m.smrtna}</span> : '0'}</td>
+                          <td>{m.kolektivna> 0 ? <span style={{ color: '#10B981', fontWeight: 700 }}>{m.kolektivna}</span> : '0'}</td>
                           <td><strong>{m.laka + m.teska + m.smrtna}</strong></td>
                         </tr>
                       ))}
@@ -938,7 +936,7 @@ export default function AnnualInjuriesPage() {
             </div>
 
             {/* Detail injury list */}
-            {yearInjuries.length > 0 && (
+            {yearInjuries.length> 0 && (
               <div className="card">
                 <div className="card-body">
                   <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: 12, paddingBottom: 6, borderBottom: '1px solid var(--border-light)' }}>
@@ -964,8 +962,7 @@ export default function AnnualInjuriesPage() {
                             <td style={{ fontWeight: 600 }}>
                               <button
                                 onClick={() => { if (inj.radnikId) setViewWorkerId(inj.radnikId); }}
-                                style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                              >{inj.radnikIme || '—'}</button>
+                                style={{ background: 'none', border: 'none', cursor: inj.radnikId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: inj.radnikId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}>{inj.radnikIme || '—'}</button>
                             </td>
                             <td>{inj.datum ? fmtDate(inj.datum) : '—'}</td>
                             <td>{tipBadge(inj.tip)}</td>

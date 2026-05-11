@@ -145,7 +145,7 @@ export default function ISZNRSigningPage() {
         certifikat: `eZNR-CERT-${Date.now().toString(36).toUpperCase()}`,
         algoritam: 'SHA-256 + RSA-2048',
       };
-      if (batchMode && batchSelected.length > 0) {
+      if (batchMode && batchSelected.length> 0) {
         batchSelected.forEach(docId => {
           update(COLLECTIONS.ISZNR_DOCUMENTS, docId, {
             ...signatureData,
@@ -282,17 +282,17 @@ export default function ISZNRSigningPage() {
                     {t('noRecords')}
                   </td></tr>
                 ) : sorted.map(doc => (
-                  <tr key={doc.id} className="hover-row" onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                  <tr key={doc.id} className="hover-row">
                     <td onClick={e => e.stopPropagation()}>
                         <div style={{ position: 'relative' }}>
-                            <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }}>Akcije ▼</button>
+                            <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }}>Akcije ▼</button>
                             {openMenuId === doc.id && (
                                 <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                    {!doc.potpisano && <button onClick={() => openSignModal(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✍️ {bs ? 'Potpiši' : 'Sign'}</button>}
-                                    <button onClick={() => { setOpenMenuId(null); setShowDetailModal(doc); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>👁️ {bs ? 'Detalji' : 'Details'}</button>
-                                    {doc.potpisano && <button onClick={() => handleVerify(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🔍 {bs ? 'Verifikuj' : 'Verify'}</button>}
+                                    {!doc.potpisano && <button onClick={() => openSignModal(doc)} className="dropdown-item">✍️ {bs ? 'Potpiši' : 'Sign'}</button>}
+                                    <button onClick={() => { setOpenMenuId(null); setShowDetailModal(doc); }} className="dropdown-item">👁️ {bs ? 'Detalji' : 'Details'}</button>
+                                    {doc.potpisano && <button onClick={() => handleVerify(doc)} className="dropdown-item">🔍 {bs ? 'Verifikuj' : 'Verify'}</button>}
                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                    <button onClick={() => handleDeleteDoc(doc)} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
+                                    <button onClick={() => handleDeleteDoc(doc)} className="dropdown-item text-danger">🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                 </div>
                             )}
                         </div>
@@ -336,8 +336,8 @@ export default function ISZNRSigningPage() {
                   <div key={i} style={{
                     flex: 1, textAlign: 'center', padding: '8px 4px',
                     fontSize: '0.72rem', fontWeight: 700,
-                    background: signStep >= i ? 'var(--primary)' : 'var(--bg-input)',
-                    color: signStep >= i ? 'white' : 'var(--text-muted)',
+                    background: signStep>= i ? 'var(--primary)' : 'var(--bg-input)',
+                    color: signStep>= i ? 'white' : 'var(--text-muted)',
                     borderRadius: i === 0 ? '8px 0 0 8px' : i === 3 ? '0 8px 8px 0' : 0,
                   }}>
                     {step}
@@ -354,7 +354,7 @@ export default function ISZNRSigningPage() {
                   <div>
                     <h4 style={{ marginBottom: 12 }}>📄 {bs ? 'Odaberite ili kreirajte dokument' : 'Select or create a document'}</h4>
 
-                    {unsignedDocs.length > 0 && (
+                    {unsignedDocs.length> 0 && (
                       <div style={{ marginBottom: 16 }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                           <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
@@ -363,7 +363,7 @@ export default function ISZNRSigningPage() {
                               {unsignedDocs.length}
                             </span>
                           </div>
-                          {unsignedDocs.length > 1 && (
+                          {unsignedDocs.length> 1 && (
                             <button onClick={() => { setBatchMode(!batchMode); setBatchSelected([]); }}
                               style={{
                                 fontSize: '0.72rem', fontWeight: 600, padding: '3px 10px', borderRadius: 8,
@@ -377,7 +377,7 @@ export default function ISZNRSigningPage() {
                           )}
                         </div>
 
-                        {unsignedDocs.length > 5 && (
+                        {unsignedDocs.length> 5 && (
                           <div style={{ position: 'relative', marginBottom: 8 }}>
                             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem' }}>🔍</span>
                             <input
@@ -396,7 +396,7 @@ export default function ISZNRSigningPage() {
                           </div>
                         )}
 
-                        {batchMode && modalFiltered.length > 0 && (
+                        {batchMode && modalFiltered.length> 0 && (
                           <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
                             <button onClick={() => setBatchSelected(modalFiltered.map(d => d.id))}
                               style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600 }}>
@@ -409,7 +409,7 @@ export default function ISZNRSigningPage() {
                           </div>
                         )}
 
-                        <div style={{ maxHeight: 280, overflowY: 'auto', borderRadius: 8, border: unsignedDocs.length > 5 ? '1px solid var(--border-light)' : 'none' }}>
+                        <div style={{ maxHeight: 280, overflowY: 'auto', borderRadius: 8, border: unsignedDocs.length> 5 ? '1px solid var(--border-light)' : 'none' }}>
                           {modalFiltered.length === 0 ? (
                             <div style={{ padding: '20px 12px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
                               {bs ? 'Nema rezultata' : 'No results'}
@@ -439,7 +439,7 @@ export default function ISZNRSigningPage() {
                           })}
                         </div>
 
-                        {batchMode && batchSelected.length > 0 && (
+                        {batchMode && batchSelected.length> 0 && (
                           <button className="btn btn-primary" onClick={handleBatchSign} style={{ width: '100%', marginTop: 10, justifyContent: 'center' }}>
                             ✍️ {bs ? `Potpiši ${batchSelected.length} dokumenata` : `Sign ${batchSelected.length} documents`}
                           </button>
@@ -516,12 +516,12 @@ export default function ISZNRSigningPage() {
                 <div style={{ textAlign: 'center', padding: '20px 0' }}>
                   <div style={{ fontSize: '4rem', marginBottom: 12 }}>✅</div>
                   <h3 style={{ color: 'var(--success)', marginBottom: 8 }}>
-                    {batchMode && batchSelected.length > 1
+                    {batchMode && batchSelected.length> 1
                       ? (bs ? `${batchSelected.length} dokumenata uspješno potpisano!` : `${batchSelected.length} documents successfully signed!`)
                       : (bs ? 'Dokument uspješno potpisan!' : 'Document successfully signed!')}
                   </h3>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                    {batchMode && batchSelected.length > 1
+                    {batchMode && batchSelected.length> 1
                       ? (bs ? 'Grupno potpisivanje završeno' : 'Batch signing complete')
                       : selectedDoc?.naslov}
                   </p>

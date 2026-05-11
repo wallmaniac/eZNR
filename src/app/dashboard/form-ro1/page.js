@@ -115,7 +115,7 @@ export default function FormRO1Page() {
 
   useEffect(() => {
     const openId = searchParams?.get('openId');
-    if (openId && records.length > 0 && !showForm) {
+    if (openId && records.length> 0 && !showForm) {
       const rec = records.find(r => r.id === openId);
       if (rec) handleEdit(rec);
     }
@@ -244,7 +244,7 @@ export default function FormRO1Page() {
             </div>
             
             {/* Grupne akcije bar */}
-            {selectedIds.size > 0 && (
+            {selectedIds.size> 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
                 <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
@@ -261,7 +261,7 @@ export default function FormRO1Page() {
               <table className="data-table" style={{ width: '100%' }}>
                 <thead>
                   <tr>
-                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang !== 'en' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang !== 'en' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
@@ -275,7 +275,7 @@ export default function FormRO1Page() {
                   ) : sorted.map((r, idx) => {
                     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
                     return (
-                    <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                    <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(r)}>
                       <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                         <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                       </td>
@@ -287,7 +287,7 @@ export default function FormRO1Page() {
                             const rect = e.currentTarget.getBoundingClientRect();
                             const spaceBelow = window.innerHeight - rect.bottom - 8;
                             const spaceAbove = rect.top - 8;
-                            const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                            const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                             setMenuPos(flipUp
                               ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -298,11 +298,11 @@ export default function FormRO1Page() {
                             <>
                               <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                             <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                              <button onClick={() => { setActionMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
-                              {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} style={menuItemSt}>📎 Preuzmi prilog</button>}
-                              <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} style={menuItemSt}>📋 Kopiraj</button>
+                              <button onClick={() => { setActionMenuId(null); handleEdit(r); }} className="dropdown-item">✏️ Otvori</button>
+                              {r.docData && <button onClick={() => { setActionMenuId(null); downloadDoc(r); }} className="dropdown-item">📎 Preuzmi prilog</button>}
+                              <button onClick={() => { setActionMenuId(null); handleDuplicate(r); }} className="dropdown-item">📋 Kopiraj</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} className="dropdown-item text-danger">🗑️ Izbriši</button>
                             </div>
                             </>, document.body
                           )}
@@ -339,7 +339,7 @@ export default function FormRO1Page() {
   const handleDocUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size> 15 * 1024 * 1024) {
       await alert(lang !== 'en' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
       return;
     }

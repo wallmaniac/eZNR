@@ -544,8 +544,7 @@ export default function SettingsPage() {
           background: checked ? 'var(--primary)' : 'var(--bg-input)',
           position: 'relative', transition: 'background 0.3s', flexShrink: 0,
           border: `1px solid ${checked ? 'var(--primary)' : 'var(--border)'}`
-        }}
-      >
+        }}>
         <span style={{
           position: 'absolute', top: 2, left: checked ? 24 : 2,
           width: 20, height: 20, borderRadius: '50%', background: 'var(--neutral)',
@@ -663,8 +662,7 @@ export default function SettingsPage() {
                 }
               }
               setActiveTab(tb.key);
-            }}
-          >
+            }}>
             {tb.icon} {tb.label}
             {dirtyTab === tb.key && <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: 'var(--warning)', marginLeft: 6, verticalAlign: 'middle', boxShadow: '0 0 4px var(--warning)' }} title="Nesačuvane promjene" />}
           </button>
@@ -782,8 +780,7 @@ export default function SettingsPage() {
                       window.dispatchEvent(new Event('storage')); // force react refresh if needed
                       setBiometricSuccess(lang !== 'en' ? 'Otisak uspješno uklonjen' : 'Fingerprint removed');
                     }}
-                    style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 600 }}
-                  >
+                    style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 600 }}>
                     🗑️ {lang !== 'en' ? 'Ukloni otisak' : 'Remove fingerprint'}
                   </button>
                 ) : (
@@ -832,8 +829,7 @@ export default function SettingsPage() {
                       } catch (err) {
                         setBiometricError('Greška: ' + err.message);
                       }
-                    }}
-                  >
+                    }}>
                     ➕ {lang !== 'en' ? 'Dodaj otisak' : 'Add fingerprint'}
                   </button>
                 )}
@@ -907,7 +903,7 @@ export default function SettingsPage() {
                 )}
 
 
-                {isAdmin && allOfficersList.length > 0 && (
+                {isAdmin && allOfficersList.length> 0 && (
                   <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
                     <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>👮 {lang !== 'en' ? 'Dodijeljeni stručnjaci ZNR i Administratori' : 'Assigned Officers and Admins'}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
@@ -928,8 +924,7 @@ export default function SettingsPage() {
                               color: isAssigned ? 'var(--primary)' : 'var(--text-muted)',
                               fontWeight: isAssigned ? 700 : 600, fontSize: '0.8rem',
                               transition: 'all 0.2s',
-                            }}
-                          >
+                            }}>
                             <span>{isAssigned ? '✅' : '➕'}</span>
                             {officer.firstName} {officer.lastName}
                           </button>
@@ -956,7 +951,7 @@ export default function SettingsPage() {
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
-                          if (file.size > 2000000) {
+                          if (file.size> 2000000) {
                             setLogoError(lang !== 'en' ? 'Logo mora biti manji od 2MB' : 'Logo must be under 2MB');
                             return;
                           }
@@ -1516,8 +1511,7 @@ export default function SettingsPage() {
                   className="form-select"
                   style={{ width: 200 }}
                   value={notifSettings.emailNotifLang ?? 'bs'}
-                  onChange={e => updateNotif('emailNotifLang', e.target.value)}
-                >
+                  onChange={e => updateNotif('emailNotifLang', e.target.value)}>
                   <option value="bs">🇧🇦 Bosanski</option>
                   <option value="hr">🇭🇷 Hrvatski</option>
                   <option value="sr">🇷🇸 Srpski</option>
@@ -1674,8 +1668,7 @@ export default function SettingsPage() {
                   fontFamily: 'var(--font-heading)',
                   color: isDark ? 'var(--primary)' : 'var(--text-light)',
                   transition: 'all 0.25s ease',
-                }}
-              >
+                }}>
                 <span style={{ fontSize: '1.1rem' }}>{isDark ? '🌙' : '☀️'}</span>
                 <span>{isDark ? (lang !== 'en' ? 'Uključi Svijetli mod' : 'Switch to Light') : (lang !== 'en' ? 'Uključi Tamni mod' : 'Switch to Dark')}</span>
               </button>
@@ -1748,7 +1741,7 @@ export default function SettingsPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 6, marginBottom: 16 }}>
                 {Object.entries(syncStats)
-                  .filter(([name, count]) => count > 0)
+                  .filter(([name, count]) => count> 0)
                   .map(([name, count]) => (
                     <div key={name} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.75rem', background: 'rgba(0,0,0,0.1)', borderRadius: 6 }}>
                       <span style={{color: 'var(--text-muted)'}}>{name}:</span><strong>{count}</strong>
@@ -1766,8 +1759,7 @@ export default function SettingsPage() {
                   type="button" 
                   className="btn btn-primary" 
                   onClick={handleRunSync}
-                  disabled={isSyncing || !activeCompanyId || Object.values(syncStats).every(count => count === 0)}
-                >
+                  disabled={isSyncing || !activeCompanyId || Object.values(syncStats).every(count => count === 0)}>
                   {isSyncing ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☁️'} 
                   {lang !== 'en' ? 'Sinkroniziraj na Firebase' : 'Sync to Firebase'}
                 </button>
@@ -1777,8 +1769,7 @@ export default function SettingsPage() {
                   className="btn"
                   style={{ background: 'var(--bg-input)', border: '1px solid var(--border)', fontSize: '0.8rem', padding: '8px 14px' }}
                   onClick={handleSeedMockData}
-                  disabled={isSyncing || !activeCompanyId}
-                >
+                  disabled={isSyncing || !activeCompanyId}>
                   🛠️ {lang !== 'en' ? 'Generiši testne podatke (40+)' : 'Generate Mock Data (40+)'}
                 </button>
 
@@ -1794,7 +1785,7 @@ export default function SettingsPage() {
                 <div style={{ marginTop: 12, padding: 12, background: 'rgba(0,0,0,0.15)', borderRadius: 8, fontSize: '0.7rem' }}>
                   <div style={{ fontWeight: 700, marginBottom: 4 }}>Detalji sinkronizacije:</div>
                   <div style={{ maxHeight: 120, overflowY: 'auto' }}>
-                    {syncResults.results.filter(r => r.synced > 0).map((r, i) => (
+                    {syncResults.results.filter(r => r.synced> 0).map((r, i) => (
                       <div key={i} style={{ color: 'var(--text-muted)' }}>✅ {r.collection}: {r.synced} zapisa</div>
                     ))}
                     {syncResults.errors.map((e, i) => (
@@ -1823,8 +1814,7 @@ export default function SettingsPage() {
                 className="btn btn-primary" 
                 onClick={handleWipeDev}
                 disabled={wiping || !activeCompanyId}
-                style={{ background: '#D32F2F', borderColor: '#D32F2F' }}
-              >
+                style={{ background: '#D32F2F', borderColor: '#D32F2F' }}>
                 {wiping ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☠️'} 
                 {lang !== 'en' ? 'HARD WIPE DSC' : 'HARD WIPE COMPANY'}
               </button>
@@ -1907,7 +1897,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Top companies */}
-              {stats.topCompanies?.length > 0 && (
+              {stats.topCompanies?.length> 0 && (
                 <>
                   <SectionHeader icon="🏆" title={lang !== 'en' ? 'Top kompanije po broju radnika' : 'Top Companies by Workers'} />
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -1935,7 +1925,7 @@ export default function SettingsPage() {
               <SectionHeader icon="📦" title={lang !== 'en' ? 'Zapisi po kolekcijama' : 'Records by Collection'} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                 {Object.entries(stats.collectionCounts)
-                  .filter(([, count]) => count > 0)
+                  .filter(([, count]) => count> 0)
                   .sort((a, b) => b[1] - a[1])
                   .map(([col, count]) => (
                     <div key={col} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 12px', fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)' }}>
@@ -1956,7 +1946,7 @@ export default function SettingsPage() {
       {currentTab === 'activity' && (
         <div>
           {/* ── Admin: Online users ── */}
-          {isAdmin && onlineUsers.length > 0 && (
+          {isAdmin && onlineUsers.length> 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
               <div className="card-body" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
@@ -2020,7 +2010,7 @@ export default function SettingsPage() {
               </div>
 
               {/* Admin log section */}
-              {isAdmin && adminLog.length > 0 && (
+              {isAdmin && adminLog.length> 0 && (
                 <>
                   <SectionHeader icon="🛡️" title={lang !== 'en' ? 'Admin aktivnosti' : 'Admin Events'} />
                   <div style={{ marginBottom: 16 }}>
@@ -2039,8 +2029,7 @@ export default function SettingsPage() {
                           transition: 'filter 0.2s'
                         }}
                         onMouseEnter={(e) => { if (entry.relatedId) e.currentTarget.style.filter = 'brightness(0.95)'; }}
-                        onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}
-                        >
+                        onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}>
                           <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
@@ -2077,8 +2066,7 @@ export default function SettingsPage() {
                     transition: 'filter 0.2s'
                   }}
                   onMouseEnter={(e) => { if (entry.relatedId) e.currentTarget.style.filter = 'brightness(0.95)'; }}
-                  onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}
-                  >
+                  onMouseLeave={(e) => { if (entry.relatedId) e.currentTarget.style.filter = ''; }}>
                     <span style={{ fontSize: '1rem', flexShrink: 0, marginTop: 1 }}>{entry.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontWeight: 600, fontSize: '0.82rem' }}>{entry.title}</div>
@@ -2090,11 +2078,10 @@ export default function SettingsPage() {
                 );
               })}
 
-              {(userLog.length >= logLimit || (isAdmin && adminLog.length >= logLimit)) && (
+              {(userLog.length>= logLimit || (isAdmin && adminLog.length>= logLimit)) && (
                 <button 
                   onClick={() => setLogLimit(l => l + 20)} 
-                  style={{ width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px dashed var(--border)', borderRadius: 8, cursor: 'pointer', marginTop: 12, color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}
-                >
+                  style={{ width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px dashed var(--border)', borderRadius: 8, cursor: 'pointer', marginTop: 12, color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>
                   {lang !== 'en' ? 'Učitaj starije aktivnosti' : 'Load older activities'}
                 </button>
               )}
@@ -2166,7 +2153,7 @@ function CountryMigrationPanel({ lang }) {
               <div>{lang !== 'en' ? 'Ukupno kompanija' : 'Total companies'}: <strong>{result.total}</strong></div>
               <div>{lang !== 'en' ? 'Već postavljeno' : 'Already set'}: <strong>{result.alreadySet}</strong></div>
               {result.wouldMigrate != null && <div>{lang !== 'en' ? 'Za migraciju' : 'Would migrate'}: <strong>{result.wouldMigrate}</strong></div>}
-              {result.migrated > 0 && <div style={{ color: 'var(--success)', fontWeight: 700, marginTop: 4 }}>{lang !== 'en' ? 'Migrirano' : 'Migrated'}: {result.migrated}</div>}
+              {result.migrated> 0 && <div style={{ color: 'var(--success)', fontWeight: 700, marginTop: 4 }}>{lang !== 'en' ? 'Migrirano' : 'Migrated'}: {result.migrated}</div>}
             </>
           )}
         </div>

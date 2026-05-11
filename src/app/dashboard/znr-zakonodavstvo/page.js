@@ -254,7 +254,7 @@ function buildCategories(country) {
     }
 
     // 2. Pravilnici / Regulations
-    if (pravilnici.length > 0) {
+    if (pravilnici.length> 0) {
         const pravilnikItems = pravilnici.map(p => {
             const meta = PRAVILNIK_META[`${country}-${p.id}`] || {};
             return {
@@ -304,7 +304,7 @@ function buildCategories(country) {
     });
 
     // 5. Institutional links
-    if (institutions.length > 0) {
+    if (institutions.length> 0) {
         categories.push({
             id: 'links',
             icon: '🔗',
@@ -396,8 +396,7 @@ export default function ZNRZakonodavstvoPage() {
                                         {item.url && item.urlLabel && (
                                             <a href={item.url} target="_blank" rel="noopener noreferrer"
                                                 style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', fontWeight: 700, color: cat.color, textDecoration: 'none', padding: '4px 12px', border: `1px solid ${cat.color}40`, borderRadius: 'var(--radius-full)', transition: 'all 0.15s' }}
-                                                onMouseEnter={e => { e.currentTarget.style.background = cat.color; e.currentTarget.style.color = 'white'; }}
-                                                onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = cat.color; }}>
+>
                                                 {item.urlLabel} ↗
                                             </a>
                                         )}

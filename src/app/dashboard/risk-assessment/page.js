@@ -98,10 +98,9 @@ function RiskMatrix({ onCellClick, items = [], selectedV = 0, selectedP = 0 }) {
                                             transition: 'transform 0.1s', position: 'relative',
                                         }}
                                         onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
-                                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                                    >
+                                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
                                         {score}
-                                        {count > 0 && (
+                                        {count> 0 && (
                                             <span style={{ position: 'absolute', top: -6, right: -6, background: '#fff', color: '#333', borderRadius: '50%', width: 18, height: 18, fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, border: '1px solid rgba(0,0,0,0.2)' }}>
                                                 {count}
                                             </span>
@@ -453,8 +452,8 @@ export default function RiskAssessmentPage() {
         const score = riForm.vjerovatnoca * riForm.posljedica;
         const vN = riForm.vjerovatnocaNakon || 0;
         const pN = riForm.posljedlicaNakon || 0;
-        const scoreAfter = vN > 0 && pN > 0 ? vN * pN : 0;
-        const data = { ...riForm, rizik: score, nivoRizika: riskLevel(score).label, rizikNakon: scoreAfter, nivoRizikaNakon: scoreAfter > 0 ? riskLevel(scoreAfter).label : '' };
+        const scoreAfter = vN> 0 && pN> 0 ? vN * pN : 0;
+        const data = { ...riForm, rizik: score, nivoRizika: riskLevel(score).label, rizikNakon: scoreAfter, nivoRizikaNakon: scoreAfter> 0 ? riskLevel(scoreAfter).label : '' };
         if (riEditId) { update(COLLECTIONS.RISK_ITEMS, riEditId, data); setLastEditedRiId(riEditId); }
         else create(COLLECTIONS.RISK_ITEMS, data);
         setShowRiForm(false); setRiEditId(null); loadRiskItems(editingId);
@@ -596,13 +595,13 @@ export default function RiskAssessmentPage() {
         
         // Predložena oprema (create unlinked array or just hint)
         // Ako želimo automatski integrirati, možda je bolje to ostaviti kao alert ili appendovati u opis procesa
-        if (docAiResult.oprema && docAiResult.oprema.length > 0) {
+        if (docAiResult.oprema && docAiResult.oprema.length> 0) {
             const opremaText = '\\n\\nStrojevi/Oprema izvučena iz dokumenata:\\n- ' + docAiResult.oprema.join('\\n- ');
             setFormData(prev => ({ ...prev, opisProcesa: (prev.opisProcesa || '') + opremaText }));
         }
 
         // Predložene opasnosti -> dodajemo kao draft Risk Items
-        if (docAiResult.opasnosti && docAiResult.opasnosti.length > 0) {
+        if (docAiResult.opasnosti && docAiResult.opasnosti.length> 0) {
             let addCount = 0;
             docAiResult.opasnosti.forEach(op => {
                 if (!op) return;
@@ -677,7 +676,7 @@ export default function RiskAssessmentPage() {
         if (!editingId) return;
         
         const existingItems = riskItems.filter(ri => ri.questionnaireId === q.id);
-        if (existingItems.length > 0) {
+        if (existingItems.length> 0) {
             if (!await confirm(`Već ste uvezli ${existingItems.length} stavki iz ovog upitnika. Želite li izbrisati prethodne i generisati nove?`)) {
                 return;
             }
@@ -832,7 +831,7 @@ export default function RiskAssessmentPage() {
                             vjerovatnocaNakon: item.vjerovatnocaNakon || 0,
                             posljedlicaNakon: item.posljedlicaNakon || 0,
                             rizikNakon: rizikNakon,
-                            nivoRizikaNakon: rizikNakon > 0 ? riskLevel(rizikNakon).label : '',
+                            nivoRizikaNakon: rizikNakon> 0 ? riskLevel(rizikNakon).label : '',
                             odgovornaOsoba: formData.ovlOsobaIme || '',
                             rokProvedbe: '',
                             status: 'draft',
@@ -854,12 +853,12 @@ export default function RiskAssessmentPage() {
             setAiGenSelectedWps([]);
             setAiGenCustomWp('');
             showFlash();
-            if (errors.length > 0) {
+            if (errors.length> 0) {
                 alert(`Generisano ${totalCreated} stavki. Greške za: ${errors.join('; ')}`);
             } else {
                 const skipped = wpTargets.length - dedupedTargets.length;
                 let msg = `Uspješno generisano ${totalCreated} stavki za ${dedupedTargets.length} jedinstveno/a radno/a mjesto/a.`;
-                if (skipped > 0) msg += ` (${skipped} duplikata preskočeno)`;
+                if (skipped> 0) msg += ` (${skipped} duplikata preskočeno)`;
                 alert(msg);
             }
         } catch (err) {
@@ -896,14 +895,14 @@ export default function RiskAssessmentPage() {
     const handleGenerateReport = (overrideData = null, overrideItems = null, autoPrint = false) => {
         const data = (overrideData && !overrideData.nativeEvent) ? overrideData : formData;
         const items = (overrideItems && !overrideItems.nativeEvent) ? overrideItems : riskItems;
-        const itemsWithScores = items.filter(ri => ri.rizik > 0);
-        const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
-        const itemsWithAfter = items.filter(ri => ri.rizikNakon > 0);
-        const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
-        const gradeBefore = avgBefore > 0 ? riskLevel(Math.round(avgBefore)) : null;
-        const gradeAfter = avgAfter > 0 ? riskLevel(Math.round(avgAfter)) : null;
+        const itemsWithScores = items.filter(ri => ri.rizik> 0);
+        const avgBefore = itemsWithScores.length> 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+        const itemsWithAfter = items.filter(ri => ri.rizikNakon> 0);
+        const avgAfter = itemsWithAfter.length> 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+        const gradeBefore = avgBefore> 0 ? riskLevel(Math.round(avgBefore)) : null;
+        const gradeAfter = avgAfter> 0 ? riskLevel(Math.round(avgAfter)) : null;
         const sorted = [...items].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
-        const highRiskItems = items.filter(ri => ri.rizik >= 6).sort((a, b) => b.rizik - a.rizik);
+        const highRiskItems = items.filter(ri => ri.rizik>= 6).sort((a, b) => b.rizik - a.rizik);
         const today = new Date().toLocaleDateString('hr-HR');
 
         const rlColor = (score) => {
@@ -1006,7 +1005,7 @@ ${data.analizaOrganizacije ? `<h3>Analiza organizacije rada</h3><p>${data.analiz
 ${sorted.map((ri, i) => {
     const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
     const hz = hazards.find(h => h.id === ri.opasnostId);
-    const hasAfter = ri.rizikNakon > 0;
+    const hasAfter = ri.rizikNakon> 0;
     return `<tr>
         <td>${i + 1}</td>
         <td>${wp?.naziv || '—'}</td>
@@ -1029,7 +1028,7 @@ ${sorted.map((ri, i) => {
 <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 0">
     <div class="grade-box" style="background:${gradeBefore ? rlBg(Math.round(avgBefore)) : '#f5f5f5'};border:2px solid ${gradeBefore ? rlColor(Math.round(avgBefore)) : '#ddd'}">
         <div style="font-size:8pt;color:#666;margin-bottom:4px">PRIJE MJERA</div>
-        <div style="font-size:20pt;font-weight:900;color:${gradeBefore ? rlColor(Math.round(avgBefore)) : '#999'}">${avgBefore > 0 ? avgBefore.toFixed(1) : '—'}</div>
+        <div style="font-size:20pt;font-weight:900;color:${gradeBefore ? rlColor(Math.round(avgBefore)) : '#999'}">${avgBefore> 0 ? avgBefore.toFixed(1) : '—'}</div>
         ${gradeBefore ? '<div style="font-size:9pt;font-weight:700;color:' + rlColor(Math.round(avgBefore)) + '">' + gradeBefore.label + '</div>' : ''}
     </div>
     ${gradeAfter ? '<div style="font-size:20pt;font-weight:900;color:#4caf50">→</div>' : ''}
@@ -1038,21 +1037,21 @@ ${sorted.map((ri, i) => {
 </div>
 
 <!-- SECTION 6: MEASURES -->
-${highRiskItems.length > 0 ? `<h2>6. Plan mjera za smanjenje rizika</h2>
+${highRiskItems.length> 0 ? `<h2>6. Plan mjera za smanjenje rizika</h2>
 <p>Stavke sa početnim rizikom R₀ ≥ 6 koje zahtijevaju dodatne mjere:</p>
 <table>
 <thead><tr><th>#</th><th>Opasnost</th><th>R₀</th><th>Postojeće mjere</th><th>Predložene mjere</th><th>R₁</th><th>Odgovorna osoba</th><th>Rok</th></tr></thead>
 <tbody>
 ${highRiskItems.map((ri, i) => {
     const hz = hazards.find(h => h.id === ri.opasnostId);
-    const hasAfter = ri.rizikNakon > 0;
+    const hasAfter = ri.rizikNakon> 0;
     return '<tr><td>' + (i + 1) + '</td><td>' + (hz ? (hz.oznaka ? hz.oznaka + ' ' : '') + hz.naziv : ri.opisOpasnosti || '—') + '</td><td style="text-align:center;font-weight:700;color:' + rlColor(ri.rizik) + '">' + ri.rizik + '</td><td>' + (ri.postojeceMjere || '—') + '</td><td style="font-weight:600">' + (ri.predlozeneMjere || '—') + '</td><td style="text-align:center;font-weight:700;color:' + (hasAfter ? rlColor(ri.rizikNakon) : '#999') + '">' + (hasAfter ? ri.rizikNakon : '—') + '</td><td>' + (ri.odgovornaOsoba || '—') + '</td><td>' + (ri.rokProvedbe ? new Date(ri.rokProvedbe).toLocaleDateString('hr-HR') : '—') + '</td></tr>';
 }).join('')}
 </tbody>
 </table>` : ''}
 
 <!-- SECTION 7: CONCLUSION -->
-<h2>${highRiskItems.length > 0 ? '7' : '6'}. Zaključak</h2>
+<h2>${highRiskItems.length> 0 ? '7' : '6'}. Zaključak</h2>
 <div class="conclusion">${(data.zakljucak || 'Zaključak nije unesen.').replace(/\n/g, '<br>')}</div>
 
 <div style="margin-top:60px;display:flex;justify-content:space-between">
@@ -1112,7 +1111,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 aVal = aVal.toLowerCase(); bVal = bVal.toLowerCase();
             }
             if (aVal < bVal) return sortConfig.dir === 'asc' ? -1 : 1;
-            if (aVal > bVal) return sortConfig.dir === 'asc' ? 1 : -1;
+            if (aVal> bVal) return sortConfig.dir === 'asc' ? 1 : -1;
             return 0;
         });
 
@@ -1122,7 +1121,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
         const getSortIcon = (k) => sortConfig.key === k ? (sortConfig.dir === 'asc' ? ' ↑' : ' ↓') : '';
         const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
-        const allSelected = sortedRecords.length > 0 && sortedRecords.every(r => selectedIds.has(r.id));
+        const allSelected = sortedRecords.length> 0 && sortedRecords.every(r => selectedIds.has(r.id));
         const toggleAll = () => { if (allSelected) setSelectedIds(new Set()); else setSelectedIds(new Set(sortedRecords.map(r => r.id))); };
         const toggleSelect = (id) => { setSelectedIds(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; }); };
 
@@ -1157,7 +1156,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <button className="btn btn-outline btn-sm" title="Uredite glavni katalog/šifarnik mogućih opasnosti i štetnosti" onClick={() => setView('opasnosti')}>⚠️ {lang !== 'en' ? 'Opasnosti' : 'Hazards'}</button>
 
                         {/* ── Grupne akcije bar ── */}
-                        {selectedIds.size > 0 && (
+                        {selectedIds.size> 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
@@ -1203,7 +1202,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     menuButtonRef.current = e.currentTarget;
                                                     const spaceBelow = window.innerHeight - rect.bottom - 8;
                                                     const spaceAbove = rect.top - 8;
-                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                    const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                                                     setMenuPos(flipUp
                                                         ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -1223,13 +1222,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                     minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                 }}>
-                                                    <button onClick={() => { setOpenMenuId(null); handleEdit(r); }} style={menuItemSt}>✏️ Otvori</button>
-                                                    <button onClick={() => { setOpenMenuId(null); handleCopy(r); }} style={menuItemSt}>📋 Kopiraj</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleEdit(r); }} className="dropdown-item">✏️ Otvori</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleCopy(r); }} className="dropdown-item">📋 Kopiraj</button>
                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                    <button onClick={() => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); handleGenerateReport(r, items, true); }} style={menuItemSt}>🖨️ Isprintaj (PDF)</button>
-                                                    <button onClick={async () => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); await handleGenerateDocx(true, r, items); }} style={menuItemSt}>📗 Preuzmi Word (.docx)</button>
+                                                    <button onClick={() => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); handleGenerateReport(r, items, true); }} className="dropdown-item">🖨️ Isprintaj (PDF)</button>
+                                                    <button onClick={async () => { setOpenMenuId(null); const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === r.id); await handleGenerateDocx(true, r, items); }} className="dropdown-item">📗 Preuzmi Word (.docx)</button>
                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                    <button onClick={() => { setOpenMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                                                    <button onClick={() => { setOpenMenuId(null); handleDelete(r.id); }} className="dropdown-item text-danger">🗑️ Izbriši</button>
                                                 </div>
                                             )}
                                         </div>
@@ -1255,7 +1254,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
     /* ━━━ FORM VIEW — Multi-tab wizard ━━━ */
     if (view === 'form') {
         const riSorted = [...riskItems].sort((a, b) => (b.rizik || 0) - (a.rizik || 0));
-        const highRisk = riskItems.filter(ri => ri.rizik >= 6);
+        const highRisk = riskItems.filter(ri => ri.rizik>= 6);
         // Summary stats
         const bands = { neznatan: 0, dopustiv: 0, umjeren: 0, znatan: 0, nedopustiv: 0 };
         riskItems.forEach(ri => {
@@ -1265,7 +1264,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
         });
 
         const currentTabIndex = tabs.findIndex(t => t.key === activeTab);
-        const hasPrevTab = currentTabIndex > 0;
+        const hasPrevTab = currentTabIndex> 0;
         const hasNextTab = currentTabIndex < tabs.length - 1;
 
         return (
@@ -1280,8 +1279,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
                     {tabs.map(tb => (
                         <button key={tb.key} title={`Prikaži stranicu: ${lang !== 'en' ? tb.label : tb.en}`} onClick={() => setActiveTab(tb.key)}
-                            className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}
-                        >{lang !== 'en' ? tb.label : tb.en}</button>
+                            className={`tab-btn ${activeTab === tb.key ? 'active' : ''}`}>{lang !== 'en' ? tb.label : tb.en}</button>
                     ))}
                 </div>
 
@@ -1341,7 +1339,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     Definirajte poslove, uvjete rada i zahtjeve za svako radno mjesto — ovi podaci koriste se za generisanje opisa procesa.
                                 </div>
                             </div>
-                            <div style={{ padding: '6px 14px', borderRadius: 'var(--radius-md)', background: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length > 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length > 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.78rem', color: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length > 0 ? '#4caf50' : '#ffc107' }}>
+                            <div style={{ padding: '6px 14px', borderRadius: 'var(--radius-md)', background: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length> 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length> 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.78rem', color: workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length === workplaces.length && workplaces.length> 0 ? '#4caf50' : '#ffc107' }}>
                                 {workplaces.filter(wp => sistematizacije.find(s => s.radnoMjestoId === wp.id)).length}/{workplaces.length} popunjeno
                             </div>
                         </div>
@@ -1384,7 +1382,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     {(sist.potrebnaOZO || []).slice(0, 2).map((ozo, i) => (
                                                         <span key={i} style={{ padding: '1px 6px', borderRadius: 10, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.65rem', fontWeight: 600 }}>🦺 {ozo}</span>
                                                     ))}
-                                                    {(sist.potrebnaOZO || []).length > 2 && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>+{sist.potrebnaOZO.length - 2}</span>}
+                                                    {(sist.potrebnaOZO || []).length> 2 && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>+{sist.potrebnaOZO.length - 2}</span>}
                                                 </div>
                                                 <div style={{ display: 'flex', gap: 4, fontSize: '0.65rem', color: 'var(--text-muted)', marginBottom: 8 }}>
                                                     <span>📋 {sist.certifikati?.length || 0} cert.</span>
@@ -1565,9 +1563,9 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     onChange={e => setDocAiFiles(Array.from(e.target.files))} />
                                                 <div style={{ fontSize: '2rem', marginBottom: 10 }}>📎</div>
                                                 <div style={{ fontWeight: 600, color: 'var(--text)' }}>
-                                                    {docAiFiles.length > 0 ? `${docAiFiles.length} dokument(a) spremno` : 'Klikni ili povuci dokumente ovdje (PDF, Word)'}
+                                                    {docAiFiles.length> 0 ? `${docAiFiles.length} dokument(a) spremno` : 'Klikni ili povuci dokumente ovdje (PDF, Word)'}
                                                 </div>
-                                                {docAiFiles.length > 0 && (
+                                                {docAiFiles.length> 0 && (
                                                     <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 8 }}>
                                                         {docAiFiles.map(f => f.name).join(', ')}
                                                     </div>
@@ -1596,7 +1594,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     onChange={e => setDocAiResult(prev => ({...prev, analizaOrganizacije: e.target.value}))} 
                                                     style={{ width: '100%', marginBottom: 12, fontSize: '0.85rem' }} />
                                                 
-                                                {docAiResult.oprema && docAiResult.oprema.length > 0 && (
+                                                {docAiResult.oprema && docAiResult.oprema.length> 0 && (
                                                     <div style={{ marginBottom: 12 }}>
                                                         <div style={{ ...labelSt }}>Predloženi strojevi/alati (Bit će dodani u opis)</div>
                                                         <div style={{ fontSize: '0.8rem', background: 'var(--bg-input)', padding: 8, borderRadius: 6 }}>
@@ -1605,7 +1603,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     </div>
                                                 )}
                                                 
-                                                {docAiResult.opasnosti && docAiResult.opasnosti.length > 0 && (
+                                                {docAiResult.opasnosti && docAiResult.opasnosti.length> 0 && (
                                                     <div style={{ marginBottom: 12 }}>
                                                         <div style={{ ...labelSt }}>Predložene opasnosti ({docAiResult.opasnosti.length} - Bit će dodane u predloške)</div>
                                                         <div style={{ maxHeight: 100, overflow: 'auto', fontSize: '0.8rem', background: 'var(--bg-input)', padding: 8, borderRadius: 6 }}>
@@ -1645,7 +1643,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                                     <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>STAVKE PROCJENE ({riskItems.length})</div>
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                        {selectedRiIds.size > 0 && (
+                                        {selectedRiIds.size> 0 && (
                                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginRight: 8 }}>
                                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedRiIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
                                                 <button className="btn btn-danger btn-sm" onClick={handleBulkDeleteRi}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
@@ -1687,7 +1685,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </div>
 
                                             {/* Workplace selection from app data */}
-                                            {workplaces.length > 0 && (
+                                            {workplaces.length> 0 && (
                                                 <div style={{ marginBottom: 16 }}>
                                                     <div style={{ ...labelSt, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                         <span>Radna mjesta iz aplikacije ({workplaces.length})</span>
@@ -1717,7 +1715,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                         transition: 'all 0.15s ease',
                                                                     }}>
                                                                     {isSelected ? '✓ ' : ''}{wp.naziv}
-                                                                    {wpWorkers > 0 && <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.7rem' }}>({wpWorkers}👤)</span>}
+                                                                    {wpWorkers> 0 && <span style={{ marginLeft: 4, opacity: 0.6, fontSize: '0.7rem' }}>({wpWorkers}👤)</span>}
                                                                 </button>
                                                             );
                                                         })}
@@ -1745,11 +1743,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 const uniqueNames = new Set(allSelected.map(n => n.trim().toLowerCase()));
                                                 const totalSelected = allSelected.length;
                                                 const uniqueCount = uniqueNames.size;
-                                                const hasDuplicates = totalSelected > uniqueCount;
+                                                const hasDuplicates = totalSelected> uniqueCount;
                                                 return (
                                                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 16, padding: '8px 12px', borderRadius: 8, background: 'rgba(102,126,234,0.06)', border: '1px solid var(--border)' }}>
                                                         📊 Generisat će se procjena za <strong style={{ color: 'var(--primary)' }}>{uniqueCount}</strong> jedinstveno/a radno/a mjesto/a
-                                                        {uniqueCount > 0 && (
+                                                        {uniqueCount> 0 && (
                                                             <span> — oko {uniqueCount * 10} stavki ukupno</span>
                                                         )}
                                                         {hasDuplicates && (
@@ -1792,7 +1790,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             </div>
 
                                             {/* ── Sistematizacija + Equipment Context Panel ── */}
-                                            {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length > 0) && (
+                                            {riForm.radnoMjestoId && (selectedWpSist || selectedWpEquipment.length> 0) && (
                                                 <div style={{ gridColumn: '1 / -1', padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', marginBottom: 4 }}>
                                                     <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', marginBottom: 8 }}>📑 Kontekst radnog mjesta</div>
                                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -1845,7 +1843,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 </div>
                                                 <div>
                                                     <div style={labelSt}>Rizik (R=V×P)</div>
-                                                    {riForm.vjerovatnoca > 0 && riForm.posljedica > 0 ? (() => {
+                                                    {riForm.vjerovatnoca> 0 && riForm.posljedica> 0 ? (() => {
                                                         const sc = riForm.vjerovatnoca * riForm.posljedica;
                                                         const rl = riskLevel(sc);
                                                         return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl.bg, color: rl.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl.color}` }}>{sc} — {rl.label}</div>;
@@ -1885,7 +1883,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 </div>
                                                 <div>
                                                     <div style={labelSt}>R nakon</div>
-                                                    {riForm.vjerovatnocaNakon > 0 && riForm.posljedlicaNakon > 0 ? (() => {
+                                                    {riForm.vjerovatnocaNakon> 0 && riForm.posljedlicaNakon> 0 ? (() => {
                                                         const sc2 = riForm.vjerovatnocaNakon * riForm.posljedlicaNakon;
                                                         const rl2 = riskLevel(sc2);
                                                         return <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-md)', background: rl2.bg, color: rl2.color, fontWeight: 700, fontSize: '1rem', textAlign: 'center', border: `2px solid ${rl2.color}` }}>{sc2} — {rl2.label}</div>;
@@ -1908,11 +1906,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             {showRiForm && !riEditId && riFormContent}
 
                                             {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang !== 'en' ? 'Nema stavki. Kliknite na matricu ili "Dodaj stavku".' : 'No items yet.'}</div>}
-                                            {riSorted.length > 0 && (
+                                            {riSorted.length> 0 && (
                                                 <div className="data-table-wrapper"><table className="data-table"><thead><tr>
                                                     <th style={{ width: 85, paddingLeft: 8 }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                            <input type="checkbox" checked={selectedRiIds.size === riSorted.length && riSorted.length > 0} onChange={() => {
+                                                            <input type="checkbox" checked={selectedRiIds.size === riSorted.length && riSorted.length> 0} onChange={() => {
                                                                 if (selectedRiIds.size === riSorted.length) setSelectedRiIds(new Set());
                                                                 else setSelectedRiIds(new Set(riSorted.map(ri => ri.id)));
                                                             }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 16, height: 16 }} title="Označi sve" />
@@ -1924,7 +1922,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                 </tr></thead>
                                                 {riSorted.map(ri => {
                                                     const rl = riskLevel(ri.rizik || 0);
-                                                    const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
+                                                    const rlA = ri.rizikNakon> 0 ? riskLevel(ri.rizikNakon) : null;
                                                     const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
                                                     const hz = hazards.find(h => h.id === ri.opasnostId);
                                                     const improved = rlA && ri.rizikNakon < ri.rizik;
@@ -2088,8 +2086,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 minHeight: 32,
                                 position: 'relative',
                             }}
-                            className="mjera-cell"
-                        >
+                            className="mjera-cell">
                             {display || (
                                 ri[field]
                                     ? <span style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{ri[field]}</span>
@@ -2118,8 +2115,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             background: 'rgba(0,0,0,0.55)',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             backdropFilter: 'blur(2px)',
-                                        }}
-                                    >
+                                        }}>
                                         <div style={{
                                             background: 'var(--bg-card)', borderRadius: 16,
                                             padding: 28, width: '90%', maxWidth: 560,
@@ -2136,8 +2132,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     autoFocus
                                                     style={{ width: '100%', marginBottom: 20 }}
                                                     value={mjeraEdit.value}
-                                                    onChange={e => setMjeraEdit(prev => ({ ...prev, value: e.target.value }))}
-                                                >
+                                                    onChange={e => setMjeraEdit(prev => ({ ...prev, value: e.target.value }))}>
                                                     <option value="">— Odaberi radno mjesto —</option>
                                                     {workplaces.map(w => <option key={w.id} value={w.id}>{w.naziv}</option>)}
                                                 </select>
@@ -2154,8 +2149,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             )}
                                             <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
                                                 <button className="btn" onClick={() => setMjeraEdit(null)}
-                                                    style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
-                                                >{t('cancel')}</button>
+                                                    style={{ background: 'var(--bg-input)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{t('cancel')}</button>
                                                 <button className="btn btn-primary" onClick={() => {
                                                     handleInlineRiUpdate(mjeraEdit.riId, mjeraEdit.field, mjeraEdit.value);
                                                     setMjeraEdit(null);
@@ -2168,7 +2162,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
                                 <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
-                                {highRisk.length > 0 && (
+                                {highRisk.length> 0 && (
                                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Dodijeli svima:' : 'Assign to all:'}</div>
                                         <div style={{ display: 'flex', gap: 4 }}>
@@ -2182,7 +2176,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             <button className="btn btn-outline btn-sm" onClick={() => {
                                                 const val = document.getElementById('bulkOdgovornaOsoba').value;
                                                 if (val) {
-                                                    setRiskItems(prev => prev.map(ri => ri.rizik >= 6 ? { ...ri, odgovornaOsoba: val } : ri));
+                                                    setRiskItems(prev => prev.map(ri => ri.rizik>= 6 ? { ...ri, odgovornaOsoba: val } : ri));
                                                     markDirty();
                                                     document.getElementById('bulkOdgovornaOsoba').value = '';
                                                 }
@@ -2207,7 +2201,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 </tr></thead><tbody>
                                     {highRisk.sort((a, b) => b.rizik - a.rizik).map(ri => {
                                         const rl = riskLevel(ri.rizik);
-                                        const rlA = ri.rizikNakon > 0 ? riskLevel(ri.rizikNakon) : null;
+                                        const rlA = ri.rizikNakon> 0 ? riskLevel(ri.rizikNakon) : null;
                                         const hp = hazards.find(h => h.id === ri.opasnostId);
                                         const wp = workplaces.find(w => w.id === ri.radnoMjestoId);
                                         return <tr key={ri.id}>
@@ -2272,12 +2266,12 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
 
                 {/* ── TAB: Zaključak ── */}
                 {activeTab === 'zakljucak' && (() => {
-                    const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
-                    const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
-                    const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
-                    const avgAfter = itemsWithAfter.length > 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
-                    const gradeBefore = avgBefore > 0 ? riskLevel(Math.round(avgBefore)) : null;
-                    const gradeAfter = avgAfter > 0 ? riskLevel(Math.round(avgAfter)) : null;
+                    const itemsWithScores = riskItems.filter(ri => ri.rizik> 0);
+                    const avgBefore = itemsWithScores.length> 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
+                    const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon> 0);
+                    const avgAfter = itemsWithAfter.length> 0 ? itemsWithAfter.reduce((s, ri) => s + ri.rizikNakon, 0) / itemsWithAfter.length : 0;
+                    const gradeBefore = avgBefore> 0 ? riskLevel(Math.round(avgBefore)) : null;
+                    const gradeAfter = avgAfter> 0 ? riskLevel(Math.round(avgAfter)) : null;
                     const bandsAfter = { neznatan: 0, dopustiv: 0, umjeren: 0, znatan: 0, nedopustiv: 0 };
                     itemsWithAfter.forEach(ri => {
                         const s = ri.rizikNakon || 0;
@@ -2287,13 +2281,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                     return (
                     <div className="card"><div className="card-body">
                         {/* ── Overall Grade ── */}
-                        {riskItems.length > 0 && (
+                        {riskItems.length> 0 && (
                             <div style={{ marginBottom: 24 }}>
                                 <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>UKUPNA OCJENA RIZIKA</div>
                                 <div style={{ display: 'flex', gap: 20, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
                                     <div style={{ textAlign: 'center', padding: '16px 24px', borderRadius: 'var(--radius-lg)', background: gradeBefore ? gradeBefore.bg : 'var(--bg-input)', border: gradeBefore ? `3px solid ${gradeBefore.color}` : '2px solid var(--border-light)', minWidth: 140 }}>
                                         <div style={{ fontSize: '0.68rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Prije mjera (Početni rizik)</div>
-                                        <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeBefore?.color || 'var(--text-muted)' }}>{avgBefore > 0 ? avgBefore.toFixed(1) : '—'}</div>
+                                        <div style={{ fontSize: '2rem', fontWeight: 900, color: gradeBefore?.color || 'var(--text-muted)' }}>{avgBefore> 0 ? avgBefore.toFixed(1) : '—'}</div>
                                         {gradeBefore && <div style={{ fontSize: '0.82rem', fontWeight: 700, color: gradeBefore.color, marginTop: 4 }}>{gradeBefore.label}</div>}
                                     </div>
                                     {gradeAfter && <div style={{ fontSize: '2rem', fontWeight: 900, color: avgAfter < avgBefore ? '#4caf50' : '#f44336' }}>→</div>}
@@ -2311,7 +2305,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         </div>
                                     )}
                                 </div>
-                                {!gradeAfter && itemsWithScores.length > 0 && (
+                                {!gradeAfter && itemsWithScores.length> 0 && (
                                     <div style={{ padding: 12, borderRadius: 'var(--radius-md)', background: 'rgba(255,193,7,0.1)', border: '1px solid #ffc107', fontSize: '0.82rem', color: '#ffc107' }}>
                                         ⚠ Koristite tab "Procjena rizika" i dugme "🤖 AI Predloži mjere" da dobijete ocjenu nakon mjera.
                                     </div>
@@ -2320,7 +2314,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         )}
                         {/* ── Distribution cards ── */}
                         <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 14 }}>DISTRIBUCIJA PO NIVOU RIZIKA</div>
-                        {riskItems.length > 0 && (
+                        {riskItems.length> 0 && (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: 10, marginBottom: 20 }}>
                                 {[
                                     { k: 'neznatan', l: 'Neznatan', c: '#4caf50' }, { k: 'dopustiv', l: 'Dopustiv', c: '#ffc107' },
@@ -2330,7 +2324,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     <div key={b.k} style={{ padding: '10px', borderRadius: 'var(--radius-md)', background: `${b.c}15`, border: `2px solid ${b.c}`, textAlign: 'center' }}>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'baseline' }}>
                                             <div style={{ fontSize: '1.3rem', fontWeight: 800, color: b.c }}>{bands[b.k]}</div>
-                                            {itemsWithAfter.length > 0 && bandsAfter[b.k] !== bands[b.k] && (
+                                            {itemsWithAfter.length> 0 && bandsAfter[b.k] !== bands[b.k] && (
                                                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: bandsAfter[b.k] < bands[b.k] ? '#4caf50' : '#f44336' }}>→ {bandsAfter[b.k]}</div>
                                             )}
                                         </div>

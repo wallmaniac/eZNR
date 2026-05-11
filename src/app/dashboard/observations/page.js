@@ -55,7 +55,7 @@ export default function ObservationsPage() {
     });
 
     useEffect(() => {
-        if (deepLinkId && items.length > 0 && !viewingItem) {
+        if (deepLinkId && items.length> 0 && !viewingItem) {
             const h = items.find(i => i.id === deepLinkId);
             if (h) {
                 setViewingItem(h);
@@ -170,14 +170,14 @@ export default function ObservationsPage() {
                         </button>
                         <SavedFlash />
                         
-                        {selectedIds.size > 0 && (<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}><span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span><button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={bs ? 'Obriši odabrane prijave' : 'Delete selected reports'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button></div>)}
+                        {selectedIds.size> 0 && (<div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}><span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span><button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={bs ? 'Obriši odabrane prijave' : 'Delete selected reports'}>🗑️ {bs ? 'Obriši' : 'Delete'}</button></div>)}
                         {selectedIds.size === 0 && <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sortedItems.length} {t('records')}</span>}
                     </div>
                     <div className="data-table-wrapper" style={{ borderTop: '1px solid var(--border-light)' }}>
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedItems.length && sortedItems.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedItems.length && sortedItems.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => requestSort('datum')} style={thStyle('datum')}>{bs ? 'Datum' : 'Date'} {sortIcon('datum')}</th>
                                     <th onClick={() => requestSort('lokacija')} style={thStyle('lokacija')}>{bs ? 'Lokacija' : 'Location'} {sortIcon('lokacija')}</th>
@@ -190,21 +190,21 @@ export default function ObservationsPage() {
                                 {sortedItems.length === 0 ? (
                                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>{bs ? 'Nema prijavljenih opasnosti' : 'No hazard reports found'}</td></tr>
                                 ) : pagedItems.map(item => (
-                                    <tr key={item.id} onClick={() => setViewingItem(item)} style={{ background: lastEditedId === item.id ? 'rgba(102,126,234,0.15)' : undefined, cursor: 'pointer', transition: 'background 0.5s ease' }} onMouseEnter={e => e.currentTarget.style.background= lastEditedId === item.id ? 'rgba(102,126,234,0.25)' : 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background= lastEditedId === item.id ? 'rgba(102,126,234,0.15)' : ''}>
+                                    <tr key={item.id} onClick={() => setViewingItem(item)} style={{ background: lastEditedId === item.id ? 'rgba(102,126,234,0.15)' : undefined, cursor: 'pointer', transition: 'background 0.5s ease' }}>
                                         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                             <input type="checkbox" checked={selectedIds.has(item.id)} onChange={() => toggleOne(item.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                         </td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (actionMenuId === item.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(item.id); }} title={bs ? 'Prikaži akcije za prijavu' : 'Show report actions'}>Akcije ▼</button>
+                                                <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (actionMenuId === item.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 200 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(item.id); }} title={bs ? 'Prikaži akcije za prijavu' : 'Show report actions'}>Akcije ▼</button>
                                                 {actionMenuId === item.id && (<><div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} /><div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border-light)' }}><span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>Prijava</span><button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button></div>
-                                                    <button onClick={() => { setActionMenuId(null); setViewingItem(item); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📷 {bs ? 'Otvori pregled' : 'View'}</button>
-                                                    <button onClick={() => { setActionMenuId(null); handleStatusCycle(item); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🔄 {bs ? `Status → ${{ 'Novo': 'U obradi', 'U obradi': 'Riješeno', 'Riješeno': 'Novo' }[item.status] || 'U obradi'}` : `Status → ${{ 'Novo': 'In Progress', 'U obradi': 'Resolved', 'Riješeno': 'New' }[item.status] || 'In Progress'}`}</button>
+                                                    <button onClick={() => { setActionMenuId(null); setViewingItem(item); }} className="dropdown-item">📷 {bs ? 'Otvori pregled' : 'View'}</button>
+                                                    <button onClick={() => { setActionMenuId(null); handleStatusCycle(item); }} className="dropdown-item">🔄 {bs ? `Status → ${{ 'Novo': 'U obradi', 'U obradi': 'Riješeno', 'Riješeno': 'Novo' }[item.status] || 'U obradi'}` : `Status → ${{ 'Novo': 'In Progress', 'U obradi': 'Resolved', 'Riješeno': 'New' }[item.status] || 'In Progress'}`}</button>
                                                     {isAdmin && (
                                                         <>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => { setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                            <button onClick={() => { setActionMenuId(null); handleDelete(item); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                         </>
                                                     )}
                                                 </div></>)}

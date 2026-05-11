@@ -34,14 +34,14 @@ export default function TrainingBookPage() {
           <th onClick={() => toggleSort('certCount')} style={thStyle('certCount')}>{t('status')}{sortIcon('certCount')}</th>
         </tr></thead><tbody>
             {sorted.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{lang !== 'en' ? '✅ Nema radnika' : '✅ No workers'}</td></tr> : sorted.map((r, idx) => (
-              <tr key={r.id} onClick={() => router.push(`/dashboard/workers?openWorker=${r.id}&section=uvjerenja`)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+              <tr key={r.id} onClick={() => router.push(`/dashboard/workers?openWorker=${r.id}&section=uvjerenja`)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                 <td>{idx + 1}</td>
                 <td style={{ fontWeight: 600 }}>{r.ime}</td>
                 <td style={{ fontWeight: 600 }}>{r.prezime}</td>
                 <td><code>{r.jmbg}</code></td>
                 <td><span className="badge badge-info">{r.certCount}</span></td>
                 <td>{r.latestCert ? formatDate(r.latestCert.datum) : '-'}</td>
-                <td><span className={`badge ${r.certCount > 0 ? 'badge-success' : 'badge-danger'}`}>{r.certCount > 0 ? '✓' : '✗'}</span></td>
+                <td><span className={`badge ${r.certCount> 0 ? 'badge-success' : 'badge-danger'}`}>{r.certCount> 0 ? '✓' : '✗'}</span></td>
               </tr>
             ))}
           </tbody></table></div>

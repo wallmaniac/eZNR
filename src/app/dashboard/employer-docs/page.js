@@ -54,14 +54,14 @@ function EmployerDocsInner() {
 
     useEffect(() => {
         const openId = searchParams?.get('openId');
-        if (openId && docs.length > 0 && !showForm) {
+        if (openId && docs.length> 0 && !showForm) {
             const rec = docs.find(d => d.id === openId);
             if (rec) handleEdit(rec);
         }
     }, [searchParams, docs]);
 
     useEffect(() => {
-        if (highlightId && docs.length > 0) {
+        if (highlightId && docs.length> 0) {
             const found = docs.find(d => d.id === highlightId);
             if (found && found.kategorija) setActiveTab(found.kategorija);
             setTimeout(() => {
@@ -136,7 +136,7 @@ function EmployerDocsInner() {
     const handleFileUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 15 * 1024 * 1024) { await alert(bs ? 'Datoteka mora biti manja od 15MB!' : 'File must be under 15MB!'); return; }
+        if (file.size> 15 * 1024 * 1024) { await alert(bs ? 'Datoteka mora biti manja od 15MB!' : 'File must be under 15MB!'); return; }
         setFormData(prev => ({ ...prev, fileObj: file, docName: file.name, docType: file.type }));
     };
 
@@ -163,7 +163,7 @@ function EmployerDocsInner() {
             return next;
         });
     };
-    const allSelected = sorted.length > 0 && sorted.every(d => selected.has(d.id));
+    const allSelected = sorted.length> 0 && sorted.every(d => selected.has(d.id));
     const toggleAll = () => {
         if (allSelected) {
             setSelected(new Set());
@@ -308,7 +308,7 @@ ${toPrint.map((d, i) => `<tr>
                         </div>
                         <SavedFlash />
 
-                        {selected.size > 0 ? (
+                        {selected.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selected.size} {bs ? 'odabrano' : 'selected'}:</span>
                                 <button className="btn btn-primary" style={{ height: 38 }} onClick={bulkPrint} title={bs ? 'Isprintaj odabrane' : 'Print selected'}>🖨️ {bs ? 'Isprintaj' : 'Print'}</button>
@@ -340,20 +340,20 @@ ${toPrint.map((d, i) => `<tr>
                                     const isHighlighted = doc.id === highlightId;
                                     const isChecked = selected.has(doc.id);
                                     return (
-                                        <tr key={doc.id} onClick={() => handleEdit(doc)} className="hover-row" ref={isHighlighted ? highlightRef : null} style={{ cursor: 'pointer', transition: 'background 0.12s', ...(isHighlighted ? { background: 'rgba(0,191,166,0.12)', outline: '2px solid var(--primary)', outlineOffset: -2, borderRadius: 4, animation: 'pulse-highlight 1.5s ease-in-out 2' } : {}) }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                                        <tr key={doc.id} onClick={() => handleEdit(doc)} className="hover-row" ref={isHighlighted ? highlightRef : null} style={{ cursor: 'pointer', transition: 'background 0.12s', ...(isHighlighted ? { background: 'rgba(0,191,166,0.12)', outline: '2px solid var(--primary)', outlineOffset: -2, borderRadius: 4, animation: 'pulse-highlight 1.5s ease-in-out 2' } : {}) }}>
                                             <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={isChecked} onChange={() => toggleSelect(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
                                             <td onClick={e => e.stopPropagation()}>
                                                 <div style={{ position: 'relative' }}>
-                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }} title={bs ? 'Prikaži akcije za dokument' : 'Show document actions'}>{bs ? 'Akcije ▼' : 'Actions ▼'}</button>
+                                                    <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (openMenuId === doc.id) { setOpenMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); menuButtonRef.current = e.currentTarget; const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 240 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setOpenMenuId(doc.id); }} title={bs ? 'Prikaži akcije za dokument' : 'Show document actions'}>{bs ? 'Akcije ▼' : 'Actions ▼'}</button>
                                                     {openMenuId === doc.id && (
                                                         <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                            <button onClick={() => handleEdit(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✏️ Otvori</button>
-                                                            <button onClick={() => handleCopy(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📋 Kopiraj</button>
+                                                            <button onClick={() => handleEdit(doc)} className="dropdown-item">✏️ Otvori</button>
+                                                            <button onClick={() => handleCopy(doc)} className="dropdown-item">📋 Kopiraj</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handlePrintSingle(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>🖨️ Isprintaj</button>
-                                                            <button onClick={() => { setOpenMenuId(null); handleDownloadFile(doc); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📗 Preuzmi</button>
+                                                            <button onClick={() => handlePrintSingle(doc)} className="dropdown-item">🖨️ Isprintaj</button>
+                                                            <button onClick={() => { setOpenMenuId(null); handleDownloadFile(doc); }} className="dropdown-item">📗 Preuzmi</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                            <button onClick={() => handleDelete(doc.id)} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ Izbriši</button>
+                                                            <button onClick={() => handleDelete(doc.id)} className="dropdown-item text-danger">🗑️ Izbriši</button>
                                                         </div>
                                                     )}
                                                 </div>

@@ -249,13 +249,13 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 background: activeCompanyId === 'all'
                                     ? 'linear-gradient(135deg, #455A64, #263238)'
                                     : 'linear-gradient(135deg, var(--primary), #009985)',
-                                cursor: 'pointer', flex: 1, height: 32,
+                                cursor: 'pointer', flex: 1, height: 32, minWidth: 0,
                             }}>
                             <span style={{ fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', flex: 1, minWidth: 0, textAlign: 'left' }}>
                                 {activeCompanyId === 'all' ? (lang !== 'en' ? 'Sve firme' : 'All') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || '—')}
                             </div>
-                            <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)' }}>▼</span>
+                            <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.7)', flexShrink: 0 }}>▼</span>
                         </button>
                         {showCompanyMenu && typeof document !== 'undefined' && createPortal(
                             <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, left: '5%', width: '90%', zIndex: 99999, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>

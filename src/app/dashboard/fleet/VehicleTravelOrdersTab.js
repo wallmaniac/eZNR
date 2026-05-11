@@ -48,7 +48,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{bs ? 'Predefinisani obrasci PN-3 (teretno) i PN-4 (putničko) spremni za print.' : 'Legal print templates for FBiH travel orders.'}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    {selectedIds.size > 0 && (
+                    {selectedIds.size> 0 && (
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
                             <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
@@ -124,7 +124,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === orders.length && orders.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === orders.length && orders.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                             <th>{bs ? 'Broj Naloga' : 'Order Num'}</th>
                             <th>{bs ? 'Tip' : 'Type'}</th>
                             <th>{bs ? 'Datum' : 'Date'}</th>
@@ -137,7 +137,7 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                         {orders.length === 0 ? (
                             <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{bs ? 'Nema kreiranih naloga' : 'No travel orders yet'}</td></tr>
                         ) : orders.map(o => (
-                            <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(o)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                            <tr key={o.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(o)}>
                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(o.id)} onChange={() => toggleOne(o.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
                                 <td style={{ fontWeight: 700 }}>{o.brojNaloga}</td>
                                 <td><span className="badge badge-info">{o.tipObrasca}</span></td>
@@ -150,11 +150,11 @@ export default function VehicleTravelOrdersTab({ vehicleId, vehicles, workers, r
                                         {actionMenuId === o.id && (<>
                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                             <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                <button onClick={() => { setActionMenuId(null); handleEdit(o); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
-                                                <button onClick={() => { setActionMenuId(null); handlePrint(o); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj' : 'Print'}</button>
-                                                <button onClick={() => { setActionMenuId(null); handleCopy(o); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleEdit(o); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handlePrint(o); }} className="dropdown-item">🖨️ {bs ? 'Printaj' : 'Print'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleCopy(o); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                <button onClick={() => { setActionMenuId(null); handleDelete(o.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleDelete(o.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                             </div>
                                         </>)}
                                     </div>

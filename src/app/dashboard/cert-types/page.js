@@ -82,7 +82,7 @@ export default function CertTypesPage() {
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang !== 'en' ? 'Novi tip uvjerenja' : 'New Cert Type'}</button>
             <SavedFlash />
-            {selectedIds.size > 0 && (
+            {selectedIds.size> 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                       {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
@@ -93,14 +93,14 @@ export default function CertTypesPage() {
             {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
           </div>
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
             <th style={{ width: 90 }}>{t('actions')}</th>
             <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
             <th onClick={() => toggleSort('oznaka')} style={thStyle('oznaka')}>{lang !== 'en' ? 'Oznaka' : 'Code'}{sortIcon('oznaka')}</th>
             <th onClick={() => toggleSort('trajanjeMjeseci')} style={thStyle('trajanjeMjeseci')}>{lang !== 'en' ? 'Trajanje' : 'Duration'}{sortIcon('trajanjeMjeseci')}</th>
           </tr></thead>
             <tbody>{sorted.length === 0 ? <tr><td colSpan={5} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr> : sorted.map(i => (
-              <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+              <tr key={i.id} onClick={() => handleEdit(i)} style={{ cursor: 'pointer' }}>
                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                   <input type="checkbox" checked={selectedIds.has(i.id)} onChange={() => toggleOne(i.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                 </td>
@@ -112,7 +112,7 @@ export default function CertTypesPage() {
                         const rect = e.currentTarget.getBoundingClientRect();
                         const spaceBelow = window.innerHeight - rect.bottom - 8;
                         const spaceAbove = rect.top - 8;
-                        const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                        const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                         setMenuPos(flipUp
                             ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -123,9 +123,9 @@ export default function CertTypesPage() {
                         <>
                         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                         <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                            <button onClick={() => { setActionMenuId(null); handleEdit(i); }} style={menuItemSt}>✏️ Otvori</button>
+                            <button onClick={() => { setActionMenuId(null); handleEdit(i); }} className="dropdown-item">✏️ Otvori</button>
                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                            <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                            <button onClick={() => { setActionMenuId(null); handleDelete(i.id); }} className="dropdown-item text-danger">🗑️ Izbriši</button>
                         </div>
                         </>
                     )}

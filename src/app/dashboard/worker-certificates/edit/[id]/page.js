@@ -236,19 +236,14 @@ function EditCertPageInner() {
                                     {filteredTips.map(ct => (
                                         <div key={ct.id}
                                             onClick={() => { set('tipUvjerenjaId', ct.id); set('tipUvjerenjaIme', ct.naziv); setShowTipDropdown(false); setTipSearch(''); }}
-                                            style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', background: formData.tipUvjerenjaId === ct.id ? 'var(--primary)' : undefined, color: formData.tipUvjerenjaId === ct.id ? 'white' : undefined }}
-                                            onMouseEnter={e => { if (formData.tipUvjerenjaId !== ct.id) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
-                                            onMouseLeave={e => { if (formData.tipUvjerenjaId !== ct.id) e.currentTarget.style.background = ''; }}>
+                                            style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', background: formData.tipUvjerenjaId === ct.id ? 'var(--primary)' : undefined, color: formData.tipUvjerenjaId === ct.id ? 'white' : undefined }}>
                                             {ct.naziv}
                                         </div>
                                     ))}
                                     {filteredTips.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang !== 'en' ? 'Nema rezultata' : 'No results'}</div>}
                                     <div
                                         onClick={() => { setShowTipDropdown(false); setShowNewTypeForm(true); setTipSearch(''); }}
-                                        style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', borderTop: '1px solid var(--border-light)', fontWeight: 600, color: 'var(--primary)' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = ''}
-                                    >
+                                        style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', borderTop: '1px solid var(--border-light)', fontWeight: 600, color: 'var(--primary)' }}>
                                         + {lang !== 'en' ? 'Ostalo...' : 'Other...'}
                                     </div>
                                 </div>
@@ -315,9 +310,7 @@ function EditCertPageInner() {
                                         <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang !== 'en' ? 'Nema ispitivača.' : 'No examiners.'}</div>
                                     ) : filteredIspitivac.map(ex => (
                                         <div key={ex.id} onClick={() => { set('ispitivacId', ex.id); setShowIspitivacDropdown(false); setIspitivacSearch(''); }}
-                                            style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                            style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem' }}>
                                             {getExaminerLabel(ex)}
                                         </div>
                                     ))}
@@ -370,7 +363,7 @@ function EditCertPageInner() {
                                     onChange={async (e) => {
                                         const file = e.target.files?.[0];
                                         if (!file) return;
-                                        if (file.size > 15 * 1024 * 1024) { dlgAlert('Max 15MB!'); return; }
+                                        if (file.size> 15 * 1024 * 1024) { dlgAlert('Max 15MB!'); return; }
                                         try {
                                             const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
                                             setFormData(f => ({ ...f, attachments: [...(f.attachments || []), {

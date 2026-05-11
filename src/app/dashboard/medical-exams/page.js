@@ -143,7 +143,7 @@ export default function MedicalExamsPage() {
         }
         // 3. Open existing form
         const openId = searchParams.get('openId');
-        if (openId && exams.length > 0 && !showForm) {
+        if (openId && exams.length> 0 && !showForm) {
             const rec = exams.find(r => r.id === openId);
             if (rec) handleEdit(rec);
         }
@@ -185,8 +185,8 @@ export default function MedicalExamsPage() {
             );
         }
         if (filterTab === 'expired') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d < 0; });
-        if (filterTab === 'soon') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d >= 0 && d <= 90; });
-        if (filterTab === 'valid') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d > 90; });
+        if (filterTab === 'soon') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d>= 0 && d <= 90; });
+        if (filterTab === 'valid') list = list.filter(e => { const d = getDays(e.vrijediDo); return d !== null && d> 90; });
         return list.sort((a, b) => {
             const da = getDays(a.vrijediDo) ?? 999999;
             const db = getDays(b.vrijediDo) ?? 999999;
@@ -284,14 +284,13 @@ export default function MedicalExamsPage() {
                     style={{ height: 38, padding: '0 12px', flexShrink: 0, fontSize: '0.85rem', width: 140, cursor: 'pointer' }}
                     value={filterTab}
                     onChange={(e) => setFilterTab(e.target.value)}
-                    title={bs ? 'Filtriraj preglede' : 'Filter exams'}
-                >
+                    title={bs ? 'Filtriraj preglede' : 'Filter exams'}>
                     {tabs.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
                 </select>
 
 
                 {/* ── Grupne akcije bar ── */}
-                {selectedIds.size > 0 && (
+                {selectedIds.size> 0 && (
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                         <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                             {selectedIds.size} {bs ? 'odabrano' : 'selected'}:
@@ -318,7 +317,7 @@ export default function MedicalExamsPage() {
                         <table className="data-table" style={{ width: '100%' }}>
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{bs ? 'Akcije' : 'Actions'}</th>
                                     <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{bs ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
                                     <th onClick={() => toggleSort('tipPregleda')} style={thStyle('tipPregleda')}>{bs ? 'Vrsta pregleda' : 'Exam Type'}{sortIcon('tipPregleda')}</th>
@@ -339,7 +338,7 @@ export default function MedicalExamsPage() {
                                     const rowBg = days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : days !== null && days <= 30 ? 'rgba(245,158,11,0.04)' : '';
                                     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
                                     return (
-                                        <tr key={exam.id} style={{ background: rowBg, cursor: 'pointer' }} onClick={() => handleEdit(exam)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = rowBg}>
+                                        <tr key={exam.id} style={{ background: rowBg, cursor: 'pointer' }} onClick={() => handleEdit(exam)}>
                                             <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                 <input type="checkbox" checked={selectedIds.has(exam.id)} onChange={() => toggleOne(exam.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                             </td>
@@ -351,7 +350,7 @@ export default function MedicalExamsPage() {
                                                         const rect = e.currentTarget.getBoundingClientRect();
                                                         const spaceBelow = window.innerHeight - rect.bottom - 8;
                                                         const spaceAbove = rect.top - 8;
-                                                        const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                        const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                                                         setMenuPos(flipUp
                                                             ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -362,10 +361,10 @@ export default function MedicalExamsPage() {
                                                         <>
                                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                                                             <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                                <button onClick={() => { setActionMenuId(null); handleEdit(exam); }} style={menuItemSt}>✏️ Otvori</button>
-                                                                <button onClick={() => { setActionMenuId(null); handleDuplicate(exam); }} style={menuItemSt}>📋 Kopiraj</button>
+                                                                <button onClick={() => { setActionMenuId(null); handleEdit(exam); }} className="dropdown-item">✏️ Otvori</button>
+                                                                <button onClick={() => { setActionMenuId(null); handleDuplicate(exam); }} className="dropdown-item">📋 Kopiraj</button>
                                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                <button onClick={() => { setActionMenuId(null); handleDelete(exam); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ Izbriši</button>
+                                                                <button onClick={() => { setActionMenuId(null); handleDelete(exam); }} className="dropdown-item text-danger">🗑️ Izbriši</button>
                                                             </div>
                                                         </>
                                                     )}
@@ -451,8 +450,7 @@ export default function MedicalExamsPage() {
                                             type="button"
                                             title={bs ? 'Idi na kreiranje nove Uputnice RA-1' : 'Create new RA-1 Referral'}
                                             onClick={() => router.push('/dashboard/referral-ra1?openNew=1')}
-                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, padding: 0, textDecoration: 'underline' }}
-                                        >
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, padding: 0, textDecoration: 'underline' }}>
                                             ↗ {bs ? 'Modul RA-1' : 'RA-1 Module'}
                                         </button>
                                     </label>

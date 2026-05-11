@@ -142,7 +142,7 @@ function WorkerCertificatesInner() {
       if (showExpiringSoon) {
         if (!expDate) return false;
         const diffDays = (expDate - now) / (1000 * 60 * 60 * 24);
-        if (diffDays > expiringSoonDays || diffDays < 0) return false;
+        if (diffDays> expiringSoonDays || diffDays < 0) return false;
       }
       if (!searchTerm) return true;
       const term = searchTerm.toLowerCase();
@@ -163,7 +163,7 @@ function WorkerCertificatesInner() {
   const pagedRows = rows.slice((page - 1) * perPage, page * perPage);
 
   // ── Bulk helpers ──────────────────────────────────────────────────────────
-  const allSelected = pagedRows.length > 0 && pagedRows.every(r => selectedIds.has(r.id));
+  const allSelected = pagedRows.length> 0 && pagedRows.every(r => selectedIds.has(r.id));
   const someSelected = pagedRows.some(r => selectedIds.has(r.id));
 
   const toggleAll = useCallback(() => {
@@ -227,7 +227,7 @@ function WorkerCertificatesInner() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <PageHeader icon="📜" title={t('workerCertificates')} subtitle={`${rows.length} ${t('records')}${selectedIds.size > 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}`} />
+        <PageHeader icon="📜" title={t('workerCertificates')} subtitle={`${rows.length} ${t('records')}${selectedIds.size> 0 ? ` · ${selectedIds.size} ${bs ? 'odabrano' : 'selected'}` : ''}`} />
 
         <div className="card">
           <div className="card-body" style={{ padding: 0 }}>
@@ -253,8 +253,7 @@ function WorkerCertificatesInner() {
                 style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
                 title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'}
                 value={filterOrgUnit}
-                onChange={(e) => setFilterOrgUnit(e.target.value)}
-              >
+                onChange={(e) => setFilterOrgUnit(e.target.value)}>
                 <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
               </select>
@@ -271,8 +270,7 @@ function WorkerCertificatesInner() {
                     value={expiringSoonDays}
                     onChange={e => setExpiringSoonDays(Number(e.target.value))}
                     disabled={!showExpiringSoon}
-                    style={{ border: '1px solid var(--border)', borderRadius: 4, padding: '0 4px', fontSize: '0.75rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5, height: 20 }}
-                  >
+                    style={{ border: '1px solid var(--border)', borderRadius: 4, padding: '0 4px', fontSize: '0.75rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5, height: 20 }}>
                     <option value={30}>30d</option>
                     <option value={60}>60d</option>
                     <option value={90}>90d</option>
@@ -286,7 +284,7 @@ function WorkerCertificatesInner() {
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
                 { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
-                ...(selectedIds.size > 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
+                ...(selectedIds.size> 0 ? [{ label: `${bs ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang)) }] : []),
               ]} />
 
               <div style={{ position: 'relative' }}>
@@ -310,7 +308,7 @@ function WorkerCertificatesInner() {
             </div>
 
             {/* ── Bulk Action Bar ────────────────────────────────────────── */}
-            {selectedIds.size > 0 && (
+            {selectedIds.size> 0 && (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px',
                 background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid rgba(0,191,166,0.2)',
@@ -322,15 +320,13 @@ function WorkerCertificatesInner() {
                 <button
                   className="btn btn-primary btn-sm"
                   onClick={handleBulkPrint}
-                  title={bs ? 'Generiši i isprintaj sva odabrana uvjerenja u jednom PDF dokumentu' : 'Generate and print all selected certificates as one PDF'}
-                >
+                  title={bs ? 'Generiši i isprintaj sva odabrana uvjerenja u jednom PDF dokumentu' : 'Generate and print all selected certificates as one PDF'}>
                   🖨️ {bs ? `Generiši PDF (${selectedIds.size} uvjerenja)` : `Generate PDF (${selectedIds.size} certs)`}
                 </button>
                 <button
                   className="btn btn-ghost btn-sm"
                   onClick={() => setSelectedIds(new Set())}
-                  title={bs ? 'Poništi odabir' : 'Clear selection'}
-                >
+                  title={bs ? 'Poništi odabir' : 'Clear selection'}>
                   ✕ {bs ? 'Poništi odabir' : 'Clear selection'}
                 </button>
               </div>
@@ -384,7 +380,7 @@ function WorkerCertificatesInner() {
                           if (!longPressTimer.current) return;
                           const dx = Math.abs(e.touches[0].clientX - touchStartPos.current.x);
                           const dy = Math.abs(e.touches[0].clientY - touchStartPos.current.y);
-                          if (dx > 10 || dy > 10) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+                          if (dx> 10 || dy> 10) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
                         }}
                         onTouchEnd={() => { if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; } }}
                         style={{
@@ -417,7 +413,7 @@ function WorkerCertificatesInner() {
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 const spaceBelow = window.innerHeight - rect.bottom;
                                 const spaceAbove = rect.top;
-                                const flipUp = spaceBelow < 300 && spaceAbove > spaceBelow;
+                                const flipUp = spaceBelow < 300 && spaceAbove> spaceBelow;
                                 setMenuPos(flipUp
                                     ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                     : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -474,16 +470,14 @@ function WorkerCertificatesInner() {
                           <button
                             onClick={() => { const w = workers.find(x => x.id === r.workerId); if (w) setViewWorkerId(w.id); }}
                             style={{ background: 'none', border: 'none', cursor: r.workerId ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: r.workerId ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                            title={r.workerId ? (bs ? 'Klikni za pregled profila' : 'Click to view profile') : ''}
-                          >{r.workerName}</button>
+                            title={r.workerId ? (bs ? 'Klikni za pregled profila' : 'Click to view profile') : ''}>{r.workerName}</button>
                         </td>
                         <td>
                           <button
                             onClick={() => handleEdit(r.id)}
                             disabled={isNavigating}
                             style={{ background: 'none', border: 'none', cursor: isNavigating ? 'wait' : 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)', opacity: isNavigating ? 0.6 : 1 }}
-                            title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}
-                          >{r.naziv || r.ime || '—'}</button>
+                            title={bs ? 'Uredi uvjerenje' : 'Edit certificate'}>{r.naziv || r.ime || '—'}</button>
                         </td>
                         <td><span className="badge badge-info">{r.oznaka}</span></td>
                         <td>{formatDate(r.datum)}</td>
@@ -500,7 +494,7 @@ function WorkerCertificatesInner() {
             </div>
 
             {/* Pagination */}
-            {rows.length > 0 && (
+            {rows.length> 0 && (
               <div className="pagination" style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border-light)' }}>
                   <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       {`${(page - 1) * perPage + 1} - ${Math.min(page * perPage, rows.length)} ${t('of')} ${rows.length}`} {t('records')}
@@ -523,7 +517,7 @@ function WorkerCertificatesInner() {
             )}
 
             {/* ── Bottom hint when none selected ────────────────────────── */}
-            {selectedIds.size === 0 && rows.length > 0 && (
+            {selectedIds.size === 0 && rows.length> 0 && (
               <div style={{ padding: '10px 16px', fontSize: '0.78rem', color: 'var(--text-muted)', borderTop: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span>💡</span>
                 <span>{bs ? 'Odaberite uvjerenja kvačicama da biste ih grupno ispisali u jedan PDF.' : 'Check the checkboxes to bulk-print selected certificates as one PDF.'}</span>

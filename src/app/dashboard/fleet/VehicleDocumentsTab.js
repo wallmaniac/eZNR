@@ -111,7 +111,7 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                     <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{bs ? 'Police osiguranja, saobraćajne dozvole, tehnički pregledi.' : 'Insurance policies, registration, and technical inspections.'}</p>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    {selectedIds.size > 0 && (
+                    {selectedIds.size> 0 && (
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
                             <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
@@ -175,7 +175,7 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === docs.length && docs.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === docs.length && docs.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                             <th>{bs ? 'Naziv dokumenta' : 'Document Name'}</th>
                             <th>{bs ? 'Kategorija' : 'Category'}</th>
                             <th>{bs ? 'Datumi (Izd/Ist)' : 'Dates (Iss/Exp)'}</th>
@@ -188,7 +188,7 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                         {docs.length === 0 ? (
                             <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{bs ? 'Nema učitanih dokumenata' : 'No documents uploaded'}</td></tr>
                         ) : docs.sort((a,b)=> new Date(b.datumUpisa) - new Date(a.datumUpisa)).map(d => (
-                            <tr key={d.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(d)} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                            <tr key={d.id} style={{ cursor: 'pointer' }} onClick={() => handleEdit(d)}>
                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(d.id)} onChange={() => toggleOne(d.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
                                 <td style={{ fontWeight: 600 }}>📄 {d.naziv}</td>
                                 <td><span className="badge badge-info">{d.kategorija || 'Ostalo'}</span></td>
@@ -201,12 +201,12 @@ export default function VehicleDocumentsTab({ vehicleId, vehicles, reloadData })
                                         {actionMenuId === d.id && (<>
                                             <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                             <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                <button onClick={() => { setActionMenuId(null); handleEdit(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Uredi meta' : 'Edit meta'}</button>
-                                                {d.docData && <button onClick={() => { setActionMenuId(null); handleDownload(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📑 {bs ? 'Preuzmi' : 'Download'}</button>}
-                                                {d.docData && <button onClick={() => { setActionMenuId(null); handlePrint(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🖨️ {bs ? 'Printaj' : 'Print'}</button>}
-                                                <button onClick={() => { setActionMenuId(null); handleCopy(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj metadate' : 'Copy metadata'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleEdit(d); }} className="dropdown-item">✏️ {bs ? 'Uredi meta' : 'Edit meta'}</button>
+                                                {d.docData && <button onClick={() => { setActionMenuId(null); handleDownload(d); }} className="dropdown-item">📑 {bs ? 'Preuzmi' : 'Download'}</button>}
+                                                {d.docData && <button onClick={() => { setActionMenuId(null); handlePrint(d); }} className="dropdown-item">🖨️ {bs ? 'Printaj' : 'Print'}</button>}
+                                                <button onClick={() => { setActionMenuId(null); handleCopy(d); }} className="dropdown-item">📋 {bs ? 'Kopiraj metadate' : 'Copy metadata'}</button>
                                                 <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                             </div>
                                         </>)}
                                     </div>

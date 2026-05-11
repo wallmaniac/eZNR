@@ -70,14 +70,13 @@ function AlertsWidget({ groups, total, lang }) {
                                         color: g.color, fontWeight: 700, fontSize: '0.78rem',
                                         cursor: 'pointer', transition: 'all 0.15s ease',
                                         fontFamily: 'var(--font-heading)',
-                                    }}
-                                >
+                                    }}>
                                     {g.icon} {g.label}
                                     <span style={{
                                         background: g.color, color: '#fff', borderRadius: 999,
                                         padding: '1px 6px', fontSize: '0.72rem', fontWeight: 800, minWidth: 18, textAlign: 'center',
                                     }}>{g.items.length}</span>
-                                    {g.items.length > 1 && (
+                                    {g.items.length> 1 && (
                                         <span style={{ fontSize: '0.7rem', opacity: 0.7, marginLeft: 1 }}>
                                             {isOpen ? '▲' : '▼'}
                                         </span>
@@ -114,10 +113,7 @@ function AlertsWidget({ groups, total, lang }) {
                                             cursor: 'pointer', fontSize: '0.82rem', color: 'var(--text)',
                                             transition: 'all 0.12s ease',
                                             gap: 8,
-                                        }}
-                                        onMouseEnter={e => { e.currentTarget.style.background = g.bg; e.currentTarget.style.borderColor = g.color; }}
-                                        onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.borderColor = g.border; }}
-                                    >
+                                        }}>
                                         <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                             {g.itemLabel(item)}
                                         </span>
@@ -302,7 +298,7 @@ export default function DashboardPage() {
                         id: `auto-risk-${ri.id}`,
                         datum: (ri.rokProvedbe || '').split('T')[0],
                         tip: 'risk',
-                        opis: `Mjera: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length > 30 ? '...' : ''} (${ra.nazivTvrtke || 'Procjena'})`,
+                        opis: `Mjera: ${ri.predlozeneMjere.substring(0, 30)}${ri.predlozeneMjere.length> 30 ? '...' : ''} (${ra.nazivTvrtke || 'Procjena'})`,
                         auto: true,
                         sourceId: ri.id,
                         companyId: ra.companyId,
@@ -338,13 +334,13 @@ export default function DashboardPage() {
             if (!c.vrijediDo) return false;
             const exp = new Date(c.vrijediDo);
             const diff = (exp - today) / (1000 * 60 * 60 * 24);
-            return diff >= 0 && diff <= 60;
+            return diff>= 0 && diff <= 60;
         }).length;
         const activeEquip = equipment.filter(e => e.status === 'active').length;
         const expiredCerts = certs.filter(c => c.vrijediDo && new Date(c.vrijediDo) < today).length;
         const expiredEquip = equipment.filter(e => e.status === 'expired' || (e.iduci && new Date(e.iduci) < today)).length;
         const expiredMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today).length;
-        const soonMed = medicalExams.filter(m => { if (!m.vrijediDo) return false; const dd = (new Date(m.vrijediDo) - today) / (86400000); return dd >= 0 && dd <= 60; }).length;
+        const soonMed = medicalExams.filter(m => { if (!m.vrijediDo) return false; const dd = (new Date(m.vrijediDo) - today) / (86400000); return dd>= 0 && dd <= 60; }).length;
         const totalExpired = expiredCerts + expiredEquip + expiredMed;
         return { activeWorkers, activeCerts, expiringSoon: expiringSoon + soonMed, activeEquip, totalExpired };
     }, [workers, certs, equipment, medicalExams]);
@@ -574,7 +570,7 @@ export default function DashboardPage() {
                     <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} />
                     <StatCard icon="⏰" label={lang !== 'en' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} />
                     <StatCard icon="⚙️" label={t('workEquipment')} value={stats.activeEquip} color="#607D8B" onClick={() => handleStatClick('/dashboard/equipment')} />
-                    {stats.totalExpired > 0 && (
+                    {stats.totalExpired> 0 && (
                         <StatCard icon="🚨" label={lang !== 'en' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert />
                     )}
                 </div>
@@ -589,7 +585,7 @@ export default function DashboardPage() {
                         const w = workers.find(wk => wk.id === c.workerId);
                         return { ...c, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
                     });
-                    const expiringCertsRaw = certs.filter(c => { if (!c.vrijediDo) return false; const diff = new Date(c.vrijediDo) - now; return diff >= 0 && diff <= d30; }).map(c => {
+                    const expiringCertsRaw = certs.filter(c => { if (!c.vrijediDo) return false; const diff = new Date(c.vrijediDo) - now; return diff>= 0 && diff <= d30; }).map(c => {
                         const w = workers.find(wk => wk.id === c.workerId);
                         return { ...c, wName: w ? `${w.prezime} ${w.ime}` : '', wId: w?.id };
                     });
@@ -613,14 +609,14 @@ export default function DashboardPage() {
                     const riskMeasuresSoonRaw = riskItems.filter(ri => {
                         if (!ri.rokProvedbe || !ri.predlozeneMjere) return false;
                         const diff = new Date(ri.rokProvedbe) - now;
-                        return diff >= 0 && diff <= d30 && activeAssessments.some(ra => ra.id === ri.procjenaId);
+                        return diff>= 0 && diff <= d30 && activeAssessments.some(ra => ra.id === ri.procjenaId);
                     }).map(ri => {
                         const ra = activeAssessments.find(a => a.id === ri.procjenaId);
                         return { ...ri, raName: ra?.nazivTvrtke || 'Procjena' };
                     });
 
                     const groups = [
-                        expiredCertsRaw.length > 0 && {
+                        expiredCertsRaw.length> 0 && {
                             key: 'expCert', icon: '📜', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
                             label: lang !== 'en' ? 'Istekla uvjerenja' : 'Expired certificates',
                             items: expiredCertsRaw,
@@ -628,7 +624,7 @@ export default function DashboardPage() {
                             itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
                             itemSub: c => formatDate(c.vrijediDo),
                         },
-                        expiringCertsRaw.length > 0 && {
+                        expiringCertsRaw.length> 0 && {
                             key: 'expirCert', icon: '⏰', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
                             label: lang !== 'en' ? 'Ističe za 30 dana' : 'Expiring in 30 days',
                             items: expiringCertsRaw,
@@ -636,7 +632,7 @@ export default function DashboardPage() {
                             itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
                             itemSub: c => formatDate(c.vrijediDo),
                         },
-                        overdueMedRaw.length > 0 && {
+                        overdueMedRaw.length> 0 && {
                             key: 'med', icon: '🩺', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
                             label: lang !== 'en' ? 'Prekoračeni med. pregledi' : 'Overdue medical exams',
                             items: overdueMedRaw,
@@ -644,7 +640,7 @@ export default function DashboardPage() {
                             itemLabel: m => <><strong>{m.wName || '?'}</strong>{m.tipPregleda ? ` — ${m.tipPregleda}` : ''}</>,
                             itemSub: m => formatDate(m.vrijediDo),
                         },
-                        equipDueRaw.length > 0 && {
+                        equipDueRaw.length> 0 && {
                             key: 'equip', icon: '⚙️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
                             label: lang !== 'en' ? 'Zakašnjeli pregledi opreme' : 'Overdue equipment inspections',
                             items: equipDueRaw,
@@ -652,20 +648,20 @@ export default function DashboardPage() {
                             itemLabel: e => <>{e.naziv}</>,
                             itemSub: e => formatDate(e.iduci),
                         },
-                        riskMeasuresDueRaw.length > 0 && {
+                        riskMeasuresDueRaw.length> 0 && {
                             key: 'riskDue', icon: '🛡️', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
                             label: lang !== 'en' ? 'Istekli rokovi mjera (Procjena)' : 'Overdue risk measures',
                             items: riskMeasuresDueRaw,
                             onItemClick: r => router.push('/dashboard/risk-assessment'),
-                            itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
+                            itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length> 40 ? '...' : ''}</>,
                             itemSub: r => formatDate(r.rokProvedbe),
                         },
-                        riskMeasuresSoonRaw.length > 0 && {
+                        riskMeasuresSoonRaw.length> 0 && {
                             key: 'riskSoon', icon: '🛡️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
                             label: lang !== 'en' ? 'Mjere ističu za 30 dana' : 'Measures expiring in 30 days',
                             items: riskMeasuresSoonRaw,
                             onItemClick: r => router.push('/dashboard/risk-assessment'),
-                            itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
+                            itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length> 40 ? '...' : ''}</>,
                             itemSub: r => formatDate(r.rokProvedbe),
                         },
                     ].filter(Boolean);
@@ -716,10 +712,7 @@ export default function DashboardPage() {
                                         transition: 'background 0.15s',
                                         background: showMonthPicker ? 'rgba(0,191,166,0.1)' : 'transparent',
                                         userSelect: 'none',
-                                    }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.08)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = showMonthPicker ? 'rgba(0,191,166,0.1)' : 'transparent'}
-                                >
+                                    }}>
                                     📅 {monthName}
                                     <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginLeft: 2 }}>{showMonthPicker ? '▲' : '▼'}</span>
                                 </h2>
@@ -750,17 +743,11 @@ export default function DashboardPage() {
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                                                 <button
                                                     onClick={() => setPickerYear(y => y - 1)}
-                                                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                                >‹</button>
+                                                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}>‹</button>
                                                 <span style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text)', letterSpacing: '0.02em' }}>{pickerYear}</span>
                                                 <button
                                                     onClick={() => setPickerYear(y => y + 1)}
-                                                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}
-                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                                                >›</button>
+                                                    style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', color: 'var(--text)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.12s' }}>›</button>
                                             </div>
 
                                             {/* Month grid */}
@@ -788,10 +775,7 @@ export default function DashboardPage() {
                                                                 cursor: 'pointer',
                                                                 transition: 'all 0.12s',
                                                                 boxShadow: isActive ? '0 2px 8px rgba(0,191,166,0.35)' : 'none',
-                                                            }}
-                                                            onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'rgba(0,191,166,0.12)'; }}
-                                                            onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-input)'; }}
-                                                        >{lbl}</button>
+                                                            }}>{lbl}</button>
                                                     );
                                                 })}
                                             </div>
@@ -802,14 +786,12 @@ export default function DashboardPage() {
                                                     onClick={() => { setCurrentDate(new Date(year, -1, 1)); setShowMonthPicker(false); }}
                                                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 6, transition: 'color 0.12s' }}
                                                     onMouseEnter={e => e.currentTarget.style.color = 'var(--danger)'}
-                                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}
-                                                >{lang !== 'en' ? 'Poništi' : 'Clear'}</button>
+                                                    onMouseLeave={e => e.currentTarget.style.color = 'var(--text-muted)'}>{lang !== 'en' ? 'Poništi' : 'Clear'}</button>
                                                 <button
                                                     onClick={() => { setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1)); setShowMonthPicker(false); }}
                                                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, padding: '2px 6px', borderRadius: 6, transition: 'opacity 0.12s' }}
                                                     onMouseEnter={e => e.currentTarget.style.opacity = '0.75'}
-                                                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                                                >{lang !== 'en' ? 'Ovaj mjesec' : 'This month'}</button>
+                                                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}>{lang !== 'en' ? 'Ovaj mjesec' : 'This month'}</button>
                                             </div>
                                         </div>
                                     );
@@ -845,7 +827,7 @@ export default function DashboardPage() {
                                         }}
                                         onClick={() => {
                                             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                            if (events.length > 0) {
+                                            if (events.length> 0) {
                                                 setDayDetailDate(dateStr);
                                                 setDayDetailEvents(events);
                                             } else {
@@ -874,7 +856,7 @@ export default function DashboardPage() {
                                         {events.map((ev, idx) => {
                                             const isExpired = ev.datum && new Date(ev.datum) < today;
                                             const diff = ev.datum ? (new Date(ev.datum) - today) / (1000 * 60 * 60 * 24) : 999;
-                                            const isSoon = diff >= 0 && diff <= 30;
+                                            const isSoon = diff>= 0 && diff <= 30;
                                             const statusIcon = ev.auto ? (isExpired ? ' ⚠️' : isSoon ? ' ⏰' : '') : '';
                                             const bgColor = ev.auto && isExpired
                                                 ? (ev.tip === 'cert' ? 'rgba(244,67,54,0.12)' : ev.tip === 'equip' ? '#FBE9E7' : ev.tip === 'fleet' ? '#FBE9E7' : 'rgba(244,67,54,0.12)')
@@ -911,10 +893,7 @@ export default function DashboardPage() {
                                                                 padding: '0 2px', lineHeight: 1, fontSize: '0.7rem',
                                                                 color: 'inherit', opacity: 0.5, flexShrink: 0,
                                                                 borderRadius: 2,
-                                                            }}
-                                                            onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.background = 'rgba(0,0,0,0.12)'; }}
-                                                            onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.5'; e.currentTarget.style.background = 'none'; }}
-                                                        >✕</button>
+                                                            }}>✕</button>
                                                     )}
                                                 </div>
                                             );
@@ -1108,10 +1087,7 @@ export default function DashboardPage() {
                                                     }}>
                                                         <div
                                                             onClick={() => { setEventFormData(prev => ({ ...prev, workerId: '' })); setWorkerSearch(''); setWorkerDropOpen(false); }}
-                                                            style={{ padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', fontStyle: 'italic' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.07)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                                        >— {lang !== 'en' ? 'Bez radnika' : 'No worker'} —</div>
+                                                            style={{ padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', fontStyle: 'italic' }}>— {lang !== 'en' ? 'Bez radnika' : 'No worker'} —</div>
                                                         {filtered.length === 0 && (
                                                             <div style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
                                                                 {lang !== 'en' ? 'Nema rezultata' : 'No results'}
@@ -1125,10 +1101,7 @@ export default function DashboardPage() {
                                                                     background: eventFormData.workerId === w.id ? 'rgba(0,191,166,0.12)' : 'transparent',
                                                                     color: eventFormData.workerId === w.id ? 'var(--primary)' : 'var(--text)',
                                                                     fontWeight: eventFormData.workerId === w.id ? 700 : 400,
-                                                                }}
-                                                                onMouseEnter={e => { if (eventFormData.workerId !== w.id) e.currentTarget.style.background = 'rgba(0,191,166,0.07)'; }}
-                                                                onMouseLeave={e => { if (eventFormData.workerId !== w.id) e.currentTarget.style.background = 'transparent'; }}
-                                                            >
+                                                                }}>
                                                                 <strong>{w.prezime}</strong> {w.ime}
                                                             </div>
                                                         ))}
@@ -1374,7 +1347,7 @@ export default function DashboardPage() {
                                         transition: 'all 0.2s',
                                     }}>
                                     {tb.label}
-                                    {tb.count > 0 && <span style={{
+                                    {tb.count> 0 && <span style={{
                                         marginLeft: 8, padding: '2px 8px', borderRadius: 10, fontSize: '0.7rem', fontWeight: 700,
                                         background: activeTab === tb.key ? 'rgba(255,255,255,0.3)' : 'var(--primary)',
                                         color: 'white',
@@ -1427,10 +1400,9 @@ export default function DashboardPage() {
                                                     onTouchMove={isMobile ? (e) => {
                                                         const dx = Math.abs(e.touches[0].clientX - lpPos.x);
                                                         const dy = Math.abs(e.touches[0].clientY - lpPos.y);
-                                                        if (dx > 10 || dy > 10) { lpMoved = true; clearTimeout(lpTimer); }
+                                                        if (dx> 10 || dy> 10) { lpMoved = true; clearTimeout(lpTimer); }
                                                     } : undefined}
-                                                    onTouchEnd={isMobile ? () => clearTimeout(lpTimer) : undefined}
-                                                >
+                                                    onTouchEnd={isMobile ? () => clearTimeout(lpTimer) : undefined}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
                                                         <button className="btn btn-primary btn-sm"
                                                             onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}
@@ -1508,15 +1480,13 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
-                                                        >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}
-                                                        >{c.naziv || c.ime || '—'}</button>
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}>{c.naziv || c.ime || '—'}</button>
                                                     </td>
                                                     <td><span className="badge badge-info">{c.oznaka}</span></td>
                                                     <td>{formatDate(c.datum)}</td>
@@ -1567,15 +1537,13 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}
-                                                        >{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}
-                                                        >{p.naziv || '—'}</button>
+                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}>{p.naziv || '—'}</button>
                                                     </td>
                                                     <td>{formatDate(p.datumZaduzenja)}</td>
                                                     <td>{p.kolicina}</td>

@@ -70,13 +70,13 @@ export default function ArchivePage() {
     const scanFileRef = useRef(null);
 
     const handleScanFileRead = (file) => {
-        if (file.size > 10 * 1024 * 1024) { alert('Max 10MB za skenirani test!'); return; }
+        if (file.size> 10 * 1024 * 1024) { alert('Max 10MB za skenirani test!'); return; }
         const reader = new FileReader();
         reader.onload = (e) => {
             setScanFile({ name: file.name, data: e.target.result, size: file.size, type: file.type });
             // Try to parse name hint from filename: e.g. "Mujo_Mujic_1990.pdf" → "Mujo Mujic"
             const base = file.name.replace(/\.[^.]+$/, '').replace(/[_\-\.]/g, ' ').replace(/\d{4,}/g, '').trim();
-            if (base.split(' ').length >= 2) setScanName(base);
+            if (base.split(' ').length>= 2) setScanName(base);
             setScanSearched(false);
             setScanMatches([]);
         };
@@ -119,7 +119,7 @@ export default function ArchivePage() {
                 }
 
                 // For certificates: read from attachments[] array (multi-file)
-                if (col === 'certificates' && Array.isArray(r.attachments) && r.attachments.length > 0) {
+                if (col === 'certificates' && Array.isArray(r.attachments) && r.attachments.length> 0) {
                     r.attachments.forEach((att, idx) => {
                         if (att.name && (att.url || att.data)) {
                             docs.push({
@@ -313,7 +313,7 @@ export default function ArchivePage() {
     );
 
     const processFile = async (file) => {
-        if (file.size > MAX_MB * 1024 * 1024) {
+        if (file.size> MAX_MB * 1024 * 1024) {
             setUploadError(lang !== 'en' ? `Datoteka mora biti manja od ${MAX_MB}MB!` : `File must be under ${MAX_MB}MB!`);
             return;
         }
@@ -424,7 +424,7 @@ export default function ArchivePage() {
             else if (file.url) {
                 const res = await fetch(file.url);
                 const blob = await res.blob();
-                if (blob.size > 4_000_000) {
+                if (blob.size> 4_000_000) {
                     alert(lang !== 'en' ? 'Datoteka je prevelika za AI analizu (Maks 4MB).' : 'File is too large for AI analysis (Max 4MB).');
                     return;
                 }
@@ -511,8 +511,7 @@ export default function ArchivePage() {
                                 onDragOver={e => { e.preventDefault(); setScanDragging(true); }}
                                 onDragLeave={() => setScanDragging(false)}
                                 onDrop={e => { e.preventDefault(); setScanDragging(false); const f = e.dataTransfer.files[0]; if (f) handleScanFileRead(f); }}
-                                onClick={() => scanFileRef.current?.click()}
-                            >
+                                onClick={() => scanFileRef.current?.click()}>
                                 <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>
                                     {scanFile ? '✅' : scanDragging ? '📂' : '📄'}
                                 </div>
@@ -588,8 +587,7 @@ export default function ArchivePage() {
                                         }}
                                             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
                                             onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                                            onClick={() => handleScanSelectWorker(w)}
-                                        >
+                                            onClick={() => handleScanSelectWorker(w)}>
                                             <div style={{
                                                 width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
                                                 background: 'linear-gradient(135deg, var(--primary), var(--secondary))',
@@ -616,7 +614,7 @@ export default function ArchivePage() {
                                         </div>
                                     );
                                 })}
-                                {!scanFile && scanMatches.length > 0 && (
+                                {!scanFile && scanMatches.length> 0 && (
                                     <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', fontSize: '0.82rem', color: 'var(--warning)' }}>
                                         ⚠️ {lang !== 'en' ? 'Odaberite datoteku skeniranog testa prije nego nastavite!' : 'Please select the scanned test file before continuing!'}
                                     </div>
@@ -641,8 +639,7 @@ export default function ArchivePage() {
                 onDragOver={e => { e.preventDefault(); setDragging(true); }}
                 onDragLeave={() => setDragging(false)}
                 onDrop={e => { e.preventDefault(); setDragging(false); handleFiles(e.dataTransfer.files); }}
-                onClick={() => fileInputRef.current?.click()}
-            >
+                onClick={() => fileInputRef.current?.click()}>
                 <div className="card-body" style={{ textAlign: 'center', padding: '28px 20px' }}>
                     <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>{uploading ? '⏳' : dragging ? '📂' : '☁️'}</div>
                     <div style={{ fontWeight: 600, marginBottom: 4 }}>

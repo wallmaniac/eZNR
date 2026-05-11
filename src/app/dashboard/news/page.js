@@ -443,7 +443,7 @@ export default function NewsPage() {
                     )}
 
                     {/* News cards — sorted newest → oldest */}
-                    {!loading && news.length > 0 && (
+                    {!loading && news.length> 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                             {[...news].sort((a, b) => parseBSDate(b.datum) - parseBSDate(a.datum)).map((item, i) => <NewsCard key={i} item={item} country={country} />)}
                         </div>
@@ -510,10 +510,7 @@ export default function NewsPage() {
                                             padding: '11px 14px', borderRadius: 'var(--radius-sm)',
                                             borderBottom: i < cat.items.length - 1 ? '1px solid var(--border-light)' : 'none',
                                             transition: 'background 0.15s',
-                                        }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                    >
+                                        }}>
                                         <span style={{ color: 'var(--primary)', fontSize: '1rem' }}>📄</span>
                                         <span style={{ fontSize: '0.88rem', flex: 1 }}>{item.name}</span>
                                         <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, flexShrink: 0 }}>
@@ -730,8 +727,7 @@ function FormsTab({ lang, country }) {
                                     background: 'var(--bg-card)',
                                 }}
                                     onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
-                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
-                                >
+                                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
                                     <span style={{ fontSize: '1.5rem', flexShrink: 0, marginTop: 2 }}>{form.icon}</span>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 3, color: 'var(--text)' }}>{form.name}</div>
@@ -744,8 +740,7 @@ function FormsTab({ lang, country }) {
                                                 transition: 'opacity 0.15s', cursor: 'pointer',
                                             }}
                                                 onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
-                                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}
-                                            >
+                                                onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                                                 📂 {lang !== 'en' ? 'Popuni obrazac' : 'Fill form'}
                                             </a>
                                             {form.printBlank && (
@@ -754,10 +749,7 @@ function FormsTab({ lang, country }) {
                                                     padding: '4px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700,
                                                     background: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)',
                                                     cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-body)',
-                                                }}
-                                                    onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
-                                                    onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--primary)'; }}
-                                                >
+                                                }}>
                                                     🖨️ {lang !== 'en' ? 'Preuzmi prazan' : 'Download blank'}
                                                 </button>
                                             )}

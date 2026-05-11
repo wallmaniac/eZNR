@@ -300,10 +300,9 @@ export default function InjuriesPage() {
                           ) : filteredWorkers.map(w => (
                             <button key={w.id}
                               style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
-                              onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                              onClick={() => handleWorkerSelect(w)}
-                            >
+                              
+                              
+                              onClick={() => handleWorkerSelect(w)}>
                               <span style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8rem', flexShrink: 0 }}>{w.ime?.[0]}{w.prezime?.[0]}</span>
                               <div>
                                 <div style={{ fontWeight: 600, fontSize: '0.88rem', color: 'var(--text)' }}>{w.ime} {w.prezime}</div>
@@ -409,8 +408,7 @@ export default function InjuriesPage() {
                     className="btn btn-outline btn-sm"
                     style={{ marginRight: 'auto' }}
                     onClick={() => { setShowForm(false); router.push(`/dashboard/medical-exams?openNew=1&workerId=${formData.radnikId}`); }}
-                    title={lang !== 'en' ? 'Otvori formu za novi ljekarski pregled za ovog radnika' : 'Open new medical exam form for this worker'}
-                  >
+                    title={lang !== 'en' ? 'Otvori formu za novi ljekarski pregled za ovog radnika' : 'Open new medical exam form for this worker'}>
                     👨‍⚕️ {lang !== 'en' ? 'Pregled za radnika' : 'Exam for worker'}
                   </button>
                 )}
@@ -434,20 +432,19 @@ export default function InjuriesPage() {
                 />
                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
               </div>
-              {orgUnits.length > 0 && (
+              {orgUnits.length> 0 && (
                 <select
                   className="form-select"
                   style={{ height: 36, width: 150, flexShrink: 0, fontSize: '0.85rem', padding: '0 8px' }}
                    title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'} value={filterOrgUnit}
-                  onChange={e => setFilterOrgUnit(e.target.value)}
-                >
+                  onChange={e => setFilterOrgUnit(e.target.value)}>
                   <option value="">{lang !== 'en' ? 'Svi odjeli' : 'All departments'}</option>
                   {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                 </select>
               )}
               <SavedFlash />
               {/* ── Grupne akcije bar ── */}
-              {selectedIds.size > 0 && (
+              {selectedIds.size> 0 && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
                   <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
@@ -460,7 +457,7 @@ export default function InjuriesPage() {
               <table className="data-table" style={{ width: '100%' }}>
                 <thead>
                   <tr>
-                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={e => { if (e.target.checked) setSelectedIds(new Set(sorted.map(x => x.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 90 }}>{t('actions')}</th>
                     <th onClick={() => toggleSort('radnikIme')} style={thStyle('radnikIme')}>{t('worker')}{sortIcon('radnikIme')}</th>
                     <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('date')}{sortIcon('datum')}</th>
@@ -476,7 +473,7 @@ export default function InjuriesPage() {
                   ) : paged.map(inj => {
                     const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
                     return (
-                      <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                      <tr key={inj.id} onClick={() => openEdit(inj)} style={{ cursor: 'pointer' }}>
                         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                           <input type="checkbox" checked={selectedIds.has(inj.id)} onChange={() => toggleOne(inj.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                         </td>
@@ -488,7 +485,7 @@ export default function InjuriesPage() {
                               const rect = e.currentTarget.getBoundingClientRect();
                               const spaceBelow = window.innerHeight - rect.bottom - 8;
                               const spaceAbove = rect.top - 8;
-                              const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                              const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                               setMenuPos(flipUp
                                 ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -499,10 +496,10 @@ export default function InjuriesPage() {
                               <>
                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
                                 <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                  <button onClick={() => { setActionMenuId(null); openEdit(inj); }} style={menuItemSt}>✏️ {lang !== 'en' ? 'Otvori' : 'Open'}</button>
-                                  <button onClick={() => { setActionMenuId(null); openCopy(inj); }} style={menuItemSt}>📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
+                                  <button onClick={() => { setActionMenuId(null); openEdit(inj); }} className="dropdown-item">✏️ {lang !== 'en' ? 'Otvori' : 'Open'}</button>
+                                  <button onClick={() => { setActionMenuId(null); openCopy(inj); }} className="dropdown-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
                                   <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                  <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang !== 'en' ? 'Izbriši' : 'Delete'}</button>
+                                  <button onClick={() => { setActionMenuId(null); handleDelete(inj.id); }} className="dropdown-item text-danger">🗑️ {lang !== 'en' ? 'Izbriši' : 'Delete'}</button>
                                 </div>
                               </>
                             )}

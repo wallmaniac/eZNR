@@ -138,10 +138,10 @@ export default function WorkerPPEPage() {
             </div>
             <PDFExportButton title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
               { label: lang !== 'en' ? 'Sva OZO zaduženja' : 'All PPE assignments', icon: '🦺', onClick: () => generatePPEReport(sortedRows.map(r => r.id), lang) },
-              ...(selectedIds.size > 0 ? [{ label: `${lang !== 'en' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
+              ...(selectedIds.size> 0 ? [{ label: `${lang !== 'en' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generatePPEReport(sortedRows.filter(r => selectedIds.has(r.id)).map(r => r.id), lang) }] : []),
             ]} />
             <SavedFlash />
-            {selectedIds.size > 0 && (
+            {selectedIds.size> 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
                 <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabranu OZO' : 'Delete selected PPE'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
@@ -151,7 +151,7 @@ export default function WorkerPPEPage() {
           </div>
 
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRows.length && sortedRows.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRows.length && sortedRows.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
             <th style={{ width: 90 }}>{t('actions')}</th>
             <th style={thStyle('workerName')} onClick={() => toggleSort('workerName')}>{t('worker')}{sortIcon('workerName')}</th>
             <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
@@ -161,7 +161,7 @@ export default function WorkerPPEPage() {
               {sortedRows.length === 0
                 ? <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                 : sortedRows.map((r, idx) => (
-                  <tr key={r.id || idx} style={{ transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                  <tr key={r.id || idx} style={{ transition: 'background 0.12s' }}>
                     <td style={{ textAlign: 'center' }}>
                       <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                     </td>
@@ -173,7 +173,7 @@ export default function WorkerPPEPage() {
                           const rect = e.currentTarget.getBoundingClientRect();
                           const spaceBelow = window.innerHeight - rect.bottom;
                           const spaceAbove = rect.top;
-                          const flipUp = spaceBelow < 180 && spaceAbove > spaceBelow;
+                          const flipUp = spaceBelow < 180 && spaceAbove> spaceBelow;
                           setMenuPos(flipUp
                               ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                               : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -190,11 +190,11 @@ export default function WorkerPPEPage() {
                                   <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase' }}>{r.workerName}</span>
                                   <button onClick={() => setActionMenuId(null)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                               </div>
-                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} style={menuItemSt} className="action-menu-item">✏️ {lang !== 'en' ? 'Uredi OZO' : 'Edit PPE'}</button>
-                              <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} style={menuItemSt} className="action-menu-item">📂 {lang !== 'en' ? 'Otvori profil' : 'Open profile'}</button>
-                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} style={menuItemSt} className="action-menu-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
+                              <button onClick={() => { setActionMenuId(null); handleEditModal(r); }} className="dropdown-item" className="action-menu-item">✏️ {lang !== 'en' ? 'Uredi OZO' : 'Edit PPE'}</button>
+                              <button onClick={() => { setActionMenuId(null); if (r.workerId) setViewWorkerId(r.workerId); }} className="dropdown-item" className="action-menu-item">📂 {lang !== 'en' ? 'Otvori profil' : 'Open profile'}</button>
+                              <button onClick={() => { setActionMenuId(null); setAddForm({ workerId: '', naziv: r.naziv || '', datumZaduzenja: todayISO(), kolicina: r.kolicina || 1 }); setShowAddModal(true); }} className="dropdown-item" className="action-menu-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Copy'}</button>
                               <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} className="action-menu-item-danger">🗑️ {lang !== 'en' ? 'Izbriši' : 'Delete'}</button>
+                              <button onClick={() => { setActionMenuId(null); handleDelete(r.id); }} className="dropdown-item text-danger" className="action-menu-item-danger">🗑️ {lang !== 'en' ? 'Izbriši' : 'Delete'}</button>
                             </div>
                             </>, document.body
                           )}
@@ -249,8 +249,7 @@ export default function WorkerPPEPage() {
                     if (e.target.value !== '__custom__') setAddForm(f => ({ ...f, naziv: e.target.value }));
                     else setAddForm(f => ({ ...f, naziv: '' }));
                   }}
-                  style={{ marginBottom: 6 }}
-                >
+                  style={{ marginBottom: 6 }}>
                   <option value="__custom__">{lang !== 'en' ? '— Odaberi iz kataloga ili unesi ručno —' : '— Select from catalogue or enter manually —'}</option>
                   {ppeTypes.sort((a, b) => (a.naziv || '').localeCompare(b.naziv || '')).map(p => (
                     <option key={p.id} value={p.naziv}>{p.naziv}</option>

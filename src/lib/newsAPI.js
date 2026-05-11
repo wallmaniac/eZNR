@@ -1,5 +1,4 @@
 // src/lib/newsAPI.js
-import { callFirebaseFunction } from '@/lib/firebaseCallable';
 
 /**
  * Fetch latest occupational safety news from the API, optionally forcing a fresh fetch.
@@ -9,8 +8,19 @@ import { callFirebaseFunction } from '@/lib/firebaseCallable';
  */
 export const apiFetchNews = async (force = false, country = 'BA') => {
     try {
-        const res = await callFirebaseFunction('news', { force, country });
-        return res;
+        const response = await fetch('/api/news', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ force, country }),
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
     } catch (error) {
         throw new Error(`News API error: ${error.message}`);
     }

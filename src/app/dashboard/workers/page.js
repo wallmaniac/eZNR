@@ -219,8 +219,8 @@ function WorkersPageInner() {
         if (mm < 0) { yy--; mm += 12; }
 
         // Add prior experience
-        dd += pd; if (dd >= 30) { mm++; dd -= 30; }
-        mm += pm; if (mm >= 12) { yy++; mm -= 12; }
+        dd += pd; if (dd>= 30) { mm++; dd -= 30; }
+        mm += pm; if (mm>= 12) { yy++; mm -= 12; }
         yy += pg;
 
         const result = `${yy}g${mm}mj${dd}d`;
@@ -308,7 +308,7 @@ function WorkersPageInner() {
 
     // ── Selection helpers ──
     const pagedIds = pagedWorkers.map(w => w.id);
-    const allPageSelected = pagedIds.length > 0 && pagedIds.every(id => selectedIds.has(id));
+    const allPageSelected = pagedIds.length> 0 && pagedIds.every(id => selectedIds.has(id));
     const somePageSelected = pagedIds.some(id => selectedIds.has(id));
     const toggleSelectAll = () => {
         setSelectedIds(prev => {
@@ -337,7 +337,7 @@ function WorkersPageInner() {
         if (showExpiringSoon) {
             if (!expDate) return false;
             const diffDays = (expDate - now) / (1000 * 60 * 60 * 24);
-            if (diffDays > expiringSoonDays || diffDays < 0) return false;
+            if (diffDays> expiringSoonDays || diffDays < 0) return false;
         }
         if (!certSearch) return true;
         const q = certSearch.toLowerCase();
@@ -592,7 +592,7 @@ function WorkersPageInner() {
                                         (c.ime || '').toLowerCase().includes('zapisnik o ocjeni osposobljenosti') &&
                                         c.sposobnost !== 'Nevažeće'
                                     );
-                                    if (zosCerts.length > 0) {
+                                    if (zosCerts.length> 0) {
                                         const oldWpName = getWorkplaceName(oldId);
                                         const newWpName = getWorkplaceName(v);
                                         const ok = await confirm(lang !== 'en'
@@ -663,14 +663,14 @@ function WorkersPageInner() {
                         const start = parseInt((odStr || '').replace(':', ''));
                         const end = parseInt((doStr || '').replace(':', ''));
                         if (isNaN(start) || isNaN(end)) return false;
-                        if (start > end) return true;
-                        if (start < 600 || end >= 2200) return true;
+                        if (start> end) return true;
+                        if (start < 600 || end>= 2200) return true;
                         return false;
                     };
                     const hasNightShift = wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo);
                     const _t = new Date();
                     const _expC = certificates.filter(cx => cx.vrijediDo && new Date(cx.vrijediDo) < _t).length;
-                    const _valC = certificates.filter(cx => !cx.vrijediDo || new Date(cx.vrijediDo) >= _t).length;
+                    const _valC = certificates.filter(cx => !cx.vrijediDo || new Date(cx.vrijediDo)>= _t).length;
                     const _lm = [...workerMedExams].sort((a, b) => (b.datumPregleda || '').localeCompare(a.datumPregleda || ''))[0];
                     const _lmd = _lm?.vrijediDo ? Math.ceil((new Date(_lm.vrijediDo) - _t) / 86400000) : null;
                     const _mc = _lmd === null ? 'none' : _lmd < 0 ? 'expired' : _lmd <= 60 ? 'soon' : 'valid';
@@ -684,12 +684,12 @@ function WorkersPageInner() {
                             )}
                             <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
                                 <div onClick={() => { setOpenSections(p => ({ ...p, uvjerenja: true })); uvjerenjaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
-                                    style={{ flex: '1 1 140px', padding: '10px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: _expC > 0 ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.06)', border: `1px solid ${_expC > 0 ? 'var(--danger)' : 'var(--success)'}`, display: 'flex', alignItems: 'center', gap: 10, transition: 'filter 0.15s' }}
+                                    style={{ flex: '1 1 140px', padding: '10px 14px', borderRadius: 'var(--radius-md)', cursor: 'pointer', background: _expC> 0 ? 'rgba(239,68,68,0.07)' : 'rgba(34,197,94,0.06)', border: `1px solid ${_expC> 0 ? 'var(--danger)' : 'var(--success)'}`, display: 'flex', alignItems: 'center', gap: 10, transition: 'filter 0.15s' }}
                                     onMouseEnter={e => e.currentTarget.style.filter = 'brightness(0.95)'} onMouseLeave={e => e.currentTarget.style.filter = ''}>
                                     <span style={{ fontSize: '1.4rem' }}>📋</span>
                                     <div>
                                         <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>{lang !== 'en' ? 'Uvjerenja' : 'Certs'}</div>
-                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: _expC > 0 ? 'var(--danger)' : 'var(--success)' }}>{_valC} ✓{_expC > 0 && <span style={{ color: 'var(--danger)', marginLeft: 6 }}> {_expC} ⚠</span>}</div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: _expC> 0 ? 'var(--danger)' : 'var(--success)' }}>{_valC} ✓{_expC> 0 && <span style={{ color: 'var(--danger)', marginLeft: 6 }}> {_expC} ⚠</span>}</div>
                                     </div>
                                 </div>
                                 <div onClick={() => { setOpenSections(p => ({ ...p, medExams: true })); medExamsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
@@ -708,7 +708,7 @@ function WorkersPageInner() {
                                     <span style={{ fontSize: '1.4rem' }}>🦺</span>
                                     <div>
                                         <div style={{ fontSize: '0.68rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>OZO</div>
-                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: ppeAssign.length > 0 ? 'var(--primary)' : 'var(--text-muted)' }}>{ppeAssign.length} {lang !== 'en' ? 'zaduženja' : 'assigned'}</div>
+                                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: ppeAssign.length> 0 ? 'var(--primary)' : 'var(--text-muted)' }}>{ppeAssign.length} {lang !== 'en' ? 'zaduženja' : 'assigned'}</div>
                                     </div>
                                 </div>
                             </div>
@@ -818,8 +818,7 @@ function WorkersPageInner() {
                                     value={expiringSoonDays}
                                     onChange={e => setExpiringSoonDays(Number(e.target.value))}
                                     disabled={!showExpiringSoon}
-                                    style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '2px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}
-                                >
+                                    style={{ border: '1px solid var(--border)', borderRadius: 6, padding: '2px 6px', fontSize: '0.78rem', background: 'var(--bg-card)', color: 'var(--text)', cursor: showExpiringSoon ? 'pointer' : 'not-allowed', opacity: showExpiringSoon ? 1 : 0.5 }}>
                                     <option value={30}>30 {lang !== 'en' ? 'dana' : 'days'}</option>
                                     <option value={60}>60 {lang !== 'en' ? 'dana' : 'days'}</option>
                                     <option value={90}>90 {lang !== 'en' ? 'dana' : 'days'}</option>
@@ -854,8 +853,7 @@ function WorkersPageInner() {
                                         return (
                                             <tr key={c.id}
                                                 style={{ cursor: 'pointer' }}
-                                                onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${returnToParam}`); }}
-                                            >
+                                                onClick={() => { markClean(); router.push(`/dashboard/worker-certificates/edit/${c.id}?returnTo=${returnToParam}`); }}>
                                                 <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
                                                     <button
                                                         className="btn btn-outline btn-sm"
@@ -876,8 +874,7 @@ function WorkersPageInner() {
                                                             const top = rect.bottom + 4;
                                                             setCertMenuPos({ top, left });
                                                             setCertMenuId(c.id);
-                                                        }}
-                                                    >
+                                                        }}>
                                                         ⚙️ {lang !== 'en' ? 'Akcije' : 'Actions'} ▾
                                                     </button>
                                                     {/* Portal: mount dropdown directly on document.body to escape all CSS transforms */}
@@ -935,7 +932,7 @@ function WorkersPageInner() {
                                                                 📎 <span>{c.potpisanScan ? (lang !== 'en' ? 'Zamijeni scan ✅' : 'Replace scan ✅') : (isZNR ? (lang !== 'en' ? 'Upload potpisan Test ZNR' : 'Upload signed ZNR Test') : isZOP ? (lang !== 'en' ? 'Upload potpisan Test ZOP' : 'Upload signed ZOP Test') : (lang !== 'en' ? 'Upload potpisan scan' : 'Upload signed scan'))}</span>
                                                                 <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={async (e) => {
                                                                     const file = e.target.files?.[0]; if (!file) return;
-                                                                    if (file.size > 15000000) { alert(lang !== 'en' ? 'Max 15MB' : 'Max 15MB'); return; }
+                                                                    if (file.size> 15000000) { alert(lang !== 'en' ? 'Max 15MB' : 'Max 15MB'); return; }
                                                                     try {
                                                                         const uploadResult = await uploadSecureFile(activeCompanyId, 'certificates', file);
                                                                         update(COLLECTIONS.CERTIFICATES, c.id, { potpisanScan: uploadResult.url, potpisanScanName: file.name, potpisanScanDate: new Date().toISOString() });
@@ -1077,10 +1074,7 @@ function WorkersPageInner() {
                                             return (
                                                 <tr key={me.id}
                                                     style={{ background: days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : '', cursor: 'pointer' }}
-                                                    onClick={openExamEdit}
-                                                    onMouseEnter={e => { if (!(days !== null && days < 0)) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
-                                                    onMouseLeave={e => { e.currentTarget.style.background = days !== null && days < 0 ? 'rgba(239,68,68,0.04)' : ''; }}
-                                                >
+                                                    onClick={openExamEdit}>
                                                     <td onClick={e => e.stopPropagation()}>
                                                         <div style={{ display: 'flex', gap: 4 }}>
                                                             <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Uredi' : 'Edit'} onClick={openExamEdit}>✏️</button>
@@ -1232,7 +1226,7 @@ function WorkersPageInner() {
                                             <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display: 'none' }} onChange={async (e) => {
                                                 const file = e.target.files?.[0];
                                                 if (!file || !editingWorker) return;
-                                                if (file.size > 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
+                                                if (file.size> 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
                                                 try {
                                                     const uploadResult = await uploadSecureFile(activeCompanyId, 'workers', file);
                                                     // Save document directly on the worker record (NOT as a certificate)
@@ -1286,8 +1280,7 @@ function WorkersPageInner() {
                                                         transition: 'border-color 0.15s',
                                                     }}
                                                         onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                                                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}
-                                                    >
+                                                        onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border-light)'}>
                                                         <span style={{ fontSize: '1.3rem', flexShrink: 0 }}>{icon}</span>
                                                         <div style={{ flex: 1, minWidth: 0 }}>
                                                             <div style={{ fontWeight: 600, fontSize: '0.85rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1296,7 +1289,7 @@ function WorkersPageInner() {
                                                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                                                                 <span>{doc.source}</span>
                                                                 {doc.date && <span>{formatDate(doc.date)}</span>}
-                                                                {doc.size > 0 && <span>{(doc.size / 1024).toFixed(1)} KB</span>}
+                                                                {doc.size> 0 && <span>{(doc.size / 1024).toFixed(1)} KB</span>}
                                                             </div>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
@@ -1643,15 +1636,15 @@ function WorkersPageInner() {
 
                                         if (exportColumns.uvjerenja) {
                                             const wCerts = allCerts.filter(cx => cx.workerId === w.id);
-                                            row['Uvjerenja ZNR'] = wCerts.length > 0 ? wCerts.map(cx => cx.oznaka || cx.ime).join(', ') : '';
+                                            row['Uvjerenja ZNR'] = wCerts.length> 0 ? wCerts.map(cx => cx.oznaka || cx.ime).join(', ') : '';
                                         }
                                         if (exportColumns.ljekarski) {
                                             const wMed = allMedExamsList.filter(mx => mx.workerId === w.id);
-                                            row['Ljekarski pregledi'] = wMed.length > 0 ? wMed.map(mx => mx.tipPregleda || 'Pregled').join(', ') : '';
+                                            row['Ljekarski pregledi'] = wMed.length> 0 ? wMed.map(mx => mx.tipPregleda || 'Pregled').join(', ') : '';
                                         }
                                         if (exportColumns.ozo) {
                                             const wPpe = allPpeList.filter(px => px.workerId === w.id);
-                                            row['Zadužena Oprema/OZO'] = wPpe.length > 0 ? wPpe.map(px => px.naziv + (px.kolicina > 1 ? ` (x${px.kolicina})` : '')).join(', ') : '';
+                                            row['Zadužena Oprema/OZO'] = wPpe.length> 0 ? wPpe.map(px => px.naziv + (px.kolicina> 1 ? ` (x${px.kolicina})` : '')).join(', ') : '';
                                         }
 
                                         return row;
@@ -1697,8 +1690,7 @@ function WorkersPageInner() {
                                 style={{ height: 38, padding: '0 12px', width: 112, flexShrink: 0, fontSize: '0.85rem' }}
                                 value={filterOrgUnit}
                                 title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'}
-                                onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}
-                            >
+                                onChange={(e) => { setFilterOrgUnit(e.target.value); setPage(1); }}>
                                 <option value="">{lang !== 'en' ? 'Svi odjeli' : 'All Departments'}</option>
                                 {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
                             </select>
@@ -1708,7 +1700,7 @@ function WorkersPageInner() {
                                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                                 options={[
                                     { label: lang !== 'en' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => generateWorkersReport(sortedWorkers.map(w => w.id), lang) },
-                                    ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
+                                    ...(selectedIds.size> 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => generateWorkersReport(sortedWorkers.filter(w => selectedIds.has(w.id)).map(w => w.id), lang) }] : [])
                                 ]}
                             />
                             <PDFExportButton
@@ -1716,7 +1708,7 @@ function WorkersPageInner() {
                                 buttonStyle={{ background: '#107c41', color: 'white', borderColor: '#107c41', height: 38 }}
                                 options={[
                                     { label: lang !== 'en' ? 'Svi radnici' : 'All workers', icon: '👷', onClick: () => setExcelExportMode('all') },
-                                    ...(selectedIds.size > 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
+                                    ...(selectedIds.size> 0 ? [{ label: lang !== 'en' ? `Odabrani (${selectedIds.size})` : `Selected (${selectedIds.size})`, icon: '✓', onClick: () => setExcelExportMode('selected') }] : [])
                                 ]}
                             />
 
@@ -1725,13 +1717,13 @@ function WorkersPageInner() {
                                 {t('formerWorkers')}
                             </label>
 
-                            {selectedIds.size > 0 && (
+                            {selectedIds.size> 0 && (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px', background: 'rgba(0,191,166,0.06)', borderRadius: 20, border: '1px solid rgba(0,191,166,0.3)', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', whiteSpace: 'nowrap' }}>
                                         {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}
                                     </span>
                                     <button className="btn btn-sm" style={{ background: 'var(--primary)', color: 'white', border: 'none', height: 26, padding: '0 8px', fontSize: '0.75rem' }} onClick={() => {
-                                        const selectedWorkers = selectedIds.size > 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
+                                        const selectedWorkers = selectedIds.size> 0 ? workers.filter(w => selectedIds.has(w.id)) : filteredWorkers;
                                         const emails = selectedWorkers.map(w => w.email).filter(Boolean);
                                         if (emails.length === 0) {
                                             alert(lang !== 'en' ? 'Odabrani radnici nemaju e-mail adrese!' : 'Selected workers have no email addresses!');
@@ -1804,7 +1796,7 @@ function WorkersPageInner() {
                                                             const rect = e.currentTarget.getBoundingClientRect();
                                                             const spaceBelow = window.innerHeight - rect.bottom;
                                                             const spaceAbove = rect.top;
-                                                            const flipUp = spaceBelow < 340 && spaceAbove > spaceBelow;
+                                                            const flipUp = spaceBelow < 340 && spaceAbove> spaceBelow;
                                                             setMenuPos(flipUp
                                                                 ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -1902,8 +1894,7 @@ function WorkersPageInner() {
                                                             }
                                                         }}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
-                                                        title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}
-                                                    >{w.ime}</button>
+                                                        title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}>{w.ime}</button>
                                                 </td>
                                                 <td style={{ fontWeight: 600, whiteSpace: 'nowrap', textAlign: 'left' }}>
                                                     <button
@@ -1916,8 +1907,7 @@ function WorkersPageInner() {
                                                             }
                                                         }}
                                                         style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)', textAlign: 'left' }}
-                                                        title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}
-                                                    >{w.prezime}</button>
+                                                        title={lang !== 'en' ? 'Klikni za pregled profila' : 'Click to view profile'}>{w.prezime}</button>
                                                 </td>
                                                 <td><code style={{ fontSize: '0.85rem' }}>{w.oib || w.jmbg}</code></td>
                                                 <td>
@@ -1940,9 +1930,9 @@ function WorkersPageInner() {
                                                         const _wC = allCerts.filter(cx => cx.workerId === w.id);
                                                         const _wM = allMedExamsList.filter(mx => mx.workerId === w.id);
                                                         const _expC = _wC.some(cx => cx.vrijediDo && new Date(cx.vrijediDo) < _today);
-                                                        const _soonC = _wC.some(cx => { if (!cx.vrijediDo) return false; const d = (new Date(cx.vrijediDo) - _today) / 86400000; return d >= 0 && d <= 30; });
+                                                        const _soonC = _wC.some(cx => { if (!cx.vrijediDo) return false; const d = (new Date(cx.vrijediDo) - _today) / 86400000; return d>= 0 && d <= 30; });
                                                         const _expM = _wM.some(mx => mx.vrijediDo && new Date(mx.vrijediDo) < _today);
-                                                        const _soonM = _wM.some(mx => { if (!mx.vrijediDo) return false; const d = (new Date(mx.vrijediDo) - _today) / 86400000; return d >= 0 && d <= 60; });
+                                                        const _soonM = _wM.some(mx => { if (!mx.vrijediDo) return false; const d = (new Date(mx.vrijediDo) - _today) / 86400000; return d>= 0 && d <= 60; });
 
                                                         let badgeCls = 'badge-success';
                                                         let badgeTxt = lang !== 'en' ? 'U redu' : 'Ok';

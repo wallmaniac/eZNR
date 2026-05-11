@@ -238,7 +238,7 @@ function generateExport(companyId) {
     const certs = getAll(COLLECTIONS.CERTIFICATES).filter(c => companyId === 'all' || c.companyId === companyId);
     workers.forEach(w => {
         const wCerts = certs.filter(c => c.workerId === w.id);
-        if (wCerts.length > 0) {
+        if (wCerts.length> 0) {
             wCerts.forEach(c => {
                 cRows.push([
                     w.ime || '', w.prezime || '', w.jmbg || '',
@@ -261,7 +261,7 @@ function generateExport(companyId) {
     const ppe = getAll(COLLECTIONS.PPE_ASSIGNMENTS).filter(p => companyId === 'all' || p.companyId === companyId);
     workers.forEach(w => {
         const wPpe = ppe.filter(p => p.workerId === w.id);
-        if (wPpe.length > 0) {
+        if (wPpe.length> 0) {
             wPpe.forEach(p => {
                 pRows.push([
                     w.ime || '', w.prezime || '', w.jmbg || '',
@@ -297,7 +297,7 @@ function generateExport(companyId) {
     const medExams = getAll(COLLECTIONS.MEDICAL_EXAMS).filter(m => companyId === 'all' || m.companyId === companyId);
     workers.forEach(w => {
         const wExams = medExams.filter(m => m.workerId === w.id);
-        if (wExams.length > 0) {
+        if (wExams.length> 0) {
             wExams.forEach(m => {
                 mRows.push([
                     w.ime || '', w.prezime || '', w.jmbg || '',
@@ -523,7 +523,7 @@ export default function ImportPage() {
             }
             newOU.push({ naziv, opis: String(row.opis || '').trim(), companyId });
         });
-        if (newOU.length > 0) await createMass(COLLECTIONS.ORG_UNITS, newOU);
+        if (newOU.length> 0) await createMass(COLLECTIONS.ORG_UNITS, newOU);
         ouCreated = newOU.length;
 
         // 0.5 Workplaces
@@ -545,7 +545,7 @@ export default function ImportPage() {
                 })()
             });
         });
-        if (newWP.length > 0) await createMass(COLLECTIONS.WORKPLACES, newWP);
+        if (newWP.length> 0) await createMass(COLLECTIONS.WORKPLACES, newWP);
         wpCreated = newWP.length;
 
         // 1. Workers
@@ -597,7 +597,7 @@ export default function ImportPage() {
         });
 
         let savedWorkers = [];
-        if (newWList.length > 0) {
+        if (newWList.length> 0) {
             savedWorkers = await createMass(COLLECTIONS.WORKERS, newWList);
         }
         wCreated = newWList.length;
@@ -646,7 +646,7 @@ export default function ImportPage() {
                 ogranicenje: String(row.ogranicenje || '').trim(), upisao: 'Import',
             });
         });
-        if (newCerts.length > 0) await createMass(COLLECTIONS.CERTIFICATES, newCerts);
+        if (newCerts.length> 0) await createMass(COLLECTIONS.CERTIFICATES, newCerts);
         cCreated = newCerts.length;
 
         // 3. PPE
@@ -668,7 +668,7 @@ export default function ImportPage() {
                 kolicina: parseInt(row.kolicina) || 1,
             });
         });
-        if (newPPE.length > 0) await createMass(COLLECTIONS.PPE_ASSIGNMENTS, newPPE);
+        if (newPPE.length> 0) await createMass(COLLECTIONS.PPE_ASSIGNMENTS, newPPE);
         pCreated = newPPE.length;
 
         // 4. Equipment
@@ -691,7 +691,7 @@ export default function ImportPage() {
                 izvanUpotrebeOd: '', evidencijskiBroj: '', brojMjernihMjesta: 0, serijskiBroj: '',
             });
         });
-        if (newEquip.length > 0) await createMass(COLLECTIONS.EQUIPMENT, newEquip);
+        if (newEquip.length> 0) await createMass(COLLECTIONS.EQUIPMENT, newEquip);
         eCreated = newEquip.length;
 
         // 5. Medical Exams
@@ -712,7 +712,7 @@ export default function ImportPage() {
                 rezultat: String(row.rezultat || 'Sposoban').trim(), napomena: String(row.napomena || '').trim(),
             });
         });
-        if (newMedExams.length > 0) await createMass(COLLECTIONS.MEDICAL_EXAMS, newMedExams);
+        if (newMedExams.length> 0) await createMass(COLLECTIONS.MEDICAL_EXAMS, newMedExams);
         mCreated = newMedExams.length;
 
         // 6. Vehicles
@@ -737,7 +737,7 @@ export default function ImportPage() {
                 orgJedinicaId: '', status: String(row.status || 'aktivan').trim(), napomena: String(row.napomena || '').trim()
             });
         });
-        if (newVehicles.length > 0) await createMass(COLLECTIONS.VEHICLES, newVehicles);
+        if (newVehicles.length> 0) await createMass(COLLECTIONS.VEHICLES, newVehicles);
         vCreated = newVehicles.length;
 
         // 7. Fire Extinguishers
@@ -757,7 +757,7 @@ export default function ImportPage() {
                 status: String(row.status || 'ispravan').trim(), napomena: String(row.napomena || '').trim()
             });
         });
-        if (newExts.length > 0) await createMass(COLLECTIONS.FIRE_EXTINGUISHERS, newExts);
+        if (newExts.length> 0) await createMass(COLLECTIONS.FIRE_EXTINGUISHERS, newExts);
         fCreated = newExts.length;
 
         // 8. Hydrants
@@ -776,7 +776,7 @@ export default function ImportPage() {
                 napomena: String(row.napomena || '').trim()
             });
         });
-        if (newHydrants.length > 0) await createMass(COLLECTIONS.HYDRANTS, newHydrants);
+        if (newHydrants.length> 0) await createMass(COLLECTIONS.HYDRANTS, newHydrants);
         hCreated = newHydrants.length;
 
         setResult({ wCreated, wSkipped, cCreated, cSkipped, pCreated, pSkipped, eCreated, eSkipped, mCreated, mSkipped, vCreated, vSkipped, fCreated, fSkipped, hCreated, hSkipped, wpLinked, wpTotal, ouLinked, ouTotal, ouCreated, ouSkipped, wpCreated, wpSkipped });
@@ -859,8 +859,7 @@ export default function ImportPage() {
                             cursor: 'pointer',
                             background: dragOver ? 'rgba(0,191,166,0.04)' : 'var(--bg-card)',
                             transition: 'all 0.2s',
-                        }}
-                    >
+                        }}>
                         <div style={{ fontSize: '3rem', marginBottom: 12 }}>📂</div>
                         <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 6 }}>
                             {lang !== 'en' ? 'Korak 2: Uploadajte popunjeni Excel' : 'Step 2: Upload your filled Excel'}
@@ -902,7 +901,7 @@ export default function ImportPage() {
                             { label: lang !== 'en' ? 'Vozila' : 'Vehicles', count: (preview.vRows || []).length, icon: '🚗', color: '#F44336' },
                             { label: lang !== 'en' ? 'PP Aparati' : 'Fire Extinguishers', count: (preview.fRows || []).length, icon: '🧯', color: '#E53935' },
                             { label: lang !== 'en' ? 'Hidranti' : 'Hydrants', count: (preview.hRows || []).length, icon: '🚰', color: '#1E88E5' },
-                        ].filter(x => x.count > 0).map(({ label, count, icon, color }) => (
+                        ].filter(x => x.count> 0).map(({ label, count, icon, color }) => (
                             <div key={label} className="card" style={{ textAlign: 'center', padding: 16 }}>
                                 <div style={{ fontSize: '1.6rem', marginBottom: 4 }}>{icon}</div>
                                 <div style={{ fontSize: '1.8rem', fontWeight: 800, color }}>{count}</div>
@@ -1012,7 +1011,7 @@ export default function ImportPage() {
                                 { h: 'Slj. pregled', r: (r) => r.sljedeciPregled },
                             ],
                         },
-                    ].filter(sec => sec.data && sec.data.length > 0).map(sec => {
+                    ].filter(sec => sec.data && sec.data.length> 0).map(sec => {
                         const isExp = expanded[sec.key];
                         const rows = isExp ? sec.data : sec.data.slice(0, 5);
                         const remaining = sec.data.length - 5;
@@ -1022,11 +1021,10 @@ export default function ImportPage() {
                                 <div className="card-body">
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                                         <div style={{ fontWeight: 700 }}>{sec.icon} {title} <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 400 }}>({sec.data.length})</span></div>
-                                        {sec.data.length > 5 && (
+                                        {sec.data.length> 5 && (
                                             <button
                                                 onClick={() => toggleExpand(sec.key)}
-                                                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, whiteSpace: 'nowrap' }}
-                                            >
+                                                style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 6, padding: '4px 12px', cursor: 'pointer', fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600, whiteSpace: 'nowrap' }}>
                                                 {isExp ? (lang !== 'en' ? '▲ Sakrij' : '▲ Collapse') : `▼ ${lang !== 'en' ? `Prikaži sve (${sec.data.length})` : `Show all (${sec.data.length})`}`}
                                             </button>
                                         )}
@@ -1038,13 +1036,12 @@ export default function ImportPage() {
                                                 {rows.map((r, i) => (
                                                     <tr key={i}>{sec.cols.map(c => <td key={c.h}>{c.r(r)}</td>)}</tr>
                                                 ))}
-                                                {!isExp && remaining > 0 && (
+                                                {!isExp && remaining> 0 && (
                                                     <tr>
                                                         <td colSpan={sec.cols.length} style={{ textAlign: 'center', padding: '10px 0' }}>
                                                             <button
                                                                 onClick={() => toggleExpand(sec.key)}
-                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}
-                                                            >
+                                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontSize: '0.82rem', fontWeight: 600 }}>
                                                                 ▼ {lang !== 'en' ? `...i još ${remaining} reda` : `...and ${remaining} more`}
                                                             </button>
                                                         </td>
@@ -1092,7 +1089,7 @@ export default function ImportPage() {
                             { label: lang !== 'en' ? 'PP Aparati preskočeno' : 'Ext. skipped', val: result.fSkipped || 0, color: 'var(--text-muted)' },
                             { label: lang !== 'en' ? 'Hidranti kreirano' : 'Hydrants created', val: result.hCreated || 0, color: '#1E88E5' },
                             { label: lang !== 'en' ? 'Hidranti preskočeno' : 'Hydrants skipped', val: result.hSkipped || 0, color: 'var(--text-muted)' },
-                        ].filter(x => x.val > 0).map(({ label, val, color }) => (
+                        ].filter(x => x.val> 0).map(({ label, val, color }) => (
                             <div key={label} className="card" style={{ padding: 14, textAlign: 'center' }}>
                                 <div style={{ fontSize: '1.6rem', fontWeight: 800, color }}>{val}</div>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{label}</div>
@@ -1101,11 +1098,11 @@ export default function ImportPage() {
                     </div>
 
                     {/* Linking stats */}
-                    {(result.wpTotal > 0 || result.ouTotal > 0) && (
+                    {(result.wpTotal> 0 || result.ouTotal> 0) && (
                         <div style={{ background: 'rgba(102,126,234,0.08)', border: '1px solid rgba(102,126,234,0.3)', borderRadius: 8, padding: '12px 16px', marginBottom: 16, fontSize: '0.85rem' }}>
                             <div style={{ fontWeight: 700, marginBottom: 6, color: '#667eea' }}>🔗 Povezivanje podataka</div>
-                            {result.wpTotal > 0 && <div>📍 Radna mjesta: <strong>{result.wpLinked}/{result.wpTotal}</strong> uspješno povezano{result.wpLinked < result.wpTotal && <span style={{ color: '#ff9800' }}> — {result.wpTotal - result.wpLinked} nije pronađeno u bazi</span>}</div>}
-                            {result.ouTotal > 0 && <div>🏢 Org. jedinice: <strong>{result.ouLinked}/{result.ouTotal}</strong> uspješno povezano{result.ouLinked < result.ouTotal && <span style={{ color: '#ff9800' }}> — {result.ouTotal - result.ouLinked} nije pronađeno u bazi</span>}</div>}
+                            {result.wpTotal> 0 && <div>📍 Radna mjesta: <strong>{result.wpLinked}/{result.wpTotal}</strong> uspješno povezano{result.wpLinked < result.wpTotal && <span style={{ color: '#ff9800' }}> — {result.wpTotal - result.wpLinked} nije pronađeno u bazi</span>}</div>}
+                            {result.ouTotal> 0 && <div>🏢 Org. jedinice: <strong>{result.ouLinked}/{result.ouTotal}</strong> uspješno povezano{result.ouLinked < result.ouTotal && <span style={{ color: '#ff9800' }}> — {result.ouTotal - result.ouLinked} nije pronađeno u bazi</span>}</div>}
                         </div>
                     )}
 

@@ -33,10 +33,7 @@ export default function EKWorkersPage() {
             ) : sorted.map((w, idx) => (
               <tr key={w.id}
                 onClick={() => router.push(`/dashboard/workers?openWorker=${w.id}`)}
-                style={{ cursor: 'pointer', transition: 'background 0.12s' }}
-                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                onMouseLeave={e => e.currentTarget.style.background = ''}
-              >
+                style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                 <td>{idx + 1}</td><td style={{ fontWeight: 600 }}>{w.ime}</td><td style={{ fontWeight: 600 }}>{w.prezime}</td>
                 <td><code>{w.jmbg}</code></td><td>{formatDate(w.datumZaposlenja)}</td><td>{getOrgUnitName(w.orgJedinicaId)}</td>
                 <td><span className={`badge ${w.aktivan !== false ? 'badge-success' : 'badge-danger'}`}>{w.aktivan !== false ? (lang !== 'en' ? 'Aktivan' : 'Active') : (lang !== 'en' ? 'Neaktivan' : 'Inactive')}</span></td>

@@ -161,7 +161,7 @@ export default function SistematizacijaPage() {
 
             <div class="sect">
                 <div class="s-title">POSEBNI UVJETI RADA</div>
-                <div>${sist.posebniUvjeti?.length > 0 ? Object.values(sist.posebniUvjeti).join(', ') : 'Nema posebnih uvjeta'}</div>
+                <div>${sist.posebniUvjeti?.length> 0 ? Object.values(sist.posebniUvjeti).join(', ') : 'Nema posebnih uvjeta'}</div>
             </div>
 
             <div class="grid">
@@ -249,7 +249,7 @@ export default function SistematizacijaPage() {
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', background: completedWp === totalWp && totalWp > 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${completedWp === totalWp && totalWp > 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.82rem', color: completedWp === totalWp && totalWp > 0 ? '#4caf50' : '#ffc107' }}>
+                    <div style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', background: completedWp === totalWp && totalWp> 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${completedWp === totalWp && totalWp> 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.82rem', color: completedWp === totalWp && totalWp> 0 ? '#4caf50' : '#ffc107' }}>
                         {completedWp}/{totalWp} {lang !== 'en' ? 'popunjeno' : 'completed'}
                     </div>
                     <SavedFlash />
@@ -299,7 +299,7 @@ export default function SistematizacijaPage() {
                                             {(sist.potrebnaOZO || []).slice(0, 3).map((ozo, i) => (
                                                 <span key={i} style={{ padding: '2px 8px', borderRadius: 10, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', fontSize: '0.68rem', fontWeight: 600 }}>🦺 {ozo}</span>
                                             ))}
-                                            {(sist.potrebnaOZO || []).length > 3 && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>+{sist.potrebnaOZO.length - 3}</span>}
+                                            {(sist.potrebnaOZO || []).length> 3 && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>+{sist.potrebnaOZO.length - 3}</span>}
                                         </div>
                                         <div style={{ display: 'flex', gap: 6, fontSize: '0.68rem', color: 'var(--text-muted)', marginBottom: 10 }}>
                                             <span>📋 {sist.certifikati?.length || 0} cert.</span>

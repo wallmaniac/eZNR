@@ -260,7 +260,7 @@ export default function ConverterPage() {
       
       const newMergeFiles = [];
       for (const file of pdfFiles) {
-        if (file.size > 30 * 1024 * 1024) continue;
+        if (file.size> 30 * 1024 * 1024) continue;
         const arrayBuffer = await file.arrayBuffer();
         newMergeFiles.push({ id: Math.random().toString(36).substr(2, 9), name: file.name, arrayBuffer });
       }
@@ -270,7 +270,7 @@ export default function ConverterPage() {
 
     // Convert mode (single file)
     const file = fileList[0];
-    if (file.size > 30 * 1024 * 1024) {
+    if (file.size> 30 * 1024 * 1024) {
       await alert(lang !== 'en' ? 'Datoteka mora biti manja od 30MB!' : 'File must be under 30MB!');
       return;
     }
@@ -376,7 +376,7 @@ export default function ConverterPage() {
       const headingYsCanvas = [];
       for (const h of iframeBody.querySelectorAll('h1,h2,h3,h4,h5,h6')) {
         const relY = h.getBoundingClientRect().top - bodyTop;
-        if (relY > 0) headingYsCanvas.push(Math.round(relY * SCALE));
+        if (relY> 0) headingYsCanvas.push(Math.round(relY * SCALE));
       }
       headingYsCanvas.sort((a, b) => a - b);
 
@@ -401,7 +401,7 @@ export default function ConverterPage() {
         const windowEnd   = targetY + Math.round(radiusPx * 0.3);
         let bestHeadingY = null;
         for (const hY of headingYsCanvas) {
-          if (hY >= windowStart && hY <= windowEnd) bestHeadingY = hY;
+          if (hY>= windowStart && hY <= windowEnd) bestHeadingY = hY;
         }
         if (bestHeadingY !== null) return Math.max(0, bestHeadingY - 8);
         // Fallback: find whitest row scanning backward
@@ -409,13 +409,13 @@ export default function ConverterPage() {
         const from = Math.max(0, targetY - radiusPx);
         const to   = Math.min(canvas.height - 1, targetY);
         let bestY = targetY, bestWhite = -1;
-        for (let y = to; y >= from; y--) {
+        for (let y = to; y>= from; y--) {
           const row = ctx.getImageData(0, y, canvas.width, 1).data;
           let white = 0;
           for (let i = 0; i < row.length; i += 4) {
-            if (row[i] >= 240 && row[i+1] >= 240 && row[i+2] >= 240) white++;
+            if (row[i]>= 240 && row[i+1]>= 240 && row[i+2]>= 240) white++;
           }
-          if (white > bestWhite) { bestWhite = white; bestY = y; }
+          if (white> bestWhite) { bestWhite = white; bestY = y; }
         }
         return bestY;
       };
@@ -429,9 +429,9 @@ export default function ConverterPage() {
 
       let startY = 0, pageNum = 0;
       while (startY < canvas.height) {
-        if (pageNum > 0) pdf.addPage();
+        if (pageNum> 0) pdf.addPage();
         const nomBottom = startY + nominalPageHPx;
-        const breakY = nomBottom >= canvas.height
+        const breakY = nomBottom>= canvas.height
           ? canvas.height
           : findBreakY(Math.round(nomBottom), Math.round(pxPerMm * 45));
         const sliceH = breakY - startY;
@@ -515,7 +515,7 @@ export default function ConverterPage() {
 
   const moveMergeFile = (index, direction) => {
     const newFiles = [...mergeFiles];
-    if (direction === 'up' && index > 0) {
+    if (direction === 'up' && index> 0) {
       [newFiles[index - 1], newFiles[index]] = [newFiles[index], newFiles[index - 1]];
     } else if (direction === 'down' && index < newFiles.length - 1) {
       [newFiles[index + 1], newFiles[index]] = [newFiles[index], newFiles[index + 1]];
@@ -561,8 +561,7 @@ export default function ConverterPage() {
               onDragOver={e => { e.preventDefault(); setDragging(true); }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-            >
+              onClick={() => fileInputRef.current?.click()}>
               <div className="card-body" style={{ textAlign: 'center', padding: '48px 20px' }}>
                 <div style={{ fontSize: '3rem', marginBottom: 12 }}>{dragging ? '📂' : '🔄'}</div>
                 <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 6 }}>
@@ -589,8 +588,7 @@ export default function ConverterPage() {
                   onDragOver={e => { e.preventDefault(); setDragging(true); }}
                   onDragLeave={() => setDragging(false)}
                   onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                >
+                  onClick={() => fileInputRef.current?.click()}>
                   <div style={{ fontSize: '2rem', marginBottom: 8 }}>{dragging ? '📂' : '📑'}</div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>
                     {lang !== 'en' ? 'Prevuci PDF datoteke ovdje' : 'Drag PDF files here'}
@@ -602,7 +600,7 @@ export default function ConverterPage() {
                     onChange={e => { if (e.target.files?.length) loadFromFile(e.target.files); setDragging(false); }} />
                 </div>
 
-                {mergeFiles.length > 0 && (
+                {mergeFiles.length> 0 && (
                   <div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                       <span>{lang !== 'en' ? 'Odabrane datoteke (' + mergeFiles.length + ')' : 'Selected files (' + mergeFiles.length + ')'}</span>

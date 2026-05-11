@@ -217,8 +217,8 @@ export default function EvacuationDrillsPage() {
                                                         <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{bs ? 'Nema radnika' : 'No workers'}</div>
                                                     ) : filteredWorkers.slice(0, 15).map(w => (
                                                         <button key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                            
+                                                            
                                                             onClick={() => handleWorkerSelect(w)}>
                                                             <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>{w.ime?.[0]}{w.prezime?.[0]}</span>
                                                             <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{w.ime} {w.prezime}</div>
@@ -290,7 +290,7 @@ export default function EvacuationDrillsPage() {
                                 <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             </div>
                             <SavedFlash />
-                            {selectedIds.size > 0 ? (
+                            {selectedIds.size> 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
                                     <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>??? {bs ? 'Obri�i' : 'Delete'}</button>
@@ -301,7 +301,7 @@ export default function EvacuationDrillsPage() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                        <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                         <th style={{ width: 90 }}>{t('actions')}</th>
                                         <th onClick={() => toggleSort('datumVjezbe')} style={thStyle('datumVjezbe')}>{bs ? 'Datum' : 'Date'}{sortIcon('datumVjezbe')}</th>
                                         <th>{bs ? 'Plan evakuacije (Lokacija)' : 'Evacuation Plan'}</th>
@@ -318,9 +318,7 @@ export default function EvacuationDrillsPage() {
                                     ) : sorted.map(d => {
                                         const st = STATUS_MAP[d.status] || STATUS_MAP.uspješno;
                                         return (
-                                            <tr key={d.id} onClick={() => openEdit(d)} style={{ cursor: 'pointer' }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                            <tr key={d.id} onClick={() => openEdit(d)} style={{ cursor: 'pointer' }}>
                                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                     <input type="checkbox" checked={selectedIds.has(d.id)} onChange={() => toggleOne(d.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                                 </td>
@@ -331,11 +329,11 @@ export default function EvacuationDrillsPage() {
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                                    <button onClick={() => { setActionMenuId(null); openEdit(d); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...d }; delete copy.id; copy.datumVjezbe = new Date().toISOString().split('T')[0]; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.EVACUATION_DRILLS, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' }; update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: cycle[d.status] || 'uspješno' }); loadData(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🔄 {bs ? `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.bs || 'Uspješno'}` : `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.en || 'Successful'}`}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); openEdit(d); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...d }; delete copy.id; copy.datumVjezbe = new Date().toISOString().split('T')[0]; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.EVACUATION_DRILLS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' }; update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: cycle[d.status] || 'uspješno' }); loadData(); }} className="dropdown-item">🔄 {bs ? `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.bs || 'Uspješno'}` : `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.en || 'Successful'}`}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>
                                                             </>
                                                         )}

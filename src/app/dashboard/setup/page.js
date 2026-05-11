@@ -38,8 +38,7 @@ export default function SetupPage() {
                         border: 'none',
                         borderRadius: 8,
                         cursor: loading ? 'not-allowed' : 'pointer'
-                    }}
-                >
+                    }}>
                     {loading ? 'Seeding...' : 'Seed Database'}
                 </button>
             </div>

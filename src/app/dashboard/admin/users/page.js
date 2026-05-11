@@ -312,7 +312,7 @@ export default function AdminUsersPage() {
                                         </div>
                                     )}
                                     {/* Companies */}
-                                    {(u.companyIds || []).length > 0 && (
+                                    {(u.companyIds || []).length> 0 && (
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                             {(u.companyIds || []).map(cid => (
                                                 <button key={cid} onClick={() => setShowCompanyDetail(getCompanyById(cid))} style={{
@@ -377,8 +377,7 @@ export default function AdminUsersPage() {
                                                 background: 'none', border: 'none', cursor: 'pointer', 
                                                 fontSize: '1.1rem', opacity: 0.6, padding: 4 
                                             }}
-                                            title={showPassword ? (lang !== 'en' ? 'Sakrij lozinku' : 'Hide password') : (lang !== 'en' ? 'Prikaži lozinku' : 'Show password')}
-                                        >
+                                            title={showPassword ? (lang !== 'en' ? 'Sakrij lozinku' : 'Hide password') : (lang !== 'en' ? 'Prikaži lozinku' : 'Show password')}>
                                             {showPassword ? '👁️' : '👁️‍🗨️'}
                                         </button>
                                     </div>

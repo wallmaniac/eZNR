@@ -228,7 +228,7 @@ function EquipmentPageInner() {
     const handleDocUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-        if (file.size > 15 * 1024 * 1024) {
+        if (file.size> 15 * 1024 * 1024) {
             await alert(lang !== 'en' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
             return;
         }
@@ -421,7 +421,7 @@ function EquipmentPageInner() {
                                     display: 'flex', alignItems: 'center', gap: 6,
                                 }}>
                                     {tab.icon} {tab.label}
-                                    {tab.key === 'servis' && serviceLogs.length > 0 && (
+                                    {tab.key === 'servis' && serviceLogs.length> 0 && (
                                         <span style={{ marginLeft: 6, background: 'rgba(0,191,166,0.15)', color: 'var(--primary)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem', fontWeight: 700 }}>
                                             {serviceLogs.length}
                                         </span>
@@ -525,7 +525,7 @@ function EquipmentPageInner() {
                                         <button className="btn btn-primary btn-sm" onClick={handleNewService} disabled={!editingId} title={lang !== 'en' ? 'Dodaj novi servisni zapisnik' : 'Add new service log'}>
                                             + {lang !== 'en' ? 'Dodaj zapisnik' : 'New service record'}
                                         </button>
-                                        {serviceLogs.length > 0 && (
+                                        {serviceLogs.length> 0 && (
                                             <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                                 {serviceLogs.length} {lang !== 'en' ? 'zapis(a)' : 'record(s)'}
                                             </span>
@@ -654,8 +654,7 @@ function EquipmentPageInner() {
                                             transition: 'all 0.15s',
                                         }}
                                             onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
-                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
-                                        >
+                                            onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}>
                                             📂 {lang !== 'en' ? 'Kliknite za upload dokumenta (PDF, slike)' : 'Click to upload document (PDF, images)'}
                                         </div>
                                     )}
@@ -687,11 +686,11 @@ function EquipmentPageInner() {
                         </div>
                         <PDFExportButton title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'} buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
                             { label: lang !== 'en' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport(sortedEquipment.map(eq => eq.id), lang) },
-                            ...(selectedIds.size > 0 ? [{ label: `${lang !== 'en' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
+                            ...(selectedIds.size> 0 ? [{ label: `${lang !== 'en' ? 'Odabrano' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => generateEquipmentReport(sortedEquipment.filter(eq => selectedIds.has(eq.id)).map(eq => eq.id), lang) }] : []),
                         ]} />
                         <PDFExportButton label={lang !== 'en' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
                             { label: lang !== 'en' ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
-                            ...(selectedIds.size > 0 ? [{ label: `${lang !== 'en' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
+                            ...(selectedIds.size> 0 ? [{ label: `${lang !== 'en' ? 'Odabrani' : 'Selected'} (${selectedIds.size})`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
                         ]} />
                         <SavedFlash />
                         <select className="form-select" style={{ height: 38, padding: '0 12px', minWidth: 160, width: 'auto', fontSize: '0.85rem' }}  title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'} value={filterOrgUnit} onChange={e => setFilterOrgUnit(e.target.value)}>
@@ -702,7 +701,7 @@ function EquipmentPageInner() {
                             <input type="checkbox" checked={showOutOfUse} onChange={e => setShowOutOfUse(e.target.checked)} />
                             {lang !== 'en' ? 'Radna oprema izvan upotrebe' : 'Out of use equipment'}
                         </label>
-                        {selectedIds.size > 0 && (
+                        {selectedIds.size> 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
@@ -716,7 +715,7 @@ function EquipmentPageInner() {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('vrsta')} style={thStyle('vrsta')}>{lang !== 'en' ? 'Vrsta' : 'Type'}{sortIcon('vrsta')}</th>
                                     <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('name')}{sortIcon('naziv')}</th>
@@ -745,7 +744,7 @@ function EquipmentPageInner() {
                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                     const spaceBelow = window.innerHeight - rect.bottom;
                                                     const spaceAbove = rect.top;
-                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                    const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                                                     setMenuPos(flipUp
                                                         ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -758,20 +757,20 @@ function EquipmentPageInner() {
                                                     <>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                     <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => handleEdit(eq, 'podaci')} style={menuItemSt}>📂 {t('open')}</button>
-                                                        <button onClick={() => handleEdit(eq, 'servis')} style={menuItemSt}>🔧 {lang !== 'en' ? 'Servisni zapisnici' : 'Service log'}</button>
-                                                        <button onClick={() => { setActionMenuId(null); setPrintSelection([eq]); setShowPrintModal(true); }} style={menuItemSt}>🖨️ {lang !== 'en' ? 'Printaj QR kod' : 'Print QR code'}</button>
+                                                        <button onClick={() => handleEdit(eq, 'podaci')} className="dropdown-item">📂 {t('open')}</button>
+                                                        <button onClick={() => handleEdit(eq, 'servis')} className="dropdown-item">🔧 {lang !== 'en' ? 'Servisni zapisnici' : 'Service log'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); setPrintSelection([eq]); setShowPrintModal(true); }} className="dropdown-item">🖨️ {lang !== 'en' ? 'Printaj QR kod' : 'Print QR code'}</button>
                                                         {docLog && (
                                                             <>
-                                                                <button onClick={() => downloadDoc(docLog)} style={menuItemSt}>📎 {lang !== 'en' ? 'Preuzmi zapisnik' : 'Download log'}</button>
-                                                                <button onClick={() => openDocInTab(docLog)} style={menuItemSt}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
+                                                                <button onClick={() => downloadDoc(docLog)} className="dropdown-item">📎 {lang !== 'en' ? 'Preuzmi zapisnik' : 'Download log'}</button>
+                                                                <button onClick={() => openDocInTab(docLog)} className="dropdown-item">🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
                                                             </>
                                                         )}
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => handleCopy(eq)} style={menuItemSt}>📋 {lang !== 'en' ? 'Kopiraj' : 'Duplicate'}</button>
-                                                        <button onClick={() => handlePrintSingle(eq)} style={menuItemSt}>🖨️ {lang !== 'en' ? 'Isprintaj podatke' : 'Print details'}</button>
+                                                        <button onClick={() => handleCopy(eq)} className="dropdown-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                        <button onClick={() => handlePrintSingle(eq)} className="dropdown-item">🖨️ {lang !== 'en' ? 'Isprintaj podatke' : 'Print details'}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => { setActionMenuId(null); handleDelete(eq.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(eq.id); }} className="dropdown-item text-danger">🗑️ {t('delete')}</button>
                                                     </div>
                                                     </>
                                                 )}
@@ -786,14 +785,13 @@ function EquipmentPageInner() {
                                                 {formatDate(eq.iduci)} {isExpired && '⚠️'}
                                             </td>
                                             <td onClick={e => e.stopPropagation()}>
-                                                {logCount > 0 ? (
+                                                {logCount> 0 ? (
                                                     <button
                                                         onClick={() => handleEdit(eq, 'servis')}
                                                         style={{ background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 10, fontSize: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer', transition: 'background 0.15s' }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,191,166,0.28)'}
-                                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(0,191,166,0.12)'}
-                                                        title={lang !== 'en' ? 'Otvori servisne zapisnike' : 'Open service log'}
-                                                    >
+                                                        
+                                                        
+                                                        title={lang !== 'en' ? 'Otvori servisne zapisnike' : 'Open service log'}>
                                                         🔧 {logCount}
                                                     </button>
                                                 ) : (

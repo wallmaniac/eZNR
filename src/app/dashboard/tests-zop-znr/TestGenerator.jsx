@@ -301,14 +301,12 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
                 <div style={{ display: 'flex', gap: 10 }}>
                     <button 
                         className={`btn ${testType === 'ZOP' ? 'btn-danger' : 'btn-outline'}`}
-                        onClick={() => setTestType('ZOP')}
-                    >
+                        onClick={() => setTestType('ZOP')}>
                         🔥 ZOP Test
                     </button>
                     <button 
                         className={`btn ${testType === 'ZNR' ? 'btn-success' : 'btn-outline'}`}
-                        onClick={() => setTestType('ZNR')}
-                    >
+                        onClick={() => setTestType('ZNR')}>
                         👷 ZNR Test
                     </button>
                 </div>
@@ -354,8 +352,7 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
                                                     background: snapshot.isDragging ? 'var(--bg-hover)' : 'var(--bg-panel)',
                                                     opacity: editingId && editingId !== q.id ? 0.5 : 1,
                                                     transition: snapshot.isDragging ? 'none' : 'opacity 0.2s'
-                                                }}
-                                            >
+                                                }}>
                                                 {editingId === q.id ? (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                                                         <div>

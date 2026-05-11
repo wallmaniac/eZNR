@@ -24,8 +24,8 @@ function isNightShift(odStr, doStr) {
     const start = parseInt((odStr || '').replace(':', ''));
     const end = parseInt((doStr || '').replace(':', ''));
     if (isNaN(start) || isNaN(end)) return false;
-    if (start > end) return true; // Spans midnight
-    if (start < 600 || end >= 2200) return true; // Touches 00:00-06:00 or >= 22:00
+    if (start> end) return true; // Spans midnight
+    if (start < 600 || end>= 2200) return true; // Touches 00:00-06:00 or>= 22:00
     return false;
 }
 
@@ -97,7 +97,7 @@ export default function WorkplacesPage() {
     const handleEdit = (item) => { setFormData({ ...item }); setEditingId(item.id); setShowForm(true); setActionMenuId(null); };
     const handleDelete = async (id) => {
         const wpWorkers = getWorkersInWorkplace(id);
-        if (wpWorkers.length > 0) {
+        if (wpWorkers.length> 0) {
             await alert(lang !== 'en' ? 'Ne možete obrisati radno mjesto koje ima zaposlenike.' : 'Cannot delete workplace with assigned workers.');
             return;
         }
@@ -151,7 +151,7 @@ export default function WorkplacesPage() {
                             return `<tr><td style="padding:4px 6px;border:1px solid #ddd">${i+1}</td><td style="padding:4px 6px;border:1px solid #ddd">${wk.ime} ${wk.prezime}</td><td style="padding:4px 6px;border:1px solid #ddd">${wk.evidencijskiBroj || '-'}</td><td style="padding:4px 6px;border:1px solid #ddd">${wkOu}</td></tr>`;
                         }).join('')}
                     </table>`}
-                ${ppeForWP.length > 0 ? `<h3 style="margin-top:20px">Za\u0161titna oprema</h3>
+                ${ppeForWP.length> 0 ? `<h3 style="margin-top:20px">Za\u0161titna oprema</h3>
                     <ul>${ppeForWP.map(p => `<li>${p.naziv || p.name || '-'}</li>`).join('')}</ul>` : ''}
             </div>`;
         }).join('');
@@ -193,10 +193,9 @@ export default function WorkplacesPage() {
                                             borderBottom: idx < panelWorkers.length - 1 ? '1px solid var(--border-light)' : 'none',
                                             cursor: 'pointer', transition: 'background 0.15s',
                                         }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                        onClick={() => { setViewWorkerId(w.id); }}
-                                    >
+                                        
+                                        
+                                        onClick={() => { setViewWorkerId(w.id); }}>
                                         <div style={{
                                             width: 42, height: 42, borderRadius: '50%',
                                             background: 'linear-gradient(135deg, var(--primary), #4CAF50)',
@@ -351,7 +350,7 @@ export default function WorkplacesPage() {
                             <input type="checkbox" checked={showActive} onChange={e => setShowActive(e.target.checked)} />
                             {lang !== 'en' ? 'Prikaži aktivne' : 'Show active'}
                         </label>
-                        {selectedIds.size > 0 && (
+                        {selectedIds.size> 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                     {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:
@@ -368,7 +367,7 @@ export default function WorkplacesPage() {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedWP.length && sortedWP.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedWP.length && sortedWP.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th style={tsWP('naziv')} onClick={() => tWP('naziv')}>{t('name')}{siWP('naziv')}</th>
                                     <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{lang !== 'en' ? 'Stručna sprema' : 'Education'}{siWP('strucnaSprema')}</th>
@@ -383,16 +382,14 @@ export default function WorkplacesPage() {
                                 ) : sortedWP.map((w) => {
                                     const count = getWorkersInWorkplace(w.id).length;
                                     return (
-                                        <tr key={w.id} onClick={() => handleEdit(w)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                        <tr key={w.id} onClick={() => handleEdit(w)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                                             <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selectedIds.has(w.id)} onChange={() => toggleOne(w.id)} style={{ cursor: 'pointer', width: 16, height: 16 }} /></td>
                                             <td onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
                                                 <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => {
                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                     const spaceBelow = window.innerHeight - rect.bottom;
                                                     const spaceAbove = rect.top;
-                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                    const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                                                     setMenuPos(flipUp
                                                         ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
@@ -405,10 +402,10 @@ export default function WorkplacesPage() {
                                                     <>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                     <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => handleEdit(w)} style={menuItemSt}>📂 {t('open')}</button>
-                                                        <button onClick={() => openWorkersPanel(w)} style={menuItemSt}>👥 {lang !== 'en' ? 'Pregled radnika' : 'View workers'}</button>
+                                                        <button onClick={() => handleEdit(w)} className="dropdown-item">📂 {t('open')}</button>
+                                                        <button onClick={() => openWorkersPanel(w)} className="dropdown-item">👥 {lang !== 'en' ? 'Pregled radnika' : 'View workers'}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => { setActionMenuId(null); handleDelete(w.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {t('delete')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(w.id); }} className="dropdown-item text-danger">🗑️ {t('delete')}</button>
                                                     </div>
                                                     </>
                                                 )}
@@ -422,13 +419,12 @@ export default function WorkplacesPage() {
                                             <td>{w.grupaRM || '-'}</td>
                                             {/* Clickable badge */}
                                             <td onClick={e => e.stopPropagation()}>
-                                                <button onClick={() => openWorkersPanel(w)} style={{ background: 'none', border: 'none', cursor: count > 0 ? 'pointer' : 'default', padding: 0 }}>
-                                                    <span className={`badge ${count > 0 ? 'badge-primary' : 'badge-info'}`}
-                                                        style={{ cursor: count > 0 ? 'pointer' : 'default', transition: 'transform 0.15s' }}
-                                                        onMouseEnter={e => count > 0 && (e.target.style.transform = 'scale(1.1)')}
-                                                        onMouseLeave={e => (e.target.style.transform = 'scale(1)')}
-                                                    >
-                                                        {count} {count > 0 ? '👁' : ''}
+                                                <button onClick={() => openWorkersPanel(w)} style={{ background: 'none', border: 'none', cursor: count> 0 ? 'pointer' : 'default', padding: 0 }}>
+                                                    <span className={`badge ${count> 0 ? 'badge-primary' : 'badge-info'}`}
+                                                        style={{ cursor: count> 0 ? 'pointer' : 'default', transition: 'transform 0.15s' }}
+                                                        onMouseEnter={e => count> 0 && (e.target.style.transform = 'scale(1.1)')}
+                                                        onMouseLeave={e => (e.target.style.transform = 'scale(1)')}>
+                                                        {count} {count> 0 ? '👁' : ''}
                                                     </span>
                                                 </button>
                                             </td>

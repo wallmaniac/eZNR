@@ -142,7 +142,7 @@ export default function QuestionnairesPage() {
     recs.forEach(q => {
       getSessionsForQuestionnaire(q.id)
         .then(sessions => {
-          if (sessions && sessions.length > 0) {
+          if (sessions && sessions.length> 0) {
             setCompletionStats(prev => ({
               ...prev,
               [q.id]: {
@@ -243,7 +243,7 @@ export default function QuestionnairesPage() {
     const checkVisible = () => {
       if (!menuButtonRef.current) return;
       const rect = menuButtonRef.current.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > window.innerHeight) setOpenMenuId(null);
+      if (rect.bottom < 0 || rect.top> window.innerHeight) setOpenMenuId(null);
     };
     window.addEventListener('scroll', checkVisible, true);
     return () => window.removeEventListener('scroll', checkVisible, true);
@@ -479,7 +479,7 @@ export default function QuestionnairesPage() {
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRecords.length && sortedRecords.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedRecords.length && sortedRecords.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 100 }}>{t('actions')}</th>
                     <th style={{ ...tsRec('naziv'), minWidth: 240 }} onClick={() => tRec('naziv')}>{lang !== 'en' ? 'Naziv' : 'Name'}{siRec('naziv')}</th>
                     <th style={tsRec('zaVrstu')} onClick={() => tRec('zaVrstu')}>{lang !== 'en' ? 'Vrsta ankete' : 'Survey type'}{siRec('zaVrstu')}</th>
@@ -494,9 +494,7 @@ export default function QuestionnairesPage() {
                   {sortedRecords.length === 0 ? (
                     <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                   ) : sortedRecords.map(r => (
-                    <tr key={r.id} onClick={() => handleEdit(r)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}
-                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                        onMouseLeave={e => e.currentTarget.style.background = ''}>
+                    <tr key={r.id} onClick={() => handleEdit(r)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                       <td style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                           <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleOne(r.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                       </td>
@@ -512,14 +510,13 @@ export default function QuestionnairesPage() {
                               menuButtonRef.current = e.currentTarget;
                               const spaceBelow = window.innerHeight - rect.bottom - 8;
                               const spaceAbove = rect.top - 8;
-                              const flipUp = spaceBelow < 200 && spaceAbove > spaceBelow;
+                              const flipUp = spaceBelow < 200 && spaceAbove> spaceBelow;
                               setMenuPos(flipUp
                                 ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                               );
                               setOpenMenuId(r.id);
-                            }}
-                          >
+                            }}>
                             {lang !== 'en' ? 'Akcije' : 'Actions'} ▼
                           </button>
                           {openMenuId === r.id && (
@@ -571,8 +568,7 @@ export default function QuestionnairesPage() {
                           textDecoration: 'none', transition: 'opacity 0.15s',
                         }}
                           onMouseEnter={e => e.target.style.textDecoration = 'underline'}
-                          onMouseLeave={e => e.target.style.textDecoration = 'none'}
-                        >
+                          onMouseLeave={e => e.target.style.textDecoration = 'none'}>
                           {r.naziv || '—'}
                         </span>
                       </td>
@@ -580,15 +576,14 @@ export default function QuestionnairesPage() {
                       <td>
                         {completionStats[r.id] ? (() => {
                           const cs = completionStats[r.id];
-                          const pct = cs.total > 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
+                          const pct = cs.total> 0 ? Math.round((cs.completed / cs.total) * 100) : 0;
                           return (
                             <div 
                                 onClick={(e) => { e.stopPropagation(); setResultsQuestionnaire(r); setView('results'); }}
                                 style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
-                                onMouseEnter={e => e.currentTarget.style.background = 'rgba(99,102,241,0.1)'}
-                                onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-                                title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}
-                            >
+                                
+                                
+                                title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}>
                               <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
                               </div>
@@ -1049,8 +1044,7 @@ export default function QuestionnairesPage() {
                     className="btn btn-outline btn-sm" 
                     style={{ marginTop: 8, width: '100%', borderColor: 'var(--primary)', color: 'var(--primary)' }}
                     onClick={handleTranslate}
-                    disabled={translating}
-                  >
+                    disabled={translating}>
                     {translating ? '⏳ Prevodim...' : '🤖 Prevedi pitanja (AI)'}
                   </button>
                 )}

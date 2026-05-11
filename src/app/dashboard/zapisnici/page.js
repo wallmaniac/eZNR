@@ -42,7 +42,7 @@ async function extractDocxText(ab) {
     const f = zip.file('word/document.xml');
     if (!f) throw new Error('Not a valid .docx file');
     const xml = await f.async('string');
-    return xml.replace(/<w:p[ >]/g, '\n<w:p ').replace(/<w:br[^>]*>/g, '\n').replace(/<[^>]+>/g, '')
+    return xml.replace(/<w:p[>]/g, '\n<w:p ').replace(/<w:br[^>]*>/g, '\n').replace(/<[^>]+>/g, '')
         .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"')
         .replace(/\n{3,}/g, '\n\n').trim();
 }
@@ -131,7 +131,7 @@ export default function ZapisniciPage() {
     }, [actionMenuId]);
 
     const toggleAll = () => {
-        if (selectedIds.size === sorted.length && sorted.length > 0) setSelectedIds(new Set());
+        if (selectedIds.size === sorted.length && sorted.length> 0) setSelectedIds(new Set());
         else setSelectedIds(new Set(sorted.map(x => x.id)));
     };
     const toggleOne = (id) => {
@@ -241,7 +241,7 @@ export default function ZapisniciPage() {
 
     const handleFileUpload = (file) => {
         if (!file) return;
-        if (file.size > 50 * 1024 * 1024) { alert('Max 50MB!'); return; }
+        if (file.size> 50 * 1024 * 1024) { alert('Max 50MB!'); return; }
         setPendingFile(file);
         setF('attachedFileName', file.name);
         setF('attachedFileSize', file.size);
@@ -272,7 +272,7 @@ export default function ZapisniciPage() {
     useEffect(() => { workersRef.current = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false); }, []);
 
     const handleFileRead = useCallback(async (file) => {
-        if (file.size > 20 * 1024 * 1024) { await alert('Max 20MB!'); return; }
+        if (file.size> 20 * 1024 * 1024) { await alert('Max 20MB!'); return; }
         setDocFile({ name: file.name, type: file.type });
         setExtractError(''); setExtracting(true); setStep('upload');
         try {
@@ -396,8 +396,7 @@ export default function ZapisniciPage() {
                                                 <button
                                                     onClick={() => handleOpen({ idbKey: form.idbKey, attachedFileName: form.attachedFileName })}
                                                     style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', padding: 0, color: 'var(--primary)', fontSize: '0.85rem', fontWeight: 600, textDecoration: 'underline', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                                                    title={lang !== 'en' ? 'Klikni za pregledavanje / ispis' : 'Click to view / print'}
-                                                >
+                                                    title={lang !== 'en' ? 'Klikni za pregledavanje / ispis' : 'Click to view / print'}>
                                                     {form.attachedFileName}
                                                 </button>
                                             ) : (
@@ -445,7 +444,7 @@ export default function ZapisniciPage() {
                             </div>
 
                             {/* Grupne akcije */}
-                            {selectedIds.size > 0 ? (
+                            {selectedIds.size> 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
                                         {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} — Grupne akcije:
@@ -480,7 +479,7 @@ export default function ZapisniciPage() {
                                             <tr>
                                                 <th style={{ width: 40, textAlign: 'center' }}>
                                                     <input type="checkbox"
-                                                        checked={selectedIds.size === sorted.length && sorted.length > 0}
+                                                        checked={selectedIds.size === sorted.length && sorted.length> 0}
                                                         onChange={toggleAll}
                                                         style={{ cursor: 'pointer', accentColor: 'var(--primary)' }}
                                                     />
@@ -495,10 +494,7 @@ export default function ZapisniciPage() {
                                         </thead>
                                         <tbody>
                                             {sorted.map(item => (
-                                                <tr key={item.id}
-                                                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                    onMouseLeave={e => e.currentTarget.style.background = ''}
-                                                >
+                                                <tr key={item.id}>
                                                     {/* Checkbox */}
                                                     <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                         <input type="checkbox"
@@ -519,14 +515,13 @@ export default function ZapisniciPage() {
                                                                     const rect = e.currentTarget.getBoundingClientRect();
                                                                     const spaceBelow = window.innerHeight - rect.bottom - 8;
                                                                     const spaceAbove = rect.top - 8;
-                                                                    const flipUp = spaceBelow < 280 && spaceAbove > spaceBelow;
+                                                                    const flipUp = spaceBelow < 280 && spaceAbove> spaceBelow;
                                                                     setMenuPos(flipUp
                                                                         ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) }
                                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                                     );
                                                                     setActionMenuId(item.id);
-                                                                }}
-                                                            >
+                                                                }}>
                                                                 {lang !== 'en' ? 'Akcije' : 'Actions'} ▼
                                                             </button>
 
@@ -540,15 +535,15 @@ export default function ZapisniciPage() {
                                                                         borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)',
                                                                         minWidth: 210, maxHeight: menuPos.maxH, overflowY: 'auto',
                                                                     }}>
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} style={menuItemSt}>✏️ {lang !== 'en' ? 'Otvori' : 'Open'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleEdit(item); }} className="dropdown-item">✏️ {lang !== 'en' ? 'Otvori' : 'Open'}</button>
                                                                         {item.idbKey && <>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} style={menuItemSt}>📂 {lang !== 'en' ? 'Otvori zapisnik' : 'Open record'}</button>
-                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} style={menuItemSt}>📥 {lang !== 'en' ? 'Preuzmi zapisnik' : 'Download record'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpen(item); }} className="dropdown-item">📂 {lang !== 'en' ? 'Otvori zapisnik' : 'Open record'}</button>
+                                                                            <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDownload(item); }} className="dropdown-item">📥 {lang !== 'en' ? 'Preuzmi zapisnik' : 'Download record'}</button>
                                                                         </>}
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} style={menuItemSt}>📋 {lang !== 'en' ? 'Kopiraj' : 'Duplicate'}</button>
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} style={menuItemSt}>✉️ {lang !== 'en' ? 'Pošalji email' : 'Send email'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDuplicate(item); }} className="dropdown-item">📋 {lang !== 'en' ? 'Kopiraj' : 'Duplicate'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleOpenEmailModal(item); }} className="dropdown-item">✉️ {lang !== 'en' ? 'Pošalji email' : 'Send email'}</button>
                                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDelete(item); }} style={{ ...menuItemSt, color: 'var(--danger)' }}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                                                                        <button onMouseDown={e => { e.stopPropagation(); setActionMenuId(null); handleDelete(item); }} className="dropdown-item text-danger">🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
                                                                     </div>
                                                                 </>
                                                             )}
@@ -561,8 +556,7 @@ export default function ZapisniciPage() {
                                                             onClick={() => handleEdit(item)}
                                                             style={{ fontWeight: 600, color: 'var(--primary)', cursor: 'pointer' }}
                                                             onMouseEnter={e => e.currentTarget.style.textDecoration = 'underline'}
-                                                            onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}
-                                                        >
+                                                            onMouseLeave={e => e.currentTarget.style.textDecoration = 'none'}>
                                                             {item.naziv}
                                                         </div>
                                                         {item.napomena && <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>{item.napomena}</div>}
@@ -656,8 +650,7 @@ export default function ZapisniciPage() {
                                     onDragOver={e => { e.preventDefault(); setDragging(true); }}
                                     onDragLeave={() => setDragging(false)}
                                     onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) handleFileRead(f); }}
-                                    onClick={() => corrFileRef.current?.click()}
-                                >
+                                    onClick={() => corrFileRef.current?.click()}>
                                     <div style={{ fontSize: '3rem', marginBottom: 12 }}>{extracting ? '⏳' : dragging ? '📂' : '📋'}</div>
                                     <div style={{ fontWeight: 700, fontSize: '1.05rem', marginBottom: 6 }}>
                                         {extracting ? (lang !== 'en' ? 'Čitanje dokumenta...' : 'Extracting text...')
@@ -748,7 +741,7 @@ export default function ZapisniciPage() {
                             <div style={{ display: 'flex', gap: 10, marginTop: 16, alignItems: 'center' }}>
                                 <button className="btn btn-primary" onClick={handleGenerate} disabled={generating || activeChanges === 0}>
                                     {generating ? '⏳' : '📥'} {lang !== 'en' ? 'Generiši ispravljen dokument' : 'Generate corrected document'}
-                                    {activeChanges > 0 && <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>{activeChanges}</span>}
+                                    {activeChanges> 0 && <span style={{ marginLeft: 6, background: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: '1px 7px', fontSize: '0.75rem' }}>{activeChanges}</span>}
                                 </button>
                                 <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: true })))}>✓ {lang !== 'en' ? 'Označi sve' : 'Select all'}</button>
                                 <button className="btn btn-ghost" onClick={() => setRows(r => r.map(x => ({ ...x, keep: false })))}>✗ {lang !== 'en' ? 'Odznači sve' : 'Deselect all'}</button>

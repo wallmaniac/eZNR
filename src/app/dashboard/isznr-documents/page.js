@@ -153,7 +153,7 @@ export default function ISZNRDocumentsPage() {
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
                         <SavedFlash />
-                        {selectedIds.size > 0 ? (
+                        {selectedIds.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
                                 <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
@@ -165,7 +165,7 @@ export default function ISZNRDocumentsPage() {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('partyId')} style={thStyle('partyId')}>{bs ? 'Stranka' : 'Party'} {sortIcon('partyId')}</th>
                                     <th onClick={() => toggleSort('naslov')} style={thStyle('naslov')}>{bs ? 'Naslov' : 'Title'} {sortIcon('naslov')}</th>
@@ -178,17 +178,17 @@ export default function ISZNRDocumentsPage() {
                                 {sorted.length === 0 ? (
                                     <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sorted.map((doc) => (
-                                    <tr key={doc.id} onClick={() => handleEdit(doc)} style={{ cursor: 'pointer', transition: 'background 0.12s' }} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>
+                                    <tr key={doc.id} onClick={() => handleEdit(doc)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                                         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}><input type="checkbox" checked={selectedIds.has(doc.id)} onChange={() => toggleOne(doc.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></td>
                                         <td onClick={e => e.stopPropagation()}>
                                             <div style={{ position: 'relative' }}>
-                                                <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (actionMenuId === doc.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 150 && spaceAbove > spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(doc.id); }}>Akcije ▼</button>
+                                                <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); if (actionMenuId === doc.id) { setActionMenuId(null); return; } const rect = e.currentTarget.getBoundingClientRect(); const spaceBelow = window.innerHeight - rect.bottom - 8; const spaceAbove = rect.top - 8; const flipUp = spaceBelow < 150 && spaceAbove> spaceBelow; setMenuPos(flipUp ? { top: undefined, bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, spaceAbove - 15) } : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }); setActionMenuId(doc.id); }}>Akcije ▼</button>
                                                 {actionMenuId === doc.id && (
                                                     <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => handleEdit(doc)} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>📂 {t('open')}</button>
-                                                        <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, { potpisano: !doc.potpisano }); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background='var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background=''}>✍️ {doc.potpisano ? (bs ? 'Ukloni potpis' : 'Remove signature') : t('digitalSigning')}</button>
+                                                        <button onClick={() => handleEdit(doc)} className="dropdown-item">📂 {t('open')}</button>
+                                                        <button onClick={() => { setActionMenuId(null); update(COLLECTIONS.ISZNR_DOCUMENTS, doc.id, { potpisano: !doc.potpisano }); loadData(); showFlash(); }} className="dropdown-item">✍️ {doc.potpisano ? (bs ? 'Ukloni potpis' : 'Remove signature') : t('digitalSigning')}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => handleDelete(doc.id)} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background='rgba(239,68,68,0.06)'} onMouseLeave={e => e.currentTarget.style.background=''}>🗑️ {t('delete')}</button>
+                                                        <button onClick={() => handleDelete(doc.id)} className="dropdown-item text-danger">🗑️ {t('delete')}</button>
                                                     </div>
                                                 )}
                                             </div>

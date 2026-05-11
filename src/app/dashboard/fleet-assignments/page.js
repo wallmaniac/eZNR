@@ -239,7 +239,7 @@ function FleetAssignmentsInner() {
                         }}>+ {bs ? 'Novo zaduženje' : 'New Assignment'}</button>
                         <SavedFlash />
                         <input className="form-input" style={{ maxWidth: 300, marginLeft: 12 }} placeholder={bs ? '🔍 Pretraži zaduženja...' : '🔍 Search assignments...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
-                        {selectedIds.size > 0 ? (
+                        {selectedIds.size> 0 ? (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
                                 <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
@@ -250,7 +250,7 @@ function FleetAssignmentsInner() {
                         <table className="data-table">
                             <thead>
                                 <tr>
-                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                    <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                     <th style={{ width: 90 }}>{t('actions')}</th>
                                     <th onClick={() => toggleSort('vehicleReg')} style={thStyle('vehicleReg')}>{bs ? 'Vozilo' : 'Vehicle'}{sortIcon('vehicleReg')}</th>
                                     <th onClick={() => toggleSort('workerName')} style={thStyle('workerName')}>{bs ? 'Vozač' : 'Driver'}{sortIcon('workerName')}</th>
@@ -264,9 +264,7 @@ function FleetAssignmentsInner() {
                                 {sorted.length === 0 ? (
                                     <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                 ) : sorted.map(a => (
-                                    <tr key={a.id} onClick={() => openInFleet(a.vehicleId)} style={{ cursor: 'pointer' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                    <tr key={a.id} onClick={() => openInFleet(a.vehicleId)} style={{ cursor: 'pointer' }}>
                                         <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                             <input type="checkbox" checked={selectedIds.has(a.id)} onChange={() => toggleOne(a.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                         </td>
@@ -276,10 +274,10 @@ function FleetAssignmentsInner() {
                                                 {actionMenuId === a.id && (<>
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                     <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                        <button onClick={() => { setActionMenuId(null); openInFleet(a.vehicleId); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                        <button onClick={() => { setActionMenuId(null); handleCopy(a); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); openInFleet(a.vehicleId); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleCopy(a); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                        <button onClick={() => { setActionMenuId(null); handleDelete(a.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                        <button onClick={() => { setActionMenuId(null); handleDelete(a.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                     </div>
                                                 </>)}
                                             </div>

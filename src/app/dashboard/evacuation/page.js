@@ -152,7 +152,7 @@ export default function EvacuationPage() {
                         { label: bs ? 'Ukupno planova' : 'Total Plans', val: stats.totalPlans, icon: '🗺️', color: 'var(--primary)' },
                         { label: bs ? 'Aktivni planovi' : 'Active Plans', val: stats.activePlans, icon: '✅', color: '#22C55E' },
                         { label: bs ? 'Ukupno vježbi' : 'Total Drills', val: stats.totalDrills, icon: '🏃', color: '#6366F1' },
-                        { label: bs ? 'Dana od zadnje vježbe' : 'Days Since Last Drill', val: stats.daysSinceDrill !== null ? stats.daysSinceDrill : '—', icon: stats.daysSinceDrill > 365 ? '🔴' : '📅', color: stats.daysSinceDrill > 365 ? '#EF4444' : '#F59E0B' },
+                        { label: bs ? 'Dana od zadnje vježbe' : 'Days Since Last Drill', val: stats.daysSinceDrill !== null ? stats.daysSinceDrill : '—', icon: stats.daysSinceDrill> 365 ? '🔴' : '📅', color: stats.daysSinceDrill> 365 ? '#EF4444' : '#F59E0B' },
                     ].map((s, i) => (
                         <div key={i} className="card" style={{ padding: '16px 20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -218,8 +218,8 @@ export default function EvacuationPage() {
                                                         <div style={{ padding: '12px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>{bs ? 'Nema radnika' : 'No workers'}</div>
                                                     ) : filteredWorkers.slice(0, 15).map(w => (
                                                         <button key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
-                                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                                                            
+                                                            
                                                             onClick={() => handleWorkerSelect(w)}>
                                                             <span style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--primary)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem', flexShrink: 0 }}>{w.ime?.[0]}{w.prezime?.[0]}</span>
                                                             <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{w.ime} {w.prezime}</div>
@@ -259,7 +259,7 @@ export default function EvacuationPage() {
                                 <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             </div>
                             <SavedFlash />
-                            {selectedIds.size > 0 ? (
+                            {selectedIds.size> 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
                                     <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>??? {bs ? 'Obri�i' : 'Delete'}</button>
@@ -270,7 +270,7 @@ export default function EvacuationPage() {
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                                        <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                                         <th style={{ width: 90 }}>{t('actions')}</th>
                                         <th onClick={() => toggleSort('lokacija')} style={thStyle('lokacija')}>{bs ? 'Lokacija' : 'Location'}{sortIcon('lokacija')}</th>
                                         <th onClick={() => toggleSort('odgovornaOsobaIme')} style={thStyle('odgovornaOsobaIme')}>{bs ? 'Odgovorna osoba' : 'Responsible'}{sortIcon('odgovornaOsobaIme')}</th>
@@ -293,9 +293,7 @@ export default function EvacuationPage() {
                                         };
                                         const st = statusMap[p.status] || statusMap.aktivan;
                                         return (
-                                            <tr key={p.id} onClick={() => openEdit(p)} style={{ cursor: 'pointer' }}
-                                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                                onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                            <tr key={p.id} onClick={() => openEdit(p)} style={{ cursor: 'pointer' }}>
                                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                                     <input type="checkbox" checked={selectedIds.has(p.id)} onChange={() => toggleOne(p.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                                 </td>
@@ -306,12 +304,12 @@ export default function EvacuationPage() {
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                                    <button onClick={() => { setActionMenuId(null); openEdit(p); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Otvori' : 'Open'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...p }; delete copy.id; copy.lokacija = copy.lokacija + (bs ? ' (Kopija)' : ' (Copy)'); copy.status = 'aktivan'; create(COLLECTIONS.EVACUATION_PLANS, copy); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { aktivan: 'revizija', revizija: 'neaktivan', neaktivan: 'aktivan' }; const statusLabels = { aktivan: { bs: 'Aktivan', en: 'Active' }, revizija: { bs: 'Revizija', en: 'Revision' }, neaktivan: { bs: 'Neaktivan', en: 'Inactive' } }; update(COLLECTIONS.EVACUATION_PLANS, p.id, { status: cycle[p.status] || 'aktivan' }); loadData(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🔄 {bs ? `Status → ${{ aktivan: 'Revizija', revizija: 'Neaktivan', neaktivan: 'Aktivan' }[p.status] || 'Aktivan'}` : `Status → ${{ aktivan: 'Revision', revizija: 'Inactive', neaktivan: 'Active' }[p.status] || 'Active'}`}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); create(COLLECTIONS.EVACUATION_DRILLS, { planId: p.id, lokacija: p.lokacija, datumVjezbe: new Date().toISOString().split('T')[0], status: 'zavrsena', napomena: bs ? 'Vježba kreirana iz plana' : 'Drill created from plan' }); loadData(); showFlash(); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🏃 {bs ? 'Zakaži vježbu' : 'Schedule Drill'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); openEdit(p); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const copy = { ...p }; delete copy.id; copy.lokacija = copy.lokacija + (bs ? ' (Kopija)' : ' (Copy)'); copy.status = 'aktivan'; create(COLLECTIONS.EVACUATION_PLANS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { aktivan: 'revizija', revizija: 'neaktivan', neaktivan: 'aktivan' }; const statusLabels = { aktivan: { bs: 'Aktivan', en: 'Active' }, revizija: { bs: 'Revizija', en: 'Revision' }, neaktivan: { bs: 'Neaktivan', en: 'Inactive' } }; update(COLLECTIONS.EVACUATION_PLANS, p.id, { status: cycle[p.status] || 'aktivan' }); loadData(); }} className="dropdown-item">🔄 {bs ? `Status → ${{ aktivan: 'Revizija', revizija: 'Neaktivan', neaktivan: 'Aktivan' }[p.status] || 'Aktivan'}` : `Status → ${{ aktivan: 'Revision', revizija: 'Inactive', neaktivan: 'Active' }[p.status] || 'Active'}`}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); create(COLLECTIONS.EVACUATION_DRILLS, { planId: p.id, lokacija: p.lokacija, datumVjezbe: new Date().toISOString().split('T')[0], status: 'zavrsena', napomena: bs ? 'Vježba kreirana iz plana' : 'Drill created from plan' }); loadData(); showFlash(); }} className="dropdown-item">🏃 {bs ? 'Zakaži vježbu' : 'Schedule Drill'}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(p.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); handleDelete(p.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>
                                                             </>
                                                         )}
@@ -328,7 +326,7 @@ export default function EvacuationPage() {
                                                 <td>{formatDate(p.datumRevizije)}</td>
                                                 <td style={{ textAlign: 'center' }}>{p.brojEvakuacijskihPuteva || '—'}</td>
                                                 <td style={{ textAlign: 'center' }}>
-                                                    <span className={`badge ${planDrills.length > 0 ? 'badge-success' : 'badge-warning'}`}>
+                                                    <span className={`badge ${planDrills.length> 0 ? 'badge-success' : 'badge-warning'}`}>
                                                         {planDrills.length}
                                                     </span>
                                                 </td>

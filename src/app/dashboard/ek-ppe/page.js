@@ -101,12 +101,11 @@ export default function EKPPEPage() {
             />
             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
           </div>
-          {selected.size > 0 && (
+          {selected.size> 0 && (
             <button
               className="btn btn-sm"
               style={{ background: 'var(--danger)', color: '#fff', fontWeight: 700 }}
-              onClick={handleDeleteSelected}
-            >
+              onClick={handleDeleteSelected}>
               🗑️ {lang !== 'en' ? `Obriši označene (${selected.size})` : `Delete selected (${selected.size})`}
             </button>
           )}
@@ -120,7 +119,7 @@ export default function EKPPEPage() {
           <div className="data-table-wrapper"><table className="data-table">
             <thead><tr>
               <th style={{ width: 40, textAlign: 'center' }}>
-                <input type="checkbox" checked={sorted.length > 0 && selected.size === sorted.length} onChange={toggleAll} title={lang !== 'en' ? 'Označi sve' : 'Select all'} />
+                <input type="checkbox" checked={sorted.length> 0 && selected.size === sorted.length} onChange={toggleAll} title={lang !== 'en' ? 'Označi sve' : 'Select all'} />
               </th>
               <th style={{ width: 44 }}>Rb.</th>
               <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang !== 'en' ? 'Naziv OZO' : 'PPE Name'}{sortIcon('naziv')}</th>
@@ -144,8 +143,7 @@ export default function EKPPEPage() {
                           className="btn btn-primary btn-sm"
                           title={lang !== 'en' ? 'Zaduži radniku' : 'Assign to worker'}
                           onClick={() => handleOpenAssign(p)}
-                          style={{ fontSize: '0.78rem' }}
-                        >
+                          style={{ fontSize: '0.78rem' }}>
                           👤 {lang !== 'en' ? 'Zaduži' : 'Assign'}
                         </button>
                         <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Uredi naziv' : 'Edit name'} onClick={() => handleEdit(p)}>✏️</button>

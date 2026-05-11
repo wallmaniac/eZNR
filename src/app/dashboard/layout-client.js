@@ -28,8 +28,8 @@ export default function DashboardLayout({ children }) {
         const handleResize = () => {
             const w = window.innerWidth;
             const mobile = w < 768;
-            const tablet = w >= 768 && w <= 1024;
-            const desktop = w > 1024;
+            const tablet = w>= 768 && w <= 1024;
+            const desktop = w> 1024;
 
             setIsMobile(mobile);
             setIsTablet(tablet);

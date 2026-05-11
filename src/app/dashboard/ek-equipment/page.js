@@ -35,10 +35,7 @@ export default function EKEquipmentPage() {
               return (
                 <tr key={e.id}
                   onClick={() => router.push(`/dashboard/equipment?openItem=${e.id}&returnTo=/dashboard/ek-equipment`)}
-                  style={{ cursor: 'pointer', transition: 'background 0.12s' }}
-                  onMouseEnter={ev => ev.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                  onMouseLeave={ev => ev.currentTarget.style.background = ''}
-                >
+                  style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                   <td>{idx + 1}</td><td style={{ fontWeight: 600 }}>{e.naziv}</td><td>{e.proizvodjac || '-'}</td><td><code>{e.tvBroj || '-'}</code></td>
                   <td style={{ color: isOverdue ? 'var(--danger)' : undefined, fontWeight: isOverdue ? 700 : undefined }}>{formatDate(e.sljedeciPregled)} {isOverdue && '⚠️'}</td>
                   <td><span className={`badge ${e.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{e.status === 'active' ? '✓' : '✗'}</span></td>

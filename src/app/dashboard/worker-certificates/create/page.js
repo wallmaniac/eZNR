@@ -387,8 +387,7 @@ export function UvjerenjeFormPage() {
                     <button 
                         onClick={() => setIsSingleWorkerMode(!isSingleWorkerMode)}
                         className="btn btn-outline btn-sm"
-                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}
-                    >
+                        style={{ padding: '4px 10px', fontSize: '0.75rem' }}>
                         {isSingleWorkerMode 
                             ? (lang !== 'en' ? '▼ Prikaži listu radnika' : '▼ Show workers list') 
                             : (lang !== 'en' ? '▲ Sakrij listu radnika' : '▲ Hide workers list')
@@ -409,14 +408,13 @@ export function UvjerenjeFormPage() {
                         <div style={labelStyle}>{lang !== 'en' ? 'Djelatnik (Radnik)' : 'Worker'} *</div>
                         <div
                             style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
-                            onClick={() => setShowWorkerDropdown(v => !v)}
-                        >
+                            onClick={() => setShowWorkerDropdown(v => !v)}>
                             <span style={{ flex: 1, fontSize: '0.88rem', color: selectedWorkerIds.size ? 'var(--text)' : 'var(--text-muted)' }}>
-                                {selectedWorkerIds.size > 0 
+                                {selectedWorkerIds.size> 0 
                                     ? getWorkerName(Array.from(selectedWorkerIds)[0])
                                     : (lang !== 'en' ? 'Odaberite radnika...' : 'Select worker...')}
                             </span>
-                            {selectedWorkerIds.size > 0 && (
+                            {selectedWorkerIds.size> 0 && (
                                 <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem', padding: '0 2px' }}
                                     onClick={e => { e.stopPropagation(); setSelectedWorkerIds(new Set()); setWorkerSearch(''); }}>×</button>
                             )}
@@ -431,7 +429,7 @@ export function UvjerenjeFormPage() {
                                     />
                                 </div>
                                 {filteredWorkers.map(w => (
-                                    <div key={w.id} onClick={() => { setSelectedWorkerIds(new Set([w.id])); setShowWorkerDropdown(false); setWorkerSearch(''); }} style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', display: 'flex', flexDirection: 'column' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                    <div key={w.id} onClick={() => { setSelectedWorkerIds(new Set([w.id])); setShowWorkerDropdown(false); setWorkerSearch(''); }} style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', display: 'flex', flexDirection: 'column' }}>
                                         <div style={{ fontWeight: 600 }}>{w.ime} {w.prezime}</div>
                                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getWorkplaceName(w.radnoMjestoId)} • {getOrgUnitName(w.orgJedinicaId)}</div>
                                     </div>
@@ -462,8 +460,7 @@ export function UvjerenjeFormPage() {
                                     className="btn btn-ghost btn-sm"
                                     style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
                                     onClick={() => setShowNewTypeForm(true)}
-                                    title={lang !== 'en' ? 'Dodaj novi tip' : 'Add new type'}
-                                >+</button>
+                                    title={lang !== 'en' ? 'Dodaj novi tip' : 'Add new type'}>+</button>
                             </div>
                             <div
                                 style={{
@@ -472,8 +469,7 @@ export function UvjerenjeFormPage() {
                                     background: 'var(--bg-input)', padding: '0 8px', minHeight: 38,
                                     cursor: 'pointer',
                                 }}
-                                onClick={() => setShowTipDropdown(v => !v)}
-                            >
+                                onClick={() => setShowTipDropdown(v => !v)}>
                                 <span style={{ flex: 1, fontSize: '0.88rem', color: formData.tipUvjerenjaIme ? 'var(--text)' : 'var(--text-muted)' }}>
                                     {formData.tipUvjerenjaIme || (lang !== 'en' ? 'Odaberite tip...' : 'Select type...')}
                                 </span>
@@ -504,10 +500,7 @@ export function UvjerenjeFormPage() {
                                                 padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem',
                                                 background: formData.tipUvjerenjaId === ct.id ? 'var(--primary)' : undefined,
                                                 color: formData.tipUvjerenjaId === ct.id ? 'white' : undefined,
-                                            }}
-                                            onMouseEnter={e => { if (formData.tipUvjerenjaId !== ct.id) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
-                                            onMouseLeave={e => { if (formData.tipUvjerenjaId !== ct.id) e.currentTarget.style.background = ''; }}
-                                        >
+                                            }}>
                                             {ct.naziv}
                                         </div>
                                     ))}
@@ -518,10 +511,7 @@ export function UvjerenjeFormPage() {
                                     )}
                                     <div
                                         onClick={() => { setShowTipDropdown(false); setShowNewTypeForm(true); setTipSearch(''); }}
-                                        style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', borderTop: '1px solid var(--border-light)', fontWeight: 600, color: 'var(--primary)' }}
-                                        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                        onMouseLeave={e => e.currentTarget.style.background = ''}
-                                    >
+                                        style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', borderTop: '1px solid var(--border-light)', fontWeight: 600, color: 'var(--primary)' }}>
                                         + {lang !== 'en' ? 'Ostalo...' : 'Other...'}
                                     </div>
                                 </div>
@@ -586,13 +576,11 @@ export function UvjerenjeFormPage() {
                                     className="btn btn-ghost btn-sm"
                                     style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
                                     onClick={e => { e.preventDefault(); setShowNewExaminerForm(true); setShowIspitivacDropdown(false); }}
-                                    title={lang !== 'en' ? 'Dodaj novog ispitivača' : 'Add new examiner'}
-                                >+</button>
+                                    title={lang !== 'en' ? 'Dodaj novog ispitivača' : 'Add new examiner'}>+</button>
                             </div>
                             <div
                                 style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
-                                onClick={() => setShowIspitivacDropdown(v => !v)}
-                            >
+                                onClick={() => setShowIspitivacDropdown(v => !v)}>
                                 <span style={{ flex: 1, fontSize: '0.88rem', color: formData.ispitivacId ? 'var(--text)' : 'var(--text-muted)' }}>
                                     {formData.ispitivacId
                                         ? getExaminerLabel(examiners.find(e => e.id === formData.ispitivacId) || {})
@@ -621,10 +609,7 @@ export function UvjerenjeFormPage() {
                                         <div
                                             key={ex.id}
                                             onClick={() => { set('ispitivacId', ex.id); setShowIspitivacDropdown(false); setIspitivacSearch(''); }}
-                                            style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem' }}
-                                            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                            onMouseLeave={e => e.currentTarget.style.background = ''}
-                                        >
+                                            style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem' }}>
                                             {getExaminerLabel(ex)}
                                         </div>
                                     ))}
@@ -729,7 +714,7 @@ export function UvjerenjeFormPage() {
                                         onChange={async (e) => {
                                             const file = e.target.files?.[0];
                                             if (!file) return;
-                                            if (file.size > 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
+                                            if (file.size> 20 * 1024 * 1024) { alert('Max 20MB!'); return; }
                                             try {
                                                 const result = await uploadSecureFile(activeCompanyId, 'certificates', file);
                                                 set('attachedFileUrl', result.url);
@@ -815,7 +800,7 @@ export function UvjerenjeFormPage() {
                                 </button>
                             );
                         })()}
-                        {selectedWorkerIds.size > 0 && (
+                        {selectedWorkerIds.size> 0 && (
                             <span style={{ marginLeft: 'auto', fontSize: '0.85rem', color: 'var(--primary)', fontWeight: 600 }}>
                                 💡 {lang !== 'en'
                                     ? `Uvjerenje će biti dodijeljeno ${selectedWorkerIds.size} radnik(u/a)`

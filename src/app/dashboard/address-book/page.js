@@ -30,7 +30,7 @@ export default function AddressBookPage() {
   const { sorted, toggleSort, sortIcon, thStyle } = useSortedList(filtered, 'prezime');
 
   // Selection helpers
-  const allSelected = sorted.length > 0 && sorted.every(w => selected.has(w.id));
+  const allSelected = sorted.length> 0 && sorted.every(w => selected.has(w.id));
   const toggleAll = () => {
     if (allSelected) setSelected(new Set());
     else setSelected(new Set(sorted.map(w => w.id)));
@@ -138,7 +138,7 @@ export default function AddressBookPage() {
             </div>
 
             {/* Selected badge */}
-            {selectedCount > 0 && (
+            {selectedCount> 0 && (
               <span className="badge badge-primary" style={{ fontSize: '0.85rem', padding: '4px 10px' }}>
                 {selectedCount} {lang !== 'en' ? 'odabrano' : 'selected'}
               </span>
@@ -165,10 +165,7 @@ export default function AddressBookPage() {
               ) : sorted.map(w => (
                 <tr key={w.id}
                   onClick={() => setViewWorkerId(w.id)}
-                  style={{ cursor: 'pointer', background: selected.has(w.id) ? 'var(--bg-table-row-hover)' : undefined, transition: 'background 0.12s' }}
-                  onMouseEnter={e => { if (!selected.has(w.id)) e.currentTarget.style.background = 'var(--bg-table-row-hover)'; }}
-                  onMouseLeave={e => { if (!selected.has(w.id)) e.currentTarget.style.background = ''; }}
-                >
+                  style={{ cursor: 'pointer', background: selected.has(w.id) ? 'var(--bg-table-row-hover)' : undefined, transition: 'background 0.12s' }}>
                   <td onClick={e => e.stopPropagation()}>
                     <input type="checkbox" checked={selected.has(w.id)} onChange={() => toggleOne(w.id)} />
                   </td>
@@ -190,10 +187,7 @@ export default function AddressBookPage() {
                             display: 'inline-flex', alignItems: 'center', flexShrink: 0,
                             borderRadius: 4, transition: 'color 0.2s, background 0.2s',
                             lineHeight: 1,
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-input)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'none'}
-                        >
+                          }}>
                           {copiedEmail === w.id ? (
                             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                               <path d="M3 8l3.5 3.5L13 4" stroke="#22c55e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -208,10 +202,7 @@ export default function AddressBookPage() {
                         <button
                           onClick={() => window.open(`mailto:${w.email}`)}
                           title={lang !== 'en' ? 'Pošalji email radniku' : 'Send email to worker'}
-                          style={{ background: 'rgba(33,150,243,0.1)', border: 'none', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--info)' }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'rgba(33,150,243,0.2)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'rgba(33,150,243,0.1)'}
-                        >✉️</button>
+                          style={{ background: 'rgba(33,150,243,0.1)', border: 'none', borderRadius: '50%', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--info)' }}>✉️</button>
                       </span>
                     ) : '-'}
                   </td>
@@ -223,7 +214,7 @@ export default function AddressBookPage() {
             </tbody></table></div>
 
           {/* Quick mailto bar when something is selected */}
-          {selectedCount > 0 && (
+          {selectedCount> 0 && (
             <div style={{
               marginTop: 12, padding: '10px 16px',
               background: 'var(--bg-input)', borderRadius: 'var(--radius-md)',

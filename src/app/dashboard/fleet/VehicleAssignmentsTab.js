@@ -135,7 +135,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                     </p>
                 </div>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                    {selectedIds.size > 0 && (
+                    {selectedIds.size> 0 && (
                         <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}</span>
                             <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
@@ -210,7 +210,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                 <table className="data-table">
                     <thead>
                         <tr>
-                            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === history.length && history.length > 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
+                            <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === history.length && history.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                             <th>{bs ? 'Vozač' : 'Driver'}</th>
                             <th>{bs ? 'Preuzeo' : 'Assigned On'}</th>
                             <th>{bs ? 'Početna KM' : 'Start KM'}</th>
@@ -224,9 +224,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                             <tr><td colSpan={7} style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)' }}>{bs ? 'Nema zaduženja' : 'No history found'}</td></tr>
                         ) : history.map((h, i) => (
                             <tr key={h.id} style={{ opacity: (!h.datumRazduzenja || i===0) ? 1 : 0.75, cursor: 'pointer' }}
-                                onClick={() => handleEdit(h)}
-                                onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
-                                onMouseLeave={e => e.currentTarget.style.background = ''}>
+                                onClick={() => handleEdit(h)}>
                                 <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
                                     <input type="checkbox" checked={selectedIds.has(h.id)} onChange={() => toggleOne(h.id)} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                                 </td>
@@ -255,11 +253,11 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                             <>
                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 160, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
-                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(h); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>✏️ {bs ? 'Uredi' : 'Edit'}</button>
-                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); setEditingId(null); setForm({ workerId: h.workerId, workerIme: h.workerIme, datumZaduzenja: new Date().toISOString().split('T')[0], vrijemeZaduzenja: new Date().toTimeString().slice(0, 5), pocetnaKilometraza: h.zavrsnaKilometraza || '', datumRazduzenja: '', vrijemeRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(h.workerIme); setShowForm(true); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                    {!h.datumRazduzenja && <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleUnassign(h); }} style={menuItemSt} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>↩️ {bs ? 'Razduži' : 'Unassign'}</button>}
+                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleEdit(h); }} className="dropdown-item">✏️ {bs ? 'Uredi' : 'Edit'}</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); setEditingId(null); setForm({ workerId: h.workerId, workerIme: h.workerIme, datumZaduzenja: new Date().toISOString().split('T')[0], vrijemeZaduzenja: new Date().toTimeString().slice(0, 5), pocetnaKilometraza: h.zavrsnaKilometraza || '', datumRazduzenja: '', vrijemeRazduzenja: '', zavrsnaKilometraza: '' }); setSearch(h.workerIme); setShowForm(true); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
+                                                    {!h.datumRazduzenja && <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleUnassign(h); }} className="dropdown-item">↩️ {bs ? 'Razduži' : 'Unassign'}</button>}
                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
-                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(h.id); }} style={{ ...menuItemSt, color: 'var(--danger)' }} onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'} onMouseLeave={e => e.currentTarget.style.background = 'none'}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
+                                                    <button onClick={(e) => { e.stopPropagation(); setActionMenuId(null); handleDelete(h.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                 </div>
                                             </>
                                         )}
