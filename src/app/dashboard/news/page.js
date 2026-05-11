@@ -225,31 +225,35 @@ function parseBSDate(str) {
     return new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
 }
 
-// Guess a useful URL from izvor text when Gemini doesn't provide one
+// Guess a reliable root URL or search query for the source
 function guessSourceUrl(izvor, naslov, country = 'BA') {
     const src = (izvor || '').toLowerCase();
-    // HR sources
-    if (src.includes('narodne novine') || src.includes('nn ') || src.includes('nn.hr')) return 'https://narodne-novine.nn.hr';
+    
+    // HR reliable sources
+    if (src.includes('narodne novine') || src.includes('nn ') || src.includes('nn.hr')) return 'https://narodne-novine.nn.hr/search.html';
     if (src.includes('zakon.hr')) return 'https://www.zakon.hr';
     if (src.includes('hzzzsr')) return 'https://hzzzsr.hr';
-    if (src.includes('mrosp') || src.includes('ministarstvo rada')) return 'https://mrosp.gov.hr';
-    // BA sources
-    if (src.includes('sl. novine fbih') || src.includes('sllist') || src.includes('federaln')) return 'https://www.sllist.ba';
-    if (src.includes('sl. glasnik rs') || src.includes('slglasnik') || src.includes('republicka') || src.includes('republika srpska')) return 'https://www.slglasnikrs.ba';
-    // Shared
-    if (src.includes('ilo')) return 'https://www.ilo.org/budapest';
+    if (src.includes('mrosp')) return 'https://mrosp.gov.hr';
+    if (src.includes('inspektorat') && country === 'HR') return 'https://dirh.gov.hr';
+
+    // BA reliable sources
+    if (src.includes('sl. novine') || src.includes('sluzbene novine') || src.includes('sllist')) return 'https://www.sllist.ba';
+    if (src.includes('sl. glasnik') || src.includes('sluzbeni glasnik') || src.includes('slglasnik')) return 'https://slglasnik.org';
+    if (src.includes('inspektorat') && country === 'BA') return 'https://fuzip.gov.ba';
+    
+    // Shared / Generic
     if (src.includes('eu') || src.includes('direktiv') || src.includes('eur-lex')) return 'https://eur-lex.europa.eu';
-    if (src.includes('inspektorat') || src.includes('vladars')) return 'https://inspektorat.vladars.net';
-    if (src.includes('ministarstvo') || src.includes('fbihvlada') || src.includes('fbih')) return 'https://www.fbihvlada.gov.ba';
-    // Fallback
-    const suffix = country === 'HR' ? 'Hrvatska' : 'Bosna Hercegovina';
-    return `https://www.google.com/search?q=${encodeURIComponent((naslov || '') + ' ' + suffix)}`;
+
+    // Ultimate fallback: Google search with exact query
+    const suffix = country === 'HR' ? 'Hrvatska zaštita na radu' : 'Bosna i Hercegovina zaštita na radu';
+    return `https://www.google.com/search?q=${encodeURIComponent((naslov || izvor || '') + ' ' + suffix)}`;
 }
 
 function NewsCard({ item, country }) {
     const cfg = TIP_CONFIG[item.tip] || TIP_CONFIG.obavijest;
-    const titleUrl = item.url || guessSourceUrl(item.izvor, item.naslov, country);
-    const sourceUrl = guessSourceUrl(item.izvor, item.naslov, country);
+    // ALWAYS use our guessed URL because Gemini hallucinates fake specific paths that 404
+    const titleUrl = guessSourceUrl(item.izvor, item.naslov, country);
+    const sourceUrl = titleUrl;
 
     const handleCardClick = (e) => {
         // Don't navigate if clicking on an internal link (source, verify, etc.)

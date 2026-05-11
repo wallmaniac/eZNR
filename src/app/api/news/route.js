@@ -77,9 +77,9 @@ function parseNews(text) {
 
 function buildPrompt(country) {
     if (country === 'HR') {
-        return `Ti si pravni asistent za zaštitu na radu u Republici Hrvatskoj. Generiraj 5 informativnih vijesti o zaštiti na radu u RH. Koristi stvarne zakone (Zakon o zaštiti na radu NN 71/14, Pravilnici iz Narodnih novina). Za 'url' koristi nn.hr ili zakon.hr. Vrati SAMO valjani JSON niz: [{"naslov":"...","opis":"...","tip":"zakon","datum":"07.03.2026.","izvor":"Narodne novine br. 71/14","url":""}] Tipovi: zakon|pravilnik|rok|obavijest. Samo JSON.`;
+        return `Ti si pravni asistent za zaštitu na radu u Republici Hrvatskoj. Generiraj 5 informativnih vijesti o zaštiti na radu u RH. Koristi stvarne zakone (Zakon o zaštiti na radu NN 71/14, Pravilnici iz Narodnih novina). Vrati SAMO valjani JSON niz: [{"naslov":"...","opis":"...","tip":"zakon","datum":"07.03.2026.","izvor":"Narodne novine br. 71/14","url":""}] Tipovi: zakon|pravilnik|rok|obavijest. Za 'url' OBAVEZNO ostavi prazan string "". Samo JSON.`;
     }
-    return `Ti si pravni asistent za zaštitu na radu u Bosni i Hercegovini. Generiraj 5 informativnih vijesti o zaštiti na radu u BiH. Koristi stvarne zakone (Zakon o zaštiti na radu FBiH 79/20, RS 1/08). Za 'url' koristi sllist.ba ili slglasnikrs.ba. Vrati SAMO valjani JSON niz: [{"naslov":"...","opis":"...","tip":"zakon","datum":"07.03.2026.","izvor":"Sl. novine FBiH br. 79/20","url":""}] Tipovi: zakon|pravilnik|rok|obavijest. Samo JSON.`;
+    return `Ti si pravni asistent za zaštitu na radu u Bosni i Hercegovini. Generiraj 5 informativnih vijesti o zaštiti na radu u BiH. Koristi stvarne zakone (Zakon o zaštiti na radu FBiH 79/20, RS 1/08). Vrati SAMO valjani JSON niz: [{"naslov":"...","opis":"...","tip":"zakon","datum":"07.03.2026.","izvor":"Sl. novine FBiH br. 79/20","url":""}] Tipovi: zakon|pravilnik|rok|obavijest. Za 'url' OBAVEZNO ostavi prazan string "". Samo JSON.`;
 }
 
 async function fetchGeminiNews(apiKey, country) {

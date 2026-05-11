@@ -138,15 +138,19 @@ export default function DashboardPage() {
     const { confirm, DialogRenderer } = useDialog();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
-    const [workers, setWorkers] = useState([]);
-    const [certs, setCerts] = useState([]);
-    const [ppeAssignments, setPpeAssignments] = useState([]);
-    const [equipment, setEquipment] = useState([]);
-    const [fleetVehicles, setFleetVehicles] = useState([]);
-    const [employerDocs, setEmployerDocs] = useState([]);
-    const [medicalExams, setMedicalExams] = useState([]);
-    const [injuriesData, setInjuriesData] = useState([]);
-    const [diseasesData, setDiseasesData] = useState([]);
+
+    // ── Single atomic data state — prevents calendar flicker from 14 separate setStates ──
+    const [ds, setDs] = useState({
+        workers: [], certs: [], ppeAssignments: [], equipment: [],
+        fleetVehicles: [], employerDocs: [], medicalExams: [],
+        injuriesData: [], diseasesData: [], calEvents: [],
+        certTypes: [], ppeTypes: [], riskAssessments: [], riskItems: [],
+    });
+    // Convenience destructure so the rest of the component reads exactly the same
+    const { workers, certs, ppeAssignments, equipment, fleetVehicles, employerDocs,
+            medicalExams, injuriesData, diseasesData, calEvents, certTypes, ppeTypes,
+            riskAssessments, riskItems } = ds;
+
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
     const [showEventForm, setShowEventForm] = useState(false);
@@ -161,11 +165,6 @@ export default function DashboardPage() {
         // service fields
         machineId: '',
     });
-    const [calEvents, setCalEvents] = useState([]);
-    const [certTypes, setCertTypes] = useState([]);
-    const [ppeTypes, setPpeTypes] = useState([]);
-    const [riskAssessments, setRiskAssessments] = useState([]);
-    const [riskItems, setRiskItems] = useState([]);
     const [deleteEventTarget, setDeleteEventTarget] = useState(null); // event to confirm-delete
     const [viewWorkerId, setViewWorkerId] = useState(null);
     const [dayDetailDate, setDayDetailDate] = useState(null);
@@ -178,28 +177,41 @@ export default function DashboardPage() {
     const [pickerYear, setPickerYear] = useState(() => new Date().getFullYear());
     const monthPickerRef = useRef(null);
 
+    // ── Single atomic data loader — ONE setState per sync, not 14 ──
+    const syncTimerRef = useRef(null);
     useEffect(() => {
         const uids = user?.companyIds || [];
-        const updateData = () => {
-            setWorkers(getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids));
-            setCerts(getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids));
-            setPpeAssignments(getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids));
-            setEquipment(getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids));
-            setFleetVehicles(getAllForCompany(COLLECTIONS.VEHICLES, activeCompanyId, uids));
-            setEmployerDocs(getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids));
-            setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids));
-            setMedicalExams(getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids));
-            setCertTypes(getAll(COLLECTIONS.CERT_TYPES));
-            setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
-            setRiskAssessments(getAllForCompany(COLLECTIONS.RISK_ASSESSMENTS, activeCompanyId, uids));
-            setRiskItems(getAll(COLLECTIONS.RISK_ITEMS));
-            setInjuriesData(getAllForCompany(COLLECTIONS.INJURIES, activeCompanyId, uids));
-            setDiseasesData(getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids));
+        const gatherData = () => ({
+            workers: getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids),
+            certs: getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids),
+            ppeAssignments: getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids),
+            equipment: getAllForCompany(COLLECTIONS.EQUIPMENT, activeCompanyId, uids),
+            fleetVehicles: getAllForCompany(COLLECTIONS.VEHICLES, activeCompanyId, uids),
+            employerDocs: getAllForCompany(COLLECTIONS.EMPLOYER_DOCS, activeCompanyId, uids),
+            calEvents: getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, uids),
+            medicalExams: getAllForCompany(COLLECTIONS.MEDICAL_EXAMS, activeCompanyId, uids),
+            certTypes: getAll(COLLECTIONS.CERT_TYPES),
+            ppeTypes: getAll(COLLECTIONS.PPE_TYPES),
+            riskAssessments: getAllForCompany(COLLECTIONS.RISK_ASSESSMENTS, activeCompanyId, uids),
+            riskItems: getAll(COLLECTIONS.RISK_ITEMS),
+            injuriesData: getAllForCompany(COLLECTIONS.INJURIES, activeCompanyId, uids),
+            diseasesData: getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids),
+        });
+
+        // Initial load — immediate, single state write
+        setDs(gatherData());
+
+        // Debounced handler for data-synced events (500ms collapse window)
+        const debouncedUpdate = () => {
+            if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+            syncTimerRef.current = setTimeout(() => setDs(gatherData()), 500);
         };
 
-        updateData();
-        window.addEventListener('eznr:data-synced', updateData);
-        return () => window.removeEventListener('eznr:data-synced', updateData);
+        window.addEventListener('eznr:data-synced', debouncedUpdate);
+        return () => {
+            window.removeEventListener('eznr:data-synced', debouncedUpdate);
+            if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
+        };
     }, [activeCompanyId, user?.companyIds]);
 
     // Stabilize notifSettings — only update state when actual values change
@@ -222,7 +234,8 @@ export default function DashboardPage() {
 
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    const today = new Date();
+    // Stable reference — only changes once per day, not per render
+    const today = useMemo(() => new Date(), []);
 
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const firstDay = new Date(year, month, 1).getDay();
