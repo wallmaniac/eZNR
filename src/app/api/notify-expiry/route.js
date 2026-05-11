@@ -142,9 +142,9 @@ function buildEmailBody({ companyName, sections, lang, today }) {
 </head>
 <body style="margin:0;padding:0;background:#f0f4f8;font-family:'Segoe UI',Arial,sans-serif;">
 
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f4f8;padding:40px 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f0f4f8;padding:0;margin:0;border-spacing:0;border-collapse:collapse;">
     <tr>
-      <td align="center">
+      <td align="center" style="padding:0;margin:0;">
         <!--[if mso]>
         <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
         <tr>
@@ -154,11 +154,11 @@ function buildEmailBody({ companyName, sections, lang, today }) {
           
           <!-- Header logo image -->
           <tr>
-            <td align="center" style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;font-size:0;line-height:0;text-align:center;">
+            <td align="center" style="padding:0;margin:0;font-size:0;line-height:0;text-align:center;background:#ffffff;">
               <img src="${APP_URL}/email-header.png" 
                    alt="eZNR — Digitalna platforma za zaštitu na radu" 
                    width="600" 
-                   style="display:block;width:100%;max-width:600px;height:auto;border-radius:16px 16px 0 0;margin:0 auto;" />
+                   style="display:block;width:100%;max-width:600px;height:auto;margin:0 auto;border:0;outline:none;" />
             </td>
           </tr>
 
