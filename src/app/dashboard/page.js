@@ -877,6 +877,7 @@ export default function DashboardPage() {
                                             background: isToday ? 'rgba(0,191,166,0.06)' : '',
                                             border: isToday ? '1.5px solid rgba(0,191,166,0.35)' : '',
                                             cursor: 'pointer',
+                                            WebkitTapHighlightColor: 'transparent',
                                         }}
                                         onClick={() => {
                                             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
