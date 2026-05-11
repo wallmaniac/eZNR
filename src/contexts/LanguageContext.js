@@ -4,25 +4,41 @@ import { translations } from '@/i18n/translations';
 
 const LanguageContext = createContext();
 
-/**
- * Supported locales: 'bs' (Bosnian), 'hr' (Croatian), 'en' (English).
- *
- * Auto-switch behaviour:
- *   When a CountryAutoSwitch component detects the active company's
- *   country is 'HR', it sets the language to 'hr'.
- *   When it switches to 'BA', it sets the language to 'bs'.
- *   The user can always override manually via toggleLang / setLang.
- */
-
 const LANG_CYCLE = ['bs', 'hr', 'en'];
 
 export function LanguageProvider({ children }) {
     const [lang, setLang] = useState('bs');
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Load persisted language on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedLang = localStorage.getItem('eznr_ui_lang');
+            if (savedLang && LANG_CYCLE.includes(savedLang)) {
+                setLang(savedLang);
+            }
+            setIsInitialized(true);
+        }
+    }, []);
+
+    const handleSetLang = useCallback((newLang) => {
+        setLang(newLang);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('eznr_ui_lang', newLang);
+            // When user manually sets language, record that they did a manual override for the current jurisdiction
+            localStorage.setItem('eznr_lang_manual_override', 'true');
+        }
+    }, []);
 
     const toggleLang = useCallback(() => {
         setLang((prev) => {
             const idx = LANG_CYCLE.indexOf(prev);
-            return LANG_CYCLE[(idx + 1) % LANG_CYCLE.length];
+            const nextLang = LANG_CYCLE[(idx + 1) % LANG_CYCLE.length];
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('eznr_ui_lang', nextLang);
+                localStorage.setItem('eznr_lang_manual_override', 'true');
+            }
+            return nextLang;
         });
     }, []);
 
@@ -34,7 +50,7 @@ export function LanguageProvider({ children }) {
     );
 
     return (
-        <LanguageContext.Provider value={{ lang, setLang, toggleLang, t }}>
+        <LanguageContext.Provider value={{ lang, setLang: handleSetLang, toggleLang, t, isInitialized }}>
             {children}
         </LanguageContext.Provider>
     );
@@ -46,32 +62,51 @@ export function useLanguage() {
     return context;
 }
 
-/**
- * CountryAutoSwitch — tiny bridge component.
- * Place INSIDE both LanguageProvider AND CountryProvider.
- * Watches the active company's country and auto-sets the UI language.
- */
 export function CountryAutoSwitch() {
-    // Lazy-import to avoid circular deps; CountryContext lives at the same level
-    const { setLang } = useLanguage();
-    const hasManualOverride = useRef(false);
+    const { setLang, isInitialized } = useLanguage();
+    const lastCountryRef = useRef(null);
 
-    // We import useCountry dynamically since the provider tree nests
-    // Language > Country — this component is rendered INSIDE Country.
     let country = 'BA';
     try {
         const { useCountry } = require('@/contexts/CountryContext');
         country = useCountry();
-    } catch (_) { /* fallback if CountryContext not ready */ }
+    } catch (_) { }
 
     useEffect(() => {
-        // Auto-switch language based on jurisdiction
-        if (country?.toUpperCase() === 'HR') {
-            setLang('hr');
-        } else if (country?.toUpperCase() === 'BA') {
-            setLang('bs');
-        }
-    }, [country, setLang]);
+        if (!isInitialized || !country) return;
 
-    return null; // Render nothing — pure side-effect component
+        const currentCountry = country.toUpperCase();
+        
+        // On first run in this session, check what country we last auto-switched for
+        if (lastCountryRef.current === null) {
+            const savedAutoCountry = localStorage.getItem('eznr_last_auto_country');
+            const hasManualOverride = localStorage.getItem('eznr_lang_manual_override') === 'true';
+            
+            // If the country hasn't changed since our last auto-switch, AND the user has a manual override,
+            // we respect their override and don't auto-switch.
+            if (savedAutoCountry === currentCountry && hasManualOverride) {
+                lastCountryRef.current = currentCountry;
+                return;
+            }
+        }
+
+        // Only auto-switch if the country actually changed (or it's the first time visiting this country)
+        if (lastCountryRef.current !== currentCountry) {
+            lastCountryRef.current = currentCountry;
+            
+            if (currentCountry === 'HR') {
+                setLang('hr');
+            } else if (currentCountry === 'BA') {
+                setLang('bs');
+            }
+            
+            // Record this auto-switch and clear any previous manual override flag
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('eznr_last_auto_country', currentCountry);
+                localStorage.removeItem('eznr_lang_manual_override');
+            }
+        }
+    }, [country, isInitialized, setLang]);
+
+    return null;
 }
