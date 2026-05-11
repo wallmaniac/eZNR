@@ -24,6 +24,9 @@ const withPWA = withPWAInit({
   cacheStartUrl: false,
   workboxOptions: {
     disableDevLogs: true,
+    skipWaiting: true,
+    clientsClaim: true,
+    cleanupOutdatedCaches: true
   },
   swcMinify: true,
   fallbacks: {
