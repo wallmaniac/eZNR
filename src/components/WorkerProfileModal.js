@@ -283,7 +283,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
                 {wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo) && (
                     <div style={{ background: 'rgba(239,83,80,0.15)', borderBottom: '1px solid var(--danger)', color: 'var(--danger)', padding: '8px 24px', fontSize: '0.8rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        🌙 Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad - čl. 40 FBiH)
+                        🌙 Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad)
                     </div>
                 )}
 
@@ -384,7 +384,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         ) : null}
                         {((formData.radnoVrijemeOd && formData.radnoVrijemeDo && isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo)) || (wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo))) && (
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(239,83,80,0.12)', border: '1px solid var(--danger)', fontSize: '0.78rem', color: 'var(--danger)', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                🌙 {lang !== 'en' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad - čl. 40 FBiH)' : 'Mandatory medical exam min. 1x per 2 years (Night work)'}
+                                🌙 {lang !== 'en' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad)' : 'Mandatory medical exam min. 1x per 2 years (Night work)'}
                             </div>
                         )}
                         {formData.posebniUvjeti && (

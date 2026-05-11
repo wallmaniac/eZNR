@@ -21,7 +21,8 @@ export default function PrintableAnnualReport({
     riskItems = [],
     riskAssessments = [],
     medicalExams = [],
-    lang = 'bs'
+    lang = 'bs',
+    companyLogo = null
 }) {
     const today = new Date();
     const dateFormatted = today.toLocaleDateString('bs-BA');
@@ -129,9 +130,16 @@ export default function PrintableAnnualReport({
     return (
         <div style={styles.container} className="printable-report">
             <div style={styles.header}>
-                <strong>Poslodavac:</strong> {companyName}<br />
-                <strong>Datum izrade:</strong> {dateFormatted}<br />
-                <strong>Mjesto:</strong> _____________________
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                        <strong>Poslodavac:</strong> {companyName}<br />
+                        <strong>Datum izrade:</strong> {dateFormatted}<br />
+                        <strong>Mjesto:</strong> _____________________
+                    </div>
+                    {companyLogo && (
+                        <img src={companyLogo} alt="Logo" style={{ maxHeight: '60px', maxWidth: '180px', objectFit: 'contain' }} />
+                    )}
+                </div>
             </div>
 
             <div style={styles.title}>

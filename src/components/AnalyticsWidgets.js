@@ -130,7 +130,7 @@ function MiniStat({ icon, label, value, color, suffix }) {
 // MAIN ANALYTICS WIDGET
 // ============================================================================
 
-export default function AnalyticsWidgets({ workers, certs, equipment, injuries, diseases, riskItems, riskAssessments, medicalExams, lang }) {
+export default function AnalyticsWidgets({ workers, certs, equipment, injuries, diseases, riskItems, riskAssessments, medicalExams, lang, companyName, companyLogo }) {
     const now = new Date();
     const d30 = 30 * 86400000;
 
@@ -331,6 +331,8 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         riskAssessments={riskAssessments}
                         medicalExams={medicalExams}
                         lang={lang}
+                        companyName={companyName}
+                        companyLogo={companyLogo}
                     />
                 </div>
             </div>

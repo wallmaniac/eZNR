@@ -184,7 +184,7 @@ export default function SistematizacijaPage() {
             </div>
 
             <div class="sect" style="margin-top:40px; font-size:9pt; color:#666;">
-                <i>Pravni osnov: ${sist.pravniOsnov || 'Zakon o radu FBiH'}</i>
+                <i>Pravni osnov: ${sist.pravniOsnov || 'Zakon o radu'}</i>
             </div>
 
             <button onclick="window.print()" style="margin-top: 20px; padding: 12px 24px; background: #000; color: #fff; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">🖨️ Isprintaj / Spremi PDF</button>

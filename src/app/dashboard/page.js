@@ -689,6 +689,8 @@ export default function DashboardPage() {
                     riskAssessments={riskAssessments}
                     medicalExams={medicalExams}
                     lang={lang}
+                    companyName={companies.find(c => c.id === activeCompanyId)?.naziv || companies[0]?.naziv || ''}
+                    companyLogo={companies.find(c => c.id === activeCompanyId)?.logo || companies[0]?.logo || ''}
                 />
             </CollapsibleWidget>
 
@@ -839,10 +841,8 @@ export default function DashboardPage() {
                                             padding: '6px 8px', minHeight: 80, minWidth: 0,
                                             background: isToday ? 'rgba(0,191,166,0.06)' : '',
                                             border: isToday ? '1.5px solid rgba(0,191,166,0.35)' : '',
-                                            transition: 'background 0.2s', cursor: 'pointer',
+                                            cursor: 'pointer',
                                         }}
-                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0,191,166,0.08)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.background = ''}
                                         onClick={() => {
                                             const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                                             if (events.length > 0) {

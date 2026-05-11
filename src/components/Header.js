@@ -241,7 +241,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip */}
-                    <div ref={companyRef} style={{ position: 'relative', flex: '1 1 auto', minWidth: 0, display: 'flex' }}>
+                    <div ref={companyRef} style={{ position: 'relative', flex: 1, minWidth: 0, display: 'flex' }}>
                         <button onClick={() => { setShowCompanyMenu(v => !v); setShowNotifs(false); }}
                             style={{
                                 display: 'flex', alignItems: 'center', gap: 4,

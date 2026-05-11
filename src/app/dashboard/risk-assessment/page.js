@@ -1683,7 +1683,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         <div style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', padding: 28, minWidth: 500, maxWidth: 650, maxHeight: '85vh', overflow: 'auto', boxShadow: '0 20px 60px rgba(0,0,0,0.4)', border: '1px solid var(--border)' }}>
                                             <div style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--primary)' }}>✨ AI Generisanje Tabele Rizika</div>
                                             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.6 }}>
-                                                Zia AI će analizirati odabrana radna mjesta i kreirati standardne (8-15) opasnosti po radnom mjestu, zajedno sa FBiH procjenom posljedica, vjerovatnoće i listom mjera prevencije.
+                                                Zia AI će analizirati odabrana radna mjesta i kreirati standardne (8-15) opasnosti po radnom mjestu, zajedno sa standardiziranom procjenom posljedica, vjerovatnoće i listom mjera prevencije.
                                             </div>
 
                                             {/* Workplace selection from app data */}

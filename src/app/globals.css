@@ -289,6 +289,11 @@
   background: white;
   border-left: 1px solid #eee;
   border-bottom: 1px solid #eee;
+  transition: background 0.2s ease;
+}
+
+.cal-cell:not(.cal-cell-pad):hover {
+  background: rgba(0, 191, 166, 0.08);
 }
 
 .cal-cell.cal-today {
@@ -312,6 +317,10 @@
 
 [data-theme="dark"] .cal-cell-pad {
   background: #0d1a27 !important;
+}
+
+[data-theme="dark"] .cal-cell:not(.cal-cell-pad):hover {
+  background: rgba(0, 205, 181, 0.12) !important;
 }
 
 /* ── Tab pills (inline-style tabs) ── */

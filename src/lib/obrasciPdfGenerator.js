@@ -1,11 +1,12 @@
 /**
  * obrasciPdfGenerator.js
  * ─────────────────────────────────────────────────────────────────────
- * Generates official FBiH ZNR forms as print-ready HTML documents.
- * Based on Pravilnik o sadržaju i načinu podnošenja izvještaja o povredi
- * na radu i profesionalnom oboljenju (Sl. novine FBiH br. 9/23).
+ * Generates official ZNR forms as print-ready HTML documents.
+ * Dynamically adapts to BA or HR jurisdiction.
  * ─────────────────────────────────────────────────────────────────────
  */
+
+import { PRAVILNICI } from '@/lib/lawConfig';
 
 const FORM_STYLES = `
   @page { size: A4; margin: 15mm 18mm; }
@@ -101,15 +102,17 @@ export function generateObrazac1(data = {}) {
   const c = data.company || {};
   const w = data.worker || {};
   const i = data.injury || {};
+  const country = c.country || 'BA';
+  const prav = PRAVILNICI[country]?.find(p => p.id === 'injury-report') || PRAVILNICI.BA.find(p => p.id === 'injury-report');
   
-  return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>Obrazac br. 1 — Izvještaj o povredi na radu</title>
+  return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>Obrazac br. 1 — ${country === 'HR' ? 'Prijava ozljede na radu' : 'Izvještaj o povredi na radu'}</title>
 <style>${FORM_STYLES}</style></head><body>
 ${printBar()}
 <div class="page">
   ${headerHtml(c,
     'Obrazac broj 1',
-    'Izvještaj o povredi na radu',
-    'Pravilnik o sadržaju i načinu podnošenja izvještaja o povredi na radu i profesionalnom oboljenju — Sl. novine FBiH br. 9/23'
+    country === 'HR' ? 'Prijava ozljede na radu' : 'Izvještaj o povredi na radu',
+    `${prav.name} (${prav.gazette})`
   )}
 
   <div class="section">
@@ -228,8 +231,9 @@ ${printBar()}
   </div>
 
   <div style="margin-top:12px; font-size:7.5pt; color:#888; text-align:center; font-style:italic;">
-    Obrazac se sačinjava u 5 primjeraka: 1× poslodavac, 1× povrijeđeni radnik, 1× inspekcija rada,
-    1× zavod zdravstvenog osiguranja, 1× zdravstvena ustanova. (Čl. 5 Pravilnika 9/23)
+    ${country === 'HR' 
+      ? 'Obrazac se sačinjava u propisanom broju primjeraka za poslodavca, HZZO i inspektorat.'
+      : 'Obrazac se sačinjava u 5 primjeraka: 1× poslodavac, 1× povrijeđeni radnik, 1× inspekcija rada, 1× zavod zdravstvenog osiguranja, 1× zdravstvena ustanova.'}
   </div>
 
   ${footerHtml(c)}
@@ -243,15 +247,17 @@ export function generateObrazac2(data = {}) {
   const c = data.company || {};
   const w = data.worker || {};
   const d = data.disease || {};
+  const country = c.country || 'BA';
+  const prav = PRAVILNICI[country]?.find(p => p.id === 'injury-report') || PRAVILNICI.BA.find(p => p.id === 'injury-report');
 
-  return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>Obrazac br. 2 — Izvještaj o profesionalnom oboljenju</title>
+  return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>Obrazac br. 2 — ${country === 'HR' ? 'Prijava profesionalne bolesti' : 'Izvještaj o profesionalnom oboljenju'}</title>
 <style>${FORM_STYLES}</style></head><body>
 ${printBar()}
 <div class="page">
   ${headerHtml(c,
     'Obrazac broj 2',
-    'Izvještaj o profesionalnom oboljenju',
-    'Pravilnik o sadržaju i načinu podnošenja izvještaja o povredi na radu i profesionalnom oboljenju — Sl. novine FBiH br. 9/23'
+    country === 'HR' ? 'Prijava profesionalne bolesti' : 'Izvještaj o profesionalnom oboljenju',
+    `${prav.name} (${prav.gazette})`
   )}
 
   <div class="section">
@@ -340,7 +346,9 @@ ${printBar()}
   </div>
 
   <div style="margin-top:12px; font-size:7.5pt; color:#888; text-align:center; font-style:italic;">
-    Obrazac se sačinjava u 5 primjeraka. (Čl. 5 Pravilnika 9/23)
+    ${country === 'HR' 
+      ? 'Obrazac se sačinjava u propisanom broju primjeraka za poslodavca, HZZO i inspektorat.'
+      : 'Obrazac se sačinjava u 5 primjeraka. (Čl. 5 Pravilnika 9/23)'}
   </div>
 
   ${footerHtml(c)}
@@ -355,6 +363,11 @@ export function generateUputnica(data = {}) {
   const w = data.worker || {};
   const tip = data.tipPregleda || 'prethodni'; // 'prethodni' | 'periodicni'
   const isPeriodic = tip === 'periodicni';
+  const country = c.country || 'BA';
+  
+  // Use 'medical-periodic' if available and periodic, otherwise fallback to 'medical'
+  let pravId = isPeriodic && country === 'HR' ? 'medical-periodic' : 'medical';
+  const pravMedical = PRAVILNICI[country]?.find(p => p.id === pravId) || PRAVILNICI.BA.find(p => p.id === 'medical');
 
   return `<!DOCTYPE html><html lang="bs"><head><meta charset="UTF-8"><title>Uputnica za ${isPeriodic ? 'periodični' : 'prethodni'} ljekarski pregled</title>
 <style>${FORM_STYLES}</style></head><body>
@@ -362,8 +375,8 @@ ${printBar()}
 <div class="page">
   ${headerHtml(c,
     isPeriodic ? 'Uputnica za periodični ljekarski pregled' : 'Uputnica za prethodni ljekarski pregled',
-    isPeriodic ? 'Obrazac br. 3 — Pravilnik o raspoređivanju radnika' : 'Obrazac br. 1 — Pravilnik o raspoređivanju radnika',
-    'Pravilnik o uvjetima koje moraju ispunjavati ovlaštene zdravstvene ustanove — Sl. novine FBiH'
+    country === 'HR' ? 'Obrazac RA-1' : (isPeriodic ? 'Obrazac br. 3' : 'Obrazac br. 1'),
+    `${pravMedical.name} (${pravMedical.gazette})`
   )}
 
   <div class="section">

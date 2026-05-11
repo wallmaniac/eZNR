@@ -5,6 +5,7 @@ import { useCountry } from '@/contexts/CountryContext';
 import { fmtDateTime } from '@/lib/dateUtils';
 import { apiFetchNews } from '@/lib/newsAPI';
 import { getAll, COLLECTIONS, getById, getUserCompanies } from '@/lib/dataStore';
+import { LAWS } from '@/lib/lawConfig';
 import { useAuth } from '@/contexts/AuthContext';
 import { generateZosPdf } from '@/lib/zosPdfGenerator';
 import { generateObrazac1, generateObrazac2, generateUputnica, openFormPrintWindow } from '@/lib/obrasciPdfGenerator';
@@ -567,6 +568,8 @@ function FormsTab({ lang, country }) {
     const printBlankZop = () => {
         const companies = getUserCompanies(user?.id);
         const company = companies.find(c => c.id === activeCompanyId) || {};
+        const country = company.country || 'BA';
+        const fireLaw = LAWS[country]?.fire || LAWS.BA.fire;
         // Build a ZOP-specific HTML (fire safety variant of ZOS)
         const formattedDate = '__.__.____.';
         const logoHtml = company.logo ? `<img src="${company.logo}" style="max-height:60px; max-width:180px; object-fit:contain;" />` : '';
@@ -612,7 +615,7 @@ function FormsTab({ lang, country }) {
         <div class="logo-area">${logoHtml}</div>
     </div>
     <div class="doc-title">Zapisnik o ocjeni osposobljenosti<br>radnika za zaštitu od požara</div>
-    <div class="doc-subtitle">Obrazac ZOP — u skladu sa Zakonom o zaštiti od požara i vatrogastvu FBiH ("Sl. novine FBiH" br. 64/09, 45/22)</div>
+    <div class="doc-subtitle">Obrazac ZOP — u skladu sa ${fireLaw.name} ("${fireLaw.gazette}")</div>
     <div class="doc-ref">Broj: ________ &nbsp;&nbsp;|&nbsp;&nbsp; Datum: ${formattedDate}</div>
     <div class="section">
         <div class="section-title">I. Podaci o radniku</div>
@@ -666,7 +669,7 @@ function FormsTab({ lang, country }) {
             </div>
         </div>
     </div>
-    <div class="legal-ref">Zakon o zaštiti od požara i vatrogastvu FBiH ("Sl. novine FBiH" br. 64/09, 45/22)</div>
+    <div class="legal-ref">${fireLaw.name} ("${fireLaw.gazette}")</div>
     <div class="signatures">
         <div class="sig-block"><div class="sig-role">Osposobljeni radnik</div><div class="sig-line">________________________</div><div class="sig-note">(potpis radnika)</div></div>
         <div class="sig-block"><div class="sig-role">Neposredni ovlaštenik poslodavca</div><div class="sig-line">${company.direktor || '________________________'}</div><div class="sig-note">(potpis ovlaštenika)</div></div>
