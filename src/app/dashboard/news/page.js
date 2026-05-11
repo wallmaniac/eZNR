@@ -251,8 +251,15 @@ function NewsCard({ item, country }) {
     const titleUrl = item.url || guessSourceUrl(item.izvor, item.naslov, country);
     const sourceUrl = guessSourceUrl(item.izvor, item.naslov, country);
 
+    const handleCardClick = (e) => {
+        // Don't navigate if clicking on an internal link (source, verify, etc.)
+        if (e.target.closest('a')) return;
+        window.open(titleUrl, '_blank', 'noopener,noreferrer');
+    };
+
     return (
-        <div className="card" style={{ borderLeft: `4px solid ${cfg.color}`, transition: 'transform 0.15s, box-shadow 0.15s' }}
+        <div className="card" style={{ borderLeft: `4px solid ${cfg.color}`, transition: 'transform 0.15s, box-shadow 0.15s', cursor: 'pointer' }}
+            onClick={handleCardClick}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-lg)'; }}
             onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}>
             <div className="card-body">

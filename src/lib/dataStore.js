@@ -146,18 +146,26 @@ export const COMPANY_SCOPED = [
     'zapisnici', 'serviceLog', 'activityLog', 'nightWork', 'safety_observations',
 ];
 
-// ── Two-tier loading strategy ────────────────────────────────────────────────
-// CORE: Loaded FIRST and awaited before the UI becomes interactive.
-//   These power the dashboard home, sidebar counters, and navigation.
-// DEFERRED: Loaded in the background AFTER core is ready.
+// ── Three-tier loading strategy ──────────────────────────────────────────────
+// CRITICAL: Loaded FIRST and awaited before the UI becomes interactive.
+//   Absolute minimum needed to render the dashboard home page stats + calendar.
+// PRIORITY: Loaded immediately AFTER UI unblocks, before deferred.
+//   Powers alerts widget, analytics, and sidebar counters.
+// DEFERRED: Loaded in the background in small batches.
 //   Pages that need these will get data asynchronously via eznr:data-synced.
-const CORE_COLLECTIONS = [
-    'workers', 'orgUnits', 'workplaces',
-    'certificates', 'ppeAssignments', 'equipment',
-    'calendarEvents', 'employerDocs', 'medicalExams',
+const CRITICAL_COLLECTIONS = [
+    'workers', 'certificates', 'calendarEvents', 'equipment',
+];
+
+const PRIORITY_COLLECTIONS = [
+    'orgUnits', 'workplaces', 'ppeAssignments',
+    'employerDocs', 'medicalExams',
     'injuries', 'diseases',
     'vehicles', 'riskAssessments', 'riskItems',
 ];
+
+// Backward compatibility — some code references CORE_COLLECTIONS
+const CORE_COLLECTIONS = [...CRITICAL_COLLECTIONS, ...PRIORITY_COLLECTIONS];
 
 const DEFERRED_COLLECTIONS = COMPANY_SCOPED.filter(
     c => !CORE_COLLECTIONS.includes(c)
@@ -250,7 +258,7 @@ function _attachCollectionListener(colName, companyId) {
 
 /**
  * Load all data for a company from Firestore.
- * Uses two-tier strategy: CORE collections are awaited, DEFERRED load in background.
+ * Uses three-tier strategy: CRITICAL awaited, PRIORITY immediate non-blocking, DEFERRED staggered.
  */
 export async function loadCompanyData(companyId) {
     if (!companyId || companyId === _activeCompanyId && _isLoaded) return;
@@ -270,11 +278,11 @@ export async function loadCompanyData(companyId) {
             console.log(`[dataStore] 📦 Loading data for company ${companyId}...`);
             const start = performance.now();
 
-            // ── Phase 1: CORE collections (awaited — blocks UI spinner) ──────
             // Initialize empty caches for ALL company-scoped collections
             COMPANY_SCOPED.forEach(col => { _cache[col] = []; });
 
-            const coreLoads = CORE_COLLECTIONS.map(colName =>
+            // ── Phase 1: CRITICAL collections (awaited — blocks UI spinner) ──
+            const criticalLoads = CRITICAL_COLLECTIONS.map(colName =>
                 _attachCollectionListener(colName, companyId)
             );
 
@@ -305,25 +313,36 @@ export async function loadCompanyData(companyId) {
                 }
             });
 
-            // CRITICAL: Wait for CORE data before declaring loaded (with 3s timeout for slow mobile)
-            const coreTimeout = new Promise(r => setTimeout(r, 3000));
+            // Wait for CRITICAL data only (4 collections) before declaring loaded
+            const criticalTimeout = new Promise(r => setTimeout(r, 3000));
             const metaPromise = Promise.all([...globalLoads, ...metaLoads]).then(() => {
                 console.log('[dataStore] 📡 Global references & meta established.');
                 if (typeof window !== 'undefined') {
                     window.dispatchEvent(new CustomEvent('eznr:data-synced'));
                 }
             });
-            await Promise.race([Promise.all(coreLoads), coreTimeout]);
+            await Promise.race([Promise.all(criticalLoads), criticalTimeout]);
 
-            const coreElapsed = ((performance.now() - start) / 1000).toFixed(2);
-            const coreDocs = CORE_COLLECTIONS.reduce((sum, col) => sum + (_cache[col]?.length || 0), 0);
-            console.log(`[dataStore] ✅ Core boot in ${coreElapsed}s (${coreDocs} docs from ${CORE_COLLECTIONS.length} collections). UI unblocked.`);
+            const criticalElapsed = ((performance.now() - start) / 1000).toFixed(2);
+            const criticalDocs = CRITICAL_COLLECTIONS.reduce((sum, col) => sum + (_cache[col]?.length || 0), 0);
+            console.log(`[dataStore] ✅ Critical boot in ${criticalElapsed}s (${criticalDocs} docs from ${CRITICAL_COLLECTIONS.length} collections). UI unblocked.`);
 
             _isLoaded = true;
             _isLoading = false;
             _notifyListeners();
 
-            // ── Phase 2: DEFERRED collections (background, non-blocking) ─────
+            // ── Phase 2: PRIORITY collections (non-blocking, but immediate) ──
+            // These power alerts, analytics, and sidebar — load ASAP after UI
+            Promise.all(PRIORITY_COLLECTIONS.map(colName =>
+                _attachCollectionListener(colName, companyId).then(() => {
+                    _deferredLoaded.add(colName);
+                })
+            )).then(() => {
+                const prioElapsed = ((performance.now() - start) / 1000).toFixed(2);
+                console.log(`[dataStore] 📊 Priority collections loaded in ${prioElapsed}s`);
+            }).catch(() => {});
+
+            // ── Phase 3: DEFERRED collections (background, staggered batches) ─
             // Small stagger to avoid flooding Firestore with 20+ listeners at once
             const BATCH_SIZE = 5;
             for (let i = 0; i < DEFERRED_COLLECTIONS.length; i += BATCH_SIZE) {
@@ -343,7 +362,7 @@ export async function loadCompanyData(companyId) {
 
             const totalElapsed = ((performance.now() - start) / 1000).toFixed(2);
             const totalDocs = Object.values(_cache).reduce((sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0), 0);
-            console.log(`[dataStore] 🏁 Full boot complete in ${totalElapsed}s (${totalDocs} total docs, ${DEFERRED_COLLECTIONS.length} deferred).`);
+            console.log(`[dataStore] 🏁 Full boot complete in ${totalElapsed}s (${totalDocs} total docs, ${PRIORITY_COLLECTIONS.length} priority + ${DEFERRED_COLLECTIONS.length} deferred).`);
         } catch (err) {
             console.error('[dataStore] ❌ Fatal load error:', err);
             _isLoading = false;

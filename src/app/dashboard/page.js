@@ -1,5 +1,5 @@
 'use client';
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
@@ -202,6 +202,8 @@ export default function DashboardPage() {
         return () => window.removeEventListener('eznr:data-synced', updateData);
     }, [activeCompanyId, user?.companyIds]);
 
+    // Stabilize notifSettings — only update state when actual values change
+    const notifSettingsRef = useRef(null);
     useEffect(() => {
         const handleClick = (e) => {
             if (actionRef.current && !actionRef.current.contains(e.target)) setActionMenuId(null);
@@ -209,7 +211,12 @@ export default function DashboardPage() {
             if (monthPickerRef.current && !monthPickerRef.current.contains(e.target)) setShowMonthPicker(false);
         };
         document.addEventListener('mousedown', handleClick);
-        setNotifSettings(getNotificationSettings() || {});
+        const fresh = getNotificationSettings() || {};
+        const freshJson = JSON.stringify(fresh);
+        if (notifSettingsRef.current !== freshJson) {
+            notifSettingsRef.current = freshJson;
+            setNotifSettings(fresh);
+        }
         return () => document.removeEventListener('mousedown', handleClick);
     }, []);
 
@@ -322,10 +329,21 @@ export default function DashboardPage() {
         return merged.map(ev => ({ ...ev, companyName: getCompName(ev.companyId) }));
     }, [calEvents, autoEvents, companies, notifSettings]);
 
-    const getDayEvents = (day) => {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        return allCalendarEvents.filter(e => e.datum === dateStr);
-    };
+    // Pre-compute day→events Map for O(1) lookups — eliminates per-cell filtering
+    const dayEventsMap = useMemo(() => {
+        const map = new Map();
+        const mm = String(month + 1).padStart(2, '0');
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dateStr = `${year}-${mm}-${String(d).padStart(2, '0')}`;
+            const dayEvents = allCalendarEvents.filter(e => e.datum === dateStr);
+            if (dayEvents.length > 0) map.set(d, dayEvents);
+        }
+        return map;
+    }, [allCalendarEvents, year, month, daysInMonth]);
+
+    const getDayEvents = useCallback((day) => {
+        return dayEventsMap.get(day) || [];
+    }, [dayEventsMap]);
 
     const stats = useMemo(() => {
         const activeWorkers = workers.filter(w => w.aktivan !== false).length;
