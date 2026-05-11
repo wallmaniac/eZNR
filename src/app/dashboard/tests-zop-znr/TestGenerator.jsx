@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { zopQuestions, znrQuestions } from './defaultQuestions';
+import { zopQuestions_BA, zopQuestions_HR, znrQuestions_BA, znrQuestions_HR } from './defaultQuestions';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getById, COLLECTIONS } from '@/lib/dataStore';
 import JSZip from 'jszip';
@@ -14,6 +15,7 @@ import { apiExtractQuestionsFromDocument } from '@/lib/testGeneratorAI';
 export default function TestGenerator() {
     const { lang } = useLanguage();
     const bs = lang !== 'en';
+    const country = useCountry();
     const { activeCompanyId } = useAuth();
 
     const [testType, setTestType] = useState('ZOP');
@@ -74,12 +76,12 @@ Ne dodaj ništa osim JSON-a. Ako neki odgovor nema labelu (a, b, c), ti mu je do
     useEffect(() => {
         // Load default questions when type changes
         if (testType === 'ZOP') {
-            setQuestions(JSON.parse(JSON.stringify(zopQuestions)));
+            setQuestions(JSON.parse(JSON.stringify(country === 'HR' ? zopQuestions_HR : zopQuestions_BA)));
         } else {
-            setQuestions(JSON.parse(JSON.stringify(znrQuestions)));
+            setQuestions(JSON.parse(JSON.stringify(country === 'HR' ? znrQuestions_HR : znrQuestions_BA)));
         }
         setEditingId(null);
-    }, [testType]);
+    }, [testType, country]);
 
     const handleShuffleQuestions = () => {
         const shuffled = [...questions].sort(() => Math.random() - 0.5);

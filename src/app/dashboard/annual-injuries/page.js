@@ -646,12 +646,22 @@ export default function AnnualInjuriesPage() {
           </div>
 
           {/* Deadline reminder */}
-          <div style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: '1.2rem' }}>⏰</span>
-            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
-              <strong>Rok za dostavu:</strong> Godišnji izvještaj o povredama na radu dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.
-            </span>
-          </div>
+          {country === 'BA' && (
+            <div style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: '1.2rem' }}>⏰</span>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
+                <strong>Rok za dostavu:</strong> Godišnji izvještaj o povredama na radu dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.
+              </span>
+            </div>
+          )}
+          {country === 'HR' && (
+            <div style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+              <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
+                <strong>Napomena za RH:</strong> Poslodavci u Hrvatskoj nemaju zakonsku obvezu dostavljanja godišnjeg izvješća inspekcijskim tijelima, već su dužni ovu evidenciju voditi interno.
+              </span>
+            </div>
+          )}
 
           {/* Quick stats (Updates dynamically based on selected year) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12, marginBottom: 24 }}>

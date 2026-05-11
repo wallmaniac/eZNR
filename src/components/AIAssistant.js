@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useRouter, usePathname } from 'next/navigation';
+import { useCountry } from '@/contexts/CountryContext';
 import { getRawAll } from '@/lib/dataStore';
 import { useAuth } from '@/contexts/AuthContext';
 import { apiCallZia } from '@/lib/ziaAPI';
@@ -341,7 +342,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
     } catch { return ''; }
 }
 
-function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies) {
+function buildSystemPrompt(lang, currentPath, dataContext, activeCompanyId, userCompanies, country) {
     const currentPage = APP_KNOWLEDGE.pages.find(p => p.path === currentPath);
     const pageDesc = currentPage
         ? (lang !== 'en' ? `Korisnik se trenutno nalazi na: ${currentPage.label_bs} — ${currentPage.desc_bs}` : `User is currently on: ${currentPage.label_en} — ${currentPage.desc_en}`)
@@ -438,10 +439,9 @@ ISZNR:
 - Ispitivači = ovlaštene osobe za provođenje pregleda opreme i objekata
 
 OBRASCI:
-- OIR-1 = Obrazac za izvještaj o povredi na radu (prijava inspektoratu)
-- RO-1, RO-2 = Obrasci za redovne preglede opreme
-- RA-1 = Ljekarska uputnica za pregled radnika
-- NR-1 = Uputnica za noćni rad
+${country === 'HR' 
+    ? '- Prijava ozljede na radu = HZZO obrazac za prijavu ozljede\n- Obrasci za redovne preglede opreme\n- Uputnica za liječnički pregled'
+    : '- OIR-1 = Obrazac za izvještaj o povredi na radu (prijava inspektoratu)\n- RO-1, RO-2 = Obrasci za redovne preglede opreme\n- RA-1 = Ljekarska uputnica za pregled radnika\n- NR-1 = Uputnica za noćni rad'}
 
 ${pageDesc}
 
@@ -515,7 +515,7 @@ CERTIFICATES:
 - PP = Fire Protection certificate
 - Valid until = expiry date, worker must renew after this
 
-FORMS: OIR-1 = Injury report, RO-1/RO-2 = Equipment inspection, RA-1 = Medical referral, NR-1 = Night work referral
+FORMS: ${country === 'HR' ? 'HZZO Injury report, Equipment inspection forms, Medical referral' : 'OIR-1 = Injury report, RO-1/RO-2 = Equipment inspection, RA-1 = Medical referral, NR-1 = Night work referral'}
 ISZNR = National Information System for Occupational Safety
 
 ${pageDesc}
@@ -840,6 +840,7 @@ export default function AIAssistant() {
     const { userCompanies } = useAuth();
     const router = useRouter();
     const pathname = usePathname();
+    const country = useCountry();
 
     // Compute theme-aware chat styles
     const chatStyles = makeChatStyles(isDark);
@@ -1510,7 +1511,7 @@ export default function AIAssistant() {
         try {
             const activeCompId = localStorage.getItem('eznr_activeCompany') || '';
             const dataCtx = buildDataContext(lang, activeCompId, userCompanies);
-            const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies);
+            const systemPrompt = buildSystemPrompt(lang, pathname, dataCtx, activeCompId, userCompanies, country);
 
             const newHistory = prefilledHistory || [...chatHistoryRef.current, { role: 'user', parts: [{ text: safeText }] }];
             if (!prefilledHistory) chatHistoryRef.current = newHistory;
