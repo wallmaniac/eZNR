@@ -13,11 +13,129 @@ const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July
 
 const EMPTY_COMPANY = { naziv: '', adresa: '', jib: '', odgovornaOsoba: '', telefon: '', email: '' };
 
+const DOPIS_TEXT = {
+  bs: {
+    inspectorateTitle: 'KANTONALNA INSPEKCIJA ZNR',
+    inspectorateSubtitle: '(Nadležna kantonalna inspekcija zaštite na radu)',
+    subject: 'Predmet: Godišnji izvještaj o povredama na radu za {year}. godinu',
+    dear: 'Poštovani,',
+    p1: 'U skladu sa odredbama Zakona o zaštiti na radu, dostavljamo Vam godišnji izvještaj o povredama na radu za {year}. godinu, za privredni subjekt',
+    p2_1: 'U navedenom periodu evidentirano je ukupno',
+    p2_2: 'povreda na radu, od čega:',
+    p2_laka: 'lakih',
+    p2_teska: 'teških',
+    p2_smrtna: 'smrtnih i',
+    p2_kol: 'kolektivnih.',
+    p3: 'Detaljan pregled povreda na radu sa lakom, teškom ili smrtnom posljedicom dat je u tabeli u prilogu ovog dopisa.',
+    p4: 'Ostajemo na Vašem raspolaganju za sva dodatna pojašnjenja.',
+    regards: 'S poštovanjem,',
+    officer: 'Odgovorna osoba / Stručnjak ZNR',
+    seal: 'Pečat i potpis',
+    attachment: 'PRILOG: Pregled povreda na radu sa lakom, teškom ili smrtnom posljedicom — {year}. godina',
+    empName: 'Naziv poslodavca:',
+    table_rb: 'Rb.',
+    table_death: 'Povreda na radu sa smrtnom posljedicom',
+    table_personal: 'Lični podaci stradalih (ime i prezime, datum rod., spol)',
+    table_location: 'Datum i mjesto nesreće / povrede',
+    table_cause: 'Uzroci pojave, sadišta teške ili kolektivne povrede rada',
+    table_report: 'Prijava MUP stanici i Kantonalnoj inspekciji (broj i datum)',
+    table_note: 'Napomena',
+    table_sub1: 'Pojedinačna',
+    table_sub2: 'Kolektivna',
+    table_sub3: 'Broj stradalih',
+    no_injuries: '✅ Nije evidentirano povreda na radu za {year}. godinu.',
+    form_title: 'Podaci poslodavca (za zaglavlje dopisa)',
+    form_f1: 'Naziv firme / poslodavca',
+    form_f2: 'Adresa sjedišta',
+    form_f3: 'JIB / ID broj',
+    form_f4: 'Odgovorna osoba (ime i prezime)',
+    form_f5: 'Telefon',
+    form_f6: 'Email'
+  },
+  hr: {
+    inspectorateTitle: 'INSPEKTORAT RADA',
+    inspectorateSubtitle: '(Nadležni inspektorat zaštite na radu)',
+    subject: 'Predmet: Godišnje izvješće o ozljedama na radu za {year}. godinu',
+    dear: 'Poštovani,',
+    p1: 'U skladu s odredbama Zakona o zaštiti na radu, dostavljamo Vam godišnje izvješće o ozljedama na radu za {year}. godinu, za poslovni subjekt',
+    p2_1: 'U navedenom razdoblju evidentirano je ukupno',
+    p2_2: 'ozljeda na radu, od čega:',
+    p2_laka: 'lakih',
+    p2_teska: 'teških',
+    p2_smrtna: 'smrtnih i',
+    p2_kol: 'kolektivnih.',
+    p3: 'Detaljan pregled ozljeda na radu s lakom, teškom ili smrtnom posljedicom dan je u tablici u prilogu ovog dopisa.',
+    p4: 'Ostajemo na Vašem raspolaganju za sva dodatna pojašnjenja.',
+    regards: 'S poštovanjem,',
+    officer: 'Odgovorna osoba / Stručnjak ZNR',
+    seal: 'Pečat i potpis',
+    attachment: 'PRILOG: Pregled ozljeda na radu s lakom, teškom ili smrtnom posljedicom — {year}. godina',
+    empName: 'Naziv poslodavca:',
+    table_rb: 'Rbr.',
+    table_death: 'Ozljeda na radu sa smrtnom posljedicom',
+    table_personal: 'Osobni podaci stradalih (ime i prezime, datum rođ., spol)',
+    table_location: 'Datum i mjesto nesreće / ozljede',
+    table_cause: 'Uzroci pojave teške ili kolektivne ozljede na radu',
+    table_report: 'Prijava MUP-u i Inspektoratu (broj i datum)',
+    table_note: 'Napomena',
+    table_sub1: 'Pojedinačna',
+    table_sub2: 'Kolektivna',
+    table_sub3: 'Broj stradalih',
+    no_injuries: '✅ Nije evidentirano ozljeda na radu za {year}. godinu.',
+    form_title: 'Podaci poslodavca (za zaglavlje dopisa)',
+    form_f1: 'Naziv tvrtke / poslodavca',
+    form_f2: 'Adresa sjedišta',
+    form_f3: 'OIB',
+    form_f4: 'Odgovorna osoba (ime i prezime)',
+    form_f5: 'Telefon',
+    form_f6: 'Email'
+  },
+  en: {
+    inspectorateTitle: 'LABOR INSPECTORATE',
+    inspectorateSubtitle: '(Competent Occupational Safety Inspectorate)',
+    subject: 'Subject: Annual Work Injury Report for {year}',
+    dear: 'Dear Sir/Madam,',
+    p1: 'In accordance with the provisions of the Occupational Safety Act, we hereby submit the annual report on work injuries for the year {year}, for the business entity',
+    p2_1: 'During the specified period, a total of',
+    p2_2: 'work injuries were recorded, of which:',
+    p2_laka: 'minor',
+    p2_teska: 'severe',
+    p2_smrtna: 'fatal and',
+    p2_kol: 'collective.',
+    p3: 'A detailed overview of work injuries with minor, severe, or fatal consequences is provided in the table attached to this letter.',
+    p4: 'We remain at your disposal for any further clarifications.',
+    regards: 'Sincerely,',
+    officer: 'Responsible Person / OSH Expert',
+    seal: 'Stamp and signature',
+    attachment: 'ATTACHMENT: Overview of work injuries with minor, severe, or fatal consequences — {year}',
+    empName: 'Employer name:',
+    table_rb: 'No.',
+    table_death: 'Work injury with fatal consequence',
+    table_personal: 'Personal data of victims (name, DOB, gender)',
+    table_location: 'Date and location of accident',
+    table_cause: 'Causes of severe or collective work injury',
+    table_report: 'Report to Police & Inspectorate (number and date)',
+    table_note: 'Note',
+    table_sub1: 'Individual',
+    table_sub2: 'Collective',
+    table_sub3: 'Number of victims',
+    no_injuries: '✅ No work injuries recorded for {year}.',
+    form_title: 'Employer data (for letterhead)',
+    form_f1: 'Company name',
+    form_f2: 'Headquarters address',
+    form_f3: 'Company ID / VAT',
+    form_f4: 'Responsible person (name)',
+    form_f5: 'Phone',
+    form_f6: 'Email'
+  }
+};
+
 export default function AnnualInjuriesPage() {
   const { t, lang } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { markDirty, markClean } = useUnsavedChanges();
   const currentYear = new Date().getFullYear();
+  const tLocal = DOPIS_TEXT[lang] || DOPIS_TEXT.bs;
 
   // ── Core state ──
   const [year, setYear] = useState(String(currentYear));
@@ -684,16 +802,16 @@ export default function AnnualInjuriesPage() {
             <div className="card no-print" style={{ marginBottom: 20 }}>
               <div className="card-body">
                 <div style={{ fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--primary)', marginBottom: 12 }}>
-                  Podaci poslodavca (za zaglavlje dopisa)
+                  {tLocal.form_title}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                   {[
-                    { key: 'naziv', label: 'Naziv firme / poslodavca' },
-                    { key: 'adresa', label: 'Adresa sjedišta' },
-                    { key: 'jib', label: 'JIB / ID broj' },
-                    { key: 'odgovornaOsoba', label: 'Odgovorna osoba (ime i prezime)' },
-                    { key: 'telefon', label: 'Telefon' },
-                    { key: 'email', label: 'Email' },
+                    { key: 'naziv', label: tLocal.form_f1 },
+                    { key: 'adresa', label: tLocal.form_f2 },
+                    { key: 'jib', label: tLocal.form_f3 },
+                    { key: 'odgovornaOsoba', label: tLocal.form_f4 },
+                    { key: 'telefon', label: tLocal.form_f5 },
+                    { key: 'email', label: tLocal.form_f6 },
                   ].map(f => (
                     <div key={f.key} className="form-group" style={{ marginBottom: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem' }}>{f.label}</label>
@@ -727,48 +845,45 @@ export default function AnnualInjuriesPage() {
 
                 {/* Recipient */}
                 <div style={{ marginBottom: 24, paddingLeft: 40 }}>
-                  <div style={{ fontWeight: 700 }}>KANTONALNA INSPEKCIJA ZNR</div>
-                  <div>(Nadležna kantonalna inspekcija zaštite na radu)</div>
+                  <div style={{ fontWeight: 700 }}>{tLocal.inspectorateTitle}</div>
+                  <div>{tLocal.inspectorateSubtitle}</div>
                 </div>
 
                 {/* Subject */}
                 <div style={{ marginBottom: 20 }}>
-                  <strong>Predmet: Godišnji izvještaj o povredama na radu za {year}. godinu</strong>
+                  <strong>{tLocal.subject.replace('{year}', year)}</strong>
                 </div>
 
                 {/* Body */}
                 <div style={{ marginBottom: 20 }}>
-                  <p>Poštovani,</p>
+                  <p>{tLocal.dear}</p>
                   <p>
-                    U skladu sa odredbama Zakona o zaštiti na radu, dostavljamo Vam godišnji izvještaj o
-                    povredama na radu za <strong>{year}. godinu</strong>, za privredni subjekt{' '}
-                    <strong>{companyInfo.naziv || '[Naziv firme]'}</strong>.
+                    {tLocal.p1} <strong>{companyInfo.naziv || '[Naziv]'}</strong>.
                   </p>
                   <p>
-                    U navedenom periodu evidentirano je ukupno <strong>{yearInjuries.length}</strong> povreda na radu,
-                    od čega: <strong>{totals.laka}</strong> lakih,{' '}
-                    <strong>{totals.teska}</strong> teških,{' '}
-                    <strong>{totals.smrtna}</strong> smrtnih i{' '}
-                    <strong>{totals.kolektivna}</strong> kolektivnih.
+                    {tLocal.p2_1} <strong>{yearInjuries.length}</strong> {tLocal.p2_2}{' '}
+                    <strong>{totals.laka}</strong> {tLocal.p2_laka},{' '}
+                    <strong>{totals.teska}</strong> {tLocal.p2_teska},{' '}
+                    <strong>{totals.smrtna}</strong> {tLocal.p2_smrtna}{' '}
+                    <strong>{totals.kolektivna}</strong> {tLocal.p2_kol}
                   </p>
                   <p>
-                    Detaljan pregled povreda na radu sa lakom, teškom ili smrtnom posljedicom dat je u
-                    tabeli u prilogu ovog dopisa.
+                    {tLocal.p3}
                   </p>
-                  <p>Ostajemo na Vašem raspolaganju za sva dodatna pojašnjenja.</p>
+                  <p>{tLocal.p4}</p>
                 </div>
 
                 {/* Signature */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 48, flexWrap: 'wrap', gap: 24 }}>
                   <div>
-                    <div>S poštovanjem,</div>
+                    <div>{tLocal.regards}</div>
                     <div style={{ marginTop: 40, borderTop: '1px solid #000', minWidth: 200, paddingTop: 4, textAlign: 'center', fontSize: '0.85rem' }}>
-                      {companyInfo.odgovornaOsoba || 'Odgovorna osoba / Stručnjak ZNR'}
+                      {companyInfo.odgovornaOsoba || tLocal.officer}
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ marginTop: 40, borderTop: '1px solid #000', minWidth: 200, paddingTop: 4, textAlign: 'center', fontSize: '0.85rem' }}>
-                      Pečat i potpis
+                      {tLocal.seal}
                     </div>
                   </div>
                 </div>
@@ -782,40 +897,40 @@ export default function AnnualInjuriesPage() {
             <div className="card" style={{ marginBottom: 20 }}>
               <div className="card-body">
                 <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 4, textAlign: 'center', fontFamily: 'Georgia, serif' }}>
-                  PRILOG: Pregled povreda na radu sa lakom, teškom ili smrtnom posljedicom — {year}. godina
+                  {tLocal.attachment.replace('{year}', year)}
                 </div>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16 }}>
-                  Naziv poslodavca: <strong>{companyInfo.naziv || '___________________'}</strong>
+                  {tLocal.empName} <strong>{companyInfo.naziv || '___________________'}</strong>
                 </div>
 
                 <div className="data-table-wrapper">
                   <table className="data-table" style={{ fontSize: '0.8rem', fontFamily: 'Georgia, serif' }}>
                     <thead>
                       <tr>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '4%' }}>Rb.</th>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '4%' }}>{tLocal.table_rb}</th>
                         <th colSpan={3} style={{ textAlign: 'center', background: 'rgba(239,68,68,0.08)', width: '16%' }}>
-                          Povreda na radu sa smrtnom posljedicom
+                          {tLocal.table_death}
                         </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
-                          Lični podaci stradalih<br/><span style={{ fontWeight: 400, fontSize: '0.72rem' }}>(ime i prezime, datum rod., spol)</span>
-                        </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
-                          Datum i mjesto nesreće / povrede
-                        </th>
-                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
-                          Uzroci pojave, sadišta teške ili kolektivne povrede rada
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%', whiteSpace: 'pre-line' }}>
+                          {tLocal.table_personal}
                         </th>
                         <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
-                          Prijava MUP stanici i Kantonalnoj inspekciji (broj i datum)
+                          {tLocal.table_location}
+                        </th>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '20%' }}>
+                          {tLocal.table_cause}
+                        </th>
+                        <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '15%' }}>
+                          {tLocal.table_report}
                         </th>
                         <th rowSpan={2} style={{ textAlign: 'center', verticalAlign: 'middle', width: '10%' }}>
-                          Napomena
+                          {tLocal.table_note}
                         </th>
                       </tr>
                       <tr>
-                        <th style={{ textAlign: 'center', background: 'rgba(239,68,68,0.05)', fontSize: '0.72rem' }}>Pojedinačna</th>
-                        <th style={{ textAlign: 'center', background: 'rgba(239,68,68,0.05)', fontSize: '0.72rem' }}>Kolektivna</th>
-                        <th style={{ textAlign: 'center', background: 'rgba(239,68,68,0.05)', fontSize: '0.72rem' }}>Broj stradalih</th>
+                        <th style={{ textAlign: 'center', background: 'rgba(239,68,68,0.05)', fontSize: '0.72rem' }}>{tLocal.table_sub1}</th>
+                        <th style={{ textAlign: 'center', background: 'rgba(239,68,68,0.05)', fontSize: '0.72rem' }}>{tLocal.table_sub2}</th>
+                        <th style={{ textAlign: 'center', background: 'rgba(239,68,68,0.05)', fontSize: '0.72rem' }}>{tLocal.table_sub3}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -829,7 +944,7 @@ export default function AnnualInjuriesPage() {
                           ))}
                           <tr>
                             <td colSpan={9} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '16px', fontStyle: 'italic', fontSize: '0.82rem' }}>
-                              ✅ Nije evidentirano povreda na radu za {year}. godinu.
+                              {tLocal.no_injuries.replace('{year}', year)}
                             </td>
                           </tr>
                         </>
