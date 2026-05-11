@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { getAll, getById, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
@@ -132,6 +133,7 @@ const DOPIS_TEXT = {
 
 export default function AnnualInjuriesPage() {
   const { t, lang } = useLanguage();
+  const country = useCountry();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { markDirty, markClean } = useUnsavedChanges();
   const currentYear = new Date().getFullYear();
@@ -782,12 +784,22 @@ export default function AnnualInjuriesPage() {
         </div>
 
         {/* Deadline */}
-        <div className="no-print" style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: '1.2rem' }}>⏰</span>
-          <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
-            <strong>Rok za dostavu:</strong> Godišnji izvještaj dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.
-          </span>
-        </div>
+        {country === 'BA' && (
+          <div className="no-print" style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '1.2rem' }}>⏰</span>
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
+              <strong>Rok za dostavu:</strong> Godišnji izvještaj dostavlja se <strong>Kantonalnoj inspekciji ZNR</strong> do <strong>{deadline}</strong>.
+            </span>
+          </div>
+        )}
+        {country === 'HR' && (
+          <div className="no-print" style={{ marginBottom: 20, padding: '12px 16px', background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: '1.2rem' }}>ℹ️</span>
+            <span style={{ fontSize: '0.88rem', color: 'var(--text-light)' }}>
+              <strong>Napomena za RH:</strong> Poslodavci u Hrvatskoj nemaju zakonsku obvezu dostavljanja godišnjeg izvješća inspekcijskim tijelima, već su dužni ovu evidenciju voditi interno.
+            </span>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="no-print" style={{ display: 'flex', gap: 0, marginBottom: 20, borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--border)', width: 'fit-content' }}>

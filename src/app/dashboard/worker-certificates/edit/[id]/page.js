@@ -11,6 +11,7 @@ import { uploadSecureFile } from '@/lib/storageService';
 import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import HelpTip from '@/components/HelpTip';
+import { useCountry } from '@/contexts/CountryContext';
 import PageHeader from '@/components/PageHeader';
 import TabBar from '@/components/TabBar';
 
@@ -32,6 +33,7 @@ const FILE_TYPE_OPTIONS = ['Sken', 'Original', 'Kopija', 'Email potvrda', 'Digit
 
 function EditCertPageInner() {
     const { t, lang } = useLanguage();
+    const country = useCountry();
     const { activeCompanyId } = useAuth();
     const router = useRouter();
     const params = useParams();
@@ -280,7 +282,7 @@ function EditCertPageInner() {
                             <DateInput value={formData.datum || ''} onChange={v => set('datum', v)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <HelpTip text="Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu." /></div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <HelpTip text={country === 'HR' ? "Zakon o zaštiti na radu nalaže periodičnu obnovu procjene radne sposobnosti ili osposobljavanja u rokovima predviđenima posebnim propisima ili samom procjenom rizika." : "Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu."} /></div>
                             <DateInput value={formData.vrijediDo || ''} onChange={v => set('vrijediDo', v)} />
                         </div>
                     </div>

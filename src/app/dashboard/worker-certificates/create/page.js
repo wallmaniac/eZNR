@@ -12,6 +12,7 @@ import { useDialog } from '@/hooks/useDialog';
 import { printZosPdf } from '@/lib/zosPdfGenerator';
 import { uploadSecureFile } from '@/lib/storageService';
 import HelpTip from '@/components/HelpTip';
+import { useCountry } from '@/contexts/CountryContext';
 import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';
 
@@ -54,8 +55,9 @@ const FILE_TYPE_OPTIONS = [
     'Sken', 'Original', 'Kopija', 'Email potvrda', 'Digitalni dokument',
 ];
 
-export function UvjerenjeFormPage() {
+function UvjerenjeFormPage() {
     const { t, lang } = useLanguage();
+    const country = useCountry();
     const { activeCompanyId } = useAuth();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -561,7 +563,7 @@ export function UvjerenjeFormPage() {
                             <DateInput value={formData.datum} onChange={v => set('datum', v)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <HelpTip text="Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu." /></div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <HelpTip text={country === 'HR' ? "Zakon o zaštiti na radu nalaže periodičnu obnovu procjene radne sposobnosti ili osposobljavanja u rokovima predviđenima posebnim propisima ili samom procjenom rizika." : "Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu."} /></div>
                             <DateInput value={formData.vrijediDo} onChange={v => set('vrijediDo', v)} />
                         </div>
                     </div>
