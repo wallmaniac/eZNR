@@ -3153,10 +3153,30 @@ button.btn-primary-glow {
   color: var(--danger) !important;
 }
 
+@media (max-width: 1200px) and (min-width: 769px) {
+  .scrollable-toolbar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    align-items: center;
+    width: 100%;
+  }
+  .scrollable-toolbar > * {
+    width: 100%;
+    justify-content: center;
+  }
+  .scrollable-toolbar .search-bar {
+    width: 100% !important;
+    max-width: none !important;
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 768px) {
   .scrollable-toolbar {
     flex-direction: column;
     align-items: stretch;
+    width: 100%;
   }
   .scrollable-toolbar > * {
     width: 100%;
