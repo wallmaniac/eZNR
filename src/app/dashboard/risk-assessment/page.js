@@ -883,7 +883,7 @@ export default function RiskAssessmentPage() {
         if (riskItems.length === 0) return;
         setConclusionLoading(true);
         try {
-            const text = await fetchAiAutoConclusion(riskItems, formData);
+            const text = await fetchAiAutoConclusion(riskItems, formData, country);
             if (text) {
                 set('zakljucak', text);
             }

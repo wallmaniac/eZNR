@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAll, create, update, remove, COLLECTIONS, getOrgUnitName } from '@/lib/dataStore';
@@ -29,8 +29,12 @@ export default function ObservationsPage() {
     
     // New Hazard Form State
     const [showNewForm, setShowNewForm] = useState(false);
-    const [newFormData, setNewFormData] = useState({ opis: '', lokacija: '', ime: '' });
+    const [newFormData, setNewFormData] = useState({ opis: '', lokacija: '', ime: '', orgJedinicaId: '' });
     const [newFormSaving, setNewFormSaving] = useState(false);
+    const [newImageFile, setNewImageFile] = useState(null);
+    const [newImagePreview, setNewImagePreview] = useState(null);
+    const fileInputRef = useRef(null);
+    const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS || 'org_units'), []);
 
     // Standard list states
     const [selectedIds, setSelectedIds] = useState(new Set());
@@ -87,6 +91,14 @@ export default function ObservationsPage() {
         }
     };
 
+    const handleNewFileSelect = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!file.type.startsWith('image/')) return;
+        setNewImageFile(file);
+        setNewImagePreview(URL.createObjectURL(file));
+    };
+
     const handleNewSubmit = async () => {
         if (!newFormData.opis.trim() || !newFormData.lokacija.trim()) {
             await alert(bs ? 'Popunite obavezna polja: Opis i Lokacija.' : 'Description and location are required.');
@@ -94,15 +106,27 @@ export default function ObservationsPage() {
         }
         setNewFormSaving(true);
         try {
-            create(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', {
+            const record = {
                 opis: newFormData.opis,
                 lokacija: newFormData.lokacija,
                 ime: newFormData.ime || (bs ? 'Admin' : 'Admin'),
+                orgJedinicaId: newFormData.orgJedinicaId || '',
                 status: 'Novo',
                 datum: new Date().toISOString(),
-            });
+            };
+            // If image selected, convert to base64 data URL and store inline
+            if (newImageFile) {
+                const dataUrl = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(newImageFile);
+                });
+                record.slika = { url: dataUrl, name: newImageFile.name };
+            }
+            create(COLLECTIONS.SAFETY_OBSERVATIONS || 'safety_observations', record);
             loadData(); showFlash(); setShowNewForm(false);
-            setNewFormData({ opis: '', lokacija: '', ime: '' });
+            setNewFormData({ opis: '', lokacija: '', ime: '', orgJedinicaId: '' });
+            setNewImageFile(null); setNewImagePreview(null);
         } catch (e) {
             await alert((bs ? 'Greška: ' : 'Error: ') + e.message);
         } finally {
@@ -253,6 +277,36 @@ export default function ObservationsPage() {
                             <div className="form-group">
                                 <label className="form-label">{bs ? 'Prijavio/la (opcionalno)' : 'Reported by (optional)'}</label>
                                 <input className="form-input" placeholder={bs ? 'Ime osobe koja prijavljuje' : 'Name of reporter'} value={newFormData.ime} onChange={e => setNewFormData({ ...newFormData, ime: e.target.value })} />
+                            </div>
+                            {orgUnits.length > 0 && (
+                                <div className="form-group">
+                                    <label className="form-label">{bs ? 'Odjel / Sektor (opcionalno)' : 'Department (optional)'}</label>
+                                    <select className="form-select" value={newFormData.orgJedinicaId} onChange={e => setNewFormData({ ...newFormData, orgJedinicaId: e.target.value })}>
+                                        <option value="">-</option>
+                                        {orgUnits.map(ou => <option key={ou.id} value={ou.id}>{ou.naziv}</option>)}
+                                    </select>
+                                </div>
+                            )}
+                            <div className="form-group">
+                                <label className="form-label">{bs ? 'Fotografija (opcionalno)' : 'Photo (optional)'}</label>
+                                <div style={{ border: '2px dashed var(--border)', borderRadius: 'var(--radius-md)', padding: '16px', textAlign: 'center', background: 'rgba(0,191,166,0.03)', position: 'relative', overflow: 'hidden' }}>
+                                    {newImagePreview ? (
+                                        <img src={newImagePreview} style={{ maxWidth: '100%', maxHeight: 180, objectFit: 'contain', borderRadius: 'var(--radius-sm)' }} alt="Preview" />
+                                    ) : (
+                                        <div>
+                                            <div style={{ fontSize: 28, marginBottom: 8 }}>📷</div>
+                                            <button type="button" className="btn btn-outline btn-sm" onClick={() => fileInputRef.current?.click()}>
+                                                {bs ? 'Odaberi sliku' : 'Choose image'}
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                {newImagePreview && (
+                                    <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 6, color: 'var(--danger)', display: 'block', margin: '6px auto 0' }} onClick={() => { setNewImageFile(null); setNewImagePreview(null); }}>
+                                        {bs ? 'Ukloni sliku' : 'Remove photo'}
+                                    </button>
+                                )}
+                                <input type="file" accept="image/*" ref={fileInputRef} style={{ display: 'none' }} onChange={handleNewFileSelect} />
                             </div>
                         </div>
                         <div className="modal-footer">

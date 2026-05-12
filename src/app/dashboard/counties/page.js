@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useCountry } from '@/contexts/CountryContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
@@ -10,6 +11,7 @@ import PageHeader from '@/components/PageHeader';
 export default function CountiesPage() {
   const { t, lang } = useLanguage();
   const bs = lang !== 'en';
+  const country = useCountry();
   const { confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const [items, setItems] = useState([]);
@@ -64,7 +66,7 @@ export default function CountiesPage() {
       </div></div>)}
       <div className="card"><div className="card-body" style={{ padding: 0 }}>
         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? 'Novi kanton' : 'New County'}</button>
+          <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ {bs ? (country === 'HR' ? 'Nova županija' : 'Novi kanton') : 'New County'}</button>
           <SavedFlash />
           {selectedIds.size> 0 && (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>

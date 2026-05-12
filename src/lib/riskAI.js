@@ -80,7 +80,7 @@ export const fetchAiDocAnalyze = async (documents, companyName) => {
     }
 };
 
-export const fetchAiAutoConclusion = async (riskItems, formData) => {
+export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA') => {
     const itemsWithScores = riskItems.filter(ri => ri.rizik > 0);
     const avgBefore = itemsWithScores.length > 0 ? itemsWithScores.reduce((s, ri) => s + ri.rizik, 0) / itemsWithScores.length : 0;
     const itemsWithAfter = riskItems.filter(ri => ri.rizikNakon > 0);
@@ -89,8 +89,12 @@ export const fetchAiAutoConclusion = async (riskItems, formData) => {
     // PII Sanitization
     const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
 
+    const sysPrompt = country === 'HR'
+        ? 'Ti si stručnjak za zaštitu na radu u Republici Hrvatskoj. Piši formalno, profesionalno, na hrvatskom jeziku. Generiraj zaključak za akt o procjeni rizika prema Zakonu o zaštiti na radu (NN 71/14).'
+        : 'Ti si stručnjak za zaštitu na radu u FBiH. Piši formalno, profesionalno, na bosanskom jeziku. Generiši zaključak za akt o procjeni rizika.';
+
     const data = await apiCallZia({
-        systemPrompt: 'Ti si stručnjak za zaštitu na radu u FBiH. Piši formalno, profesionalno, na bosanskom jeziku. Generiši zaključak za akt o procjeni rizika.',
+        systemPrompt: sysPrompt,
         messages: [{
             role: 'user', parts: [{
                 text: `Na osnovu procjene rizika sa ${riskItems.length} stavki:\n- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})\n- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}\n- Smanjenje: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}\n- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}\n- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}\n- Naziv tvrtke: ${sanitizedCompanyName}\n- Djelatnost: ${formData.djelatnost || 'N/A'}\n\nNapiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uključi: opći zaključak, ključne rizike, obaveze poslodavca, rok za reviziju.`

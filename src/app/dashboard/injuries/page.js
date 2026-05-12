@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAll, create, update, remove, COLLECTIONS } from '@/lib/dataStore';
+import { useCountry } from '@/contexts/CountryContext';
 import { useDialog } from '@/hooks/useDialog';
 import { useSortedList } from '@/hooks/useSortedList';
 import { usePagination } from '@/hooks/usePagination';
@@ -29,6 +30,7 @@ const EMPTY_FORM = {
 export default function InjuriesPage() {
   const { t, lang } = useLanguage();
   const router = useRouter();
+  const country = useCountry();
   const { alert, confirm, DialogRenderer } = useDialog();
   const { showFlash, SavedFlash } = useSavedFlash();
   const { markDirty, markClean } = useUnsavedChanges();
@@ -390,7 +392,7 @@ export default function InjuriesPage() {
                         </div>
                       )}
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                        <label className="form-label">{lang !== 'en' ? 'Prijava MUP stanici / Kantonalnoj inspekciji (broj i datum)' : 'Report to police / inspection (number & date)'}</label>
+                        <label className="form-label">{lang !== 'en' ? (country === 'HR' ? 'Prijava MUP-u / Inspektoratu rada (broj i datum)' : 'Prijava MUP stanici / Kantonalnoj inspekciji (broj i datum)') : 'Report to police / inspection (number & date)'}</label>
                         <input className="form-input" value={formData.prijavaOrgan} onChange={e => set('prijavaOrgan', e.target.value)} placeholder={lang !== 'en' ? 'Npr. Br. 12345/2026 od 15.03.2026.' : 'E.g. No. 12345/2026 dated 15.03.2026'} />
                       </div>
                       <div className="form-group" style={{ gridColumn: '1 / -1' }}>
