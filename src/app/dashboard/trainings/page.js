@@ -523,9 +523,9 @@ export default function TrainingsPage() {
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew}>+ Nova obuka</button>
-                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')}>📝 {lang !== 'en' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')}>🔥 {lang !== 'en' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={lang !== 'en' ? 'Kreiraj novu obuku sa prezentacijom i testom' : 'Create new training with presentation and test'}>+ {lang !== 'en' ? 'Nova obuka' : 'New training'}</button>
+                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način za ručno popunjavanje' : 'Generate an empty ZOS record for manual filling'}>📝 {lang !== 'en' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika iz oblasti zaštite od požara za ručno popunjavanje' : 'Generate an empty ZOP record for manual filling'}>🔥 {lang !== 'en' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                             <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
                                 <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder="Pretraži obuke..." value={search} onChange={e => setSearch(e.target.value)}

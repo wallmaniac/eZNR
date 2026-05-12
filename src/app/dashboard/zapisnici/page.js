@@ -432,14 +432,14 @@ export default function ZapisniciPage() {
                     {/* ── TOOLBAR ── */}
                     <div className="card" style={{ marginBottom: 16 }}>
                         <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                            <button className="btn btn-primary" onClick={handleNew}>
+                            <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Kliknite za kreiranje novog zapisnika (npr. o pregledu opreme ili vježbi)' : 'Click to create a new record (e.g., equipment inspection or drill)'}>
                                 + {lang !== 'en' ? 'Novi zapisnik' : 'New record'}
                             </button>
 
-                            <button className="btn btn-dark btn-sm" style={{ height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')}>
+                            <button className="btn btn-dark btn-sm" style={{ height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način za ručno popunjavanje' : 'Generate an empty ZOS record for manual filling'}>
                                 📝 {lang !== 'en' ? 'Zapisnik ZOS' : 'Print ZOS'}
                             </button>
-                            <button className="btn btn-dark btn-sm" style={{ height: 38, background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')}>
+                            <button className="btn btn-dark btn-sm" style={{ height: 38, background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika iz oblasti zaštite od požara za ručno popunjavanje' : 'Generate an empty ZOP record for manual filling'}>
                                 🔥 {lang !== 'en' ? 'Zapisnik ZOP' : 'Print ZOP'}
                             </button>
 
