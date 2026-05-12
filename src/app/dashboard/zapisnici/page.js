@@ -8,6 +8,7 @@ import { useSortedList } from '@/hooks/useSortedList';
 import { matchWorkers, confidenceLabel, extractNameTokens } from '@/lib/textMatch';
 import { idbSaveFile, idbDeleteFile, idbDownloadFile, idbOpenFile, idbKey as makeIdbKey } from '@/lib/idbFiles';
 import PageHeader from '@/components/PageHeader';
+import { useCountry } from '@/contexts/CountryContext';
 
 // ── CDN loader ────────────────────────────────────────────────────────────────
 function loadScript(src) {
@@ -91,6 +92,7 @@ const menuItemSt = {
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function ZapisniciPage() {
     const { lang, t } = useLanguage();
+    const country = useCountry();
     const { alert, confirm, DialogRenderer } = useDialog();
     const [activeTab, setActiveTab] = useState('list');
 
@@ -432,6 +434,13 @@ export default function ZapisniciPage() {
                         <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
                             <button className="btn btn-primary" onClick={handleNew}>
                                 + {lang !== 'en' ? 'Novi zapisnik' : 'New record'}
+                            </button>
+
+                            <button className="btn btn-dark btn-sm" style={{ height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')}>
+                                📝 {lang !== 'en' ? 'Zapisnik ZOS' : 'Print ZOS'}
+                            </button>
+                            <button className="btn btn-dark btn-sm" style={{ height: 38, background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')}>
+                                🔥 {lang !== 'en' ? 'Zapisnik ZOP' : 'Print ZOP'}
                             </button>
 
                             <div className="search-bar" style={{ flex: 1, minWidth: 200, maxWidth: 360 }}>
