@@ -57,7 +57,7 @@ function AlertsWidget({ groups, total, lang, isMobile }) {
                             🚨 {total} {lang !== 'en' ? 'stavki zahtijeva pažnju' : 'items need attention'}
                         </span>
                     </div>
-                    <div className="scrollable-toolbar" style={{ flex: 1, padding: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+                    <div className="scrollable-toolbar" style={{ flex: 1, padding: 0, width: isMobile ? '100%' : 'auto' }}>
                         {groups.map(g => {
                             const isOpen = openKey === g.key;
                             return (
