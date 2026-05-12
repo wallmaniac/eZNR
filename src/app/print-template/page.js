@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LAWS } from '@/lib/lawConfig';
 
@@ -7,17 +7,39 @@ export default function PrintTemplatePage() {
     const searchParams = useSearchParams();
     const type = searchParams.get('type') || 'ZOS'; // ZOS or ZOP
     const workerName = searchParams.get('worker') || '_________________________';
-    const country = searchParams.get('country') || 'BA';
+    const urlCountry = searchParams.get('country');
+
+    // Auto-detect country from the active company in localStorage
+    const [country, setCountry] = useState(urlCountry || 'BA');
+
+    useEffect(() => {
+        if (urlCountry) { setCountry(urlCountry); return; }
+        // Read from localStorage — same approach as CountryContext
+        try {
+            const activeId = localStorage.getItem('eznr_activeCompany');
+            if (activeId && activeId !== 'all') {
+                const raw = localStorage.getItem('eznr_data_companies');
+                if (raw) {
+                    const companies = JSON.parse(raw);
+                    const comp = companies.find(c => c.id === activeId);
+                    if (comp?.country) setCountry(comp.country.toUpperCase());
+                }
+            }
+        } catch (_) {}
+    }, [urlCountry]);
 
     useEffect(() => {
         // Automatically open print dialog a moment after loading
         const t = setTimeout(() => {
             window.print();
-        }, 500);
+        }, 600);
         return () => clearTimeout(t);
     }, []);
 
-    const today = new Date().toLocaleDateString('bs-BA');
+    const today = new Date().toLocaleDateString('hr-HR');
+
+    const osh = LAWS[country]?.osh || LAWS.BA.osh;
+    const fire = LAWS[country]?.fire || LAWS.BA.fire;
 
     return (
         <div className="print-template-wrapper" style={{ maxWidth: '210mm', minHeight: '297mm', margin: '0 auto', padding: '20mm', fontFamily: 'serif', boxSizing: 'border-box' }}>
@@ -37,8 +59,11 @@ export default function PrintTemplatePage() {
                         </ol>
 
                         <p>
-                            Na osnovu {LAWS[country]?.osh?.articleWord || 'Člana'} {LAWS[country]?.osh?.articles?.trainingObligation || '26'}. {LAWS[country]?.osh?.name || 'Zakona o zaštiti na radu'} ("{LAWS[country]?.osh?.gazette || ''}") 
-                            i Pravilnika o načinu, postupku i rokovima vršenja periodičnih pregleda i ispitivanja iz oblasti zaštite na radu, 
+                            Na osnovu {osh.articleWord} {osh.articles?.trainingObligation || '26'}. {osh.name} ("{osh.gazette}") 
+                            {country === 'HR'
+                                ? ' i Pravilnika o osposobljavanju i usavršavanju iz zaštite na radu (NN 142/21), '
+                                : ' i Pravilnika o načinu, postupku i rokovima vršenja periodičnih pregleda i ispitivanja iz oblasti zaštite na radu, '
+                            }
                             komisija donosi ocjenu da je radnik/ca:
                         </p>
 
@@ -47,7 +72,7 @@ export default function PrintTemplatePage() {
                         </div>
 
                         <p>
-                            upoznat/a sa uslovima rada, opasnostima i štetnostima na radnom mjestu, te je nakon sprovedene 
+                            upoznat/a sa uvjetima rada, opasnostima i štetnostima na radnom mjestu, te je nakon provedene 
                             teoretske i praktične obuke uspješno položio/la provjeru znanja i <strong>OSPOSOBLJEN/A</strong> je za rad na siguran način.
                         </p>
 
@@ -85,7 +110,7 @@ export default function PrintTemplatePage() {
                         </ol>
 
                         <p>
-                            Na osnovu zakonskih propisa iz oblasti Zaštite od požara ({LAWS[country]?.fire?.name || 'Zakon o zaštiti od požara'}, "{LAWS[country]?.fire?.gazette || ''}"),
+                            Na osnovu zakonskih propisa iz oblasti zaštite od požara ({fire.name}, "{fire.gazette}"),
                             komisija donosi ocjenu da je opće i posebno poznavanje mjera zaštite od požara usvojio/la radnik/ca:
                         </p>
 
@@ -94,8 +119,8 @@ export default function PrintTemplatePage() {
                         </div>
 
                         <p>
-                            koji/a je nakon edukacije i sprovedene provjere znanja, uspješno položio/la ispit i 
-                            <strong> OSPOSOBLJEN/A</strong> je za sprovođenje mjera zaštite od požara, gašenje početnih požara 
+                            koji/a je nakon edukacije i provedene provjere znanja, uspješno položio/la ispit i 
+                            <strong> OSPOSOBLJEN/A</strong> je za provođenje mjera zaštite od požara, gašenje početnih požara 
                             kao i za evakuaciju i spašavanje.
                         </p>
 
