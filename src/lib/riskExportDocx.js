@@ -11,7 +11,8 @@ export const generateSafeWordDoc = async (
     items,
     workplaces,
     hazards,
-    saveToFile = true
+    saveToFile = true,
+    country = 'BA'
 ) => {
     const {
         Document, Packer, Paragraph, Table, TableRow, TableCell, TextRun,
@@ -85,7 +86,7 @@ export const generateSafeWordDoc = async (
         sections: [{
             properties: { page: { margin: { top: 1440, right: 1080, bottom: 1440, left: 1080 } } },
             children: [
-                new Paragraph({ text: 'Bosna i Hercegovina — Federacija BiH', alignment: AlignmentType.CENTER, spacing: { before: 2400 }, children: [new TextRun({ text: 'Bosna i Hercegovina — Federacija BiH', size: 20, color: '999999' })] }),
+                new Paragraph({ text: country === 'HR' ? 'Republika Hrvatska' : 'Bosna i Hercegovina — Federacija BiH', alignment: AlignmentType.CENTER, spacing: { before: 2400 }, children: [new TextRun({ text: country === 'HR' ? 'Republika Hrvatska' : 'Bosna i Hercegovina — Federacija BiH', size: 20, color: '999999' })] }),
                 new Paragraph({ text: '', spacing: { before: 600 } }),
                 new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: 'AKT O PROCJENI RIZIKA', size: 56, bold: true, color: '1A237E' })] }),
                 new Paragraph({ alignment: AlignmentType.CENTER, spacing: { before: 200 }, children: [new TextRun({ text: 'na radnim mjestima i u radnim prostorijama', size: 28, color: '555555' })] }),
@@ -165,7 +166,8 @@ export const generateSafeWordDoc = async (
 
     const blob = await Packer.toBlob(doc);
     if (saveToFile) {
-        const { saveAs } = await import('file-saver');
+        const fileSaver = await import('file-saver');
+        const saveAs = fileSaver.saveAs || fileSaver.default;
         saveAs(blob, `Procjena_rizika_${(data.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`);
     }
     return new Promise((resolve) => {

@@ -10,6 +10,7 @@ import Icon3D from '@/components/Icon3D';
 import PDFExportButton from '@/components/PDFExportButton';
 import PageHeader from '@/components/PageHeader';
 import { useDialog } from '@/hooks/useDialog';
+import { useCountry } from '@/contexts/CountryContext';
 
 // ── Bulk PDF print ────────────────────────────────────────────────────────────
 function buildBulkPrintHtml(selectedRows, workers, lang) {
@@ -108,6 +109,7 @@ function WorkerCertificatesInner() {
   const { confirm, DialogRenderer } = useDialog();
   const [certsVersion, setCertsVersion] = useState(0);
   const [zapisniciOpen, setZapisniciOpen] = useState(false);
+  const country = useCountry();
 
   // ── Bulk selection state ──────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -299,8 +301,8 @@ function WorkerCertificatesInner() {
                    <>
                      <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
                      <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
-                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOS', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item">📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
-                        <div onClick={() => { setZapisniciOpen(false); window.open('/print-template?type=ZOP', '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item">🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item">📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item">🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
                      </div>
                    </>, document.body
                  )}

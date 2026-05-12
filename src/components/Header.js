@@ -181,7 +181,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
             switchCompany(newComp.id);
             setShowNewCompanyModal(false);
             setNewCompanyData({ naziv: '', adresa: '', mjesto: '', telefon: '', email: '', assignedOfficerId: '' });
-            window.location.reload();
+            router.push('/dashboard');
         } catch (err) {
             console.error('[Header] Failed to create company natively:', err);
             setSwitchingCompany(false);
@@ -280,7 +280,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 {/* Officer: aggregate mode */}
                                 {!isSuperAdmin && !companySearchTerm && (
                                     <>
-                                        <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }}
+                                        <button className="dropdown-item" onClick={async () => { await switchCompany('all'); setShowCompanyMenu(false); router.push('/dashboard'); }}
                                             style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
                                             {activeCompanyId === 'all' ? '✅' : '🌐'} {lang !== 'en' ? 'Sve firme' : 'All companies'}
                                         </button>
@@ -293,7 +293,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     </div>
                                 )}
                                 {filteredCompaniesForMenu.map(c => (
-                                    <button key={c.id} className="dropdown-item" onClick={() => { switchCompany(c.id); setShowCompanyMenu(false); window.location.reload(); }}
+                                    <button key={c.id} className="dropdown-item" onClick={async () => { await switchCompany(c.id); setShowCompanyMenu(false); router.push('/dashboard'); }}
                                         style={{ fontWeight: c.id === activeCompanyId ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
                                         {c.id === activeCompanyId ? '✅' : '🏛️'} {c.naziv || c.skraceniNaziv}
                                     </button>
@@ -445,7 +445,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     {/* Officer: "Sve firme" aggregate mode */}
                                     {!isSuperAdmin && !companySearchTerm && (
                                         <>
-                                            <button className="dropdown-item" onClick={() => { switchCompany('all'); setShowCompanyMenu(false); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
+                                            <button className="dropdown-item" onClick={async () => { await switchCompany('all'); setShowCompanyMenu(false); router.push('/dashboard'); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
                                                 <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang !== 'en' ? 'Sve firme' : 'All companies'}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Kombinirani prikaz' : 'Combined view'}</div></div>
                                             </button>
                                             <div className="dropdown-divider" />
@@ -463,7 +463,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                             const parent = c.parentId ? companies.find(p => p.id === c.parentId) : null;
                                             const isHolding = companies.some(sub => sub.parentId === c.id);
                                             return (
-                                                <button key={c.id} className="dropdown-item" onClick={async () => { setShowCompanyMenu(false); await switchCompany(c.id); window.location.reload(); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
+                                                <button key={c.id} className="dropdown-item" onClick={async () => { setShowCompanyMenu(false); await switchCompany(c.id); router.push('/dashboard'); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: c.id === activeCompanyId ? 700 : 400 }}>
                                                     <span>{c.id === activeCompanyId ? '✅' : (isHolding ? '🏢' : (parent ? '🔗' : '🏛️'))}</span>
                                                     <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
                                                         <div style={{ fontSize: '0.85rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>

@@ -97,17 +97,17 @@ export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA')
         systemPrompt: sysPrompt,
         messages: [{
             role: 'user', parts: [{
-                text: `Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Podaci procjene:
-- Ukupno stavki: ${riskItems.length}
-- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})
-- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}
-- Smanjenje rizika: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}
-- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}
-- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}
-- Naziv tvrtke: ${sanitizedCompanyName}
+                text: `Napiši zaključak za akt o procjeni rizika. STROGO: maksimalno 3 kratka paragrafa, ukupno do 200 riječi. Podaci:
+- Stavki: ${riskItems.length}
+- Ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})
+- Ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}
+- Smanjenje: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}
+- Visok rizik (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}
+- Nedopustiv rizik (R>20): ${riskItems.filter(r => r.rizik > 20).length}
+- Tvrtka: ${sanitizedCompanyName}
 - Djelatnost: ${formData.djelatnost || 'N/A'}
 
-Zaključak mora sadržavati: opći zaključak o stanju, ključne rizike, obaveze poslodavca, rok za reviziju procjene rizika. Piši u trećem licu. Samo tekst zaključka, bez uvoda.`
+Sadržaj: stanje rizika, obaveze poslodavca, rok revizije. Treće lice. Bez uvoda, samo tekst.`
             }]
         }],
     });

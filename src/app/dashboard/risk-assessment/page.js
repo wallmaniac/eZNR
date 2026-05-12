@@ -874,7 +874,8 @@ export default function RiskAssessmentPage() {
             overrideItems || riskItems, 
             workplaces, 
             hazards, 
-            saveToFile
+            saveToFile,
+            country
         );
     };
 

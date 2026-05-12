@@ -1,5 +1,6 @@
 'use client';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useCountry } from '@/contexts/CountryContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getById, COLLECTIONS } from '@/lib/dataStore';
 import JSZip from 'jszip';
@@ -11,6 +12,7 @@ import PageHeader from '@/components/PageHeader';
 export default function TestsZopZnrPage() {
     const { lang } = useLanguage();
     const bs = lang !== 'en';
+    const country = useCountry();
     const { activeCompanyId } = useAuth();
     const [loading, setLoading] = useState(null);
     const [activeTab, setActiveTab] = useState('DOWNLOAD'); // DOWNLOAD or GENERATOR
@@ -134,8 +136,8 @@ export default function TestsZopZnrPage() {
                     ⚙️ {bs ? 'Generator testova' : 'Test Generator'}
                 </button>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOS', '_blank')}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open('/print-template?type=ZOP', '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                 </div>
             </div>
 
