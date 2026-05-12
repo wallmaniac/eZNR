@@ -252,7 +252,7 @@ export default function FormOIR1Page() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
+          <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
             <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Dodaj novi OIR-1 obrazac' : 'Add new OIR-1 form'}>
               + {lang !== 'en' ? 'Novi OIR-1' : 'New OIR-1'}
             </button>

@@ -3152,3 +3152,18 @@ button.btn-primary-glow {
 .text-danger {
   color: var(--danger) !important;
 }
+
+@media (max-width: 768px) {
+  .scrollable-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .scrollable-toolbar > * {
+    width: 100%;
+    justify-content: center;
+  }
+  .scrollable-toolbar .search-bar {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}

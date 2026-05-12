@@ -1147,7 +1147,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 <PageHeader icon="📊" title={lang !== 'en' ? 'Procjene rizika' : 'Risk Assessments'} />
                 <DialogRenderer />
                 <div className="card" style={{ marginBottom: 16 }}>
-                    <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
+                    <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                         <button className="btn btn-primary btn-sm" title="Započnite kreiranje nove procjene rizika od nule" onClick={handleNew}>+ {lang !== 'en' ? 'Nova procjena' : 'New'}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
                             <input title="Pretražite procjene po nazivu tvrtke ili nazivu procjene" placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}

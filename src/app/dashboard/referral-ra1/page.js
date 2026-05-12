@@ -379,7 +379,7 @@ export default function ReferralRA1Page() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
+          <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
             <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Dodaj novu RA-1 uputnicu' : 'Add new RA-1 referral'}>
               + {lang !== 'en' ? 'Nova uputnica RA-1' : 'New RA-1 referral'}
             </button>

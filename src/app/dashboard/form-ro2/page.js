@@ -177,7 +177,7 @@ export default function FormRO2Page() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 12 }}>
+          <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 12 }}>
             <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Dodaj novi RO-2 obrazac' : 'Add new RO-2 form'}>
               + {lang !== 'en' ? 'Novi RO-2' : 'New RO-2'}
             </button>

@@ -51,13 +51,13 @@ function AlertsWidget({ groups, total, lang, isMobile }) {
         <div ref={ref} style={{ marginBottom: 20 }}>
             {/* Header bar */}
             <div className="card" style={{ border: '1px solid rgba(244,67,54,0.18)', background: 'rgba(244,67,54,0.015)' }}>
-                <div style={{ padding: '12px 18px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 12 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, width: isMobile ? '100%' : 'auto', borderBottom: isMobile ? '1px solid rgba(244,67,54,0.1)' : 'none', paddingBottom: isMobile ? 8 : 0 }}>
+                <div style={{ padding: '12px 18px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12, justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <span style={{ fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.9rem', color: 'var(--danger)', flexShrink: 0 }}>
                             🚨 {total} {lang !== 'en' ? 'stavki zahtijeva pažnju' : 'items need attention'}
                         </span>
                     </div>
-                    <div className="scrollable-toolbar" style={{ flex: 1, padding: 0, width: isMobile ? '100%' : 'auto' }}>
+                    <div className="scrollable-toolbar" style={{ padding: 0, width: 'auto', flexWrap: 'wrap' }}>
                         {groups.map(g => {
                             const isOpen = openKey === g.key;
                             return (

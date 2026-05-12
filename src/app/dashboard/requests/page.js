@@ -296,7 +296,7 @@ export default function RequestsPage() {
         <DialogRenderer />
 
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 12 }}>
+          <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 12 }}>
             <button className="btn btn-primary" onClick={handleNew}>
               + {lang !== 'en' ? 'Nova zahtjevnica' : 'New request'}
             </button>
