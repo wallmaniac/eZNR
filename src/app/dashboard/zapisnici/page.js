@@ -90,7 +90,7 @@ const menuItemSt = {
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function ZapisniciPage() {
-    const { lang } = useLanguage();
+    const { lang, t } = useLanguage();
     const { alert, confirm, DialogRenderer } = useDialog();
     const [activeTab, setActiveTab] = useState('list');
 

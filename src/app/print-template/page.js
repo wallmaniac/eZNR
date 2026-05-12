@@ -1,7 +1,23 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { LAWS } from '@/lib/lawConfig';
+
+/** Read the company country synchronously from localStorage */
+function detectCountryFromStorage() {
+    try {
+        const activeId = localStorage.getItem('eznr_activeCompany');
+        if (activeId && activeId !== 'all') {
+            const raw = localStorage.getItem('eznr_data_companies');
+            if (raw) {
+                const companies = JSON.parse(raw);
+                const comp = companies.find(c => c.id === activeId);
+                if (comp?.country) return comp.country.toUpperCase();
+            }
+        }
+    } catch (_) {}
+    return null;
+}
 
 export default function PrintTemplatePage() {
     const searchParams = useSearchParams();
@@ -9,32 +25,22 @@ export default function PrintTemplatePage() {
     const workerName = searchParams.get('worker') || '_________________________';
     const urlCountry = searchParams.get('country');
 
-    // Auto-detect country from the active company in localStorage
-    const [country, setCountry] = useState(urlCountry || 'BA');
+    // Detect country: URL param > localStorage > fallback BA
+    const [country, setCountry] = useState('BA');
+    const ready = useRef(false);
 
     useEffect(() => {
-        if (urlCountry) { setCountry(urlCountry); return; }
-        // Read from localStorage — same approach as CountryContext
-        try {
-            const activeId = localStorage.getItem('eznr_activeCompany');
-            if (activeId && activeId !== 'all') {
-                const raw = localStorage.getItem('eznr_data_companies');
-                if (raw) {
-                    const companies = JSON.parse(raw);
-                    const comp = companies.find(c => c.id === activeId);
-                    if (comp?.country) setCountry(comp.country.toUpperCase());
-                }
-            }
-        } catch (_) {}
+        const detected = urlCountry || detectCountryFromStorage() || 'BA';
+        setCountry(detected);
+        ready.current = true;
     }, [urlCountry]);
 
+    // Print only after country has been resolved (next tick after setCountry)
     useEffect(() => {
-        // Automatically open print dialog a moment after loading
-        const t = setTimeout(() => {
-            window.print();
-        }, 600);
+        if (!ready.current) return;
+        const t = setTimeout(() => { window.print(); }, 400);
         return () => clearTimeout(t);
-    }, []);
+    }, [country]);
 
     const today = new Date().toLocaleDateString('hr-HR');
 
@@ -59,7 +65,7 @@ export default function PrintTemplatePage() {
                         </ol>
 
                         <p>
-                            Na osnovu {osh.articleWord} {osh.articles?.trainingObligation || '26'}. {osh.name} ("{osh.gazette}") 
+                            Na osnovu {osh.articleWord} {osh.articles?.trainingObligation || '26'}. {osh.name} ("{osh.gazette}")
                             {country === 'HR'
                                 ? ' i Pravilnika o osposobljavanju i usavršavanju iz zaštite na radu (NN 142/21), '
                                 : ' i Pravilnika o načinu, postupku i rokovima vršenja periodičnih pregleda i ispitivanja iz oblasti zaštite na radu, '
@@ -72,7 +78,7 @@ export default function PrintTemplatePage() {
                         </div>
 
                         <p>
-                            upoznat/a sa uvjetima rada, opasnostima i štetnostima na radnom mjestu, te je nakon provedene 
+                            upoznat/a sa uvjetima rada, opasnostima i štetnostima na radnom mjestu, te je nakon provedene
                             teoretske i praktične obuke uspješno položio/la provjeru znanja i <strong>OSPOSOBLJEN/A</strong> je za rad na siguran način.
                         </p>
 
@@ -119,8 +125,8 @@ export default function PrintTemplatePage() {
                         </div>
 
                         <p>
-                            koji/a je nakon edukacije i provedene provjere znanja, uspješno položio/la ispit i 
-                            <strong> OSPOSOBLJEN/A</strong> je za provođenje mjera zaštite od požara, gašenje početnih požara 
+                            koji/a je nakon edukacije i provedene provjere znanja, uspješno položio/la ispit i
+                            <strong> OSPOSOBLJEN/A</strong> je za provođenje mjera zaštite od požara, gašenje početnih požara
                             kao i za evakuaciju i spašavanje.
                         </p>
 
@@ -154,7 +160,8 @@ export default function PrintTemplatePage() {
                     nav, header, footer, .sidebar, button { display: none !important; }
                     @page { margin: 0; size: A4; }
                 }
-            `}</style>
+            `}
+            </style>
         </div>
     );
 }

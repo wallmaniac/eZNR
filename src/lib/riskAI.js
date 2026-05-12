@@ -90,14 +90,24 @@ export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA')
     const sanitizedCompanyName = '[Zaštićen Naziv Kompanije]';
 
     const sysPrompt = country === 'HR'
-        ? 'Ti si stručnjak za zaštitu na radu u Republici Hrvatskoj. Piši formalno, profesionalno, na hrvatskom jeziku. Generiraj zaključak za akt o procjeni rizika prema Zakonu o zaštiti na radu (NN 71/14).'
-        : 'Ti si stručnjak za zaštitu na radu u FBiH. Piši formalno, profesionalno, na bosanskom jeziku. Generiši zaključak za akt o procjeni rizika.';
+        ? 'Ti si stručnjak za zaštitu na radu u Republici Hrvatskoj. Tvoj zadatak je napisati zaključak akta o procjeni rizika. Piši formalno, profesionalno, na hrvatskom jeziku. Pozivaj se na Zakon o zaštiti na radu (NN 71/14, 118/14, 94/18, 96/18) i Pravilnik o izradi procjene rizika (NN 112/14). VAŽNO: Odmah napiši tekst zaključka. NE PIŠI nikakav uvod poput "U redu" ili "Slijedi zaključak". Započni direktno s tekstom zaključka.'
+        : 'Ti si stručnjak za zaštitu na radu u FBiH. Tvoj zadatak je napisati zaključak akta o procjeni rizika. Piši formalno, profesionalno, na bosanskom jeziku. VAŽNO: Odmah napiši tekst zaključka. NE PIŠI nikakav uvod poput "U redu" ili "Slijedi zaključak". Započni direktno s tekstom zaključka.';
 
     const data = await apiCallZia({
         systemPrompt: sysPrompt,
         messages: [{
             role: 'user', parts: [{
-                text: `Na osnovu procjene rizika sa ${riskItems.length} stavki:\n- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})\n- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}\n- Smanjenje: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}\n- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}\n- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}\n- Naziv tvrtke: ${sanitizedCompanyName}\n- Djelatnost: ${formData.djelatnost || 'N/A'}\n\nNapiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Uključi: opći zaključak, ključne rizike, obaveze poslodavca, rok za reviziju.`
+                text: `Napiši profesionalni zaključak za akt o procjeni rizika (3-5 paragrafa). Podaci procjene:
+- Ukupno stavki: ${riskItems.length}
+- Prosječna ocjena PRIJE mjera: ${avgBefore.toFixed(1)} (${avgBefore > 0 ? riskLevel(Math.round(avgBefore)).label : 'N/A'})
+- Prosječna ocjena NAKON mjera: ${avgAfter > 0 ? avgAfter.toFixed(1) : 'N/A'} ${avgAfter > 0 ? '(' + riskLevel(Math.round(avgAfter)).label + ')' : ''}
+- Smanjenje rizika: ${avgAfter > 0 && avgBefore > 0 ? ((1 - avgAfter / avgBefore) * 100).toFixed(0) + '%' : 'N/A'}
+- Stavke sa visokim rizikom (R≥6): ${riskItems.filter(r => r.rizik >= 6).length}
+- Stavke sa nedopustivim rizikom (R>20): ${riskItems.filter(r => r.rizik > 20).length}
+- Naziv tvrtke: ${sanitizedCompanyName}
+- Djelatnost: ${formData.djelatnost || 'N/A'}
+
+Zaključak mora sadržavati: opći zaključak o stanju, ključne rizike, obaveze poslodavca, rok za reviziju procjene rizika. Piši u trećem licu. Samo tekst zaključka, bez uvoda.`
             }]
         }],
     });
@@ -112,6 +122,12 @@ export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA')
         throw new Error(data.error || 'Generisanje zaključka nije uspjelo');
     }
 
+    // Strip any AI preamble like "U redu, slijedi..." or "**ZAKLJUČAK...**"
+    finalText = finalText
+        .replace(/^(U redu[,.]?\s*(s|S)lijedi[^\n]*\n+)/i, '')
+        .replace(/^\*\*ZAKLJUČAK[^\n]*\*\*\s*\n*/i, '')
+        .trim();
+
     // Restore PII
     if (formData.nazivTvrtke) {
         finalText = finalText.replace(/\[Zaštićen Naziv Kompanije\]/g, formData.nazivTvrtke);
@@ -119,6 +135,7 @@ export const fetchAiAutoConclusion = async (riskItems, formData, country = 'BA')
     
     return finalText;
 };
+
 
 export const apiGenerateRiskQuestionnaire = async (payload) => {
     try {
