@@ -1147,7 +1147,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 <PageHeader icon="📊" title={lang !== 'en' ? 'Procjene rizika' : 'Risk Assessments'} />
                 <DialogRenderer />
                 <div className="card" style={{ marginBottom: 16 }}>
-                    <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                         <button className="btn btn-primary btn-sm" title="Započnite kreiranje nove procjene rizika od nule" onClick={handleNew}>+ {lang !== 'en' ? 'Nova procjena' : 'New'}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
                             <input title="Pretražite procjene po nazivu tvrtke ili nazivu procjene" placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
@@ -2344,7 +2344,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         </div>
                         <textarea className="form-input" rows={6} value={formData.zakljucak || ''} onChange={e => set('zakljucak', e.target.value)}
                             placeholder="Na osnovu provedene procjene rizika, zaključuje se..." style={{ resize: 'vertical', marginBottom: 16 }} />
-                        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                             <button className="btn btn-outline" onClick={() => handleGenerateReport()}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                 📄 {lang !== 'en' ? 'Preuzmi PDF' : 'Download PDF'}

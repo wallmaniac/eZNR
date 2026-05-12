@@ -91,7 +91,7 @@ export default function AddressBookPage() {
         <div className="card"><div className="card-body">
 
           {/* Toolbar */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="scrollable-toolbar" style={{ padding: 0, gap: 12, marginBottom: 16 }}>
             {/* Akcije dropdown */}
             <div style={{ position: 'relative' }}>
               <button className="btn btn-primary btn-sm" onClick={() => setActionMenu(m => !m)} title={lang !== 'en' ? 'Prikaži akcije imenika' : 'Show address book actions'}>

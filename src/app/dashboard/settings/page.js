@@ -1160,7 +1160,7 @@ export default function SettingsPage() {
 
                                 <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
 
-                                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                                <div className="scrollable-toolbar" style={{ padding: 0, gap: 8 }}>
                                     <input type="text" value={headerText} onChange={e => { setHeaderText(e.target.value); setDirty('company'); }} placeholder={lang !== 'en' ? 'Dodatni tekst... (opcionalno)' : 'Header text... (optional)'} style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.85rem', fontWeight: 600 }} />
                                     
                                     <div style={{ display: 'flex', gap: 4, background: 'var(--bg-card)', padding: '3px', borderRadius: 8, border: '1px solid var(--border)' }}>

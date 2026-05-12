@@ -1,93 +1,38 @@
 const fs = require('fs');
+const glob = require('glob');
 
-function processFile(path, blockRegexps, replacerStr) {
-  let text = fs.readFileSync(path, 'utf8');
-  let match = text.match(blockRegexps);
-  if (match) {
-    text = text.replace(blockRegexps, replacerStr);
-    fs.writeFileSync(path, text, 'utf8');
-    console.log('Fixed', path);
-  } else {
-    console.log('No match in', path);
-  }
-}
+const files = glob.sync('src/app/dashboard/**/*.js');
+let count = 0;
 
-// 1. equipment
-processFile('src/app/dashboard/equipment/page.js', 
-  /<button className="btn btn-primary btn-sm" onClick={handleNew}>\+ \{lang === 'bs' \? 'Nova oprema' : 'New Equipment'\}<\/button>[\s\S]*?<PDFExportButton buttonStyle={{ background: '#db2777'[\s\S]*?]} \/>[\s\S]*?<PDFExportButton label=\{lang === 'bs' \? '🖨️ QR Kod'[\s\S]*?]} \/>[\s\S]*?<SavedFlash \/>[\s\S]*?<div className="search-bar" style={{ flex: 1 }}>[\s\S]*?<\/div>/,
-  `<button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang === 'bs' ? 'Nova oprema' : 'New Equipment'}</button>
-                        <div className="search-bar" style={{ flex: 1 }}>
-                            <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
-                        </div>
-                        <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                            { label: lang === 'bs' ? 'Sva oprema' : 'All equipment', icon: '⚙️', onClick: () => generateEquipmentReport([], lang) },
-                            ...(selectedIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrano' : 'Selected'} (\${selectedIds.size})\`, icon: '✓', onClick: () => generateEquipmentReport([...selectedIds], lang) }] : []),
-                        ]} />
-                        <PDFExportButton label={lang === 'bs' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                            { label: lang === 'bs' ? 'Svi kodovi' : 'All codes', icon: '🖨️', onClick: () => { setPrintSelection(sortedEquipment); setShowPrintModal(true); } },
-                            ...(selectedIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrani' : 'Selected'} (\${selectedIds.size})\`, icon: '✓', onClick: () => { setPrintSelection(sortedEquipment.filter(eq => selectedIds.has(eq.id))); setShowPrintModal(true); } }] : []),
-                        ]} />
-                        <SavedFlash />`
-);
+files.forEach(f => {
+    let text = fs.readFileSync(f, 'utf8');
+    let original = text;
 
-// 2. fleet
-processFile('src/app/dashboard/fleet/page.js',
-  /<button className="btn btn-primary btn-sm" onClick=\{\(\) => \{ setEditingId\(null\); setFormData\(\{.*?\}\); setShowForm\(true\); \}\}>\+ \{lang === 'bs' \? 'Novo vozilo' : 'New Vehicle'\}<\/button>[\s\S]*?<PDFExportButton buttonStyle={{ background: '#db2777'[\s\S]*?]} \/>[\s\S]*?<PDFExportButton label=\{lang === 'bs' \? '🖨️ QR Kod'[\s\S]*?]} \/>[\s\S]*?<SavedFlash \/>[\s\S]*?<div className="search-bar" style={{ flex: 1 }}>[\s\S]*?<\/div>/,
-  `<button className="btn btn-primary btn-sm" onClick={() => { setEditingId(null); setFormData({ marka: '', model: '', registracija: '', regOd: '', regDo: '', tipVozila: '', brojSjedista: 4, zapreminaMotora: '', snagaMotora: '', brojSasije: '', vozacId: '', uUpotrebiOd: '' }); setShowForm(true); }}>+ {lang === 'bs' ? 'Novo vozilo' : 'New Vehicle'}</button>
-                        <div className="search-bar" style={{ flex: 1 }}>
-                            <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
-                        </div>
-                        <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                            { label: lang === 'bs' ? 'Sva vozila' : 'All vehicles', icon: '🚗', onClick: () => generateFleetReport([], lang) },
-                            ...(selectedIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrano' : 'Selected'} (\${selectedIds.size})\`, icon: '✓', onClick: () => generateFleetReport([...selectedIds], lang) }] : []),
-                        ]} />
-                        <PDFExportButton label={lang === 'bs' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                            { label: lang === 'bs' ? 'Sva vozila' : 'All vehicles', icon: '🖨️', onClick: () => { setPrintSelection(sortedVehicles); setShowPrintModal(true); } },
-                            ...(selectedIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrana' : 'Selected'} (\${selectedIds.size})\`, icon: '✓', onClick: () => { setPrintSelection(sortedVehicles.filter(v => selectedIds.has(v.id))); setShowPrintModal(true); } }] : []),
-                        ]} />
-                        <SavedFlash />`
-);
+    // Replace: flexWrap: 'wrap' -> flexWrap: 'nowrap', overflowX: 'auto', scrollbarWidth: 'none'
+    // But only for the main toolbars. We can identify them by matching:
+    // style={{ ... display: 'flex', ... alignItems: 'center' ... flexWrap: 'wrap' ... }}
+    
+    // Actually, replacing `flexWrap: 'wrap'` with `flexWrap: 'wrap'` doesn't fix it if we want it to scroll.
+    // The most elegant fix for toolbars that wrap poorly is to use className="scrollable-toolbar"
+    // Let's replace the inline style of known toolbar patterns.
+    
+    // Pattern: `style={{ display: 'flex', gap: \d+, alignItems: 'center', flexWrap: 'wrap' }}`
+    // Or similar variations.
+    
+    text = text.replace(/style=\{\{\s*display:\s*'flex',\s*gap:\s*(\d+),\s*alignItems:\s*'center',\s*flexWrap:\s*'wrap'\s*\}\}/g, 
+        "className=\"scrollable-toolbar\" style={{ padding: 0, gap: $1 }}");
 
-// 3. fire protection - aparat
-processFile('src/app/dashboard/fire-protection/page.js',
-  /<button className="btn btn-primary btn-sm" onClick={handleNewItem}>\+ \{lang === 'bs' \? 'Novi aparat' : 'New Extinguisher'\}<\/button>[\s\S]*?<PDFExportButton buttonStyle={{ background: '#db2777'[\s\S]*?]} \/>[\s\S]*?<PDFExportButton label=\{lang === 'bs' \? '🖨️ QR Kod'[\s\S]*?]} \/>[\s\S]*?<SavedFlash \/>[\s\S]*?<div className="search-bar" style={{ flex: 1 }}>[\s\S]*?<\/div>/,
-  `<button className="btn btn-primary btn-sm" onClick={handleNewItem}>+ {lang === 'bs' ? 'Novi aparat' : 'New Extinguisher'}</button>
-                                    <div className="search-bar" style={{ flex: 1 }}>
-                                        <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                            style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                                        <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
-                                    </div>
-                                    <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                                        { label: lang === 'bs' ? 'Svi aparati' : 'All extinguishers', icon: '🧯', onClick: () => generateFireProtectionReport([], lang) },
-                                        ...(selectedFEIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrano' : 'Selected'} (\${selectedFEIds.size})\`, icon: '✓', onClick: () => generateFireProtectionReport([...selectedFEIds], lang) }] : []),
-                                    ]} />
-                                    <PDFExportButton label={lang === 'bs' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                                        { label: lang === 'bs' ? 'Svi aparati' : 'All extinguishers', icon: '🖨️', onClick: () => { setPrintSelection(sortedFireExt); setShowPrintModal(true); } },
-                                        ...(selectedFEIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrani' : 'Selected'} (\${selectedFEIds.size})\`, icon: '✓', onClick: () => { setPrintSelection(sortedFireExt.filter(fe => selectedFEIds.has(fe.id))); setShowPrintModal(true); } }] : []),
-                                    ]} />
-                                    <SavedFlash />`
-);
+    text = text.replace(/style=\{\{\s*display:\s*'flex',\s*alignItems:\s*'center',\s*gap:\s*(\d+),\s*marginBottom:\s*(\d+),\s*flexWrap:\s*'wrap'\s*\}\}/g, 
+        "className=\"scrollable-toolbar\" style={{ padding: 0, gap: $1, marginBottom: $2 }}");
+        
+    text = text.replace(/style=\{\{\s*display:\s*'flex',\s*gap:\s*(\d+),\s*marginBottom:\s*(\d+),\s*flexWrap:\s*'wrap',\s*alignItems:\s*'center'\s*\}\}/g, 
+        "className=\"scrollable-toolbar\" style={{ padding: 0, gap: $1, marginBottom: $2 }}");
 
-// 4. fire protection - hydrant
-processFile('src/app/dashboard/fire-protection/page.js',
-  /<button className="btn btn-primary btn-sm" onClick=\{handleNewHydrant\}>\+ \{lang === 'bs' \? 'Novi hidrant' : 'New Hydrant'\}<\/button>[\s\S]*?<PDFExportButton buttonStyle={{ background: '#db2777'[\s\S]*?]} \/>[\s\S]*?<PDFExportButton label=\{lang === 'bs' \? '🖨️ QR Kod'[\s\S]*?]} \/>[\s\S]*?<SavedFlash \/>[\s\S]*?<div className="search-bar" style={{ flex: 1 }}>[\s\S]*?<\/div>/,
-  `<button className="btn btn-primary btn-sm" onClick={handleNewHydrant}>+ {lang === 'bs' ? 'Novi hidrant' : 'New Hydrant'}</button>
-                                    <div className="search-bar" style={{ flex: 1 }}>
-                                        <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                            style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                                        <button className="btn btn-ghost btn-sm">{t('searchBtn')}</button>
-                                    </div>
-                                    <PDFExportButton buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }} options={[
-                                        { label: lang === 'bs' ? 'Svi hidranti' : 'All hydrants', icon: '🚰', onClick: () => generateFireProtectionReport([], lang) },
-                                        ...(selectedHydrantIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrano' : 'Selected'} (\${selectedHydrantIds.size})\`, icon: '✓', onClick: () => generateFireProtectionReport([...selectedHydrantIds], lang) }] : []),
-                                    ]} />
-                                    <PDFExportButton label={lang === 'bs' ? '🖨️ QR Kod' : '🖨️ QR Code'} buttonStyle={{ border: '1px solid var(--border)', background: 'transparent', color: 'var(--text)', height: 38 }} options={[
-                                        { label: lang === 'bs' ? 'Svi hidranti' : 'All hydrants', icon: '🖨️', onClick: () => { setPrintSelection(sortedHydrants); setShowPrintModal(true); } },
-                                        ...(selectedHydrantIds.size > 0 ? [{ label: \`\${lang === 'bs' ? 'Odabrani' : 'Selected'} (\${selectedHydrantIds.size})\`, icon: '✓', onClick: () => { setPrintSelection(sortedHydrants.filter(h => selectedHydrantIds.has(h.id))); setShowPrintModal(true); } }] : []),
-                                    ]} />
-                                    <SavedFlash />`
-);
+    if (text !== original) {
+        fs.writeFileSync(f, text, 'utf8');
+        console.log("Fixed:", f);
+        count++;
+    }
+});
+
+console.log(`Fixed ${count} files.`);

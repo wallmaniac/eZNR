@@ -764,7 +764,7 @@ function UvjerenjeFormPage() {
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                         <button className="btn btn-primary" onClick={handleSave}>
                             💾 {t('save')}
                         </button>

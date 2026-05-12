@@ -23,7 +23,7 @@ const EVENT_ROUTES = {
     service: '/dashboard/equipment',
 };
 // ── Alerts Widget: collapsible per-category expander ─────────────────────────
-function AlertsWidget({ groups, total, lang }) {
+function AlertsWidget({ groups, total, lang, isMobile }) {
     const [openKey, setOpenKey] = useState(null);
     const ref = useRef(null);
 
@@ -51,11 +51,13 @@ function AlertsWidget({ groups, total, lang }) {
         <div ref={ref} style={{ marginBottom: 20 }}>
             {/* Header bar */}
             <div className="card" style={{ border: '1px solid rgba(244,67,54,0.18)', background: 'rgba(244,67,54,0.015)' }}>
-                <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.85rem', color: 'var(--danger)', flexShrink: 0 }}>
-                        🚨 {total} {lang !== 'en' ? 'stavki zahtijeva pažnju' : 'items need attention'}
-                    </span>
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1 }}>
+                <div style={{ padding: '12px 18px', display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, width: isMobile ? '100%' : 'auto', borderBottom: isMobile ? '1px solid rgba(244,67,54,0.1)' : 'none', paddingBottom: isMobile ? 8 : 0 }}>
+                        <span style={{ fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.9rem', color: 'var(--danger)', flexShrink: 0 }}>
+                            🚨 {total} {lang !== 'en' ? 'stavki zahtijeva pažnju' : 'items need attention'}
+                        </span>
+                    </div>
+                    <div className="scrollable-toolbar" style={{ flex: 1, padding: 0, width: isMobile ? '100%' : 'auto', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
                         {groups.map(g => {
                             const isOpen = openKey === g.key;
                             return (
@@ -722,7 +724,7 @@ export default function DashboardPage() {
                 {(() => {
                     const total = alertsGroups.reduce((s, g) => s + g.items.length, 0);
                     if (total === 0) return null;
-                    return <AlertsWidget groups={alertsGroups} total={total} lang={lang} />;
+                    return <AlertsWidget groups={alertsGroups} total={total} lang={lang} isMobile={isMobile} />;
                 })()}
             </CollapsibleWidget>
 

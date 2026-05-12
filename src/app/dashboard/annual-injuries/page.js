@@ -764,7 +764,7 @@ export default function AnnualInjuriesPage() {
         <style>{`.print-only { display: none; }`}</style>
 
         {/* Header bar */}
-        <div className="no-print" style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div className="no-print" className="scrollable-toolbar" style={{ padding: 0, gap: 12, marginBottom: 24 }}>
           <button className="btn btn-ghost btn-sm" onClick={handleBackToList} style={{ fontSize: '0.85rem' }} title={lang !== 'en' ? 'Povratak na listu izvještaja' : 'Back to report list'}>
             ← {lang !== 'en' ? 'Nazad na listu' : 'Back to list'}
           </button>

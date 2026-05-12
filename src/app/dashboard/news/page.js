@@ -278,7 +278,7 @@ function NewsCard({ item, country }) {
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                     <span style={{ fontSize: '1.6rem', flexShrink: 0, marginTop: 2 }}>{cfg.icon}</span>
                     <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+                        <div className="scrollable-toolbar" style={{ padding: 0, gap: 10, marginBottom: 8 }}>
                             <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{item.datum}</span>
                             <span style={{ padding: '2px 10px', borderRadius: 'var(--radius-full)', fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.04em', background: cfg.bg, color: cfg.color }}>
                                 {item.tip?.toUpperCase()}
@@ -402,7 +402,7 @@ export default function NewsPage() {
             {activeTab === 'news' && (
                 <div>
                     {/* Header bar */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+                    <div className="scrollable-toolbar" style={{ padding: 0, gap: 12, marginBottom: 20 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             {source === 'gemini' ? (
                                 <span style={{ fontSize: '0.8rem', padding: '3px 12px', borderRadius: 'var(--radius-full)', background: 'linear-gradient(135deg,#00897B,#00695C)', color: 'white', fontWeight: 700, letterSpacing: '0.04em' }}>

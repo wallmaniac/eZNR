@@ -226,7 +226,7 @@ export default function AdminUsersPage() {
                             }}>✕</button>
                         )}
                     </div>
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="scrollable-toolbar" style={{ padding: 0, gap: 8 }}>
                         <select className="form-input" value={filterCompany} onChange={e => setFilterCompany(e.target.value)}
                             style={{ flex: 1, minWidth: 120, borderRadius: 'var(--radius-full)', fontSize: '0.8rem' }}>
                             <option value="all">🏢 {lang !== 'en' ? 'Sve firme' : 'All companies'}</option>

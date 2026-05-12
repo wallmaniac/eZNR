@@ -87,7 +87,7 @@ export default function EKPPEPage() {
         <PageHeader icon="🔍" title={"EK — Osobna zaštitna oprema"} />
 
         {/* Toolbar */}
-        <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="scrollable-toolbar" style={{ padding: 0, gap: 12, marginBottom: 20 }}>
           <button className="btn btn-primary btn-sm" onClick={handleOpenNew}>
             + {lang !== 'en' ? 'Dodaj novu OZO' : 'Add new PPE'}
           </button>

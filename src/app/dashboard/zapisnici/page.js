@@ -431,7 +431,7 @@ export default function ZapisniciPage() {
 
                     {/* ── TOOLBAR ── */}
                     <div className="card" style={{ marginBottom: 16 }}>
-                        <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                             <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Kliknite za kreiranje novog zapisnika (npr. o pregledu opreme ili vježbi)' : 'Click to create a new record (e.g., equipment inspection or drill)'}>
                                 + {lang !== 'en' ? 'Novi zapisnik' : 'New record'}
                             </button>

@@ -660,7 +660,7 @@ export default function ArchivePage() {
             </div>
 
             {/* Filters */}
-            <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="scrollable-toolbar" style={{ padding: 0, gap: 10, marginBottom: 16 }}>
                 <div className="search-bar" style={{ flex: 1, maxWidth: 320 }}>
                     <input placeholder={lang !== 'en' ? 'Pretraži arhivu...' : 'Search archive...'}
                         value={search} onChange={e => setSearch(e.target.value)}

@@ -454,7 +454,7 @@ export default function QuestionnairesPage() {
 
         {/* ═══ User Questionnaires ═══ */}
         <div className="card" style={{ marginBottom: 16 }}>
-          <div className="card-body" style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="card-body" className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
             <button className="btn btn-primary btn-sm" onClick={handleNew}>
               + {lang !== 'en' ? 'Novi' : 'New'}
             </button>

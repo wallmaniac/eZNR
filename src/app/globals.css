@@ -3152,3 +3152,6 @@ button.btn-primary-glow {
 .text-danger {
   color: var(--danger) !important;
 }
+
+.scrollable-toolbar::-webkit-scrollbar { display: none; }
+.scrollable-toolbar { scrollbar-width: none; -ms-overflow-style: none; }
