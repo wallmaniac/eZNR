@@ -122,6 +122,12 @@ function EvacuationDrillsInner() {
     const [actionMenuId, setActionMenuId] = useState(null);
     const [menuPos, setMenuPos] = useState({});
 
+    const returnTo = searchParams?.get('returnTo');
+    const handleCloseForm = () => {
+        setShowForm(false);
+        if (returnTo) router.push(returnTo);
+    };
+
     const openNew = () => { setEditingId(null); setFormData({ ...EMPTY }); setWorkerSearch(''); setShowForm(true); };
     const openEdit = (d) => { setEditingId(d.id); setFormData({ ...d }); setWorkerSearch(d.odgovornaOsobaIme || ''); setShowForm(true); };
 
@@ -134,6 +140,7 @@ function EvacuationDrillsInner() {
         if (editingId) { update(COLLECTIONS.EVACUATION_DRILLS, editingId, formData); }
         else { create(COLLECTIONS.EVACUATION_DRILLS, formData); }
         loadData(); markClean(); setShowForm(false); showFlash();
+        if (returnTo) router.push(returnTo);
     };
 
     const handleDelete = async (id) => {
@@ -195,11 +202,11 @@ function EvacuationDrillsInner() {
 
                 {/* Form modal */}
                 {showForm && (
-                    <div className="modal-overlay" onClick={() => setShowForm(false)}>
+                    <div className="modal-overlay" onClick={handleCloseForm}>
                         <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header">
                                 <h2>{editingId ? '✏️' : '+'} {bs ? 'Vježba evakuacije' : 'Evacuation Drill'}</h2>
-                                <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
+                                <button className="btn btn-ghost btn-icon" onClick={handleCloseForm}>✕</button>
                             </div>
                             <div className="modal-body" style={{ maxHeight: '65vh', overflowY: 'auto' }}>
                                 <div className="form-grid-2">
@@ -338,7 +345,12 @@ function EvacuationDrillsInner() {
                                                 set('documents', newDocs);
                                             } catch (err) {
                                                 console.error("Upload error", err);
-                                                alert(bs ? "Greška prilikom uploada dokumenta!" : "Error uploading document!");
+                                                const errMsg = err?.code === 'storage/unauthorized' 
+                                                    ? (bs ? 'Nemate dozvolu za upload. Provjerite Firebase Storage pravila.' : 'Upload unauthorized. Check Firebase Storage rules.')
+                                                    : err?.code === 'storage/canceled'
+                                                    ? (bs ? 'Upload je otkazan.' : 'Upload was cancelled.')
+                                                    : (bs ? `Greška prilikom uploada: ${err?.message || err?.code || 'Nepoznata greška'}` : `Upload error: ${err?.message || err?.code || 'Unknown error'}`);
+                                                await alert(errMsg);
                                             } finally {
                                                 setUploadingDoc(false);
                                                 e.target.value = ''; // reset input
@@ -353,7 +365,7 @@ function EvacuationDrillsInner() {
                                 </div>
                             </div>
                             <div className="modal-footer">
-                                <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
+                                <button className="btn btn-ghost" onClick={handleCloseForm}>{t('cancel')}</button>
                                 <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                             </div>
                         </div>

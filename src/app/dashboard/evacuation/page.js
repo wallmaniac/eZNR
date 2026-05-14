@@ -291,7 +291,12 @@ export default function EvacuationPage() {
                                                 set('documents', newDocs);
                                             } catch (err) {
                                                 console.error("Upload error", err);
-                                                alert(bs ? "Greška prilikom uploada dokumenta!" : "Error uploading document!");
+                                                const errMsg = err?.code === 'storage/unauthorized' 
+                                                    ? (bs ? 'Nemate dozvolu za upload. Provjerite Firebase Storage pravila.' : 'Upload unauthorized. Check Firebase Storage rules.')
+                                                    : err?.code === 'storage/canceled'
+                                                    ? (bs ? 'Upload je otkazan.' : 'Upload was cancelled.')
+                                                    : (bs ? `Greška prilikom uploada: ${err?.message || err?.code || 'Nepoznata greška'}` : `Upload error: ${err?.message || err?.code || 'Unknown error'}`);
+                                                await alert(errMsg);
                                             } finally {
                                                 setUploadingDoc(false);
                                                 e.target.value = ''; // reset input

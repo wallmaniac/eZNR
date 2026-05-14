@@ -588,11 +588,11 @@ export default function DashboardPage() {
         // ── Service events → open equipment page for the specific machine ──
         if (ev.tip === 'service') {
             if (ev.machineId) {
-                router.push('/dashboard/equipment?openItem=' + ev.machineId + '&returnTo=/dashboard');
+                router.push('/dashboard/equipment?openItem=' + ev.machineId + '&tab=servis&returnTo=/dashboard');
                 return;
             }
             if (ev.sourceId) {
-                router.push('/dashboard/equipment?openItem=' + ev.sourceId + '&returnTo=/dashboard');
+                router.push('/dashboard/equipment?openItem=' + ev.sourceId + '&tab=servis&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/equipment');
@@ -628,7 +628,7 @@ export default function DashboardPage() {
         // ── Evacuation drill events ──
         if (ev.tip === 'evac_drill') {
             if (ev.sourceId) {
-                router.push('/dashboard/evacuation-drills?openId=' + ev.sourceId);
+                router.push('/dashboard/evacuation-drills?openId=' + ev.sourceId + '&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/evacuation-drills');
@@ -638,11 +638,11 @@ export default function DashboardPage() {
         // ── Medical & Training events ──
         if (ev.tip === 'medical') {
             if (ev.sourceId) {
-                router.push('/dashboard/medical-exams?openId=' + ev.sourceId);
+                router.push('/dashboard/medical-exams?openId=' + ev.sourceId + '&returnTo=/dashboard');
                 return;
             }
             if (ev.workerId) {
-                router.push('/dashboard/workers?openWorker=' + ev.workerId + '&section=pregledi');
+                router.push('/dashboard/workers?openWorker=' + ev.workerId + '&section=pregledi&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/medical-exams');
@@ -650,7 +650,7 @@ export default function DashboardPage() {
         }
         if (ev.tip === 'training') {
             if (ev.sourceId) {
-                router.push('/dashboard/trainings?openId=' + ev.sourceId);
+                router.push('/dashboard/trainings?openId=' + ev.sourceId + '&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/trainings');
@@ -696,7 +696,7 @@ export default function DashboardPage() {
             return;
         }
 
-        if (ev.tip === 'med') { router.push('/dashboard/medical-exams'); return; }
+        if (ev.tip === 'med') { router.push('/dashboard/medical-exams?returnTo=/dashboard'); return; }
         const path = EVENT_ROUTES[ev.tip] || '/dashboard';
         router.push(path);
     };
@@ -709,8 +709,8 @@ export default function DashboardPage() {
     const confirmDeleteEvent = () => {
         if (!deleteEventTarget) return;
         remove(COLLECTIONS.CALENDAR_EVENTS, deleteEventTarget.id);
-        loadDashboardData();
         setDeleteEventTarget(null);
+        loadDashboardData();
     };
 
     const handleStatClick = (path) => {
@@ -1650,6 +1650,12 @@ export default function DashboardPage() {
                                     }, companyId);
 
                                     setEventFormError(''); setShowEventForm(false);
+                                    loadDashboardData();
+
+                                    // Auto-navigate to relevant page for service events
+                                    if (tip === 'service' && machineId) {
+                                        router.push('/dashboard/equipment?openItem=' + machineId + '&tab=servis&returnTo=/dashboard');
+                                    }
                                 }}>💾 {t('save')}</button>
                             </div>
                         </div>
@@ -1664,11 +1670,11 @@ export default function DashboardPage() {
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setDeleteEventTarget(null)}>✕</button>
                             </div>
                             <div className="modal-body">
-                                <p style={{ marginBottom: 12, color: 'var(--text-dark)' }}>
+                                <p style={{ marginBottom: 12, color: 'var(--text)' }}>
                                     {lang !== 'en' ? 'Sigurno želiš obrisati ovaj događaj s kalendara?' : 'Are you sure you want to delete this event from the calendar?'}
                                 </p>
-                                <div style={{ background: '#f8f9fa', borderRadius: 8, padding: '10px 14px', border: '1px solid #eee' }}>
-                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 4 }}>
+                                <div style={{ background: 'rgba(0,0,0,0.06)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--border)' }}>
+                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text)' }}>
                                         {deleteEventTarget.tip === 'cert' ? '📜' : deleteEventTarget.tip === 'ppe' ? '🦺' : deleteEventTarget.tip === 'equip' ? '⚙️' : '📋'}{' '}
                                         {deleteEventTarget.opis || deleteEventTarget.tip}
                                     </div>
