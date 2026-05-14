@@ -709,7 +709,7 @@ export default function DashboardPage() {
     const confirmDeleteEvent = () => {
         if (!deleteEventTarget) return;
         remove(COLLECTIONS.CALENDAR_EVENTS, deleteEventTarget.id);
-        setCalEvents(getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds));
+        loadDashboardData();
         setDeleteEventTarget(null);
     };
 
