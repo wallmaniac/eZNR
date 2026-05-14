@@ -15,6 +15,7 @@ const EMPTY = {
     odgovornaOsobaId: '', odgovornaOsobaIme: '',
     brojEvakuacijskihPuteva: '', kapacitetOsoba: '',
     opis: '', napomena: '', status: 'aktivan',
+    attachedFile: '', attachedFileName: '',
 };
 
 export default function EvacuationPage() {
@@ -240,6 +241,26 @@ export default function EvacuationPage() {
                                         <textarea className="form-input" rows={2} value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
                                     </div>
                                 </div>
+
+                                    {/* Document Upload */}
+                                    <div className="form-group" style={{ borderTop: '1px solid var(--border-light)', paddingTop: 12, marginTop: 4 }}>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{bs ? '📎 Dokument (plan evakuacije)' : '📎 Document (evacuation plan)'}</label>
+                                        {formData.attachedFile && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
+                                                <span>📄</span>
+                                                <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{formData.attachedFileName}</span>
+                                                <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { set('attachedFile', ''); set('attachedFileName', ''); }}>✕</button>
+                                            </div>
+                                        )}
+                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            if (file.size > 10 * 1024 * 1024) { alert(bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
+                                            const reader = new FileReader();
+                                            reader.onload = () => { set('attachedFile', reader.result); set('attachedFileName', file.name); };
+                                            reader.readAsDataURL(file);
+                                        }} style={{ fontSize: '0.85rem' }} />
+                                    </div>
                             </div>
                             <div className="modal-footer">
                                 <button className="btn btn-ghost" onClick={() => setShowForm(false)}>{t('cancel')}</button>
@@ -255,14 +276,14 @@ export default function EvacuationPage() {
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
                             <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew}>+ {bs ? 'Novi plan' : 'New Plan'}</button>
                             <div className="search-bar" style={{ width: 250 }}>
-                                <span style={{ opacity: 0.5 }}>??</span>
+                                <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             </div>
                             <SavedFlash />
                             {selectedIds.size> 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>??? {bs ? 'Obri�i' : 'Delete'}</button>
+                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                 </div>
                             ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {bs ? 'planova' : 'plans'}</span>}
                         </div>
@@ -276,6 +297,7 @@ export default function EvacuationPage() {
                                         <th onClick={() => toggleSort('odgovornaOsobaIme')} style={thStyle('odgovornaOsobaIme')}>{bs ? 'Odgovorna osoba' : 'Responsible'}{sortIcon('odgovornaOsobaIme')}</th>
                                         <th onClick={() => toggleSort('datumIzrade')} style={thStyle('datumIzrade')}>{bs ? 'Izrađen' : 'Created'}{sortIcon('datumIzrade')}</th>
                                         <th onClick={() => toggleSort('datumRevizije')} style={thStyle('datumRevizije')}>{bs ? 'Revizija' : 'Revision'}{sortIcon('datumRevizije')}</th>
+                                        <th>{bs ? 'Dokument' : 'Document'}</th>
                                         <th>{bs ? 'Putevi' : 'Routes'}</th>
                                         <th>{bs ? 'Vježbe' : 'Drills'}</th>
                                         <th>{bs ? 'Status' : 'Status'}</th>
@@ -285,6 +307,7 @@ export default function EvacuationPage() {
                                     {sorted.length === 0 ? (
                                         <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                     ) : sorted.map(p => {
+                                        const colSpanCount = 10;
                                         const planDrills = getDrillsForPlan(p.id);
                                         const statusMap = {
                                             aktivan: { bs: 'Aktivan', en: 'Active', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' },
@@ -299,7 +322,7 @@ export default function EvacuationPage() {
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ position: 'relative' }}>
-                                                        <button className="btn btn-primary btn-sm" onClick={e => openMenu(p.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                        <button className="btn btn-ghost btn-sm" onClick={e => openMenu(p.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
                                                         {actionMenuId === p.id && (
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -324,6 +347,14 @@ export default function EvacuationPage() {
                                                 </td>
                                                 <td>{formatDate(p.datumIzrade)}</td>
                                                 <td>{formatDate(p.datumRevizije)}</td>
+                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                                    {p.attachedFile ? (
+                                                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Preuzmi' : 'Download'} onClick={() => { const a = document.createElement('a'); a.href = p.attachedFile; a.download = p.attachedFileName || 'document'; a.click(); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>⬇️</button>
+                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Pregledaj' : 'View'} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${p.attachedFile}" style="width:100%;height:100%;border:none"></iframe>`); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>👁️</button>
+                                                        </div>
+                                                    ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                                                </td>
                                                 <td style={{ textAlign: 'center' }}>{p.brojEvakuacijskihPuteva || '—'}</td>
                                                 <td style={{ textAlign: 'center' }}>
                                                     <span className={`badge ${planDrills.length> 0 ? 'badge-success' : 'badge-warning'}`}>

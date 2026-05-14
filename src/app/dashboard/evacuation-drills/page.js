@@ -21,6 +21,7 @@ const EMPTY = {
     sudjelovaliVatrogasci: false,
     sudjelovalaHitna: false,
     napomena: '', status: 'uspješno',
+    attachedFile: '', attachedFileName: '',
 };
 
 const STATUS_MAP = {
@@ -270,6 +271,26 @@ export default function EvacuationDrillsPage() {
                                         <label className="form-label">{t('note')}</label>
                                         <textarea className="form-input" rows={1} value={formData.napomena} onChange={e => set('napomena', e.target.value)} />
                                     </div>
+
+                                    {/* Document Upload */}
+                                    <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', paddingTop: 12, marginTop: 4 }}>
+                                        <label className="form-label" style={{ fontWeight: 700 }}>{bs ? '📎 Dokument (izvještaj vježbe)' : '📎 Document (drill report)'}</label>
+                                        {formData.attachedFile && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
+                                                <span>📄</span>
+                                                <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{formData.attachedFileName}</span>
+                                                <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { set('attachedFile', ''); set('attachedFileName', ''); }}>✕</button>
+                                            </div>
+                                        )}
+                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
+                                            const file = e.target.files?.[0];
+                                            if (!file) return;
+                                            if (file.size > 10 * 1024 * 1024) { alert(bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
+                                            const reader = new FileReader();
+                                            reader.onload = () => { set('attachedFile', reader.result); set('attachedFileName', file.name); };
+                                            reader.readAsDataURL(file);
+                                        }} style={{ fontSize: '0.85rem' }} />
+                                    </div>
                                 </div>
                             </div>
                             <div className="modal-footer">
@@ -284,18 +305,18 @@ export default function EvacuationDrillsPage() {
                 <div className="card">
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew}>+ {bs ? 'Nova vje�ba' : 'New Drill'}</button>
+                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={openNew}>+ {bs ? 'Nova vježba' : 'New Drill'}</button>
                             <div className="search-bar" style={{ width: 250 }}>
-                                <span style={{ opacity: 0.5 }}>??</span>
+                                <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                             </div>
                             <SavedFlash />
                             {selectedIds.size> 0 ? (
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                     <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {bs ? 'odabrano' : 'selected'}:</span>
-                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>??? {bs ? 'Obri�i' : 'Delete'}</button>
+                                    <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {bs ? 'Obriši' : 'Delete'}</button>
                                 </div>
-                            ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {bs ? 'vje�bi' : 'drills'}</span>}
+                            ) : <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto', flexShrink: 0 }}>{sorted.length} {bs ? 'vježbi' : 'drills'}</span>}
                         </div>
                         <div className="data-table-wrapper">
                             <table className="data-table">
@@ -308,6 +329,7 @@ export default function EvacuationDrillsPage() {
                                         <th>{bs ? 'Rukovodilac' : 'Supervisor'}</th>
                                         <th onClick={() => toggleSort('trajanjeMinuta')} style={thStyle('trajanjeMinuta')}>{bs ? 'Trajanje' : 'Duration'}{sortIcon('trajanjeMinuta')}</th>
                                         <th onClick={() => toggleSort('brojEvakuisanihOsoba')} style={thStyle('brojEvakuisanihOsoba')}>{bs ? 'Evakuisano' : 'Evacuated'}{sortIcon('brojEvakuisanihOsoba')}</th>
+                                        <th>{bs ? 'Dokument' : 'Document'}</th>
                                         <th>{bs ? 'Hitne službe' : 'Emergency Svc.'}</th>
                                         <th>{bs ? 'Status' : 'Status'}</th>
                                     </tr>
@@ -324,7 +346,7 @@ export default function EvacuationDrillsPage() {
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ position: 'relative' }}>
-                                                        <button className="btn btn-primary btn-sm" onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▼</button>
+                                                        <button className="btn btn-ghost btn-sm" onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
                                                         {actionMenuId === d.id && (
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -349,6 +371,14 @@ export default function EvacuationDrillsPage() {
                                                 </td>
                                                 <td style={{ textAlign: 'center' }}>{d.trajanjeMinuta ? `${d.trajanjeMinuta} min` : '—'}</td>
                                                 <td style={{ textAlign: 'center' }}>{d.brojEvakuisanihOsoba || '—'}</td>
+                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                                    {d.attachedFile ? (
+                                                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
+                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Preuzmi' : 'Download'} onClick={() => { const a = document.createElement('a'); a.href = d.attachedFile; a.download = d.attachedFileName || 'document'; a.click(); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>⬇️</button>
+                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Pregledaj' : 'View'} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${d.attachedFile}" style="width:100%;height:100%;border:none"></iframe>`); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>👁️</button>
+                                                        </div>
+                                                    ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
+                                                </td>
                                                 <td>
                                                     <div style={{ display: 'flex', gap: 4 }}>
                                                         {d.sudjelovaliVatrogasci && <span title="Vatrogasci" style={{ fontSize: '1.2rem' }}>🚒</span>}

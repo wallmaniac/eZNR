@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
-    getAll, create, remove, removeWorkerCascade, COLLECTIONS, getAllForCompany, getRawAll, formatDate, getOrgUnitName, createForCompany,
+    getAll, create, update, remove, removeWorkerCascade, COLLECTIONS, getAllForCompany, getRawAll, formatDate, getOrgUnitName, createForCompany,
 } from '@/lib/dataStore';
 import { getNotificationSettings } from '@/lib/systemMonitor';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +21,13 @@ const EVENT_ROUTES = {
     equip: '/dashboard/equipment',
     doc: '/dashboard/employer-docs',
     service: '/dashboard/equipment',
+    fleet_inspection: '/dashboard/fleet',
+    fleet_registration: '/dashboard/fleet',
+    fire_service: '/dashboard/fire-protection',
+    hydrant_inspection: '/dashboard/fire-protection',
+    evac_drill: '/dashboard/evacuation-drills',
+    medical: '/dashboard/medical-exams',
+    training: '/dashboard/trainings',
 };
 // ── Alerts Widget: collapsible per-category expander ─────────────────────────
 function AlertsWidget({ groups, total, lang, isMobile }) {
@@ -147,11 +154,12 @@ export default function DashboardPage() {
         fleetVehicles: [], employerDocs: [], medicalExams: [],
         injuriesData: [], diseasesData: [], calEvents: [],
         certTypes: [], ppeTypes: [], riskAssessments: [], riskItems: [],
+        fireExtinguishers: [], hydrants: [], evacuationPlans: [],
     });
     // Convenience destructure so the rest of the component reads exactly the same
     const { workers, certs, ppeAssignments, equipment, fleetVehicles, employerDocs,
             medicalExams, injuriesData, diseasesData, calEvents, certTypes, ppeTypes,
-            riskAssessments, riskItems } = ds;
+            riskAssessments, riskItems, fireExtinguishers, hydrants, evacuationPlans } = ds;
 
     const [actionMenuId, setActionMenuId] = useState(null);
     const actionRef = useRef(null);
@@ -166,6 +174,14 @@ export default function DashboardPage() {
         ppeNaziv: '', ppeDatum: '', ppeKolicina: 1,
         // service fields
         machineId: '',
+        // fleet fields
+        vehicleId: '',
+        // fire protection fields
+        extinguisherId: '', hydrantId: '',
+        // evacuation fields
+        evacPlanId: '', drillDuration: '',
+        // training fields
+        trainingName: '',
     });
     const [deleteEventTarget, setDeleteEventTarget] = useState(null); // event to confirm-delete
     const [viewWorkerId, setViewWorkerId] = useState(null);
@@ -198,6 +214,9 @@ export default function DashboardPage() {
             riskItems: getAll(COLLECTIONS.RISK_ITEMS),
             injuriesData: getAllForCompany(COLLECTIONS.INJURIES, activeCompanyId, uids),
             diseasesData: getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids),
+            fireExtinguishers: getAllForCompany(COLLECTIONS.FIRE_EXTINGUISHERS, activeCompanyId, uids),
+            hydrants: getAllForCompany(COLLECTIONS.HYDRANTS, activeCompanyId, uids),
+            evacuationPlans: getAllForCompany(COLLECTIONS.EVACUATION_PLANS, activeCompanyId, uids),
         });
 
         // Initial load — immediate, single state write
@@ -988,8 +1007,10 @@ export default function DashboardPage() {
                                     {dayDetailEvents.length} {lang !== 'en' ? 'događaj(a)' : 'event(s)'}
                                 </div>
                                 {dayDetailEvents.map((ev, idx) => {
-                                    const tipIcon = ev.tip === 'cert' ? '📜' : ev.tip === 'ppe' ? '🦺' : ev.tip === 'equip' ? '⚙️' : ev.tip === 'doc' ? '📄' : ev.tip === 'service' ? '🔧' : ev.tip === 'risk' ? '🛡️' : '📌';
-                                    const tipLabel = ev.tip === 'cert' ? (lang !== 'en' ? 'Uvjerenje' : 'Certificate') : ev.tip === 'ppe' ? 'OZO' : ev.tip === 'equip' ? (lang !== 'en' ? 'Oprema' : 'Equipment') : ev.tip === 'doc' ? (lang !== 'en' ? 'Dokument' : 'Document') : ev.tip === 'service' ? 'Servis' : ev.tip === 'risk' ? (lang !== 'en' ? 'Mjera rizika' : 'Risk Measure') : (lang !== 'en' ? 'Događaj' : 'Event');
+                                    const tipIconMap = { cert: '📜', ppe: '🦺', equip: '⚙️', doc: '📄', service: '🔧', risk: '🛡️', fleet_inspection: '🚗', fleet_registration: '📋', fire_service: '🧯', hydrant_inspection: '🚰', evac_drill: '🏃', medical: '🏥', training: '📚' };
+                                    const tipLabelMap = { cert: lang !== 'en' ? 'Uvjerenje' : 'Certificate', ppe: 'OZO', equip: lang !== 'en' ? 'Oprema' : 'Equipment', doc: lang !== 'en' ? 'Dokument' : 'Document', service: 'Servis', risk: lang !== 'en' ? 'Mjera rizika' : 'Risk Measure', fleet_inspection: lang !== 'en' ? 'Tehnički' : 'Inspection', fleet_registration: lang !== 'en' ? 'Registracija' : 'Registration', fire_service: lang !== 'en' ? 'PP Servis' : 'FE Service', hydrant_inspection: lang !== 'en' ? 'Hidrant' : 'Hydrant', evac_drill: lang !== 'en' ? 'Evakuacija' : 'Evacuation', medical: lang !== 'en' ? 'Ljekarski' : 'Medical', training: lang !== 'en' ? 'Obuka' : 'Training' };
+                                    const tipIcon = tipIconMap[ev.tip] || '📌';
+                                    const tipLabel = tipLabelMap[ev.tip] || (lang !== 'en' ? 'Događaj' : 'Event');
                                     const isExpired = ev.datum && new Date(ev.datum) < new Date();
                                     return (
                                         <div key={ev.id || idx} className="hover-translate-x" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, marginBottom: 6, background: isExpired ? 'rgba(198,40,40,0.06)' : 'rgba(0,191,166,0.04)', border: '1px solid ' + (isExpired ? 'rgba(198,40,40,0.15)' : 'var(--border-light)'), cursor: 'pointer', transition: 'all 0.15s' }}
@@ -1017,6 +1038,7 @@ export default function DashboardPage() {
                                         tip: 'cert', opis: '', count: 1, companyId: activeCompanyId === 'all' ? (user?.companyIds?.[0] || '') : activeCompanyId,
                                         workerId: '', certNaziv: '', certOznaka: '', certTip: '', certDatum: dayDetailDate, certVrijediDo: '', certSposobnost: 'Sposoban',
                                         ppeNaziv: '', ppeDatum: dayDetailDate, ppeKolicina: 1, machineId: '',
+                                        vehicleId: '', extinguisherId: '', hydrantId: '', evacPlanId: '', drillDuration: '', trainingName: '',
                                     });
                                     setEventFormError(''); setShowEventForm(true);
                                 }}>➕ {lang !== 'en' ? 'Novi događaj' : 'New event'}</button>
@@ -1051,6 +1073,13 @@ export default function DashboardPage() {
                                         <option value="service">{lang !== 'en' ? '🔧 Servis / Održavanje' : '🔧 Service / Maintenance'}</option>
                                         <option value="ppe">{lang !== 'en' ? '🦺 Zaštitna oprema (OZO)' : '🦺 PPE'}</option>
                                         <option value="equip">{lang !== 'en' ? '⚙️ Radna oprema / Objekti' : '⚙️ Equipment'}</option>
+                                        <option value="fleet_inspection">{lang !== 'en' ? '🚗 Tehnički pregled vozila' : '🚗 Vehicle Inspection'}</option>
+                                        <option value="fleet_registration">{lang !== 'en' ? '📋 Registracija vozila' : '📋 Vehicle Registration'}</option>
+                                        <option value="fire_service">{lang !== 'en' ? '🧯 Servis PP aparata' : '🧯 Fire Ext. Service'}</option>
+                                        <option value="hydrant_inspection">{lang !== 'en' ? '🚰 Pregled hidranta' : '🚰 Hydrant Inspection'}</option>
+                                        <option value="evac_drill">{lang !== 'en' ? '🏃 Vježba evakuacije' : '🏃 Evacuation Drill'}</option>
+                                        <option value="medical">{lang !== 'en' ? '🏥 Ljekarski pregled' : '🏥 Medical Exam'}</option>
+                                        <option value="training">{lang !== 'en' ? '📚 Obuka radnika' : '📚 Worker Training'}</option>
                                         <option value="doc">{lang !== 'en' ? '📋 Dokumentacija' : '📋 Documentation'}</option>
                                         <option value="other">{lang !== 'en' ? 'Ostalo' : 'Other'}</option>
                                     </select>
@@ -1082,7 +1111,7 @@ export default function DashboardPage() {
                                 )}
 
                                 {/* Worker selector — searchable combobox */}
-                                {(eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (() => {
+                                {(eventFormData.tip === 'cert' || eventFormData.tip === 'ppe' || eventFormData.tip === 'medical' || eventFormData.tip === 'training') && (() => {
                                     const sortedWorkers = [...workers]
                                         .filter(w => w.aktivan !== false)
                                         .sort((a, b) => {
@@ -1252,18 +1281,91 @@ export default function DashboardPage() {
                                     </div>
                                 )}
 
+                                {/* ── Fleet Vehicle fields ── */}
+                                {(eventFormData.tip === 'fleet_inspection' || eventFormData.tip === 'fleet_registration') && (
+                                    <div className="form-group">
+                                        <label className="form-label">🚗 {lang !== 'en' ? 'Vozilo *' : 'Vehicle *'}</label>
+                                        <select className="form-select" value={eventFormData.vehicleId}
+                                            onChange={e => setEventFormData(prev => ({ ...prev, vehicleId: e.target.value }))}>
+                                            <option value="">{lang !== 'en' ? '— Odaberi vozilo —' : '— Select vehicle —'}</option>
+                                            {fleetVehicles.filter(v => !eventFormData.companyId || v.companyId === eventFormData.companyId).map(v => (
+                                                <option key={v.id} value={v.id}>{v.marka} {v.model} ({v.registracija})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {/* ── Fire Extinguisher Service fields ── */}
+                                {eventFormData.tip === 'fire_service' && (
+                                    <div className="form-group">
+                                        <label className="form-label">🧯 {lang !== 'en' ? 'PP Aparat *' : 'Fire Extinguisher *'}</label>
+                                        <select className="form-select" value={eventFormData.extinguisherId}
+                                            onChange={e => setEventFormData(prev => ({ ...prev, extinguisherId: e.target.value }))}>
+                                            <option value="">{lang !== 'en' ? '— Odaberi aparat —' : '— Select extinguisher —'}</option>
+                                            {fireExtinguishers.map(fe => (
+                                                <option key={fe.id} value={fe.id}>{fe.serijskiBroj} — {fe.lokacija || fe.tip}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {/* ── Hydrant Inspection fields ── */}
+                                {eventFormData.tip === 'hydrant_inspection' && (
+                                    <div className="form-group">
+                                        <label className="form-label">🚰 {lang !== 'en' ? 'Hidrant *' : 'Hydrant *'}</label>
+                                        <select className="form-select" value={eventFormData.hydrantId}
+                                            onChange={e => setEventFormData(prev => ({ ...prev, hydrantId: e.target.value }))}>
+                                            <option value="">{lang !== 'en' ? '— Odaberi hidrant —' : '— Select hydrant —'}</option>
+                                            {hydrants.map(h => (
+                                                <option key={h.id} value={h.id}>{h.oznaka} — {h.lokacija || (h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski')}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                )}
+
+                                {/* ── Evacuation Drill fields ── */}
+                                {eventFormData.tip === 'evac_drill' && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 12 }}>
+                                        <div className="form-group">
+                                            <label className="form-label">📍 {lang !== 'en' ? 'Plan evakuacije (lokacija) *' : 'Evacuation Plan (location) *'}</label>
+                                            <select className="form-select" value={eventFormData.evacPlanId}
+                                                onChange={e => setEventFormData(prev => ({ ...prev, evacPlanId: e.target.value }))}>
+                                                <option value="">{lang !== 'en' ? '— Odaberi plan —' : '— Select plan —'}</option>
+                                                {evacuationPlans.map(p => (
+                                                    <option key={p.id} value={p.id}>{p.lokacija}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div className="form-group">
+                                            <label className="form-label">{lang !== 'en' ? 'Trajanje (min)' : 'Duration (min)'}</label>
+                                            <input className="form-input" type="number" min="1" value={eventFormData.drillDuration}
+                                                onChange={e => setEventFormData(prev => ({ ...prev, drillDuration: e.target.value }))} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* ── Training fields ── */}
+                                {eventFormData.tip === 'training' && (
+                                    <div className="form-group">
+                                        <label className="form-label">📚 {lang !== 'en' ? 'Naziv obuke *' : 'Training name *'}</label>
+                                        <input className="form-input" value={eventFormData.trainingName}
+                                            onChange={e => setEventFormData(prev => ({ ...prev, trainingName: e.target.value }))}
+                                            placeholder={lang !== 'en' ? 'npr. Obuka ZNR, Obuka ZOP...' : 'e.g. OHS Training...'} />
+                                    </div>
+                                )}
+
                                 {/* Description + count for non-cert/ppe */}
                                 <div className="form-group">
                                     <label className="form-label">
                                         {lang !== 'en' ? 'Opis događaja' : 'Event description'}
-                                        {(eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe') ? ' *' : ` (${lang !== 'en' ? 'opcionalno' : 'optional'})`}
+                                        {(eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe') ? ` (${lang !== 'en' ? 'opcionalno' : 'optional'})` : ` (${lang !== 'en' ? 'opcionalno' : 'optional'})`}
                                     </label>
                                     <input className="form-input" value={eventFormData.opis}
                                         onChange={e => setEventFormData(prev => ({ ...prev, opis: e.target.value }))}
                                         placeholder={lang !== 'en' ? 'Opis događaja...' : 'Event description...'} />
                                 </div>
 
-                                {eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe' && (
+                                {eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe' && !['fleet_inspection','fleet_registration','fire_service','hydrant_inspection','evac_drill','training','medical'].includes(eventFormData.tip) && (
                                     <div className="form-group">
                                         <label className="form-label">{lang !== 'en' ? 'Broj radnika' : 'Number of workers'}</label>
                                         <input className="form-input" type="number" min="1" value={eventFormData.count}
@@ -1271,12 +1373,40 @@ export default function DashboardPage() {
                                     </div>
                                 )}
 
-                                {/* Info banner when worker linked */}
+                                {/* Info banner for connected events */}
                                 {eventFormData.workerId && (eventFormData.tip === 'cert' || eventFormData.tip === 'ppe') && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
                                         ✅ {lang !== 'en'
                                             ? `Zapis će biti dodan i u ${eventFormData.tip === 'cert' ? 'Popis uvjerenja' : 'Zaštitnu opremu'} radnika.`
                                             : `Record will also be added to worker's ${eventFormData.tip === 'cert' ? 'certificates list' : 'PPE list'}.`}
+                                    </div>
+                                )}
+                                {(eventFormData.tip === 'fleet_inspection' || eventFormData.tip === 'fleet_registration') && eventFormData.vehicleId && (
+                                    <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
+                                        ✅ {lang !== 'en'
+                                            ? `Datum ${eventFormData.tip === 'fleet_inspection' ? 'tehničkog pregleda' : 'registracije'} vozila će biti automatski ažuriran, a istek produžen za 1 godinu.`
+                                            : `Vehicle's ${eventFormData.tip === 'fleet_inspection' ? 'inspection' : 'registration'} date will be updated automatically, expiry extended by 1 year.`}
+                                    </div>
+                                )}
+                                {eventFormData.tip === 'fire_service' && eventFormData.extinguisherId && (
+                                    <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
+                                        ✅ {lang !== 'en'
+                                            ? 'Datum servisa PP aparata će biti automatski ažuriran, sljedeći servis zakazan za 1 godinu.'
+                                            : 'Fire extinguisher service date will be updated, next service scheduled in 1 year.'}
+                                    </div>
+                                )}
+                                {eventFormData.tip === 'hydrant_inspection' && eventFormData.hydrantId && (
+                                    <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
+                                        ✅ {lang !== 'en'
+                                            ? 'Datum pregleda hidranta će biti automatski ažuriran, sljedeći pregled zakazan za 6 mjeseci.'
+                                            : 'Hydrant inspection date will be updated, next inspection scheduled in 6 months.'}
+                                    </div>
+                                )}
+                                {eventFormData.tip === 'evac_drill' && eventFormData.evacPlanId && (
+                                    <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
+                                        ✅ {lang !== 'en'
+                                            ? 'Vježba evakuacije će biti automatski kreirana u modulu Vježbe evakuacije.'
+                                            : 'Evacuation drill record will be automatically created in the Drills module.'}
                                     </div>
                                 )}
                             </div>
@@ -1286,28 +1416,38 @@ export default function DashboardPage() {
                                 <button className="btn btn-primary" onClick={() => {
                                     const { tip, opis, count, workerId, companyId, machineId,
                                         certNaziv, certOznaka, certTip, certDatum, certVrijediDo, certSposobnost,
-                                        ppeNaziv, ppeDatum, ppeKolicina } = eventFormData;
+                                        ppeNaziv, ppeDatum, ppeKolicina,
+                                        vehicleId, extinguisherId, hydrantId, evacPlanId, drillDuration, trainingName } = eventFormData;
 
                                     // Validation
                                     if (tip === 'cert' && !certNaziv.trim() && !certTip) { setEventFormError(lang !== 'en' ? 'Naziv ili tip uvjerenja je obavezan!' : 'Certificate name or type is required!'); return; }
                                     if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(lang !== 'en' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
                                     if (tip === 'service' && !machineId) { setEventFormError(lang !== 'en' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
-                                    if (tip !== 'cert' && tip !== 'ppe' && tip !== 'service' && !opis.trim()) { setEventFormError(lang !== 'en' ? 'Opis je obavezan!' : 'Description is required!'); return; }
+                                    if ((tip === 'fleet_inspection' || tip === 'fleet_registration') && !vehicleId) { setEventFormError(lang !== 'en' ? 'Vozilo je obavezno!' : 'Vehicle is required!'); return; }
+                                    if (tip === 'fire_service' && !extinguisherId) { setEventFormError(lang !== 'en' ? 'PP aparat je obavezan!' : 'Fire extinguisher is required!'); return; }
+                                    if (tip === 'hydrant_inspection' && !hydrantId) { setEventFormError(lang !== 'en' ? 'Hidrant je obavezan!' : 'Hydrant is required!'); return; }
+                                    if (tip === 'evac_drill' && !evacPlanId) { setEventFormError(lang !== 'en' ? 'Plan evakuacije je obavezan!' : 'Evacuation plan is required!'); return; }
+                                    if (tip === 'training' && !trainingName.trim()) { setEventFormError(lang !== 'en' ? 'Naziv obuke je obavezan!' : 'Training name is required!'); return; }
+                                    if (!['cert','ppe','service','fleet_inspection','fleet_registration','fire_service','hydrant_inspection','evac_drill','training','medical'].includes(tip) && !opis.trim()) { setEventFormError(lang !== 'en' ? 'Opis je obavezan!' : 'Description is required!'); return; }
 
                                     // Auto-generate description
                                     let autoOpis = opis;
                                     if (tip === 'cert' && !opis) autoOpis = (certNaziv || certTip || 'Uvjerenje') + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
                                     if (tip === 'ppe' && !opis) autoOpis = ppeNaziv + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
+                                    if (tip === 'service' && !opis) { const m = equipment.find(e => e.id === machineId); autoOpis = `${lang !== 'en' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`; }
+                                    if ((tip === 'fleet_inspection' || tip === 'fleet_registration') && !opis) { const v = fleetVehicles.find(v => v.id === vehicleId); autoOpis = `${tip === 'fleet_inspection' ? (lang !== 'en' ? 'Tehnički pregled' : 'Inspection') : (lang !== 'en' ? 'Registracija' : 'Registration')}: ${v?.marka || ''} ${v?.model || ''} (${v?.registracija || ''})`; }
+                                    if (tip === 'fire_service' && !opis) { const fe = fireExtinguishers.find(f => f.id === extinguisherId); autoOpis = `${lang !== 'en' ? 'Servis PP aparata' : 'Fire Ext. Service'}: ${fe?.serijskiBroj || ''}`; }
+                                    if (tip === 'hydrant_inspection' && !opis) { const h = hydrants.find(h => h.id === hydrantId); autoOpis = `${lang !== 'en' ? 'Pregled hidranta' : 'Hydrant Inspection'}: ${h?.oznaka || ''}`; }
+                                    if (tip === 'evac_drill' && !opis) { const p = evacuationPlans.find(p => p.id === evacPlanId); autoOpis = `${lang !== 'en' ? 'Vježba evakuacije' : 'Evacuation Drill'}: ${p?.lokacija || ''}`; }
+                                    if (tip === 'medical' && !opis) autoOpis = (lang !== 'en' ? 'Ljekarski pregled' : 'Medical Exam') + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
+                                    if (tip === 'training' && !opis) autoOpis = trainingName + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
 
-                                    // 1. Build service description if needed
-                                    if (tip === 'service' && !opis) {
-                                        const m = equipment.find(e => e.id === machineId);
-                                        autoOpis = `${lang !== 'en' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`;
-                                    }
                                     // Create calendar event (company-scoped)
-                                    createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId, workerId: workerId || '' }, companyId);
+                                    createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId, vehicleId, extinguisherId, hydrantId, evacPlanId, workerId: workerId || '' }, companyId);
 
-                                    // 2. If cert type + worker selected → also create certificate record
+                                    // ── Connected record updates ──
+
+                                    // 1. Cert → create certificate
                                     if (tip === 'cert' && workerId) {
                                         createForCompany(COLLECTIONS.CERTIFICATES, {
                                             workerId,
@@ -1321,10 +1461,9 @@ export default function DashboardPage() {
                                             upisao: 'Kalendar',
                                             ogranicenje: '',
                                         }, companyId);
-                                        setCerts([...getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, user?.companyIds)]);
                                     }
 
-                                    // 3. If ppe type + worker selected → also create PPE assignment
+                                    // 2. PPE → create PPE assignment
                                     if (tip === 'ppe' && workerId) {
                                         createForCompany(COLLECTIONS.PPE_ASSIGNMENTS, {
                                             workerId,
@@ -1333,10 +1472,69 @@ export default function DashboardPage() {
                                             datumRazduzenja: '',
                                             kolicina: ppeKolicina,
                                         }, companyId);
-                                        setPpeAssignments([...getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, user?.companyIds)]);
                                     }
 
-                                    setCalEvents([...getAllForCompany(COLLECTIONS.CALENDAR_EVENTS, activeCompanyId, user?.companyIds)]);
+                                    // 3. Fleet inspection → update vehicle's datumTehnickogPregleda + tehnickiIstice (+1 year)
+                                    if (tip === 'fleet_inspection' && vehicleId) {
+                                        const nextYear = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
+                                        update(COLLECTIONS.VEHICLES, vehicleId, { datumTehnickogPregleda: eventFormDate, tehnickiIstice: nextYear });
+                                    }
+
+                                    // 4. Fleet registration → update vehicle's datumRegistracije + registracijaIstice (+1 year)
+                                    if (tip === 'fleet_registration' && vehicleId) {
+                                        const nextYear = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
+                                        update(COLLECTIONS.VEHICLES, vehicleId, { datumRegistracije: eventFormDate, registracijaIstice: nextYear });
+                                    }
+
+                                    // 5. Fire extinguisher service → update zadnjiServis + sljedeciServis (+1 year)
+                                    if (tip === 'fire_service' && extinguisherId) {
+                                        const nextYear = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
+                                        update(COLLECTIONS.FIRE_EXTINGUISHERS, extinguisherId, { zadnjiServis: eventFormDate, sljedeciServis: nextYear, status: 'ispravan' });
+                                    }
+
+                                    // 6. Hydrant inspection → update inspection dates (+6 months)
+                                    if (tip === 'hydrant_inspection' && hydrantId) {
+                                        const in6m = new Date(new Date(eventFormDate).getTime() + 182 * 86400000).toISOString().split('T')[0];
+                                        update(COLLECTIONS.HYDRANTS, hydrantId, { datumZadnjegPregleda: eventFormDate, sljedeciPregled: in6m, status: 'ispravan' });
+                                    }
+
+                                    // 7. Evacuation drill → create drill record
+                                    if (tip === 'evac_drill' && evacPlanId) {
+                                        const plan = evacuationPlans.find(p => p.id === evacPlanId);
+                                        createForCompany(COLLECTIONS.EVACUATION_DRILLS, {
+                                            planId: evacPlanId,
+                                            lokacija: plan?.lokacija || '',
+                                            datumVjezbe: eventFormDate,
+                                            trajanjeMinuta: drillDuration || '',
+                                            brojEvakuisanihOsoba: '',
+                                            rukovodilac: '',
+                                            napomena: opis || '',
+                                            status: 'zakazano',
+                                        }, companyId);
+                                    }
+
+                                    // 8. Medical exam → create medical exam record
+                                    if (tip === 'medical' && workerId) {
+                                        createForCompany(COLLECTIONS.MEDICAL_EXAMS, {
+                                            workerId,
+                                            datumPregleda: eventFormDate,
+                                            tipPregleda: 'periodični',
+                                            rezultat: '',
+                                            napomena: opis || '',
+                                        }, companyId);
+                                    }
+
+                                    // 9. Training → create training record
+                                    if (tip === 'training') {
+                                        createForCompany(COLLECTIONS.TRAININGS, {
+                                            naziv: trainingName,
+                                            datum: eventFormDate,
+                                            workerId: workerId || '',
+                                            napomena: opis || '',
+                                            status: 'zakazano',
+                                        }, companyId);
+                                    }
+
                                     setEventFormError(''); setShowEventForm(false);
                                 }}>💾 {t('save')}</button>
                             </div>
