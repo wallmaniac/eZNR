@@ -642,7 +642,7 @@ export default function DashboardPage() {
                 return;
             }
             if (ev.workerId) {
-                router.push('/dashboard/workers?openWorker=' + ev.workerId);
+                router.push('/dashboard/workers?openWorker=' + ev.workerId + '&section=pregledi');
                 return;
             }
             router.push('/dashboard/medical-exams');
@@ -1351,6 +1351,7 @@ export default function DashboardPage() {
                                     </div>
                                 )}
 
+
                                 {/* ── Fleet Vehicle fields ── */}
                                 {(eventFormData.tip === 'fleet_inspection' || eventFormData.tip === 'fleet_registration') && (
                                     <div className="form-group">
@@ -1609,7 +1610,42 @@ export default function DashboardPage() {
                                             napomena: opis || '',
                                             status: 'zakazano',
                                         }, companyId);
+                                        newSourceId = newTraining.id;
                                     }
+
+                                    // 10. Service → update equipment dates and history
+                                    if (tip === 'service' && machineId) {
+                                        const eq = equipment.find(e => e.id === machineId);
+                                        if (eq) {
+                                            const in1y = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
+                                            const newLog = {
+                                                id: Date.now().toString(),
+                                                datum: eventFormDate,
+                                                tip: 'pregled',
+                                                servisirao: 'Kalendar',
+                                                napomena: opis || '',
+                                                iduciServis: in1y
+                                            };
+                                            const updatedHistory = [...(eq.history || []), newLog].sort((a, b) => b.datum.localeCompare(a.datum));
+                                            update(COLLECTIONS.EQUIPMENT, machineId, { posljednji: eventFormDate, iduci: in1y, history: updatedHistory });
+                                            newSourceId = machineId;
+                                        }
+                                    }
+
+                                    // Create calendar event (company-scoped)
+                                    createForCompany(COLLECTIONS.CALENDAR_EVENTS, { 
+                                        datum: eventFormDate, 
+                                        tip, 
+                                        opis: autoOpis || opis, 
+                                        count: workerId ? 1 : count, 
+                                        machineId, 
+                                        vehicleId, 
+                                        extinguisherId, 
+                                        hydrantId, 
+                                        evacPlanId, 
+                                        workerId: workerId || '',
+                                        sourceId: newSourceId || ''
+                                    }, companyId);
 
                                     setEventFormError(''); setShowEventForm(false);
                                 }}>💾 {t('save')}</button>

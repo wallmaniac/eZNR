@@ -22,7 +22,7 @@ const EMPTY = {
     sudjelovaliVatrogasci: false,
     sudjelovalaHitna: false,
     napomena: '', status: 'uspješno',
-    attachedFile: '', attachedFileName: '',
+    attachedFile: '', attachedFileName: '', documents: [],
 };
 
 const STATUS_MAP = {
@@ -34,6 +34,7 @@ const STATUS_MAP = {
 function EvacuationDrillsInner() {
     const { t, lang } = useLanguage();
     const bs = lang !== 'en';
+    const hr = lang === 'hr';
     const router = useRouter();
     const searchParams = useSearchParams();
     const { alert, confirm, DialogRenderer } = useDialog();
@@ -166,15 +167,15 @@ function EvacuationDrillsInner() {
             <div className="animate-fadeIn">
                 <DialogRenderer />
                 {/* Header */}
-                <PageHeader icon="🏃" title={bs ? 'Vježbe evakuacije' : 'Evacuation Drills'} />
+                <PageHeader icon="🏃" title={hr ? 'Vježbe evakuacije' : bs ? 'Vježbe evakuacije' : 'Evacuation Drills'} />
 
                 {/* Stats */}
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20, marginTop: 16 }}>
                     {[
                         { label: bs ? 'Ukupno vježbi' : 'Total Drills', val: stats.total, icon: '🏃', color: 'var(--primary)' },
-                        { label: bs ? 'Uspješno provedene' : 'Successfully Completed', val: stats.successful, icon: '✅', color: '#22C55E' },
-                        { label: bs ? 'Neuspješne vježbe' : 'Failed Drills', val: stats.failed, icon: '🔴', color: '#EF4444' },
-                        { label: bs ? 'Uz učešće žurnih službi' : 'With Emergency Svc.', val: stats.withEmergencyServices, icon: '🚒', color: '#6366F1' },
+                        { label: hr ? 'Uspješno provedene' : bs ? 'Uspješno provedene' : 'Successfully Completed', val: stats.successful, icon: '✅', color: '#22C55E' },
+                        { label: hr ? 'Neuspješne vježbe' : bs ? 'Neuspješne vježbe' : 'Failed Drills', val: stats.failed, icon: '🔴', color: '#EF4444' },
+                        { label: hr ? 'Uz sudjelovanje hitnih službi' : bs ? 'Uz učešće hitnih službi' : 'With Emergency Svc.', val: stats.withEmergencyServices, icon: '🚒', color: '#6366F1' },
                     ].map((s, i) => (
                         <div key={i} className="card" style={{ padding: '16px 20px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -224,7 +225,7 @@ function EvacuationDrillsInner() {
 
                                     {/* Responsible person */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
-                                        <label className="form-label">{bs ? 'Rukovodilac vježbe' : 'Drill Supervisor'}</label>
+                                        <label className="form-label">{hr ? 'Voditelj vježbe' : bs ? 'Rukovodilac vježbe' : 'Drill Supervisor'}</label>
                                         <div style={{ position: 'relative' }}>
                                             <input className="form-input" placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={workerSearch}
                                                 onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('odgovornaOsobaId', ''); set('odgovornaOsobaIme', ''); }}
@@ -251,16 +252,16 @@ function EvacuationDrillsInner() {
                                     {/* Additional Services */}
                                     <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', marginTop: 4, paddingTop: 12 }}>
                                         <div style={{ fontSize: '0.82rem', fontWeight: 700, color: 'var(--primary)', marginBottom: 12 }}>
-                                            🚨 {bs ? 'Učešće hitnih službi' : 'Emergency Services Participation'}
+                                            🚨 {hr ? 'Sudjelovanje hitnih službi' : bs ? 'Učešće hitnih službi' : 'Emergency Services Participation'}
                                         </div>
                                     </div>
                                     <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <input type="checkbox" checked={formData.sudjelovaliVatrogasci} onChange={e => set('sudjelovaliVatrogasci', e.target.checked)} style={{ cursor: 'pointer' }} id="chk-fire" />
-                                        <label htmlFor="chk-fire" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{bs ? 'Vatrogasci' : 'Fire Department'}</label>
+                                        <label htmlFor="chk-fire" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{hr ? 'Vatrogasci' : bs ? 'Vatrogasci' : 'Fire Department'}</label>
                                     </div>
                                     <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                         <input type="checkbox" checked={formData.sudjelovalaHitna} onChange={e => set('sudjelovalaHitna', e.target.checked)} style={{ cursor: 'pointer' }} id="chk-med" />
-                                        <label htmlFor="chk-med" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{bs ? 'Hitna medicinska pomoć' : 'Ambulance'}</label>
+                                        <label htmlFor="chk-med" style={{ cursor: 'pointer', margin: 0, userSelect: 'none' }}>{hr ? 'Hitna medicinska pomoć' : bs ? 'Hitna medicinska pomoć' : 'Ambulance'}</label>
                                     </div>
 
                                     {/* Textareas */}
@@ -292,20 +293,42 @@ function EvacuationDrillsInner() {
                                     {/* Document Upload */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--border-light)', paddingTop: 12, marginTop: 4 }}>
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? '📎 Dokument (izvještaj vježbe)' : '📎 Document (drill report)'}</label>
-                                        {formData.attachedFile && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
-                                                <span>📄</span>
-                                                <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{formData.attachedFileName}</span>
-                                                <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { set('attachedFile', ''); set('attachedFileName', ''); }}>✕</button>
-                                            </div>
-                                        )}
-                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            if (file.size > 10 * 1024 * 1024) { alert(bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
-                                            const reader = new FileReader();
-                                            reader.onload = () => { set('attachedFile', reader.result); set('attachedFileName', file.name); };
-                                            reader.readAsDataURL(file);
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                                            {formData.attachedFile && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
+                                                    <span>📄</span>
+                                                    <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{formData.attachedFileName}</span>
+                                                    <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { set('attachedFile', ''); set('attachedFileName', ''); }}>✕</button>
+                                                </div>
+                                            )}
+                                            {formData.documents && formData.documents.map((doc, idx) => (
+                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
+                                                    <span>📄</span>
+                                                    <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{doc.name}</span>
+                                                    <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { const newDocs = [...formData.documents]; newDocs.splice(idx, 1); set('documents', newDocs); }}>✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
+                                            const files = Array.from(e.target.files || []);
+                                            if (files.length === 0) return;
+                                            
+                                            const newDocs = [...(formData.documents || [])];
+                                            let processed = 0;
+                                            
+                                            files.forEach(file => {
+                                                if (file.size > 10 * 1024 * 1024) { alert(hr ? 'Maksimalna veličina fajla je 10MB!' : bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
+                                                const reader = new FileReader();
+                                                reader.onload = () => { 
+                                                    newDocs.push({ url: reader.result, name: file.name });
+                                                    processed++;
+                                                    if (processed === files.length) {
+                                                        set('documents', newDocs);
+                                                    }
+                                                };
+                                                reader.readAsDataURL(file);
+                                            });
+                                            e.target.value = ''; // reset input
                                         }} style={{ fontSize: '0.85rem' }} />
                                     </div>
                                 </div>
@@ -343,11 +366,11 @@ function EvacuationDrillsInner() {
                                         <th style={{ width: 90 }}>{t('actions')}</th>
                                         <th onClick={() => toggleSort('datumVjezbe')} style={thStyle('datumVjezbe')}>{bs ? 'Datum' : 'Date'}{sortIcon('datumVjezbe')}</th>
                                         <th>{bs ? 'Plan evakuacije (Lokacija)' : 'Evacuation Plan'}</th>
-                                        <th>{bs ? 'Rukovodilac' : 'Supervisor'}</th>
+                                        <th>{hr ? 'Voditelj' : bs ? 'Rukovodilac' : 'Supervisor'}</th>
                                         <th onClick={() => toggleSort('trajanjeMinuta')} style={thStyle('trajanjeMinuta')}>{bs ? 'Trajanje' : 'Duration'}{sortIcon('trajanjeMinuta')}</th>
-                                        <th onClick={() => toggleSort('brojEvakuisanihOsoba')} style={thStyle('brojEvakuisanihOsoba')}>{bs ? 'Evakuisano' : 'Evacuated'}{sortIcon('brojEvakuisanihOsoba')}</th>
+                                        <th onClick={() => toggleSort('brojEvakuisanihOsoba')} style={thStyle('brojEvakuisanihOsoba')}>{hr ? 'Evakuirano' : bs ? 'Evakuisano' : 'Evacuated'}{sortIcon('brojEvakuisanihOsoba')}</th>
                                         <th>{bs ? 'Dokument' : 'Document'}</th>
-                                        <th>{bs ? 'Hitne službe' : 'Emergency Svc.'}</th>
+                                        <th>{hr ? 'Hitne službe' : bs ? 'Hitne službe' : 'Emergency Svc.'}</th>
                                         <th>{bs ? 'Status' : 'Status'}</th>
                                     </tr>
                                 </thead>
@@ -363,12 +386,13 @@ function EvacuationDrillsInner() {
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ position: 'relative' }}>
-                                                        <button className="btn btn-ghost btn-sm" onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
+                                                        <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={e => openMenu(d.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
                                                         {actionMenuId === d.id && (
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEdit(d); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); if (d.attachedFile) { const a = document.createElement('a'); a.href = d.attachedFile; a.download = d.attachedFileName || 'document'; a.click(); } if (d.documents) { d.documents.forEach(d => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.click(); }); } }} className="dropdown-item">⬇️ {hr ? 'Preuzmi dokumente' : bs ? 'Preuzmi dokumente' : 'Download documents'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...d }; delete copy.id; copy.datumVjezbe = new Date().toISOString().split('T')[0]; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.EVACUATION_DRILLS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const cycle = { 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' }; update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: cycle[d.status] || 'uspješno' }); loadData(); }} className="dropdown-item">🔄 {bs ? `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.bs || 'Uspješno'}` : `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.en || 'Successful'}`}</button>
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
@@ -388,11 +412,25 @@ function EvacuationDrillsInner() {
                                                 </td>
                                                 <td style={{ textAlign: 'center' }}>{d.trajanjeMinuta ? `${d.trajanjeMinuta} min` : '—'}</td>
                                                 <td style={{ textAlign: 'center' }}>{d.brojEvakuisanihOsoba || '—'}</td>
-                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-                                                    {d.attachedFile ? (
-                                                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Preuzmi' : 'Download'} onClick={() => { const a = document.createElement('a'); a.href = d.attachedFile; a.download = d.attachedFileName || 'document'; a.click(); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>⬇️</button>
-                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Pregledaj' : 'View'} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${d.attachedFile}" style="width:100%;height:100%;border:none"></iframe>`); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>👁️</button>
+                                                <td onClick={e => e.stopPropagation()} style={{ padding: '8px' }}>
+                                                    {((d.documents && d.documents.length > 0) || d.attachedFile) ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                            {d.attachedFile && (
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>1.</span>
+                                                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'underline', textAlign: 'left' }} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${d.attachedFile}" style="width:100%;height:100%;border:none"></iframe>`); }}>
+                                                                        {d.attachedFileName || 'Dokument'}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                            {d.documents && d.documents.map((doc, idx) => (
+                                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{d.attachedFile ? idx + 2 : idx + 1}.</span>
+                                                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'underline', textAlign: 'left', wordBreak: 'break-all' }} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${doc.url}" style="width:100%;height:100%;border:none"></iframe>`); }}>
+                                                                        {doc.name}
+                                                                    </button>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                                                 </td>

@@ -15,12 +15,13 @@ const EMPTY = {
     odgovornaOsobaId: '', odgovornaOsobaIme: '',
     brojEvakuacijskihPuteva: '', kapacitetOsoba: '',
     opis: '', napomena: '', status: 'aktivan',
-    attachedFile: '', attachedFileName: '',
+    attachedFile: '', attachedFileName: '', documents: [],
 };
 
 export default function EvacuationPage() {
     const { t, lang } = useLanguage();
     const bs = lang !== 'en';
+    const hr = lang === 'hr';
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
@@ -245,20 +246,42 @@ export default function EvacuationPage() {
                                     {/* Document Upload */}
                                     <div className="form-group" style={{ borderTop: '1px solid var(--border-light)', paddingTop: 12, marginTop: 4 }}>
                                         <label className="form-label" style={{ fontWeight: 700 }}>{bs ? '📎 Dokument (plan evakuacije)' : '📎 Document (evacuation plan)'}</label>
-                                        {formData.attachedFile && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
-                                                <span>📄</span>
-                                                <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{formData.attachedFileName}</span>
-                                                <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { set('attachedFile', ''); set('attachedFileName', ''); }}>✕</button>
-                                            </div>
-                                        )}
-                                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
-                                            const file = e.target.files?.[0];
-                                            if (!file) return;
-                                            if (file.size > 10 * 1024 * 1024) { alert(bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
-                                            const reader = new FileReader();
-                                            reader.onload = () => { set('attachedFile', reader.result); set('attachedFileName', file.name); };
-                                            reader.readAsDataURL(file);
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+                                            {formData.attachedFile && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
+                                                    <span>📄</span>
+                                                    <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{formData.attachedFileName}</span>
+                                                    <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { set('attachedFile', ''); set('attachedFileName', ''); }}>✕</button>
+                                                </div>
+                                            )}
+                                            {formData.documents && formData.documents.map((doc, idx) => (
+                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.2)', borderRadius: 'var(--radius-sm)', fontSize: '0.82rem' }}>
+                                                    <span>📄</span>
+                                                    <span style={{ flex: 1, fontWeight: 600, color: 'var(--text)' }}>{doc.name}</span>
+                                                    <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)', padding: '2px 8px' }} onClick={() => { const newDocs = [...formData.documents]; newDocs.splice(idx, 1); set('documents', newDocs); }}>✕</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
+                                            const files = Array.from(e.target.files || []);
+                                            if (files.length === 0) return;
+                                            
+                                            const newDocs = [...(formData.documents || [])];
+                                            let processed = 0;
+                                            
+                                            files.forEach(file => {
+                                                if (file.size > 10 * 1024 * 1024) { alert(hr ? 'Maksimalna veličina fajla je 10MB!' : bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
+                                                const reader = new FileReader();
+                                                reader.onload = () => { 
+                                                    newDocs.push({ url: reader.result, name: file.name });
+                                                    processed++;
+                                                    if (processed === files.length) {
+                                                        set('documents', newDocs);
+                                                    }
+                                                };
+                                                reader.readAsDataURL(file);
+                                            });
+                                            e.target.value = ''; // reset input
                                         }} style={{ fontSize: '0.85rem' }} />
                                     </div>
                             </div>
@@ -322,12 +345,13 @@ export default function EvacuationPage() {
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ position: 'relative' }}>
-                                                        <button className="btn btn-ghost btn-sm" onClick={e => openMenu(p.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
+                                                        <button className="btn btn-primary btn-sm" data-menu-trigger onMouseDown={(e) => e.preventDefault()} onClick={e => openMenu(p.id, e)}>{bs ? 'Akcije' : 'Actions'} ▾</button>
                                                         {actionMenuId === p.id && (
                                                             <>
                                                                 <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={e => { e.stopPropagation(); setActionMenuId(null); }} />
                                                                 <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                                     <button onClick={() => { setActionMenuId(null); openEdit(p); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
+                                                                    <button onClick={() => { setActionMenuId(null); if (p.attachedFile) { const a = document.createElement('a'); a.href = p.attachedFile; a.download = p.attachedFileName || 'document'; a.click(); } if (p.documents) { p.documents.forEach(d => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.click(); }); } }} className="dropdown-item">⬇️ {hr ? 'Preuzmi dokumente' : bs ? 'Preuzmi dokumente' : 'Download documents'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...p }; delete copy.id; copy.lokacija = copy.lokacija + (bs ? ' (Kopija)' : ' (Copy)'); copy.status = 'aktivan'; create(COLLECTIONS.EVACUATION_PLANS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const cycle = { aktivan: 'revizija', revizija: 'neaktivan', neaktivan: 'aktivan' }; const statusLabels = { aktivan: { bs: 'Aktivan', en: 'Active' }, revizija: { bs: 'Revizija', en: 'Revision' }, neaktivan: { bs: 'Neaktivan', en: 'Inactive' } }; update(COLLECTIONS.EVACUATION_PLANS, p.id, { status: cycle[p.status] || 'aktivan' }); loadData(); }} className="dropdown-item">🔄 {bs ? `Status → ${{ aktivan: 'Revizija', revizija: 'Neaktivan', neaktivan: 'Aktivan' }[p.status] || 'Aktivan'}` : `Status → ${{ aktivan: 'Revision', revizija: 'Inactive', neaktivan: 'Active' }[p.status] || 'Active'}`}</button>
                                                                     <button onClick={() => { setActionMenuId(null); create(COLLECTIONS.EVACUATION_DRILLS, { planId: p.id, lokacija: p.lokacija, datumVjezbe: new Date().toISOString().split('T')[0], status: 'zavrsena', napomena: bs ? 'Vježba kreirana iz plana' : 'Drill created from plan' }); loadData(); showFlash(); }} className="dropdown-item">🏃 {bs ? 'Zakaži vježbu' : 'Schedule Drill'}</button>
@@ -347,11 +371,25 @@ export default function EvacuationPage() {
                                                 </td>
                                                 <td>{formatDate(p.datumIzrade)}</td>
                                                 <td>{formatDate(p.datumRevizije)}</td>
-                                                <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
-                                                    {p.attachedFile ? (
-                                                        <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
-                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Preuzmi' : 'Download'} onClick={() => { const a = document.createElement('a'); a.href = p.attachedFile; a.download = p.attachedFileName || 'document'; a.click(); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>⬇️</button>
-                                                            <button className="btn btn-ghost btn-sm" title={bs ? 'Pregledaj' : 'View'} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${p.attachedFile}" style="width:100%;height:100%;border:none"></iframe>`); }} style={{ padding: '2px 6px', fontSize: '0.8rem' }}>👁️</button>
+                                                <td onClick={e => e.stopPropagation()} style={{ padding: '8px' }}>
+                                                    {((p.documents && p.documents.length > 0) || p.attachedFile) ? (
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                                            {p.attachedFile && (
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>1.</span>
+                                                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'underline', textAlign: 'left' }} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${p.attachedFile}" style="width:100%;height:100%;border:none"></iframe>`); }}>
+                                                                        {p.attachedFileName || 'Dokument'}
+                                                                    </button>
+                                                                </div>
+                                                            )}
+                                                            {p.documents && p.documents.map((doc, idx) => (
+                                                                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                                                    <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{p.attachedFile ? idx + 2 : idx + 1}.</span>
+                                                                    <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem', textDecoration: 'underline', textAlign: 'left', wordBreak: 'break-all' }} onClick={() => { const w = window.open(); w.document.write(`<iframe src="${doc.url}" style="width:100%;height:100%;border:none"></iframe>`); }}>
+                                                                        {doc.name}
+                                                                    </button>
+                                                                </div>
+                                                            ))}
                                                         </div>
                                                     ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                                                 </td>
