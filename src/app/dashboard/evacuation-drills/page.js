@@ -1,6 +1,7 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
@@ -30,9 +31,11 @@ const STATUS_MAP = {
     neuspješno: { bs: 'Neuspješno', en: 'Failed', color: '#EF4444', bg: 'rgba(239,68,68,0.1)' },
 };
 
-export default function EvacuationDrillsPage() {
+function EvacuationDrillsInner() {
     const { t, lang } = useLanguage();
     const bs = lang !== 'en';
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { alert, confirm, DialogRenderer } = useDialog();
     const { showFlash, SavedFlash } = useSavedFlash();
     const { markDirty, markClean } = useUnsavedChanges();
@@ -62,6 +65,20 @@ export default function EvacuationDrillsPage() {
         window.addEventListener('eznr:data-synced', loadData);
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
+
+    const openId = searchParams?.get('openId');
+    useEffect(() => {
+        if (openId && drills.length > 0 && !showForm) {
+            const rec = drills.find(d => d.id === openId);
+            if (rec) {
+                setEditingId(rec.id);
+                setFormData({ ...EMPTY, ...rec });
+                setWorkerSearch(rec.odgovornaOsobaIme || '');
+                setShowForm(true);
+            }
+        }
+    }, [openId, drills, showForm]);
+
     useEffect(() => {
         const handler = (e) => { if (workerRef.current && !workerRef.current.contains(e.target)) setShowWorkerDropdown(false); };
         document.addEventListener('mousedown', handler);
@@ -400,3 +417,4 @@ export default function EvacuationDrillsPage() {
         </>
     );
 }
+export default function EvacuationDrillsPage() { return <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "var(--text-muted)" }}>Učitavanje / Loading...</div>}><EvacuationDrillsInner /></Suspense>; }

@@ -1,6 +1,7 @@
 'use client';
 import DateInput from '@/components/DateInput';
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useCountry } from '@/contexts/CountryContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,9 +43,11 @@ const EMPTY_TRAINING = {
 
 const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
 
-export default function TrainingsPage() {
+function TrainingsInner() {
     const { t, lang } = useLanguage();
     const country = useCountry();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const { alert, confirm, choose, DialogRenderer } = useDialog();
     const { user, activeCompanyId } = useAuth();
     const officerName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || 'eZNR Admin';
@@ -111,6 +114,16 @@ export default function TrainingsPage() {
         window.addEventListener('eznr:data-synced', loadData);
         return () => window.removeEventListener('eznr:data-synced', loadData);
     }, [loadData]);
+
+    const openId = searchParams?.get('openId');
+    useEffect(() => {
+        if (openId && records.length > 0 && view === 'list') {
+            const rec = records.find(r => r.id === openId);
+            if (rec) {
+                handleEdit(rec);
+            }
+        }
+    }, [openId, records, view]);
 
     // Close dropdown on outside click — ignore clicks on the trigger button itself
     useEffect(() => {
@@ -1361,5 +1374,13 @@ function TrainingDispatchModal({ isOpen, onClose, training }) {
                 </div>
             </div>
         </>
+    );
+}
+
+export default function TrainingsPage() {
+    return (
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>Učitavanje / Loading...</div>}>
+            <TrainingsInner />
+        </Suspense>
     );
 }

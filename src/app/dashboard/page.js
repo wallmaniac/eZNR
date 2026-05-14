@@ -563,13 +563,25 @@ export default function DashboardPage() {
                     return;
                 }
             }
+            if (ev.workerId) {
+                router.push('/dashboard/workers?openWorker=' + ev.workerId + '&section=uvjerenja');
+                return;
+            }
             router.push('/dashboard/worker-certificates?sort=expiry');
             return;
         }
 
         // ── Fleet events → open fleet page ──
-        if (ev.tip === 'fleet') {
-            router.push('/dashboard/fleet?q=' + (ev.sourceId || ''));
+        if (ev.tip === 'fleet' || ev.tip === 'fleet_inspection' || ev.tip === 'fleet_registration') {
+            if (ev.vehicleId) {
+                router.push('/dashboard/fleet?openId=' + ev.vehicleId);
+                return;
+            }
+            if (ev.sourceId) {
+                router.push('/dashboard/fleet?openId=' + ev.sourceId);
+                return;
+            }
+            router.push('/dashboard/fleet');
             return;
         }
 
@@ -584,6 +596,64 @@ export default function DashboardPage() {
                 return;
             }
             router.push('/dashboard/equipment');
+            return;
+        }
+
+        // ── Fire Protection events ──
+        if (ev.tip === 'fire_service') {
+            if (ev.sourceId) {
+                router.push('/dashboard/fire-protection?openItem=' + ev.sourceId + '&tab=extinguishers');
+                return;
+            }
+            if (ev.extinguisherId) {
+                router.push('/dashboard/fire-protection?openItem=' + ev.extinguisherId + '&tab=extinguishers');
+                return;
+            }
+            router.push('/dashboard/fire-protection');
+            return;
+        }
+        if (ev.tip === 'hydrant_inspection') {
+            if (ev.sourceId) {
+                router.push('/dashboard/fire-protection?openItem=' + ev.sourceId + '&tab=hydrants');
+                return;
+            }
+            if (ev.hydrantId) {
+                router.push('/dashboard/fire-protection?openItem=' + ev.hydrantId + '&tab=hydrants');
+                return;
+            }
+            router.push('/dashboard/fire-protection');
+            return;
+        }
+
+        // ── Evacuation drill events ──
+        if (ev.tip === 'evac_drill') {
+            if (ev.sourceId) {
+                router.push('/dashboard/evacuation-drills?openId=' + ev.sourceId);
+                return;
+            }
+            router.push('/dashboard/evacuation-drills');
+            return;
+        }
+
+        // ── Medical & Training events ──
+        if (ev.tip === 'medical') {
+            if (ev.sourceId) {
+                router.push('/dashboard/medical-exams?openId=' + ev.sourceId);
+                return;
+            }
+            if (ev.workerId) {
+                router.push('/dashboard/workers?openWorker=' + ev.workerId);
+                return;
+            }
+            router.push('/dashboard/medical-exams');
+            return;
+        }
+        if (ev.tip === 'training') {
+            if (ev.sourceId) {
+                router.push('/dashboard/trainings?openId=' + ev.sourceId);
+                return;
+            }
+            router.push('/dashboard/trainings');
             return;
         }
 
@@ -1442,14 +1512,12 @@ export default function DashboardPage() {
                                     if (tip === 'medical' && !opis) autoOpis = (lang !== 'en' ? 'Ljekarski pregled' : 'Medical Exam') + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
                                     if (tip === 'training' && !opis) autoOpis = trainingName + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
 
-                                    // Create calendar event (company-scoped)
-                                    createForCompany(COLLECTIONS.CALENDAR_EVENTS, { datum: eventFormDate, tip, opis: autoOpis || opis, count: workerId ? 1 : count, machineId, vehicleId, extinguisherId, hydrantId, evacPlanId, workerId: workerId || '' }, companyId);
-
                                     // ── Connected record updates ──
+                                    let newSourceId = null;
 
                                     // 1. Cert → create certificate
                                     if (tip === 'cert' && workerId) {
-                                        createForCompany(COLLECTIONS.CERTIFICATES, {
+                                        const newCert = createForCompany(COLLECTIONS.CERTIFICATES, {
                                             workerId,
                                             ime: certNaziv || certTip || 'Uvjerenje',
                                             naziv: certNaziv || certTip || 'Uvjerenje',
@@ -1461,47 +1529,53 @@ export default function DashboardPage() {
                                             upisao: 'Kalendar',
                                             ogranicenje: '',
                                         }, companyId);
+                                        newSourceId = newCert.id;
                                     }
 
                                     // 2. PPE → create PPE assignment
                                     if (tip === 'ppe' && workerId) {
-                                        createForCompany(COLLECTIONS.PPE_ASSIGNMENTS, {
+                                        const newPpe = createForCompany(COLLECTIONS.PPE_ASSIGNMENTS, {
                                             workerId,
                                             naziv: ppeNaziv,
                                             datumZaduzenja: ppeDatum || eventFormDate,
                                             datumRazduzenja: '',
                                             kolicina: ppeKolicina,
                                         }, companyId);
+                                        newSourceId = newPpe.id;
                                     }
 
                                     // 3. Fleet inspection → update vehicle's datumTehnickogPregleda + tehnickiIstice (+1 year)
                                     if (tip === 'fleet_inspection' && vehicleId) {
                                         const nextYear = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
                                         update(COLLECTIONS.VEHICLES, vehicleId, { datumTehnickogPregleda: eventFormDate, tehnickiIstice: nextYear });
+                                        newSourceId = vehicleId;
                                     }
 
                                     // 4. Fleet registration → update vehicle's datumRegistracije + registracijaIstice (+1 year)
                                     if (tip === 'fleet_registration' && vehicleId) {
                                         const nextYear = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
                                         update(COLLECTIONS.VEHICLES, vehicleId, { datumRegistracije: eventFormDate, registracijaIstice: nextYear });
+                                        newSourceId = vehicleId;
                                     }
 
                                     // 5. Fire extinguisher service → update zadnjiServis + sljedeciServis (+1 year)
                                     if (tip === 'fire_service' && extinguisherId) {
                                         const nextYear = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
                                         update(COLLECTIONS.FIRE_EXTINGUISHERS, extinguisherId, { zadnjiServis: eventFormDate, sljedeciServis: nextYear, status: 'ispravan' });
+                                        newSourceId = extinguisherId;
                                     }
 
                                     // 6. Hydrant inspection → update inspection dates (+6 months)
                                     if (tip === 'hydrant_inspection' && hydrantId) {
                                         const in6m = new Date(new Date(eventFormDate).getTime() + 182 * 86400000).toISOString().split('T')[0];
                                         update(COLLECTIONS.HYDRANTS, hydrantId, { datumZadnjegPregleda: eventFormDate, sljedeciPregled: in6m, status: 'ispravan' });
+                                        newSourceId = hydrantId;
                                     }
 
                                     // 7. Evacuation drill → create drill record
                                     if (tip === 'evac_drill' && evacPlanId) {
                                         const plan = evacuationPlans.find(p => p.id === evacPlanId);
-                                        createForCompany(COLLECTIONS.EVACUATION_DRILLS, {
+                                        const newDrill = createForCompany(COLLECTIONS.EVACUATION_DRILLS, {
                                             planId: evacPlanId,
                                             lokacija: plan?.lokacija || '',
                                             datumVjezbe: eventFormDate,
@@ -1511,22 +1585,24 @@ export default function DashboardPage() {
                                             napomena: opis || '',
                                             status: 'zakazano',
                                         }, companyId);
+                                        newSourceId = newDrill.id;
                                     }
 
                                     // 8. Medical exam → create medical exam record
                                     if (tip === 'medical' && workerId) {
-                                        createForCompany(COLLECTIONS.MEDICAL_EXAMS, {
+                                        const newMed = createForCompany(COLLECTIONS.MEDICAL_EXAMS, {
                                             workerId,
                                             datumPregleda: eventFormDate,
                                             tipPregleda: 'periodični',
                                             rezultat: '',
                                             napomena: opis || '',
                                         }, companyId);
+                                        newSourceId = newMed.id;
                                     }
 
                                     // 9. Training → create training record
                                     if (tip === 'training') {
-                                        createForCompany(COLLECTIONS.TRAININGS, {
+                                        const newTraining = createForCompany(COLLECTIONS.TRAININGS, {
                                             naziv: trainingName,
                                             datum: eventFormDate,
                                             workerId: workerId || '',
