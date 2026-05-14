@@ -559,12 +559,12 @@ export default function DashboardPage() {
             if (ev.sourceId) {
                 const certRecord = getRawAll(COLLECTIONS.CERTIFICATES).find(c => c.id === ev.sourceId);
                 if (certRecord && certRecord.workerId) {
-                    router.push('/dashboard/workers?openWorker=' + certRecord.workerId + '&section=uvjerenja');
+                    router.push('/dashboard/workers?openWorker=' + certRecord.workerId + '&section=uvjerenja&returnTo=/dashboard');
                     return;
                 }
             }
             if (ev.workerId) {
-                router.push('/dashboard/workers?openWorker=' + ev.workerId + '&section=uvjerenja');
+                router.push('/dashboard/workers?openWorker=' + ev.workerId + '&section=uvjerenja&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/worker-certificates?sort=expiry');
@@ -574,11 +574,11 @@ export default function DashboardPage() {
         // ── Fleet events → open fleet page ──
         if (ev.tip === 'fleet' || ev.tip === 'fleet_inspection' || ev.tip === 'fleet_registration') {
             if (ev.vehicleId) {
-                router.push('/dashboard/fleet?openId=' + ev.vehicleId);
+                router.push('/dashboard/fleet?openId=' + ev.vehicleId + '&returnTo=/dashboard');
                 return;
             }
             if (ev.sourceId) {
-                router.push('/dashboard/fleet?openId=' + ev.sourceId);
+                router.push('/dashboard/fleet?openId=' + ev.sourceId + '&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/fleet');
@@ -588,11 +588,11 @@ export default function DashboardPage() {
         // ── Service events → open equipment page for the specific machine ──
         if (ev.tip === 'service') {
             if (ev.machineId) {
-                router.push('/dashboard/equipment?openItem=' + ev.machineId);
+                router.push('/dashboard/equipment?openItem=' + ev.machineId + '&returnTo=/dashboard');
                 return;
             }
             if (ev.sourceId) {
-                router.push('/dashboard/equipment?openItem=' + ev.sourceId);
+                router.push('/dashboard/equipment?openItem=' + ev.sourceId + '&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/equipment');
@@ -660,7 +660,7 @@ export default function DashboardPage() {
         // ── Equipment inspection events → open specific equipment item ──
         if (ev.tip === 'equip') {
             if (ev.sourceId) {
-                router.push('/dashboard/equipment?openItem=' + ev.sourceId);
+                router.push('/dashboard/equipment?openItem=' + ev.sourceId + '&returnTo=/dashboard');
                 return;
             }
             router.push('/dashboard/equipment');
@@ -1620,14 +1620,16 @@ export default function DashboardPage() {
                                             const in1y = new Date(new Date(eventFormDate).getTime() + 365 * 86400000).toISOString().split('T')[0];
                                             const newLog = {
                                                 id: Date.now().toString(),
+                                                equipmentId: machineId,
                                                 datum: eventFormDate,
                                                 tip: 'pregled',
                                                 servisirao: 'Kalendar',
                                                 napomena: opis || '',
                                                 iduciServis: in1y
                                             };
-                                            const updatedHistory = [...(eq.history || []), newLog].sort((a, b) => b.datum.localeCompare(a.datum));
-                                            update(COLLECTIONS.EQUIPMENT, machineId, { posljednji: eventFormDate, iduci: in1y, history: updatedHistory });
+                                            // Create log in SERVICE_LOG collection to match equipment page logic
+                                            create(COLLECTIONS.SERVICE_LOG, newLog);
+                                            update(COLLECTIONS.EQUIPMENT, machineId, { posljednji: eventFormDate, iduci: in1y });
                                             newSourceId = machineId;
                                         }
                                     }
@@ -1655,7 +1657,7 @@ export default function DashboardPage() {
                 )}
                 {/* ── Delete Event Confirmation Modal ── */}
                 {deleteEventTarget && (
-                    <div className="modal-overlay" onClick={() => setDeleteEventTarget(null)}>
+                    <div className="modal-overlay" onClick={() => setDeleteEventTarget(null)} style={{ zIndex: 100000 }}>
                         <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #C62828, #B71C1C)' }}>
                                 <h2 style={{ color: 'white' }}>🗑️ {lang !== 'en' ? 'Obriši događaj' : 'Delete event'}</h2>

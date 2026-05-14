@@ -291,6 +291,7 @@ function EquipmentPageInner() {
         if (editingId) setLastEditedId(editingId);
         setEditingId(null);
         setShowForm(false);
+        if (returnPath) { router.push(returnPath); setReturnPath(null); }
     };
 
     const handlePrintSingle = (eq) => {

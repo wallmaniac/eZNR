@@ -2,7 +2,8 @@
 import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageService';
+import { getActiveCompanyId, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -93,6 +94,9 @@ export default function EvacuationPage() {
 
     const openNew = () => { setEditingId(null); setFormData({ ...EMPTY }); setWorkerSearch(''); setShowForm(true); };
     const openEdit = (p) => { setEditingId(p.id); setFormData({ ...p }); setWorkerSearch(p.odgovornaOsobaIme || ''); setShowForm(true); };
+
+    const [uploadingDoc, setUploadingDoc] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const handleSave = async () => {
         if (!formData.lokacija) { await alert(bs ? 'Lokacija je obavezna!' : 'Location is required!'); return; }
@@ -209,7 +213,7 @@ export default function EvacuationPage() {
 
                                     {/* Responsible person */}
                                     <div className="form-group" style={{ gridColumn: '1 / -1' }} ref={workerRef}>
-                                        <label className="form-label">{bs ? 'Odgovorna osoba' : 'Responsible Person'}</label>
+                                        <label className="form-label">{hr ? 'Odgovorna osoba' : bs ? 'Odgovorna osoba' : 'Responsible Person'}</label>
                                         <div style={{ position: 'relative' }}>
                                             <input className="form-input" placeholder={bs ? '🔍 Pretraži...' : '🔍 Search...'} value={workerSearch}
                                                 onChange={e => { setWorkerSearch(e.target.value); setShowWorkerDropdown(true); set('odgovornaOsobaId', ''); set('odgovornaOsobaIme', ''); }}
@@ -262,27 +266,42 @@ export default function EvacuationPage() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
+                                        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={async e => {
                                             const files = Array.from(e.target.files || []);
                                             if (files.length === 0) return;
                                             
+                                            setUploadingDoc(true);
+                                            setUploadProgress(0);
+                                            const cid = getActiveCompanyId();
                                             const newDocs = [...(formData.documents || [])];
-                                            let processed = 0;
                                             
-                                            files.forEach(file => {
-                                                if (file.size > 10 * 1024 * 1024) { alert(hr ? 'Maksimalna veličina fajla je 10MB!' : bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
-                                                const reader = new FileReader();
-                                                reader.onload = () => { 
-                                                    newDocs.push({ url: reader.result, name: file.name });
-                                                    processed++;
-                                                    if (processed === files.length) {
-                                                        set('documents', newDocs);
+                                            try {
+                                                for (let i = 0; i < files.length; i++) {
+                                                    const file = files[i];
+                                                    if (file.size > 15 * 1024 * 1024) { 
+                                                        alert(hr ? `Fajl ${file.name} je prevelik (max 15MB)!` : bs ? `Fajl ${file.name} je prevelik (max 15MB)!` : `File ${file.name} is too large (max 15MB)!`); 
+                                                        continue; 
                                                     }
-                                                };
-                                                reader.readAsDataURL(file);
-                                            });
-                                            e.target.value = ''; // reset input
-                                        }} style={{ fontSize: '0.85rem' }} />
+                                                    
+                                                    const res = await uploadDocument(file, cid, 'evacuations', (prog) => {
+                                                        setUploadProgress(Math.round(((i / files.length) * 100) + (prog / files.length)));
+                                                    });
+                                                    newDocs.push({ url: res.url, name: file.name });
+                                                }
+                                                set('documents', newDocs);
+                                            } catch (err) {
+                                                console.error("Upload error", err);
+                                                alert(bs ? "Greška prilikom uploada dokumenta!" : "Error uploading document!");
+                                            } finally {
+                                                setUploadingDoc(false);
+                                                e.target.value = ''; // reset input
+                                            }
+                                        }} style={{ fontSize: '0.85rem' }} disabled={uploadingDoc} />
+                                        {uploadingDoc && (
+                                            <div style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--primary)' }}>
+                                                {bs ? 'Učitavanje dokumenata...' : 'Uploading documents...'} {uploadProgress}%
+                                            </div>
+                                        )}
                                     </div>
                             </div>
                             <div className="modal-footer">
@@ -353,8 +372,8 @@ export default function EvacuationPage() {
                                                                     <button onClick={() => { setActionMenuId(null); openEdit(p); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); if (p.attachedFile) { const a = document.createElement('a'); a.href = p.attachedFile; a.download = p.attachedFileName || 'document'; a.click(); } if (p.documents) { p.documents.forEach(d => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.click(); }); } }} className="dropdown-item">⬇️ {hr ? 'Preuzmi dokumente' : bs ? 'Preuzmi dokumente' : 'Download documents'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...p }; delete copy.id; copy.lokacija = copy.lokacija + (bs ? ' (Kopija)' : ' (Copy)'); copy.status = 'aktivan'; create(COLLECTIONS.EVACUATION_PLANS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { aktivan: 'revizija', revizija: 'neaktivan', neaktivan: 'aktivan' }; const statusLabels = { aktivan: { bs: 'Aktivan', en: 'Active' }, revizija: { bs: 'Revizija', en: 'Revision' }, neaktivan: { bs: 'Neaktivan', en: 'Inactive' } }; update(COLLECTIONS.EVACUATION_PLANS, p.id, { status: cycle[p.status] || 'aktivan' }); loadData(); }} className="dropdown-item">🔄 {bs ? `Status → ${{ aktivan: 'Revizija', revizija: 'Neaktivan', neaktivan: 'Aktivan' }[p.status] || 'Aktivan'}` : `Status → ${{ aktivan: 'Revision', revizija: 'Inactive', neaktivan: 'Active' }[p.status] || 'Active'}`}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); create(COLLECTIONS.EVACUATION_DRILLS, { planId: p.id, lokacija: p.lokacija, datumVjezbe: new Date().toISOString().split('T')[0], status: 'zavrsena', napomena: bs ? 'Vježba kreirana iz plana' : 'Drill created from plan' }); loadData(); showFlash(); }} className="dropdown-item">🏃 {bs ? 'Zakaži vježbu' : 'Schedule Drill'}</button>
+                                                                    
+                                                                    
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDelete(p.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>
@@ -399,7 +418,17 @@ export default function EvacuationPage() {
                                                         {planDrills.length}
                                                     </span>
                                                 </td>
-                                                <td><span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color }}>{bs ? st.bs : st.en}</span></td>
+                                                <td onClick={e => e.stopPropagation()}>
+                                                    <select 
+                                                        style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: 'pointer', outline: 'none', appearance: 'none', paddingRight: '20px' }}
+                                                        value={p.status || 'aktivan'}
+                                                        onChange={e => { update(COLLECTIONS.EVACUATION_PLANS, p.id, { status: e.target.value }); loadData(); }}
+                                                    >
+                                                        <option value="aktivan" style={{ background: '#fff', color: '#1a1a1a' }}>{bs ? 'Aktivan' : 'Active'}</option>
+                                                        <option value="revizija" style={{ background: '#fff', color: '#1a1a1a' }}>{bs ? 'Revizija' : 'Revision'}</option>
+                                                        <option value="neaktivan" style={{ background: '#fff', color: '#1a1a1a' }}>{bs ? 'Neaktivan' : 'Inactive'}</option>
+                                                    </select>
+                                                </td>
                                             </tr>
                                         );
                                     })}

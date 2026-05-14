@@ -3,7 +3,8 @@ import DateInput from '@/components/DateInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
+import { uploadDocument } from '@/lib/storageService';
+import { getActiveCompanyId, getAll, create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import { useSavedFlash } from '@/hooks/useSavedFlash';
 import { useSortedList } from '@/hooks/useSortedList';
@@ -123,6 +124,9 @@ function EvacuationDrillsInner() {
 
     const openNew = () => { setEditingId(null); setFormData({ ...EMPTY }); setWorkerSearch(''); setShowForm(true); };
     const openEdit = (d) => { setEditingId(d.id); setFormData({ ...d }); setWorkerSearch(d.odgovornaOsobaIme || ''); setShowForm(true); };
+
+    const [uploadingDoc, setUploadingDoc] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
 
     const handleSave = async () => {
         if (!formData.planId) { await alert(bs ? 'Plan evakuacije je obavezan!' : 'Evacuation Plan is required!'); return; }
@@ -309,27 +313,42 @@ function EvacuationDrillsInner() {
                                                 </div>
                                             ))}
                                         </div>
-                                        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={e => {
+                                        <input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={async e => {
                                             const files = Array.from(e.target.files || []);
                                             if (files.length === 0) return;
                                             
+                                            setUploadingDoc(true);
+                                            setUploadProgress(0);
+                                            const cid = getActiveCompanyId();
                                             const newDocs = [...(formData.documents || [])];
-                                            let processed = 0;
                                             
-                                            files.forEach(file => {
-                                                if (file.size > 10 * 1024 * 1024) { alert(hr ? 'Maksimalna veličina fajla je 10MB!' : bs ? 'Maksimalna veličina fajla je 10MB!' : 'Max file size is 10MB!'); return; }
-                                                const reader = new FileReader();
-                                                reader.onload = () => { 
-                                                    newDocs.push({ url: reader.result, name: file.name });
-                                                    processed++;
-                                                    if (processed === files.length) {
-                                                        set('documents', newDocs);
+                                            try {
+                                                for (let i = 0; i < files.length; i++) {
+                                                    const file = files[i];
+                                                    if (file.size > 15 * 1024 * 1024) { 
+                                                        alert(hr ? `Fajl ${file.name} je prevelik (max 15MB)!` : bs ? `Fajl ${file.name} je prevelik (max 15MB)!` : `File ${file.name} is too large (max 15MB)!`); 
+                                                        continue; 
                                                     }
-                                                };
-                                                reader.readAsDataURL(file);
-                                            });
-                                            e.target.value = ''; // reset input
-                                        }} style={{ fontSize: '0.85rem' }} />
+                                                    
+                                                    const res = await uploadDocument(file, cid, 'evacuations', (prog) => {
+                                                        setUploadProgress(Math.round(((i / files.length) * 100) + (prog / files.length)));
+                                                    });
+                                                    newDocs.push({ url: res.url, name: file.name });
+                                                }
+                                                set('documents', newDocs);
+                                            } catch (err) {
+                                                console.error("Upload error", err);
+                                                alert(bs ? "Greška prilikom uploada dokumenta!" : "Error uploading document!");
+                                            } finally {
+                                                setUploadingDoc(false);
+                                                e.target.value = ''; // reset input
+                                            }
+                                        }} style={{ fontSize: '0.85rem' }} disabled={uploadingDoc} />
+                                        {uploadingDoc && (
+                                            <div style={{ marginTop: 8, fontSize: '0.8rem', color: 'var(--primary)' }}>
+                                                {bs ? 'Učitavanje dokumenata...' : 'Uploading documents...'} {uploadProgress}%
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -394,7 +413,7 @@ function EvacuationDrillsInner() {
                                                                     <button onClick={() => { setActionMenuId(null); openEdit(d); }} className="dropdown-item">✏️ {bs ? 'Otvori' : 'Open'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); if (d.attachedFile) { const a = document.createElement('a'); a.href = d.attachedFile; a.download = d.attachedFileName || 'document'; a.click(); } if (d.documents) { d.documents.forEach(d => { const a = document.createElement('a'); a.href = d.url; a.download = d.name; a.click(); }); } }} className="dropdown-item">⬇️ {hr ? 'Preuzmi dokumente' : bs ? 'Preuzmi dokumente' : 'Download documents'}</button>
                                                                     <button onClick={() => { setActionMenuId(null); const copy = { ...d }; delete copy.id; copy.datumVjezbe = new Date().toISOString().split('T')[0]; copy.napomena = (copy.napomena ? copy.napomena + ' ' : '') + (bs ? '(Kopija)' : '(Copy)'); create(COLLECTIONS.EVACUATION_DRILLS, copy); loadData(); showFlash(); }} className="dropdown-item">📋 {bs ? 'Kopiraj' : 'Copy'}</button>
-                                                                    <button onClick={() => { setActionMenuId(null); const cycle = { 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' }; update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: cycle[d.status] || 'uspješno' }); loadData(); }} className="dropdown-item">🔄 {bs ? `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.bs || 'Uspješno'}` : `Status → ${STATUS_MAP[({ 'uspješno': 'djelimično', 'djelimično': 'neuspješno', 'neuspješno': 'uspješno' })[d.status]]?.en || 'Successful'}`}</button>
+                                                                    
                                                                     <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                                     <button onClick={() => { setActionMenuId(null); handleDelete(d.id); }} className="dropdown-item text-danger">🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                                                 </div>
@@ -441,7 +460,17 @@ function EvacuationDrillsInner() {
                                                         {(!d.sudjelovaliVatrogasci && !d.sudjelovalaHitna) && <span style={{ color: 'var(--text-muted)' }}>—</span>}
                                                     </div>
                                                 </td>
-                                                <td><span style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color }}>{bs ? st.bs : st.en}</span></td>
+                                                <td onClick={e => e.stopPropagation()}>
+                                                    <select 
+                                                        style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: 'pointer', outline: 'none', appearance: 'none', paddingRight: '20px' }}
+                                                        value={d.status || 'uspješno'}
+                                                        onChange={e => { update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: e.target.value }); loadData(); }}
+                                                    >
+                                                        {Object.entries(STATUS_MAP).map(([k, v]) => (
+                                                            <option key={k} value={k} style={{ background: '#fff', color: '#1a1a1a' }}>{bs ? v.bs : v.en}</option>
+                                                        ))}
+                                                    </select>
+                                                </td>
                                             </tr>
                                         );
                                     })}

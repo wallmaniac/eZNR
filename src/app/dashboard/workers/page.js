@@ -261,6 +261,8 @@ function WorkersPageInner() {
     useEffect(() => {
         if (workers.length === 0) return;
         const openId = searchParams?.get('openWorker');
+        const retPath = searchParams?.get('returnTo');
+        if (retPath) setReturnPath(retPath);
         if (!openId) return;
         if (openWorkerHandledRef.current === openId) return;
         const found = workers.find(x => x.id === openId);
@@ -480,8 +482,11 @@ function WorkersPageInner() {
         if (editingWorker) setLastEditedId(editingWorker);
         setEditingWorker(null);
         setShowForm(false);
-        // If closing via in-app button, pop the history entry we pushed
-        if (!skipHistoryBack && typeof window !== 'undefined') {
+        if (returnPath) {
+            const path = returnPath;
+            setReturnPath(null);
+            router.push(path);
+        } else if (!skipHistoryBack && typeof window !== 'undefined') {
             window.history.back();
         }
     };
