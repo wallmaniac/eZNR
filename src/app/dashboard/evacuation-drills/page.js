@@ -473,15 +473,42 @@ function EvacuationDrillsInner() {
                                                     </div>
                                                 </td>
                                                 <td onClick={e => e.stopPropagation()}>
-                                                    <select 
-                                                        style={{ padding: '2px 10px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: 'none', cursor: 'pointer', outline: 'none', appearance: 'none', paddingRight: '20px' }}
-                                                        value={d.status || 'uspješno'}
-                                                        onChange={e => { update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: e.target.value }); loadData(); }}
-                                                    >
-                                                        {Object.entries(STATUS_MAP).map(([k, v]) => (
-                                                            <option key={k} value={k} style={{ background: '#fff', color: '#1a1a1a' }}>{bs ? v.bs : v.en}</option>
-                                                        ))}
-                                                    </select>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                const key = `status_${d.id}`;
+                                                                if (actionMenuId === key) { setActionMenuId(null); return; }
+                                                                const rect = e.currentTarget.getBoundingClientRect();
+                                                                const spaceBelow = window.innerHeight - rect.bottom - 8;
+                                                                const flipUp = spaceBelow < 160;
+                                                                setMenuPos(flipUp
+                                                                    ? { bottom: window.innerHeight - rect.top + 4, left: rect.left, maxH: Math.max(120, rect.top - 8) }
+                                                                    : { top: rect.bottom + 4, left: rect.left, maxH: Math.max(120, spaceBelow - 15) });
+                                                                setActionMenuId(key);
+                                                            }}
+                                                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, background: st.bg, color: st.color, border: `1.5px solid ${st.color}30`, cursor: 'pointer', outline: 'none', transition: 'all 0.15s', whiteSpace: 'nowrap' }}
+                                                        >
+                                                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: st.color, flexShrink: 0 }} />
+                                                            {bs ? st.bs : st.en} ▾
+                                                        </button>
+                                                        {actionMenuId === `status_${d.id}` && (<>
+                                                            <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
+                                                            <div style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.35)', minWidth: 200, maxHeight: menuPos.maxH, overflowY: 'auto', padding: '4px 0' }}>
+                                                                {Object.entries(STATUS_MAP).map(([k, v]) => (
+                                                                    <button key={k} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); update(COLLECTIONS.EVACUATION_DRILLS, d.id, { status: k }); loadData(); }}
+                                                                        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', width: '100%', background: (d.status || 'uspješno') === k ? 'rgba(255,255,255,0.06)' : 'transparent', border: 'none', cursor: 'pointer', fontSize: '0.82rem', fontWeight: 600, color: v.color, textAlign: 'left', transition: 'background 0.12s' }}
+                                                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
+                                                                        onMouseLeave={e => e.currentTarget.style.background = (d.status || 'uspješno') === k ? 'rgba(255,255,255,0.06)' : 'transparent'}
+                                                                    >
+                                                                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: v.color, flexShrink: 0 }} />
+                                                                        {bs ? v.bs : v.en}
+                                                                        {(d.status || 'uspješno') === k && <span style={{ marginLeft: 'auto', fontSize: '0.9rem' }}>✓</span>}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </>)}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         );

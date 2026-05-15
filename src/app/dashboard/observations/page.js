@@ -238,7 +238,16 @@ export default function ObservationsPage() {
                                         <td style={{ fontWeight: 600 }}>{item.lokacija} {item.orgJedinicaId && <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 700 }}>{getOrgUnitName(item.orgJedinicaId)}</div>}</td>
                                         <td>{item.opis}</td>
                                         <td>{item.ime}</td>
-                                        <td style={{ textAlign: 'center' }}>{getStatusBadge(item.status)}</td>
+                                        <td onClick={e => e.stopPropagation()} style={{ textAlign: 'center' }}>
+                                            <button onClick={() => handleStatusCycle(item)} 
+                                                title={bs ? `Klik za promjenu statusa → ${{ 'Novo': 'U obradi', 'U obradi': 'Riješeno', 'Riješeno': 'Novo' }[item.status] || 'U obradi'}` : `Click to change status → ${{ 'Novo': 'In Progress', 'U obradi': 'Resolved', 'Riješeno': 'New' }[item.status] || 'In Progress'}`}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'transform 0.15s' }}
+                                                onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                                                onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                            >
+                                                {getStatusBadge(item.status)}
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
