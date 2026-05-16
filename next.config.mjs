@@ -20,8 +20,6 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   reloadOnOnline: true,
-  cacheOnFrontEndNav: false,
-  cacheStartUrl: false,
   workboxOptions: {
     disableDevLogs: true,
     skipWaiting: true,

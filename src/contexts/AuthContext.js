@@ -78,9 +78,9 @@ export function AuthProvider({ children }) {
                             localStorage.setItem('eznr_activeCompany', companyId);
                         }
 
-                        // Load company data from Firestore into dataStore cache
+                        // Load company data from Firestore into dataStore cache (NON-BLOCKING)
                         if (companyId) {
-                            await loadCompanyData(companyId);
+                            loadCompanyData(companyId).catch(console.error);
                         }
 
                         let resolvedCompanyIds = profile.companyIds || [];
@@ -99,7 +99,7 @@ export function AuthProvider({ children }) {
                                     if (firstId) {
                                         setActiveCompanyId(firstId);
                                         localStorage.setItem('eznr_activeCompany', firstId);
-                                        await loadCompanyData(firstId);
+                                        loadCompanyData(firstId).catch(console.error);
                                         setActiveCompany(allComps[0]);
                                     }
                                 } else {
