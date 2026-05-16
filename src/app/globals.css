@@ -2579,9 +2579,18 @@ a {
     font-size: 1.15rem !important;
   }
 }
-.scrollable-toolbar { display: flex; align-items: center; justify-content: flex-start; gap: 12px; padding: 12px 16px; flex-wrap: wrap; }
+.scrollable-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .scrollable-toolbar > * { flex-shrink: 0; }
-.scrollable-toolbar .search-bar { flex: 1 1 220px !important; min-width: 220px !important; }
+.scrollable-toolbar .search-bar { flex: 0 0 auto !important; width: var(--search-width, 220px) !important; min-width: var(--search-width, 220px) !important; }
+/* Visible thin scrollbar for toolbar */
+.scrollable-toolbar::-webkit-scrollbar { height: 3px; }
+.scrollable-toolbar::-webkit-scrollbar-track { background: transparent; }
+.scrollable-toolbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+.scrollable-toolbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.3); }
+.scrollable-toolbar { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.15) transparent; }
+[data-theme="light"] .scrollable-toolbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); }
+[data-theme="light"] .scrollable-toolbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+[data-theme="light"] .scrollable-toolbar { scrollbar-color: rgba(0,0,0,0.12) transparent; }
 
 /* ===== DESIGN SYSTEM — Shared Utility Classes ===== */
 
@@ -3153,51 +3162,9 @@ button.btn-primary-glow {
   color: var(--danger) !important;
 }
 
-@media (max-width: 1200px) and (min-width: 769px) {
-  .scrollable-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-    width: 100%;
-  }
-  .scrollable-toolbar > * {
-    flex-shrink: 0;
-  }
-  .scrollable-toolbar .search-bar {
-    flex: 1 1 280px !important;
-    min-width: 220px !important;
-    max-width: none !important;
-  }
-}
-
 @media (max-width: 768px) {
   .scrollable-toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     gap: 8px;
     padding: 8px 10px;
-    width: 100%;
-  }
-  .scrollable-toolbar > * {
-    flex-shrink: 0;
-  }
-  .scrollable-toolbar .search-bar {
-    flex: 1 1 100% !important;
-    min-width: 0 !important;
-    max-width: none !important;
-    height: 38px !important;
-    order: -1;
-  }
-  .scrollable-toolbar .btn {
-    height: 34px;
-    padding: 0 12px;
-    font-size: 0.8rem;
-  }
-  .scrollable-toolbar .form-select {
-    height: 34px;
-    padding: 0 8px;
-    font-size: 0.82rem;
   }
 }
