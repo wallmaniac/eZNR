@@ -85,6 +85,10 @@ const APP_KNOWLEDGE = {
         { path: '/dashboard/evacuation', label_bs: 'Plan evakuacije', label_en: 'Evacuation Plan', desc_en: 'Evacuation maps and emergency procedures', desc_bs: 'Mape evakuacije i procedure spašavanja' },
         { path: '/dashboard/evacuation-drills', label_bs: 'Vježbe evakuacije', label_en: 'Evacuation Drills', desc_en: 'Records of conducted fire and evacuation drills', desc_bs: 'Zapisnici o provedenim vježbama evakuacije' },
         { path: '/dashboard/archive', label_bs: 'Digitalna arhiva', label_en: 'Digital Archive', desc_en: 'Store and manage all company documents digitally', desc_bs: 'Čuvanje i upravljanje svim dokumentima firme digitalno' },
+        { path: '/dashboard/observations', label_bs: 'Prijava opasnosti', label_en: 'Hazard Reports', desc_en: 'Report and track workplace hazards and safety observations', desc_bs: 'Prijava i praćenje uočenih opasnosti na radnom mjestu' },
+        { path: '/dashboard/service-records', label_bs: 'Servisni zapisi', label_en: 'Service Records', desc_en: 'Equipment service history and maintenance logs', desc_bs: 'Historija servisa i održavanja opreme' },
+        { path: '/dashboard/import', label_bs: 'Excel uvoz', label_en: 'Excel Import', desc_en: 'Bulk import workers, equipment and certificates from Excel files', desc_bs: 'Masovni uvoz radnika, opreme i uvjerenja iz Excel datoteka' },
+        { path: '/dashboard/company-profile', label_bs: 'Profil firme', label_en: 'Company Profile', desc_en: 'View and edit company information and legal details', desc_bs: 'Pregled i uređivanje podataka o firmi' },
         { path: '/dashboard/requests', label_bs: 'Zahtjevnice', label_en: 'Requests', desc_en: 'Manage procurement and material requests', desc_bs: 'Upravljanje zahtjevnicama za nabavku opreme' },
         { path: '/dashboard/risk-assessment', label_bs: 'Procjena rizika', label_en: 'Risk Assessment', desc_en: 'Perform and document workplace risk assessments', desc_bs: 'Provođenje i dokumentovanje procjene rizika na radnom mjestu' },
         { path: '/dashboard/questionnaires', label_bs: 'Upitnici/Ankete', label_en: 'Questionnaires', desc_en: 'Create and manage safety questionnaires for workers', desc_bs: 'Kreiranje upitnika i on-line testiranja za radnike' },
@@ -135,6 +139,12 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         const employerDocs = get('employerDocs');
         const riskAssessments = get('riskAssessments');
         const riskItems = get('riskItems');
+        const safetyObservations = get('safety_observations');
+        const evacuationPlans = get('evacuationPlans');
+        const evacuationDrills = get('evacuationDrills');
+        const trainings = get('trainings');
+        const ppeAssignments = get('ppeAssignments');
+        const serviceLog = get('serviceLog');
 
         const lines = [];
         
@@ -331,11 +341,67 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
                 : `\nQUESTIONNAIRES (${questionnaires.length}): ${qList}`);
         }
 
+        // ── Safety Observations (Prijava opasnosti) ──────────────────────────────
+        const openObs = safetyObservations.filter(o => o.status !== 'zatvorena' && o.status !== 'riješeno');
+        if (openObs.length > 0) {
+            lines.push(lang !== 'en'
+                ? `\nOTVORENE PRIJAVE OPASNOSTI (${openObs.length}): ${openObs.slice(0, 8).map(o => `"${o.opis || o.lokacija || 'Bez opisa'}" (Lokacija: ${o.lokacija || '?'}, Status: ${o.status || 'nova'}, Datum: ${o.datum || '?'})`).join('; ')}`
+                : `\nOPEN HAZARD REPORTS (${openObs.length}): ${openObs.slice(0, 8).map(o => `"${o.opis || o.lokacija || 'No desc'}" (Location: ${o.lokacija || '?'}, Status: ${o.status || 'new'}, Date: ${o.datum || '?'})`).join('; ')}`
+            );
+        }
+        if (safetyObservations.length > 0 && openObs.length === 0) {
+            lines.push(lang !== 'en'
+                ? `\nPRIJAVE OPASNOSTI: Sve ${safetyObservations.length} prijava su riješene.`
+                : `\nHAZARD REPORTS: All ${safetyObservations.length} reports are resolved.`
+            );
+        }
+
+        // ── Evacuation Plans & Drills ────────────────────────────────────────────
+        if (evacuationPlans.length > 0 || evacuationDrills.length > 0) {
+            const planNames = evacuationPlans.slice(0, 5).map(p => `"${p.nazivObjekta || p.naziv || 'Plan'}" (Status: ${p.status || '?'})`);
+            const drillNames = evacuationDrills.sort((a,b) => (b.datum || '').localeCompare(a.datum || '')).slice(0, 5).map(d => `"${d.nazivVjezbe || 'Vježba'}" (${d.datum || '?'}, Evakuirano: ${d.brojEvakuiranih || '?'})`);
+            lines.push(lang !== 'en'
+                ? `\nEVAKUACIJA: ${evacuationPlans.length} planova${planNames.length > 0 ? ': ' + planNames.join('; ') : ''} | ${evacuationDrills.length} vježbi${drillNames.length > 0 ? ': ' + drillNames.join('; ') : ''}`
+                : `\nEVACUATION: ${evacuationPlans.length} plans${planNames.length > 0 ? ': ' + planNames.join('; ') : ''} | ${evacuationDrills.length} drills${drillNames.length > 0 ? ': ' + drillNames.join('; ') : ''}`
+            );
+        }
+
+        // ── Trainings ────────────────────────────────────────────────────────────
+        if (trainings.length > 0) {
+            const recentTrainings = trainings.sort((a,b) => (b.datum || '').localeCompare(a.datum || '')).slice(0, 6);
+            lines.push(lang !== 'en'
+                ? `\nOBUKE (${trainings.length}): ${recentTrainings.map(t => `"${t.naziv || t.vrsta || 'Obuka'}" (${t.datum || '?'}, Polaznika: ${t.brojPolaznika || '?'})`).join('; ')}`
+                : `\nTRAININGS (${trainings.length}): ${recentTrainings.map(t => `"${t.naziv || t.vrsta || 'Training'}" (${t.datum || '?'}, Attendees: ${t.brojPolaznika || '?'})`).join('; ')}`
+            );
+        }
+
+        // ── PPE Assignments overview ─────────────────────────────────────────────
+        if (ppeAssignments.length > 0) {
+            const activePpe = ppeAssignments.filter(p => !p.datumRazduzenja);
+            const ppeSummary = {};
+            activePpe.forEach(p => { ppeSummary[p.naziv || 'Nepoznato'] = (ppeSummary[p.naziv || 'Nepoznato'] || 0) + (p.kolicina || 1); });
+            const topPpe = Object.entries(ppeSummary).sort((a,b) => b[1] - a[1]).slice(0, 10).map(([name, cnt]) => `${name}: ${cnt}`);
+            lines.push(lang !== 'en'
+                ? `\nZADUŽENA OZO OPREMA (${activePpe.length} aktivnih): ${topPpe.join(', ')}`
+                : `\nACTIVE PPE ASSIGNMENTS (${activePpe.length}): ${topPpe.join(', ')}`
+            );
+        }
+
+        // ── Service Records (Equipment Maintenance) ────────────────────────────
+        if (serviceLog.length > 0) {
+            const recentServices = serviceLog.sort((a,b) => (b.datum || '').localeCompare(a.datum || '')).slice(0, 5);
+            lines.push(lang !== 'en'
+                ? `\nSERVISNI ZAPISI (${serviceLog.length}): ${recentServices.map(s => `"${s.opis || s.tip || 'Servis'}" (${s.datum || '?'}, Oprema: ${s.equipmentNaziv || s.equipmentId || '?'})`).join('; ')}`
+                : `\nSERVICE RECORDS (${serviceLog.length}): ${recentServices.map(s => `"${s.opis || s.tip || 'Service'}" (${s.datum || '?'}, Equipment: ${s.equipmentNaziv || s.equipmentId || '?'})`).join('; ')}`
+            );
+        }
+
         // Stats
         const activeWorkers = workers.filter(w => w.aktivan !== false).length;
+        const activePpeCount = ppeAssignments.filter(p => !p.datumRazduzenja).length;
         lines.push(lang !== 'en'
-            ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja, ${questionnaires.length} upitnika`
-            : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment, ${certificates.length} certificates, ${questionnaires.length} questionnaires`
+            ? `\nSTATISTIKE: ${activeWorkers} aktivnih radnika, ${equipment.length} opreme, ${certificates.length} uvjerenja, ${questionnaires.length} upitnika, ${trainings.length} obuka, ${safetyObservations.length} prijava opasnosti, ${activePpeCount} aktivnih OZO zaduženja`
+            : `\nSTATISTICS: ${activeWorkers} active workers, ${equipment.length} equipment, ${certificates.length} certificates, ${questionnaires.length} questionnaires, ${trainings.length} trainings, ${safetyObservations.length} hazard reports, ${activePpeCount} active PPE assignments`
         );
 
         return lines.join('\n');
@@ -389,6 +455,11 @@ Možeš i aktivno pomagati pri kreiranju zapisa:
 - Ako korisnik kaže "dodaj ljekarski", "obavio ljekarski" → prikupi worker_id (iz SVI AKTIVNI RADNICI), tip pregleda (prethodni, periodični, vanredni), datum, rezultat (Sposoban/Nesposoban), pa koristi add_medical_exam.
 - Ako korisnik kaže "vratio se sa bolovanja", "zatvori bolovanje" → koristi close_sick_leave sa worker_id. Pronalazi i zatvara otvoreno bolovanje u ŽIVIM PODACIMA.
 - Ako korisnik pita "imamo li akt XYZ" ili pita za dokumente firme → prvo provjeri NORMATIVNI AKTI POSLODAVCA u svom kontekstu.
+- Ako korisnik kaže "prijavi opasnost", "uočena opasnost", "opasan uvjet", "nesigurno" → prikupi opis i lokaciju, pa koristi create_observation. Podrazumijevano: datum = danas, prioritet = srednji.
+- Ako korisnik kaže "održana obuka", "obuka ZNR", "obučeni radnici", "provedena obuka" → prikupi naziv i datum, pa koristi create_training. Podrazumijevano: vrsta = ZNR.
+- Ako korisnik pita "imamo li otvorenih prijava opasnosti" ili "koliko je hazarda" → provjeri OTVORENE PRIJAVE OPASNOSTI u ŽIVIM PODACIMA i odgovori direktno.
+- Ako korisnik pita "kad smo zadnji put imali vježbu evakuacije" → provjeri EVAKUACIJA u ŽIVIM PODACIMA.
+- Ako korisnik pita "koliko obuka smo proveli" ili "koje obuke imamo" → provjeri OBUKE u ŽIVIM PODACIMA.
 - VAŽNO O FIRMAMA: Ako je u kontekstu vidljivo da radnik pripada određenoj firmi, a trenutni kontekst je "Sve firme", obavezno u odgovorima spomeni i naziv firme radnika kako bi korisnik znao o kome se radi.
 
 RJEČNIK POJMOVA (koristi kad korisnik pita "šta znači...?" ili kad nešto nije jasno):
@@ -486,6 +557,11 @@ IMPORTANT DATA PROTECTION: Worker names are pseudonymized as W[id]. If the user 
 - If the user says "add medical exam", "did medical exam" → collect worker_id, type (prethodni, periodični, vanredni), date, result, and use add_medical_exam.
 - If the user says "returned from sick leave", "close sick leave" → use close_sick_leave with worker_id.
 - If the user asks about an employer document → check EMPLOYER DOCUMENTATION in your context.
+- If the user says "report hazard", "unsafe condition", "danger at location" → collect description and location, then use create_observation. Default: datum = today, prioritet = srednji.
+- If the user says "training was held", "completed training", "ZNR training" → collect name and date, then use create_training. Default: vrsta = ZNR.
+- If the user asks about open hazard reports → check OPEN HAZARD REPORTS in LIVE DATA and answer directly.
+- If the user asks about evacuation drills → check EVACUATION in LIVE DATA.
+- If the user asks about trainings → check TRAININGS in LIVE DATA.
 
 DOMAIN GLOSSARY (use when user asks "what does X mean?" or needs clarification):
 
@@ -598,6 +674,16 @@ function buildDynamicSuggestions(lang, pathname) {
             chips.push(lang !== 'en' ? { label: '📋 Propisane mjere', text: 'Koje su propisane mjere za smanjenje znatnih rizika?' } : { label: '📋 Prescribed measures', text: 'What are the prescribed measures to reduce high risks?' });
         } else if (pathname === '/dashboard/zapisnici') {
             chips.push(lang !== 'en' ? { label: '📝 Novi zapisnik', text: 'Kreiraj mi novi zapisnik za današnji sastanak odbora: dogovorena nabavka novih šljemova.' } : { label: '📝 Draft minute', text: 'Draft a new meeting minute for today regarding the purchase of helmets.' });
+        } else if (pathname === '/dashboard/observations') {
+            chips.push(lang !== 'en' ? { label: '⚠️ Prijavi opasnost', text: 'Želim prijaviti opasnost na radnom mjestu.' } : { label: '⚠️ Report hazard', text: 'I want to report a workplace hazard.' });
+            chips.push(lang !== 'en' ? { label: '📊 Otvorene prijave', text: 'Koliko imamo otvorenih prijava opasnosti?' } : { label: '📊 Open reports', text: 'How many open hazard reports do we have?' });
+        } else if (pathname === '/dashboard/trainings') {
+            chips.push(lang !== 'en' ? { label: '🎓 Nova obuka', text: 'Želim evidentirati novu obuku iz ZNR.' } : { label: '🎓 New training', text: 'I want to record a new safety training.' });
+            chips.push(lang !== 'en' ? { label: '📊 Pregled obuka', text: 'Koliko obuka smo proveli ove godine?' } : { label: '📊 Training overview', text: 'How many trainings have we conducted this year?' });
+        } else if (pathname === '/dashboard/evacuation') {
+            chips.push(lang !== 'en' ? { label: '🗺️ Planovi evakuacije', text: 'Koji planovi evakuacije su trenutno aktivni?' } : { label: '🗺️ Evacuation plans', text: 'Which evacuation plans are currently active?' });
+        } else if (pathname === '/dashboard/evacuation-drills') {
+            chips.push(lang !== 'en' ? { label: '🏃 Posljednja vježba', text: 'Kad smo zadnji put imali vježbu evakuacije i koliko je bilo evakuiranih?' } : { label: '🏃 Last drill', text: 'When was our last evacuation drill and how many were evacuated?' });
         } else if (pathname === '/dashboard') {
             chips.push(lang !== 'en' ? { label: '📅 Novi podsjetnik', text: 'Dodaj podsjetnik u kalendar za idući ponedjeljak.' } : { label: '📅 New reminder', text: 'Add a calendar reminder for next Monday.' });
         }
@@ -830,6 +916,35 @@ const ZIA_TOOLS = [
             },
             required: ['naziv', 'datum', 'vrsta']
         }
+    },
+    {
+        name: 'create_observation',
+        description: 'Report a workplace hazard or safety observation (Prijava opasnosti). Use when user says they noticed a danger, hazard, unsafe condition, or wants to report a safety concern at a location.',
+        parameters: {
+            type: 'object',
+            properties: {
+                opis: { type: 'string', description: 'Description of the hazard or observation.' },
+                lokacija: { type: 'string', description: 'Location where the hazard was observed.' },
+                datum: { type: 'string', description: 'Date of observation in YYYY-MM-DD format. Default: today.' },
+                prioritet: { type: 'string', description: 'Priority level: nizak (low), srednji (medium), visok (high), kritičan (critical). Default: srednji.' },
+            },
+            required: ['opis', 'lokacija'],
+        },
+    },
+    {
+        name: 'create_training',
+        description: 'Record a completed safety training (Obuka iz ZNR/ZOP). Use when user says a training was held, a worker completed a course, or they want to log a training event.',
+        parameters: {
+            type: 'object',
+            properties: {
+                naziv: { type: 'string', description: 'Name/title of the training (e.g. "Obuka iz ZNR", "Protupožarna obuka").' },
+                datum: { type: 'string', description: 'Date of training in YYYY-MM-DD format.' },
+                vrsta: { type: 'string', description: 'Type: ZNR, ZOP, or Ostalo. Default: ZNR.' },
+                brojPolaznika: { type: 'number', description: 'Number of attendees if known.' },
+                napomena: { type: 'string', description: 'Optional notes about the training.' },
+            },
+            required: ['naziv', 'datum'],
+        },
     },
 ];
 
@@ -1445,6 +1560,37 @@ export default function AIAssistant() {
                 setIsMinimized(true);
                 return { success: true, message: `Zapisnik "${args.naziv}" uspješno kreiran.` };
             } catch (err) { return { error: err.message }; }
+        }
+        if (name === 'create_observation') {
+            try {
+                const { create, COLLECTIONS } = await import('@/lib/dataStore');
+                const today = new Date().toISOString().split('T')[0];
+                const newObs = create(COLLECTIONS.SAFETY_OBSERVATIONS, {
+                    opis: args.opis,
+                    lokacija: args.lokacija,
+                    datum: args.datum || today,
+                    prioritet: args.prioritet || 'srednji',
+                    status: 'nova',
+                });
+                router.push('/dashboard/observations');
+                setIsMinimized(true);
+                return { success: true, message: `Prijava opasnosti "${args.opis}" na lokaciji "${args.lokacija}" uspješno kreirana.` };
+            } catch (err) { return { error: `Failed to create observation: ${err.message}` }; }
+        }
+        if (name === 'create_training') {
+            try {
+                const { create, COLLECTIONS } = await import('@/lib/dataStore');
+                const newTraining = create(COLLECTIONS.TRAININGS, {
+                    naziv: args.naziv,
+                    datum: args.datum,
+                    vrsta: args.vrsta || 'ZNR',
+                    brojPolaznika: args.brojPolaznika || 0,
+                    napomena: args.napomena || '',
+                });
+                router.push('/dashboard/trainings');
+                setIsMinimized(true);
+                return { success: true, message: `Obuka "${args.naziv}" (${args.datum}) uspješno snimljena.` };
+            } catch (err) { return { error: `Failed to create training: ${err.message}` }; }
         }
         return { error: 'unknown_tool' };
     }, [router, pathname]);
