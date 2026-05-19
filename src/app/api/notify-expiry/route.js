@@ -154,11 +154,11 @@ function buildEmailBody({ companyName, sections, lang, today }) {
           
           <!-- Header logo image -->
           <tr>
-            <td align="center" style="padding:0;margin:0;font-size:0;line-height:0;text-align:center;background:#ffffff;">
+            <td align="center" style="padding:0;margin:0;font-size:0;line-height:0;text-align:center;background:#ffffff;border-left:1px solid #e2e8f0;border-right:1px solid #e2e8f0;border-top:1px solid #e2e8f0;border-radius:16px 16px 0 0;">
               <img src="${APP_URL}/email-header.png" 
                    alt="eZNR — Digitalna platforma za zaštitu na radu" 
                    width="600" 
-                   style="display:block;width:100%;max-width:600px;height:auto;margin:0 auto;border:0;outline:none;" />
+                   style="display:block;width:100%;max-width:100%;height:auto;margin:0 auto;border:0;outline:none;border-radius:15px 15px 0 0;" />
             </td>
           </tr>
 
