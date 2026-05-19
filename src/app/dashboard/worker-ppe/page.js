@@ -28,8 +28,19 @@ export default function WorkerPPEPage() {
   const { showFlash, SavedFlash } = useSavedFlash();
 
   const [assignments, setAssignments] = useState(() => getAll(COLLECTIONS.PPE_ASSIGNMENTS));
-  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
+  const [workers, setWorkers] = useState(() => getAll(COLLECTIONS.WORKERS));
   const [ppeTypes, setPpeTypes] = useState(() => getAll(COLLECTIONS.PPE_TYPES));
+
+  useEffect(() => {
+      if (typeof window === 'undefined') return;
+      const loadData = () => {
+          setAssignments(getAll(COLLECTIONS.PPE_ASSIGNMENTS));
+          setWorkers(getAll(COLLECTIONS.WORKERS));
+          setPpeTypes(getAll(COLLECTIONS.PPE_TYPES));
+      };
+      window.addEventListener('eznr:data-synced', loadData);
+      return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, []);
 
   const rows = useMemo(() => {
     return assignments.map(a => {

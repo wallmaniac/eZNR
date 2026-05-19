@@ -71,8 +71,8 @@ export default function MedicalExamsPage() {
     const medPravilnik = useMemo(() => getMedicalPravilnik(country), [country]);
 
     const [exams, setExams] = useState(() => getAll(COLLECTIONS.MEDICAL_EXAMS));
-    const [workers] = useState(() => getAll(COLLECTIONS.WORKERS));
-    const [doctors] = useState(() => getAll(COLLECTIONS.DOCTORS));
+    const [workers, setWorkers] = useState(() => getAll(COLLECTIONS.WORKERS));
+    const [doctors, setDoctors] = useState(() => getAll(COLLECTIONS.DOCTORS));
 
     const [showForm, setShowForm] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -149,7 +149,17 @@ export default function MedicalExamsPage() {
         }
     }, [searchParams, exams]);
 
-    const reload = useCallback(() => setExams(getAll(COLLECTIONS.MEDICAL_EXAMS)), []);
+    const reload = useCallback(() => {
+        setExams(getAll(COLLECTIONS.MEDICAL_EXAMS));
+        setWorkers(getAll(COLLECTIONS.WORKERS));
+        setDoctors(getAll(COLLECTIONS.DOCTORS));
+    }, []);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+        window.addEventListener('eznr:data-synced', reload);
+        return () => window.removeEventListener('eznr:data-synced', reload);
+    }, [reload]);
 
 
     const setField = (k, v) => { setForm(p => ({ ...p, [k]: v })); setIsDirty(true); };

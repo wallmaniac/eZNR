@@ -107,7 +107,6 @@ function WorkerCertificatesInner() {
   const longPressTimer = useRef(null);
   const touchStartPos = useRef({ x: 0, y: 0 });
   const { confirm, DialogRenderer } = useDialog();
-  const [certsVersion, setCertsVersion] = useState(0);
   const [zapisniciOpen, setZapisniciOpen] = useState(false);
   const country = useCountry();
 
@@ -118,10 +117,21 @@ function WorkerCertificatesInner() {
   const sortByExpiry = searchParams.get('sort') === 'expiry';
   const highlightRef = useRef(null);
 
-  const workers = useMemo(() => getAll(COLLECTIONS.WORKERS), []);
-  const certs = useMemo(() => getAll(COLLECTIONS.CERTIFICATES), [certsVersion]); // eslint-disable-line react-hooks/exhaustive-deps
-  const orgUnits = useMemo(() => getAll(COLLECTIONS.ORG_UNITS), []);
+  const [workers, setWorkers] = useState(() => getAll(COLLECTIONS.WORKERS));
+  const [certs, setCerts] = useState(() => getAll(COLLECTIONS.CERTIFICATES));
+  const [orgUnits, setOrgUnits] = useState(() => getAll(COLLECTIONS.ORG_UNITS));
   const [filterOrgUnit, setFilterOrgUnit] = useState('');
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const loadData = () => {
+      setWorkers(getAll(COLLECTIONS.WORKERS));
+      setCerts(getAll(COLLECTIONS.CERTIFICATES));
+      setOrgUnits(getAll(COLLECTIONS.ORG_UNITS));
+    };
+    window.addEventListener('eznr:data-synced', loadData);
+    return () => window.removeEventListener('eznr:data-synced', loadData);
+  }, []);
 
   const filteredRows = useMemo(() => {
     return certs.map(c => {
@@ -459,7 +469,7 @@ function WorkerCertificatesInner() {
                                                 onClick={async () => {
                                                     setActionMenuId(null);
                                                     const ok = await confirm(bs ? 'Obrisati uvjerenje? Ova radnja je trajna.' : 'Delete certificate? This is permanent.');
-                                                    if (ok) { remove(COLLECTIONS.CERTIFICATES, r.id); setCertsVersion(v => v + 1); }
+                                                    if (ok) { remove(COLLECTIONS.CERTIFICATES, r.id); setCerts(getAll(COLLECTIONS.CERTIFICATES)); }
                                                 }}>🗑️ {bs ? 'Izbriši' : 'Delete'}</button>
                                         </>);
                                     })()}
