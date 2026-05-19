@@ -346,7 +346,6 @@ export default function EvacuationPage() {
                                         <th onClick={() => toggleSort('datumRevizije')} style={thStyle('datumRevizije')}>{bs ? 'Revizija' : 'Revision'}{sortIcon('datumRevizije')}</th>
                                         <th>{bs ? 'Dokument' : 'Document'}</th>
                                         <th>{bs ? 'Putevi' : 'Routes'}</th>
-                                        <th>{bs ? 'Vježbe' : 'Drills'}</th>
                                         <th>{bs ? 'Status' : 'Status'}</th>
                                     </tr>
                                 </thead>
@@ -354,7 +353,7 @@ export default function EvacuationPage() {
                                     {sorted.length === 0 ? (
                                         <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                                     ) : sorted.map(p => {
-                                        const colSpanCount = 10;
+                                        const colSpanCount = 9;
                                         const planDrills = getDrillsForPlan(p.id);
                                         const statusMap = {
                                             aktivan: { bs: 'Aktivan', en: 'Active', color: '#22C55E', bg: 'rgba(34,197,94,0.1)' },
@@ -418,11 +417,6 @@ export default function EvacuationPage() {
                                                     ) : <span style={{ color: 'var(--text-muted)' }}>—</span>}
                                                 </td>
                                                 <td style={{ textAlign: 'center' }}>{p.brojEvakuacijskihPuteva || '—'}</td>
-                                                <td style={{ textAlign: 'center' }}>
-                                                    <span className={`badge ${planDrills.length> 0 ? 'badge-success' : 'badge-warning'}`}>
-                                                        {planDrills.length}
-                                                    </span>
-                                                </td>
                                                 <td onClick={e => e.stopPropagation()}>
                                                     <div style={{ position: 'relative' }}>
                                                         <button
