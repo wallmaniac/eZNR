@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -131,14 +131,17 @@ export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [showLangMenu, setShowLangMenu] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const landingRef = useRef(null);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
       // Normalize to -1 to 1
       const x = (e.clientX / window.innerWidth - 0.5) * 2;
       const y = (e.clientY / window.innerHeight - 0.5) * 2;
-      setMousePos({ x, y });
+      if (landingRef.current) {
+        landingRef.current.style.setProperty('--mouse-x', x);
+        landingRef.current.style.setProperty('--mouse-y', y);
+      }
     };
     window.addEventListener("mousemove", handleMouseMove, { passive: true });
     return () => window.removeEventListener("mousemove", handleMouseMove);
@@ -161,7 +164,7 @@ export default function LandingPage() {
   }, []);
 
   return (
-    <div className="landing-root" style={{ '--mouse-x': mousePos.x, '--mouse-y': mousePos.y }}>
+    <div className="landing-root" ref={landingRef}>
       
       {/* ── Animated Aurora & Stars Background ── */}
       <div className="aurora-bg">
