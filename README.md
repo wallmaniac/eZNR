@@ -347,31 +347,33 @@ Korisnik vidi normalan odgovor s imenom
 
 ## 🔥 Status Firebase Backend-a
 
+### Arhitektura pohrane podataka
+
+Sustav koristi **Firestore-backed in-memory cache** model:
+- **Firestore** je **source of truth** — svi `create()`, `update()` i `remove()` automatski zapisuju u Firestore u pozadini
+- **In-memory cache** (`_cache`) pruža instantne sinkrone čitanja za UI — koristi computing power korisnikovog uređaja za maksimalnu responsivnost
+- **onSnapshot listeneri** osiguravaju real-time sync između korisnika (više korisnika vidi promjene odmah)
+- **Troslojna strategija učitavanja**: CRITICAL kolekcije (4) se čekaju za prikaz UI-ja, PRIORITY (10) se učitavaju odmah nakon, DEFERRED (20+) se učitavaju u batch-evima u pozadini
+
 ### Što je implementirano i funkcionalno ✅
 
 | Komponenta | Status | Detalj |
 |:---|:---|:---|
-| **Firebase Auth** | ✅ Produkcija | Email/lozinka prijava, registracija novih tvrtki, SuperAdmin/CompanyAdmin uloge, WebAuthn biometrija |
-| **Firestore Security Rules** | ✅ Napisane | `belongsToCompany()`, role-based access, company-scoped izolacija, deny-all fallback |
-| **Cloud Firestore — Upitnici** | ✅ Produkcija | `questionnaire_sessions` i `questionnaire_responses` — potpuno live, koriste se za javne token linkove |
-| **Cloud Firestore — Obuke** | ✅ Produkcija | `training_sessions` i `training_responses` — potpuno live |
-| **Cloud Firestore — Korisnici** | ✅ Produkcija | `users` kolekcija — kreiranje, čitanje, uloge, firma dodjela |
-| **Cloud Firestore — Tvrtke** | ✅ Produkcija | `companies` kolekcija — profili, branding, storage quota |
+| **Firestore kao primarni DB** | ✅ Produkcija | `dataStore.js` — svi CRUD automatski zapisuju u Firestore, čitanja iz in-memory cache-a |
+| **Real-time sync** | ✅ Produkcija | `onSnapshot` listeneri na svim kolekcijama — automatska sinkronizacija |
+| **Auto-sync na svaki save** | ✅ Produkcija | `create()` → `_firestoreWrite()`, `update()` → `_firestoreWrite()`, `remove()` → `_firestoreDelete()` |
+| **Undo mehanizam** | ✅ Produkcija | `UndoBar.js` — floating countdown bar (12s), stack od 30 brisanja, cascade undo, automatski Firestore rollback |
+| **Firebase Auth** | ✅ Produkcija | Email/lozinka, registracija tvrtki, SuperAdmin/CompanyAdmin uloge, WebAuthn biometrija |
+| **Firestore Security Rules** | ✅ Deploy-ane | `belongsToCompany()`, role-based access, company-scoped izolacija, deny-all fallback |
+| **Cloud Firestore — Upitnici** | ✅ Produkcija | `questionnaire_sessions` / `questionnaire_responses` — javni token pristup |
+| **Cloud Firestore — Obuke** | ✅ Produkcija | `training_sessions` / `training_responses` — javni token pristup |
+| **Cloud Firestore — Korisnici** | ✅ Produkcija | `users` kolekcija — CRUD, uloge, firma dodjela |
+| **Cloud Firestore — Tvrtke** | ✅ Produkcija | `companies` — profili, branding, storage quota, parent/subsidiary |
 | **Cloud Firestore — Notifikacije** | ✅ Produkcija | `notif_settings` — postavke dnevnog email digesta |
 | **Firebase Storage** | ✅ Produkcija | Upload dokumenata s kvota praćenjem (`storageService.js`) |
 | **Firebase Admin SDK** | ✅ Produkcija | Server-side u `/api/notify-expiry` za dnevni Vercel Cron job |
-| **Ručni sync (localStorage → Firestore)** | ✅ Funkcionalan | `firebaseSync.js` — batch upload svih kolekcija, zaštita od >1MB dokumenata |
-| **Firestore CRUD service** | ✅ Napisana | `firestoreService.js` — drop-in replacement za `dataStore.js`, s cache slojem |
-
-### Što još treba ⏳
-
-| Komponenta | Status | Potrebna akcija |
-|:---|:---|:---|
-| **Deploy `firestore.rules` na Firebase Console** | ⏳ Lokalno napisane | Pravila su napisana u `firestore.rules`, ali moraju se deploy-ati putem Firebase CLI |
-| **Migracija s localStorage na Firestore kao primarni izvor** | ⏳ Planirano | `firestoreService.js` je ready ali UI još koristi `dataStore.js` (localStorage) |
-| **Auto-sync pri svakom save-u** | ⏳ Planirano | Trenutno je ručni gumb "Sync to Firebase" — treba automatski sync pri `create/update/delete` |
-| **Composite indeksi za Firestore** | ⏳ Djelomično | Neke query kombinacije traže Firestore composite index — fallback pattern implementiran |
-| **Testiranje s realnim podacima** | ⏳ Potrebno | Validacija Firestore sync-a s produkcijskim podacima |
+| **Activity Log** | ✅ Produkcija | Automatski logira svaki create/update/delete s korisnikom, kategorijom i ikonom |
+| **Company-scoped izolacija** | ✅ Produkcija | Svi podaci pod `companies/{companyId}/{collection}/{docId}` |
 
 ### Cloud Run AI Backend
 
@@ -387,37 +389,31 @@ Zia AI asistent komunicira s **Google Cloud Run Express.js serverisom** (`eznr-a
 ### ✅ Potpuno implementirano (produkcijski spremno)
 
 - [x] **68+ dashboard stranica** s kompletnim CRUD-om
+- [x] **Firestore-backed in-memory cache** s automatskim sync-om na svaki save
+- [x] **Real-time onSnapshot listeneri** za sync između korisnika
+- [x] **Undo mehanizam** — UndoBar s countdown-om, cascade undo, Firestore rollback
 - [x] **Dual-jurisdiction legal engine** (BiH + HR) s dinamičkim referencama na zakone
 - [x] **Excel import/export** s 9+ sheet-ova i fuzzy matchingom
 - [x] **Zia AI asistent** s 20+ function calling alata i živim podacima
-- [x] **PII maskiranje** za sve AI interakcije (GDPR/ZZPL)
+- [x] **PII maskiranje** za sve AI interakcije (GDPR/ZZPL usklađeno)
 - [x] **Upitnici i obuke** — graditelj, email dispatch, javna forma, rezultati
 - [x] **Procjena rizika** — 5×5 matrica, AI mjere, DOCX eksport
 - [x] **Sistematizacija** — 7 zakonskih polja, AI generiranje
 - [x] **Dnevni email digest** — Vercel Cron (07:00 CET), Firebase Admin SDK
 - [x] **PDF/Word generiranje** — 6+ obrazaca (RO-1, RO-2, OIR-1, RA-1, PN-3, PN-4)
 - [x] **Firebase Auth** — prijava, registracija, role, WebAuthn biometrija
+- [x] **Firestore Security Rules** — deploy-ane, company-scoped, deny-all fallback
 - [x] **PWA** — Service Worker, offline fallback, instalacija
 - [x] **Dark/Light mode** — kompletna CSS varijable podrška
 - [x] **Mobilna optimizacija** — 10 dedicated mobilnih komponenti
 - [x] **Branding Engine** — PDF i UI prilagodba po tvrtki
-- [x] **Activity Log** — automatsko logiranje svih mutacija
+- [x] **Activity Log** — automatsko logiranje svih mutacija u Firestore
 - [x] **Subscription tier hook** — `useSubscription()` s enterprise module gatingom
 - [x] **Penetracijski test modul** — automatska provjera Firestore rules
 
-### ⏳ Djelomično implementirano (funkcionira ali treba dorada)
+### 🔒 Zaključano za buduće verzije
 
-- [/] **Firebase Firestore** — upitnici/obuke/users/companies rade u Firestoreu; ostale kolekcije (workers, certificates, equipment...) još rade primarno iz localStorage s ručnim sync-om
-- [/] **Firestore Security Rules** — napisane i kompletne, ali nisu deploy-ane na Firebase Console
-- [/] **Feature gating** — `useSubscription()` hook i sidebar lock ikone postoje, ali nema billing integracije za naplatu
-- [/] **ISZNR modul** — 6 pod-stranica postoji (dokumenti, stranke, tipovi, ispitivači, mjerna oprema, potpisivanje), ali signing workflow nije potpun
-- [/] **Evakuacija i ZOP** — stranice postoje, ali su Enterprise-tier locked
-- [/] **Multi-company registracija** — registracija radi, parent/subsidiary logika implementirana, ali onboarding za self-signup nije polirano
+- **ISZNR modul** — 6 pod-stranica pripremljeno (dokumenti, stranke, tipovi, ispitivači, mjerna oprema, potpisivanje), čeka regulatorni zahtjev
+- **Evakuacija i ZOP napredni moduli** — stranice postoje, zaključane iza Enterprise tier-a
+- **Billing sustav** — nije potreban u B2B fazi (ručna fakturacija), planira se za SaaS fazu
 
-### ❌ Nije implementirano
-
-- [ ] **Billing sustav** (Stripe/Paddle) — nema naplatnog mehanizma
-- [ ] **Auto-sync na save** — svaki create/update/delete bi trebao automatski zapisivati u Firestore
-- [ ] **GDPR data retention politika** — automatsko brisanje starih podataka prema zakonskim rokovima
-- [ ] **SwipeRow integracija** — komponenta postoji (`SwipeRow.js`), ali nije integrirana u tablice
-- [ ] **Global audit native time inputa** — zamjena preostalih `<input type="time">` s custom 24h komponentom
