@@ -295,13 +295,129 @@ Otvorite [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## 📈 Što je još u razvoju
+## 🔒 Zaštita osobnih podataka i PII maskiranje za AI
 
-Aplikacija je funkcionalno kompletna za svakodnevno korištenje. Sljedeće stavke su u planu za nadogradnju:
+Sustav implementira **GDPR/ZZPL-usklađeni mehanizam zaštite osobnih podataka** za sve AI interakcije. Nijedan osobni podatak radnika nikada ne napušta preglednik korisnika u izvornom obliku prema Google Gemini API-ju.
 
-- [ ] Implementacija billing sustava (Stripe/Paddle) za prelazak na SaaS model nakon prve godine
-- [ ] Feature gating po subscription tier-u (Basic/Premium/Enterprise)
-- [ ] Auto-sync pri svakom spremanju (umjesto ručnog Firebase Sync gumba)
-- [ ] ISZNR signing workflow (digitalni potpis inspektorskih dokumenata)
-- [ ] GDPR / data retention politika
-- [ ] Integracija SwipeRow geste u sve tablice
+### Pseudonimizacija (PII Masking)
+
+Prije slanja bilo kakvog upita prema AI modelu, svi podaci prolaze kroz dvoslojni proces:
+
+1. **Maskiranje korisničkog unosa (`maskPIIInput`)**:
+   - Svaka poruka korisnika se skenira za poznata imena i prezimena radnika iz baze.
+   - Imena se zamjenjuju pseudonimiziranim tokenima formata `W[identifikator]` (npr. `W[abc123]`).
+   - Algoritam koristi descending sort po duljini imena (duža imena imaju prioritet) kako bi se spriječilo djelomično maskiranje.
+   - Podržava deklinaciju imena u bosanskom/hrvatskom jeziku (sufiksi: -a, -u, -e, -om, -em, -i).
+   - Za unikatna imena (>3 znaka) i samo ime se maskira ako je jednoznačno u bazi.
+
+2. **Demaskiranje AI odgovora (`unmaskPIIOutput`)**:
+   - Odgovor AI modela prolazi kroz obrnutu transformaciju.
+   - `W[abc123]` se zamjenjuje nazad u `**Ime Prezime**` (bold) koristeći lokalni worker map.
+   - AI nikada ne vidi pravo ime — samo token.
+
+### Zaštita u kontekstu podataka za AI
+
+U sustavu za kontekstualno informiranje AI-ja (`buildDataContext`):
+- Radnici su navedeni isključivo kao `W[id]` tokeni, **bez imena, prezimena, JMBG-a ili OIB-a**.
+- Bolovanja, uvjerenja, ljekarski pregledi i povrede — sve se referencira po `W[id]` tokenu.
+- AI prompt eksplicitno zabranjuje model da pokuša rekonstruirati ili izmisliti osobne podatke.
+
+### Zabrana obrade JMBG/OIB
+
+System prompt sadrži eksplicitnu instrukciju:
+> *"Zabranjeno je obrađivati JMBG i OIB. Ako korisnik sam unese JMBG ili OIB u chat, MORAŠ ga upozoriti da zbog GDPR/ZZPL zakona nemaš pravo prikupljati lične identifikacijske brojeve."*
+
+### Arhitektura zaštite
+
+```
+Korisnik piše: "Je li Marko Marković na bolovanju?"
+         ↓
+maskPIIInput() → "Je li W[m7x2k] na bolovanju?"
+         ↓
+Šalje se Gemini API-ju (Google ne vidi ime)
+         ↓
+Gemini odgovara: "Da, W[m7x2k] je na bolovanju od..."
+         ↓
+unmaskPIIOutput() → "Da, **Marko Marković** je na bolovanju od..."
+         ↓
+Korisnik vidi normalan odgovor s imenom
+```
+
+---
+
+## 🔥 Status Firebase Backend-a
+
+### Što je implementirano i funkcionalno ✅
+
+| Komponenta | Status | Detalj |
+|:---|:---|:---|
+| **Firebase Auth** | ✅ Produkcija | Email/lozinka prijava, registracija novih tvrtki, SuperAdmin/CompanyAdmin uloge, WebAuthn biometrija |
+| **Firestore Security Rules** | ✅ Napisane | `belongsToCompany()`, role-based access, company-scoped izolacija, deny-all fallback |
+| **Cloud Firestore — Upitnici** | ✅ Produkcija | `questionnaire_sessions` i `questionnaire_responses` — potpuno live, koriste se za javne token linkove |
+| **Cloud Firestore — Obuke** | ✅ Produkcija | `training_sessions` i `training_responses` — potpuno live |
+| **Cloud Firestore — Korisnici** | ✅ Produkcija | `users` kolekcija — kreiranje, čitanje, uloge, firma dodjela |
+| **Cloud Firestore — Tvrtke** | ✅ Produkcija | `companies` kolekcija — profili, branding, storage quota |
+| **Cloud Firestore — Notifikacije** | ✅ Produkcija | `notif_settings` — postavke dnevnog email digesta |
+| **Firebase Storage** | ✅ Produkcija | Upload dokumenata s kvota praćenjem (`storageService.js`) |
+| **Firebase Admin SDK** | ✅ Produkcija | Server-side u `/api/notify-expiry` za dnevni Vercel Cron job |
+| **Ručni sync (localStorage → Firestore)** | ✅ Funkcionalan | `firebaseSync.js` — batch upload svih kolekcija, zaštita od >1MB dokumenata |
+| **Firestore CRUD service** | ✅ Napisana | `firestoreService.js` — drop-in replacement za `dataStore.js`, s cache slojem |
+
+### Što još treba ⏳
+
+| Komponenta | Status | Potrebna akcija |
+|:---|:---|:---|
+| **Deploy `firestore.rules` na Firebase Console** | ⏳ Lokalno napisane | Pravila su napisana u `firestore.rules`, ali moraju se deploy-ati putem Firebase CLI |
+| **Migracija s localStorage na Firestore kao primarni izvor** | ⏳ Planirano | `firestoreService.js` je ready ali UI još koristi `dataStore.js` (localStorage) |
+| **Auto-sync pri svakom save-u** | ⏳ Planirano | Trenutno je ručni gumb "Sync to Firebase" — treba automatski sync pri `create/update/delete` |
+| **Composite indeksi za Firestore** | ⏳ Djelomično | Neke query kombinacije traže Firestore composite index — fallback pattern implementiran |
+| **Testiranje s realnim podacima** | ⏳ Potrebno | Validacija Firestore sync-a s produkcijskim podacima |
+
+### Cloud Run AI Backend
+
+Zia AI asistent komunicira s **Google Cloud Run Express.js serverisom** (`eznr-ai-backend`) hostiranim na `europe-west1`:
+- Endpoint: `https://eznr-ai-backend-757041188739.europe-west1.run.app/api/zia`
+- Razlog izdvajanja: Dugo AI procesiranje (>10s) ne radi na Vercel serverless (timeout), Cloud Run podržava do 300s.
+- Komunikacija: Same-origin proxy pattern — klijent šalje request na Cloud Run, izbjegava CORS probleme.
+
+---
+
+## 📈 Status razvoja — što je odrađeno, a što nije
+
+### ✅ Potpuno implementirano (produkcijski spremno)
+
+- [x] **68+ dashboard stranica** s kompletnim CRUD-om
+- [x] **Dual-jurisdiction legal engine** (BiH + HR) s dinamičkim referencama na zakone
+- [x] **Excel import/export** s 9+ sheet-ova i fuzzy matchingom
+- [x] **Zia AI asistent** s 20+ function calling alata i živim podacima
+- [x] **PII maskiranje** za sve AI interakcije (GDPR/ZZPL)
+- [x] **Upitnici i obuke** — graditelj, email dispatch, javna forma, rezultati
+- [x] **Procjena rizika** — 5×5 matrica, AI mjere, DOCX eksport
+- [x] **Sistematizacija** — 7 zakonskih polja, AI generiranje
+- [x] **Dnevni email digest** — Vercel Cron (07:00 CET), Firebase Admin SDK
+- [x] **PDF/Word generiranje** — 6+ obrazaca (RO-1, RO-2, OIR-1, RA-1, PN-3, PN-4)
+- [x] **Firebase Auth** — prijava, registracija, role, WebAuthn biometrija
+- [x] **PWA** — Service Worker, offline fallback, instalacija
+- [x] **Dark/Light mode** — kompletna CSS varijable podrška
+- [x] **Mobilna optimizacija** — 10 dedicated mobilnih komponenti
+- [x] **Branding Engine** — PDF i UI prilagodba po tvrtki
+- [x] **Activity Log** — automatsko logiranje svih mutacija
+- [x] **Subscription tier hook** — `useSubscription()` s enterprise module gatingom
+- [x] **Penetracijski test modul** — automatska provjera Firestore rules
+
+### ⏳ Djelomično implementirano (funkcionira ali treba dorada)
+
+- [/] **Firebase Firestore** — upitnici/obuke/users/companies rade u Firestoreu; ostale kolekcije (workers, certificates, equipment...) još rade primarno iz localStorage s ručnim sync-om
+- [/] **Firestore Security Rules** — napisane i kompletne, ali nisu deploy-ane na Firebase Console
+- [/] **Feature gating** — `useSubscription()` hook i sidebar lock ikone postoje, ali nema billing integracije za naplatu
+- [/] **ISZNR modul** — 6 pod-stranica postoji (dokumenti, stranke, tipovi, ispitivači, mjerna oprema, potpisivanje), ali signing workflow nije potpun
+- [/] **Evakuacija i ZOP** — stranice postoje, ali su Enterprise-tier locked
+- [/] **Multi-company registracija** — registracija radi, parent/subsidiary logika implementirana, ali onboarding za self-signup nije polirano
+
+### ❌ Nije implementirano
+
+- [ ] **Billing sustav** (Stripe/Paddle) — nema naplatnog mehanizma
+- [ ] **Auto-sync na save** — svaki create/update/delete bi trebao automatski zapisivati u Firestore
+- [ ] **GDPR data retention politika** — automatsko brisanje starih podataka prema zakonskim rokovima
+- [ ] **SwipeRow integracija** — komponenta postoji (`SwipeRow.js`), ali nije integrirana u tablice
+- [ ] **Global audit native time inputa** — zamjena preostalih `<input type="time">` s custom 24h komponentom
