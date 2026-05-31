@@ -1,5 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
+import TimeInput from '@/components/TimeInput';
 import { createPortal } from 'react-dom';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -384,7 +385,7 @@ export default function FormOIR1Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang !== 'en' ? 'Vrijeme' : 'Time'}</div>
-                <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemeDogadjaja} onChange={e => set('vrijemeDogadjaja', e.target.value)} />
+                <TimeInput value={formData.vrijemeDogadjaja} onChange={v => set('vrijemeDogadjaja', v)} />
               </div>
             </div>
           </div>

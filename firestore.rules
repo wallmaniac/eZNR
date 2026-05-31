@@ -26,10 +26,13 @@ service cloud.firestore {
       allow update: if request.auth.uid == userId || isAdmin();
     }
 
-    // 2) Companies Collection — only members of a company can modify it
+    // 2) Companies Collection
+    //    CREATE: any signed-in user can create a new company (they don't belong to it yet)
+    //    UPDATE/DELETE: only members of that company can modify/remove it
     match /companies/{companyId} {
       allow read: if isSignedIn();
-      allow write: if belongsToCompany(companyId);
+      allow create: if isSignedIn();
+      allow update, delete: if belongsToCompany(companyId);
     }
 
     // 3) Global Catalog Data

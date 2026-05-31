@@ -1,5 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
+import TimeInput from '@/components/TimeInput';
 import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -223,7 +224,7 @@ function EvacuationDrillsInner() {
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Vrijeme početka' : 'Start Time'}</label>
-                                        <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemePocetka} onChange={e => set('vrijemePocetka', e.target.value)} />
+                                        <TimeInput value={formData.vrijemePocetka} onChange={v => set('vrijemePocetka', v)} />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">{bs ? 'Trajanje (minute)' : 'Duration (minutes)'}</label>

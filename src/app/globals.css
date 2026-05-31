@@ -1200,6 +1200,14 @@ a {
   animation: slideUp var(--transition-normal) ease-out;
 }
 
+/* ===== SKELETON LOADING ===== */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-input) 25%, var(--border-light) 50%, var(--bg-input) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
 /* ===== UTILITY ===== */
 .flex {
   display: flex;

@@ -14,6 +14,7 @@ import PullToRefresh from '@/components/mobile/PullToRefresh';
 import CollapsibleWidget from '@/components/mobile/CollapsibleWidget';
 import LongPressMenu, { useLongPress } from '@/components/mobile/LongPressMenu';
 import AnalyticsWidgets from '@/components/AnalyticsWidgets';
+import EmptyDashboard from '@/components/EmptyDashboard';
 
 const EVENT_ROUTES = {
     cert: '/dashboard/worker-certificates',
@@ -400,7 +401,13 @@ export default function DashboardPage() {
         const expiredMed = medicalExams.filter(m => m.vrijediDo && new Date(m.vrijediDo) < today).length;
         const soonMed = medicalExams.filter(m => { if (!m.vrijediDo) return false; const dd = (new Date(m.vrijediDo) - today) / (86400000); return dd>= 0 && dd <= 60; }).length;
         const totalExpired = expiredCerts + expiredEquip + expiredMed;
-        return { activeWorkers, activeCerts, expiringSoon: expiringSoon + soonMed, activeEquip, totalExpired };
+
+        // Trend: items created in last 30 days
+        const d30ago = new Date(today.getTime() - 30 * 86400000);
+        const recentWorkers = workers.filter(w => w.createdAt && new Date(w.createdAt) >= d30ago).length;
+        const recentCerts = certs.filter(c => c.createdAt && new Date(c.createdAt) >= d30ago).length;
+
+        return { activeWorkers, activeCerts, expiringSoon: expiringSoon + soonMed, activeEquip, totalExpired, recentWorkers, recentCerts };
     }, [workers, certs, equipment, medicalExams]);
 
     const alertsGroups = useMemo(() => {
@@ -779,6 +786,15 @@ export default function DashboardPage() {
         }
     };
 
+    // ── Empty state: show onboarding wizard for brand-new companies ──
+    if (workers.length === 0 && certs.length === 0 && equipment.length === 0) {
+        return (
+            <PullToRefresh onRefresh={reloadAllData}>
+                <EmptyDashboard />
+            </PullToRefresh>
+        );
+    }
+
     const dashboardContent = (
         <div className="animate-fadeIn">
             {/* Long-press context menu (mobile only) */}
@@ -797,13 +813,13 @@ export default function DashboardPage() {
 
             {/* Stats Cards — now clickable */}
             <CollapsibleWidget id="stats" title={lang !== 'en' ? 'Pregled' : 'Overview'} icon="📊" isMobile={isMobile}>
-                <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(0, 1fr)', gap: 10, marginBottom: 24 }}>
-                    <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} />
-                    <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} />
-                    <StatCard icon="⏰" label={lang !== 'en' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} />
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : `repeat(${stats.totalExpired > 0 ? 5 : 4}, 1fr)`, gap: 10, marginBottom: 24 }}>
+                    <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} trend={!isMobile ? stats.recentWorkers : undefined} />
+                    <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} trend={!isMobile ? stats.recentCerts : undefined} />
+                    <StatCard icon="⏰" label={lang !== 'en' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} total={stats.activeCerts} />
                     <StatCard icon="⚙️" label={t('workEquipment')} value={stats.activeEquip} color="#607D8B" onClick={() => handleStatClick('/dashboard/equipment')} />
                     {stats.totalExpired> 0 && (
-                        <StatCard icon="🚨" label={lang !== 'en' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert />
+                        <StatCard icon="🚨" label={lang !== 'en' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert total={stats.activeCerts + stats.activeEquip} />
                     )}
                 </div>
             </CollapsibleWidget>
@@ -1952,16 +1968,60 @@ export default function DashboardPage() {
     );
 }
 
-function StatCard({ icon, label, value, color, onClick, isAlert }) {
+function StatCard({ icon, label, value, color, onClick, isAlert, trend, total }) {
+    const pct = total && total > 0 ? Math.min(100, Math.round((value / total) * 100)) : null;
+    // Hover only on non-touch devices
+    const hoverIn = (e) => {
+        if (!window.matchMedia('(hover: hover)').matches) return;
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = 'var(--shadow-lg)';
+    };
+    const hoverOut = (e) => {
+        e.currentTarget.style.transform = '';
+        e.currentTarget.style.boxShadow = '';
+    };
     return (
-        <div className="card" style={{ borderLeft: `4px solid ${color}`, cursor: 'pointer', background: isAlert ? 'rgba(244,67,54,0.12)' : undefined }} onClick={onClick}>
-            <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 10px' }}>
-                <span style={{ fontSize: '1.5rem', flexShrink: 0, animation: isAlert ? 'pulse 1.5s infinite' : undefined }}>{icon}</span>
+        <div
+            className="card"
+            style={{
+                borderLeft: `4px solid ${color}`,
+                cursor: 'pointer',
+                background: isAlert ? 'rgba(244,67,54,0.12)' : undefined,
+                transition: 'all 0.2s ease',
+            }}
+            onClick={onClick}
+            onMouseEnter={hoverIn}
+            onMouseLeave={hoverOut}
+        >
+            <div className="card-body" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 10px' }}>
+                {/* Icon in circular badge — smaller on mobile via clamp */}
+                <div style={{
+                    width: 'clamp(32px, 5vw, 40px)', height: 'clamp(32px, 5vw, 40px)', borderRadius: '50%',
+                    background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0, fontSize: 'clamp(1rem, 2vw, 1.25rem)',
+                    animation: isAlert ? 'pulse 1.5s infinite' : undefined,
+                }}>{icon}</div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '1.25rem', fontWeight: 800, fontFamily: 'var(--font-heading)', color }}>{value}</div>
-                    <div style={{ fontSize: '0.75rem', lineHeight: 1.2, color: isAlert ? 'var(--danger)' : 'var(--text-muted)', fontWeight: isAlert ? 700 : undefined, wordBreak: 'break-word', hyphens: 'auto' }}>{label}</div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 'clamp(1rem, 2.5vw, 1.25rem)', fontWeight: 800, fontFamily: 'var(--font-heading)', color }}>{value}</span>
+                        {trend != null && trend !== 0 && (
+                            <span style={{
+                                fontSize: '0.65rem', fontWeight: 700,
+                                color: trend > 0 ? 'var(--success)' : 'var(--danger)',
+                            }}>
+                                {trend > 0 ? `▲+${trend}` : `▼${trend}`}
+                            </span>
+                        )}
+                    </div>
+                    <div style={{ fontSize: 'clamp(0.65rem, 1.5vw, 0.75rem)', lineHeight: 1.2, color: isAlert ? 'var(--danger)' : 'var(--text-muted)', fontWeight: isAlert ? 700 : undefined, overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{label}</div>
+                    {/* Mini progress bar */}
+                    {pct != null && (
+                        <div style={{ marginTop: 4, height: 3, borderRadius: 2, background: 'var(--border-light)', overflow: 'hidden' }}>
+                            <div style={{ width: `${pct}%`, height: '100%', borderRadius: 2, background: color, transition: 'width 0.6s ease' }} />
+                        </div>
+                    )}
                 </div>
-                {isAlert && <span style={{ marginLeft: 'auto', fontSize: '1.2rem', flexShrink: 0 }}>⚠️</span>}
+                {isAlert && <span style={{ marginLeft: 'auto', fontSize: '1rem', flexShrink: 0 }}>⚠️</span>}
             </div>
         </div>
     );

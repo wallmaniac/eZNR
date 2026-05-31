@@ -832,12 +832,7 @@ export function getUserCompanies(userId) {
 export function getAllUsers() { return _cache['users'] || []; }
 export function getAllCompanies() { return _cache['companies'] || []; }
 
-// ============================================================================
-// SEED DATA — No longer auto-seeded on module load
-// Kept as export for reference and initial setup
-// ============================================================================
 
-export const SEED_DATA = {};
 
 let isInitialized = false;
 

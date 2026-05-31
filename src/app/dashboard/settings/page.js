@@ -19,7 +19,7 @@ import {
   getOnlineUsers, humanizePage,
 } from '@/lib/activityLog';
 
-import { seedMockDataConfig } from '@/lib/mockDataGenerator';
+
 import { useDialog } from '@/hooks/useDialog';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { isWebAuthnAvailable, hasStoredCredentialForUser, clearBiometricCredentialForUser, registerCredential } from '@/lib/webAuthn';
@@ -463,22 +463,7 @@ export default function SettingsPage() {
 
 
 
-  const handleSeedMockData = async () => {
-    if (!activeCompanyId) return;
-    const isSure = await confirm(lang !== 'en' 
-      ? 'Ovo će kreirati preko 30 mock zapisa (za svaku kolekciju) u vašem browseru za testiranje migracije. Nastaviti?'
-      : 'This will seed over 30 mock records (one for each collection) in your browser to test migration. Proceed?'
-    );
-    if (!isSure) return;
 
-    try {
-      const generated = seedMockDataConfig(activeCompanyId);
-      await alert(lang !== 'en' ? `Uspješno generirano ${generated} mock zapisa! Stranica će se osvježiti.` : `Successfully generated ${generated} mock records! Reloading...`);
-      window.location.reload();
-    } catch (e) {
-      await alert(`Greška: ${e.message}`);
-    }
-  };
 
   // ── Tabs ──
   const tabs = [

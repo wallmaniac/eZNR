@@ -1,5 +1,6 @@
 'use client';
 import DateInput from '@/components/DateInput';
+import TimeInput from '@/components/TimeInput';
 import {  useState, useEffect, useCallback, useRef  } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -615,7 +616,7 @@ export default function ReferralRA1Page() {
               </div>
               <div>
                 <div style={labelSt}>{lang !== 'en' ? 'Sati' : 'Time'}</div>
-                <input className="form-input" type="time" pattern="[0-2][0-9]:[0-5][0-9]" step="60" value={formData.vrijemePregleda} onChange={e => set('vrijemePregleda', e.target.value)} />
+                <TimeInput value={formData.vrijemePregleda} onChange={v => set('vrijemePregleda', v)} />
               </div>
             </div>
           </div>

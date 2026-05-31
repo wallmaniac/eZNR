@@ -3,6 +3,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { create, update, remove, COLLECTIONS, formatDate } from '@/lib/dataStore';
 import { useDialog } from '@/hooks/useDialog';
 import DateInput from '@/components/DateInput';
+import TimeInput from '@/components/TimeInput';
 
 export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments, workers, reloadData }) {
     const { t, lang } = useLanguage();
@@ -174,7 +175,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                     <label className="form-label">{bs ? 'Datum i vrijeme zaduženja' : 'Assigned Date & Time'} <span style={{color:'var(--danger)'}}>*</span></label>
                                     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
                                         <DateInput value={form.datumZaduzenja} onChange={v => setForm(f => ({...f, datumZaduzenja: v}))} />
-                                        <input className="form-input" type="time" value={form.vrijemeZaduzenja} onChange={e => setForm(f => ({...f, vrijemeZaduzenja: e.target.value}))} />
+                                        <TimeInput value={form.vrijemeZaduzenja} onChange={v => setForm(f => ({...f, vrijemeZaduzenja: v}))} />
                                     </div>
                                 </div>
                                 <div className="form-group">
@@ -187,7 +188,7 @@ export default function VehicleAssignmentsTab({ vehicleId, vehicles, assignments
                                             <label className="form-label">{bs ? 'Datum i vrijeme razduženja' : 'Return Date & Time'}</label>
                                             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
                                                 <DateInput value={form.datumRazduzenja} onChange={v => setForm(f => ({...f, datumRazduzenja: v}))} />
-                                                <input className="form-input" type="time" value={form.vrijemeRazduzenja} onChange={e => setForm(f => ({...f, vrijemeRazduzenja: e.target.value}))} />
+                                                <TimeInput value={form.vrijemeRazduzenja} onChange={v => setForm(f => ({...f, vrijemeRazduzenja: v}))} />
                                             </div>
                                         </div>
                                         <div className="form-group">
