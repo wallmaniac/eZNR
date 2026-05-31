@@ -799,7 +799,27 @@ export default function SettingsPage() {
       {currentTab === 'company' && (
         <div className="card">
           <div className="card-body">
-            <h3 style={{ marginBottom: 20 }}>🏢 {lang !== 'en' ? 'Podaci o firmi' : 'Company Data'}</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+              <h3 style={{ margin: 0 }}>🏢 {lang !== 'en' ? 'Podaci o firmi' : 'Company Data'}</h3>
+              <button
+                type="button"
+                className="btn btn-ghost btn-sm"
+                onClick={async () => {
+                  const ok = await confirm(
+                    lang !== 'en'
+                      ? 'Želite li pokrenuti čarobnjak za postavljanje?'
+                      : 'Do you want to start the setup wizard?'
+                  );
+                  if (ok) {
+                    localStorage.removeItem(`eznr_wizard_completed_${activeCompanyId}`);
+                    router.push('/dashboard?wizard=true');
+                  }
+                }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem' }}
+              >
+                🚀 {lang !== 'en' ? 'Pokreni čarobnjak' : 'Start Setup Wizard'}
+              </button>
+            </div>
             {!activeCompanyId ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
                 {lang !== 'en' ? 'Odaberite firmu kroz birač firma u gornjem meniju.' : 'Select a company from the company switcher.'}
@@ -938,30 +958,9 @@ export default function SettingsPage() {
                     </div>
                   </div>
                 </div>
-                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
-                    {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
-                  </div>
-
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    onClick={async () => {
-                      const ok = await confirm(
-                        lang !== 'en'
-                          ? 'Želite li pokrenuti čarobnjak za postavljanje?'
-                          : 'Do you want to start the setup wizard?'
-                      );
-                      if (ok) {
-                        localStorage.removeItem(`eznr_wizard_completed_${activeCompanyId}`);
-                        router.push('/dashboard?wizard=true');
-                      }
-                    }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--primary)', fontWeight: 600, fontSize: '0.85rem' }}
-                  >
-                    🚀 {lang !== 'en' ? 'Pokreni čarobnjak' : 'Start Setup Wizard'}
-                  </button>
+                <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
+                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
                 </div>
 
                 {/* ══ BRANDING SECTION ══ */}
