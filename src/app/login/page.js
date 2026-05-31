@@ -183,15 +183,18 @@ export default function LoginPage() {
       {/* Language switcher dropdown */}
       <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 999 }}>
         <button onClick={() => setShowLangMenu(!showLangMenu)} style={{...styles.langSwitcher, width: 110, justifyContent: 'flex-start'}}>
-          <img src={lang === 'hr' ? 'https://flagcdn.com/w40/hr.png' : lang === 'en' ? 'https://flagcdn.com/w40/gb.png' : 'https://flagcdn.com/w40/ba.png'} width={18} height={18} alt={lang} style={{ borderRadius: '50%', objectFit: 'cover' }} />
-          <span>{lang === 'hr' ? 'HR' : lang === 'en' ? 'EN' : 'BA'}</span>
+          <img src={lang === 'hr' ? 'https://flagcdn.com/w40/hr.png' : lang === 'en' ? 'https://flagcdn.com/w40/gb.png' : lang === 'de' ? 'https://flagcdn.com/w40/de.png' : lang === 'sl' ? 'https://flagcdn.com/w40/si.png' : lang === 'sr' ? 'https://flagcdn.com/w40/rs.png' : 'https://flagcdn.com/w40/ba.png'} width={18} height={18} alt={lang} style={{ borderRadius: '50%', objectFit: 'cover' }} />
+          <span>{lang === 'hr' ? 'HR' : lang === 'en' ? 'EN' : lang === 'de' ? 'DE' : lang === 'sl' ? 'SL' : lang === 'sr' ? 'SR' : 'BA'}</span>
         </button>
         {showLangMenu && (
-          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'rgba(20,40,60,0.95)', backdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 6, width: 110, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
+          <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 8, background: 'rgba(20,40,60,0.95)', backdropFilter: 'blur(10px)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', padding: 6, width: 130, boxShadow: '0 8px 32px rgba(0,0,0,0.4)' }}>
             {[
               { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
               { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
-              { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' }
+              { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' },
+              { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png', title: 'Deutsch' },
+              { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png', title: 'Slovenščina' },
+              { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png', title: 'Srpski' }
             ].map(l => (
               <button key={l.code} onClick={() => { setLang(l.code); setShowLangMenu(false); }}
                 style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: 10, padding: '8px 8px', width: '100%', border: 'none', background: lang === l.code ? 'rgba(0,191,166,0.15)' : 'transparent', color: lang === l.code ? '#00BFA6' : 'rgba(255,255,255,0.8)', borderRadius: 8, cursor: 'pointer', textAlign: 'left', fontWeight: lang === l.code ? 700 : 500, transition: 'all 0.15s' }}

@@ -195,7 +195,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
     const LANGUAGES = [
         { code: 'bs', label: 'BA', flag: 'https://flagcdn.com/w40/ba.png', title: 'Bosanski' },
         { code: 'hr', label: 'HR', flag: 'https://flagcdn.com/w40/hr.png', title: 'Hrvatski' },
-        { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' }
+        { code: 'en', label: 'EN', flag: 'https://flagcdn.com/w40/gb.png', title: 'English' },
+        { code: 'de', label: 'DE', flag: 'https://flagcdn.com/w40/de.png', title: 'Deutsch' },
+        { code: 'sl', label: 'SL', flag: 'https://flagcdn.com/w40/si.png', title: 'Slovenščina' },
+        { code: 'sr', label: 'SR', flag: 'https://flagcdn.com/w40/rs.png', title: 'Srpski' }
     ];
     const currentLang = LANGUAGES.find(l => l.code === lang) || LANGUAGES[0];
 
