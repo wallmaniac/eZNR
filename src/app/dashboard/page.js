@@ -805,6 +805,27 @@ export default function DashboardPage() {
 
     const dashboardContent = (
         <div className="animate-fadeIn">
+            {/* Run wizard again option */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+                <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={async () => {
+                        const ok = await confirm(
+                            lang !== 'en' 
+                                ? 'Želite li ponovno pokrenuti čarobnjak za postavljanje?' 
+                                : 'Do you want to run the setup wizard again?'
+                        );
+                        if (ok) {
+                            localStorage.removeItem(`eznr_wizard_completed_${activeCompanyId}`);
+                            setWizardCompleted(false);
+                        }
+                    }}
+                    style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                    🚀 {lang !== 'en' ? 'Pokreni čarobnjak ponovno' : 'Run Setup Wizard Again'}
+                </button>
+            </div>
+
             {/* Long-press context menu (mobile only) */}
             <LongPressMenu
                 isOpen={lpMenu.open}
