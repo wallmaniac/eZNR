@@ -307,8 +307,6 @@ body {
 /* ── Calendar cells ── */
 .cal-cell {
   background: white;
-  border-left: 1px solid #eee;
-  border-bottom: 1px solid #eee;
   transition: background 0.2s ease;
 }
 
@@ -329,8 +327,6 @@ body {
 
 [data-theme="dark"] .cal-cell {
   background: var(--bg-card) !important;
-  border-left-color: var(--border) !important;
-  border-bottom-color: var(--border) !important;
 }
 
 [data-theme="dark"] .cal-cell.cal-today {
