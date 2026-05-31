@@ -4,6 +4,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useRouter } from 'next/navigation';
 import {
     getAll, create, update, remove, removeWorkerCascade, COLLECTIONS, getAllForCompany, getRawAll, formatDate, getOrgUnitName, createForCompany,
+    isDataReady,
 } from '@/lib/dataStore';
 import { getNotificationSettings } from '@/lib/systemMonitor';
 import { useAuth } from '@/contexts/AuthContext';
@@ -148,18 +149,13 @@ export default function DashboardPage() {
     const { confirm, DialogRenderer } = useDialog();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
-    const [wizardCompleted, setWizardCompleted] = useState(false);
-
-    useEffect(() => {
-        if (activeCompanyId) {
-            setWizardCompleted(localStorage.getItem(`eznr_wizard_completed_${activeCompanyId}`) === 'true');
-        }
-    }, [activeCompanyId]);
+    const [forceWizard, setForceWizard] = useState(false);
 
 
     // ── Single atomic data state — prevents calendar flicker from 14 separate setStates ──
     const [ds, setDs] = useState({
         companyId: '',
+        wizardCompleted: false,
         workers: [], certs: [], ppeAssignments: [], equipment: [],
         fleetVehicles: [], employerDocs: [], medicalExams: [],
         injuriesData: [], diseasesData: [], calEvents: [],
@@ -167,7 +163,7 @@ export default function DashboardPage() {
         fireExtinguishers: [], hydrants: [], evacuationPlans: [],
     });
     // Convenience destructure so the rest of the component reads exactly the same
-    const { workers, certs, ppeAssignments, equipment, fleetVehicles, employerDocs,
+    const { wizardCompleted, workers, certs, ppeAssignments, equipment, fleetVehicles, employerDocs,
             medicalExams, injuriesData, diseasesData, calEvents, certTypes, ppeTypes,
             riskAssessments, riskItems, fireExtinguishers, hydrants, evacuationPlans } = ds;
 
@@ -211,6 +207,7 @@ export default function DashboardPage() {
         const uids = user?.companyIds || [];
         const gatherData = () => ({
             companyId: activeCompanyId,
+            wizardCompleted: typeof window !== 'undefined' ? localStorage.getItem(`eznr_wizard_completed_${activeCompanyId}`) === 'true' : false,
             workers: getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids),
             certs: getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids),
             ppeAssignments: getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids),
@@ -251,6 +248,17 @@ export default function DashboardPage() {
             if (syncTimerRef.current) clearTimeout(syncTimerRef.current);
         };
     }, [activeCompanyId, user?.companyIds]);
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('wizard') === 'true') {
+                setForceWizard(true);
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, '', newUrl);
+            }
+        }
+    }, []);
 
     // Stabilize notifSettings — only update state when actual values change
     const notifSettingsRef = useRef(null);
@@ -797,7 +805,7 @@ export default function DashboardPage() {
     };
 
     // ── Stale state check: prevent layout flash during company switching ──
-    if (ds.companyId !== activeCompanyId) {
+    if (ds.companyId !== activeCompanyId || !isDataReady()) {
         return (
             <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
                 {lang !== 'en' ? 'Učitavanje...' : 'Loading...'}
@@ -806,10 +814,13 @@ export default function DashboardPage() {
     }
 
     // ── Empty state: show onboarding wizard for brand-new companies ──
-    if (workers.length === 0 && certs.length === 0 && equipment.length === 0 && !wizardCompleted) {
+    if (((workers.length === 0 && certs.length === 0 && equipment.length === 0) && !wizardCompleted) || forceWizard) {
         return (
             <PullToRefresh onRefresh={reloadAllData}>
-                <EmptyDashboard onComplete={() => setWizardCompleted(true)} />
+                <EmptyDashboard onComplete={() => {
+                    setDs(prev => ({ ...prev, wizardCompleted: true }));
+                    setForceWizard(false);
+                }} />
             </PullToRefresh>
         );
     }
@@ -828,7 +839,8 @@ export default function DashboardPage() {
                         );
                         if (ok) {
                             localStorage.removeItem(`eznr_wizard_completed_${activeCompanyId}`);
-                            setWizardCompleted(false);
+                            setDs(prev => ({ ...prev, wizardCompleted: false }));
+                            setForceWizard(true);
                         }
                     }}
                     style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}
