@@ -159,6 +159,7 @@ export default function DashboardPage() {
 
     // ── Single atomic data state — prevents calendar flicker from 14 separate setStates ──
     const [ds, setDs] = useState({
+        companyId: '',
         workers: [], certs: [], ppeAssignments: [], equipment: [],
         fleetVehicles: [], employerDocs: [], medicalExams: [],
         injuriesData: [], diseasesData: [], calEvents: [],
@@ -209,6 +210,7 @@ export default function DashboardPage() {
     useEffect(() => {
         const uids = user?.companyIds || [];
         const gatherData = () => ({
+            companyId: activeCompanyId,
             workers: getAllForCompany(COLLECTIONS.WORKERS, activeCompanyId, uids),
             certs: getAllForCompany(COLLECTIONS.CERTIFICATES, activeCompanyId, uids),
             ppeAssignments: getAllForCompany(COLLECTIONS.PPE_ASSIGNMENTS, activeCompanyId, uids),
@@ -793,6 +795,15 @@ export default function DashboardPage() {
             window.eznrToast(lang !== 'en' ? 'Podaci osvježeni' : 'Data refreshed', 'success', 2000);
         }
     };
+
+    // ── Stale state check: prevent layout flash during company switching ──
+    if (ds.companyId !== activeCompanyId) {
+        return (
+            <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
+                {lang !== 'en' ? 'Učitavanje...' : 'Loading...'}
+            </div>
+        );
+    }
 
     // ── Empty state: show onboarding wizard for brand-new companies ──
     if (workers.length === 0 && certs.length === 0 && equipment.length === 0 && !wizardCompleted) {
