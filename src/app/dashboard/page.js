@@ -148,6 +148,14 @@ export default function DashboardPage() {
     const { confirm, DialogRenderer } = useDialog();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const [activeTab, setActiveTab] = useState('new');
+    const [wizardCompleted, setWizardCompleted] = useState(false);
+
+    useEffect(() => {
+        if (activeCompanyId) {
+            setWizardCompleted(localStorage.getItem(`eznr_wizard_completed_${activeCompanyId}`) === 'true');
+        }
+    }, [activeCompanyId]);
+
 
     // ── Single atomic data state — prevents calendar flicker from 14 separate setStates ──
     const [ds, setDs] = useState({
@@ -787,10 +795,10 @@ export default function DashboardPage() {
     };
 
     // ── Empty state: show onboarding wizard for brand-new companies ──
-    if (workers.length === 0 && certs.length === 0 && equipment.length === 0) {
+    if (workers.length === 0 && certs.length === 0 && equipment.length === 0 && !wizardCompleted) {
         return (
             <PullToRefresh onRefresh={reloadAllData}>
-                <EmptyDashboard />
+                <EmptyDashboard onComplete={() => setWizardCompleted(true)} />
             </PullToRefresh>
         );
     }
