@@ -7,7 +7,7 @@ export default function Pagination({ page, perPage, totalPages, totalItems, setP
     return (
         <div className="pagination" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                {totalItems > 0 ? `${(page - 1) * perPage + 1} - ${Math.min(page * perPage, totalItems)}` : '0'} {lang !== 'en' ? 'od' : 'of'} {totalItems} {lang !== 'en' ? 'zapisa' : 'records'}
+                {totalItems > 0 ? `${(page - 1) * perPage + 1} - ${Math.min(page * perPage, totalItems)}` : '0'} {t('od')} {totalItems} {t('zapisa')}
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <button className="pagination-btn" onClick={() => setPage(1)} disabled={page === 1}>«</button>

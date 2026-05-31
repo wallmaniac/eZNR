@@ -11,15 +11,15 @@ import MobileSearchOverlay from './MobileSearchOverlay';
 export default function MobileBottomNav({ onMenuOpen }) {
     const router = useRouter();
     const pathname = usePathname();
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const [searchOpen, setSearchOpen] = useState(false);
 
     const tabs = [
-        { key: 'dashboard', icon: '📊', label: lang !== 'en' ? 'Početna' : 'Home', path: '/dashboard' },
-        { key: 'workers', icon: '👷', label: lang !== 'en' ? 'Radnici' : 'Workers', path: '/dashboard/workers' },
+        { key: 'dashboard', icon: '📊', label: t('pocetna'), path: '/dashboard' },
+        { key: 'workers', icon: '👷', label: t('radnici'), path: '/dashboard/workers' },
         { key: 'certs', icon: '📜', label: lang !== 'en' ? 'Uvjerenja' : 'Certs', path: '/dashboard/worker-certificates' },
-        { key: 'search', icon: '🔍', label: lang !== 'en' ? 'Pretraži' : 'Search', action: 'search' },
-        { key: 'menu', icon: '☰', label: lang !== 'en' ? 'Meni' : 'Menu', action: 'menu' },
+        { key: 'search', icon: '🔍', label: t('pretrazi2'), action: 'search' },
+        { key: 'menu', icon: '☰', label: t('meni'), action: 'menu' },
     ];
 
     const isActive = useCallback((path) => {

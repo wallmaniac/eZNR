@@ -98,14 +98,14 @@ export default function WorkplacesPage() {
     const handleDelete = async (id) => {
         const wpWorkers = getWorkersInWorkplace(id);
         if (wpWorkers.length> 0) {
-            await alert(lang !== 'en' ? 'Ne možete obrisati radno mjesto koje ima zaposlenike.' : 'Cannot delete workplace with assigned workers.');
+            await alert(t('neMozeteObrisatiRadnoMjesto'));
             return;
         }
-        const delOk = await confirm(lang !== 'en' ? 'Jeste li sigurni?' : 'Are you sure?');
+        const delOk = await confirm(t('jesteLiSigurni'));
         if (delOk) { remove(COLLECTIONS.WORKPLACES, id); setActionMenuId(null); loadData(); }
     };
     const handleSave = async () => {
-        if (!formData.naziv) { await alert(lang !== 'en' ? 'Naziv je obavezno polje!' : 'Name is required!'); return; }
+        if (!formData.naziv) { await alert(t('nazivJeObaveznoPolje')); return; }
         if (editingId) { update(COLLECTIONS.WORKPLACES, editingId, formData); } else { create(COLLECTIONS.WORKPLACES, formData); }
         setShowForm(false); loadData();
     };
@@ -170,10 +170,10 @@ export default function WorkplacesPage() {
                     <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <div>
-                                <h2>👥 {lang !== 'en' ? 'Radnici' : 'Workers'} — {workersPanel.naziv}</h2>
+                                <h2>👥 {t('radnici')} — {workersPanel.naziv}</h2>
                                 <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-                                    {panelWorkers.length} {lang !== 'en' ? 'zaposlenih na ovom radnom mjestu' : 'employees at this workplace'}
-                                    {workersPanel.strucnaSprema ? ` · ${lang !== 'en' ? 'Zahtj. SSS' : 'Req. edu'}: ${workersPanel.strucnaSprema}` : ''}
+                                    {panelWorkers.length} {t('zaposlenihNaOvomRadnomMjestu')}
+                                    {workersPanel.strucnaSprema ? ` · ${t('zahtjSss')}: ${workersPanel.strucnaSprema}` : ''}
                                 </div>
                             </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setWorkersPanel(null)}>✕</button>
@@ -181,7 +181,7 @@ export default function WorkplacesPage() {
                         <div className="modal-body" style={{ padding: 0, maxHeight: 480, overflowY: 'auto' }}>
                             {panelWorkers.length === 0 ? (
                                 <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                                    {lang !== 'en' ? 'Nema radnika na ovom radnom mjestu.' : 'No workers at this workplace.'}
+                                    {t('nemaRadnikaNaOvomRadnom')}
                                 </div>
                             ) : panelWorkers.map((w, idx) => {
                                 const ou = getAll(COLLECTIONS.ORG_UNITS).find(o => o.id === w.orgJedinicaId);
@@ -214,16 +214,16 @@ export default function WorkplacesPage() {
                                             </div>
                                         </div>
                                         <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600 }}>
-                                            {lang !== 'en' ? 'Otvori →' : 'Open →'}
+                                            {t('otvori1')}
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setWorkersPanel(null)}>{lang !== 'en' ? 'Zatvori' : 'Close'}</button>
+                            <button className="btn btn-ghost" onClick={() => setWorkersPanel(null)}>{t('zatvori')}</button>
                             <button className="btn btn-primary" onClick={() => { setWorkersPanel(null); router.push('/dashboard/workers'); }}>
-                                👥 {lang !== 'en' ? 'Svi radnici' : 'All workers'}
+                                👥 {t('sviRadnici')}
                             </button>
                         </div>
                     </div>
@@ -244,7 +244,7 @@ export default function WorkplacesPage() {
                 <div className="modal-overlay" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>
                     <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? '✏️' : '+'} {lang !== 'en' ? 'Radno mjesto' : 'Workplace'}</h2>
+                            <h2>{editingId ? '✏️' : '+'} {t('radnoMjesto')}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => { setShowForm(false); if(returnPath) { router.push(returnPath); setReturnPath(null); } }}>✕</button>
                         </div>
                         <div className="modal-body">
@@ -254,11 +254,11 @@ export default function WorkplacesPage() {
                                     <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} placeholder={t('mandatory')} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label" style={{ fontWeight: 700 }}>{lang !== 'en' ? 'Oznaka' : 'Code'} <span style={{ color: 'var(--danger)' }}>*</span></label>
+                                    <label className="form-label" style={{ fontWeight: 700 }}>{t('oznaka')} <span style={{ color: 'var(--danger)' }}>*</span></label>
                                     <input className="form-input" value={formData.oznaka} onChange={e => updateField('oznaka', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Zahtjevana stručna sprema' : 'Required education'}</label>
+                                    <label className="form-label">{t('zahtjevanaStrucnaSprema')}</label>
                                     <select className="form-select" value={formData.strucnaSprema} onChange={e => updateField('strucnaSprema', e.target.value)}>
                                         <option value="">-</option>
                                         <option value="NKV">NKV</option><option value="PKV">PKV</option>
@@ -268,7 +268,7 @@ export default function WorkplacesPage() {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Grupa RM' : 'Workplace Group'}</label>
+                                    <label className="form-label">{t('grupaRm')}</label>
                                     <input className="form-input" value={formData.grupaRM} onChange={e => updateField('grupaRM', e.target.value)} />
                                 </div>
                                 <div className="form-group">
@@ -280,7 +280,7 @@ export default function WorkplacesPage() {
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1', display: 'grid', gridTemplateColumns: 'minmax(120px, 1fr) minmax(120px, 1fr) 2fr', gap: 16 }}>
                                     <div>
-                                        <label className="form-label">{lang !== 'en' ? 'Radno vrijeme od' : 'Work from'}</label>
+                                        <label className="form-label">{t('radnoVrijemeOd')}</label>
                                         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                                             <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.radnoVrijemeOd || ':').split(':')[0] || '08'} onChange={e => updateField('radnoVrijemeOd', `${e.target.value}:${(formData.radnoVrijemeOd || ':').split(':')[1] || '00'}`)}>
                                                 {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
@@ -292,7 +292,7 @@ export default function WorkplacesPage() {
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="form-label">{lang !== 'en' ? 'Radno vrijeme do' : 'Work to'}</label>
+                                        <label className="form-label">{t('radnoVrijemeDo')}</label>
                                         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
                                             <select className="form-select" style={{ padding: '8px', minWidth: 60 }} value={(formData.radnoVrijemeDo || ':').split(':')[0] || '16'} onChange={e => updateField('radnoVrijemeDo', `${e.target.value}:${(formData.radnoVrijemeDo || ':').split(':')[1] || '00'}`)}>
                                                 {Array.from({ length: 24 }).map((_, i) => <option key={i} value={String(i).padStart(2,'0')}>{String(i).padStart(2,'0')}</option>)}
@@ -306,8 +306,8 @@ export default function WorkplacesPage() {
                                     <div style={{ alignSelf: 'flex-end', paddingBottom: 6, minWidth: 160 }}>
                                         {isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo) && (
                                             <div style={{ background: 'rgba(239,83,80,0.1)', border: '1px solid var(--danger)', color: 'var(--danger)', padding: '6px 12px', borderRadius: 'var(--radius-md)', fontSize: '0.8rem', fontWeight: 600 }}>
-                                                🌙 {lang !== 'en' ? 'Noćni rad' : 'Night work'}
-                                                <div style={{ fontSize: '0.7rem', fontWeight: 400, marginTop: 2 }}>{lang !== 'en' ? 'Obvezni ljekarski najmanje 1x u 2 godine.' : 'Mandatory medical exam at least once every 2 years.'}</div>
+                                                🌙 {t('nocniRad1')}
+                                                <div style={{ fontSize: '0.7rem', fontWeight: 400, marginTop: 2 }}>{t('obvezniLjekarskiNajmanje1xU')}</div>
                                             </div>
                                         )}
                                     </div>
@@ -315,11 +315,11 @@ export default function WorkplacesPage() {
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 12 }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                                         <input type="checkbox" checked={formData.radNaRacunalu} onChange={e => updateField('radNaRacunalu', e.target.checked)} />
-                                        {lang !== 'en' ? 'Rad na računalu' : 'Computer work'}
+                                        {t('radNaRacunalu')}
                                     </label>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                                         <input type="checkbox" checked={formData.posebniUvjetiRada} onChange={e => updateField('posebniUvjetiRada', e.target.checked)} />
-                                        {lang !== 'en' ? 'Posebni uvjeti rada' : 'Special working conditions'}
+                                        {t('posebniUvjetiRada')}
                                     </label>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
@@ -339,25 +339,25 @@ export default function WorkplacesPage() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={lang !== 'en' ? 'Dodaj novo radno mjesto' : 'Add new workplace'}>+ {lang !== 'en' ? 'Novo radno mjesto' : 'New Workplace'}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={t('dodajNovoRadnoMjesto')}>+ {t('novoRadnoMjesto')}</button>
                         <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input placeholder={t('searchBtn') + '...'} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', width: '100%' }} />
-                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                         </div>
                         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', cursor: 'pointer', flexShrink: 0 }}>
                             <input type="checkbox" checked={showActive} onChange={e => setShowActive(e.target.checked)} />
-                            {lang !== 'en' ? 'Prikaži aktivne' : 'Show active'}
+                            {t('prikaziAktivne')}
                         </label>
                         {selectedIds.size> 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:
+                                    {selectedIds.size} {t('odabrano')}:
                                 </span>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments} title={lang !== 'en' ? 'Generiraj dokumente' : 'Generate documents'}>📄 {lang !== 'en' ? 'Dokumenti' : 'Documents'}</button>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrano' : 'Print selected'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabrana radna mjesta' : 'Delete selected workplaces'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={handleGenerateDocuments} title={t('generirajDokumente')}>📄 {lang !== 'en' ? 'Dokumenti' : 'Documents'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()} title={t('isprintajOdabrano')}>🖨️ {t('isprintaj')}</button>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected} title={t('obrisiOdabranaRadnaMjesta')}>🗑️ {t('obrisi')}</button>
                             </div>
                         )}
                         {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}></span>}
@@ -370,10 +370,10 @@ export default function WorkplacesPage() {
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sortedWP.length && sortedWP.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th style={tsWP('naziv')} onClick={() => tWP('naziv')}>{t('name')}{siWP('naziv')}</th>
-                                    <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{lang !== 'en' ? 'Stručna sprema' : 'Education'}{siWP('strucnaSprema')}</th>
-                                    <th>{lang !== 'en' ? 'Radno vrijeme' : 'Shift'}</th>
+                                    <th style={tsWP('strucnaSprema')} onClick={() => tWP('strucnaSprema')}>{t('strucnaSprema')}{siWP('strucnaSprema')}</th>
+                                    <th>{t('radnoVrijeme')}</th>
                                     <th style={tsWP('grupaRM')} onClick={() => tWP('grupaRM')}>{lang !== 'en' ? 'Grupa RM' : 'WP Group'}{siWP('grupaRM')}</th>
-                                    <th>{lang !== 'en' ? 'Radnici' : 'Workers'}</th>
+                                    <th>{t('radnici')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -395,7 +395,7 @@ export default function WorkplacesPage() {
                                                         : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                     );
                                                     setActionMenuId(actionMenuId === w.id ? null : w.id);
-                                                }} title={lang !== 'en' ? 'Prikaži akcije za radno mjesto' : 'Show workplace actions'}>
+                                                }} title={t('prikaziAkcijeZaRadnoMjesto')}>
                                                     {t('actions')} ▼
                                                 </button>
                                                 {actionMenuId === w.id && (
@@ -403,7 +403,7 @@ export default function WorkplacesPage() {
                                                     <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                     <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                         <button onClick={() => handleEdit(w)} className="dropdown-item">📂 {t('open')}</button>
-                                                        <button onClick={() => openWorkersPanel(w)} className="dropdown-item">👥 {lang !== 'en' ? 'Pregled radnika' : 'View workers'}</button>
+                                                        <button onClick={() => openWorkersPanel(w)} className="dropdown-item">👥 {t('pregledRadnika')}</button>
                                                         <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                         <button onClick={() => { setActionMenuId(null); handleDelete(w.id); }} className="dropdown-item text-danger">🗑️ {t('delete')}</button>
                                                     </div>
@@ -436,8 +436,8 @@ export default function WorkplacesPage() {
                     </div>
 
                     <div style={{ marginTop: 16, display: 'flex', gap: 16, fontSize: '0.85rem' }}>
-                        <button onClick={() => router.push('/dashboard/ppe')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0, fontFamily: 'var(--font-body)', fontSize: '0.85rem', textDecoration: 'underline' }}>{lang !== 'en' ? '→ Zaštitna oprema (OZO)' : '→ PPE / Protective equipment'}</button>
-                        <button onClick={() => router.push('/dashboard/worker-ppe')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0, fontFamily: 'var(--font-body)', fontSize: '0.85rem', textDecoration: 'underline' }}>{lang !== 'en' ? '→ OZO dodijeljena radnicima' : '→ PPE per worker'}</button>
+                        <button onClick={() => router.push('/dashboard/ppe')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0, fontFamily: 'var(--font-body)', fontSize: '0.85rem', textDecoration: 'underline' }}>{t('zastitnaOpremaOzo1')}</button>
+                        <button onClick={() => router.push('/dashboard/worker-ppe')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', padding: 0, fontFamily: 'var(--font-body)', fontSize: '0.85rem', textDecoration: 'underline' }}>{t('ozoDodijeljenaRadnicima')}</button>
                     </div>
 
                     <div className="pagination" style={{ marginTop: 12 }}>

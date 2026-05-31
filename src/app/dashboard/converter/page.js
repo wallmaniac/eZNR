@@ -239,7 +239,7 @@ export default function ConverterPage() {
         setLoaded({ name, data: originalDataUri, iframeSrc: blobUrl, htmlBody: body, ext });
       } catch (e) {
         console.error(e);
-        await alert(lang !== 'en' ? 'Greška pri čitanju Word dokumenta.' : 'Error reading Word document.');
+        await alert(t('greskaPriCitanjuWordDokumenta'));
       } finally {
         setProcessing('');
       }
@@ -256,7 +256,7 @@ export default function ConverterPage() {
     
     if (activeTab === 'merge') {
       const pdfFiles = fileList.filter(f => getExt(f.name) === 'pdf');
-      if (pdfFiles.length === 0) return alert(lang !== 'en' ? 'Samo PDF datoteke se mogu spajati.' : 'Only PDF files can be merged.');
+      if (pdfFiles.length === 0) return alert(t('samoPdfDatotekeSeMogu'));
       
       const newMergeFiles = [];
       for (const file of pdfFiles) {
@@ -271,7 +271,7 @@ export default function ConverterPage() {
     // Convert mode (single file)
     const file = fileList[0];
     if (file.size> 30 * 1024 * 1024) {
-      await alert(lang !== 'en' ? 'Datoteka mora biti manja od 30MB!' : 'File must be under 30MB!');
+      await alert(t('datotekaMoraBitiManjaOd'));
       return;
     }
     const arrayBuffer = await file.arrayBuffer();
@@ -287,16 +287,14 @@ export default function ConverterPage() {
   const loadFromArchive = async (file) => {
     if (!file.hasData && !file.data?.startsWith?.('data:')) {
       await alert(
-        lang !== 'en'
-          ? 'Sadržaj ove datoteke nije pohranjen u arhivi (samo metapodaci). Otvorite datoteku direktno da biste je konvertirali.'
-          : 'This file has no stored content (metadata only). Open the file directly to convert it.'
+        t('sadrzajOveDatotekeNijePohranjen')
       );
       return;
     }
     const arrayBuffer = dataUriToBuffer(file.data);
     
     if (activeTab === 'merge') {
-      if (getExt(file.name) !== 'pdf') return alert(lang !== 'en' ? 'Samo PDF datoteke se mogu spajati.' : 'Only PDF files can be merged.');
+      if (getExt(file.name) !== 'pdf') return alert(t('samoPdfDatotekeSeMogu'));
       setMergeFiles(prev => [...prev, { id: Math.random().toString(36).substr(2, 9), name: file.name, arrayBuffer }]);
       return;
     }
@@ -487,7 +485,7 @@ export default function ConverterPage() {
   };
 
   const handleMerge = async () => {
-    if (mergeFiles.length < 2) return alert(lang !== 'en' ? 'Odaberite barem 2 PDF datoteke za spajanje.' : 'Select at least 2 PDF files to merge.');
+    if (mergeFiles.length < 2) return alert(t('odaberiteBarem2PdfDatoteke'));
     setProcessing('merging');
     try {
       const mergedPdf = await PDFDocument.create();
@@ -537,15 +535,15 @@ export default function ConverterPage() {
       <DialogRenderer />
       {/* Header — stacks on mobile */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-        <PageHeader icon="🔄" title={t('converter')} subtitle={lang !== 'en' ? 'PDF i Word — pregled, ispis, konverzija i spajanje' : 'PDF and Word — preview, print, convert and merge'} />
+        <PageHeader icon="🔄" title={t('converter')} subtitle={t('pdfIWordPregledIspis')} />
         
         {/* Tabs */}
         <div style={{ display: 'flex', background: 'var(--bg-card)', padding: 4, borderRadius: 10, border: '1px solid var(--border)', flexShrink: 0 }}>
           <button onClick={() => setActiveTab('convert')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: '0.85rem', fontWeight: 600, border: 'none', background: activeTab === 'convert' ? 'var(--primary)' : 'transparent', color: activeTab === 'convert' ? '#fff' : 'var(--text)', cursor: 'pointer', transition: 'all 0.2s' }}>
-            {lang !== 'en' ? 'Konverzija' : 'Conversion'}
+            {t('konverzija')}
           </button>
           <button onClick={() => setActiveTab('merge')} style={{ padding: '8px 16px', borderRadius: 6, fontSize: '0.85rem', fontWeight: 600, border: 'none', background: activeTab === 'merge' ? 'var(--primary)' : 'transparent', color: activeTab === 'merge' ? '#fff' : 'var(--text)', cursor: 'pointer', transition: 'all 0.2s' }}>
-            {lang !== 'en' ? 'Spajanje PDF' : 'Merge PDF'}
+            {t('spajanjePdf')}
           </button>
         </div>
       </div>
@@ -565,14 +563,14 @@ export default function ConverterPage() {
               <div className="card-body" style={{ textAlign: 'center', padding: '48px 20px' }}>
                 <div style={{ fontSize: '3rem', marginBottom: 12 }}>{dragging ? '📂' : '🔄'}</div>
                 <div style={{ fontWeight: 700, fontSize: '1rem', marginBottom: 6 }}>
-                  {lang !== 'en' ? 'Prevuci PDF ili Word dokument ovdje' : 'Drag a PDF or Word document here'}
+                  {t('prevuciPdfIliWordDokument')}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 20 }}>
-                  {lang !== 'en' ? 'ili kliknite da odaberete datoteku' : 'or click to select a file'}
+                  {t('iliKlikniteDaOdabereteDatoteku')}
                 </div>
                 <div style={{ display: 'flex', gap: 16, justifyContent: 'center', fontSize: '0.82rem', flexWrap: 'wrap' }}>
-                  <span style={{ color: 'var(--text-muted)' }}>📕 PDF → <strong style={{ color: 'var(--primary)' }}>{lang !== 'en' ? 'pregled + Word' : 'preview + Word'}</strong></span>
-                  <span style={{ color: 'var(--text-muted)' }}>📘 Word → <strong style={{ color: 'var(--primary)' }}>{lang !== 'en' ? 'pregled + PDF' : 'preview + PDF'}</strong></span>
+                  <span style={{ color: 'var(--text-muted)' }}>📕 PDF → <strong style={{ color: 'var(--primary)' }}>{t('pregledWord')}</strong></span>
+                  <span style={{ color: 'var(--text-muted)' }}>📘 Word → <strong style={{ color: 'var(--primary)' }}>{t('pregledPdf')}</strong></span>
                 </div>
                 <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" multiple={activeTab === 'merge'} style={{ display: 'none' }}
                   onChange={e => { if (e.target.files?.length) loadFromFile(e.target.files); }} />
@@ -591,10 +589,10 @@ export default function ConverterPage() {
                   onClick={() => fileInputRef.current?.click()}>
                   <div style={{ fontSize: '2rem', marginBottom: 8 }}>{dragging ? '📂' : '📑'}</div>
                   <div style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: 4 }}>
-                    {lang !== 'en' ? 'Prevuci PDF datoteke ovdje' : 'Drag PDF files here'}
+                    {t('prevuciPdfDatotekeOvdje')}
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    {lang !== 'en' ? 'ili kliknite za odabir' : 'or click to select'}
+                    {t('iliKlikniteZaOdabir')}
                   </div>
                   <input ref={fileInputRef} type="file" accept=".pdf" multiple style={{ display: 'none' }}
                     onChange={e => { if (e.target.files?.length) loadFromFile(e.target.files); setDragging(false); }} />
@@ -605,7 +603,7 @@ export default function ConverterPage() {
                     <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
                       <span>{lang !== 'en' ? 'Odabrane datoteke (' + mergeFiles.length + ')' : 'Selected files (' + mergeFiles.length + ')'}</span>
                       <button className="btn btn-primary btn-sm" onClick={handleMerge} disabled={mergeFiles.length < 2}>
-                        📑 {lang !== 'en' ? 'Spoji PDFove' : 'Merge PDFs'}
+                        📑 {t('spojiPdfove')}
                       </button>
                     </div>
                     
@@ -617,9 +615,9 @@ export default function ConverterPage() {
                           <span style={{ flex: 1, fontWeight: 500, fontSize: '0.82rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{file.name}</span>
                           
                           <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
-                            <button className="btn btn-ghost btn-icon btn-sm" disabled={i === 0} onClick={() => moveMergeFile(i, 'up')} title={lang !== 'en' ? 'Pomakni gore' : 'Move up'}>↑</button>
-                            <button className="btn btn-ghost btn-icon btn-sm" disabled={i === mergeFiles.length - 1} onClick={() => moveMergeFile(i, 'down')} title={lang !== 'en' ? 'Pomakni dolje' : 'Move down'}>↓</button>
-                            <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }} onClick={() => removeMergeFile(i)} title={lang !== 'en' ? 'Ukloni' : 'Remove'}>✕</button>
+                            <button className="btn btn-ghost btn-icon btn-sm" disabled={i === 0} onClick={() => moveMergeFile(i, 'up')} title={t('pomakniGore')}>↑</button>
+                            <button className="btn btn-ghost btn-icon btn-sm" disabled={i === mergeFiles.length - 1} onClick={() => moveMergeFile(i, 'down')} title={t('pomakniDolje')}>↓</button>
+                            <button className="btn btn-ghost btn-icon btn-sm" style={{ color: 'var(--danger)' }} onClick={() => removeMergeFile(i)} title={t('ukloni')}>✕</button>
                           </div>
                         </div>
                       ))}
@@ -637,13 +635,13 @@ export default function ConverterPage() {
                 <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>⏳</div>
                 <div style={{ fontWeight: 600 }}>
                   {processing === 'converting'
-                    ? (lang !== 'en' ? 'Konvertovanje Word dokumenta...' : 'Converting Word document...')
+                    ? (t('konvertovanjeWordDokumenta'))
                     : processing === 'merging' 
-                      ? (lang !== 'en' ? 'Spajanje PDF datoteka...' : 'Merging PDF files...')
-                      : (lang !== 'en' ? 'Konvertovanje PDF-a u Word (MuPDF)...' : 'Converting PDF to editable Word (MuPDF)...')}
+                      ? (t('spajanjePdfDatoteka'))
+                      : (t('konvertovanjePdfaUWordMupdf'))}
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 6 }}>
-                  {lang !== 'en' ? 'Ovo može potrajati nekoliko sekundi.' : 'This may take a few seconds.'}
+                  {t('ovoMozePotrajatiNekolikoSekundi')}
                 </div>
               </div>
             </div>
@@ -661,23 +659,23 @@ export default function ConverterPage() {
                     {isWord && <span style={{ marginLeft: 8, fontSize: '0.7rem', background: 'rgba(0,191,166,0.12)', color: 'var(--primary)', padding: '1px 7px', borderRadius: 8, fontWeight: 700 }}>Word → HTML</span>}
                   </span>
                   <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                    <button className="btn btn-ghost btn-sm" onClick={openInTab}>👁 {lang !== 'en' ? 'Otvori' : 'Open'}</button>
-                    {isPdf && <button className="btn btn-primary btn-sm" onClick={handleConvertPdfToWord} disabled={!!processing}>📘 {lang !== 'en' ? 'U Word' : 'To Word'}</button>}
-                    {isWord && <button className="btn btn-primary btn-sm" onClick={handleConvertWordToPdf} disabled={!!processing}>📥 {lang !== 'en' ? 'U PDF' : 'To PDF'}</button>}
-                    {(isWord || isPdf) && <button className="btn btn-ghost btn-sm" onClick={printDoc}>🖨️ {lang !== 'en' ? 'Ispiši' : 'Print'}</button>}
-                    <button className="btn btn-ghost btn-sm" onClick={downloadOriginal}>⬇️ {lang !== 'en' ? 'Preuzmi' : 'Download'}</button>
+                    <button className="btn btn-ghost btn-sm" onClick={openInTab}>👁 {t('otvori')}</button>
+                    {isPdf && <button className="btn btn-primary btn-sm" onClick={handleConvertPdfToWord} disabled={!!processing}>📘 {t('uWord')}</button>}
+                    {isWord && <button className="btn btn-primary btn-sm" onClick={handleConvertWordToPdf} disabled={!!processing}>📥 {t('uPdf')}</button>}
+                    {(isWord || isPdf) && <button className="btn btn-ghost btn-sm" onClick={printDoc}>🖨️ {t('ispisi')}</button>}
+                    <button className="btn btn-ghost btn-sm" onClick={downloadOriginal}>⬇️ {t('preuzmi')}</button>
                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={close}>✕</button>
                   </div>
                 </div>
 
                 {isWord && (
                   <div style={{ padding: '5px 14px', background: 'rgba(0,191,166,0.06)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang !== 'en' ? '"U PDF" automatski preuzima PDF. "Ispiši" otvara dijaloški okvir.' : '"To PDF" auto-downloads a PDF. "Print" opens the print dialog.'}
+                    💡 {t('uPdfAutomatskiPreuzimaPdf')}
                   </div>
                 )}
                 {isPdf && (
                   <div style={{ padding: '5px 14px', background: 'rgba(99,102,241,0.05)', borderBottom: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    💡 {lang !== 'en' ? 'Konverzija putem MuPDF — editabilni tekst + tabele.' : 'Conversion via MuPDF — editable text + tables.'}
+                    💡 {t('konverzijaPutemMupdfEditabilniTekst')}
                   </div>
                 )}
 
@@ -698,17 +696,17 @@ export default function ConverterPage() {
           <div className="card">
             <div className="card-body">
               <div style={{ fontWeight: 700, marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem' }}>
-                🗄️ {lang !== 'en' ? 'Iz Digitalne Arhive' : 'From Digital Archive'}
+                🗄️ {t('izDigitalneArhive')}
               </div>
               <div className="search-bar" style={{ marginBottom: 12 }}>
-                <input placeholder={lang !== 'en' ? 'Pretraži arhivu...' : 'Search archive...'}
+                <input placeholder={t('pretraziArhivu')}
                   value={archiveSearch} onChange={e => setArchiveSearch(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.85rem', flex: 1, width: '100%' }} />
                 {archiveSearch && <button className="btn btn-ghost btn-sm" onClick={() => setArchiveSearch('')}>✕</button>}
               </div>
               {filteredArchive.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
-                  {lang !== 'en' ? 'Nema datoteka u arhivi' : 'No files in archive'}
+                  {t('nemaDatotekaUArhivi')}
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: '74vh', overflowY: 'auto' }}>
@@ -716,7 +714,7 @@ export default function ConverterPage() {
                       const noData = !file.hasData && !file.data?.startsWith?.('data:');
                       return (
                         <button key={file.id} onClick={() => loadFromArchive(file)}
-                          title={noData ? (lang !== 'en' ? 'Datoteka bez sadržaja' : 'No stored file content') : file.name}
+                          title={noData ? (t('datotekaBezSadrzaja')) : file.name}
                           style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 10px', borderRadius: 8, border: '1px solid var(--border)', background: loaded?.name === file.name ? 'rgba(0,191,166,0.08)' : 'var(--bg-card)', cursor: noData ? 'not-allowed' : 'pointer', textAlign: 'left', fontSize: '0.82rem', fontFamily: 'var(--font-body)', color: noData ? 'var(--text-muted)' : 'var(--text)', opacity: noData ? 0.6 : 1, transition: 'all 0.15s' }}>
                           <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{noData ? '🔒' : getIcon(file.name)}</span>
                           <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{file.name}</span>

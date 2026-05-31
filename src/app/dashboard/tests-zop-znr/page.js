@@ -10,7 +10,7 @@ import TestGenerator from './TestGenerator';
 
 import PageHeader from '@/components/PageHeader';
 export default function TestsZopZnrPage() {
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const bs = lang !== 'en';
     const country = useCountry();
     const { activeCompanyId } = useAuth();
@@ -136,8 +136,8 @@ export default function TestsZopZnrPage() {
                     ⚙️ {bs ? 'Generator testova' : 'Test Generator'}
                 </button>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način za ručno popunjavanje' : 'Generate an empty ZOS record for manual filling'}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika iz oblasti zaštite od požara za ručno popunjavanje' : 'Generate an empty ZOP record for manual filling'}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>🖨️ {bs ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
+                    <button className="btn btn-dark btn-sm" onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c' }} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {bs ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
                 </div>
             </div>
 

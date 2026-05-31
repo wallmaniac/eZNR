@@ -85,14 +85,14 @@ export default function MobileSearchOverlay({ isOpen, onClose }) {
     };
 
     const typeLabel = (type) => {
-        if (type === 'worker') return lang !== 'en' ? 'Radnik' : 'Worker';
-        if (type === 'equipment') return lang !== 'en' ? 'Oprema' : 'Equipment';
-        if (type === 'workplace') return lang !== 'en' ? 'Radno mj.' : 'Workplace';
-        if (type === 'vehicle') return lang !== 'en' ? 'Vozilo' : 'Vehicle';
-        if (type === 'medical_exam') return lang !== 'en' ? 'Lj. Pregled' : 'Medical';
-        if (type === 'observation') return lang !== 'en' ? 'Prijava op.' : 'Observation';
-        if (type === 'certificate') return lang !== 'en' ? 'Uvjerenje' : 'Certificate';
-        return lang !== 'en' ? 'Org. jed.' : 'Org. unit';
+        if (type === 'worker') return t('radnik1');
+        if (type === 'equipment') return t('oprema');
+        if (type === 'workplace') return t('radnoMj');
+        if (type === 'vehicle') return t('vozilo1');
+        if (type === 'medical_exam') return t('ljPregled');
+        if (type === 'observation') return t('prijavaOp1');
+        if (type === 'certificate') return t('uvjerenje');
+        return t('orgJed');
     };
 
     if (!isOpen) return null;
@@ -153,23 +153,23 @@ export default function MobileSearchOverlay({ isOpen, onClose }) {
                     <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
                         <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>🔍</div>
                         <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                            {lang !== 'en' ? 'Pretražite radnike, opremu, radna mjesta...' : 'Search workers, equipment, workplaces...'}
+                            {t('pretraziteRadnikeOpremuRadnaMjesta')}
                         </div>
                         <div style={{ fontSize: '0.8rem', marginTop: 6, opacity: 0.6 }}>
-                            {lang !== 'en' ? 'Unesite minimalno 2 znaka' : 'Enter at least 2 characters'}
+                            {t('unesiteMinimalno2Znaka')}
                         </div>
                     </div>
                 ) : searchResults.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
                         <div style={{ fontSize: '2rem', marginBottom: 12 }}>😕</div>
                         <div style={{ fontSize: '0.9rem' }}>
-                            {lang !== 'en' ? 'Nema rezultata za' : 'No results for'} &quot;{searchTerm}&quot;
+                            {t('nemaRezultataZa')} &quot;{searchTerm}&quot;
                         </div>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                         <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 0.5, padding: '8px 0 4px' }}>
-                            {searchResults.length} {lang !== 'en' ? 'rezultata' : 'results'}
+                            {searchResults.length} {t('rezultata')}
                         </div>
                         {searchResults.map((r, idx) => (
                             <button

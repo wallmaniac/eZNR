@@ -29,11 +29,11 @@ export default function TrainingBookPage() {
           <th onClick={() => toggleSort('ime')} style={thStyle('ime')}>{t('workerName')}{sortIcon('ime')}</th>
           <th onClick={() => toggleSort('prezime')} style={thStyle('prezime')}>{t('workerSurname')}{sortIcon('prezime')}</th>
           <th onClick={() => toggleSort('jmbg')} style={thStyle('jmbg')}>JMBG{sortIcon('jmbg')}</th>
-          <th onClick={() => toggleSort('certCount')} style={thStyle('certCount')}>{lang !== 'en' ? 'Br. uvjerenja' : 'Cert. count'}{sortIcon('certCount')}</th>
-          <th onClick={() => toggleSort('_latestDate')} style={thStyle('_latestDate')}>{lang !== 'en' ? 'Posljednje uvjerenje' : 'Latest cert'}{sortIcon('_latestDate')}</th>
+          <th onClick={() => toggleSort('certCount')} style={thStyle('certCount')}>{t('brUvjerenja')}{sortIcon('certCount')}</th>
+          <th onClick={() => toggleSort('_latestDate')} style={thStyle('_latestDate')}>{t('posljednjeUvjerenje')}{sortIcon('_latestDate')}</th>
           <th onClick={() => toggleSort('certCount')} style={thStyle('certCount')}>{t('status')}{sortIcon('certCount')}</th>
         </tr></thead><tbody>
-            {sorted.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{lang !== 'en' ? '✅ Nema radnika' : '✅ No workers'}</td></tr> : sorted.map((r, idx) => (
+            {sorted.length === 0 ? <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('nemaRadnika1')}</td></tr> : sorted.map((r, idx) => (
               <tr key={r.id} onClick={() => router.push(`/dashboard/workers?openWorker=${r.id}&section=uvjerenja`)} style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                 <td>{idx + 1}</td>
                 <td style={{ fontWeight: 600 }}>{r.ime}</td>

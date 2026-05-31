@@ -309,11 +309,11 @@ export default function SettingsContent() {
     setPasswordError('');
     setPasswordSuccess('');
     if (!passwordData.current || !passwordData.newPass) {
-      setPasswordError(lang !== 'en' ? 'Sva polja su obavezna!' : 'All fields are required!');
+      setPasswordError(t('svaPoljaSuObavezna'));
       return;
     }
     if (passwordData.newPass !== passwordData.confirm) {
-      setPasswordError(lang !== 'en' ? 'Nove lozinke se ne podudaraju!' : 'New passwords do not match!');
+      setPasswordError(t('noveLozinkeSeNePodudaraju'));
       return;
     }
     if (passwordData.newPass.length < appSettings.minPasswordLength) {
@@ -326,7 +326,7 @@ export default function SettingsContent() {
     } catch (e) {
       const code = e?.code || e?.message || '';
       if (code.includes('wrong-password') || code.includes('invalid-credential')) {
-        setPasswordError(lang !== 'en' ? 'Trenutna lozinka je netočna!' : 'Current password is incorrect!');
+        setPasswordError(t('trenutnaLozinkaJeNetocna'));
       } else {
         setPasswordError(lang !== 'en' ? 'Greška pri provjeri lozinke: ' + e.message : 'Password verification error: ' + e.message);
       }
@@ -335,7 +335,7 @@ export default function SettingsContent() {
     try {
       // Step 2: Update password in Firebase Auth (the only source of truth)
       await changePassword(passwordData.newPass);
-      setPasswordSuccess(lang !== 'en' ? 'Lozinka uspješno promijenjena!' : 'Password successfully changed!');
+      setPasswordSuccess(t('lozinkaUspjesnoPromijenjena'));
       setPasswordData({ current: '', newPass: '', confirm: '' });
     } catch (e) {
       setPasswordError(lang !== 'en' ? 'Greška pri promjeni lozinke: ' + e.message : 'Error changing password: ' + e.message);
@@ -467,14 +467,14 @@ export default function SettingsContent() {
 
   // ── Tabs ──
   const tabs = [
-    { key: 'activity', label: lang !== 'en' ? 'Aktivnost' : 'Activity', icon: '📋' },
-    { key: 'profile', label: lang !== 'en' ? 'Profil' : 'Profile', icon: '👤' },
-    { key: 'company', label: lang !== 'en' ? 'Firma' : 'Company', icon: '🏢' },
-    { key: 'notifications', label: lang !== 'en' ? 'Obavijesti' : 'Notifications', icon: '🔔' },
-    { key: 'display', label: lang !== 'en' ? 'Prikaz' : 'Display', icon: '🎨' },
+    { key: 'activity', label: t('aktivnost'), icon: '📋' },
+    { key: 'profile', label: t('profil'), icon: '👤' },
+    { key: 'company', label: t('firma'), icon: '🏢' },
+    { key: 'notifications', label: t('obavijesti'), icon: '🔔' },
+    { key: 'display', label: t('prikaz'), icon: '🎨' },
     ...(isAdmin ? [
-      { key: 'system', label: lang !== 'en' ? 'Sistem' : 'System', icon: '🛡️' },
-      { key: 'statistics', label: lang !== 'en' ? 'Statistika' : 'Statistics', icon: '📊' },
+      { key: 'system', label: t('sistem'), icon: '🛡️' },
+      { key: 'statistics', label: t('statistika'), icon: '📊' },
     ] : []),
   ];
 
@@ -569,7 +569,7 @@ export default function SettingsContent() {
         title={t('settings')} 
         actions={
           <button className="btn" onClick={logout} style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 700, padding: '8px 16px', fontSize: '0.85rem' }}>
-            🚪 {lang !== 'en' ? 'Odjava' : 'Logout'}
+            🚪 {t('odjava')}
           </button>
         } 
       />
@@ -598,9 +598,7 @@ export default function SettingsContent() {
                   company: handleSaveCompany,
                 };
                 const action = await choose(
-                  lang !== 'en'
-                    ? 'Imate nesačuvane promjene.\nŽelite li ih sačuvati prije promjene taba?'
-                    : 'You have unsaved changes.\nDo you want to save them before switching tabs?',
+                  t('imateNesacuvanePromjenenzeliteLiIh'),
                   [
                     { label: '💾 Sačuvaj i nastavi', value: 'save', primary: true },
                     { label: '🗑️ Odbaci promjene', value: 'discard', danger: true },
@@ -639,7 +637,7 @@ export default function SettingsContent() {
       {currentTab === 'profile' && (
         <div className="card">
           <div className="card-body">
-            <h3 style={{ marginBottom: 20 }}>👤 {lang !== 'en' ? 'Korisnički profil' : 'User Profile'}</h3>
+            <h3 style={{ marginBottom: 20 }}>👤 {t('korisnickiProfil')}</h3>
 
             {/* Avatar & role */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24, padding: 16, borderRadius: 12, background: 'var(--bg-input)' }}>
@@ -659,7 +657,7 @@ export default function SettingsContent() {
                   background: isAdmin ? 'linear-gradient(135deg, #7B1FA2, #E040FB)' : 'linear-gradient(135deg, var(--primary), var(--secondary))',
                   color: 'white',
                 }}>
-                  {isAdmin ? '👑 Admin' : (lang !== 'en' ? '🛡️ Stručnjak ZNR' : '🛡️ Safety Officer')}
+                  {isAdmin ? '👑 Admin' : (t('strucnjakZnr1'))}
                 </span>
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>@{user?.username}</div>
               </div>
@@ -685,20 +683,20 @@ export default function SettingsContent() {
             </div>
             <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
               <button className="btn btn-primary" onClick={handleSaveProfile}>💾 {t('save')}</button>
-              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {t('sacuvano1')}</span>}
             </div>
 
             <hr style={{ margin: '28px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
-            <h4 style={{ marginBottom: 16 }}>🔐 {lang !== 'en' ? 'Promjena lozinke' : 'Change Password'}</h4>
+            <h4 style={{ marginBottom: 16 }}>🔐 {t('promjenaLozinke')}</h4>
             {passwordError && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>⚠️ {passwordError}</div>}
             {passwordSuccess && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(76,175,80,0.1)', color: 'var(--success)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>✅ {passwordSuccess}</div>}
             <div className="form-grid-3">
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Trenutna lozinka' : 'Current password'}</label>
+                <label className="form-label">{t('trenutnaLozinka')}</label>
                 <input className="form-input" type="password" value={passwordData.current} onChange={e => setPasswordData(p => ({ ...p, current: e.target.value }))} />
               </div>
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Nova lozinka' : 'New password'}</label>
+                <label className="form-label">{t('novaLozinka')}</label>
                 <input className="form-input" type="password" value={passwordData.newPass} onChange={e => setPasswordData(p => ({ ...p, newPass: e.target.value }))} />
               </div>
               <div className="form-group">
@@ -707,20 +705,18 @@ export default function SettingsContent() {
               </div>
             </div>
             <div style={{ marginTop: 16 }}>
-              <button className="btn btn-primary" onClick={handleChangePassword}>🔐 {lang !== 'en' ? 'Promijeni lozinku' : 'Change Password'}</button>
+              <button className="btn btn-primary" onClick={handleChangePassword}>🔐 {t('promijeniLozinku')}</button>
             </div>
 
             <hr style={{ margin: '28px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
-            <h4 style={{ marginBottom: 16 }}>👆 {lang !== 'en' ? 'Biometrijska prijava' : 'Biometric Login'}</h4>
+            <h4 style={{ marginBottom: 16 }}>👆 {t('biometrijskaPrijava')}</h4>
             {biometricError && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>⚠️ {biometricError}</div>}
             {biometricSuccess && <div style={{ padding: '8px 14px', borderRadius: 8, background: 'rgba(76,175,80,0.1)', color: 'var(--success)', fontSize: '0.82rem', fontWeight: 600, marginBottom: 12 }}>✅ {biometricSuccess}</div>}
             <div style={{ padding: '16px', borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{lang !== 'en' ? 'Otisak prsta' : 'Fingerprint'}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>{t('otisakPrsta')}</div>
                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  {lang !== 'en' 
-                    ? 'Omogućite brzu prijavu na ovom uređaju bez unošenja šifre.' 
-                    : 'Enable quick login on this device without a password.'}
+                  {t('omoguciteBrzuPrijavuNaOvom')}
                 </div>
               </div>
               <div>
@@ -728,14 +724,14 @@ export default function SettingsContent() {
                   <button 
                     className="btn" 
                     onClick={async () => {
-                      const isConfirmed = await confirm(lang !== 'en' ? 'Da li ste sigurni da želite ukloniti sačuvani otisak s ovog uređaja za ovaj nalog?' : 'Remove saved fingerprint from device for this account?');
+                      const isConfirmed = await confirm(t('daLiSteSigurniDa'));
                       if (!isConfirmed) return;
                       clearBiometricCredentialForUser(user.id);
                       window.dispatchEvent(new Event('storage')); // force react refresh if needed
-                      setBiometricSuccess(lang !== 'en' ? 'Otisak uspješno uklonjen' : 'Fingerprint removed');
+                      setBiometricSuccess(t('otisakUspjesnoUklonjen'));
                     }}
                     style={{ background: 'rgba(244,67,54,0.1)', color: 'var(--danger)', border: '1px solid rgba(244,67,54,0.3)', fontWeight: 600 }}>
-                    🗑️ {lang !== 'en' ? 'Ukloni otisak' : 'Remove fingerprint'}
+                    🗑️ {t('ukloniOtisak')}
                   </button>
                 ) : (
                   <button 
@@ -744,16 +740,16 @@ export default function SettingsContent() {
                       setBiometricError('');
                       setBiometricSuccess('');
                       if (!isWebAuthnAvailable()) {
-                        await alert(lang !== 'en' ? 'Biometrija nije podržana na ovom uređaju (potreban HTTPS).' : 'Biometrics not supported on this device/browser.');
+                        await alert(t('biometrijaNijePodrzanaNaOvom'));
                         return;
                       }
                       // Prompt user for their current password so we can stash it for biometric login
                       const pwdInput = await prompt(
-                        lang !== 'en' ? 'Unesite vašu trenutnu lozinku za aktivaciju otiska prsta:' : 'Enter your current password to enable fingerprint:',
-                        lang !== 'en' ? 'Potvrda lozinke' : 'Confirm Password'
+                        t('unesiteVasuTrenutnuLozinkuZa'),
+                        t('potvrdaLozinke')
                       );
                       if (!pwdInput) {
-                        setBiometricError(lang !== 'en' ? 'Lozinka je obavezna za aktivaciju otiska prsta.' : 'Password is required to enable fingerprint.');
+                        setBiometricError(t('lozinkaJeObaveznaZaAktivaciju'));
                         return;
                       }
                       // Verify password is correct by re-authenticating
@@ -762,7 +758,7 @@ export default function SettingsContent() {
                       } catch (err) {
                         const code = err?.code || err?.message || '';
                         if (code.includes('wrong-password') || code.includes('invalid-credential')) {
-                          setBiometricError(lang !== 'en' ? 'Pogrešna lozinka!' : 'Wrong password!');
+                          setBiometricError(t('pogresnaLozinka'));
                         } else {
                           setBiometricError(lang !== 'en' ? 'Greška pri provjeri: ' + err.message : 'Verification error: ' + err.message);
                         }
@@ -779,12 +775,12 @@ export default function SettingsContent() {
                           fsPassword: pwdInput,
                         };
                         await registerCredential(user.id, user.email, userData);
-                        setBiometricSuccess(lang !== 'en' ? 'Otisak uspješno sačuvan! Na login ekranu ćete vidjeti opciju za brzu prijavu.' : 'Fingerprint saved! You will see quick login option on the login screen.');
+                        setBiometricSuccess(t('otisakUspjesnoSacuvanNaLogin'));
                       } catch (err) {
                         setBiometricError('Greška: ' + err.message);
                       }
                     }}>
-                    ➕ {lang !== 'en' ? 'Dodaj otisak' : 'Add fingerprint'}
+                    ➕ {t('dodajOtisak')}
                   </button>
                 )}
               </div>
@@ -800,15 +796,13 @@ export default function SettingsContent() {
         <div className="card">
           <div className="card-body">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
-              <h3 style={{ margin: 0 }}>🏢 {lang !== 'en' ? 'Podaci o firmi' : 'Company Data'}</h3>
+              <h3 style={{ margin: 0 }}>🏢 {t('podaciOFirmi')}</h3>
               <button
                 type="button"
                 className="btn btn-ghost btn-sm"
                 onClick={async () => {
                   const ok = await confirm(
-                    lang !== 'en'
-                      ? 'Želite li pokrenuti čarobnjak za postavljanje?'
-                      : 'Do you want to start the setup wizard?'
+                    t('zeliteLiPokrenutiCarobnjakZa')
                   );
                   if (ok) {
                     localStorage.removeItem(`eznr_wizard_completed_${activeCompanyId}`);
@@ -816,35 +810,35 @@ export default function SettingsContent() {
                   }
                 }}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem' }}
-                title={lang !== 'en' ? 'Pokreće interaktivni čarobnjak koji vas vodi kroz postavljanje firme korak po korak — podaci, logo, branding, radnici, uvjerenja i više.' : 'Launches the interactive setup wizard that guides you step-by-step through company setup — data, logo, branding, workers, certificates and more.'}
+                title={t('pokreceInteraktivniCarobnjakKojiVas')}
               >
-                🚀 {lang !== 'en' ? 'Pokreni čarobnjak' : 'Start Setup Wizard'}
+                🚀 {t('pokreniCarobnjak')}
               </button>
             </div>
             {!activeCompanyId ? (
               <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                {lang !== 'en' ? 'Odaberite firmu kroz birač firma u gornjem meniju.' : 'Select a company from the company switcher.'}
+                {t('odaberiteFirmuKrozBiracFirma')}
               </div>
             ) : (
               <>
                 <div className="form-grid-2">
-                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Naziv firme' : 'Company name'}</label><input className="form-input" value={companyData.naziv} onChange={e => setCompanyDirty(p => ({ ...p, naziv: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Skraćeni naziv' : 'Short name'}</label><input className="form-input" value={companyData.skraceniNaziv} onChange={e => setCompanyDirty(p => ({ ...p, skraceniNaziv: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'ID broj / OIB' : 'ID number'}</label><input className="form-input" value={companyData.oib} onChange={e => setCompanyDirty(p => ({ ...p, oib: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('nazivFirme')}</label><input className="form-input" value={companyData.naziv} onChange={e => setCompanyDirty(p => ({ ...p, naziv: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('skraceniNaziv')}</label><input className="form-input" value={companyData.skraceniNaziv} onChange={e => setCompanyDirty(p => ({ ...p, skraceniNaziv: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('idBrojOib')}</label><input className="form-input" value={companyData.oib} onChange={e => setCompanyDirty(p => ({ ...p, oib: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{t('address')}</label><input className="form-input" value={companyData.adresa} onChange={e => setCompanyDirty(p => ({ ...p, adresa: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{t('city')}</label><input className="form-input" value={companyData.mjesto} onChange={e => setCompanyDirty(p => ({ ...p, mjesto: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Poštanski broj' : 'Postal code'}</label><input className="form-input" value={companyData.postanskiBroj} onChange={e => setCompanyDirty(p => ({ ...p, postanskiBroj: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('postanskiBroj')}</label><input className="form-input" value={companyData.postanskiBroj} onChange={e => setCompanyDirty(p => ({ ...p, postanskiBroj: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">{t('phone')}</label><input className="form-input" value={companyData.telefon} onChange={e => setCompanyDirty(p => ({ ...p, telefon: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">Email</label><input className="form-input" value={companyData.email} onChange={e => setCompanyDirty(p => ({ ...p, email: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Direktor' : 'Director'}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyDirty(p => ({ ...p, direktor: e.target.value }))} /></div>
-                  <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyDirty(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('direktor')}</label><input className="form-input" value={companyData.direktor} onChange={e => setCompanyDirty(p => ({ ...p, direktor: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">{t('strucnoLiceZnr')}</label><input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyDirty(p => ({ ...p, strucnoLice: e.target.value }))} /></div>
                 </div>
 
                 {/* ── Područje djelovanja (Jurisdiction) ── */}
                 <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4 }}>🌍 {lang !== 'en' ? 'Područje djelovanja' : 'Jurisdiction'}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4 }}>🌍 {t('podrucjeDjelovanja')}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                    {lang !== 'en' ? 'Odaberite državu u kojoj firma posluje. Ovo određuje koje zakone i pravilnike aplikacija koristi.' : 'Select the country where the company operates. This determines which laws and regulations the app uses.'}
+                    {t('odaberiteDrzavuUKojojFirma')}
                   </div>
                   <div style={{ display: 'flex', gap: 10 }}>
                     {[{ code: 'BA', flag: '🇧🇦', label: 'Bosna i Hercegovina', law: 'Zakon o ZNR FBiH (79/20)' }, { code: 'HR', flag: '🇭🇷', label: 'Republika Hrvatska', law: 'Zakon o ZNR (NN 71/14)' }].map(opt => (
@@ -869,9 +863,9 @@ export default function SettingsContent() {
 
                 {companyData.parentId && (
                     <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'rgba(0,191,166,0.05)', border: '1px solid var(--primary)' }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4, color: 'var(--primary)' }}>🔗 {lang !== 'en' ? 'Dio Holdinga' : 'Part of Holding'}</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 4, color: 'var(--primary)' }}>🔗 {t('dioHoldinga1')}</div>
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                            {lang !== 'en' ? 'Ova firma je kćerka firma i pripada holdingu: ' : 'This is a subsidiary company belonging to: '}
+                            {t('ovaFirmaJeKcerkaFirma')}
                             <strong style={{ color: 'var(--text)' }}>{getById(COLLECTIONS.COMPANIES, companyData.parentId)?.naziv || 'Nepoznato'}</strong>
                         </div>
                     </div>
@@ -880,9 +874,9 @@ export default function SettingsContent() {
 
                 {isAdmin && allOfficersList.length> 0 && (
                   <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
-                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>👮 {lang !== 'en' ? 'Dodijeljeni stručnjaci ZNR i Administratori' : 'Assigned Officers and Admins'}</div>
+                    <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>👮 {t('dodijeljeniStrucnjaciZnrIAdministratori')}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                      {lang !== 'en' ? 'Odaberite koji stručnjaci/administratori imaju pristup ovoj firmi:' : 'Select which officers/admins can access this company:'}
+                      {t('odaberiteKojiStrucnjaciadministratoriImajuPristup')}
                     </div>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                       {allOfficersList.map(officer => {
@@ -911,23 +905,23 @@ export default function SettingsContent() {
 
                 {/* Logo upload */}
                 <div style={{ marginTop: 20, padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>🖼️ {lang !== 'en' ? 'Logo firme' : 'Company Logo'}</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12 }}>🖼️ {t('logoFirme')}</div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
                     {companyData.logo ? (
                       <img src={companyData.logo} alt="Logo" style={{ height: 64, maxWidth: 200, objectFit: 'contain', borderRadius: 8, background: '#fff', padding: 4 }} />
                     ) : (
                       <div style={{ height: 64, width: 120, borderRadius: 8, border: '2px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                        {lang !== 'en' ? 'Nema loga' : 'No logo'}
+                        {t('nemaLoga')}
                       </div>
                     )}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <label style={{ cursor: 'pointer', padding: '8px 16px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: '0.82rem', display: 'inline-block' }}>
-                        📁 {lang !== 'en' ? 'Učitaj logo' : 'Upload Logo'}
+                        📁 {t('ucitajLogo')}
                         <input type="file" accept="image/*" style={{ display: 'none' }} onChange={async e => {
                           const file = e.target.files?.[0];
                           if (!file) return;
                           if (file.size> 2000000) {
-                            setLogoError(lang !== 'en' ? 'Logo mora biti manji od 2MB' : 'Logo must be under 2MB');
+                            setLogoError(t('logoMoraBitiManjiOd1'));
                             return;
                           }
                           setLogoError('');
@@ -938,30 +932,30 @@ export default function SettingsContent() {
                               setCompanyData(p => ({ ...p, logo: reader.result }));
                             };
                             reader.onerror = () => {
-                              setLogoError(lang !== 'en' ? 'Greška pri čitanju fajla' : 'Error reading file');
+                              setLogoError(t('greskaPriCitanjuFajla'));
                             };
                             reader.readAsDataURL(file);
                           } catch (err) {
-                            setLogoError(lang !== 'en' ? 'Greška pri uploadu loga' : 'Error uploading logo');
+                            setLogoError(t('greskaPriUploaduLoga'));
                           }
                         }} />
                       </label>
                       {logoError && <div style={{ fontSize: '0.75rem', color: 'var(--danger)', fontWeight: 600 }}>⚠️ {logoError}</div>}
                       {companyData.logo && (
                         <button onClick={() => setCompanyData(p => ({ ...p, logo: '' }))} style={{ padding: '6px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}>
-                          🗑️ {lang !== 'en' ? 'Ukloni logo' : 'Remove Logo'}
+                          🗑️ {t('ukloniLogo')}
                         </button>
                       )}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                      {lang !== 'en' ? 'Logo će biti prikazan na svim obukama i upitnicima koje radnici primaju.' : 'Logo will appear on all trainings and questionnaires sent to workers.'}<br />
-                      {lang !== 'en' ? 'Preporučena veličina: PNG ili SVG, max 2MB.' : 'Recommended: PNG or SVG, max 2MB.'}
+                      {t('logoCeBitiPrikazanNa')}<br />
+                      {t('preporucenaVelicinaPngIliSvg')}
                     </div>
                   </div>
                 </div>
                 <div style={{ marginTop: 20, display: 'flex', alignItems: 'center', gap: 16 }}>
                   <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
-                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
+                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {t('sacuvano1')}</span>}
                 </div>
 
                 {/* ══ BRANDING SECTION ══ */}
@@ -974,12 +968,12 @@ export default function SettingsContent() {
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.9 0 1.5-.7 1.5-1.5 0-.4-.1-.7-.4-1-.3-.3-.4-.6-.4-1 0-.8.7-1.5 1.5-1.5H16c3.3 0 6-2.7 6-6 0-5.5-4.5-10-10-10z"/></svg>
                       </div>
                       <div>
-                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.3px' }}>{lang !== 'en' ? 'Branding & Identitet' : 'Brand Identity'}</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, marginTop: 4 }}>{lang !== 'en' ? 'Vrhunski dizajn za vašu aplikaciju i tiskane PDF izvještaje.' : 'Premium design elements for your dashboard and reports.'}</p>
+                        <h3 style={{ margin: 0, fontSize: '1.4rem', fontWeight: 900, color: 'var(--text)', letterSpacing: '-0.3px' }}>{t('brandingIdentitet')}</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', margin: 0, marginTop: 4 }}>{t('vrhunskiDizajnZaVasuAplikaciju')}</p>
                       </div>
                     </div>
                     {/* Add back Default Settings Reset entirely */}
-                    <button type="button" onClick={() => { if(confirm(lang==='bs'?'Poništi sve na početne EZNR vrijednosti?':'Reset to EZNR defaults?')){setUiPrimaryColor(EZNR_DEFAULTS.primaryColor);setUiSidebarColor(EZNR_DEFAULTS.sidebarColor);setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setShowCompanyName(true);setWmOpacity(5);setWmSize(280);setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>↺ {lang !== 'en' ? 'Vrati zadane postavke' : 'Reset to Defaults'}</button>
+                    <button type="button" onClick={() => { if(confirm(t('ponistiSveNaPocetneEznr'))){setUiPrimaryColor(EZNR_DEFAULTS.primaryColor);setUiSidebarColor(EZNR_DEFAULTS.sidebarColor);setSidebarLogoEnabled(false);setSidebarText(UI_DEFAULTS.sidebarText);setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setShowCompanyName(true);setWmOpacity(5);setWmSize(280);setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer' }}>↺ {t('vratiZadanePostavke')}</button>
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 24, marginTop: 32 }}>
@@ -989,7 +983,7 @@ export default function SettingsContent() {
                       <div style={{ padding: '20px 24px', background: 'linear-gradient(to right, rgba(150,150,150,0.03), transparent)', borderBottom: '1px solid rgba(150,150,150,0.1)', display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 12, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{lang !== 'en' ? 'Izgled Aplikacije' : 'Application Appereance'}</div>
+                          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{t('izgledAplikacije')}</div>
                         </div>
                         <span style={{ fontSize: '0.62rem', fontWeight: 800, padding: '4px 10px', borderRadius: 12, background: 'linear-gradient(135deg,#1f2937,#111827)', color: '#fff', marginLeft: 'auto', letterSpacing: 0.5 }}>ENTERPRISE</span>
                       </div>
@@ -998,7 +992,7 @@ export default function SettingsContent() {
                           {/* SMART THEMES */}
                           <div>
                             <div style={{ fontSize: '0.9rem', fontWeight: 800, marginBottom: 14, color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span style={{ fontSize: '1.1rem' }}>✨</span> {lang !== 'en' ? 'Pametne Tematske Palete' : 'Smart Theme Palettes'}
+                              <span style={{ fontSize: '1.1rem' }}>✨</span> {t('pametneTematskePalete')}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12 }}>
                               {[
@@ -1028,7 +1022,7 @@ export default function SettingsContent() {
                             {/* Primary */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flex: '1 1 200px' }}>
                               <div>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{lang !== 'en' ? 'Primarna Web Boja' : 'Primary Color'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('primarnaWebBoja')}</div>
                               </div>
                               <label style={{ display: 'inline-block', width: 42, height: 42, borderRadius: 12, border: '2px solid rgba(150,150,150,0.2)', overflow: 'hidden', cursor: 'pointer', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
                                 <input type="color" value={uiPrimaryColor || EZNR_DEFAULTS.primaryColor} onChange={e=>{setUiPrimaryColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 80, height: 80, cursor: 'pointer', opacity: 0 }} />
@@ -1038,7 +1032,7 @@ export default function SettingsContent() {
                             {/* Sidebar */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flex: '1 1 200px' }}>
                               <div>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{lang !== 'en' ? 'Boja Bočne Trake' : 'Sidebar Color'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text)', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('bojaBocneTrake')}</div>
                               </div>
                               <label style={{ display: 'inline-block', width: 42, height: 42, borderRadius: 12, border: '2px solid rgba(150,150,150,0.2)', overflow: 'hidden', cursor: 'pointer', position: 'relative', boxShadow: '0 4px 12px rgba(0,0,0,0.06)' }}>
                                 <input type="color" value={uiSidebarColor || EZNR_DEFAULTS.sidebarColor} onChange={e=>{setUiSidebarColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 80, height: 80, cursor: 'pointer', opacity: 0 }} />
@@ -1048,13 +1042,13 @@ export default function SettingsContent() {
                             {/* Logo Replace */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, width: '100%', paddingTop: 16, borderTop: '1px solid rgba(150,150,150,0.1)' }}>
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-                                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: sidebarLogoEnabled ? 'var(--text)' : 'var(--text-muted)' }}>{lang !== 'en' ? 'Zamijeni logo mojim logom u bočnoj traci' : 'Replace logo with mine in sidebar'}</div>
+                                  <div style={{ fontSize: '0.85rem', fontWeight: 600, color: sidebarLogoEnabled ? 'var(--text)' : 'var(--text-muted)' }}>{t('zamijeniLogoMojimLogomU')}</div>
                                   <div onClick={()=>{setSidebarLogoEnabled(e=>!e);setDirty('company');}} style={{ width: 46, height: 26, background: sidebarLogoEnabled ? 'var(--primary)' : 'var(--border)', borderRadius: 13, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
                                     <div style={{ width: 22, height: 22, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: sidebarLogoEnabled ? 22 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                                   </div>
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <input type="text" value={sidebarText || ''} onChange={e=>{setSidebarText(e.target.value);setDirty('company');}} placeholder={lang==='bs'?'Tekst ispod loga... (opcionalno)':'Text below logo... (optional)'} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', fontSize: '0.82rem', width: '100%', maxWidth: 400 }} />
+                                <input type="text" value={sidebarText || ''} onChange={e=>{setSidebarText(e.target.value);setDirty('company');}} placeholder={t('tekstIspodLogaOpcionalno')} style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text)', fontSize: '0.82rem', width: '100%', maxWidth: 400 }} />
                               </div>
                             </div>
                           </div>
@@ -1069,9 +1063,9 @@ export default function SettingsContent() {
                       <div style={{ padding: '20px 24px', background: 'linear-gradient(to right, rgba(150,150,150,0.03), transparent)', borderBottom: '1px solid rgba(150,150,150,0.1)', display: 'flex', alignItems: 'center', gap: 12 }}>
                         <div style={{ padding: 10, background: 'var(--bg-input)', borderRadius: 12, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
                         <div>
-                          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{lang !== 'en' ? 'PDF Branding' : 'PDF Report Branding'}</div>
+                          <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text)' }}>{t('pdfBranding')}</div>
                         </div>
-                        <button type="button" onClick={() => { if(confirm(lang==='bs'?'Poništi PDF postavke na početne EZNR vrijednosti?':'Reset PDF settings to EZNR defaults?')){setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setShowCompanyName(true);setWmPosition('center');setWmOpacity(5);setWmSize(280);setWmContent('both');setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderFontSize(12);setHeaderBold(false);setHeaderItalic(false);setHeaderUnderline(false);setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>↺ {lang !== 'en' ? 'Vrati zadane postavke' : 'Reset to Defaults'}</button>
+                        <button type="button" onClick={() => { if(confirm(t('ponistiPdfPostavkeNaPocetne'))){setPdfAccentColor(EZNR_DEFAULTS.accentColor);setWmEnabled(true);setHeaderEnabled(true);setShowCompanyInfo(true);setShowCompanyName(true);setWmPosition('center');setWmOpacity(5);setWmSize(280);setWmContent('both');setLogoPosition('left');setLogoSize(40);setHeaderText('');setHeaderFontSize(12);setHeaderBold(false);setHeaderItalic(false);setHeaderUnderline(false);setHeaderColor('#1a1a2e');setDirty('company');} }} style={{ padding: '8px 16px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600, cursor: 'pointer', marginLeft: 'auto' }}>↺ {t('vratiZadanePostavke')}</button>
                       </div>
 
                       <div style={{ padding: '20px', display: 'flex', flexWrap: 'wrap', gap: 24 }}>
@@ -1081,7 +1075,7 @@ export default function SettingsContent() {
                           {/* Top Row Base settings */}
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                             <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Akcent Boja':'Accent Color'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('akcentBoja')}</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <label style={{ display: 'inline-block', width: 34, height: 34, borderRadius: 8, border: '1px solid var(--border)', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
                                     <input type="color" value={pdfAccentColor || EZNR_DEFAULTS.accentColor} onChange={e=>{setPdfAccentColor(e.target.value);setDirty('company');}} style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60, cursor: 'pointer', opacity: 0 }} />
@@ -1091,14 +1085,14 @@ export default function SettingsContent() {
                             </div>
 
                             <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Podaci Firme':'Company Info'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('podaciFirme')}</div>
                                 <div onClick={()=>{setShowCompanyInfo(e=>!e);setDirty('company');}} style={{ width: 42, height: 24, background: showCompanyInfo !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 12, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
                                   <div style={{ width: 20, height: 20, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: showCompanyInfo !== false ? 20 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                                 </div>
                             </div>
 
                             <div style={{ background: 'var(--bg-input)', padding: 16, borderRadius: 16, border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{lang==='bs'?'Naziv Firme':'Company Name'}</div>
+                                <div style={{ fontWeight: 800, fontSize: '0.8rem', color: 'var(--text-muted)', textTransform: 'uppercase' }}>{t('nazivFirme1')}</div>
                                 <div onClick={()=>{setShowCompanyName(e=>!e);setDirty('company');}} style={{ width: 42, height: 24, background: showCompanyName !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 12, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
                                   <div style={{ width: 20, height: 20, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: showCompanyName !== false ? 20 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                                 </div>
@@ -1108,7 +1102,7 @@ export default function SettingsContent() {
                           {/* Header / Zaglavlje */}
                           <div style={{ background: 'var(--bg-input)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                              <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{lang !== 'en' ? 'Zaglavlje Dokumenta' : 'Document Header'}</div>
+                              <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{t('zaglavljeDokumenta')}</div>
                               <div onClick={()=>{setHeaderEnabled(e=>!e);setDirty('company');}} style={{ width: 46, height: 26, background: headerEnabled !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 13, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
                                 <div style={{ width: 22, height: 22, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: headerEnabled !== false ? 22 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                               </div>
@@ -1117,7 +1111,7 @@ export default function SettingsContent() {
                             {headerEnabled !== false && (
                               <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16 }}>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>{lang==='bs'?'Pozicija Loga:':'Logo Position:'}</span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>{t('pozicijaLoga')}</span>
                                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                       {LOGO_POSITIONS.map(p => (
                                         <button key={p.id} onClick={() => { setLogoPosition(p.id); setDirty('company'); }} style={{ padding: '6px 12px', borderRadius: 8, fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', border: logoPosition === p.id ? '2px solid var(--primary)' : '1px solid var(--border)', background: logoPosition === p.id ? 'var(--primary-glow)' : 'var(--bg-card)', color: logoPosition === p.id ? 'var(--primary)' : 'var(--text-muted)' }}>{p.label}</button>
@@ -1126,7 +1120,7 @@ export default function SettingsContent() {
                                 </div>
 
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center' }}>
-                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', minWidth: 100 }}>{lang==='bs'?'Veličina Loga:':'Logo Size:'}</span>
+                                    <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)', minWidth: 100 }}>{t('velicinaLoga')}</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 200 }}>
                                       <input type="range" min={20} max={80} value={logoSize} onChange={e => { setLogoSize(+e.target.value); setDirty('company'); }} style={{ flex: 1, accentColor: 'var(--primary)' }} />
                                       <code style={{ fontSize: '0.75rem', color: 'var(--text-muted)', width: 40, textAlign: 'right' }}>{logoSize}px</code>
@@ -1136,7 +1130,7 @@ export default function SettingsContent() {
                                 <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
 
                                 <div className="scrollable-toolbar" style={{ padding: 0, gap: 8 }}>
-                                    <input type="text" value={headerText} onChange={e => { setHeaderText(e.target.value); setDirty('company'); }} placeholder={lang !== 'en' ? 'Dodatni tekst... (opcionalno)' : 'Header text... (optional)'} style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.85rem', fontWeight: 600 }} />
+                                    <input type="text" value={headerText} onChange={e => { setHeaderText(e.target.value); setDirty('company'); }} placeholder={t('dodatniTekstOpcionalno')} style={{ flex: '1 1 200px', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-card)', fontSize: '0.85rem', fontWeight: 600 }} />
                                     
                                     <div style={{ display: 'flex', gap: 4, background: 'var(--bg-card)', padding: '3px', borderRadius: 8, border: '1px solid var(--border)' }}>
                                       <button onClick={() => { setHeaderBold(b => !b); setDirty('company'); }} style={{ width: 34, height: 34, borderRadius: 6, border: 'none', background: headerBold ? 'var(--primary-glow)' : 'transparent', cursor: 'pointer', fontWeight: 900, color: headerBold ? 'var(--primary)' : 'var(--text-muted)' }}>B</button>
@@ -1158,7 +1152,7 @@ export default function SettingsContent() {
                           {/* WATERMARK MODULE */}
                           <div style={{ background: 'var(--bg-input)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px', borderBottom: '1px solid rgba(150,150,150,0.1)' }}>
-                              <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{lang !== 'en' ? 'Vodeni Žig / Pečat' : 'Watermark'}</div>
+                              <div style={{ fontWeight: 800, fontSize: '0.85rem', color: 'var(--text)', textTransform: 'uppercase' }}>{t('vodeniZigPecat')}</div>
                               <div onClick={()=>{setWmEnabled(e=>!e);setDirty('company');}} style={{ width: 46, height: 26, background: wmEnabled !== false ? 'var(--primary)' : 'var(--border)', borderRadius: 13, position: 'relative', cursor: 'pointer', transition: 'all 0.3s' }}>
                                 <div style={{ width: 22, height: 22, background: '#fff', borderRadius: '50%', position: 'absolute', top: 2, left: wmEnabled !== false ? 22 : 2, transition: 'all 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
                               </div>
@@ -1169,25 +1163,25 @@ export default function SettingsContent() {
                                 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 20, flex: 1, minWidth: 200 }}>
                                   <div>
-                                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>{lang !== 'en' ? 'Sadržaj:' : 'Content:'}</div>
+                                    <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8 }}>{t('sadrzaj')}</div>
                                     <div style={{ display: 'flex', gap: 6 }}>
-                                      {[{id:'logo',lbl:'Logo'},{id:'name',lbl:lang==='bs'?'Naziv':'Name'},{id:'both',lbl:lang==='bs'?'Oboje':'Both'}].map(o => (
+                                      {[{id:'logo',lbl:'Logo'},{id:'name',lbl:t('naziv')},{id:'both',lbl:t('oboje')}].map(o => (
                                         <button key={o.id} onClick={()=>{setWmContent(o.id);setDirty('company');}} style={{flex: 1, padding:'8px 6px',borderRadius:8,fontSize:'0.75rem',fontWeight:700,cursor:'pointer',border:wmContent===o.id?'2px solid var(--primary)':'1px solid var(--border)',background:wmContent===o.id?'var(--primary-glow)':'var(--bg-card)',color:wmContent===o.id?'var(--primary)':'var(--text-muted)'}}>{o.lbl}</button>
                                       ))}
                                     </div>
                                   </div>
                                   <div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700 }}>{lang !== 'en' ? 'Transparentnost' : 'Opacity'} ({wmOpacity}%)</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700 }}>{t('transparentnost')} ({wmOpacity}%)</div>
                                     <input type="range" min={1} max={30} value={wmOpacity} onChange={e=>{setWmOpacity(+e.target.value);setDirty('company');}} style={{ width: '100%', accentColor: 'var(--primary)' }} />
                                   </div>
                                   <div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700 }}>{lang !== 'en' ? 'Veličina' : 'Size'} ({wmSize}px)</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700 }}>{t('velicina')} ({wmSize}px)</div>
                                     <input type="range" min={80} max={600} value={wmSize} onChange={e=>{setWmSize(+e.target.value);setDirty('company');}} style={{ width: '100%', accentColor: 'var(--primary)' }} />
                                   </div>
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700 }}>{lang !== 'en' ? 'Pozicija' : 'Position'}</div>
+                                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 8, fontWeight: 700 }}>{t('pozicija')}</div>
                                   <table style={{ borderCollapse: 'separate', borderSpacing: '4px' }}>
                                     <tbody>
                                       {[0,1,2].map(r => (
@@ -1215,7 +1209,7 @@ export default function SettingsContent() {
 
                         {/* LIVE REPORT PREVIEW HERO */}
                         <div style={{ flex: '1 1 300px', display: 'flex', flexDirection: 'column' }}>
-                           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>{lang !== 'en' ? 'PDF simulacija' : 'Live Report Simulation'}</div>
+                           <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 14 }}>{t('pdfSimulacija')}</div>
                            <div style={{ background: '#fff', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 14, padding: '24px 24px 60px', position: 'relative', overflow: 'hidden', boxShadow: '0 8px 30px rgba(0,0,0,0.08)', height: '100%', minHeight: 400 }}>
                               {/* Watermark Rendering */}
                               {wmEnabled !== false && (
@@ -1246,11 +1240,11 @@ export default function SettingsContent() {
                               
                               {/* Custom text */}
                               {headerEnabled !== false && (
-                                <div style={{fontSize:Math.max(5,headerFontSize*0.5)+'pt',fontWeight:headerBold?800:500,fontStyle:headerItalic?'italic':'normal',textDecoration:headerUnderline?'underline':'none',color:headerColor,marginBottom:15,position:'relative',zIndex:1}}>{headerText || (lang==='bs'?'Prazno...':'Empty...')}</div>
+                                <div style={{fontSize:Math.max(5,headerFontSize*0.5)+'pt',fontWeight:headerBold?800:500,fontStyle:headerItalic?'italic':'normal',textDecoration:headerUnderline?'underline':'none',color:headerColor,marginBottom:15,position:'relative',zIndex:1}}>{headerText || (t('prazno'))}</div>
                               )}
                               
                               {/* Mock Content */}
-                              <div style={{fontSize:'6pt',fontWeight:800,textTransform:'uppercase',letterSpacing:0.5,color:'#1e293b',position:'relative',zIndex:1, marginBottom: 8}}>{lang==='bs'?'IZVJEŠTAJ O PROCJENI':'ASSESSMENT REPORT'}</div>
+                              <div style={{fontSize:'6pt',fontWeight:800,textTransform:'uppercase',letterSpacing:0.5,color:'#1e293b',position:'relative',zIndex:1, marginBottom: 8}}>{t('izvjestajOProcjeni')}</div>
                               <div style={{position:'relative',zIndex:1}}>{[1,2,3,4,5].map(i=>(
                                 <div key={i} style={{display:'flex',gap:6,marginBottom:6}}>
                                   <div style={{width:'30%',height:4,background:i===1?pdfAccentColor+'33':'#f1f5f9',borderRadius:2}}/>
@@ -1272,7 +1266,7 @@ export default function SettingsContent() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <button className="btn btn-primary" onClick={handleSaveCompany}>💾 {t('save')}</button>
 
-                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
+                  {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {t('sacuvano1')}</span>}
                 </div>
               </>
             )}
@@ -1288,10 +1282,10 @@ export default function SettingsContent() {
           <div className="card-body">
             {/* Top save bar */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h3 style={{ margin: 0 }}>🔔 {lang !== 'en' ? 'Postavke obavijesti' : 'Notification Preferences'}</h3>
+              <h3 style={{ margin: 0 }}>🔔 {t('postavkeObavijesti')}</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {dirtyTab === 'notifications' && (
-                  <span style={{ fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600 }}>● {lang !== 'en' ? 'Nesačuvano' : 'Unsaved'}</span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--warning)', fontWeight: 600 }}>● {t('nesacuvano')}</span>
                 )}
                 <button className="btn btn-primary btn-sm" onClick={handleSaveNotifSettings}>
                   💾 {t('save')}
@@ -1300,188 +1294,186 @@ export default function SettingsContent() {
               </div>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginBottom: 16 }}>
-              {lang !== 'en' ? 'Odaberite koje obavijesti želite primati u aplikaciji.' : 'Choose which notifications you want to receive.'}
+              {t('odaberiteKojeObavijestiZelitePrimati')}
             </p>
 
             {/* ── Certificates ── */}
-            <SectionHeader icon="📋" title={lang !== 'en' ? 'Uvjerenja radnika' : 'Worker Certificates'} />
+            <SectionHeader icon="📋" title={t('uvjerenjaRadnika')} />
             <Toggle
               checked={notifSettings.certExpiryEnabled}
               onChange={v => updateNotif('certExpiryEnabled', v)}
-              label={lang !== 'en' ? 'Obavijest o isteku uvjerenja' : 'Certificate expiry alerts'}
-              description={lang !== 'en' ? 'Upozori me kada radničko uvjerenje uskoro ističe' : 'Warn me when worker certificates are expiring soon'}
+              label={t('obavijestOIstekuUvjerenja')}
+              description={t('upozoriMeKadaRadnickoUvjerenje')}
             />
             {notifSettings.certExpiryEnabled && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Upozori me' : 'Warn me'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('upozoriMe')}</span>
                 <select className="form-select" style={{ width: 80 }} value={notifSettings.certExpiryDays} onChange={e => updateNotif('certExpiryDays', Number(e.target.value))}>
                   <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
                 </select>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'dana prije isteka' : 'days before expiry'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('danaPrijeIsteka')}</span>
               </div>
             )}
 
             {/* ── Equipment ── */}
-            <SectionHeader icon="⚙️" title={lang !== 'en' ? 'Pregled opreme' : 'Equipment Inspections'} />
+            <SectionHeader icon="⚙️" title={t('pregledOpreme')} />
             <Toggle
               checked={notifSettings.equipExpiryEnabled}
               onChange={v => updateNotif('equipExpiryEnabled', v)}
-              label={lang !== 'en' ? 'Obavijest o pregledu opreme' : 'Equipment inspection alerts'}
-              description={lang !== 'en' ? 'Upozori me kada oprema treba pregled' : 'Warn me when equipment inspection is due'}
+              label={t('obavijestOPregleduOpreme')}
+              description={t('upozoriMeKadaOpremaTreba')}
             />
             {notifSettings.equipExpiryEnabled && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Upozori me' : 'Warn me'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('upozoriMe')}</span>
                 <select className="form-select" style={{ width: 80 }} value={notifSettings.equipExpiryDays} onChange={e => updateNotif('equipExpiryDays', Number(e.target.value))}>
                   <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
                 </select>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'dana prije isteka' : 'days before expiry'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('danaPrijeIsteka')}</span>
               </div>
             )}
 
             {/* ── Documents ── */}
-            <SectionHeader icon="📄" title={lang !== 'en' ? 'Dokumenti poslodavca' : 'Employer Documents'} />
+            <SectionHeader icon="📄" title={t('dokumentiPoslodavca')} />
             <Toggle
               checked={notifSettings.docExpiryEnabled}
               onChange={v => updateNotif('docExpiryEnabled', v)}
-              label={lang !== 'en' ? 'Obavijest o isteku dokumenata' : 'Document expiry alerts'}
-              description={lang !== 'en' ? 'Upozori me kada dokumenti ističu' : 'Warn me when employer documents expire'}
+              label={t('obavijestOIstekuDokumenata')}
+              description={t('upozoriMeKadaDokumentiIsticu')}
             />
             {notifSettings.docExpiryEnabled && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Upozori me' : 'Warn me'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('upozoriMe')}</span>
                 <select className="form-select" style={{ width: 80 }} value={notifSettings.docExpiryDays} onChange={e => updateNotif('docExpiryDays', Number(e.target.value))}>
                   <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
                 </select>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'dana prije isteka' : 'days before expiry'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('danaPrijeIsteka')}</span>
               </div>
             )}
 
             {/* ── Workers ── */}
-            <SectionHeader icon="👷" title={lang !== 'en' ? 'Radnici' : 'Workers'} />
+            <SectionHeader icon="👷" title={t('radnici')} />
             <Toggle
               checked={notifSettings.workersNoCerts}
               onChange={v => updateNotif('workersNoCerts', v)}
-              label={lang !== 'en' ? 'Radnici bez uvjerenja' : 'Workers without certificates'}
-              description={lang !== 'en' ? 'Prikaži koliko aktivnih radnika nema uvjerenja' : 'Show how many active workers have no certificates'}
+              label={t('radniciBezUvjerenja')}
+              description={t('prikaziKolikoAktivnihRadnikaNema')}
             />
             <Toggle
               checked={notifSettings.workersNoPPE}
               onChange={v => updateNotif('workersNoPPE', v)}
-              label={lang !== 'en' ? 'Radnici bez zaštitne opreme' : 'Workers without PPE'}
-              description={lang !== 'en' ? 'Prikaži koliko aktivnih radnika nema dodijeljenu zaštitnu opremu' : 'Show workers missing PPE assignments'}
+              label={t('radniciBezZastitneOpreme')}
+              description={t('prikaziKolikoAktivnihRadnikaNema1')}
             />
 
             {/* ── Calendar ── */}
-            <SectionHeader icon="📅" title={lang !== 'en' ? 'Kalendar' : 'Calendar'} />
+            <SectionHeader icon="📅" title={t('kalendar')} />
             <Toggle
               checked={notifSettings.calendarWeek}
               onChange={v => updateNotif('calendarWeek', v)}
-              label={lang !== 'en' ? 'Događaji ovog tjedna' : 'Events this week'}
-              description={lang !== 'en' ? 'Prikaži nadolazeće kalendarske događaje' : 'Show upcoming calendar events'}
+              label={t('dogaajiOvogTjedna')}
+              description={t('prikaziNadolazeceKalendarskeDogaaje')}
             />
             <div style={{ marginTop: 12, padding: '16px 20px', background: 'var(--bg-card)', borderRadius: 12, border: '1px solid var(--border-light)' }}>
               <div style={{ fontWeight: 700, fontSize: '0.88rem', marginBottom: 12, color: 'var(--text)' }}>
-                {lang !== 'en' ? 'Prikazani događaji na kalendaru' : 'Events shown on calendar'}
+                {t('prikazaniDogaajiNaKalendaru')}
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Toggle checked={notifSettings.calShowCerts ?? true} onChange={v => updateNotif('calShowCerts', v)} label={lang !== 'en' ? '📜 Uvjerenja radnika' : '📜 Worker certificates'} />
-                <Toggle checked={notifSettings.calShowEquip ?? true} onChange={v => updateNotif('calShowEquip', v)} label={lang !== 'en' ? '⚙️ Radna oprema' : '⚙️ Work equipment'} />
-                <Toggle checked={notifSettings.calShowDoc ?? true} onChange={v => updateNotif('calShowDoc', v)} label={lang !== 'en' ? '📄 Dokumenti' : '📄 Documents'} />
-                <Toggle checked={notifSettings.calShowRisk ?? true} onChange={v => updateNotif('calShowRisk', v)} label={lang !== 'en' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
-                <Toggle checked={notifSettings.calShowMed ?? true} onChange={v => updateNotif('calShowMed', v)} label={lang !== 'en' ? '🩺 Ljekarski pregledi' : '🩺 Medical exams'} />
-                <Toggle checked={notifSettings.calShowService ?? true} onChange={v => updateNotif('calShowService', v)} label={lang !== 'en' ? '🔧 Servisi' : '🔧 Services'} />
-                <Toggle checked={notifSettings.calShowFleet ?? true} onChange={v => updateNotif('calShowFleet', v)} label={lang !== 'en' ? '🚗 Vozila (Reg/Tehnički)' : '🚗 Vehicles (Reg/Tech)'} />
+                <Toggle checked={notifSettings.calShowCerts ?? true} onChange={v => updateNotif('calShowCerts', v)} label={t('uvjerenjaRadnika1')} />
+                <Toggle checked={notifSettings.calShowEquip ?? true} onChange={v => updateNotif('calShowEquip', v)} label={t('radnaOprema')} />
+                <Toggle checked={notifSettings.calShowDoc ?? true} onChange={v => updateNotif('calShowDoc', v)} label={t('dokumenti')} />
+                <Toggle checked={notifSettings.calShowRisk ?? true} onChange={v => updateNotif('calShowRisk', v)} label={t('mjereRizika')} />
+                <Toggle checked={notifSettings.calShowMed ?? true} onChange={v => updateNotif('calShowMed', v)} label={t('ljekarskiPregledi')} />
+                <Toggle checked={notifSettings.calShowService ?? true} onChange={v => updateNotif('calShowService', v)} label={t('servisi')} />
+                <Toggle checked={notifSettings.calShowFleet ?? true} onChange={v => updateNotif('calShowFleet', v)} label={t('vozilaRegtehnicki')} />
               </div>
             </div>
 
             {/* ── Vozni Park (Fleet) ── */}
-            <SectionHeader icon="🚗" title={lang !== 'en' ? 'Vozni park' : 'Vehicle Fleet'} />
+            <SectionHeader icon="🚗" title={t('vozniPark')} />
             <Toggle
               checked={notifSettings.fleetExpiryEnabled ?? true}
               onChange={v => updateNotif('fleetExpiryEnabled', v)}
-              label={lang !== 'en' ? 'Obavijest o isteku registracije i tehničkog' : 'Registration and tech inspection alerts'}
-              description={lang !== 'en' ? 'Upozori me kada vozilima ističe registracija, osiguranje ili pregled' : 'Warn me when vehicle registration or inspection expires'}
+              label={t('obavijestOIstekuRegistracijeI')}
+              description={t('upozoriMeKadaVozilimaIstice')}
             />
             {(notifSettings.fleetExpiryEnabled ?? true) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Upozori me' : 'Warn me'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('upozoriMe')}</span>
                 <select className="form-select" style={{ width: 80 }} value={notifSettings.fleetExpiryDays || 30} onChange={e => updateNotif('fleetExpiryDays', Number(e.target.value))}>
                   <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
                 </select>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'dana prije isteka' : 'days before expiry'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('danaPrijeIsteka')}</span>
               </div>
             )}
 
             {/* ── Admin-only notifications ── */}
             {isAdmin && (
               <>
-                <SectionHeader icon="🛡️" title={lang !== 'en' ? 'Admin: Zdravlje sistema' : 'Admin: System Health'} />
+                <SectionHeader icon="🛡️" title={t('adminZdravljeSistema')} />
                 <Toggle
                   checked={notifSettings.adminDbSize}
                   onChange={v => updateNotif('adminDbSize', v)}
-                  label={lang !== 'en' ? 'Upozorenje o veličini baze' : 'Database size warning'}
-                  description={lang !== 'en' ? 'Obavijesti me kada baza podataka raste iznad pragova' : 'Alert me when database grows past thresholds'}
+                  label={t('upozorenjeOVeliciniBaze')}
+                  description={t('obavijestiMeKadaBazaPodataka')}
                 />
                 {notifSettings.adminDbSize && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0 12px 24px', borderBottom: '1px solid var(--border-light)' }}>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.75rem' }}>{lang !== 'en' ? 'Prag upozorenja (zapisi)' : 'Warning threshold (records)'}</label>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>{t('pragUpozorenjaZapisi')}</label>
                       <input className="form-input" type="number" value={notifSettings.adminDbWarnThreshold} onChange={e => updateNotif('adminDbWarnThreshold', Number(e.target.value))} />
                     </div>
                     <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label" style={{ fontSize: '0.75rem' }}>{lang !== 'en' ? 'Kritični prag (zapisi)' : 'Critical threshold (records)'}</label>
+                      <label className="form-label" style={{ fontSize: '0.75rem' }}>{t('kriticniPragZapisi')}</label>
                       <input className="form-input" type="number" value={notifSettings.adminDbCriticalThreshold} onChange={e => updateNotif('adminDbCriticalThreshold', Number(e.target.value))} />
                     </div>
                   </div>
                 )}
 
-                <SectionHeader icon="📈" title={lang !== 'en' ? 'Admin: Rast i aktivnost' : 'Admin: Growth & Activity'} />
-                <Toggle checked={notifSettings.adminNewCompanies} onChange={v => updateNotif('adminNewCompanies', v)} label={lang !== 'en' ? 'Nove kompanije' : 'New companies'} description={lang !== 'en' ? 'Obavijesti me kada se registrira nova kompanija' : 'Notify when new company registers'} />
-                <Toggle checked={notifSettings.adminNewUsers} onChange={v => updateNotif('adminNewUsers', v)} label={lang !== 'en' ? 'Novi korisnici' : 'New users'} description={lang !== 'en' ? 'Obavijesti me kada se registrira novi korisnik' : 'Notify when new user registers'} />
-                <Toggle checked={notifSettings.adminMilestones} onChange={v => updateNotif('adminMilestones', v)} label={lang !== 'en' ? 'Milestone obavijesti' : 'Milestone alerts'} description={lang !== 'en' ? 'Obavijesti na 50, 100, 250, 500 kompanija/korisnika' : 'Alerts at 50, 100, 250, 500 companies/users'} />
+                <SectionHeader icon="📈" title={t('adminRastIAktivnost')} />
+                <Toggle checked={notifSettings.adminNewCompanies} onChange={v => updateNotif('adminNewCompanies', v)} label={t('noveKompanije')} description={t('obavijestiMeKadaSeRegistrira')} />
+                <Toggle checked={notifSettings.adminNewUsers} onChange={v => updateNotif('adminNewUsers', v)} label={t('noviKorisnici')} description={t('obavijestiMeKadaSeRegistrira1')} />
+                <Toggle checked={notifSettings.adminMilestones} onChange={v => updateNotif('adminMilestones', v)} label={t('milestoneObavijesti')} description={t('obavijestiNa50100250')} />
 
-                <SectionHeader icon="🔒" title={lang !== 'en' ? 'Admin: Sigurnost' : 'Admin: Security'} />
-                <Toggle checked={notifSettings.adminFailedLogins} onChange={v => updateNotif('adminFailedLogins', v)} label={lang !== 'en' ? 'Neuspješne prijave' : 'Failed login attempts'} description={lang !== 'en' ? 'Upozori me na 5+ neuspješnih prijava' : 'Alert on 5+ failed logins for same account'} />
-                <Toggle checked={notifSettings.adminInactiveCompanies} onChange={v => updateNotif('adminInactiveCompanies', v)} label={lang !== 'en' ? 'Neaktivne kompanije' : 'Inactive companies'} description={lang !== 'en' ? 'Prikaži kompanije bez prijave 30+ dana' : 'Show companies with no login in 30+ days'} />
+                <SectionHeader icon="🔒" title={t('adminSigurnost')} />
+                <Toggle checked={notifSettings.adminFailedLogins} onChange={v => updateNotif('adminFailedLogins', v)} label={t('neuspjesnePrijave')} description={t('upozoriMeNa5Neuspjesnih')} />
+                <Toggle checked={notifSettings.adminInactiveCompanies} onChange={v => updateNotif('adminInactiveCompanies', v)} label={t('neaktivneKompanije')} description={t('prikaziKompanijeBezPrijave30')} />
               </>
             )}
 
             {/* ── Automated Email Notifications ── */}
-            <SectionHeader icon="📧" title={lang !== 'en' ? 'Automatski Email (Dnevni Pregled)' : 'Automated Email (Daily Digest)'} />
+            <SectionHeader icon="📧" title={t('automatskiEmailDnevniPregled')} />
             <div style={{ padding: '14px 18px', marginBottom: 8, borderRadius: 10, background: 'rgba(79,70,229,0.06)', border: '1px solid rgba(79,70,229,0.2)' }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                {lang !== 'en'
-                  ? '📬 Svaki dan u 07:00 sistem automatski šalje email sa pregledom svih stavki koje uskoro ističu. Vi birate kome ide email i šta uključiti.'
-                  : '📬 Every day at 07:00 the system sends an automatic email with a summary of all soon-to-expire items. Choose who receives it and what to include.'}
+                {t('svakiDanU0700Sistem')}
               </div>
             </div>
             <Toggle
               checked={notifSettings.emailNotifEnabled ?? false}
               onChange={v => updateNotif('emailNotifEnabled', v)}
-              label={lang !== 'en' ? 'Aktiviraj automatski email dnevnik' : 'Enable automatic daily email digest'}
-              description={lang !== 'en' ? 'Svaki dan u 07:00 šalje se email sa isticanjima' : 'Sends an expiry summary email every day at 07:00'}
+              label={t('aktivirajAutomatskiEmailDnevnik')}
+              description={t('svakiDanU0700Salje')}
             />
             {(notifSettings.emailNotifEnabled ?? false) && (<>
               {/* Recipients */}
               <div style={{ padding: '14px 0 6px 0', borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📬 {lang !== 'en' ? 'Primatelji' : 'Recipients'}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📬 {t('primatelji')}</div>
                 <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 500 }}>
                     <input type="checkbox" id="notif-to-company" checked={notifSettings.emailNotifToCompany ?? true} onChange={e => updateNotif('emailNotifToCompany', e.target.checked)} style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
-                    🏢 {lang !== 'en' ? 'Email firme' : 'Company email'}
+                    🏢 {t('emailFirme')}
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>(email polje firme)</span>
                   </label>
                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.82rem', fontWeight: 500 }}>
                     <input type="checkbox" id="notif-to-officer" checked={notifSettings.emailNotifToOfficer ?? true} onChange={e => updateNotif('emailNotifToOfficer', e.target.checked)} style={{ accentColor: 'var(--primary)', width: 16, height: 16 }} />
-                    👤 {lang !== 'en' ? 'Moj email (stručnjak ZNR)' : 'My email (safety officer)'}
+                    👤 {t('mojEmailStrucnjakZnr')}
                   </label>
                 </div>
               </div>
 
               {/* Language */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.82rem', flexShrink: 0 }}>🌐 {lang !== 'en' ? 'Jezik emaila' : 'Email language'}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', flexShrink: 0 }}>🌐 {t('jezikEmaila')}</div>
                 <select
                   className="form-select"
                   style={{ width: 200 }}
@@ -1490,7 +1482,8 @@ export default function SettingsContent() {
                   <option value="bs">🇧🇦 Bosanski</option>
                   <option value="hr">🇭🇷 Hrvatski</option>
                   <option value="sr">🇷🇸 Srpski</option>
-                  <option value="sl">🇸🇮 Slovenski</option>
+                  <option value="sl">🇸🇮 Slovenščina</option>
+                  <option value="de">🇩🇪 Deutsch</option>
                   <option value="en">🇬🇧 English only</option>
                   <option value="bilingual">🌍 Bilingual (Local + English)</option>
                 </select>
@@ -1498,22 +1491,22 @@ export default function SettingsContent() {
 
               {/* Days threshold */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 0', borderBottom: '1px solid var(--border-light)' }}>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', flexShrink: 0 }}>{lang !== 'en' ? 'Uključi stavke koje ističu u narednih' : 'Include items expiring within'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', flexShrink: 0 }}>{t('ukljuciStavkeKojeIsticuU')}</span>
                 <select className="form-select" style={{ width: 80 }} value={notifSettings.emailNotifDays ?? 30} onChange={e => updateNotif('emailNotifDays', Number(e.target.value))}>
                   <option value={7}>7</option><option value={14}>14</option><option value={30}>30</option><option value={60}>60</option>
                 </select>
-                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'dana' : 'days'}</span>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{t('dana')}</span>
               </div>
 
               {/* Per-category toggles */}
               <div style={{ padding: '12px 0 4px' }}>
-                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📋 {lang !== 'en' ? 'Uključi kategorije u email' : 'Include categories in email'}</div>
+                <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: 10 }}>📋 {t('ukljuciKategorijeUEmail')}</div>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
-                  <Toggle checked={notifSettings.emailNotifCerts ?? true} onChange={v => updateNotif('emailNotifCerts', v)} label={lang !== 'en' ? '📜 Uvjerenja radnika' : '📜 Worker certificates'} />
+                  <Toggle checked={notifSettings.emailNotifCerts ?? true} onChange={v => updateNotif('emailNotifCerts', v)} label={t('uvjerenjaRadnika1')} />
                   <Toggle checked={notifSettings.emailNotifEquip ?? true} onChange={v => updateNotif('emailNotifEquip', v)} label={lang !== 'en' ? '⚙️ Radna oprema' : '⚙️ Equipment inspections'} />
-                  <Toggle checked={notifSettings.emailNotifDocs ?? true} onChange={v => updateNotif('emailNotifDocs', v)} label={lang !== 'en' ? '📄 Dokumenti poslodavca' : '📄 Employer documents'} />
-                  <Toggle checked={notifSettings.emailNotifFleet ?? true} onChange={v => updateNotif('emailNotifFleet', v)} label={lang !== 'en' ? '🚗 Vozni park' : '🚗 Fleet / Vehicles'} />
-                  <Toggle checked={notifSettings.emailNotifMedical ?? true} onChange={v => updateNotif('emailNotifMedical', v)} label={lang !== 'en' ? '🩺 Ljekarski pregledi' : '🩺 Medical exams'} />
+                  <Toggle checked={notifSettings.emailNotifDocs ?? true} onChange={v => updateNotif('emailNotifDocs', v)} label={t('dokumentiPoslodavca1')} />
+                  <Toggle checked={notifSettings.emailNotifFleet ?? true} onChange={v => updateNotif('emailNotifFleet', v)} label={t('vozniPark1')} />
+                  <Toggle checked={notifSettings.emailNotifMedical ?? true} onChange={v => updateNotif('emailNotifMedical', v)} label={t('ljekarskiPregledi')} />
 
 
                 </div>
@@ -1521,23 +1514,21 @@ export default function SettingsContent() {
             </>)}
 
             {/* ── ALARMI SA TERENA (Real-time) ── */}
-            <SectionHeader icon="🚨" title={lang !== 'en' ? 'Hitni Alarmi / Terenske Prijave' : 'Instant Alerts / Hazard Reports'} />
+            <SectionHeader icon="🚨" title={t('hitniAlarmiTerenskePrijave')} />
             <div className="card" style={{ marginBottom: 24 }}>
                 <div className="card-body">
                     <div style={{ display: 'flex', gap: 16 }}>
                         <div style={{ flex: 1 }}>
                             <div style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 4 }}>
-                                {lang !== 'en' ? 'Email za obavijesti sa terena' : 'Field Alert Email'}
+                                {t('emailZaObavijestiSaTerena')}
                             </div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>
-                                {lang !== 'en' 
-                                    ? 'Ovo je email adresa na koju se šalju trenutačni alarmi čim neko skenira javni QR kod i prijavi opasnu situaciju. Možete unijeti više emailova odvojenih zarezom (,).' 
-                                    : 'Immediate alerts will be sent here as soon as someone scans the public QR code and reports a hazard. You can enter multiple emails separated by commas (,).'}
+                                {t('ovoJeEmailAdresaNa')}
                             </div>
                             <input 
                                 className="form-input" 
                                 style={{ maxWidth: 500, background: 'var(--bg-page)', borderColor: 'var(--danger)', borderWidth: 1 }}
-                                placeholder={lang !== 'en' ? 'Npr. sigurnost@firma.ba, direktor@firma.ba' : 'E.g. safety@company.com, ceo@company.com'}
+                                placeholder={t('nprSigurnostfirmabaDirektorfirmaba')}
                                 value={notifSettings.obsNotifEmail || ''} 
                                 onChange={e => updateNotif('obsNotifEmail', e.target.value)} 
                             />
@@ -1547,19 +1538,17 @@ export default function SettingsContent() {
             </div>
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {lang !== 'en' ? 'Sačuvaj postavke obavijesti' : 'Save Notification Settings'}</button>
-              {saved && !notifSyncError && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
+              <button className="btn btn-primary" onClick={handleSaveNotifSettings}>💾 {t('sacuvajPostavkeObavijesti')}</button>
+              {saved && !notifSyncError && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {t('sacuvano1')}</span>}
               {notifSyncError && (
                 <span className="animate-fadeIn" style={{ color: 'var(--danger)', fontWeight: 600, fontSize: '0.85rem' }}>
-                  ⚠️ {lang !== 'en' ? 'Greška pri snimanju na server. Provjerite konzolu.' : 'Failed to save to server. Check the console.'}
+                  ⚠️ {t('greskaPriSnimanjuNaServer')}
                 </span>
               )}
             </div>
             {notifSyncError && (
               <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 8, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)', fontSize: '0.8rem', color: 'var(--danger)' }}>
-                {lang !== 'en'
-                  ? '⚠️ Postavke su sačuvane lokalno ali nisu sinhronizovane sa serverom. Email obavijesti s terena neće raditi dok se ovo ne ispravi. Provjerite da ste prijavljeni i pokušajte ponovo.'
-                  : '⚠️ Settings saved locally but failed to sync to server. Field alert emails will not work until this is resolved. Make sure you are logged in and try again.'}
+                {t('postavkeSuSacuvaneLokalnoAli')}
               </div>
             )}
           </div>
@@ -1572,7 +1561,7 @@ export default function SettingsContent() {
       {currentTab === 'display' && (
         <div className="card">
           <div className="card-body">
-            <h3 style={{ marginBottom: 20 }}>🎨 {lang !== 'en' ? 'Postavke prikaza' : 'Display Settings'}</h3>
+            <h3 style={{ marginBottom: 20 }}>🎨 {t('postavkePrikaza')}</h3>
 
             <div className="form-grid-2">
               <div className="form-group">
@@ -1580,11 +1569,14 @@ export default function SettingsContent() {
                 <select className="form-select" value={lang} onChange={e => setLang(e.target.value)}>
                   <option value="bs">🇧🇦 Bosanski</option>
                   <option value="hr">🇭🇷 Hrvatski</option>
+                  <option value="sr">🇷🇸 Srpski</option>
+                  <option value="sl">🇸🇮 Slovenščina</option>
+                  <option value="de">🇩🇪 Deutsch</option>
                   <option value="en">🇬🇧 English</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Format datuma' : 'Date format'}</label>
+                <label className="form-label">{t('formatDatuma')}</label>
                 <select className="form-select" value={appSettings.dateFormat} onChange={e => updateApp('dateFormat', e.target.value)}>
                   <option value="dd.mm.yyyy">DD.MM.YYYY.</option>
                   <option value="mm/dd/yyyy">MM/DD/YYYY</option>
@@ -1592,7 +1584,7 @@ export default function SettingsContent() {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Zapisi po stranici' : 'Records per page'}</label>
+                <label className="form-label">{t('zapisiPoStranici')}</label>
                 <select className="form-select" value={appSettings.recordsPerPage} onChange={e => updateApp('recordsPerPage', Number(e.target.value))}>
                   <option value={10}>10</option><option value={25}>25</option><option value={50}>50</option><option value={100}>100</option>
                 </select>
@@ -1601,10 +1593,10 @@ export default function SettingsContent() {
 
             <hr style={{ margin: '20px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
 
-            <Toggle checked={appSettings.compactView} onChange={v => updateApp('compactView', v)} label={lang !== 'en' ? 'Kompaktni prikaz' : 'Compact view'} description={lang !== 'en' ? 'Smanji razmake između elemenata' : 'Reduce spacing between elements'} />
-            <Toggle checked={appSettings.animations} onChange={v => updateApp('animations', v)} label={lang !== 'en' ? 'Animacije' : 'Animations'} description={lang !== 'en' ? 'Uključi glatke prijelaze i animacije' : 'Enable smooth transitions and animations'} />
-            <Toggle checked={appSettings.notificationSound} onChange={v => updateApp('notificationSound', v)} label={lang !== 'en' ? 'Zvuk obavijesti' : 'Notification sound'} description={lang !== 'en' ? 'Pusti zvuk kada stigne nova obavijest' : 'Play sound for new notifications'} />
-            <Toggle checked={appSettings.sidebarOpen} onChange={v => updateApp('sidebarOpen', v)} label={lang !== 'en' ? 'Bočna traka uvijek otvorena' : 'Sidebar always open'} description={lang !== 'en' ? 'Zadrži bočnu traku otvorenom pri pokretanju' : 'Keep sidebar expanded on startup'} />
+            <Toggle checked={appSettings.compactView} onChange={v => updateApp('compactView', v)} label={t('kompaktniPrikaz')} description={t('smanjiRazmakeIzmeuElemenata')} />
+            <Toggle checked={appSettings.animations} onChange={v => updateApp('animations', v)} label={t('animacije')} description={t('ukljuciGlatkePrijelazeIAnimacije')} />
+            <Toggle checked={appSettings.notificationSound} onChange={v => updateApp('notificationSound', v)} label={t('zvukObavijesti')} description={t('pustiZvukKadaStigneNova')} />
+            <Toggle checked={appSettings.sidebarOpen} onChange={v => updateApp('sidebarOpen', v)} label={t('bocnaTrakaUvijekOtvorena')} description={t('zadrziBocnuTrakuOtvorenomPri')} />
 
             <div style={{ marginTop: 24, padding: '16px 20px', background: 'var(--bg-input)', borderRadius: 12, border: '1px solid var(--primary)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
@@ -1613,8 +1605,8 @@ export default function SettingsContent() {
               <Toggle 
                 checked={appSettings.proactiveZia !== false} 
                 onChange={v => updateApp('proactiveZia', v)} 
-                label={lang !== 'en' ? 'Proaktivna asistentica' : 'Proactive assistant'} 
-                description={lang !== 'en' ? 'Dozvoli Zii da analizira stanje i automatski progovori o istecima prilikom otvaranja aplikacije.' : 'Allow Zia to analyze the state and automatically speak about expiring items when opening the app.'} 
+                label={t('proaktivnaAsistentica')} 
+                description={t('dozvoliZiiDaAnaliziraStanje')} 
               />
             </div>
 
@@ -1624,12 +1616,12 @@ export default function SettingsContent() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderTop: '1px solid var(--border)' }}>
               <div>
                 <div style={{ fontWeight: 600, fontSize: '0.88rem' }}>
-                  {isDark ? '🌙' : '☀️'} {lang !== 'en' ? 'Tamni mod' : 'Dark mode'}
+                  {isDark ? '🌙' : '☀️'} {t('tamniMod')}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                  {lang !== 'en' ? 'Trenutno: ' : 'Currently: '}
-                  <strong>{isDark ? (lang !== 'en' ? 'Tamni' : 'Dark') : (lang !== 'en' ? 'Svijetli' : 'Light')}</strong>
-                  {lang !== 'en' ? ' — promjena se odmah primjenjuje' : ' — changes apply immediately'}
+                  {t('trenutno')}
+                  <strong>{isDark ? (t('tamni')) : (t('svijetli'))}</strong>
+                  {t('promjenaSeOdmahPrimjenjuje')}
                 </div>
               </div>
               <button
@@ -1645,13 +1637,13 @@ export default function SettingsContent() {
                   transition: 'all 0.25s ease',
                 }}>
                 <span style={{ fontSize: '1.1rem' }}>{isDark ? '🌙' : '☀️'}</span>
-                <span>{isDark ? (lang !== 'en' ? 'Uključi Svijetli mod' : 'Switch to Light') : (lang !== 'en' ? 'Uključi Tamni mod' : 'Switch to Dark')}</span>
+                <span>{isDark ? (t('ukljuciSvijetliMod')) : (t('ukljuciTamniMod'))}</span>
               </button>
             </div>
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang !== 'en' ? 'Sačuvaj postavke prikaza' : 'Save Display Settings'}</button>
-              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
+              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {t('sacuvajPostavkePrikaza')}</button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {t('sacuvano1')}</span>}
             </div>
           </div>
         </div>
@@ -1663,42 +1655,42 @@ export default function SettingsContent() {
       {currentTab === 'system' && isAdmin && (
         <div className="card">
           <div className="card-body">
-            <h3 style={{ marginBottom: 20 }}>🛡️ {lang !== 'en' ? 'Postavke sistema' : 'System Settings'}</h3>
+            <h3 style={{ marginBottom: 20 }}>🛡️ {t('postavkeSistema')}</h3>
 
 
 
-            <SectionHeader icon="🔒" title={lang !== 'en' ? 'Sigurnost' : 'Security'} />
+            <SectionHeader icon="🔒" title={t('sigurnost')} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0' }}>
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Minimalna dužina lozinke' : 'Minimum password length'}</label>
+                <label className="form-label">{t('minimalnaDuzinaLozinke')}</label>
                 <select className="form-select" value={appSettings.minPasswordLength} onChange={e => updateApp('minPasswordLength', Number(e.target.value))}>
-                  {[6, 8, 10, 12, 16, 20].map(n => <option key={n} value={n}>{n} {lang !== 'en' ? 'znakova' : 'characters'}</option>)}
+                  {[6, 8, 10, 12, 16, 20].map(n => <option key={n} value={n}>{n} {t('znakova')}</option>)}
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Automatsko odjavljivanje' : 'Auto-logout'}</label>
+                <label className="form-label">{t('automatskoOdjavljivanje')}</label>
                 <select className="form-select" value={appSettings.autoLogoutMinutes} onChange={e => updateApp('autoLogoutMinutes', Number(e.target.value))}>
-                  <option value={15}>15 min</option><option value={30}>30 min</option><option value={60}>1 {lang !== 'en' ? 'sat' : 'hour'}</option><option value={120}>2 {lang !== 'en' ? 'sata' : 'hours'}</option><option value={0}>{lang !== 'en' ? 'Nikada' : 'Never'}</option>
+                  <option value={15}>15 min</option><option value={30}>30 min</option><option value={60}>1 {t('sat')}</option><option value={120}>2 {t('sata')}</option><option value={0}>{t('nikada')}</option>
                 </select>
               </div>
             </div>
 
-            <SectionHeader icon="📁" title={lang !== 'en' ? 'Datoteke' : 'Files'} />
+            <SectionHeader icon="📁" title={t('datoteke')} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: '12px 0' }}>
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Maksimalna veličina datoteke' : 'Max file size'}</label>
+                <label className="form-label">{t('maksimalnaVelicinaDatoteke')}</label>
                 <select className="form-select" value={appSettings.maxFileSizeMB} onChange={e => updateApp('maxFileSizeMB', Number(e.target.value))}>
                   <option value={5}>5 MB</option><option value={10}>10 MB</option><option value={25}>25 MB</option><option value={50}>50 MB</option>
                 </select>
               </div>
             </div>
 
-            <SectionHeader icon="🔧" title={lang !== 'en' ? 'Održavanje' : 'Maintenance'} />
-            <Toggle checked={appSettings.maintenanceMode} onChange={v => updateApp('maintenanceMode', v)} label={lang !== 'en' ? 'Režim održavanja' : 'Maintenance mode'} description={lang !== 'en' ? 'Prikaži stranicu održavanja za sve korisnike osim admina' : 'Show maintenance page to all users except admin'} />
+            <SectionHeader icon="🔧" title={t('odrzavanje')} />
+            <Toggle checked={appSettings.maintenanceMode} onChange={v => updateApp('maintenanceMode', v)} label={t('rezimOdrzavanja')} description={t('prikaziStranicuOdrzavanjaZaSve')} />
             {appSettings.maintenanceMode && (
               <div className="form-group" style={{ padding: '12px 0 0 24px' }}>
-                <label className="form-label">{lang !== 'en' ? 'Poruka održavanja' : 'Maintenance message'}</label>
-                <input className="form-input" value={appSettings.maintenanceMessage} onChange={e => updateApp('maintenanceMessage', e.target.value)} placeholder={lang !== 'en' ? 'Aplikacija je trenutno na održavanju...' : 'Application is under maintenance...'} />
+                <label className="form-label">{t('porukaOdrzavanja')}</label>
+                <input className="form-input" value={appSettings.maintenanceMessage} onChange={e => updateApp('maintenanceMessage', e.target.value)} placeholder={t('aplikacijaJeTrenutnoNaOdrzavanju')} />
               </div>
             )}
 
@@ -1708,16 +1700,14 @@ export default function SettingsContent() {
 
 
             {/* ── Country Migration ── */}
-            <SectionHeader icon="🌍" title={lang !== 'en' ? 'Migracija jurisdikcije (BA/HR)' : 'Jurisdiction Migration (BA/HR)'} />
+            <SectionHeader icon="🌍" title={t('migracijaJurisdikcijeBahr')} />
             <CountryMigrationPanel lang={lang} />
 
             <hr style={{ margin: '24px 0', border: 'none', borderTop: '1px solid var(--border)' }} />
-            <SectionHeader icon="☠️" title={lang !== 'en' ? 'Opasna zona (Super Admin)' : 'Danger Zone'} />
+            <SectionHeader icon="☠️" title={t('opasnaZonaSuperAdmin')} />
             <div style={{ padding: 16, borderRadius: 12, background: 'rgba(211,47,47,0.08)', border: '1px solid rgba(211,47,47,0.3)' }}>
               <div style={{ fontSize: '0.85rem', color: '#D32F2F', marginBottom: 16, fontWeight: 500 }}>
-                {lang !== 'en' 
-                  ? 'PAŽNJA: Hard Wipe briše sve podatke za trenutno aktivnu kompaniju direktno sa Firebase Clouda. Ovo je nepovratno.' 
-                  : 'WARNING: Hard Wipe completely deletes all data for the currently active company directly from Firebase. This cannot be undone.'}
+                {t('paznjaHardWipeBriseSve')}
               </div>
               <button 
                 type="button" 
@@ -1726,7 +1716,7 @@ export default function SettingsContent() {
                 disabled={wiping || !activeCompanyId}
                 style={{ background: '#D32F2F', borderColor: '#D32F2F' }}>
                 {wiping ? <span className="spinner" style={{ width: 14, height: 14, border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'spin 1s linear infinite' }}></span> : '☠️'} 
-                {lang !== 'en' ? 'HARD WIPE DSC' : 'HARD WIPE COMPANY'}
+                {t('hardWipeDsc')}
               </button>
             </div>
             </>
@@ -1737,21 +1727,21 @@ export default function SettingsContent() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '1rem' }}>eZNR v{APP_VERSION}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Datum izgradnje' : 'Build date'}: {APP_BUILD_DATE}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('datumIzgradnje')}: {APP_BUILD_DATE}</div>
                 </div>
                 <span style={{ padding: '4px 12px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700, background: 'rgba(76,175,80,0.1)', color: 'var(--success)' }}>
-                  {lang !== 'en' ? 'Najnovija verzija' : 'Latest version'}
+                  {t('najnovijaVerzija')}
                 </span>
               </div>
-              <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 8 }}>{lang !== 'en' ? 'Changelog' : 'Changelog'}:</div>
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, marginBottom: 8 }}>{t('changelog')}:</div>
               {CHANGELOG[0]?.changes?.map((c, i) => (
                 <div key={i} style={{ fontSize: '0.78rem', color: 'var(--text-muted)', padding: '2px 0', paddingLeft: 12, borderLeft: '2px solid var(--primary)' }}>• {c}</div>
               ))}
             </div>
 
             <div style={{ marginTop: 24, display: 'flex', alignItems: 'center', gap: 16 }}>
-              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {lang !== 'en' ? 'Sačuvaj postavke sistema' : 'Save System Settings'}</button>
-              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sačuvano!' : 'Saved!'}</span>}
+              <button className="btn btn-primary" onClick={handleSaveAppSettings}>💾 {t('sacuvajPostavkeSistema')}</button>
+              {saved && <span className="animate-fadeIn" style={{ color: 'var(--success)', fontWeight: 600, fontSize: '0.9rem' }}>✅ {t('sacuvano1')}</span>}
             </div>
           </div>
         </div>
@@ -1764,58 +1754,58 @@ export default function SettingsContent() {
         <div>
           <div className="card" style={{ marginBottom: 20 }}>
             <div className="card-body">
-              <h3 style={{ marginBottom: 20 }}>📊 {lang !== 'en' ? 'Pregled sistema' : 'System Overview'}</h3>
+              <h3 style={{ marginBottom: 20 }}>📊 {t('pregledSistema')}</h3>
 
               {/* Main stats grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
-                <StatCard icon="🏢" value={stats.totalCompanies} label={lang !== 'en' ? 'Kompanije' : 'Companies'} color="var(--primary)" />
-                <StatCard icon="👥" value={stats.totalUsers} label={lang !== 'en' ? 'Korisnici' : 'Users'} color="#7B1FA2" />
-                <StatCard icon="👷" value={stats.totalWorkers} label={lang !== 'en' ? 'Radnici' : 'Workers'} color="#1976D2" />
-                <StatCard icon="📋" value={stats.totalCertificates} label={lang !== 'en' ? 'Uvjerenja' : 'Certificates'} color="var(--warning)" />
-                <StatCard icon="⚙️" value={stats.totalEquipment} label={lang !== 'en' ? 'Oprema' : 'Equipment'} color="#388E3C" />
-                <StatCard icon="💾" value={stats.totalRecords} label={lang !== 'en' ? 'Ukupno zapisa' : 'Total records'} color="var(--danger)" />
+                <StatCard icon="🏢" value={stats.totalCompanies} label={t('kompanije')} color="var(--primary)" />
+                <StatCard icon="👥" value={stats.totalUsers} label={t('korisnici')} color="#7B1FA2" />
+                <StatCard icon="👷" value={stats.totalWorkers} label={t('radnici')} color="#1976D2" />
+                <StatCard icon="📋" value={stats.totalCertificates} label={t('uvjerenja')} color="var(--warning)" />
+                <StatCard icon="⚙️" value={stats.totalEquipment} label={t('oprema')} color="#388E3C" />
+                <StatCard icon="💾" value={stats.totalRecords} label={t('ukupnoZapisa')} color="var(--danger)" />
               </div>
 
               {/* Workers breakdown */}
-              <SectionHeader icon="👷" title={lang !== 'en' ? 'Radnici — Pregled' : 'Workers — Breakdown'} />
+              <SectionHeader icon="👷" title={t('radniciPregled')} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginBottom: 16 }}>
                 <div style={{ padding: 16, borderRadius: 10, background: 'var(--bg-badge)', textAlign: 'center' }}>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--info)' }}>{stats.activeWorkers}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--info)' }}>{lang !== 'en' ? 'Aktivni' : 'Active'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--info)' }}>{t('aktivni')}</div>
                 </div>
                 <div style={{ padding: 16, borderRadius: 10, background: 'rgba(255,152,0,0.1)', textAlign: 'center' }}>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--warning)' }}>{stats.inactiveWorkers}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>{lang !== 'en' ? 'Neaktivni' : 'Inactive'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--warning)' }}>{t('neaktivni')}</div>
                 </div>
                 <div style={{ padding: 16, borderRadius: 10, background: '#F3E5F5', textAlign: 'center' }}>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#7B1FA2' }}>{stats.totalWorkers}</div>
-                  <div style={{ fontSize: '0.75rem', color: '#7B1FA2' }}>{lang !== 'en' ? 'Ukupno' : 'Total'}</div>
+                  <div style={{ fontSize: '0.75rem', color: '#7B1FA2' }}>{t('ukupno')}</div>
                 </div>
               </div>
 
               {/* Certificate breakdown */}
-              <SectionHeader icon="📋" title={lang !== 'en' ? 'Uvjerenja — Status' : 'Certificates — Status'} />
+              <SectionHeader icon="📋" title={t('uvjerenjaStatus')} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
                 <div style={{ padding: 16, borderRadius: 10, background: 'rgba(76,175,80,0.1)', textAlign: 'center' }}>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--success)' }}>{stats.activeCerts}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--success)' }}>{lang !== 'en' ? 'Aktivna' : 'Active'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--success)' }}>{t('aktivna')}</div>
                 </div>
                 <div style={{ padding: 16, borderRadius: 10, background: 'rgba(244,67,54,0.1)', textAlign: 'center' }}>
                   <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--danger)' }}>{stats.expiredCerts}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--danger)' }}>{lang !== 'en' ? 'Istekla' : 'Expired'}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--danger)' }}>{t('istekla')}</div>
                 </div>
               </div>
 
               {/* Top companies */}
               {stats.topCompanies?.length> 0 && (
                 <>
-                  <SectionHeader icon="🏆" title={lang !== 'en' ? 'Top kompanije po broju radnika' : 'Top Companies by Workers'} />
+                  <SectionHeader icon="🏆" title={t('topKompanijePoBrojuRadnika')} />
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ borderBottom: '2px solid var(--border)' }}>
                         <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>#</th>
-                        <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Kompanija' : 'Company'}</th>
-                        <th style={{ textAlign: 'right', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Radnici' : 'Workers'}</th>
+                        <th style={{ textAlign: 'left', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('kompanija')}</th>
+                        <th style={{ textAlign: 'right', padding: '8px 12px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('radnici')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1832,7 +1822,7 @@ export default function SettingsContent() {
               )}
 
               {/* Collection breakdown */}
-              <SectionHeader icon="📦" title={lang !== 'en' ? 'Zapisi po kolekcijama' : 'Records by Collection'} />
+              <SectionHeader icon="📦" title={t('zapisiPoKolekcijama')} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                 {Object.entries(stats.collectionCounts)
                   .filter(([, count]) => count> 0)
@@ -1861,7 +1851,7 @@ export default function SettingsContent() {
               <div className="card-body" style={{ padding: '16px 20px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                   <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22C55E', display: 'inline-block', boxShadow: '0 0 6px #22C55E' }} />
-                  <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{lang !== 'en' ? 'Korisnici online' : 'Users online'} ({onlineUsers.length})</span>
+                  <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>{t('korisniciOnline')} ({onlineUsers.length})</span>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                   {onlineUsers.map(u => (
@@ -1884,11 +1874,11 @@ export default function SettingsContent() {
           <div className="card">
             <div className="card-body">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <h3 style={{ margin: 0 }}>📋 {lang !== 'en' ? 'Dnevnik aktivnosti' : 'Activity Log'}</h3>
+                <h3 style={{ margin: 0 }}>📋 {t('dnevnikAktivnosti')}</h3>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn" style={{ fontSize: '0.75rem', padding: '6px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
                     onClick={() => { if (isAdmin) { clearAdminLog(); } clearUserLog(); setLogRefresh(r => r + 1); }}>
-                    🗑️ {lang !== 'en' ? 'Obriši log' : 'Clear log'}
+                    🗑️ {t('obrisiLog')}
                   </button>
                   <button className="btn" style={{ fontSize: '0.75rem', padding: '6px 12px', background: 'var(--bg-input)', border: '1px solid var(--border)', color: 'var(--text)' }}
                     onClick={() => setLogRefresh(r => r + 1)}>
@@ -1907,7 +1897,7 @@ export default function SettingsContent() {
                       background: logFilter === cat ? 'var(--primary)' : 'var(--bg-input)',
                       color: logFilter === cat ? 'white' : 'var(--text)',
                     }}>
-                    {cat === null ? (lang !== 'en' ? '📋 Sve' : '📋 All') :
+                    {cat === null ? (t('sve')) :
                       cat === 'worker' ? '👷 Radnici' :
                         cat === 'certificate' ? '📋 Uvjerenja' :
                           cat === 'equipment' ? '⚙️ Oprema' :
@@ -1922,7 +1912,7 @@ export default function SettingsContent() {
               {/* Admin log section */}
               {isAdmin && adminLog.length> 0 && (
                 <>
-                  <SectionHeader icon="🛡️" title={lang !== 'en' ? 'Admin aktivnosti' : 'Admin Events'} />
+                  <SectionHeader icon="🛡️" title={t('adminAktivnosti')} />
                   <div style={{ marginBottom: 16 }}>
                     {adminLog.map(entry => {
                       const colors = getSeverityColors(entry.severity);
@@ -1954,12 +1944,12 @@ export default function SettingsContent() {
               )}
 
               {/* User log section */}
-              <SectionHeader icon="📝" title={lang !== 'en' ? 'Moje aktivnosti' : 'My Activities'} />
+              <SectionHeader icon="📝" title={t('mojeAktivnosti')} />
               {userLog.length === 0 ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   <div style={{ fontSize: '2rem', marginBottom: 8 }}>📭</div>
-                  {lang !== 'en' ? 'Nema evidentiranih aktivnosti.' : 'No activities recorded yet.'}
-                  <div style={{ fontSize: '0.75rem', marginTop: 4 }}>{lang !== 'en' ? 'Aktivnosti se bilježe kada dodajete, mijenjate ili brišete podatke.' : 'Activities are recorded when you add, edit or delete data.'}</div>
+                  {t('nemaEvidentiranihAktivnosti')}
+                  <div style={{ fontSize: '0.75rem', marginTop: 4 }}>{t('aktivnostiSeBiljezeKadaDodajete')}</div>
                 </div>
               ) : userLog.map(entry => {
                 const colors = getSeverityColors(entry.severity);
@@ -1992,13 +1982,13 @@ export default function SettingsContent() {
                 <button 
                   onClick={() => setLogLimit(l => l + 20)} 
                   style={{ width: '100%', padding: '10px', background: 'var(--bg-input)', border: '1px dashed var(--border)', borderRadius: 8, cursor: 'pointer', marginTop: 12, color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: 600 }}>
-                  {lang !== 'en' ? 'Učitaj starije aktivnosti' : 'Load older activities'}
+                  {t('ucitajStarijeAktivnosti')}
                 </button>
               )}
 
               {userLog.length === 0 && isAdmin && adminLog.length === 0 && (
                 <div style={{ textAlign: 'center', padding: 20, color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-                  {lang !== 'en' ? 'Log je prazan.' : 'Log is empty.'}
+                  {t('logJePrazan')}
                 </div>
               )}
             </div>
@@ -2037,9 +2027,7 @@ function CountryMigrationPanel({ lang }) {
   return (
     <div style={{ padding: 16, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
       <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-        {lang !== 'en'
-          ? 'Skenira sve kompanije u Firestore-u i postavlja polje "country" na one koje ga nemaju. Koristite DRY RUN za pregled bez pisanja.'
-          : 'Scans all company documents in Firestore and sets the "country" field on those missing it. Use DRY RUN to preview without writing.'}
+        {t('skeniraSveKompanijeUFirestoreu')}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
         <select className="form-select" value={selectedCountry} onChange={e => setSelectedCountry(e.target.value)} style={{ width: 100, height: 38 }}>
@@ -2050,7 +2038,7 @@ function CountryMigrationPanel({ lang }) {
           {migrating ? '⏳' : '🔍'} DRY RUN
         </button>
         <button className="btn btn-primary" onClick={handleExecute} disabled={migrating} style={{ fontWeight: 600, fontSize: '0.8rem' }}>
-          {migrating ? '⏳' : '🚀'} {lang !== 'en' ? 'Izvrši migraciju' : 'Execute Migration'}
+          {migrating ? '⏳' : '🚀'} {t('izvrsiMigraciju')}
         </button>
       </div>
       {result && (
@@ -2060,10 +2048,10 @@ function CountryMigrationPanel({ lang }) {
           ) : (
             <>
               <div><strong>{result.mode === 'dry-run' ? '🔍 DRY RUN' : '✅ MIGRATED'}</strong></div>
-              <div>{lang !== 'en' ? 'Ukupno kompanija' : 'Total companies'}: <strong>{result.total}</strong></div>
-              <div>{lang !== 'en' ? 'Već postavljeno' : 'Already set'}: <strong>{result.alreadySet}</strong></div>
-              {result.wouldMigrate != null && <div>{lang !== 'en' ? 'Za migraciju' : 'Would migrate'}: <strong>{result.wouldMigrate}</strong></div>}
-              {result.migrated> 0 && <div style={{ color: 'var(--success)', fontWeight: 700, marginTop: 4 }}>{lang !== 'en' ? 'Migrirano' : 'Migrated'}: {result.migrated}</div>}
+              <div>{t('ukupnoKompanija')}: <strong>{result.total}</strong></div>
+              <div>{t('vecPostavljeno')}: <strong>{result.alreadySet}</strong></div>
+              {result.wouldMigrate != null && <div>{t('zaMigraciju')}: <strong>{result.wouldMigrate}</strong></div>}
+              {result.migrated> 0 && <div style={{ color: 'var(--success)', fontWeight: 700, marginTop: 4 }}>{t('migrirano')}: {result.migrated}</div>}
             </>
           )}
         </div>

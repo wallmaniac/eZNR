@@ -236,7 +236,7 @@ export default function ReferralRA1Page() {
   };
 
   const handleDelete = async (id) => {
-    const ok = await confirm(lang !== 'en' ? 'Obrisati uputnicu?' : 'Delete referral?');
+    const ok = await confirm(t('obrisatiUputnicu'));
     if (ok) { remove(COLLECTIONS.REFERRALS_RA1, id); loadData(); }
   };
 
@@ -324,7 +324,7 @@ export default function ReferralRA1Page() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size> 15 * 1024 * 1024) {
-      await alert(lang !== 'en' ? 'Dokument mora biti manji od 15MB!' : 'Document must be under 15MB!');
+      await alert(t('dokumentMoraBitiManjiOd'));
       return;
     }
     setFormData(prev => ({
@@ -381,35 +381,35 @@ export default function ReferralRA1Page() {
 
         <div className="card" style={{ marginBottom: 16 }}>
           <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
-            <button className="btn btn-primary" onClick={handleNew} title={lang !== 'en' ? 'Dodaj novu RA-1 uputnicu' : 'Add new RA-1 referral'}>
-              + {lang !== 'en' ? 'Nova uputnica RA-1' : 'New RA-1 referral'}
+            <button className="btn btn-primary" onClick={handleNew} title={t('dodajNovuRa1Uputnicu')}>
+              + {t('novaUputnicaRa1')}
             </button>
             {filterEstab && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', background: 'rgba(0,191,166,0.1)', border: '1px solid var(--primary)', borderRadius: 20, padding: '2px 10px', color: 'var(--primary)' }}>
                 🏥 {filterEstab}
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 700, padding: 0, lineHeight: 1 }} onClick={() => setFilterEstab('')} title={lang !== 'en' ? 'Poništi filter ustanove' : 'Clear establishment filter'}>✕</button>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--primary)', fontWeight: 700, padding: 0, lineHeight: 1 }} onClick={() => setFilterEstab('')} title={t('ponistiFilterUstanove')}>✕</button>
               </span>
             )}
             {filterDoctor && (
               <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', background: 'rgba(99,102,241,0.1)', border: '1px solid var(--secondary)', borderRadius: 20, padding: '2px 10px', color: 'var(--secondary)' }}>
                 👨‍⚕️ {filterDoctor}
-                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary)', fontWeight: 700, padding: 0, lineHeight: 1 }} onClick={() => setFilterDoctor('')} title={lang !== 'en' ? 'Poništi filter doktora' : 'Clear doctor filter'}>✕</button>
+                <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--secondary)', fontWeight: 700, padding: 0, lineHeight: 1 }} onClick={() => setFilterDoctor('')} title={t('ponistiFilterDoktora')}>✕</button>
               </span>
             )}
             <div className="search-bar" style={{ flex: 1, maxWidth: 280 }}>
-              <input placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
+              <input placeholder={t('pretrazi1')} value={search} onChange={e => setSearch(e.target.value)}
                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
-              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+              {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')} title={t('ponistiPretragu')}>✕</button>}
             </div>
             {/* ── Grupne akcije bar ── */}
             {selectedIds.size> 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
-                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={lang !== 'en' ? 'Isprintaj odabrane obrasce' : 'Print selected forms'}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
-                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={lang !== 'en' ? 'Obriši odabrane obrasce' : 'Delete selected forms'}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedIds.size} {t('odabrano')}:</span>
+                <button className="btn btn-primary btn-sm" onClick={() => window.print()} title={t('isprintajOdabraneObrasce')}>🖨️ {t('isprintaj')}</button>
+                <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected} title={t('obrisiOdabraneObrasce')}>🗑️ {t('obrisi')}</button>
               </div>
             )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{displayRecords.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{displayRecords.length} {t('zapisa')}</span>}
           </div>
         </div>
 
@@ -421,11 +421,11 @@ export default function ReferralRA1Page() {
                   <tr>
                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={allSelected} onChange={e => { if (e.target.checked) setSelectedIds(new Set(displayRecords.map(r => r.id))); else setSelectedIds(new Set()); }} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>
                     <th style={{ width: 90 }}>{t('actions')}</th>
-                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{lang !== 'en' ? 'Radnik' : 'Worker'}{sortIcon('_workerName')}</th>
-                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{lang !== 'en' ? 'Datum' : 'Date'}{sortIcon('datum')}</th>
-                    <th>{lang !== 'en' ? 'Tip pregleda' : 'Exam type'}</th>
-                    <th>{lang !== 'en' ? 'Ustanova' : 'Institution'}</th>
-                    <th>{lang !== 'en' ? 'Doktor' : 'Doctor'}</th>
+                    <th onClick={() => toggleSort('_workerName')} style={thStyle('_workerName')}>{t('radnik1')}{sortIcon('_workerName')}</th>
+                    <th onClick={() => toggleSort('datum')} style={thStyle('datum')}>{t('datum')}{sortIcon('datum')}</th>
+                    <th>{t('tipPregleda')}</th>
+                    <th>{t('ustanova')}</th>
+                    <th>{t('doktor')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -454,7 +454,7 @@ export default function ReferralRA1Page() {
                                 : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                               );
                               setActionMenuId(r.id);
-                            }} title={lang !== 'en' ? 'Prikaži akcije za obrazac' : 'Show form actions'}>Akcije ▼</button>
+                            }} title={t('prikaziAkcijeZaObrazac')}>Akcije ▼</button>
                             {actionMenuId === r.id && typeof document !== 'undefined' && createPortal(
                             <>
                               <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={(e) => { e.stopPropagation(); setActionMenuId(null); }} />
@@ -470,7 +470,7 @@ export default function ReferralRA1Page() {
                           </div>
                         </td>
                         <td>
-                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }} title={lang !== 'en' ? 'Otvori profil radnika' : 'Open worker profile'}>
+                          <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }} onClick={e => { e.stopPropagation(); router.push('/dashboard/workers?openWorker=' + r.workerId); }} title={t('otvoriProfilRadnika')}>
                             {wName}
                           </button>
                         </td>
@@ -479,7 +479,7 @@ export default function ReferralRA1Page() {
                         <td>
                           {r.ustanovaNaziv
                             ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                title={lang !== 'en' ? 'Filtriraj po ustanovi' : 'Filter by institution'}
+                                title={t('filtrirajPoUstanovi')}
                                 onClick={e => { e.stopPropagation(); setFilterEstab(f => f === r.ustanovaNaziv ? '' : r.ustanovaNaziv); }}>
                                 {r.ustanovaNaziv}
                               </button>
@@ -488,7 +488,7 @@ export default function ReferralRA1Page() {
                         <td>
                           {r.doktorIme
                             ? <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text)', fontSize: '0.85rem', fontFamily: 'inherit', padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                title={lang !== 'en' ? 'Filtriraj po doktoru' : 'Filter by doctor'}
+                                title={t('filtrirajPoDoktoru')}
                                 onClick={e => { e.stopPropagation(); setFilterDoctor(f => f === r.doktorIme ? '' : r.doktorIme); }}>
                                 {r.doktorIme}
                               </button>
@@ -513,9 +513,9 @@ export default function ReferralRA1Page() {
   return (
     <div className="animate-fadeIn">
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
+        <button className="btn btn-ghost" onClick={() => setShowForm(false)} title={t('nazad')}>←</button>
         <Icon3D name="Ljekarska uputnica.png" size={64} />
-        <h1 style={{ margin: 0 }}>{editingId ? (lang !== 'en' ? 'Uredi uputnicu RA-1' : 'Edit RA-1 referral') : (lang !== 'en' ? 'Nova uputnica RA-1' : 'New RA-1 referral')}</h1>
+        <h1 style={{ margin: 0 }}>{editingId ? (t('urediUputnicuRa1')) : (t('novaUputnicaRa1'))}</h1>
       </div>
       <DialogRenderer />
 
@@ -525,22 +525,22 @@ export default function ReferralRA1Page() {
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
-              {lang !== 'en' ? 'Uputnica za utvrđivanje zdravstvene sposobnosti radnika' : 'Referral for determining worker health fitness'}
+              {t('uputnicaZaUtvrivanjeZdravstveneSposobnosti1')}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '120px 200px 1fr', gap: 16, marginBottom: 16 }}>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Broj' : 'Number'}</div>
+                <div style={labelSt}>{t('broj')}</div>
                 <input className="form-input" value={formData.broj} onChange={e => set('broj', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Datum' : 'Date'}</div>
+                <div style={labelSt}>{t('datum')}</div>
                 <DateInput value={formData.datum} onChange={v => set('datum', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Radnik' : 'Worker'} *</div>
+                <div style={labelSt}>{t('radnik1')} *</div>
                 <select className="form-select" value={formData.workerId} onChange={e => handleWorkerChange(e.target.value)}>
-                  <option value="">{lang !== 'en' ? '— Odaberite radnika —' : '— Select worker —'}</option>
+                  <option value="">{t('odaberiteRadnika1')}</option>
                   {workers.filter(w => w.aktivan !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.prezime} {w.ime} {w.oib ? `(${w.oib})` : ''}</option>
                   ))}
@@ -554,8 +554,8 @@ export default function ReferralRA1Page() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px 16px', fontSize: '0.84rem' }}>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>OIB:</span> <strong>{worker.oib || '—'}</strong></div>
                   <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Prezime, ime, ime oca:' : 'Name, father:'}</span> <strong>{worker.prezime} {worker.ime}{worker.imeRoditelja ? `, ${worker.imeRoditelja}` : ''}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Datum rođenja:' : 'DOB:'}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
-                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{lang !== 'en' ? 'Org. jedinica:' : 'Org unit:'}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t('datumRoenja')}</span> <strong>{formatDate(worker.datumRodenja)}</strong></div>
+                  <div><span style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>{t('orgJedinica')}</span> <strong>{workerOu?.naziv || '—'}</strong></div>
                 </div>
               </div>
             )}
@@ -566,21 +566,21 @@ export default function ReferralRA1Page() {
         <div className="card">
           <div className="card-body">
             <div style={sectionTitle}>
-              {lang !== 'en' ? 'Ustanova i datum pregleda' : 'Institution & exam date'}
+              {t('ustanovaIDatumPregleda')}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 12 }}>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Odaberite ustanovu' : 'Select institution'}</div>
-                <input className="form-input" placeholder={lang !== 'en' ? 'Naziv ustanove' : 'Institution name'} value={formData.ustanovaNaziv} onChange={e => set('ustanovaNaziv', e.target.value)} />
+                <div style={labelSt}>{t('odaberiteUstanovu')}</div>
+                <input className="form-input" placeholder={t('nazivUstanove')} value={formData.ustanovaNaziv} onChange={e => set('ustanovaNaziv', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Doktor medicine rada' : 'Occupational medicine doctor'}</div>
+                <div style={labelSt}>{t('doktorMedicineRada')}</div>
                 <select className="form-select" value={formData.doktorId} onChange={e => {
                   const doc = doctors.find(d => d.id === e.target.value);
                   setFormData(prev => ({ ...prev, doktorId: e.target.value, doktorIme: doc?.ime || '', doktorEmail: doc?.email || '' }));
                 }}>
-                  <option value="">{lang !== 'en' ? '— Odaberite doktora —' : '— Select doctor —'}</option>
+                  <option value="">{t('odaberiteDoktora')}</option>
                   {doctors.map(d => <option key={d.id} value={d.id}>{d.ime}</option>)}
                 </select>
               </div>
@@ -588,15 +588,15 @@ export default function ReferralRA1Page() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Adresa' : 'Address'}</div>
+                <div style={labelSt}>{t('adresa')}</div>
                 <input className="form-input" value={formData.ustanovaAdresa} onChange={e => set('ustanovaAdresa', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Pošta' : 'Postal'}</div>
+                <div style={labelSt}>{t('posta')}</div>
                 <input className="form-input" value={formData.ustanovaPosta} onChange={e => set('ustanovaPosta', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Mjesto' : 'City'}</div>
+                <div style={labelSt}>{t('mjesto')}</div>
                 <input className="form-input" value={formData.ustanovaMjesto} onChange={e => set('ustanovaMjesto', e.target.value)} />
               </div>
               <div>
@@ -611,11 +611,11 @@ export default function ReferralRA1Page() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '200px 200px', gap: 12 }}>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Na dan (datum pregleda)' : 'Exam date'}</div>
+                <div style={labelSt}>{t('naDanDatumPregleda')}</div>
                 <DateInput value={formData.datumPregleda} onChange={v => set('datumPregleda', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Sati' : 'Time'}</div>
+                <div style={labelSt}>{t('sati')}</div>
                 <TimeInput value={formData.vrijemePregleda} onChange={v => set('vrijemePregleda', v)} />
               </div>
             </div>
@@ -628,52 +628,52 @@ export default function ReferralRA1Page() {
             <div style={sectionTitle}>RA-1</div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Poslovi za koje se utvrđuje zdravstvena sposobnost' : 'Jobs for health fitness assessment'}</div>
+              <div style={labelSt}>{t('posloviZaKojeSeUtvruje')}</div>
               <input className="form-input" value={formData.posloviZaKoje} onChange={e => set('posloviZaKoje', e.target.value)}
-                placeholder={lang !== 'en' ? 'npr. Komercijalista' : 'e.g. Sales representative'} />
+                placeholder={t('nprKomercijalista')} />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', gap: '4px 8px', alignItems: 'center', marginBottom: 14, fontSize: '0.84rem' }}>
               <div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>1) {lang !== 'en' ? 'Poslovi su prema članku' : 'Jobs per article'}</span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>1) {t('posloviSuPremaClanku')}</span>
                 <input className="form-input" value={formData.posloviClanak} onChange={e => set('posloviClanak', e.target.value)} style={{ marginTop: 4 }} />
               </div>
-              <span style={{ color: 'var(--text-muted)' }}>{lang !== 'en' ? 'točka' : 'point'}</span>
+              <span style={{ color: 'var(--text-muted)' }}>{t('tocka')}</span>
               <div>
                 <input className="form-input" value={formData.posloviTocka} onChange={e => set('posloviTocka', e.target.value)} />
               </div>
-              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Pravilnika o poslovima s posebnim uvjetima rada.' : 'of the Regulation.'}</span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{t('pravilnikaOPoslovimaSPosebnim')}</span>
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 4 }}>2) {lang !== 'en' ? 'Poslovi prema drugim zakonima, propisima ili kolektivnom ugovoru:' : 'Jobs per other laws/regulations:'}</div>
+              <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 4 }}>2) {t('posloviPremaDrugimZakonimaPropisima')}</div>
               <textarea className="form-input" rows={2} value={formData.posloviDrugiZakoni} onChange={e => set('posloviDrugiZakoni', e.target.value)}
-                placeholder={lang !== 'en' ? 'navesti zakon, propis ili kolektivni ugovor' : 'specify law, regulation or collective agreement'} />
+                placeholder={t('navestiZakonPropisIliKolektivni')} />
             </div>
 
             <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 14 }}>
-              3) {lang !== 'en' ? 'Poslovi su prema propisima o mirovinskom osiguranju utvrđeni kao poslovi na kojima se staž osiguranja računa s povećanim trajanjem.' : 'Jobs per pension insurance regulations.'}
+              3) {t('posloviSuPremaPropisimaO')}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 14 }}>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Ukupni radni staž' : 'Total work experience'}</div>
+                <div style={labelSt}>{t('ukupniRadniStaz')}</div>
                 <input className="form-input" value={formData.ukupniRadniStaz} onChange={e => set('ukupniRadniStaz', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'Radni staž na poslovima za koje se utvrđuje zdr. sposobnost' : 'Experience in assessed position'}</div>
+                <div style={labelSt}>{t('radniStazNaPoslovimaZa')}</div>
                 <input className="form-input" value={formData.radniStazNaPoslovima} onChange={e => set('radniStazNaPoslovima', e.target.value)} />
               </div>
             </div>
 
             {/* Zdravstveni pregled type */}
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Zdravstveni pregled' : 'Health examination'}</div>
+              <div style={labelSt}>{t('zdravstveniPregled')}</div>
               <div style={checkGroup}>
-                <Chk field="pregledPrethodni" label={lang !== 'en' ? 'prethodni' : 'initial'} />
-                <Chk field="pregledPeriodicki" label={lang !== 'en' ? 'periodički' : 'periodic'} />
-                <Chk field="pregledIzvanredni" label={lang !== 'en' ? 'izvanredni' : 'extraordinary'} />
-                <Chk field="pregledKontrolni" label={lang !== 'en' ? 'kontrolni' : 'control'} />
+                <Chk field="pregledPrethodni" label={t('prethodni1')} />
+                <Chk field="pregledPeriodicki" label={t('periodicki')} />
+                <Chk field="pregledIzvanredni" label={t('izvanredni')} />
+                <Chk field="pregledKontrolni" label={t('kontrolni1')} />
               </div>
             </div>
 
@@ -684,11 +684,11 @@ export default function ReferralRA1Page() {
                 <DateInput value={formData.posljednjiPregledDatum} onChange={v => set('posljednjiPregledDatum', v)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'prema članku' : 'per article'}</div>
+                <div style={labelSt}>{t('premaClanku')}</div>
                 <input className="form-input" value={formData.posljednjiPregledClanak} onChange={e => set('posljednjiPregledClanak', e.target.value)} />
               </div>
               <div>
-                <div style={labelSt}>{lang !== 'en' ? 'točki' : 'point'}</div>
+                <div style={labelSt}>{t('tocki')}</div>
                 <input className="form-input" value={formData.posljednjiPregledTocka} onChange={e => set('posljednjiPregledTocka', e.target.value)} />
               </div>
             </div>
@@ -699,7 +699,7 @@ export default function ReferralRA1Page() {
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang !== 'en' ? 's ocjenom zdravstvene sposobnosti' : 'with health fitness assessment'}</div>
+              <div style={labelSt}>{t('sOcjenomZdravstveneSposobnosti')}</div>
               <input className="form-input" value={formData.ocjenaZdravstveneSposobnosti} onChange={e => set('ocjenaZdravstveneSposobnosti', e.target.value)} />
             </div>
           </div>
@@ -708,82 +708,82 @@ export default function ReferralRA1Page() {
         {/* ═══ SECTION 4: Job Description ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={sectionTitle}>{lang !== 'en' ? 'Opis posla i uvjeti rada' : 'Job description & working conditions'}</div>
+            <div style={sectionTitle}>{t('opisPoslaIUvjetiRada')}</div>
 
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Kratak opis posla' : 'Brief job description'}</div>
-              <textarea className="form-input" rows={2} value={formData.kratakOpisPosla} onChange={e => set('kratakOpisPosla', e.target.value)} placeholder={lang !== 'en' ? 'kratak opis posla' : 'brief job description'} />
+              <div style={labelSt}>{t('kratakOpisPosla')}</div>
+              <textarea className="form-input" rows={2} value={formData.kratakOpisPosla} onChange={e => set('kratakOpisPosla', e.target.value)} placeholder={t('kratakOpisPosla1')} />
             </div>
             <div style={{ marginBottom: 12 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Strojevi i alati' : 'Machines & tools'}</div>
-              <textarea className="form-input" rows={2} value={formData.strojeviIAlati} onChange={e => set('strojeviIAlati', e.target.value)} placeholder={lang !== 'en' ? 'strojevi i alati' : 'machines and tools'} />
+              <div style={labelSt}>{t('strojeviIAlati')}</div>
+              <textarea className="form-input" rows={2} value={formData.strojeviIAlati} onChange={e => set('strojeviIAlati', e.target.value)} placeholder={t('strojeviIAlati2')} />
             </div>
             <div style={{ marginBottom: 16 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Predmet rada' : 'Subject of work'}</div>
-              <textarea className="form-input" rows={2} value={formData.predmetRada} onChange={e => set('predmetRada', e.target.value)} placeholder={lang !== 'en' ? 'predmet rada' : 'subject of work'} />
+              <div style={labelSt}>{t('predmetRada')}</div>
+              <textarea className="form-input" rows={2} value={formData.predmetRada} onChange={e => set('predmetRada', e.target.value)} placeholder={t('predmetRada1')} />
             </div>
 
             {/* Mjesto rada */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang !== 'en' ? 'Mjesto rada' : 'Workplace location'}</div>
+              <div style={labelSt}>{t('mjestoRada')}</div>
               <div style={checkGroup}>
-                <Chk field="mjestoZatvoreno" label={lang !== 'en' ? 'u zatvorenom' : 'indoors'} />
-                <Chk field="mjestoOtvoreno" label={lang !== 'en' ? 'na otvorenom' : 'outdoors'} />
-                <Chk field="mjestoNaVisini" label={lang !== 'en' ? 'na visini' : 'at height'} />
-                <Chk field="mjestoUJami" label={lang !== 'en' ? 'u jami' : 'in pit'} />
-                <Chk field="mjestoUVodi" label={lang !== 'en' ? 'u vodi' : 'in water'} />
-                <Chk field="mjestoPodVodom" label={lang !== 'en' ? 'pod vodom' : 'underwater'} />
-                <Chk field="mjestoUMokrom" label={lang !== 'en' ? 'u mokrom' : 'in wet'} />
+                <Chk field="mjestoZatvoreno" label={t('uZatvorenom')} />
+                <Chk field="mjestoOtvoreno" label={t('naOtvorenom')} />
+                <Chk field="mjestoNaVisini" label={t('naVisini')} />
+                <Chk field="mjestoUJami" label={t('uJami')} />
+                <Chk field="mjestoUVodi" label={t('uVodi')} />
+                <Chk field="mjestoPodVodom" label={t('podVodom')} />
+                <Chk field="mjestoUMokrom" label={t('uMokrom')} />
               </div>
             </div>
 
             {/* Organizacija rada */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang !== 'en' ? 'Organizacija rada' : 'Work organization'}</div>
+              <div style={labelSt}>{t('organizacijaRada')}</div>
               <div style={checkGroup}>
-                <Chk field="orgSmjene" label={lang !== 'en' ? 'u smjenama' : 'in shifts'} />
-                <Chk field="orgNocniRad" label={lang !== 'en' ? 'noćni rad' : 'night work'} />
-                <Chk field="orgTerenskiRad" label={lang !== 'en' ? 'terenski rad' : 'field work'} />
-                <Chk field="orgRadiSam" label={lang !== 'en' ? 'radi sam' : 'works alone'} />
-                <Chk field="orgRadiSGrupom" label={lang !== 'en' ? 'radi s grupom' : 'works in group'} />
+                <Chk field="orgSmjene" label={t('uSmjenama')} />
+                <Chk field="orgNocniRad" label={t('nocniRad')} />
+                <Chk field="orgTerenskiRad" label={t('terenskiRad')} />
+                <Chk field="orgRadiSam" label={t('radiSam')} />
+                <Chk field="orgRadiSGrupom" label={t('radiSGrupom')} />
                 <Chk field="orgRadiSaStrankama" label={lang !== 'en' ? 'radi sa strankama' : 'works with clients'} />
-                <Chk field="orgRadiNaTraci" label={lang !== 'en' ? 'radi na traci' : 'assembly line'} />
-                <Chk field="orgBrziTempo" label={lang !== 'en' ? 'brzi tempo rada' : 'fast pace'} />
-                <Chk field="orgRitamOdreden" label={lang !== 'en' ? 'ritam određen' : 'fixed rhythm'} />
-                <Chk field="orgMonotonija" label={lang !== 'en' ? 'monotonija' : 'monotony'} />
+                <Chk field="orgRadiNaTraci" label={t('radiNaTraci')} />
+                <Chk field="orgBrziTempo" label={t('brziTempoRada')} />
+                <Chk field="orgRitamOdreden" label={t('ritamOdreen')} />
+                <Chk field="orgMonotonija" label={t('monotonija')} />
               </div>
             </div>
 
             {/* Položaj tijela */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang !== 'en' ? 'Položaj tijela i aktivnosti' : 'Body position & activities'}</div>
+              <div style={labelSt}>{t('polozajTijelaIAktivnosti')}</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px 16px', marginBottom: 10 }}>
-                <Chk field="polRadStojeci" label={lang !== 'en' ? 'rad stojeći' : 'standing'} />
-                <Chk field="polUcestaloSagibanje" label={lang !== 'en' ? 'učestalo sagibanje' : 'frequent bending'} />
+                <Chk field="polRadStojeci" label={t('radStojeci')} />
+                <Chk field="polUcestaloSagibanje" label={t('ucestaloSagibanje1')} />
                 <Chk field="polPodvlacenje" label={lang !== 'en' ? 'podvlačenje' : 'crawling under'} />
-                <Chk field="polRadSjedeci" label={lang !== 'en' ? 'rad sjedeći' : 'sitting'} />
-                <Chk field="polZakretanjeTrupa" label={lang !== 'en' ? 'zakretanje trupa' : 'torso rotation'} />
-                <Chk field="polBalansiranje" label={lang !== 'en' ? 'balansiranje' : 'balancing'} />
-                <Chk field="polUPokretu" label={lang !== 'en' ? 'u pokretu' : 'in motion'} />
-                <Chk field="polKlecanje" label={lang !== 'en' ? 'klečanje' : 'kneeling'} />
-                <Chk field="polUspinjanjeLjestvama" label={lang !== 'en' ? 'uspinjanje ljestvama' : 'climbing ladders'} />
-                <Chk field="polKombinirano" label={lang !== 'en' ? 'kombinirano' : 'combined'} />
-                <Chk field="polCucanje" label={lang !== 'en' ? 'čučanje' : 'squatting'} />
-                <Chk field="polUspinjanjeStepen" label={lang !== 'en' ? 'uspinjanje stepenicama' : 'climbing stairs'} />
+                <Chk field="polRadSjedeci" label={t('radSjedeci')} />
+                <Chk field="polZakretanjeTrupa" label={t('zakretanjeTrupa')} />
+                <Chk field="polBalansiranje" label={t('balansiranje')} />
+                <Chk field="polUPokretu" label={t('uPokretu')} />
+                <Chk field="polKlecanje" label={t('klecanje')} />
+                <Chk field="polUspinjanjeLjestvama" label={t('uspinjanjeLjestvama')} />
+                <Chk field="polKombinirano" label={t('kombinirano')} />
+                <Chk field="polCucanje" label={t('cucanje')} />
+                <Chk field="polUspinjanjeStepen" label={t('uspinjanjeStepenicama')} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang !== 'en' ? 'diz. tereta:' : 'lift:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{t('dizTereta')}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.dizTereta} onChange={e => set('dizTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang !== 'en' ? 'prenoš. tereta:' : 'carry:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{t('prenosTereta')}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.prenosTereta} onChange={e => set('prenosTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{lang !== 'en' ? 'guranje tereta:' : 'push:'}</span>
+                  <span style={{ fontSize: '0.82rem', whiteSpace: 'nowrap' }}>{t('guranjeTereta1')}</span>
                   <input className="form-input" type="number" min="0" style={{ width: 80 }} value={formData.guranjeTereta} onChange={e => set('guranjeTereta', Number(e.target.value))} />
                   <span style={{ fontSize: '0.82rem' }}>kg</span>
                 </div>
@@ -792,46 +792,46 @@ export default function ReferralRA1Page() {
 
             {/* Sensory */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang !== 'en' ? 'U poslu je važan' : 'Important in work'}</div>
+              <div style={labelSt}>{t('uPosluJeVazan')}</div>
               <div style={checkGroup}>
-                <Chk field="vidNaDaljinu" label={lang !== 'en' ? 'vid na daljinu' : 'distance vision'} />
-                <Chk field="vidNaBlizinu" label={lang !== 'en' ? 'vid na blizinu' : 'near vision'} />
-                <Chk field="raspoznavanjeBoja" label={lang !== 'en' ? 'raspoznavanje boja' : 'color recognition'} />
-                <Chk field="dobarSluh" label={lang !== 'en' ? 'dobar sluh' : 'good hearing'} />
-                <Chk field="jasanGovor" label={lang !== 'en' ? 'jasan govor' : 'clear speech'} />
+                <Chk field="vidNaDaljinu" label={t('vidNaDaljinu')} />
+                <Chk field="vidNaBlizinu" label={t('vidNaBlizinu')} />
+                <Chk field="raspoznavanjeBoja" label={t('raspoznavanjeBoja')} />
+                <Chk field="dobarSluh" label={t('dobarSluh')} />
+                <Chk field="jasanGovor" label={t('jasanGovor')} />
               </div>
             </div>
 
             {/* Uvjeti rada */}
             <div style={sectionStyle}>
-              <div style={labelSt}>{lang !== 'en' ? 'Uvjeti rada' : 'Working conditions'}</div>
+              <div style={labelSt}>{t('uvjetiRada')}</div>
               <div style={checkGroup}>
-                <Chk field="uvjetiVisokaTemp" label={lang !== 'en' ? 'visoka temperatura' : 'high temp'} />
-                <Chk field="uvjetiVisokaVlaznost" label={lang !== 'en' ? 'visoka vlažnost' : 'high humidity'} />
-                <Chk field="uvjetiNiskaTemp" label={lang !== 'en' ? 'niska temperatura' : 'low temp'} />
-                <Chk field="uvjetiBuka" label={lang !== 'en' ? 'buka' : 'noise'} />
-                <Chk field="uvjetiVibracijeStroj" label={lang !== 'en' ? 'vibracije stroja ili alata' : 'machine vibrations'} />
-                <Chk field="uvjetiVibracijePoda" label={lang !== 'en' ? 'vibracije poda' : 'floor vibrations'} />
-                <Chk field="uvjetiPoviseniTlak" label={lang !== 'en' ? 'povišeni atmosferski tlak' : 'increased pressure'} />
-                <Chk field="uvjetiPovecanaOzljeda" label={lang !== 'en' ? 'povećana izloženost ozljedama' : 'increased injury risk'} />
-                <Chk field="uvjetiIonizacija" label={lang !== 'en' ? 'ionizacijska zračenja' : 'ionizing radiation'} />
-                <Chk field="uvjetiNeionizacija" label={lang !== 'en' ? 'neionizacijska zračenja' : 'non-ionizing radiation'} />
-                <Chk field="uvjetiPrasina" label={lang !== 'en' ? 'prašina' : 'dust'} />
+                <Chk field="uvjetiVisokaTemp" label={t('visokaTemperatura')} />
+                <Chk field="uvjetiVisokaVlaznost" label={t('visokaVlaznost')} />
+                <Chk field="uvjetiNiskaTemp" label={t('niskaTemperatura')} />
+                <Chk field="uvjetiBuka" label={t('buka')} />
+                <Chk field="uvjetiVibracijeStroj" label={t('vibracijeStrojaIliAlata')} />
+                <Chk field="uvjetiVibracijePoda" label={t('vibracijePoda')} />
+                <Chk field="uvjetiPoviseniTlak" label={t('poviseniAtmosferskiTlak')} />
+                <Chk field="uvjetiPovecanaOzljeda" label={t('povecanaIzlozenostOzljedama')} />
+                <Chk field="uvjetiIonizacija" label={t('ionizacijskaZracenja')} />
+                <Chk field="uvjetiNeionizacija" label={t('neionizacijskaZracenja')} />
+                <Chk field="uvjetiPrasina" label={t('prasina1')} />
               </div>
             </div>
 
             {/* Chemical & Biological */}
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Kemijske tvari' : 'Chemical agents'}</div>
+              <div style={labelSt}>{t('kemijskeTvari')}</div>
               <textarea className="form-input" rows={2} value={formData.kemijskeTvari} onChange={e => set('kemijskeTvari', e.target.value)} />
             </div>
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Biološke štetnosti' : 'Biological hazards'}</div>
+              <div style={labelSt}>{t('bioloskeStetnosti')}</div>
               <textarea className="form-input" rows={2} value={formData.bioloskeStetnosti} onChange={e => set('bioloskeStetnosti', e.target.value)} />
             </div>
 
             <div style={{ marginBottom: 14 }}>
-              <div style={labelSt}>{lang !== 'en' ? 'Odgovorna osoba' : 'Responsible person'}</div>
+              <div style={labelSt}>{t('odgovornaOsoba')}</div>
               <input className="form-input" value={formData.odgovornaOsoba} onChange={e => set('odgovornaOsoba', e.target.value)} />
             </div>
           </div>
@@ -840,21 +840,21 @@ export default function ReferralRA1Page() {
         {/* ═══ Document Upload ═══ */}
         <div className="card">
           <div className="card-body">
-            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{lang !== 'en' ? 'Prilog' : 'Attachment'}</div>
+            <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>{t('prilog')}</div>
             <div className="form-group" style={{ marginBottom: 0 }}>
-              <label className="form-label">📎 {lang !== 'en' ? 'Dokument (PDF, Word, maks. 2MB)' : 'Document (PDF, Word, max 2MB)'}</label>
+              <label className="form-label">📎 {t('dokumentPdfWordMaks2mb')}</label>
               {formData.docName ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'rgba(33,150,243,0.06)', borderRadius: 8, border: '1px solid rgba(33,150,243,0.2)' }}>
                       <button type="button" onClick={() => openDoc(formData.docData, formData.docName)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600, padding: 0, textDecoration: 'underline', textDecorationStyle: 'solid' }}>📎 {formData.docName}</button>
                       <div className="scrollable-toolbar" style={{ padding: 0, gap: 8 }}>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={lang !== 'en' ? 'Pregled priloga' : 'View attachment'}>👁 {lang !== 'en' ? 'Otvori' : 'Open'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={lang !== 'en' ? 'Preuzmi prilog' : 'Download attachment'}>↓ {lang !== 'en' ? 'Preuzmi' : 'Download'}</button>
-                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Ukloni prilog' : 'Remove attachment'}>✕ {lang !== 'en' ? 'Ukloni' : 'Remove'}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => openDoc(formData.docData, formData.docName)} style={{ color: 'var(--info)' }} title={t('pregledPriloga')}>👁 {t('otvori')}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={() => downloadDoc({ docData: formData.docData, docName: formData.docName })} style={{ color: 'var(--primary)' }} title={t('preuzmiPrilog')}>↓ {t('preuzmi')}</button>
+                        <button type="button" className="btn btn-ghost btn-sm" onClick={(e) => { e.preventDefault(); setFormData(p => ({ ...p, docName: '', docData: '' })); }} style={{ color: 'var(--danger)' }} title={t('ukloniPrilog')}>✕ {t('ukloni')}</button>
                       </div>
                   </div>
               ) : (
                   <div onClick={() => docInputRef.current?.click()} style={{ border: '2px dashed var(--border)', borderRadius: 8, padding: '16px', textAlign: 'center', cursor: 'pointer', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      📂 {lang !== 'en' ? 'Kliknite za upload dokumenta (Word, PDF)' : 'Click to upload document (Word, PDF)'}
+                      📂 {t('klikniteZaUploadDokumentaWord')}
                   </div>
               )}
               <input ref={docInputRef} type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={handleDocUpload} />
@@ -869,7 +869,7 @@ export default function ReferralRA1Page() {
               💾 {t('save')}
             </button>
             <button className="btn btn-outline" onClick={async () => { await handleSave(); handleNew(); }}>
-              💾 {lang !== 'en' ? 'Sačuvaj i nova' : 'Save & new'}
+              💾 {t('sacuvajINova')}
             </button>
             <button className="btn btn-ghost" onClick={() => setShowForm(false)}>
               ↩ {t('cancel')}

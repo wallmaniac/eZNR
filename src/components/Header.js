@@ -235,9 +235,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                     borderBottom: '1px solid var(--border-light)',
                 }}>
                     {/* Back / Forward */}
-                    <button onClick={handleBack} title={lang !== 'en' ? 'Nazad' : 'Back'}
+                    <button onClick={handleBack} title={t('nazad')}
                         style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>←</button>
-                    <button onClick={() => router.forward?.() || window.history.forward()} title={lang !== 'en' ? 'Naprijed' : 'Forward'}
+                    <button onClick={() => router.forward?.() || window.history.forward()} title={t('naprijed')}
                         style={{ ...iBtn({ width: 36, height: 32, fontSize: '0.9rem' }), border: '1px solid var(--border)', borderRadius: 8, background: 'var(--bg-input)' }}>→</button>
 
                     {/* Company chip */}
@@ -260,7 +260,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {showCompanyMenu && typeof document !== 'undefined' && createPortal(
                             <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, left: '5%', width: '90%', zIndex: 99999, maxHeight: '75vh', overflowY: 'auto', borderRadius: 16, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>🏢 {isSuperAdmin ? (lang !== 'en' ? 'Sve firme klijenata' : 'All client companies') : (lang !== 'en' ? 'Moje firme' : 'My companies')}</span>
+                                    <span>🏢 {isSuperAdmin ? (t('sveFirmeKlijenata')) : (t('mojeFirme'))}</span>
                                     <button onClick={() => { setShowCompanyMenu(false); setCompanySearchTerm(''); }} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'inherit', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                 </div>
                                 {/* Fast company search bar */}
@@ -270,7 +270,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                             <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', opacity: 0.5 }}>🔍</span>
                                             <input
                                                 value={companySearchTerm} onChange={e => setCompanySearchTerm(e.target.value)}
-                                                placeholder={lang !== 'en' ? 'Pretraži firme...' : 'Search companies...'}
+                                                placeholder={t('pretraziFirme')}
                                                 style={{ width: '100%', padding: '6px 10px 6px 30px', fontSize: '0.85rem', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', outline: 'none' }}
                                                 autoFocus
                                             />
@@ -282,14 +282,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     <>
                                         <button className="dropdown-item" onClick={async () => { await switchCompany('all'); setShowCompanyMenu(false); router.push('/dashboard'); }}
                                             style={{ fontWeight: activeCompanyId === 'all' ? 700 : 400, padding: '12px 16px', fontSize: '0.9rem' }}>
-                                            {activeCompanyId === 'all' ? '✅' : '🌐'} {lang !== 'en' ? 'Sve firme' : 'All companies'}
+                                            {activeCompanyId === 'all' ? '✅' : '🌐'} {t('sveFirme')}
                                         </button>
                                         <div className="dropdown-divider" />
                                     </>
                                 )}
                                 {filteredCompaniesForMenu.length === 0 && (
                                     <div style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>
-                                        {companySearchTerm ? (lang !== 'en' ? 'Nema rezultata.' : 'No results found.') : (isSuperAdmin ? (lang !== 'en' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang !== 'en' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.'))}
+                                        {companySearchTerm ? (t('nemaRezultata1')) : (isSuperAdmin ? (t('nemaRegistrovanihFirmi')) : (t('nemaDodijeljenihFirmi')))}
                                     </div>
                                 )}
                                 {filteredCompaniesForMenu.map(c => (
@@ -301,7 +301,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 {/* Add new company - Available for all roles */}
                                 <div className="dropdown-divider" />
                                 <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 700, padding: '12px 16px', fontSize: '0.9rem', justifyContent: 'center' }}>
-                                    ➕ {lang !== 'en' ? 'Dodaj firmu' : 'Add company'}
+                                    ➕ {t('dodajFirmu')}
                                 </button>
                             </div>,
                             document.body
@@ -347,14 +347,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {showNotifs && typeof document !== 'undefined' && createPortal(
                             <div onMouseDown={e => e.stopPropagation()} style={{ position: 'fixed', top: 58, right: 8, left: 8, zIndex: 99999, maxHeight: '80vh', overflowY: 'auto', borderRadius: 14, background: 'var(--bg-card)', border: '1px solid var(--border)', boxShadow: '0 8px 40px rgba(0,0,0,0.35)' }}>
                                 <div style={{ padding: '12px 14px', fontWeight: 700, fontSize: '0.9rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span>🔔 {lang !== 'en' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
+                                    <span>🔔 {t('obavijesti')} ({notifications.length})</span>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                         {isAdmin && <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)' }}>v{APP_VERSION}</span>}
                                         <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', fontSize: '1.2rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer', padding: '0 4px' }}>✕</button>
                                     </div>
                                 </div>
                                 {notifications.length === 0 ? (
-                                    <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>✅ {lang !== 'en' ? 'Sve je u redu!' : 'All good!'}</div>
+                                    <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.9rem' }}>✅ {t('sveJeURedu')}</div>
                                 ) : notifications.map((n, idx) => {
                                     const sc = { critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: 'var(--danger)' }, urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: 'var(--warning)' }, warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: 'var(--warning)' }, info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: 'var(--success)' } };
                                     const c = sc[n.severity] || sc.info;
@@ -367,7 +367,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                     {n.detail && <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>{n.detail}</div>}
                                                     <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
                                                         {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 6, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
-                                                        {n.id && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>✕ {lang !== 'en' ? 'Odbaci' : 'Dismiss'}</button>}
+                                                        {n.id && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 6, border: '1px solid var(--border)', background: 'var(--bg-card)', color: 'var(--text-muted)', cursor: 'pointer', fontWeight: 600 }}>✕ {t('odbaci')}</button>}
                                                     </div>
                                                 </div>
                                             </div>
@@ -400,10 +400,10 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 }}>
                     {/* ══ LEFT ISLAND: Navigation + Company ══ */}
                     <div style={{ ...island, boxShadow: '0 2px 14px rgba(0,191,166,0.12), 0 1px 3px rgba(0,0,0,0.07)' }}>
-                        <button title={lang !== 'en' ? 'Nazad' : 'Back'} onClick={handleBack} style={iBtn()}
+                        <button title={t('nazad')} onClick={handleBack} style={iBtn()}
                             onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>←</button>
-                        <button title={lang !== 'en' ? 'Naprijed' : 'Forward'} onClick={() => router.forward?.() || window.history.forward()} style={iBtn()}
+                        <button title={t('naprijed')} onClick={() => router.forward?.() || window.history.forward()} style={iBtn()}
                             onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = 'white'; }}
                             onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--text-muted)'; }}>→</button>
                         {sep}
@@ -414,9 +414,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                 onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}>
                                 <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', flexShrink: 0 }}>🏢</span>
                                 <div>
-                                    <div style={{ fontSize: '0.58rem', fontWeight: 600, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.3px', lineHeight: 1, marginBottom: 1 }}>{lang !== 'en' ? 'Aktivna firma' : 'Active company'}</div>
+                                    <div style={{ fontSize: '0.58rem', fontWeight: 600, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.3px', lineHeight: 1, marginBottom: 1 }}>{t('aktivnaFirma')}</div>
                                     <div style={{ fontSize: '0.79rem', fontWeight: 700, color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>
-                                        {activeCompanyId === 'all' ? (lang !== 'en' ? 'Sve firme' : 'All companies') : (activeCompany?.skraceniNaziv || activeCompany?.naziv || (lang !== 'en' ? 'Odaberi' : 'Select'))}
+                                        {activeCompanyId === 'all' ? (t('sveFirme')) : (activeCompany?.skraceniNaziv || activeCompany?.naziv || (t('odaberi2')))}
                                     </div>
                                 </div>
                                 <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.75)', flexShrink: 0 }}>▼</span>
@@ -424,7 +424,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             {showCompanyMenu && (
                                 <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', left: 0, minWidth: 300, zIndex: 200 }}>
                                     <div style={{ padding: '10px 16px', fontWeight: 700, fontSize: '0.8rem', borderBottom: '1px solid var(--border-light)', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>🏢 {isSuperAdmin ? (lang !== 'en' ? 'Sve firme klijenata' : 'All client companies') : (lang !== 'en' ? 'Moje firme' : 'My companies')}</span>
+                                        <span>🏢 {isSuperAdmin ? (t('sveFirmeKlijenata')) : (t('mojeFirme'))}</span>
                                         <button onClick={() => { setShowCompanyMenu(false); setCompanySearchTerm(''); }} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'inherit', cursor: 'pointer' }}>✕</button>
                                     </div>
 
@@ -435,7 +435,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                 <span style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', opacity: 0.5 }}>🔍</span>
                                                 <input
                                                     value={companySearchTerm} onChange={e => setCompanySearchTerm(e.target.value)}
-                                                    placeholder={lang !== 'en' ? 'Pretraži firme...' : 'Search companies...'}
+                                                    placeholder={t('pretraziFirme')}
                                                     style={{ width: '100%', padding: '6px 10px 6px 30px', fontSize: '0.85rem', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-input)', outline: 'none' }}
                                                     autoFocus
                                                 />
@@ -446,7 +446,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     {!isSuperAdmin && !companySearchTerm && (
                                         <>
                                             <button className="dropdown-item" onClick={async () => { await switchCompany('all'); setShowCompanyMenu(false); router.push('/dashboard'); }} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', fontWeight: activeCompanyId === 'all' ? 700 : 400 }}>
-                                                <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{lang !== 'en' ? 'Sve firme' : 'All companies'}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Kombinirani prikaz' : 'Combined view'}</div></div>
+                                                <span>{activeCompanyId === 'all' ? '✅' : '🌐'}</span><div style={{ flex: 1 }}><div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{t('sveFirme')}</div><div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{t('kombiniraniPrikaz')}</div></div>
                                             </button>
                                             <div className="dropdown-divider" />
                                         </>
@@ -455,7 +455,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     {/* Company list */}
                                     {filteredCompaniesForMenu.length === 0 && (
                                         <div style={{ padding: '14px 16px', color: 'var(--text-muted)', fontSize: '0.83rem', textAlign: 'center' }}>
-                                            {companySearchTerm ? (lang !== 'en' ? 'Nema rezultata.' : 'No results found.') : (isSuperAdmin ? (lang !== 'en' ? 'Nema registrovanih firmi.' : 'No registered companies.') : (lang !== 'en' ? 'Nema dodijeljenih firmi.' : 'No companies assigned.'))}
+                                            {companySearchTerm ? (t('nemaRezultata1')) : (isSuperAdmin ? (t('nemaRegistrovanihFirmi')) : (t('nemaDodijeljenihFirmi')))}
                                         </div>
                                     )}
                                     <div style={{ maxHeight: '55vh', overflowY: 'auto' }}>
@@ -471,7 +471,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                             {isHolding && <span style={{ fontSize: '0.6rem', padding: '1px 4px', borderRadius: 4, background: 'rgba(0,191,166,0.1)', color: 'var(--primary)', fontWeight: 800 }}>HOLDING</span>}
                                                         </div>
                                                         {parent ? (
-                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>↳ {lang !== 'en' ? 'Dio od' : 'Sub of'}: {parent.naziv || parent.skraceniNaziv}</div>
+                                                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>↳ {t('dioOd')}: {parent.naziv || parent.skraceniNaziv}</div>
                                                         ) : (
                                                             c.mjesto && <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{c.mjesto}</div>
                                                         )}
@@ -484,7 +484,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
 
                                     {/* Add new company - Available for all roles */}
                                     <div className="dropdown-divider" />
-                                    <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>➕ {lang !== 'en' ? 'Dodaj novu firmu' : 'Add new company'}</button>
+                                    <button className="dropdown-item" onClick={() => { setShowCompanyMenu(false); setShowNewCompanyModal(true); }} style={{ color: 'var(--primary)', fontWeight: 600 }}>➕ {t('dodajNovuFirmu')}</button>
                                 </div>
                             )}
                         </div>
@@ -501,9 +501,9 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                         {searchFocused && searchTerm.length >= 2 && (
                             <div className="search-dropdown" style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, right: 0, background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)', boxShadow: '0 8px 30px rgba(11,42,60,0.15)', border: '1px solid var(--border)', zIndex: 200, overflow: 'hidden' }}>
                                 {searchResults.length === 0 ? (
-                                    <div style={{ padding: '16px 20px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>{lang !== 'en' ? 'Nema rezultata' : 'No results'}</div>
+                                    <div style={{ padding: '16px 20px', color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center' }}>{t('nemaRezultata')}</div>
                                 ) : (<>
-                                    <div style={{ padding: '8px 16px', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{lang !== 'en' ? 'Rezultati pretrage' : 'Search results'} ({searchResults.length})</div>
+                                    <div style={{ padding: '8px 16px', fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t('rezultatiPretrage')} ({searchResults.length})</div>
                                     {searchResults.map((r, idx) => (
                                         <button key={idx} onClick={() => handleSearchNav(r)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 16px', width: '100%', border: 'none', background: 'transparent', cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
                                             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-table-row-hover)'}
@@ -514,7 +514,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{r.sub}</div>
                                             </div>
                                             <span style={{ fontSize: '0.65rem', padding: '2px 8px', borderRadius: 10, background: 'var(--bg-badge)', color: 'var(--primary-dark)', fontWeight: 600 }}>
-                                                {r.type === 'worker' ? (lang !== 'en' ? 'Radnik' : 'Worker') : r.type === 'equipment' ? (lang !== 'en' ? 'Oprema' : 'Equipment') : r.type === 'workplace' ? (lang !== 'en' ? 'Radno mj.' : 'Workplace') : r.type === 'orgUnit' ? (lang !== 'en' ? 'Org. jed.' : 'Org. unit') : r.type === 'vehicle' ? (lang !== 'en' ? 'Vozilo' : 'Vehicle') : r.type === 'medical_exam' ? (lang !== 'en' ? 'Lj. Pregled' : 'Medical') : r.type === 'observation' ? (lang !== 'en' ? 'Prijava op..' : 'Observation') : r.type === 'certificate' ? (lang !== 'en' ? 'Uvjerenje' : 'Certificate') : ''}
+                                                {r.type === 'worker' ? (t('radnik1')) : r.type === 'equipment' ? (t('oprema')) : r.type === 'workplace' ? (t('radnoMj')) : r.type === 'orgUnit' ? (t('orgJed')) : r.type === 'vehicle' ? (t('vozilo1')) : r.type === 'medical_exam' ? (t('ljPregled')) : r.type === 'observation' ? (t('prijavaOp')) : r.type === 'certificate' ? (t('uvjerenje')) : ''}
                                             </span>
                                         </button>
                                     ))}
@@ -569,14 +569,14 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                             {showNotifs && (
                                 <div className="dropdown-menu" style={{ top: 'calc(100% + 8px)', right: 0, left: 'auto', minWidth: 380, maxHeight: 500, overflowY: 'auto' }}>
                                     <div style={{ padding: '12px 16px', fontWeight: 700, fontSize: '0.85rem', borderBottom: '1px solid var(--border-light)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span>🔔 {lang !== 'en' ? 'Obavijesti' : 'Notifications'} ({notifications.length})</span>
+                                        <span>🔔 {t('obavijesti')} ({notifications.length})</span>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                                             {isAdmin && <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontWeight: 400 }}>v{APP_VERSION}</span>}
                                             <button onClick={() => setShowNotifs(false)} style={{ background: 'none', border: 'none', fontSize: '1.1rem', lineHeight: 1, color: 'var(--text-muted)', cursor: 'pointer' }}>✕</button>
                                         </div>
                                     </div>
                                     {notifications.length === 0 ? (
-                                        <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>✅ {lang !== 'en' ? 'Sve je u redu!' : 'All good!'}</div>
+                                        <div style={{ padding: 20, textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>✅ {t('sveJeURedu')}</div>
                                     ) : notifications.map((n, idx) => {
                                         const sc = { critical: { bg: 'rgba(239,68,68,0.10)', border: '#EF4444', titleColor: 'var(--danger)' }, urgent: { bg: 'rgba(249,115,22,0.10)', border: '#F97316', titleColor: 'var(--warning)' }, warning: { bg: 'rgba(245,158,11,0.10)', border: '#F59E0B', titleColor: 'var(--warning)' }, info: { bg: 'rgba(34,197,94,0.10)', border: '#22C55E', titleColor: 'var(--success)' } };
                                         const c = sc[n.severity] || sc.info;
@@ -592,7 +592,7 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                                         {n.detail && <div style={{ fontSize: '0.75rem', color: 'var(--text-light)', marginTop: 3 }}>{n.detail}</div>}
                                                         <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
                                                             {n.actionLabel && <button onClick={() => handleNotifNav(n.path)} style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 4, border: `1px solid ${c.border}`, background: c.border, color: 'white', fontWeight: 700, cursor: 'pointer' }}>{n.actionLabel}</button>}
-                                                            {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {lang !== 'en' ? 'Odbaci' : 'Dismiss'}</button>}
+                                                            {n.id && isAdmin && <button onClick={e => { e.stopPropagation(); dismissNotification(n.id); setShowNotifs(false); setTimeout(() => setShowNotifs(true), 50); }} style={{ fontSize: '0.65rem', padding: '2px 6px', borderRadius: 4, border: '1px solid var(--border)', background: 'transparent', color: 'var(--text-muted)', cursor: 'pointer' }}>✕ {t('odbaci')}</button>}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -634,8 +634,8 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                                     <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/settings?tab=app')}>⚙️ {t('settings')}</button>
                                     {isAdmin && (<>
                                         <div className="dropdown-divider" />
-                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {lang !== 'en' ? 'Upravljanje korisnicima' : 'User Management'}</button>
-                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/companies')} style={{ color: '#0288D1', fontWeight: 600 }}>🏢 {lang !== 'en' ? 'Upravljanje firmama' : 'Company Management'}</button>
+                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/users')} style={{ color: '#7B1FA2', fontWeight: 600 }}>👑 {t('upravljanjeKorisnicima')}</button>
+                                        <button className="dropdown-item" onClick={() => handleProfileNav('/dashboard/admin/companies')} style={{ color: '#0288D1', fontWeight: 600 }}>🏢 {t('upravljanjeFirmama')}</button>
                                     </>)}
                                     <div className="dropdown-divider" />
                                     <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={handleLogout}>🚪 {t('logout')}</button>
@@ -652,27 +652,27 @@ export default function Header({ sidebarCollapsed, isMobile = false, onMobileMen
                 <div className="modal-overlay" onClick={() => setShowNewCompanyModal(false)} style={{ zIndex: 300 }}>
                     <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-                            <h2 style={{ color: 'white' }}>🏢 {lang !== 'en' ? 'Nova firma' : 'New Company'}</h2>
+                            <h2 style={{ color: 'white' }}>🏢 {t('novaFirma')}</h2>
                             <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowNewCompanyModal(false)}>✕</button>
                         </div>
                         <div className="modal-body">
                             <div className="form-group">
-                                <label className="form-label">{lang !== 'en' ? 'Naziv firme' : 'Company name'} *</label>
+                                <label className="form-label">{t('nazivFirme')} *</label>
                                 <input className="form-input" value={newCompanyData.naziv} onChange={e => setNewCompanyData(p => ({ ...p, naziv: e.target.value }))} placeholder="ABC d.o.o." required />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                                <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Adresa' : 'Address'}</label><input className="form-input" value={newCompanyData.adresa} onChange={e => setNewCompanyData(p => ({ ...p, adresa: e.target.value }))} /></div>
-                                <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Mjesto' : 'City'}</label><input className="form-input" value={newCompanyData.mjesto} onChange={e => setNewCompanyData(p => ({ ...p, mjesto: e.target.value }))} /></div>
+                                <div className="form-group"><label className="form-label">{t('adresa')}</label><input className="form-input" value={newCompanyData.adresa} onChange={e => setNewCompanyData(p => ({ ...p, adresa: e.target.value }))} /></div>
+                                <div className="form-group"><label className="form-label">{t('mjesto')}</label><input className="form-input" value={newCompanyData.mjesto} onChange={e => setNewCompanyData(p => ({ ...p, mjesto: e.target.value }))} /></div>
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                                <div className="form-group"><label className="form-label">{lang !== 'en' ? 'Telefon' : 'Phone'}</label><input className="form-input" value={newCompanyData.telefon} onChange={e => setNewCompanyData(p => ({ ...p, telefon: e.target.value }))} /></div>
+                                <div className="form-group"><label className="form-label">{t('telefon')}</label><input className="form-input" value={newCompanyData.telefon} onChange={e => setNewCompanyData(p => ({ ...p, telefon: e.target.value }))} /></div>
                                 <div className="form-group"><label className="form-label">Email</label><input className="form-input" type="email" value={newCompanyData.email} onChange={e => setNewCompanyData(p => ({ ...p, email: e.target.value }))} /></div>
                             </div>
                             {isAdmin && officers.length > 0 && (
                                 <div className="form-group" style={{ marginTop: 12 }}>
-                                    <label className="form-label">{lang !== 'en' ? 'Dodijeli stručnjaku ZNR' : 'Assign to Officer'}</label>
+                                    <label className="form-label">{t('dodijeliStrucnjakuZnr')}</label>
                                     <select className="form-input" value={newCompanyData.assignedOfficerId} onChange={e => setNewCompanyData(p => ({ ...p, assignedOfficerId: e.target.value }))}>
-                                        <option value="">-- {lang !== 'en' ? 'Samo za mene' : 'Do not assign yet'} --</option>
+                                        <option value="">-- {t('samoZaMene')} --</option>
                                         {officers.map(o => <option key={o.id} value={o.id}>{o.firstName} {o.lastName} ({o.email})</option>)}
                                     </select>
                                 </div>

@@ -105,11 +105,11 @@ export default function AdminCompaniesPage() {
         const file = e.target.files?.[0];
         if (!file) return;
         if (!file.type.startsWith('image/')) {
-            setLogoError(lang !== 'en' ? 'Samo slike su dozvoljene.' : 'Only images are allowed.');
+            setLogoError(t('samoSlikeSuDozvoljene'));
             return;
         }
         if (file.size> 500000) {
-            setLogoError(lang !== 'en' ? 'Logo mora biti manji od 500KB' : 'Logo must be under 500KB');
+            setLogoError(t('logoMoraBitiManjiOd'));
             return;
         }
         setLogoError('');
@@ -150,11 +150,11 @@ export default function AdminCompaniesPage() {
             <DialogRenderer />
             <PageHeader 
                 icon="🏢" 
-                title={lang !== 'en' ? 'Upravljanje firmama' : 'Company Management'} 
-                subtitle={lang !== 'en' ? 'Sve registrirane firme u sistemu' : 'All registered companies in the system'} 
+                title={t('upravljanjeFirmama')} 
+                subtitle={t('sveRegistriraneFirmeUSistemu')} 
                 actions={
                     <button className="btn btn-primary btn-sm" onClick={openNew} style={{ flexShrink: 0 }}>
-                        ➕ {lang !== 'en' ? 'Nova firma' : 'New Company'}
+                        ➕ {t('novaFirma')}
                     </button>
                 }
             />
@@ -181,7 +181,7 @@ export default function AdminCompaniesPage() {
                                             )}
                                             {c.parentId && (() => {
                                                 const p = companies.find(comp => comp.id === c.parentId);
-                                                return p ? <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>🔗 {lang !== 'en' ? 'Dio Holdinga:' : 'Part of Holding:'} {p.naziv}</div> : null;
+                                                return p ? <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>🔗 {t('dioHoldinga')} {p.naziv}</div> : null;
                                             })()}
                                         </div>
                                     </div>
@@ -206,7 +206,7 @@ export default function AdminCompaniesPage() {
                                 {/* Users in this company */}
                                 <div style={{ marginTop: 10, paddingTop: 8, borderTop: '1px solid var(--border-light)' }}>
                                     <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: 5 }}>
-                                        👥 {lang !== 'en' ? 'Korisnici' : 'Users'} ({companyUsers.length})
+                                        👥 {t('korisnici')} ({companyUsers.length})
                                     </div>
                                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                                         {companyUsers.map(u => {
@@ -227,7 +227,7 @@ export default function AdminCompaniesPage() {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(c)}>✏️ {lang !== 'en' ? 'Uredi' : 'Edit'}</button>
+                                    <button className="btn btn-ghost btn-sm" onClick={() => openEdit(c)}>✏️ {t('uredi')}</button>
                                     <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDelete(c)}>🗑️</button>
                                 </div>
                             </div>
@@ -242,7 +242,7 @@ export default function AdminCompaniesPage() {
                     <div className="modal" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
                             <h2 style={{ color: 'white' }}>
-                                {editCompany ? '✏️' : '➕'} {editCompany ? (lang !== 'en' ? 'Uredi firmu' : 'Edit Company') : (lang !== 'en' ? 'Nova firma' : 'New Company')}
+                                {editCompany ? '✏️' : '➕'} {editCompany ? (t('urediFirmu')) : (t('novaFirma'))}
                             </h2>
                             <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setShowModal(false)}>✕</button>
                         </div>
@@ -250,14 +250,14 @@ export default function AdminCompaniesPage() {
 
                             {/* Puni naziv */}
                             <div className="form-group">
-                                <label className="form-label">{lang !== 'en' ? 'Puni naziv' : 'Full name'} *</label>
+                                <label className="form-label">{t('puniNaziv')} *</label>
                                 <input className="form-input" value={formData.naziv} onChange={e => setFormData(p => ({ ...p, naziv: e.target.value }))} required />
                             </div>
 
                             
                             {/* Parent Company */}
                             <div className="form-group" style={{ marginTop: 12 }}>
-                                <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 700 }}>🔗 {lang !== 'en' ? 'Pripada Holdingu (Kćerka firma)' : 'Parent Company (Subsidiary)'}</label>
+                                <label className="form-label" style={{ color: 'var(--primary)', fontWeight: 700 }}>🔗 {t('pripadaHoldinguKcerkaFirma')}</label>
                                 <select className="form-select" value={formData.parentId} onChange={e => setFormData(p => ({ ...p, parentId: e.target.value }))}>
                                     <option value="">- Nema (Nezavisna firma / Holding) -</option>
                                     {companies.filter(c => c.id !== editCompany?.id && !c.parentId).map(c => (
@@ -270,7 +270,7 @@ export default function AdminCompaniesPage() {
                             {/* Skraćeni naziv + OIB */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Skraćeni naziv' : 'Short name'}</label>
+                                    <label className="form-label">{t('skraceniNaziv')}</label>
                                     <input className="form-input" value={formData.skraceniNaziv} onChange={e => setFormData(p => ({ ...p, skraceniNaziv: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
@@ -282,11 +282,11 @@ export default function AdminCompaniesPage() {
                             {/* Adresa + Mjesto */}
                             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Adresa' : 'Address'}</label>
+                                    <label className="form-label">{t('adresa')}</label>
                                     <input className="form-input" value={formData.adresa} onChange={e => setFormData(p => ({ ...p, adresa: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Mjesto' : 'City'}</label>
+                                    <label className="form-label">{t('mjesto')}</label>
                                     <input className="form-input" value={formData.mjesto} onChange={e => setFormData(p => ({ ...p, mjesto: e.target.value }))} />
                                 </div>
                             </div>
@@ -294,11 +294,11 @@ export default function AdminCompaniesPage() {
                             {/* Poštanski broj + Telefon + Email */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Poštanski br.' : 'Postal code'}</label>
+                                    <label className="form-label">{t('postanskiBr')}</label>
                                     <input className="form-input" value={formData.postanskiBroj} onChange={e => setFormData(p => ({ ...p, postanskiBroj: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Telefon' : 'Phone'}</label>
+                                    <label className="form-label">{t('telefon')}</label>
                                     <input className="form-input" value={formData.telefon} onChange={e => setFormData(p => ({ ...p, telefon: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
@@ -310,47 +310,47 @@ export default function AdminCompaniesPage() {
                             {/* Direktor + Stručno lice */}
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Direktor' : 'Director'}</label>
+                                    <label className="form-label">{t('direktor')}</label>
                                     <input className="form-input" value={formData.direktor} onChange={e => setFormData(p => ({ ...p, direktor: e.target.value }))} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Stručno lice ZNR' : 'OHS Specialist'}</label>
+                                    <label className="form-label">{t('strucnoLiceZnr')}</label>
                                     <input className="form-input" value={formData.strucnoLice} onChange={e => setFormData(p => ({ ...p, strucnoLice: e.target.value }))} />
                                 </div>
                             </div>
 
                             {/* Logo upload — same as Postavke */}
                             <div style={{ marginTop: 16, padding: 14, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
-                                <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 10 }}>🖼️ {lang !== 'en' ? 'Logo firme' : 'Company Logo'}</div>
+                                <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 10 }}>🖼️ {t('logoFirme')}</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                                     {formData.logo ? (
                                         <img src={formData.logo} alt="Logo" style={{ height: 56, maxWidth: 180, objectFit: 'contain', borderRadius: 8, background: '#fff', padding: 4, border: '1px solid var(--border-light)' }} />
                                     ) : (
                                         <div style={{ height: 56, width: 100, borderRadius: 8, border: '2px dashed var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.72rem' }}>
-                                            {lang !== 'en' ? 'Nema loga' : 'No logo'}
+                                            {t('nemaLoga')}
                                         </div>
                                     )}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
                                         <label style={{ cursor: 'pointer', padding: '7px 14px', borderRadius: 8, background: 'var(--primary)', color: '#fff', fontWeight: 600, fontSize: '0.8rem', display: 'inline-block' }}>
-                                            📁 {lang !== 'en' ? 'Učitaj logo' : 'Upload Logo'}
+                                            📁 {t('ucitajLogo')}
                                             <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleLogoUpload} />
                                         </label>
                                         {logoError && <div style={{ fontSize: '0.73rem', color: 'var(--danger)', fontWeight: 600 }}>⚠️ {logoError}</div>}
                                         {formData.logo && (
                                             <button onClick={() => setFormData(p => ({ ...p, logo: '' }))} style={{ padding: '5px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 600 }}>
-                                                🗑️ {lang !== 'en' ? 'Ukloni logo' : 'Remove Logo'}
+                                                🗑️ {t('ukloniLogo')}
                                             </button>
                                         )}
                                     </div>
                                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                        {lang !== 'en' ? 'PNG ili SVG, max 500KB.' : 'PNG or SVG, max 500KB.'}
+                                        {t('pngIliSvgMax500kb')}
                                     </div>
                                 </div>
                             </div>
 
                             {editCompany && assignableUsers.length> 0 && (
                               <div style={{ marginTop: 20, padding: 14, borderRadius: 12, background: 'var(--bg-input)', border: '1px solid var(--border)' }}>
-                                <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12 }}>👮 {lang !== 'en' ? 'Dodijeljeni korisnici (Admini i Stručnjaci)' : 'Assigned Users (Admins and Officers)'}</div>
+                                <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12 }}>👮 {t('dodijeljeniKorisniciAdminiIStrucnjaci')}</div>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                                   {assignableUsers.map(officer => {
                                     const isDirectlyAssigned = (officer.companyIds || []).includes(editCompany.id);
@@ -365,7 +365,7 @@ export default function AdminCompaniesPage() {
                                             toggleOfficerAssignment(officer.id);
                                         }}
                                         disabled={isInherited}
-                                        title={isInherited ? (lang !== 'en' ? 'Naslijeđen pristup preko holdinga' : 'Inherited access via holding') : ''}
+                                        title={isInherited ? (t('naslijeenPristupPrekoHoldinga')) : ''}
                                         style={{
                                           display: 'flex', alignItems: 'center', gap: 6,
                                           padding: '4px 10px', borderRadius: 20, cursor: isInherited ? 'default' : 'pointer',
@@ -388,7 +388,7 @@ export default function AdminCompaniesPage() {
                             {/* Aktivna firma */}
                             <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                                 <input type="checkbox" id="aktivan-check" checked={formData.aktivan} onChange={e => setFormData(p => ({ ...p, aktivan: e.target.checked }))} />
-                                <label htmlFor="aktivan-check" style={{ fontSize: '0.85rem', cursor: 'pointer' }}>{lang !== 'en' ? 'Aktivna firma' : 'Active company'}</label>
+                                <label htmlFor="aktivan-check" style={{ fontSize: '0.85rem', cursor: 'pointer' }}>{t('aktivnaFirma')}</label>
                             </div>
                         </div>
                         <div className="modal-footer">

@@ -4,7 +4,7 @@ import { translations } from '@/i18n/translations';
 
 const LanguageContext = createContext();
 
-const LANG_CYCLE = ['bs', 'hr', 'en'];
+const LANG_CYCLE = ['bs', 'hr', 'en', 'de', 'sl', 'sr'];
 
 export function LanguageProvider({ children }) {
     const [lang, setLang] = useState('bs');
@@ -94,10 +94,10 @@ export function CountryAutoSwitch() {
         if (lastCountryRef.current !== currentCountry) {
             lastCountryRef.current = currentCountry;
             
-            if (currentCountry === 'HR') {
-                setLang('hr');
-            } else if (currentCountry === 'BA') {
-                setLang('bs');
+            const countryLangMap = { HR: 'hr', BA: 'bs', SI: 'sl', DE: 'de', AT: 'de', RS: 'sr' };
+            const autoLang = countryLangMap[currentCountry];
+            if (autoLang) {
+                setLang(autoLang);
             }
             
             // Record this auto-switch and clear any previous manual override flag

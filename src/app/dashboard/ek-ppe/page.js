@@ -9,7 +9,7 @@ import Icon3D from '@/components/Icon3D';
 import PageHeader from '@/components/PageHeader';
 
 export default function EKPPEPage() {
-  const { lang } = useLanguage();
+  const { lang , t } = useLanguage();
   const { alert, confirm, DialogRenderer } = useDialog();
 
   // ── State ──
@@ -89,14 +89,14 @@ export default function EKPPEPage() {
         {/* Toolbar */}
         <div className="scrollable-toolbar" style={{ padding: 0, gap: 12, marginBottom: 20 }}>
           <button className="btn btn-primary btn-sm" onClick={handleOpenNew}>
-            + {lang !== 'en' ? 'Dodaj novu OZO' : 'Add new PPE'}
+            + {t('dodajNovuOzo')}
           </button>
           <div className="search-bar" style={{ flex: 1, maxWidth: 380, display: 'flex', alignItems: 'center' }}>
             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder={lang !== 'en' ? 'Pretraži OZO...' : 'Search PPE...'}
+              placeholder={t('pretraziOzo')}
               style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }}
             />
             {search && <button onClick={() => setSearch('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }}>✕</button>}
@@ -110,7 +110,7 @@ export default function EKPPEPage() {
             </button>
           )}
           <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginLeft: 'auto' }}>
-            {filtered.length} {lang !== 'en' ? 'vrsta OZO' : 'PPE types'}
+            {filtered.length} {t('vrstaOzo')}
           </span>
         </div>
 
@@ -119,16 +119,16 @@ export default function EKPPEPage() {
           <div className="data-table-wrapper"><table className="data-table">
             <thead><tr>
               <th style={{ width: 40, textAlign: 'center' }}>
-                <input type="checkbox" checked={sorted.length> 0 && selected.size === sorted.length} onChange={toggleAll} title={lang !== 'en' ? 'Označi sve' : 'Select all'} />
+                <input type="checkbox" checked={sorted.length> 0 && selected.size === sorted.length} onChange={toggleAll} title={t('oznaciSve')} />
               </th>
               <th style={{ width: 44 }}>Rb.</th>
-              <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{lang !== 'en' ? 'Naziv OZO' : 'PPE Name'}{sortIcon('naziv')}</th>
-              <th style={{ width: 200, textAlign: 'center' }}>{lang !== 'en' ? 'Akcije' : 'Actions'}</th>
+              <th onClick={() => toggleSort('naziv')} style={thStyle('naziv')}>{t('nazivOzo')}{sortIcon('naziv')}</th>
+              <th style={{ width: 200, textAlign: 'center' }}>{t('akcije')}</th>
             </tr></thead>
             <tbody>
               {sorted.length === 0
                 ? <tr><td colSpan={4} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                    {lang !== 'en' ? 'Nema OZO u katalogu.' : 'No PPE in catalogue.'}
+                    {t('nemaOzoUKatalogu')}
                   </td></tr>
                 : sorted.map((p, idx) => (
                   <tr key={p.id} style={{ background: selected.has(p.id) ? 'rgba(var(--primary-rgb,99,102,241),0.07)' : undefined }}>
@@ -141,13 +141,13 @@ export default function EKPPEPage() {
                       <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
                         <button
                           className="btn btn-primary btn-sm"
-                          title={lang !== 'en' ? 'Zaduži radniku' : 'Assign to worker'}
+                          title={t('zaduziRadniku')}
                           onClick={() => handleOpenAssign(p)}
                           style={{ fontSize: '0.78rem' }}>
-                          👤 {lang !== 'en' ? 'Zaduži' : 'Assign'}
+                          👤 {t('zaduzi')}
                         </button>
-                        <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Uredi naziv' : 'Edit name'} onClick={() => handleEdit(p)}>✏️</button>
-                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(p)}>🗑️</button>
+                        <button className="btn btn-ghost btn-sm btn-icon" title={t('urediNaziv')} onClick={() => handleEdit(p)}>✏️</button>
+                        <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('obrisi')} onClick={() => handleDelete(p)}>🗑️</button>
                       </div>
                     </td>
                   </tr>
@@ -168,12 +168,12 @@ export default function EKPPEPage() {
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label className="form-label">{lang !== 'en' ? 'Naziv OZO *' : 'PPE Name *'}</label>
+                <label className="form-label">{t('nazivOzo1')}</label>
                 <input
                   className="form-input"
                   value={form.naziv}
                   onChange={e => setForm({ naziv: e.target.value })}
-                  placeholder={lang !== 'en' ? 'npr. Zaštitna kaciga, Vizir...' : 'e.g. Hard hat, Face shield...'}
+                  placeholder={t('nprZastitnaKacigaVizir')}
                   autoFocus
                   onKeyDown={e => e.key === 'Enter' && handleSave()}
                 />
@@ -194,7 +194,7 @@ export default function EKPPEPage() {
         <div className="modal-overlay" onClick={() => setAssignFor(null)}>
           <div className="modal" style={{ maxWidth: 460 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header" style={{ background: 'linear-gradient(135deg, var(--primary), var(--secondary))' }}>
-              <h2 style={{ color: 'white' }}>👤 {lang !== 'en' ? 'Zaduži OZO radniku' : 'Assign PPE to worker'}</h2>
+              <h2 style={{ color: 'white' }}>👤 {t('zaduziOzoRadniku')}</h2>
               <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAssignFor(null)}>✕</button>
             </div>
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -202,9 +202,9 @@ export default function EKPPEPage() {
                 🦺 {assignFor.naziv}
               </div>
               <div className="form-group">
-                <label className="form-label">👤 {lang !== 'en' ? 'Radnik *' : 'Worker *'}</label>
+                <label className="form-label">👤 {t('radnik')}</label>
                 <select className="form-select" value={assignForm.workerId} onChange={e => setAssignForm(f => ({ ...f, workerId: e.target.value }))}>
-                  <option value="">{lang !== 'en' ? '— Odaberi radnika —' : '— Select worker —'}</option>
+                  <option value="">{t('odaberiRadnika')}</option>
                   {workers.map(w => (
                     <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
                   ))}
@@ -212,11 +212,11 @@ export default function EKPPEPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: 12 }}>
                 <div className="form-group">
-                  <label className="form-label">📅 {lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</label>
+                  <label className="form-label">📅 {t('datumZaduzenja')}</label>
                   <DateInput value={assignForm.datumZaduzenja} onChange={v => setAssignForm(f => ({ ...f, datumZaduzenja: v }))} />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">{lang !== 'en' ? 'Količina' : 'Quantity'}</label>
+                  <label className="form-label">{t('kolicina')}</label>
                   <input className="form-input" type="number" min="1" value={assignForm.kolicina} onChange={e => setAssignForm(f => ({ ...f, kolicina: parseInt(e.target.value) || 1 }))} />
                 </div>
               </div>
@@ -224,7 +224,7 @@ export default function EKPPEPage() {
             <div className="modal-footer">
               <button className="btn btn-ghost" onClick={() => setAssignFor(null)}>{t('cancel')}</button>
               <button className="btn btn-primary" onClick={handleAssign} disabled={!assignForm.workerId}>
-                ✅ {lang !== 'en' ? 'Zaduži' : 'Assign'}
+                ✅ {t('zaduzi')}
               </button>
             </div>
           </div>

@@ -104,7 +104,7 @@ export default function PPEPage() {
     if (editingId) update(COLLECTIONS.PPE_TYPES, editingId, formData); else create(COLLECTIONS.PPE_TYPES, formData);
     setShowForm(false); loadData(); showFlash();
   };
-  const handleDelete = async (id) => { const ok = await confirm(lang !== 'en' ? 'Obrisati?' : 'Delete?'); if (ok) { remove(COLLECTIONS.PPE_TYPES, id); loadData(); } };
+  const handleDelete = async (id) => { const ok = await confirm(t('obrisati')); if (ok) { remove(COLLECTIONS.PPE_TYPES, id); loadData(); } };
 
   const menuItemSt = { display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', width: '100%', fontSize: '0.85rem', fontWeight: 500, color: 'var(--text)', textAlign: 'left', transition: 'background 0.12s' };
 
@@ -112,7 +112,7 @@ export default function PPEPage() {
     <>
       <DialogRenderer />
       <div className="animate-fadeIn">
-        <PageHeader icon={<Icon3D name="OZO.png" size={64} />} title={t('ppe')} subtitle={`${sorted.length} ${lang !== 'en' ? 'zapisa' : 'records'}`} />
+        <PageHeader icon={<Icon3D name="OZO.png" size={64} />} title={t('ppe')} subtitle={`${sorted.length} ${t('zapisa')}`} />
         {showForm && (
           <div className="modal-overlay" onClick={() => setShowForm(false)}>
             <div className="modal" style={{ maxWidth: 450 }} onClick={e => e.stopPropagation()}>
@@ -126,19 +126,19 @@ export default function PPEPage() {
         )}
         <div className="card"><div className="card-body">
           <div style={{ display: 'flex', gap: 12, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {lang !== 'en' ? 'Nova OZO stavka' : 'New PPE Item'}</button>
+            <button className="btn btn-primary btn-sm" onClick={handleNew}>+ {t('novaOzoStavka')}</button>
             {isAdmin && <button className="btn btn-primary btn-sm" onClick={handleSeedOZO} style={{ background: '#FF9800', borderColor: '#FF9800' }}>🦺 SEED OZO LIST</button>}
 
             <SavedFlash />
             {selectedIds.size> 0 && (
               <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                      {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                      {selectedIds.size} {t('odabrano')} &mdash; Grupne akcije:
                   </span>
-                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                  <button className="btn btn-danger btn-sm" onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
               </div>
             )}
-            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
+            {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sorted.length} {t('zapisa')}</span>}
           </div>
           <div className="data-table-wrapper"><table className="data-table"><thead><tr>
             <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === sorted.length && sorted.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} /></th>

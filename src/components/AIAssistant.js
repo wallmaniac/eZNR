@@ -150,7 +150,7 @@ function buildDataContext(lang, activeCompanyId, userCompanies) {
         
         // Add multi-tenant context awareness
         const activeCompName = activeCompanyId === 'all' 
-            ? (lang !== 'en' ? 'Sve dodijeljene firme (Agregatni prikaz)' : 'All assigned companies (Aggregate view)')
+            ? (t('sveDodijeljeneFirmeAgregatniPrikaz'))
             : (userCompanies?.find(c => c.id === activeCompanyId)?.naziv || activeCompanyId);
             
         lines.push(lang !== 'en' 
@@ -950,7 +950,7 @@ const ZIA_TOOLS = [
 
 // ─── Main component ─────────────────────────────────────────────────────────
 export default function AIAssistant() {
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const { isDark } = useTheme();
     const { userCompanies } = useAuth();
     const router = useRouter();
@@ -1693,10 +1693,10 @@ export default function AIAssistant() {
                 let reply;
                 try {
                     const finalResult = await callZiaAPI(historyWithResult, systemPrompt, ZIA_TOOLS);
-                    reply = unmaskPIIOutput(finalResult.text) || unmaskPIIOutput(toolResult.message || toolResult.error || (lang !== 'en' ? 'Urađeno.' : 'Done.'));
+                    reply = unmaskPIIOutput(finalResult.text) || unmaskPIIOutput(toolResult.message || toolResult.error || (t('uraeno')));
                 } catch {
                     // If second call fails (rate limit etc), use the tool result message
-                    reply = unmaskPIIOutput(toolResult.message || toolResult.error || (lang !== 'en' ? 'Urađeno.' : 'Done.'));
+                    reply = unmaskPIIOutput(toolResult.message || toolResult.error || (t('uraeno')));
                 }
 
                 chatHistoryRef.current = [...historyWithResult, { role: 'model', parts: [{ text: reply }] }];
@@ -1708,7 +1708,7 @@ export default function AIAssistant() {
             }
 
             // ── Normal text response ──────────────────────────────────────────
-            const reply = unmaskPIIOutput(result.text) || (lang !== 'en' ? 'Nema odgovora.' : 'No response.');
+            const reply = unmaskPIIOutput(result.text) || (t('nemaOdgovora'));
             chatHistoryRef.current = [...newHistory, { role: 'model', parts: [{ text: reply }] }];
             setMessages(prev => [...prev, { role: 'assistant', content: reply, timestamp: new Date() }]);
             if (isMinimized) setHasNewMessage(true);
@@ -1746,7 +1746,7 @@ export default function AIAssistant() {
             accumulatedTranscriptRef.current = '';
         }
         const attachedFiles = [...attachments];
-        const displayText = text.trim() || (attachedFiles.length > 0 ? (lang !== 'en' ? '[Prilog]' : '[Attachment]') : '');
+        const displayText = text.trim() || (attachedFiles.length > 0 ? (t('prilog1')) : '');
         const userMessage = {
             role: 'user',
             content: displayText,
@@ -1812,7 +1812,7 @@ export default function AIAssistant() {
         
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
-            alert(lang !== 'en' ? 'Vaš preglednik ne podržava glasovni unos (preporučujemo Chrome/Edge).' : 'Your browser does not support speech recognition (use Chrome/Edge).');
+            alert(t('vasPreglednikNePodrzavaGlasovni'));
             return;
         }
 
@@ -1823,7 +1823,7 @@ export default function AIAssistant() {
 
         const startRecognition = () => {
             const recognition = new SpeechRecognition();
-            recognition.lang = lang !== 'en' ? 'bs-BA' : 'en-US';
+            recognition.lang = t('bsba');
             recognition.interimResults = true;
             recognition.continuous = false; // single-shot prevents Android duplication
             recognition.maxAlternatives = 1;
@@ -1943,7 +1943,7 @@ export default function AIAssistant() {
     }}
     onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.05)'; e.currentTarget.style.filter = 'drop-shadow(0 0 8px rgba(0,191,166,0.6))'; }}
     onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.filter = 'none'; }}
-                    title={lang !== 'en' ? 'Otvori AI asistenta Zia' : 'Open AI assistant Zia'}
+                    title={t('otvoriAiAsistentaZia')}
                 >
                     <span style={{ fontSize: '0.9rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))', marginBottom: 4 }}>✨</span>
     <span style={{ writingMode: 'vertical-rl', textOrientation: 'upright', fontSize: '0.6rem', fontWeight: 800, letterSpacing: 2 }}>ZIA</span>
@@ -2005,21 +2005,21 @@ export default function AIAssistant() {
                                         ? (
                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                                {lang !== 'en' ? `Pokušavalac za ${retryCountdown}s` : `Retry in ${retryCountdown}s`}
-                                               <button onClick={(e) => { e.stopPropagation(); if (retryTimerRef.current) clearInterval(retryTimerRef.current); retryTimerRef.current = null; setRetryCountdown(0); pendingRetryRef.current = null; setIsLoading(false); }} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 4, fontSize: '0.6rem', padding: '2px 5px', cursor: 'pointer', opacity: 0.85, color: 'inherit', fontWeight: 600 }}>{lang !== 'en' ? 'Otkaži' : 'Cancel'}</button>
+                                               <button onClick={(e) => { e.stopPropagation(); if (retryTimerRef.current) clearInterval(retryTimerRef.current); retryTimerRef.current = null; setRetryCountdown(0); pendingRetryRef.current = null; setIsLoading(false); }} style={{ background: 'transparent', border: '1px solid currentColor', borderRadius: 4, fontSize: '0.6rem', padding: '2px 5px', cursor: 'pointer', opacity: 0.85, color: 'inherit', fontWeight: 600 }}>{t('otkazi')}</button>
                                            </div>
                                         )
                                         : isLoading
-                                            ? (lang !== 'en' ? 'Tipka...' : 'Typing...')
-                                            : (lang !== 'en' ? 'Online • AI Agent' : 'Online • AI Agent')}
+                                            ? (t('tipka'))
+                                            : (t('onlineAiAgent'))}
                                 </div>
                             </div>
                         </div>
                         <div style={chatStyles.headerActions}>
-                            <button onClick={clearChat} style={chatStyles.actionBtn} title={lang !== 'en' ? 'Novi razgovor' : 'New conversation'}>↺</button>
-                            <button onClick={handleMinimize} style={chatStyles.actionBtn} title={lang !== 'en' ? 'Minimiziraj' : 'Minimize'}>
+                            <button onClick={clearChat} style={chatStyles.actionBtn} title={t('noviRazgovor')}>↺</button>
+                            <button onClick={handleMinimize} style={chatStyles.actionBtn} title={t('minimiziraj')}>
                                 {isMinimized ? '▲' : '▼'}
                             </button>
-                            <button onClick={handleClose} style={{ ...chatStyles.actionBtn, ...chatStyles.closeBtn }} title={lang !== 'en' ? 'Zatvori' : 'Close'}>✕</button>
+                            <button onClick={handleClose} style={{ ...chatStyles.actionBtn, ...chatStyles.closeBtn }} title={t('zatvori')}>✕</button>
                         </div>
                     </div>
 
@@ -2036,7 +2036,7 @@ export default function AIAssistant() {
                                 {isDragging && (
                                     <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,191,166,0.12)', border: '2px dashed #00BFA6', borderRadius: 12, zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8, color: '#00BFA6', fontWeight: 700, fontSize: '0.95rem', pointerEvents: 'none' }}>
                                         <span style={{ fontSize: '2rem' }}>📎</span>
-                                        {lang !== 'en' ? 'Ispustite datoteke ovdje' : 'Drop files here'}
+                                        {t('ispustiteDatotekeOvdje')}
                                     </div>
                                 )}
                                 {messages.map((msg, idx) => (
@@ -2092,7 +2092,7 @@ export default function AIAssistant() {
                             {showSuggestions && messages.length <= 1 && (
                                 <div style={chatStyles.suggestions}>
                                     <div style={chatStyles.suggestionsLabel}>
-                                        {lang !== 'en' ? 'Česta pitanja:' : 'Quick questions:'}
+                                        {t('cestaPitanja')}
                                     </div>
                                     <div style={chatStyles.suggestionsGrid}>
                                         {suggestions.map((s, idx) => (
@@ -2142,7 +2142,7 @@ export default function AIAssistant() {
                                         ref={inputRef}
                                         id="ai-assistant-input"
                                         style={chatStyles.input}
-                                        placeholder={lang !== 'en' ? 'Postavite pitanje Zia...' : 'Ask Zia a question...'}
+                                        placeholder={t('postavitePitanjeZia')}
                                         value={inputValue}
                                         onChange={e => setInputValue(e.target.value)}
                                         onKeyDown={handleKeyDown}
@@ -2187,14 +2187,14 @@ export default function AIAssistant() {
                                             ...chatStyles.sendBtn,
                                             opacity: ((!inputValue.trim() && attachments.length === 0) || isLoading || retryCountdown > 0) ? 0.4 : 1,
                                         }}
-                                        title={lang !== 'en' ? 'Pošalji' : 'Send'}
+                                        title={t('posalji')}
                                     >
                                         ➤
                                     </button>
                                 </div>
                                 <div style={chatStyles.inputFooter}>
-                                    {lang !== 'en' ? 'Pokretano sa Google Gemini' : 'Powered by Google Gemini'} ·{' '}
-                                    {lang !== 'en' ? 'Enter za slanje • + za prilog' : 'Enter to send • + to attach'}
+                                    {t('pokretanoSaGoogleGemini')} ·{' '}
+                                    {t('enterZaSlanjeZaPrilog')}
                                 </div>
                             </div>
                         </>
@@ -2217,7 +2217,7 @@ export default function AIAssistant() {
                             transition: 'transform 0.15s',
                             color: 'white',
                         }}
-                        title={lang !== 'en' ? 'Zatvori Zia' : 'Close Zia'}
+                        title={t('zatvoriZia')}
                         onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.1)'; }}
                         onMouseLeave={e => { e.currentTarget.style.transform = 'none'; }}
                     >

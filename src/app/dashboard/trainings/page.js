@@ -176,7 +176,7 @@ function TrainingsInner() {
     };
 
     const handleSave = async () => {
-        if (!formData.naziv.trim()) { await alert(lang !== 'en' ? 'Unesite naziv obuke.' : 'Enter training name.'); return; }
+        if (!formData.naziv.trim()) { await alert(t('unesiteNazivObuke')); return; }
         let savedId = editingId;
         if (editingId) {
             update(COLLECTIONS.TRAININGS, editingId, formData);
@@ -199,7 +199,7 @@ function TrainingsInner() {
 
     const handleCancel = async () => {
         if (contextIsDirty) {
-            const ok = await confirm(lang !== 'en' ? 'Imate nesačuvane promjene. Želite li zaista odustati?' : 'You have unsaved changes. Are you sure you want to discard them?');
+            const ok = await confirm(t('imateNesacuvanePromjeneZeliteLi1'));
             if (!ok) return;
         }
         if (editingId) setLastEditedId(editingId);
@@ -348,11 +348,11 @@ function TrainingsInner() {
                             value: 'append',
                         },
                         {
-                            label: lang !== 'en' ? 'Odustani' : 'Cancel',
+                            label: t('odustani'),
                             value: null,
                         },
                     ],
-                    lang !== 'en' ? '📂 Uvoz slajdova' : '📂 Import Slides'
+                    t('uvozSlajdova')
                 );
                 if (action === null || action === undefined) return; // cancelled
                 if (action === 'append') {
@@ -536,9 +536,9 @@ function TrainingsInner() {
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body" style={{ padding: 0 }}>
                         <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={lang !== 'en' ? 'Kreiraj novu obuku sa prezentacijom i testom' : 'Create new training with presentation and test'}>+ {lang !== 'en' ? 'Nova obuka' : 'New training'}</button>
-                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način za ručno popunjavanje' : 'Generate an empty ZOS record for manual filling'}>📝 {lang !== 'en' ? 'Zapisnik ZOS' : 'Print ZOS'}</button>
-                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika iz oblasti zaštite od požara za ručno popunjavanje' : 'Generate an empty ZOP record for manual filling'}>🔥 {lang !== 'en' ? 'Zapisnik ZOP' : 'Print ZOP'}</button>
+                            <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={handleNew} title={t('kreirajNovuObukuSaPrezentacijom')}>+ {t('novaObuka')}</button>
+                            <button className="btn btn-dark" style={{ flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOS&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {t('zapisnikZos')}</button>
+                            <button className="btn btn-dark" style={{ background: '#d32f2f', color: 'white', borderColor: '#b71c1c', flexShrink: 0, height: 38 }} onClick={() => window.open(`/print-template?type=ZOP&country=${country}`, '_blank')} title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {t('zapisnikZop')}</button>
                             <div className="search-bar" style={{ width: 250, flexShrink: 0 }}>
                                 <span style={{ opacity: 0.5 }}>🔍</span>
                                 <input placeholder="Pretraži obuke..." value={search} onChange={e => setSearch(e.target.value)}
@@ -559,7 +559,7 @@ function TrainingsInner() {
                                         <th>Naziv obuke</th>
                                         <th>Slajdova</th>
                                         <th>Pitanja</th>
-                                        <th>{lang !== 'en' ? 'Ispunjenost' : 'Completion'}</th>
+                                        <th>{t('ispunjenost')}</th>
                                         <th>Prag prolaza</th>
                                         <th>Kreirano</th>
                                     </tr>
@@ -641,7 +641,7 @@ function TrainingsInner() {
                                                             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.2s', margin: '-4px -8px' }}
                                                             
                                                             
-                                                            title={lang !== 'en' ? 'Klikni za pregled rezultata' : 'Click to view results'}>
+                                                            title={t('klikniZaPregledRezultata')}>
                                                             <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: 'rgba(99,102,241,0.12)', overflow: 'hidden' }}>
                                                                 <div style={{ width: `${pct}%`, height: '100%', borderRadius: 3, background: pct === 100 ? '#22c55e' : '#6366f1', transition: 'width 0.4s' }} />
                                                             </div>
@@ -711,13 +711,13 @@ function TrainingsInner() {
                 />
                 {viewWorkerId && <WorkerProfileModal workerId={viewWorkerId} onClose={() => setViewWorkerId(null)} />}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                    <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
+                    <button className="btn btn-ghost" onClick={() => { setView('list'); setResultsTraining(null); }} title={t('nazad')}>←</button>
                     <h1 style={{ margin: 0, flex: 1 }}>📊 Rezultati: {resultsTraining.naziv}</h1>
                     <button 
                         className="btn btn-outline btn-sm" 
                         onClick={() => { setReminderTraining(resultsTraining); setReminderOpen(true); }}
                         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}>
-                        📩 {lang !== 'en' ? 'Pošalji podsjetnik' : 'Send Reminder'}
+                        📩 {t('posaljiPodsjetnik')}
                     </button>
                 </div>
 
@@ -836,7 +836,7 @@ function TrainingsInner() {
                                 <h2 style={{ color: 'white', fontSize: '1rem' }}>
                                     📝 Odgovori: {answerDetail.session.recipientName}
                                 </h2>
-                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)} title={lang !== 'en' ? 'Zatvori' : 'Close'}>✕</button>
+                                <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setAnswerDetail(null)} title={t('zatvori')}>✕</button>
                             </div>
                             <div className="modal-body" style={{ padding: 20 }}>
                                 {answerDetail.response?.answers ? (
@@ -910,7 +910,7 @@ function TrainingsInner() {
         <div className="animate-fadeIn">
             <DialogRenderer />
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-                <button className="btn btn-ghost" onClick={handleCancel} title={lang !== 'en' ? 'Nazad' : 'Back'}>←</button>
+                <button className="btn btn-ghost" onClick={handleCancel} title={t('nazad')}>←</button>
                 <h1 style={{ margin: 0 }}>{editingId ? '✏️ Uredi obuku' : '🎬 Nova obuka'}</h1>
             </div>
 
@@ -1016,7 +1016,7 @@ function TrainingsInner() {
                         </div>
                     ))}
                     <div style={{ display: 'flex', gap: 10 }}>
-                        <button className="btn btn-outline" onClick={addSlide} title={lang !== 'en' ? 'Dodaj novi slajd' : 'Add new slide'}>+ Dodaj slajd</button>
+                        <button className="btn btn-outline" onClick={addSlide} title={t('dodajNoviSlajd')}>+ Dodaj slajd</button>
                     </div>
                 </div>
             )}
@@ -1040,7 +1040,7 @@ function TrainingsInner() {
                                     <><span style={{ display: 'inline-block', width: 14, height: 14, border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />Generišem...</>
                                 ) : '✨ Generiraj test iz prezentacije'}
                             </button>
-                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={lang !== 'en' ? 'Dodaj pitanje ručno' : 'Add question manually'}>+ Dodaj ručno</button>
+                            <button className="btn btn-outline btn-sm" onClick={addQuestion} title={t('dodajPitanjeRucno')}>+ Dodaj ručno</button>
                         </div>
                     </div>
 
@@ -1147,7 +1147,7 @@ function TrainingsInner() {
             {/* Bottom Save */}
             <div className="card" style={{ marginTop: 16 }}>
                 <div className="card-body" style={{ display: 'flex', gap: 10 }}>
-                    <button className="btn btn-primary" onClick={handleSave}>💾 {lang !== 'en' ? 'Sačuvaj obuku' : 'Save training'}</button>
+                    <button className="btn btn-primary" onClick={handleSave}>💾 {t('sacuvajObuku')}</button>
                     <button className="btn btn-ghost" onClick={handleCancel}>{t('cancel')}</button>
                     {editingId && (
                         <button className="btn btn-ghost" style={{ color: 'var(--danger)', marginLeft: 'auto' }}

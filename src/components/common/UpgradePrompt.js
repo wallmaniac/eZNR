@@ -2,7 +2,7 @@
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function UpgradePrompt({ title, description, benefits = [] }) {
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     
     return (
         <div style={{
@@ -20,17 +20,17 @@ export default function UpgradePrompt({ title, description, benefits = [] }) {
             </div>
             
             <h2 style={{ fontSize: '1.8rem', fontWeight: 800, fontFamily: 'var(--font-heading)', marginBottom: 12 }}>
-                {title || (lang !== 'en' ? 'Pretplata potrebna' : 'Subscription Required')}
+                {title || (t('pretplataPotrebna'))}
             </h2>
             
             <p style={{ fontSize: '1rem', color: 'var(--text-muted)', marginBottom: 32, maxWidth: 480, lineHeight: 1.6 }}>
-                {description || (lang !== 'en' ? 'Ovaj modul je dostupan samo na višim paketima. Nadogradite svoj paket kako biste otključali napredne značajke.' : 'This module is restricted to higher plans. Please upgrade to unlock advanced features.')}
+                {description || (t('ovajModulJeDostupanSamo'))}
             </p>
 
             {benefits.length > 0 && (
                 <div style={{ textAlign: 'left', background: 'var(--bg-input)', padding: 24, borderRadius: 12, width: '100%', marginBottom: 32 }}>
                     <div style={{ fontWeight: 700, marginBottom: 16, color: 'var(--text)' }}>
-                        {lang !== 'en' ? 'Što dobivate nadogradnjom?' : 'What do you get by upgrading?'}
+                        {t('stoDobivateNadogradnjom')}
                     </div>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
                         {benefits.map((b, i) => (
@@ -44,11 +44,11 @@ export default function UpgradePrompt({ title, description, benefits = [] }) {
             )}
 
             <a href="mailto:podrska@eznr.ba?subject=Upit za nadogradnju paketa" className="btn btn-primary" style={{ padding: '12px 32px', fontSize: '1.05rem' }}>
-                ⭐ {lang !== 'en' ? 'Zatražite nadogradnju' : 'Request Upgrade'}
+                ⭐ {t('zatraziteNadogradnju')}
             </a>
             
             <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 16 }}>
-                {lang !== 'en' ? 'Ili nas kontaktirajte na ' : 'Or contact us at '} podrska@eznr.ba
+                {t('iliNasKontaktirajteNa')} podrska@eznr.ba
             </div>
         </div>
     );

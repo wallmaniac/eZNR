@@ -28,7 +28,7 @@ export default function EKEquipmentPage() {
         </tr></thead><tbody>
             {sorted.length === 0 ? (
               <tr><td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                {lang !== 'en' ? '✅ Nema radne opreme u evidenciji' : '✅ No equipment in records'}
+                {t('nemaRadneOpremeUEvidenciji')}
               </td></tr>
             ) : sorted.map((e, idx) => {
               const isOverdue = e.sljedeciPregled && new Date(e.sljedeciPregled) < new Date();

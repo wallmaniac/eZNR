@@ -131,7 +131,7 @@ function EditCertPageInner() {
     const handleSave = async () => {
         if (isSavingRef.current) return;
         if (!formData.tipUvjerenjaIme && !formData.tipUvjerenjaId && !formData.ime) {
-            await dlgAlert(lang !== 'en' ? 'Tip uvjerenja je obavezan!' : 'Certificate type is required!');
+            await dlgAlert(t('tipUvjerenjaJeObavezan'));
             return;
         }
         isSavingRef.current = true;
@@ -153,7 +153,7 @@ function EditCertPageInner() {
             update(COLLECTIONS.CERTIFICATES, certId, saveData);
             // Toast feedback (non-blocking)
             if (typeof window !== 'undefined' && window.eznrToast) {
-                window.eznrToast(lang !== 'en' ? 'Uvjerenje sačuvano ✅' : 'Certificate saved ✅', 'success');
+                window.eznrToast(t('uvjerenjeSacuvano'), 'success');
             }
             if (returnTo) { router.push(decodeURIComponent(returnTo)); } else { router.back(); }
         } finally {
@@ -177,7 +177,7 @@ function EditCertPageInner() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={() => { if (returnTo) router.push(returnTo); else router.back(); }}>←</button>
                 <div>
-                    <h1 style={{ margin: 0 }}>✏️ {lang !== 'en' ? 'Uredi uvjerenje' : 'Edit Certificate'}</h1>
+                    <h1 style={{ margin: 0 }}>✏️ {t('urediUvjerenje')}</h1>
                     {worker && (
                         <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 4 }}>
                             👤 {worker.ime} {worker.prezime}
@@ -194,8 +194,8 @@ function EditCertPageInner() {
                     <div style={{ marginBottom: 20 }}>
                         <TabBar active={activeTab} onChange={setActiveTab} 
                             tabs={[
-                                { key: 'podaci', icon: '📝', label: lang !== 'en' ? 'Podaci' : 'Details' },
-                                { key: 'dokumenti', icon: '📁', label: `${lang !== 'en' ? 'Dokumenti' : 'Docs'} (${(formData.attachments || []).length})` },
+                                { key: 'podaci', icon: '📝', label: t('podaci') },
+                                { key: 'dokumenti', icon: '📁', label: `${t('dokumenti1')} (${(formData.attachments || []).length})` },
                             ]} 
                         />
                     </div>
@@ -207,21 +207,21 @@ function EditCertPageInner() {
                         <div className="form-group" style={{ marginBottom: 0 }}>
                             <div style={labelStyle}>Oznaka</div>
                             <input className="form-input" value={formData.oznaka || ''} onChange={e => set('oznaka', e.target.value)}
-                                placeholder={lang !== 'en' ? 'Šifra / referentni broj' : 'Code / reference number'} />
+                                placeholder={t('sifraReferentniBroj')} />
                         </div>
 
                         {/* Tip uvjerenja */}
                         <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={tipRef}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Tip uvjerenja' : 'Certificate type'} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
+                                <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{t('tipUvjerenja')} * <HelpTip text="Ukoliko radnik polaže i teoretski i praktični dio, oba moraju biti unesena unutar istog tipa uvjerenja ili odvojeno." /></div>
                                 <button className="btn btn-ghost btn-sm"
                                 style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
-                                    onClick={() => setShowNewTypeForm(true)} title={lang !== 'en' ? 'Dodaj novi tip' : 'Add new type'}>+</button>
+                                    onClick={() => setShowNewTypeForm(true)} title={t('dodajNoviTip')}>+</button>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
                                 onClick={() => setShowTipDropdown(v => !v)}>
                                 <span style={{ flex: 1, fontSize: '0.88rem', color: formData.tipUvjerenjaIme ? 'var(--text)' : 'var(--text-muted)' }}>
-                                    {formData.tipUvjerenjaIme || formData.ime || (lang !== 'en' ? 'Odaberite tip...' : 'Select type...')}
+                                    {formData.tipUvjerenjaIme || formData.ime || (t('odaberiteTip'))}
                                 </span>
                                 {formData.tipUvjerenjaIme && (
                                     <button style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.9rem', padding: '0 2px' }}
@@ -242,20 +242,20 @@ function EditCertPageInner() {
                                             {ct.naziv}
                                         </div>
                                     ))}
-                                    {filteredTips.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang !== 'en' ? 'Nema rezultata' : 'No results'}</div>}
+                                    {filteredTips.length === 0 && <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('nemaRezultata')}</div>}
                                     <div
                                         onClick={() => { setShowTipDropdown(false); setShowNewTypeForm(true); setTipSearch(''); }}
                                         style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem', borderTop: '1px solid var(--border-light)', fontWeight: 600, color: 'var(--primary)' }}>
-                                        + {lang !== 'en' ? 'Ostalo...' : 'Other...'}
+                                        + {t('ostalo1')}
                                     </div>
                                 </div>
                             )}
                             {showNewTypeForm && (
                                 <div style={{ marginTop: 8, padding: 10, background: 'var(--bg-input)', border: '1px solid var(--primary)', borderRadius: 'var(--radius-sm)', display: 'flex', gap: 8, alignItems: 'center' }}>
-                                    <input className="form-input" style={{ flex: 1, fontSize: '0.85rem' }} placeholder={lang !== 'en' ? 'Naziv novog tipa...' : 'New type name...'}
+                                    <input className="form-input" style={{ flex: 1, fontSize: '0.85rem' }} placeholder={t('nazivNovogTipa')}
                                         value={newTypeName} onChange={e => setNewTypeName(e.target.value)}
                                         onKeyDown={e => { if (e.key === 'Enter') handleAddNewType(); if (e.key === 'Escape') { setShowNewTypeForm(false); setNewTypeName(''); } }} autoFocus />
-                                    <button className="btn btn-primary btn-sm" onClick={handleAddNewType}>{lang !== 'en' ? 'Dodaj' : 'Add'}</button>
+                                    <button className="btn btn-primary btn-sm" onClick={handleAddNewType}>{t('dodaj')}</button>
                                     <button className="btn btn-ghost btn-sm" onClick={() => { setShowNewTypeForm(false); setNewTypeName(''); }}>✕</button>
                                 </div>
                             )}
@@ -263,7 +263,7 @@ function EditCertPageInner() {
 
                         {/* Sposoban */}
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Sposoban/Nesposoban' : 'Capable/Incapable'}</div>
+                            <div style={labelStyle}>{t('sposobannesposoban')}</div>
                             <div style={{ paddingTop: 6 }}>
                                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.9rem' }}>
                                     <input type="checkbox" checked={formData.sposoban ?? formData.sposobnost !== 'Nesposoban'} onChange={e => set('sposoban', e.target.checked)} style={{ width: 18, height: 18, accentColor: 'var(--primary)' }} />
@@ -278,11 +278,11 @@ function EditCertPageInner() {
                     {/* Row 2: Datum | Vrijedi do */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Datum' : 'Date'} <HelpTip text="Datum donošenja zapisnika/ljekarskog nalaza" /></div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{t('datum')} <HelpTip text="Datum donošenja zapisnika/ljekarskog nalaza" /></div>
                             <DateInput value={formData.datum || ''} onChange={v => set('datum', v)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'} <HelpTip text={country === 'HR' ? "Zakon o zaštiti na radu nalaže periodičnu obnovu procjene radne sposobnosti ili osposobljavanja u rokovima predviđenima posebnim propisima ili samom procjenom rizika." : "Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu."} /></div>
+                            <div style={{...labelStyle, display: 'inline-flex', alignItems: 'center', gap: 4}}>{t('vrijediDo')} <HelpTip text={country === 'HR' ? "Zakon o zaštiti na radu nalaže periodičnu obnovu procjene radne sposobnosti ili osposobljavanja u rokovima predviđenima posebnim propisima ili samom procjenom rizika." : "Zakon o zaštiti na radu nalaže obnovu certifikata/pregleda svake 2 ili 3 godine, ovisno o radnom mjestu."} /></div>
                             <DateInput value={formData.vrijediDo || ''} onChange={v => set('vrijediDo', v)} />
                         </div>
                     </div>
@@ -291,14 +291,14 @@ function EditCertPageInner() {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0, position: 'relative' }} ref={ispitivacRef}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                                <div style={labelStyle}>{lang !== 'en' ? 'Ispitivač' : 'Examiner'}</div>
+                                <div style={labelStyle}>{t('ispitivac')}</div>
                                 <button className="btn btn-ghost btn-sm" style={{ width: 22, height: 22, borderRadius: '50%', padding: 0, fontSize: '1.2rem', paddingBottom: 2, lineHeight: 0, border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}
-                                    onClick={() => router.push('/dashboard/examiners')} title={lang !== 'en' ? 'Upravljaj ispitivačima' : 'Manage examiners'}>+</button>
+                                    onClick={() => router.push('/dashboard/examiners')} title={t('upravljajIspitivacima')}>+</button>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4, border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', background: 'var(--bg-input)', padding: '0 8px', minHeight: 38, cursor: 'pointer' }}
                                 onClick={() => setShowIspitivacDropdown(v => !v)}>
                                 <span style={{ flex: 1, fontSize: '0.88rem', color: formData.ispitivacId ? 'var(--text)' : 'var(--text-muted)' }}>
-                                    {formData.ispitivacId ? getExaminerLabel(examiners.find(e => e.id === formData.ispitivacId) || {}) : (lang !== 'en' ? 'Odaberite ispitivača' : 'Select examiner')}
+                                    {formData.ispitivacId ? getExaminerLabel(examiners.find(e => e.id === formData.ispitivacId) || {}) : (t('odaberiteIspitivaca'))}
                                 </span>
                                 <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>▾</span>
                             </div>
@@ -309,7 +309,7 @@ function EditCertPageInner() {
                                             value={ispitivacSearch} onChange={e => setIspitivacSearch(e.target.value)} autoFocus onClick={e => e.stopPropagation()} />
                                     </div>
                                     {filteredIspitivac.length === 0 ? (
-                                        <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{lang !== 'en' ? 'Nema ispitivača.' : 'No examiners.'}</div>
+                                        <div style={{ padding: 12, color: 'var(--text-muted)', fontSize: '0.85rem' }}>{t('nemaIspitivaca')}</div>
                                     ) : filteredIspitivac.map(ex => (
                                         <div key={ex.id} onClick={() => { set('ispitivacId', ex.id); setShowIspitivacDropdown(false); setIspitivacSearch(''); }}
                                             style={{ padding: '9px 12px', cursor: 'pointer', fontSize: '0.86rem' }}>
@@ -328,11 +328,11 @@ function EditCertPageInner() {
                     {/* Row 4: Upisao | Cijena */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Upisao' : 'Entered by'}</div>
+                            <div style={labelStyle}>{t('upisao')}</div>
                             <input className="form-input" value={formData.upisao || ''} onChange={e => set('upisao', e.target.value)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Cijena' : 'Price'}</div>
+                            <div style={labelStyle}>{t('cijena')}</div>
                             <input className="form-input" type="number" min="0" step="0.01" style={{ textAlign: 'right' }}
                                 value={formData.cijena || ''} onChange={e => set('cijena', e.target.value)} placeholder="0,00" />
                         </div>
@@ -341,11 +341,11 @@ function EditCertPageInner() {
                     {/* Row 5: Izdano za radno mjesto | Ograničenja */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 24 }}>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Izdano za radno mjesto' : 'Issued for workplace'}</div>
+                            <div style={labelStyle}>{t('izdanoZaRadnoMjesto')}</div>
                             <input className="form-input" value={formData.vydanoZaRadnoMjesto || ''} onChange={e => set('vydanoZaRadnoMjesto', e.target.value)} />
                         </div>
                         <div className="form-group" style={{ marginBottom: 0 }}>
-                            <div style={labelStyle}>{lang !== 'en' ? 'Ograničenja / Napomena' : 'Restrictions / Note'}</div>
+                            <div style={labelStyle}>{t('ogranicenjaNapomena')}</div>
                             <textarea className="form-input" rows={3} value={formData.ogranicenja || ''} onChange={e => set('ogranicenja', e.target.value)} style={{ resize: 'vertical' }} />
                         </div>
                     </div>
@@ -360,7 +360,7 @@ function EditCertPageInner() {
                                 📎 {lang !== 'en' ? `Priložene datoteke (${(formData.attachments || []).length})` : `Attached files (${(formData.attachments || []).length})`}
                             </div>
                             <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', fontSize: '0.8rem' }}>
-                                + {lang !== 'en' ? 'Dodaj datoteku' : 'Add file'}
+                                + {t('dodajDatoteku')}
                                 <input type="file" style={{ display: 'none' }} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                     onChange={async (e) => {
                                         const file = e.target.files?.[0];
@@ -386,7 +386,7 @@ function EditCertPageInner() {
                         </div>
                         {(formData.attachments || []).length === 0 ? (
                             <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem', border: '1px dashed var(--border)', borderRadius: 'var(--radius-md)' }}>
-                                📄 {lang !== 'en' ? 'Nema priloženih datoteka. Kliknite "Dodaj datoteku" za upload.' : 'No attached files. Click "Add file" to upload.'}
+                                📄 {t('nemaPrilozenihDatotekaKlikniteDodaj')}
                             </div>
                         ) : (formData.attachments || []).map((att, idx) => (
                             <div key={att.id} style={{ padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(0,191,166,0.06)', border: '1px solid rgba(0,191,166,0.25)', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -398,21 +398,19 @@ function EditCertPageInner() {
                                 <select className="form-select" style={{ width: 120, fontSize: '0.75rem', padding: '2px 6px', height: 28 }}
                                     value={att.vrsta || ''} onClick={e => e.stopPropagation()}
                                     onChange={e => { const v = e.target.value; setFormData(f => { const a = [...(f.attachments || [])]; a[idx] = { ...a[idx], vrsta: v }; return { ...f, attachments: a }; }); }}>
-                                    <option value="">{lang !== 'en' ? 'Vrsta...' : 'Type...'}</option>
+                                    <option value="">{t('vrsta1')}</option>
                                     {FILE_TYPE_OPTIONS.map(ft => <option key={ft} value={ft}>{ft}</option>)}
                                 </select>
                                 <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Otvori' : 'View'}
                                     onClick={() => { const src = att.url || att.data; if (src?.startsWith('http')) window.open(src, '_blank'); else if (src) { const w = window.open('', '_blank'); w.document.write(src.includes('pdf') ? `<embed src="${src}" width="100%" height="100%" type="application/pdf" />` : `<img src="${src}" style="max-width:100%;margin:20px auto;display:block;" />`); w.document.close(); } }}>👁️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Preuzmi' : 'Download'}
+                                <button className="btn btn-ghost btn-sm btn-icon" title={t('preuzmi')}
                                     onClick={() => { const a = document.createElement('a'); a.href = att.url || att.data; a.download = att.name; if (att.url) a.target = '_blank'; a.click(); }}>⬇️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Ukloni' : 'Remove'}
+                                <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('ukloni')}
                                     onClick={() => setFormData(f => ({ ...f, attachments: (f.attachments || []).filter((_, i) => i !== idx) }))}>✕</button>
                             </div>
                         ))}
                         <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(33,150,243,0.06)', border: '1px solid rgba(33,150,243,0.2)', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-                            💡 {lang !== 'en'
-                                ? 'Priložene datoteke se automatski pojavljuju u Digitalnoj arhivi (kategorija: Certifikati).'
-                                : 'Attached files automatically appear in the Digital Archive (category: Certificates).'}
+                            💡 {t('prilozeneDatotekeSeAutomatskiPojavljuju')}
                         </div>
                     </div>
                     </>)}
@@ -446,13 +444,13 @@ function EditCertPageInner() {
                                     testResult: formData.rezultatTesta || '',
                                 });
                             }}>
-                                🖨️ {lang !== 'en' ? 'Ispiši ZOS' : 'Print ZOS'}
+                                🖨️ {t('ispisiZos')}
                             </button>
                         )}
                         {worker && (
                             <button className="btn btn-outline btn-sm" style={{ marginLeft: 'auto' }}
                                 onClick={() => router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`)}>
-                                👤 {lang !== 'en' ? 'Otvori radnika' : 'Open worker'}
+                                👤 {t('otvoriRadnika')}
                             </button>
                         )}
                     </div>

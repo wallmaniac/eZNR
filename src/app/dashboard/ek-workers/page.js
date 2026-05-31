@@ -28,7 +28,7 @@ export default function EKWorkersPage() {
         </tr></thead><tbody>
             {sorted.length === 0 ? (
               <tr><td colSpan={7} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                {lang !== 'en' ? '✅ Nema radnika u evidenciji' : '✅ No workers in records'}
+                {t('nemaRadnikaUEvidenciji')}
               </td></tr>
             ) : sorted.map((w, idx) => (
               <tr key={w.id}
@@ -36,7 +36,7 @@ export default function EKWorkersPage() {
                 style={{ cursor: 'pointer', transition: 'background 0.12s' }}>
                 <td>{idx + 1}</td><td style={{ fontWeight: 600 }}>{w.ime}</td><td style={{ fontWeight: 600 }}>{w.prezime}</td>
                 <td><code>{w.jmbg}</code></td><td>{formatDate(w.datumZaposlenja)}</td><td>{getOrgUnitName(w.orgJedinicaId)}</td>
-                <td><span className={`badge ${w.aktivan !== false ? 'badge-success' : 'badge-danger'}`}>{w.aktivan !== false ? (lang !== 'en' ? 'Aktivan' : 'Active') : (lang !== 'en' ? 'Neaktivan' : 'Inactive')}</span></td>
+                <td><span className={`badge ${w.aktivan !== false ? 'badge-success' : 'badge-danger'}`}>{w.aktivan !== false ? (t('aktivan')) : (t('neaktivan'))}</span></td>
               </tr>
             ))}
           </tbody></table></div>

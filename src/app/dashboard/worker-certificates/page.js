@@ -245,7 +245,7 @@ function WorkerCertificatesInner() {
           <div className="card-body" style={{ padding: 0 }}>
             {/* ── Toolbar ───────────────────────────────────────────────── */}
             <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')} title={lang !== 'en' ? 'Dodaj novo uvjerenje' : 'Add new certificate'}>
+              <button className="btn btn-primary btn-sm" style={{ height: 38, padding: '0 8px' }} onClick={() => router.push('/dashboard/worker-certificates/create')} title={t('dodajNovoUvjerenje')}>
                 + {bs ? 'Dodaj uvjerenje' : 'Add certificate'}
               </button>
 
@@ -257,13 +257,13 @@ function WorkerCertificatesInner() {
                   onChange={e => setSearchTerm(e.target.value)}
                   style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                 />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
               </div>
 
               <select
                 className="form-select"
                 style={{ height: 38, padding: '0 8px', width: 98, flexShrink: 0, fontSize: '0.8rem' }}
-                title={lang !== 'en' ? 'Filtriraj po odjelu' : 'Filter by department'}
+                title={t('filtrirajPoOdjelu')}
                 value={filterOrgUnit}
                 onChange={(e) => setFilterOrgUnit(e.target.value)}>
                 <option value="">{bs ? 'Svi odjeli' : 'All Depts'}</option>
@@ -292,7 +292,7 @@ function WorkerCertificatesInner() {
               </div>
 
                 <PDFExportButton 
-                title={lang !== 'en' ? 'Prikaži PDF izvještaje' : 'Show PDF reports'}
+                title={t('prikaziPdfIzvjestaje')}
                 buttonStyle={{ background: '#db2777', color: 'white', borderColor: '#db2777', height: 38 }}
                 options={[
                 { label: bs ? 'Sva uvjerenja' : 'All certs', icon: '📄', onClick: () => import('@/lib/pdfReportGenerator').then(m => m.generateCertificatesReport(rows.map(r => r.id), lang)) },
@@ -304,15 +304,15 @@ function WorkerCertificatesInner() {
                      const rect = e.currentTarget.getBoundingClientRect();
                      setMenuPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
                      setZapisniciOpen(prev => !prev);
-                 }} title={lang !== 'en' ? 'Prikaži zapisnike i uvjerenja' : 'Show records and certificates'}>
+                 }} title={t('prikaziZapisnikeIUvjerenja')}>
                     🖨️ {bs ? 'Zapisnici' : 'Records'} ▾
                  </button>
                  {zapisniciOpen && typeof document !== 'undefined' && createPortal(
                    <>
                      <div style={{ position: 'fixed', inset: 0, zIndex: 98 }} onClick={() => setZapisniciOpen(false)} />
                      <div onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, right: menuPos.right, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 6, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 99, minWidth: 170 }}>
-                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika za rad na siguran način za ručno popunjavanje' : 'Generate an empty ZOS record for manual filling'}>📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
-                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={lang !== 'en' ? 'Generirajte prazan Zapisnik o ocjeni osposobljenosti radnika iz oblasti zaštite od požara za ručno popunjavanje' : 'Generate an empty ZOP record for manual filling'}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOS&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni')}>📝 {bs ? 'Zapisnik ZOS' : 'ZOS Record'}</div>
+                        <div onClick={() => { setZapisniciOpen(false); window.open(`/print-template?type=ZOP&country=${country}`, '_blank'); }} style={{ padding: '10px 14px', cursor: 'pointer', color: '#d32f2f', fontSize: '0.85rem', fontWeight: 500 }} className="action-menu-item" title={t('generirajtePrazanZapisnikOOcjeni1')}>🔥 {bs ? 'Zapisnik ZOP' : 'ZOP Record'}</div>
                      </div>
                    </>, document.body
                  )}

@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 export default function InstallPWA() {
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [isInstalled, setIsInstalled] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
@@ -66,7 +66,7 @@ export default function InstallPWA() {
                     margin: '12px 0 0 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                 }}
             >
-                📱 {lang !== 'en' ? 'Instaliraj Aplikaciju' : 'Install App'}
+                📱 {t('instalirajAplikaciju')}
             </button>
             {isIOS && showIOSGuide && (
                 <div style={{
@@ -75,11 +75,11 @@ export default function InstallPWA() {
                     fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.7,
                 }}>
                     <div style={{ fontWeight: 700, marginBottom: 4, color: 'var(--text)' }}>
-                        {lang !== 'en' ? 'Upute za iOS:' : 'iOS Instructions:'}
+                        {t('uputeZaIos')}
                     </div>
-                    1️⃣ {lang !== 'en' ? 'Klikni na' : 'Tap the'} <strong style={{ fontSize: '1.1rem' }}>⬆️</strong> (Share)<br/>
-                    2️⃣ {lang !== 'en' ? 'Odaberi' : 'Select'} <strong>"{lang !== 'en' ? 'Dodaj na početni zaslon' : 'Add to Home Screen'}"</strong><br/>
-                    3️⃣ {lang !== 'en' ? 'Potvrdi sa "Dodaj"' : 'Confirm with "Add"'}
+                    1️⃣ {t('klikniNa')} <strong style={{ fontSize: '1.1rem' }}>⬆️</strong> (Share)<br/>
+                    2️⃣ {t('odaberi2')} <strong>"{t('dodajNaPocetniZaslon')}"</strong><br/>
+                    3️⃣ {t('potvrdiSaDodaj')}
                 </div>
             )}
         </div>

@@ -84,7 +84,7 @@ export default function ArchivePage() {
     };
 
     const handleScanSearch = () => {
-        if (!scanName.trim()) { alert(lang !== 'en' ? 'Unesite ime radnika!' : 'Enter worker name!'); return; }
+        if (!scanName.trim()) { alert(t('unesiteImeRadnika')); return; }
         const workers = getAll(COLLECTIONS.WORKERS).filter(w => w.aktivan !== false);
         const results = matchWorkers(scanName, scanDob, workers);
         setScanMatches(results);
@@ -340,7 +340,7 @@ export default function ArchivePage() {
             });
             reload();
         } catch {
-            setUploadError(lang !== 'en' ? 'Greška pri učitavanju datoteke.' : 'File read error.');
+            setUploadError(t('greskaPriUcitavanjuDatoteke'));
         } finally {
             setUploading(false);
         }
@@ -408,7 +408,7 @@ export default function ArchivePage() {
     const handleAskZia = async (file) => {
         const isPdf = typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.pdf');
         if (!isPdf) {
-            alert(lang !== 'en' ? 'Zia trenutno može analizirati samo PDF datoteke iz arhive.' : 'Zia can currently only analyze PDF files from the archive.');
+            alert(t('ziaTrenutnoMozeAnaliziratiSamo'));
             return;
         }
 
@@ -425,7 +425,7 @@ export default function ArchivePage() {
                 const res = await fetch(file.url);
                 const blob = await res.blob();
                 if (blob.size> 4_000_000) {
-                    alert(lang !== 'en' ? 'Datoteka je prevelika za AI analizu (Maks 4MB).' : 'File is too large for AI analysis (Max 4MB).');
+                    alert(t('datotekaJePrevelikaZaAi'));
                     return;
                 }
                 const reader = new FileReader();
@@ -437,7 +437,7 @@ export default function ArchivePage() {
             // IndexedDB 
             else if (file._idbKey) {
                 // Not easily supported synchronously right here without importing IDB logic deeply
-                alert(lang !== 'en' ? 'Skenirani testovi nisu podržani. Preuzmite datoteku pa je prevucite u Zia chat.' : 'Scanned tests not supported directly. Download the file and drop it into Zia chat.');
+                alert(t('skeniraniTestoviNisuPodrzaniPreuzmite'));
                 return;
             }
 
@@ -466,7 +466,7 @@ export default function ArchivePage() {
     return (
         <div className="animate-fadeIn">
             <DialogRenderer />
-            <PageHeader icon="🗄️" title={lang !== 'en' ? 'Digitalna arhiva' : 'Digital Archive'} />
+            <PageHeader icon="🗄️" title={t('digitalnaArhiva')} />
 
             {/* ── Tab bar ── */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 20, borderBottom: '2px solid var(--border)' }}>
@@ -492,12 +492,10 @@ export default function ArchivePage() {
                     <div className="card" style={{ marginBottom: 20 }}>
                         <div className="card-body">
                             <div style={{ fontWeight: 700, marginBottom: 4 }}>
-                                {lang !== 'en' ? '📝 Ubaci skenirani test' : '📝 Upload Scanned Test'}
+                                {t('ubaciSkeniraniTest')}
                             </div>
                             <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                                {lang !== 'en'
-                                    ? 'Aplikacija će pronaći odgovarajućeg radnika prema imenu i datumu rođenja, a vi možete po potrebi ručno doraditi unos.'
-                                    : 'The app will find the matching worker by name and date of birth. You can manually adjust if needed.'}
+                                {t('aplikacijaCePronaciOdgovarajucegRadnika')}
                             </div>
 
                             {/* Drop zone */}
@@ -519,15 +517,15 @@ export default function ArchivePage() {
                                     <div>
                                         <div style={{ fontWeight: 700, color: 'var(--success)' }}>{scanFile.name}</div>
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                                            {formatSize(scanFile.size)} · {lang !== 'en' ? 'Klikni za promjenu' : 'Click to change'}
+                                            {formatSize(scanFile.size)} · {t('klikniZaPromjenu')}
                                         </div>
                                     </div>
                                 ) : (
                                     <div>
                                         <div style={{ fontWeight: 600, marginBottom: 4 }}>
                                             {scanDragging
-                                                ? (lang !== 'en' ? 'Ispusti test ovdje' : 'Drop test here')
-                                                : (lang !== 'en' ? 'Prevuci skenirani test ili klikni za odabir' : 'Drag scanned test here or click to select')}
+                                                ? (t('ispustiTestOvdje'))
+                                                : (t('prevuciSkeniraniTestIliKlikni'))}
                                         </div>
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                                             PDF, JPG, PNG, DOCX — max 10MB
@@ -542,22 +540,22 @@ export default function ArchivePage() {
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 200px auto', gap: 12, alignItems: 'flex-end' }}>
                                 <div>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                        {lang !== 'en' ? 'Ime i prezime (iz testa)' : 'Name (from test)'}
+                                        {t('imeIPrezimeIzTesta')}
                                     </div>
                                     <input className="form-input" value={scanName}
                                         onChange={e => { setScanName(e.target.value); setScanSearched(false); setScanMatches([]); }}
-                                        placeholder={lang !== 'en' ? 'npr. Mujo Mujić' : 'e.g. John Smith'}
+                                        placeholder={t('nprMujoMujic')}
                                         onKeyDown={e => { if (e.key === 'Enter') handleScanSearch(); }} />
                                 </div>
                                 <div>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
-                                        {lang !== 'en' ? 'Datum r. (opciono)' : 'Date of birth (opt.)'}
+                                        {t('datumROpciono')}
                                     </div>
                                     <DateInput value={scanDob}
                                         onChange={v => { setScanDob(v); setScanSearched(false); setScanMatches([]); }} />
                                 </div>
                                 <button className="btn btn-primary" onClick={handleScanSearch} style={{ whiteSpace: 'nowrap' }}>
-                                    🔍 {lang !== 'en' ? 'Pronađi radnika' : 'Find worker'}
+                                    🔍 {t('pronaiRadnika')}
                                 </button>
                             </div>
                         </div>
@@ -573,8 +571,8 @@ export default function ArchivePage() {
                                 {scanMatches.length === 0 ? (
                                     <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--text-muted)' }}>
                                         <div style={{ fontSize: '2rem', marginBottom: 8 }}>🔎</div>
-                                        <div style={{ fontWeight: 600 }}>{lang !== 'en' ? 'Nema rezultata' : 'No results'}</div>
-                                        <div style={{ fontSize: '0.82rem', marginTop: 4 }}>{lang !== 'en' ? 'Pokušajte s drugačijim imenom ili dodajte datum rođenja.' : 'Try a different name or add date of birth.'}</div>
+                                        <div style={{ fontWeight: 600 }}>{t('nemaRezultata')}</div>
+                                        <div style={{ fontSize: '0.82rem', marginTop: 4 }}>{t('pokusajteSDrugacijimImenomIli')}</div>
                                     </div>
                                 ) : scanMatches.map(({ worker: w, score, dobMatch }) => {
                                     const conf = confidenceLabel(score);
@@ -609,14 +607,14 @@ export default function ArchivePage() {
                                                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: conf.color }}>{conf.label}</div>
                                             </div>
                                             <button className="btn btn-primary btn-sm" onMouseDown={(e) => e.preventDefault()} onClick={e => { e.stopPropagation(); handleScanSelectWorker(w); }}>
-                                                {lang !== 'en' ? 'Odaberi →' : 'Select →'}
+                                                {t('odaberi')}
                                             </button>
                                         </div>
                                     );
                                 })}
                                 {!scanFile && scanMatches.length> 0 && (
                                     <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 'var(--radius-sm)', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', fontSize: '0.82rem', color: 'var(--warning)' }}>
-                                        ⚠️ {lang !== 'en' ? 'Odaberite datoteku skeniranog testa prije nego nastavite!' : 'Please select the scanned test file before continuing!'}
+                                        ⚠️ {t('odaberiteDatotekuSkeniranogTestaPrije')}
                                     </div>
                                 )}
                             </div>
@@ -644,10 +642,10 @@ export default function ArchivePage() {
                     <div style={{ fontSize: '2.5rem', marginBottom: 8 }}>{uploading ? '⏳' : dragging ? '📂' : '☁️'}</div>
                     <div style={{ fontWeight: 600, marginBottom: 4 }}>
                         {uploading
-                            ? (lang !== 'en' ? 'Učitavanje...' : 'Uploading...')
+                            ? (t('ucitavanje'))
                             : dragging
-                            ? (lang !== 'en' ? 'Ispusti datoteke ovdje' : 'Drop files here')
-                            : (lang !== 'en' ? 'Prevuci datoteke ovdje ili klikni za odabir' : 'Drag & drop files here or click to select')}
+                            ? (t('ispustiDatotekeOvdje'))
+                            : (t('prevuciDatotekeOvdjeIliKlikni'))}
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                         PDF, Word, Excel, PowerPoint, slike, ZIP — max {MAX_MB}MB
@@ -662,7 +660,7 @@ export default function ArchivePage() {
             {/* Filters */}
             <div className="scrollable-toolbar" style={{ padding: 0, gap: 10, marginBottom: 16 }}>
                 <div className="search-bar" style={{ flex: 1, maxWidth: 320 }}>
-                    <input placeholder={lang !== 'en' ? 'Pretraži arhivu...' : 'Search archive...'}
+                    <input placeholder={t('pretraziArhivu')}
                         value={search} onChange={e => setSearch(e.target.value)}
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                     {search && <button className="btn btn-ghost btn-sm" onClick={() => setSearch('')}>✕</button>}
@@ -685,8 +683,8 @@ export default function ArchivePage() {
                     {sorted.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '3rem', marginBottom: 12 }}>🗄️</div>
-                            <div style={{ fontWeight: 600, marginBottom: 6 }}>{lang !== 'en' ? 'Arhiva je prazna' : 'Archive is empty'}</div>
-                            <div style={{ fontSize: '0.82rem' }}>{lang !== 'en' ? 'Prevucite datoteke gore da počnete' : 'Drag files above to get started'}</div>
+                            <div style={{ fontWeight: 600, marginBottom: 6 }}>{t('arhivaJePrazna')}</div>
+                            <div style={{ fontSize: '0.82rem' }}>{t('prevuciteDatotekeGoreDaPocnete')}</div>
                         </div>
                     ) : (
                         <div className="data-table-wrapper">
@@ -694,11 +692,11 @@ export default function ArchivePage() {
                                 <thead>
                                     <tr>
                                         <th style={{ width: 44 }}></th>
-                                        <th onClick={() => toggleSort('name')} style={thStyle('name')}>{lang !== 'en' ? 'Naziv' : 'Name'}{sortIcon('name')}</th>
-                                        <th style={{ width: 160 }}>{lang !== 'en' ? 'Kategorija' : 'Category'}</th>
-                                        <th onClick={() => toggleSort('size')} style={{ ...thStyle('size'), width: 90 }}>{lang !== 'en' ? 'Veličina' : 'Size'}{sortIcon('size')}</th>
-                                        <th onClick={() => toggleSort('uploadedAt')} style={{ ...thStyle('uploadedAt'), width: 120 }}>{lang !== 'en' ? 'Datum' : 'Date'}{sortIcon('uploadedAt')}</th>
-                                        <th style={{ width: 100 }}>{lang !== 'en' ? 'Akcije' : 'Actions'}</th>
+                                        <th onClick={() => toggleSort('name')} style={thStyle('name')}>{t('naziv')}{sortIcon('name')}</th>
+                                        <th style={{ width: 160 }}>{t('kategorija')}</th>
+                                        <th onClick={() => toggleSort('size')} style={{ ...thStyle('size'), width: 90 }}>{t('velicina')}{sortIcon('size')}</th>
+                                        <th onClick={() => toggleSort('uploadedAt')} style={{ ...thStyle('uploadedAt'), width: 120 }}>{t('datum')}{sortIcon('uploadedAt')}</th>
+                                        <th style={{ width: 100 }}>{t('akcije')}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -707,7 +705,7 @@ export default function ArchivePage() {
                                             <td style={{ textAlign: 'center', fontSize: '1.4rem' }}>{getIcon(file.name)}</td>
                                             <td>
                                                 <div style={{ fontWeight: 600, cursor: 'pointer', color: 'var(--primary)' }}
-                                                    onClick={() => handleOpen(file)} title={lang !== 'en' ? 'Otvori' : 'Open'}>
+                                                    onClick={() => handleOpen(file)} title={t('otvori')}>
                                                     {file.name}
                                                 </div>
                                                 {file._readonly ? (
@@ -718,7 +716,7 @@ export default function ArchivePage() {
                                                     <input
                                                         defaultValue={file.description || ''}
                                                         onBlur={e => handleDescChange(file.id, e.target.value)}
-                                                        placeholder={lang !== 'en' ? 'Opis (opcionalno)...' : 'Description (optional)...'}
+                                                        placeholder={t('opisOpcionalno')}
                                                         style={{ border: 'none', background: 'transparent', fontSize: '0.75rem', color: 'var(--text-muted)', width: '100%', outline: 'none', marginTop: 2, fontFamily: 'var(--font-body)' }}
                                                     />
                                                 )}
@@ -741,17 +739,17 @@ export default function ArchivePage() {
                                                 <div style={{ display: 'grid', gridTemplateColumns: '28px 28px 28px 28px', gap: 4, alignItems: 'center' }}>
                                                     <div>
                                                         {typeof file?.name === 'string' && file.name.toLowerCase().endsWith('.pdf') && (
-                                                            <button className="btn btn-ghost btn-sm btn-icon" style={{color: 'transparent', textShadow: '0 0 0 var(--primary)', width: '100%', padding: 0}} title={lang !== 'en' ? 'Analiziraj sa Zia' : 'Ask Zia'} onClick={() => handleAskZia(file)}>✨</button>
+                                                            <button className="btn btn-ghost btn-sm btn-icon" style={{color: 'transparent', textShadow: '0 0 0 var(--primary)', width: '100%', padding: 0}} title={t('analizirajSaZia')} onClick={() => handleAskZia(file)}>✨</button>
                                                         )}
                                                     </div>
                                                     <div>
-                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ width: '100%', padding: 0 }} title={lang !== 'en' ? 'Otvori' : 'Open'} onClick={() => handleOpen(file)}>👁️</button>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ width: '100%', padding: 0 }} title={t('otvori')} onClick={() => handleOpen(file)}>👁️</button>
                                                     </div>
                                                     <div>
-                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ width: '100%', padding: 0 }} title={lang !== 'en' ? 'Preuzmi' : 'Download'} onClick={() => handleDownload(file)}>⬇️</button>
+                                                        <button className="btn btn-ghost btn-sm btn-icon" style={{ width: '100%', padding: 0 }} title={t('preuzmi')} onClick={() => handleDownload(file)}>⬇️</button>
                                                     </div>
                                                     <div>
-                                                        {!file._readonly && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)', width: '100%', padding: 0 }} title={lang !== 'en' ? 'Obriši' : 'Delete'} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>}
+                                                        {!file._readonly && <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)', width: '100%', padding: 0 }} title={t('obrisi')} onClick={() => handleDelete(file.id, file.name)}>🗑️</button>}
                                                     </div>
                                                 </div>
                                             </td>

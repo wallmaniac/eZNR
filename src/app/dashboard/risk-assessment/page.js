@@ -333,7 +333,7 @@ export default function RiskAssessmentPage() {
         if (typeof window !== 'undefined') window.history.pushState({ riskForm: true }, '');
     };
     const handleDelete = async (id) => {
-        if (await confirm(lang !== 'en' ? 'Obrisati procjenu i sve stavke?' : 'Delete assessment and all items?')) {
+        if (await confirm(t('obrisatiProcjenuISveStavke'))) {
             // cascade delete risk items
             const items = getAll(COLLECTIONS.RISK_ITEMS).filter(ri => ri.procjenaId === id);
             items.forEach(ri => remove(COLLECTIONS.RISK_ITEMS, ri.id));
@@ -358,8 +358,8 @@ export default function RiskAssessmentPage() {
         showFlash();
     };
     const handleSave = async () => {
-        if (!formData.nazivTvrtke) { alert(lang !== 'en' ? 'Naziv tvrtke je obavezan!' : 'Company name is required!'); return; }
-        if (!formData.nazivProcjene) { alert(lang !== 'en' ? 'Naziv procjene je obavezan!' : 'Assessment name is required!'); return; }
+        if (!formData.nazivTvrtke) { alert(t('nazivTvrtkeJeObavezan')); return; }
+        if (!formData.nazivProcjene) { alert(t('nazivProcjeneJeObavezan')); return; }
         
         let docData = null;
         let docName = `Procjena_rizika_${(formData.nazivTvrtke || 'export').replace(/[^a-zA-Z0-9]/g, '_')}.docx`;
@@ -431,7 +431,7 @@ export default function RiskAssessmentPage() {
         setRiForm({ ...ri }); setRiEditId(ri.id); setShowRiForm(true); setLastEditedRiId(null);
     };
     const handleDeleteRi = async (id) => {
-        if (await confirm(lang !== 'en' ? 'Obriši stavku?' : 'Delete item?')) {
+        if (await confirm(t('obrisiStavku'))) {
             remove(COLLECTIONS.RISK_ITEMS, id); loadRiskItems(editingId);
         }
     };
@@ -461,7 +461,7 @@ export default function RiskAssessmentPage() {
     };
     const handleAiOpis = async (mode = 'app') => {
         if (!formData.nazivTvrtke) {
-            alert(lang !== 'en' ? 'Molimo prvo unesite naziv firme u Opštim podacima.' : 'Please enter company name first.');
+            alert(t('molimoPrvoUnesiteNazivFirme'));
             return;
         }
         setAiOpisLoading(true);
@@ -1075,12 +1075,12 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
     const startEditPt = (p) => { setPtEdit(p.id); setPtNaziv(p.naziv || ''); setPtVrsta(p.vrsta || ''); };
     const cancelPt = () => setPtEdit(null);
     const savePt = () => { if (!ptNaziv.trim()) return; if (ptEdit === '__new__') create(COLLECTIONS.PERSON_TYPES, { naziv: ptNaziv, vrsta: ptVrsta }); else update(COLLECTIONS.PERSON_TYPES, ptEdit, { naziv: ptNaziv, vrsta: ptVrsta }); setPtEdit(null); loadData(); };
-    const deletePt = async (id) => { if (await confirm(lang !== 'en' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.PERSON_TYPES, id); loadData(); } };
+    const deletePt = async (id) => { if (await confirm(t('obrisati'))) { remove(COLLECTIONS.PERSON_TYPES, id); loadData(); } };
     const startNewHaz = () => { setHazEdit('__new__'); setHazNaziv(''); setHazOznaka(''); };
     const startEditHaz = (h) => { setHazEdit(h.id); setHazNaziv(h.naziv || ''); setHazOznaka(h.oznaka || ''); };
     const cancelHaz = () => setHazEdit(null);
     const saveHaz = () => { if (!hazNaziv.trim()) return; if (hazEdit === '__new__') create(COLLECTIONS.HAZARDS, { naziv: hazNaziv, oznaka: hazOznaka }); else update(COLLECTIONS.HAZARDS, hazEdit, { naziv: hazNaziv, oznaka: hazOznaka }); setHazEdit(null); loadData(); };
-    const deleteHaz = async (id) => { if (await confirm(lang !== 'en' ? 'Obrisati?' : 'Delete?')) { remove(COLLECTIONS.HAZARDS, id); loadData(); } };
+    const deleteHaz = async (id) => { if (await confirm(t('obrisati'))) { remove(COLLECTIONS.HAZARDS, id); loadData(); } };
 
     const labelSt = { fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 };
 
@@ -1144,29 +1144,29 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
         return (
             <div className="animate-fadeIn">
                 <style>{`.hover-row:hover { background: rgba(0,0,0,0.02); }`}</style>
-                <PageHeader icon="📊" title={lang !== 'en' ? 'Procjene rizika' : 'Risk Assessments'} />
+                <PageHeader icon="📊" title={t('procjeneRizika')} />
                 <DialogRenderer />
                 <div className="card" style={{ marginBottom: 16 }}>
                     <div className="card-body scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
-                        <button className="btn btn-primary btn-sm" title="Započnite kreiranje nove procjene rizika od nule" onClick={handleNew}>+ {lang !== 'en' ? 'Nova procjena' : 'New'}</button>
+                        <button className="btn btn-primary btn-sm" title="Započnite kreiranje nove procjene rizika od nule" onClick={handleNew}>+ {t('novaProcjena')}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
-                            <input title="Pretražite procjene po nazivu tvrtke ili nazivu procjene" placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={search} onChange={e => setSearch(e.target.value)}
+                            <input title="Pretražite procjene po nazivu tvrtke ili nazivu procjene" placeholder={t('pretrazi1')} value={search} onChange={e => setSearch(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
-                        <button className="btn btn-outline btn-sm" title="Uredite šifarnik opcija za vrstu osoba (Zaposlenik, Učenik na praksi...)" onClick={() => setView('vrstaOsobe')}>👤 {lang !== 'en' ? 'Vrsta osobe' : 'Person types'}</button>
-                        <button className="btn btn-outline btn-sm" title="Uredite glavni katalog/šifarnik mogućih opasnosti i štetnosti" onClick={() => setView('opasnosti')}>⚠️ {lang !== 'en' ? 'Opasnosti' : 'Hazards'}</button>
+                        <button className="btn btn-outline btn-sm" title="Uredite šifarnik opcija za vrstu osoba (Zaposlenik, Učenik na praksi...)" onClick={() => setView('vrstaOsobe')}>👤 {t('vrstaOsobe')}</button>
+                        <button className="btn btn-outline btn-sm" title="Uredite glavni katalog/šifarnik mogućih opasnosti i štetnosti" onClick={() => setView('opasnosti')}>⚠️ {t('opasnosti')}</button>
 
                         {/* ── Grupne akcije bar ── */}
                         {selectedIds.size> 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', padding: '6px 14px', background: 'rgba(0,191,166,0.08)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(0,191,166,0.25)' }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'} &mdash; Grupne akcije:
+                                    {selectedIds.size} {t('odabrano')} &mdash; Grupne akcije:
                                 </span>
-                                <button className="btn btn-primary btn-sm" title="Otvorite prozor za pregled i preuzimanje označenih procjena" onClick={bulkPrint}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-danger btn-sm" title="Trajno obrišite označene procjene u potpunosti" onClick={bulkDelete}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary btn-sm" title="Otvorite prozor za pregled i preuzimanje označenih procjena" onClick={bulkPrint}>🖨️ {t('isprintaj')}</button>
+                                <button className="btn btn-danger btn-sm" title="Trajno obrišite označene procjene u potpunosti" onClick={bulkDelete}>🗑️ {t('obrisi')}</button>
                             </div>
                         )}
-                        {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedRecords.length} {lang !== 'en' ? 'zapisa' : 'records'}</span>}
+                        {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto' }}>{sortedRecords.length} {t('zapisa')}</span>}
                     </div>
                 </div>
                 <div className="card"><div className="card-body"><div className="data-table-wrapper">
@@ -1175,13 +1175,13 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                             <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ cursor: 'pointer', accentColor: 'var(--primary)' }} />
                         </th>
                         <th style={{ width: 90 }}>{t('actions')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivProcjene')} title="Naziv dokumenta / procjene">{lang !== 'en' ? 'Naziv procjene' : 'Assessment'}{getSortIcon('nazivProcjene')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')} title="Naziv tvrtke za koju radite procjenu">{lang !== 'en' ? 'Naziv tvrtke' : 'Company'}{getSortIcon('nazivTvrtke')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('radnoMjestoId')} title="Povezano radno mjesto">{lang !== 'en' ? 'Radno mjesto' : 'Workplace'}{getSortIcon('radnoMjestoId')}</th>
-                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('revizija')} title="Broj revizije">{lang !== 'en' ? 'Rev.' : 'Rev.'}{getSortIcon('revizija')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')} title="Datum kad je procjena napravljena">{lang !== 'en' ? 'Datum' : 'Date'}{getSortIcon('datumIzrade')}</th>
-                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('status')} title="Status dokumenta (Nacrt, Aktivna, Arhivirana)">{lang !== 'en' ? 'Status' : 'Status'}{getSortIcon('status')}</th>
-                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('cnt')} title="Ukupan broj prepoznatih rizika/opasnosti">{lang !== 'en' ? 'Rizika' : 'Risks'}{getSortIcon('cnt')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivProcjene')} title="Naziv dokumenta / procjene">{t('nazivProcjene')}{getSortIcon('nazivProcjene')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('nazivTvrtke')} title="Naziv tvrtke za koju radite procjenu">{t('nazivTvrtke')}{getSortIcon('nazivTvrtke')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('radnoMjestoId')} title="Povezano radno mjesto">{t('radnoMjesto')}{getSortIcon('radnoMjestoId')}</th>
+                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('revizija')} title="Broj revizije">{t('rev')}{getSortIcon('revizija')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('datumIzrade')} title="Datum kad je procjena napravljena">{t('datum')}{getSortIcon('datumIzrade')}</th>
+                        <th style={{ cursor: 'pointer' }} onClick={() => reqSort('status')} title="Status dokumenta (Nacrt, Aktivna, Arhivirana)">{t('status')}{getSortIcon('status')}</th>
+                        <th style={{ cursor: 'pointer', textAlign: 'center' }} onClick={() => reqSort('cnt')} title="Ukupan broj prepoznatih rizika/opasnosti">{t('rizika')}{getSortIcon('cnt')}</th>
                     </tr></thead><tbody>
                         {sortedRecords.length === 0 ? <tr><td colSpan={9} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>{t('noRecords')}</td></tr>
                         : sortedRecords.map(r => {
@@ -1271,8 +1271,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
         return (
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
-                    <button className="btn btn-ghost" onClick={handleBack}>← {lang !== 'en' ? 'Procjene' : 'Assessments'}</button>
-                    <h1 style={{ margin: 0 }}>📊 {editingId ? (lang !== 'en' ? 'Uredi procjenu' : 'Edit') : (lang !== 'en' ? 'Nova procjena rizika' : 'New assessment')}</h1>
+                    <button className="btn btn-ghost" onClick={handleBack}>← {t('procjene')}</button>
+                    <h1 style={{ margin: 0 }}>📊 {editingId ? (t('urediProcjenu')) : (t('novaProcjenaRizika'))}</h1>
                 </div>
                 <DialogRenderer />
 
@@ -1632,7 +1632,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                 {activeTab === 'procjena' && (
                     <div>
                         {!editingId && <div className="card" style={{ marginBottom: 16 }}><div className="card-body" style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 30 }}>
-                            ⚠️ {lang !== 'en' ? 'Prvo sačuvajte procjenu (tab Opšti podaci) da biste mogli dodavati stavke.' : 'Save the assessment first to add risk items.'}
+                            ⚠️ {t('prvoSacuvajteProcjenuTabOpsti')}
                         </div></div>}
                         {editingId && <>
                             <div className="card" style={{ marginBottom: 16 }}><div className="card-body">
@@ -1646,8 +1646,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                         {selectedRiIds.size> 0 && (
                                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginRight: 8 }}>
-                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedRiIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:</span>
-                                                <button className="btn btn-danger btn-sm" onClick={handleBulkDeleteRi}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                                                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>{selectedRiIds.size} {t('odabrano')}:</span>
+                                                <button className="btn btn-danger btn-sm" onClick={handleBulkDeleteRi}>🗑️ {t('obrisi')}</button>
                                             </div>
                                         )}
                                         <button className="btn btn-outline btn-sm" onClick={() => setShowImportModal(true)} title="Uvezite prepoznate opasnosti i nedostatke iz odgovora radnika na online upitnike"
@@ -1672,7 +1672,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                             style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
                                             ⚠️ Dodaj iz kataloga
                                         </button>
-                                        <button className="btn btn-outline btn-sm" title="Ručno popunite formu i napravite procjenu za jedan pojedinačni rizik" onClick={handleNewRi}>+ {lang !== 'en' ? 'Dodaj stavku' : 'Add item'}</button>
+                                        <button className="btn btn-outline btn-sm" title="Ručno popunite formu i napravite procjenu za jedan pojedinačni rizik" onClick={handleNewRi}>+ {t('dodajStavku')}</button>
                                     </div>
                                 </div>
 
@@ -1906,7 +1906,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                         <>
                                             {showRiForm && !riEditId && riFormContent}
 
-                                            {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang !== 'en' ? 'Nema stavki. Kliknite na matricu ili "Dodaj stavku".' : 'No items yet.'}</div>}
+                                            {riSorted.length === 0 && !showRiForm && <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{t('nemaStavkiKlikniteNaMatricu')}</div>}
                                             {riSorted.length> 0 && (
                                                 <div className="data-table-wrapper"><table className="data-table"><thead><tr>
                                                     <th style={{ width: 85, paddingLeft: 8 }}>
@@ -1936,8 +1936,8 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                                         if (next.has(ri.id)) next.delete(ri.id); else next.add(ri.id);
                                                                         setSelectedRiIds(next);
                                                                     }} style={{ cursor: 'pointer', accentColor: 'var(--primary)', width: 15, height: 15 }} />
-                                                                    <button className="btn btn-ghost btn-sm" title={lang !== 'en' ? 'Uredi stavku' : 'Edit item'} onClick={(e) => { e.stopPropagation(); handleEditRi(ri); }}>✏️</button>
-                                                                    <button className="btn btn-ghost btn-sm" title={lang !== 'en' ? 'Obriši stavku' : 'Delete item'} style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDeleteRi(ri.id); }}>🗑️</button>
+                                                                    <button className="btn btn-ghost btn-sm" title={t('urediStavku')} onClick={(e) => { e.stopPropagation(); handleEditRi(ri); }}>✏️</button>
+                                                                    <button className="btn btn-ghost btn-sm" title={t('obrisiStavku1')} style={{ color: 'var(--danger)' }} onClick={(e) => { e.stopPropagation(); handleDeleteRi(ri.id); }}>🗑️</button>
                                                                 </div></td>
                                                                 <td style={{ fontSize: '0.82rem' }}>{wp?.naziv || '—'}</td>
                                                                 <td style={{ fontSize: '0.82rem' }}>
@@ -2165,14 +2165,14 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 <div style={{ ...labelSt, fontSize: '0.78rem', color: 'var(--primary)', marginBottom: 0 }}>MJERE ZA SMANJENJE RIZIKA (Stavke sa R ≥ 6)</div>
                                 {highRisk.length> 0 && (
                                     <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Dodijeli svima:' : 'Assign to all:'}</div>
+                                        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('dodijeliSvima')}</div>
                                         <div style={{ display: 'flex', gap: 4 }}>
                                             <input
                                                 id="bulkOdgovornaOsoba"
                                                 className="form-input"
                                                 style={{ fontSize: '0.75rem', padding: '4px 8px', width: 160 }}
                                                 list="workers-list"
-                                                placeholder={lang !== 'en' ? 'Odgovorna osoba' : 'Responsible person'}
+                                                placeholder={t('odgovornaOsoba')}
                                             />
                                             <button className="btn btn-outline btn-sm" onClick={() => {
                                                 const val = document.getElementById('bulkOdgovornaOsoba').value;
@@ -2182,14 +2182,14 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                                     document.getElementById('bulkOdgovornaOsoba').value = '';
                                                 }
                                             }} style={{ padding: '4px 10px', height: 'auto', minHeight: 'auto' }}>
-                                                {lang !== 'en' ? 'Primijeni' : 'Apply'}
+                                                {t('primijeni')}
                                             </button>
                                         </div>
                                     </div>
                                 )}
                             </div>
                             {highRisk.length === 0
-                                ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{lang !== 'en' ? 'Nema stavki sa rizikom ≥ 6. Sve je u prihvatljivom okviru.' : 'No items with risk ≥ 6.'}</div>
+                                ? <div style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>{t('nemaStavkiSaRizikom6')}</div>
                                 : <div className="data-table-wrapper"><table className="data-table"><thead><tr>
                                     <th style={{ width: 48 }}>R₀</th>
                                     <th style={{ width: 48 }}>R₁</th>
@@ -2347,11 +2347,11 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                         <div className="scrollable-toolbar" style={{ padding: 0, gap: 10 }}>
                             <button className="btn btn-outline" onClick={() => handleGenerateReport()}
                                 style={{ background: 'linear-gradient(135deg, #1a237e 0%, #3f51b5 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                📄 {lang !== 'en' ? 'Preuzmi PDF' : 'Download PDF'}
+                                📄 {t('preuzmiPdf')}
                             </button>
                             <button className="btn btn-outline" onClick={() => handleGenerateDocx()}
                                 style={{ background: 'linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                📗 {lang !== 'en' ? 'Preuzmi Word (.docx)' : 'Download Word (.docx)'}
+                                📗 {t('preuzmiWordDocx')}
                             </button>
                         </div>
                     </div></div>
@@ -2364,7 +2364,7 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
                                 ← {lang !== 'en' ? 'Nazad' : 'Previous'}
                             </button>
                             <button className="btn btn-outline" onClick={() => hasNextTab && setActiveTab(tabs[currentTabIndex + 1].key)} disabled={!hasNextTab} style={{ opacity: !hasNextTab ? 0.3 : 1, borderColor: 'var(--primary)', color: 'var(--primary)' }}>
-                                {lang !== 'en' ? 'Dalje' : 'Next'} →
+                                {t('dalje')} →
                             </button>
                         </div>
                         <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -2383,19 +2383,19 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={() => { setView('list'); cancelPt(); }}>←</button>
-                    <h1 style={{ margin: 0 }}>👤 {lang !== 'en' ? 'Vrste osoba' : 'Person Types'}</h1>
+                    <h1 style={{ margin: 0 }}>👤 {t('vrsteOsoba')}</h1>
                 </div>
                 <DialogRenderer />
                 <div className="card"><div className="card-body">
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
-                        <button className="btn btn-outline btn-sm" onClick={startNewPt}>+ {lang !== 'en' ? 'Dodaj' : 'Add'}</button>
+                        <button className="btn btn-outline btn-sm" onClick={startNewPt}>+ {t('dodaj')}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
-                            <input placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={searchPt} onChange={e => setSearchPt(e.target.value)}
+                            <input placeholder={t('pretrazi1')} value={searchPt} onChange={e => setSearchPt(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
                     </div>
                     <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                        <th style={{ width: 90 }}></th><th>{lang !== 'en' ? 'Naziv' : 'Name'}</th><th>{lang !== 'en' ? 'Vrsta' : 'Type'}</th>
+                        <th style={{ width: 90 }}></th><th>{t('naziv')}</th><th>{t('vrsta')}</th>
                     </tr></thead><tbody>
                         {ptEdit === '__new__' && <tr style={{ background: 'var(--bg-input)' }}><td><div style={{ display: 'flex', gap: 4 }}><button className="btn btn-primary btn-sm" onClick={savePt}>✔</button><button className="btn btn-ghost btn-sm" onClick={cancelPt}>✖</button></div></td>
                             <td><input className="form-input" value={ptNaziv} onChange={e => setPtNaziv(e.target.value)} autoFocus /></td><td><input className="form-input" value={ptVrsta} onChange={e => setPtVrsta(e.target.value)} /></td></tr>}
@@ -2417,19 +2417,19 @@ ${autoPrint ? '<script>setTimeout(() => window.print(), 500);</script>' : ''}
             <div className="animate-fadeIn">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                     <button className="btn btn-ghost" onClick={() => { setView('list'); cancelHaz(); }}>←</button>
-                    <h1 style={{ margin: 0 }}>⚠️ {lang !== 'en' ? 'Opasnosti' : 'Hazards'}</h1>
+                    <h1 style={{ margin: 0 }}>⚠️ {t('opasnosti')}</h1>
                 </div>
                 <DialogRenderer />
                 <div className="card"><div className="card-body">
                     <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 14, flexWrap: 'wrap' }}>
-                        <button className="btn btn-outline btn-sm" onClick={startNewHaz}>+ {lang !== 'en' ? 'Dodaj' : 'Add'}</button>
+                        <button className="btn btn-outline btn-sm" onClick={startNewHaz}>+ {t('dodaj')}</button>
                         <div className="search-bar" style={{ flex: 1, maxWidth: 300 }}>
-                            <input placeholder={lang !== 'en' ? 'Pretraži...' : 'Search...'} value={searchHaz} onChange={e => setSearchHaz(e.target.value)}
+                            <input placeholder={t('pretrazi1')} value={searchHaz} onChange={e => setSearchHaz(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                         </div>
                     </div>
                     <div className="data-table-wrapper"><table className="data-table"><thead><tr>
-                        <th style={{ width: 90 }}></th><th>{lang !== 'en' ? 'Naziv' : 'Name'}</th><th>{lang !== 'en' ? 'Oznaka' : 'Code'}</th>
+                        <th style={{ width: 90 }}></th><th>{t('naziv')}</th><th>{t('oznaka')}</th>
                     </tr></thead><tbody>
                         {hazEdit === '__new__' && <tr style={{ background: 'var(--bg-input)' }}><td><div style={{ display: 'flex', gap: 4 }}><button className="btn btn-primary btn-sm" onClick={saveHaz}>✔</button><button className="btn btn-ghost btn-sm" onClick={cancelHaz}>✖</button></div></td>
                             <td><input className="form-input" value={hazNaziv} onChange={e => setHazNaziv(e.target.value)} autoFocus placeholder="npr. O.1. MEHANIČKE OPASNOSTI" /></td>

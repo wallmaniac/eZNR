@@ -93,7 +93,7 @@ export function InfoTip({ text }) {
 
 // -- StazPicker: 3-dropdown prior experience picker --------------------------
 export function StazPicker({ label, value, onChange }) {
-    const { lang } = useLanguage();
+    const { lang , t } = useLanguage();
     const parse = (v) => {
         if (!v) return { g: '', m: '', d: '' };
         const m1 = v.match(/(\d+)g(\d+)mj(\d+)d/i);
@@ -116,7 +116,7 @@ export function StazPicker({ label, value, onChange }) {
         <div className="form-group">
             <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6, position: 'relative' }}>
                 <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
-                <InfoTip text={lang !== 'en' ? "Staž prije dolaska u firmu: Godina / Mjeseci / Dana" : "Prior experience: Years / Months / Days"} />
+                <InfoTip text={t('stazPrijeDolaskaUFirmu')} />
                 {value && <span style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}>{value.toUpperCase()}</span>}
             </label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4 }}>

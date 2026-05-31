@@ -147,9 +147,9 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
     }, [certs]);
 
     const certSegments = [
-        { label: lang !== 'en' ? 'Važeća' : 'Valid', value: certStats.valid, color: 'var(--success)' },
-        { label: lang !== 'en' ? 'Ističe ≤30d' : 'Expiring ≤30d', value: certStats.expiringSoon, color: 'var(--warning)' },
-        { label: lang !== 'en' ? 'Istekla' : 'Expired', value: certStats.expired, color: 'var(--danger)' },
+        { label: t('vazeca'), value: certStats.valid, color: 'var(--success)' },
+        { label: t('istice30d'), value: certStats.expiringSoon, color: 'var(--warning)' },
+        { label: t('istekla'), value: certStats.expired, color: 'var(--danger)' },
     ];
 
     // ── Injuries per Month (last 12 months) ─────────────────────────────────
@@ -178,11 +178,11 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
         const items = (riskItems || []).filter(ri => ri.procjenaId && activeIds.has(ri.procjenaId) && ri.rizik > 0);
 
         const buckets = [
-            { label: lang !== 'en' ? 'Neznatan' : 'Negligible', min: 1, max: 5, color: '#4caf50' },
-            { label: lang !== 'en' ? 'Dopustiv' : 'Tolerable', min: 6, max: 10, color: '#ffc107' },
-            { label: lang !== 'en' ? 'Umjeren' : 'Moderate', min: 11, max: 15, color: '#ff9800' },
-            { label: lang !== 'en' ? 'Znatan' : 'Significant', min: 16, max: 20, color: '#f44336' },
-            { label: lang !== 'en' ? 'Nedopustiv' : 'Intolerable', min: 21, max: 25, color: '#b71c1c' },
+            { label: t('neznatan'), min: 1, max: 5, color: '#4caf50' },
+            { label: t('dopustiv'), min: 6, max: 10, color: '#ffc107' },
+            { label: t('umjeren'), min: 11, max: 15, color: '#ff9800' },
+            { label: t('znatan'), min: 16, max: 20, color: '#f44336' },
+            { label: t('nedopustiv'), min: 21, max: 25, color: '#b71c1c' },
         ];
 
         return buckets.map(b => ({
@@ -224,7 +224,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             const element = document.getElementById('print-document-container');
             const opt = {
                 margin: 0,
-                filename: lang !== 'en' ? 'Godisnji_Izvjestaj_ZNR.pdf' : 'Annual_Safety_Report.pdf',
+                filename: t('godisnjiizvjestajznrpdf'),
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -233,11 +233,11 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             await html2pdf().from(element).set(opt).save();
 
             if (window.eznrToast) {
-                window.eznrToast(lang !== 'en' ? 'Izvještaj uspješno preuzet!' : 'Report downloaded safely!', 'success');
+                window.eznrToast(t('izvjestajUspjesnoPreuzet'), 'success');
             }
         } catch (err) {
             console.error('PDF export failed', err);
-            if (window.eznrToast) window.eznrToast(lang !== 'en' ? 'Greška pri izradi PDF-a.' : 'Error generating PDF.', 'error');
+            if (window.eznrToast) window.eznrToast(t('greskaPriIzradiPdfa'), 'error');
         }
     };
 
@@ -246,7 +246,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             {/* Action Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {lang !== 'en' ? 'Automatska analitika iz stvarnih podataka' : 'Automated analytics from live data'}
+                    {t('automatskaAnalitikaIzStvarnihPodataka')}
                 </span>
                 <button 
                     onClick={handleDownloadPDF}
@@ -257,23 +257,23 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         display: 'flex', alignItems: 'center', gap: 6
                     }}
                 >
-                    📑 {lang !== 'en' ? 'Godišnji izvještaj (PDF)' : 'Annual Report (PDF)'}
+                    📑 {t('godisnjiIzvjestajPdf')}
                 </button>
             </div>
 
             <div id="analytics-dashboard-export" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '10px 0' }}>
                 {/* PDF Header (only visible strictly during html2canvas, or just visually clean) */}
                 <h2 style={{ fontSize: '1.2rem', marginBottom: 4, display: 'none' }} className="pdf-only-header">
-                    {lang !== 'en' ? 'Godišnji izvještaj Zaštite na radu' : 'Annual Occupational Safety Report'}
+                    {t('godisnjiIzvjestajZastiteNaRadu')}
                 </h2>
 
                 {/* Mini stats row */}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <MiniStat icon="👷" label={lang !== 'en' ? 'Aktivni radnici' : 'Active workers'} value={activeWorkerCount} color="var(--primary)" />
-                    <MiniStat icon="⚙️" label={lang !== 'en' ? 'Usklađenost opreme' : 'Equipment compliance'} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
-                    <MiniStat icon="⚠️" label={lang !== 'en' ? 'Prosj. rizik' : 'Avg. risk score'} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
+                    <MiniStat icon="👷" label={t('aktivniRadnici')} value={activeWorkerCount} color="var(--primary)" />
+                    <MiniStat icon="⚙️" label={t('usklaenostOpreme')} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
+                    <MiniStat icon="⚠️" label={t('prosjRizik')} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
                     {medOverdue > 0 && (
-                        <MiniStat icon="🩺" label={lang !== 'en' ? 'Prekoračeni pregledi' : 'Overdue exams'} value={medOverdue} color="var(--danger)" />
+                        <MiniStat icon="🩺" label={t('prekoraceniPregledi')} value={medOverdue} color="var(--danger)" />
                     )}
                 </div>
 
@@ -288,8 +288,8 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         <div className="card" style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center' }}>
                             <DonutChart
                                 segments={certSegments}
-                                label={lang !== 'en' ? 'Status uvjerenja' : 'Certificate Status'}
-                                subLabel={lang !== 'en' ? 'ukupno' : 'total'}
+                                label={t('statusUvjerenja')}
+                                subLabel={t('ukupno1')}
                             />
                         </div>
                     )}
@@ -298,7 +298,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                     <div className="card" style={{ padding: '20px 16px' }}>
                         <BarChart
                             data={injuryMonths}
-                            title={lang !== 'en' ? 'Povrede i bolesti (12 mj.)' : 'Injuries & Diseases (12 mo.)'}
+                            title={t('povredeIBolesti12Mj')}
                             barColor={(d) => d.value >= 3 ? 'var(--danger)' : d.value >= 1 ? 'var(--warning)' : 'var(--border)'}
                             height={150}
                         />
@@ -309,7 +309,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         <div className="card" style={{ padding: '20px 16px' }}>
                             <BarChart
                                 data={riskDistribution}
-                                title={lang !== 'en' ? 'Distribucija rizika' : 'Risk Distribution'}
+                                title={t('distribucijaRizika')}
                                 barColor={(d) => d.color}
                                 height={150}
                             />

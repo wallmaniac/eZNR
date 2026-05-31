@@ -126,15 +126,15 @@ export default function OrgUnitsPage() {
     const handleDelete = async (id) => {
         const children = getChildOrgUnits(id);
         if (children.length> 0) {
-            await alert(lang !== 'en' ? 'Ne možete obrisati org. jedinicu koja ima podorganizacije.' : 'Cannot delete org. unit with child units.');
+            await alert(t('neMozeteObrisatiOrgJedinicu'));
             return;
         }
         const unitWorkers = getWorkersInOrgUnit(id);
         if (unitWorkers.length> 0) {
-            await alert(lang !== 'en' ? 'Ne možete obrisati org. jedinicu koja ima zaposlenike.' : 'Cannot delete org. unit with employees.');
+            await alert(t('neMozeteObrisatiOrgJedinicu1'));
             return;
         }
-        const ok = await confirm(lang !== 'en' ? 'Jeste li sigurni?' : 'Are you sure?');
+        const ok = await confirm(t('jesteLiSigurni'));
         if (ok) {
             remove(COLLECTIONS.ORG_UNITS, id);
             setActionMenuId(null);
@@ -195,7 +195,7 @@ export default function OrgUnitsPage() {
 
     return (
         <div className="animate-fadeIn">
-            <PageHeader icon="🏢" title={lang !== 'en' ? 'Organizacijske jedinice' : 'Organizational Units'} />
+            <PageHeader icon="🏢" title={t('organizacijskeJedinice')} />
 
             {/* Workers Panel Modal */}
             {workersPanel && (
@@ -203,9 +203,9 @@ export default function OrgUnitsPage() {
                     <div className="modal" style={{ maxWidth: 600 }} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <div>
-                                <h2>👥 {lang !== 'en' ? 'Radnici' : 'Workers'} — {workersPanel.naziv}</h2>
+                                <h2>👥 {t('radnici')} — {workersPanel.naziv}</h2>
                                 <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>
-                                    {panelWorkers.length} {lang !== 'en' ? 'zaposlenih' : 'employees'}
+                                    {panelWorkers.length} {t('zaposlenih')}
                                 </div>
                             </div>
                             <button className="btn btn-ghost btn-icon" onClick={() => setWorkersPanel(null)}>✕</button>
@@ -213,7 +213,7 @@ export default function OrgUnitsPage() {
                         <div className="modal-body" style={{ padding: 0, maxHeight: 480, overflowY: 'auto' }}>
                             {panelWorkers.length === 0 ? (
                                 <div style={{ padding: 40, textAlign: 'center', color: 'var(--text-muted)' }}>
-                                    {lang !== 'en' ? 'Nema zaposlenika u ovoj organizacijskoj jedinici.' : 'No employees in this organizational unit.'}
+                                    {t('nemaZaposlenikaUOvojOrganizacijskoj')}
                                 </div>
                             ) : panelWorkers.map((w, idx) => {
                                 const workplaces = getAll(COLLECTIONS.WORKPLACES);
@@ -243,21 +243,21 @@ export default function OrgUnitsPage() {
                                                 {w.ime} {w.prezime}
                                             </div>
                                             <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                                                {wp ? wp.naziv : (lang !== 'en' ? 'Bez radnog mjesta' : 'No workplace')}
+                                                {wp ? wp.naziv : (t('bezRadnogMjesta'))}
                                                 {w.evidencijskiBroj ? ` · Ev.br: ${w.evidencijskiBroj}` : ''}
                                             </div>
                                         </div>
                                         <div style={{ fontSize: '0.72rem', color: 'var(--primary)', fontWeight: 600 }}>
-                                            {lang !== 'en' ? 'Otvori →' : 'Open →'}
+                                            {t('otvori1')}
                                         </div>
                                     </div>
                                 );
                             })}
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-ghost" onClick={() => setWorkersPanel(null)}>{lang !== 'en' ? 'Zatvori' : 'Close'}</button>
+                            <button className="btn btn-ghost" onClick={() => setWorkersPanel(null)}>{t('zatvori')}</button>
                             <button className="btn btn-primary" onClick={() => { setWorkersPanel(null); router.push('/dashboard/workers'); }}>
-                                👥 {lang !== 'en' ? 'Svi radnici' : 'All workers'}
+                                👥 {t('sviRadnici')}
                             </button>
                         </div>
                     </div>
@@ -278,8 +278,8 @@ export default function OrgUnitsPage() {
                 <div className="modal-overlay" onClick={() => setShowForm(false)}>
                     <div className="modal" style={{ maxWidth: 700 }} onClick={(e) => e.stopPropagation()}>
                         <div className="modal-header">
-                            <h2>{editingId ? (lang !== 'en' ? '✏️ Uredi organizacijsku jedinicu' : '✏️ Edit Organizational Unit')
-                                : (lang !== 'en' ? '+ Nova organizacijska jedinica' : '+ New Organizational Unit')}</h2>
+                            <h2>{editingId ? (t('urediOrganizacijskuJedinicu'))
+                                : (t('novaOrganizacijskaJedinica'))}</h2>
                             <button className="btn btn-ghost btn-icon" onClick={() => setShowForm(false)}>✕</button>
                         </div>
                         <div className="modal-body">
@@ -289,11 +289,11 @@ export default function OrgUnitsPage() {
                                     <input className="form-input" value={formData.naziv} onChange={e => updateField('naziv', e.target.value)} placeholder={t('mandatory')} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Skraćeni naziv (opcionalno)' : 'Short name (optional)'}</label>
+                                    <label className="form-label">{t('skraceniNazivOpcionalno')}</label>
                                     <input className="form-input" value={formData.skraceniNaziv} onChange={e => updateField('skraceniNaziv', e.target.value)} />
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{lang !== 'en' ? 'Radna mjesta u ovoj org. jedinici' : 'Workplaces in this org. unit'}</label>
+                                    <label className="form-label">{t('radnaMjestaUOvojOrg')}</label>
                                     <div style={{ maxHeight: 180, overflowY: 'auto', background: 'var(--bg-body)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
                                         {getAll(COLLECTIONS.WORKPLACES).map(w => (
                                             <label key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', borderRadius: 'var(--radius-sm)' }}>
@@ -308,7 +308,7 @@ export default function OrgUnitsPage() {
                                     </div>
                                 </div>
                                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                    <label className="form-label">{lang !== 'en' ? 'Podređene org. jedinice' : 'Child org. units'}</label>
+                                    <label className="form-label">{t('podreeneOrgJedinice')}</label>
                                     <div style={{ maxHeight: 180, overflowY: 'auto', background: 'var(--bg-body)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 8 }}>
                                         {getAll(COLLECTIONS.ORG_UNITS).filter(u => u.id !== editingId).map(u => (
                                             <label key={u.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', cursor: 'pointer', borderRadius: 'var(--radius-sm)' }}>
@@ -330,7 +330,7 @@ export default function OrgUnitsPage() {
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Nadređena org. jedinica' : 'Parent Unit'}</label>
+                                    <label className="form-label">{t('nadreenaOrgJedinica')}</label>
                                     <select className="form-select" value={formData.parentId || ''} onChange={e => updateField('parentId', e.target.value || null)}>
                                         <option value="">-</option>
                                         {units.filter(u => u.id !== editingId).map(u => <option key={u.id} value={u.id}>{u.naziv}</option>)}
@@ -345,16 +345,16 @@ export default function OrgUnitsPage() {
                                     <input className="form-input" value={formData.kucniBroj} onChange={e => updateField('kucniBroj', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Tip' : 'Type'}</label>
+                                    <label className="form-label">{t('tip')}</label>
                                     <input className="form-input" value={formData.tip} onChange={e => updateField('tip', e.target.value)} />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Mjesto troška' : 'Cost center'}</label>
+                                    <label className="form-label">{t('mjestoTroska')}</label>
                                     <input className="form-input" value={formData.mjestroTroska} onChange={e => updateField('mjestroTroska', e.target.value)} />
                                 </div>
                                 <div className="form-group" style={{ position: 'relative' }}>
-                                    <label className="form-label">{lang !== 'en' ? 'Odgovorna osoba' : 'Responsible person'}</label>
-                                    <input className="form-input" value={formData.odgovornaOsoba} onChange={e => { updateField('odgovornaOsoba', e.target.value); setShowRespMenu(true); }} onFocus={() => setShowRespMenu(true)} onBlur={() => setTimeout(() => setShowRespMenu(false), 200)} placeholder={lang !== 'en' ? 'Upiši ime za pretragu...' : 'Search by name...'} />
+                                    <label className="form-label">{t('odgovornaOsoba')}</label>
+                                    <input className="form-input" value={formData.odgovornaOsoba} onChange={e => { updateField('odgovornaOsoba', e.target.value); setShowRespMenu(true); }} onFocus={() => setShowRespMenu(true)} onBlur={() => setTimeout(() => setShowRespMenu(false), 200)} placeholder={t('upisiImeZaPretragu')} />
                                     {showRespMenu && (
                                         <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-card)', border: '1px solid var(--border)', zIndex: 10, maxHeight: 180, overflowY: 'auto', borderRadius: 'var(--radius-md)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
                                             {workers.filter(w => `${w.ime} ${w.prezime}`.toLowerCase().includes((formData.odgovornaOsoba || '').toLowerCase())).map(w => (
@@ -363,13 +363,13 @@ export default function OrgUnitsPage() {
                                                 </div>
                                             ))}
                                             {workers.filter(w => `${w.ime} ${w.prezime}`.toLowerCase().includes((formData.odgovornaOsoba || '').toLowerCase())).length === 0 && (
-                                                <div style={{ padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Nema rezultata' : 'No results'}</div>
+                                                <div style={{ padding: '8px 12px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>{t('nemaRezultata')}</div>
                                             )}
                                         </div>
                                     )}
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Odabrani liječnik' : 'Selected doctor'}</label>
+                                    <label className="form-label">{t('odabraniLijecnik')}</label>
                                     <select className="form-select" value={formData.odabraniLijecnik} onChange={e => updateField('odabraniLijecnik', e.target.value)}>
                                         <option value="">-</option>
                                         {getAll(COLLECTIONS.DOCTORS).map(d => <option key={d.id} value={d.id}>{d.ime}</option>)}
@@ -389,7 +389,7 @@ export default function OrgUnitsPage() {
             <div className="card">
                 <div className="card-body" style={{ padding: 0 }}>
                     <div className="scrollable-toolbar" style={{ padding: '8px 16px', display: 'flex', gap: 14, alignItems: 'center' }}>
-                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={() => handleNew()} title={lang !== 'en' ? 'Dodaj novog organizacijsku jedinicu' : 'Add new org unit'}>+ {lang !== 'en' ? 'Nova org. jedinica' : 'New Org Unit'}</button>
+                        <button className="btn btn-primary" style={{ flexShrink: 0, height: 38 }} onClick={() => handleNew()} title={t('dodajNovogOrganizacijskuJedinicu')}>+ {t('novaOrgJedinica')}</button>
                         <div className="search-bar" style={{ flexShrink: 0, height: 38, border: '1px solid var(--border)', borderRadius: 6, padding: '0 12px', width: 220, display: 'flex', alignItems: 'center' }}>
                             <span style={{ fontSize: '1rem', marginRight: 8 }}>🔍</span>
                             <input
@@ -398,15 +398,15 @@ export default function OrgUnitsPage() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1, width: '100%', minWidth: 0 }}
                             />
-                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={lang !== 'en' ? 'Poništi pretragu' : 'Clear search'}>✕</button>}
+                            {searchTerm && <button onClick={() => setSearchTerm('')} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title={t('ponistiPretragu')}>✕</button>}
                         </div>
                         {selectedIds.size> 0 && (
                             <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginLeft: 'auto', flexShrink: 0 }}>
                                 <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-                                    {selectedIds.size} {lang !== 'en' ? 'odabrano' : 'selected'}:
+                                    {selectedIds.size} {t('odabrano')}:
                                 </span>
-                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
-                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                                <button className="btn btn-primary" style={{ height: 38 }} onClick={() => window.print()}>🖨️ {t('isprintaj')}</button>
+                                <button className="btn btn-danger" style={{ height: 38 }} onClick={handleDeleteSelected}>🗑️ {t('obrisi')}</button>
                             </div>
                         )}
                         {selectedIds.size === 0 && <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginLeft: 'auto', flexShrink: 0 }}></span>}
@@ -419,11 +419,11 @@ export default function OrgUnitsPage() {
                                     <th style={{ width: 40, textAlign: 'center' }}><input type="checkbox" checked={selectedIds.size === treeUnits.length && treeUnits.length> 0} onChange={toggleAll} style={{ cursor: 'pointer', width: 16, height: 16 }} /></th>
                                     <th style={{ width: 100 }}>{t('actions')}</th>
                                     <th style={thStyle('naziv')} onClick={() => toggleSort('naziv')}>{t('name')}{sortIcon('naziv')}</th>
-                                    <th style={thStyle('skraceniNaziv')} onClick={() => toggleSort('skraceniNaziv')}>{lang !== 'en' ? 'Skraćeni' : 'Short'}{sortIcon('skraceniNaziv')}</th>
-                                    <th>{lang !== 'en' ? 'Nadređena' : 'Parent'}</th>
+                                    <th style={thStyle('skraceniNaziv')} onClick={() => toggleSort('skraceniNaziv')}>{t('skraceni')}{sortIcon('skraceniNaziv')}</th>
+                                    <th>{t('nadreena')}</th>
                                     <th style={thStyle('mjesto')} onClick={() => toggleSort('mjesto')}>{t('place')}{sortIcon('mjesto')}</th>
                                     <th style={thStyle('odgovornaOsoba')} onClick={() => toggleSort('odgovornaOsoba')}>{lang !== 'en' ? 'Odgovorna osoba' : 'Resp. Person'}{sortIcon('odgovornaOsoba')}</th>
-                                    <th>{lang !== 'en' ? 'Radnici' : 'Workers'}</th>
+                                    <th>{t('radnici')}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -448,7 +448,7 @@ export default function OrgUnitsPage() {
                                                             : { top: rect.bottom + 4, bottom: undefined, left: rect.left, maxH: Math.max(120, spaceBelow - 15) }
                                                         );
                                                         setActionMenuId(actionMenuId === u.id ? null : u.id);
-                                                    }} title={lang !== 'en' ? 'Prikaži akcije za jedinicu' : 'Show unit actions'}>
+                                                    }} title={t('prikaziAkcijeZaJedinicu')}>
                                                         {t('actions')} ▼
                                                     </button>
                                                     {actionMenuId === u.id && (
@@ -456,8 +456,8 @@ export default function OrgUnitsPage() {
                                                         <div style={{ position: 'fixed', inset: 0, zIndex: 9998 }} onClick={() => setActionMenuId(null)} />
                                                         <div data-menu onMouseDown={(e) => e.preventDefault()} style={{ position: 'fixed', top: menuPos.top, bottom: menuPos.bottom, left: menuPos.left, zIndex: 9999, userSelect: 'none', WebkitUserSelect: 'none', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', boxShadow: '0 8px 32px rgba(0,0,0,0.28)', minWidth: 220, maxHeight: menuPos.maxH, overflowY: 'auto' }}>
                                                             <button onClick={() => handleEdit(u)} className="dropdown-item">📂 {t('open')}</button>
-                                                            <button onClick={() => openWorkersPanel(u)} className="dropdown-item">👥 {lang !== 'en' ? 'Pregled zaposlenih' : 'View employees'}</button>
-                                                            <button onClick={() => handleNew(u.id)} className="dropdown-item">➕ {lang !== 'en' ? 'Dodaj podorganizaciju' : 'Add sub-unit'}</button>
+                                                            <button onClick={() => openWorkersPanel(u)} className="dropdown-item">👥 {t('pregledZaposlenih')}</button>
+                                                            <button onClick={() => handleNew(u.id)} className="dropdown-item">➕ {t('dodajPodorganizaciju')}</button>
                                                             <div style={{ borderTop: '1px solid var(--border-light)', margin: '2px 0' }} />
                                                             <button onClick={() => { setActionMenuId(null); handleDelete(u.id); }} className="dropdown-item text-danger">🗑️ {t('delete')}</button>
                                                         </div>
@@ -480,7 +480,7 @@ export default function OrgUnitsPage() {
                                                         <span style={{ cursor: 'pointer', color: 'var(--primary)', textDecoration: 'underline', textDecorationStyle: 'solid' }} onClick={() => {
                                                             const w = workers.find(x => `${x.ime} ${x.prezime}` === u.odgovornaOsoba);
                                                             if (w) setViewWorkerId(w.id);
-                                                            else alert(lang !== 'en' ? 'Radnik nije pronađen u bazi.' : 'Worker not found in database.');
+                                                            else alert(t('radnikNijePronaenUBazi'));
                                                         }} title={lang !== 'en' ? 'Klikni za pregled profila' : 'View profile'}>
                                                             {u.odgovornaOsoba}
                                                         </span>
@@ -494,7 +494,7 @@ export default function OrgUnitsPage() {
                                                             background: 'none', border: 'none', cursor: count> 0 ? 'pointer' : 'default',
                                                             padding: 0,
                                                         }}
-                                                        title={count> 0 ? (lang !== 'en' ? 'Klikni za pregled radnika' : 'Click to view workers') : ''}>
+                                                        title={count> 0 ? (t('klikniZaPregledRadnika')) : ''}>
                                                         <span className={`badge ${count> 0 ? 'badge-primary' : 'badge-info'}`}
                                                             style={{
                                                                 cursor: count> 0 ? 'pointer' : 'default',

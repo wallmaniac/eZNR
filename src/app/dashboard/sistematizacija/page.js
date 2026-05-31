@@ -243,14 +243,14 @@ export default function SistematizacijaPage() {
             {/* Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <div>
-                    <h1 style={{ margin: 0, fontSize: '1.4rem' }}>📑 {lang !== 'en' ? 'Sistematizacija radnih mjesta' : 'Job Systematization'}</h1>
+                    <h1 style={{ margin: 0, fontSize: '1.4rem' }}>📑 {t('sistematizacijaRadnihMjesta')}</h1>
                     <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: 4 }}>
-                        {lang !== 'en' ? 'Definirajte poslove, uvjete rada i zahtjeve za svako radno mjesto' : 'Define duties, working conditions, and requirements for each workplace'}
+                        {t('definirajtePosloveUvjeteRadaI')}
                     </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ padding: '8px 16px', borderRadius: 'var(--radius-md)', background: completedWp === totalWp && totalWp> 0 ? 'rgba(76,175,80,0.15)' : 'rgba(255,193,7,0.15)', border: `1px solid ${completedWp === totalWp && totalWp> 0 ? '#4caf50' : '#ffc107'}`, fontWeight: 700, fontSize: '0.82rem', color: completedWp === totalWp && totalWp> 0 ? '#4caf50' : '#ffc107' }}>
-                        {completedWp}/{totalWp} {lang !== 'en' ? 'popunjeno' : 'completed'}
+                        {completedWp}/{totalWp} {t('popunjeno')}
                     </div>
                     <SavedFlash />
                 </div>
@@ -259,7 +259,7 @@ export default function SistematizacijaPage() {
             {/* Search */}
             <div style={{ marginBottom: 16 }}>
                 <div className="search-bar" style={{ maxWidth: 360 }}>
-                    <input placeholder={lang !== 'en' ? 'Pretraži radna mjesta...' : 'Search workplaces...'} value={searchQ} onChange={e => setSearchQ(e.target.value)}
+                    <input placeholder={t('pretraziRadnaMjesta')} value={searchQ} onChange={e => setSearchQ(e.target.value)}
                         style={{ border: 'none', background: 'transparent', outline: 'none', fontFamily: 'var(--font-body)', fontSize: '0.9rem', flex: 1 }} />
                 </div>
             </div>
@@ -310,11 +310,11 @@ export default function SistematizacijaPage() {
                                             {sist.uploadedFile && <span style={{ color: '#f59e0b' }}>📄 {sist.uploadedFile}</span>}
                                         </div>
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                                            <button className="btn btn-outline btn-sm" onClick={() => setEditData({ ...sist })}>✏️ {lang !== 'en' ? 'Detalji' : 'Details'}</button>
-                                            <button className="btn btn-outline btn-sm" onClick={() => handlePrintSist(sist, wp, ou)} style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>🖨️ {lang !== 'en' ? 'Isprintaj' : 'Print'}</button>
+                                            <button className="btn btn-outline btn-sm" onClick={() => setEditData({ ...sist })}>✏️ {t('detalji')}</button>
+                                            <button className="btn btn-outline btn-sm" onClick={() => handlePrintSist(sist, wp, ou)} style={{ color: 'var(--primary)', borderColor: 'var(--primary)' }}>🖨️ {t('isprintaj')}</button>
                                             <button className="btn btn-outline btn-sm" onClick={() => handleAIGenerate(wp)} disabled={isLoading}
                                                 style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize: '0.72rem' }}>
-                                                {isLoading ? (lang !== 'en' ? '⏳ Regeneriše...' : '⏳ Regenerating...') : (lang !== 'en' ? '🤖 Regeneriši' : '🤖 Regenerate')}
+                                                {isLoading ? (t('regenerise')) : (t('regenerisi'))}
                                             </button>
                                             <button className="btn btn-ghost btn-sm" style={{ color: 'var(--danger)' }} onClick={() => handleDeleteSist(wp.id)}>✖</button>
                                         </div>
@@ -322,7 +322,7 @@ export default function SistematizacijaPage() {
                                 ) : (
                                     <div>
                                         <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginBottom: 12, padding: 10, textAlign: 'center', background: 'var(--bg-input)', borderRadius: 'var(--radius-md)' }}>
-                                            {lang !== 'en' ? 'Nema sistematizacije. Generiši putem AI ili učitaj dokument.' : 'No systematization data. Generate via AI or upload a document.'}
+                                            {t('nemaSistematizacijeGenerisiPutemAi')}
                                         </div>
                                         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                                             <button className="btn btn-outline btn-sm" onClick={() => handleAIGenerate(wp)} disabled={isLoading}
@@ -330,11 +330,11 @@ export default function SistematizacijaPage() {
                                                 {isLoading ? '⏳ Generiše...' : '🤖 AI Generiši'}
                                             </button>
                                             <label className="btn btn-outline btn-sm" style={{ cursor: 'pointer', background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)', color: '#fff', border: 'none', fontWeight: 700 }}>
-                                                📄 {lang !== 'en' ? 'Učitaj dokument' : 'Upload document'}
+                                                📄 {t('ucitajDokument')}
                                                 <input type="file" accept=".txt,.pdf,.doc,.docx" style={{ display: 'none' }} onChange={e => handleFileUpload(wp, e)} />
                                             </label>
                                             <button className="btn btn-outline btn-sm" onClick={() => setEditData({ radnoMjestoId: wp.id, nazivPosla: '', opisPoslova: '', odgovornosti: '', strucnaSprema: wp.strucnaSprema || '', radnoIskustvo: '', posebniUvjeti: [], brojIzvrsilaca: 1, kategorijaRM: '', slozenostPoslova: '', probniRad: '', pravniOsnov: getDefaultPravniOsnov(country), uvjetiRada: { fizicki: [], kemijski: [], bioloski: [], ergonomski: [], psihosocijalni: [] }, potrebnaOZO: [], radnaOprema: [], zdravstveniZahtjevi: [], certifikati: [], potrebneObuke: [], napomena: '' })}>
-                                                ✏️ {lang !== 'en' ? 'Ručno' : 'Manual'}
+                                                ✏️ {t('rucno')}
                                             </button>
                                         </div>
                                     </div>
@@ -347,7 +347,7 @@ export default function SistematizacijaPage() {
 
             {workplaces.length === 0 && (
                 <div className="card"><div className="card-body" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
-                    {lang !== 'en' ? 'Nema radnih mjesta. Kreirajte ih u modulu Radna mjesta.' : 'No workplaces found. Create them in the Workplaces module.'}
+                    {t('nemaRadnihMjestaKreirajteIh')}
                 </div></div>
             )}
 
@@ -466,7 +466,7 @@ export default function SistematizacijaPage() {
                         {/* Actions */}
                         <div style={{ display: 'flex', gap: 8 }}>
                             <button className="btn btn-primary" onClick={handleSaveEdit}>💾 {t('save')}</button>
-                            <button className="btn btn-ghost" onClick={() => setEditData(null)}>{lang !== 'en' ? 'Zatvori' : 'Close'}</button>
+                            <button className="btn btn-ghost" onClick={() => setEditData(null)}>{t('zatvori')}</button>
                         </div>
                     </div>
                 </div>

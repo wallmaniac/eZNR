@@ -386,7 +386,7 @@ export default function NewsPage() {
 
     return (
         <div className="animate-fadeIn">
-            <PageHeader icon="📰" title={lang !== 'en' ? 'Početna' : 'Home'} />
+            <PageHeader icon="📰" title={t('pocetna')} />
 
             {/* Tabs */}
             <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '2px solid var(--border)', flexWrap: 'wrap' }}>
@@ -760,7 +760,7 @@ function FormsTab({ lang, country }) {
                                             }}
                                                 onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                                                 onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-                                                📂 {lang !== 'en' ? 'Popuni obrazac' : 'Fill form'}
+                                                📂 {t('popuniObrazac')}
                                             </a>
                                             {form.printBlank && (
                                                 <button onClick={() => handlePrintBlank(form.printBlank)} style={{
@@ -769,7 +769,7 @@ function FormsTab({ lang, country }) {
                                                     background: 'transparent', color: 'var(--primary)', border: '1px solid var(--primary)',
                                                     cursor: 'pointer', transition: 'all 0.15s', fontFamily: 'var(--font-body)',
                                                 }}>
-                                                    🖨️ {lang !== 'en' ? 'Preuzmi prazan' : 'Download blank'}
+                                                    🖨️ {t('preuzmiPrazan')}
                                                 </button>
                                             )}
                                         </div>

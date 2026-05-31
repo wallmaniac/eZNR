@@ -34,7 +34,7 @@ function ModalField({ label, field, type = 'text', opts = null, editMode, formDa
                 ) : type === 'checkbox' ? (
                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', paddingTop: 6 }}>
                         <input type="checkbox" checked={!!formData[field]} onChange={e => set(field, e.target.checked)} />
-                        {lang !== 'en' ? 'Da' : 'Yes'}
+                        {t('da')}
                     </label>
                 ) : type === 'date' ? (
                     <DateInput value={formData[field] || ''} onChange={v => set(field, v)} />
@@ -43,7 +43,7 @@ function ModalField({ label, field, type = 'text', opts = null, editMode, formDa
                 )
             ) : (
                 <div style={valueStyle}>{
-                    type === 'checkbox' ? (formData[field] ? (lang !== 'en' ? 'Da' : 'Yes') : (lang !== 'en' ? 'Ne' : 'No'))
+                    type === 'checkbox' ? (formData[field] ? (t('da')) : (t('ne')))
                         : opts ? (opts.find(o => o.value === formData[field])?.label || '—')
                         : type === 'date' ? (fmtDate(formData[field]) || '—')
                         : (formData[field] || '—')
@@ -173,7 +173,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
     const handleSaveCert = async () => {
         if (!certFormData.oznaka || !certFormData.ime) {
-            await alert(lang !== 'en' ? 'Oznaka i naziv su obavezni!' : 'Code and name are required!');
+            await alert(t('oznakaINazivSuObavezni'));
             return;
         }
         if (certEditId) {
@@ -188,7 +188,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
     const handleSavePpe = async () => {
         if (!ppeFormData.naziv) {
-            await alert(lang !== 'en' ? 'Naziv je obavezan!' : 'Name is required!');
+            await alert(t('nazivJeObavezan'));
             return;
         }
         let saved;
@@ -243,7 +243,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         <div>
                             <h2 style={{ margin: 0, fontSize: '1.1rem' }}>
                                 {worker.ime} {worker.prezime}
-                                {editMode && <span style={{ marginLeft: 10, fontSize: '0.72rem', background: 'rgba(255,200,0,0.2)', color: '#FFD700', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>✏️ {lang !== 'en' ? 'Uređivanje' : 'Editing'}</span>}
+                                {editMode && <span style={{ marginLeft: 10, fontSize: '0.72rem', background: 'rgba(255,200,0,0.2)', color: '#FFD700', padding: '2px 8px', borderRadius: 20, fontWeight: 600 }}>✏️ {t('ureivanje')}</span>}
                             </h2>
                             <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.55)', marginTop: 2 }}>
                                 {wp?.naziv || '—'} · {ou?.naziv || '—'}
@@ -255,12 +255,12 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         {!editMode && (
                             <>
                                 <button className="btn btn-outline btn-sm" onClick={() => setEditMode(true)} style={{ fontSize: '0.8rem', padding: '6px 12px', height: 32, display: 'flex', alignItems: 'center', gap: 5 }}>
-                                    ✏️ {lang !== 'en' ? 'Uredi' : 'Edit'}
+                                    ✏️ {t('uredi')}
                                 </button>
                                 <button className="btn btn-primary btn-sm" onClick={openFullEdit}
                                     style={{ fontSize: '0.8rem', padding: '6px 12px', height: 32, display: 'flex', alignItems: 'center', gap: 5 }}>
                                     <Icon3D name="Radnici.png" size={16} />
-                                    {lang !== 'en' ? 'Otvori potpuno' : 'Open full'}
+                                    {t('otvoriPotpuno')}
                                 </button>
                             </>
                         )}
@@ -272,11 +272,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                 <div style={{ padding: '0 24px', marginBottom: 20 }}>
                     <TabBar active={activeTab} onChange={setActiveTab} 
                         tabs={[
-                            { key: 'osnovno', icon: '👤', label: lang !== 'en' ? 'Osnovno' : 'Basic' },
+                            { key: 'osnovno', icon: '👤', label: t('osnovno') },
                             { key: 'uvjerenja', icon: '📜', label: `${lang !== 'en' ? 'Uvjerenja' : 'Certs'} (${certificates.length})` },
                             { key: 'ozo', icon: '🦺', label: `OZO (${ppeAssign.length})` },
-                            { key: 'pregledi', icon: '👨‍⚕️', label: `${lang !== 'en' ? 'Pregledi' : 'Exams'} (${medExams.length})` },
-                            { key: 'dokumenti', icon: '📁', label: `${lang !== 'en' ? 'Dokumenti' : 'Docs'} (${(formData.dokumenti || []).length})` },
+                            { key: 'pregledi', icon: '👨‍⚕️', label: `${t('pregledi')} (${medExams.length})` },
+                            { key: 'dokumenti', icon: '📁', label: `${t('dokumenti1')} (${(formData.dokumenti || []).length})` },
                         ]} 
                     />
                 </div>
@@ -303,27 +303,27 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         </button>
                         <button className="btn btn-outline btn-sm" style={{ fontSize: '0.8rem', padding: '4px 10px', height: 'auto', borderColor: 'var(--danger)', color: 'var(--danger)', background: 'var(--bg-card)' }}
                             onClick={() => { onClose(); router.push(`/dashboard/injuries?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
-                            🚑 {lang !== 'en' ? 'Prijavi povredu' : 'Report injury'}
+                            🚑 {t('prijaviPovredu')}
                         </button>
                     </div>
 
                     <ModalSection title={lang !== 'en' ? 'Osnovno' : 'Basic info'}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Ime' : 'First name'} field="ime" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Prezime' : 'Last name'} field="prezime" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('ime')} field="ime" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('prezime')} field="prezime" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Ime roditelja' : "Parent's name"} field="imeRoditelja" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="JMBG" field="jmbg" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="OIB" field="oib" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Spol' : 'Gender'} field="spol"
-                                opts={[{ value: 'M', label: lang !== 'en' ? 'Muški' : 'Male' }, { value: 'Z', label: lang !== 'en' ? 'Ženski' : 'Female' }]} />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Datum rođenja' : 'Date of birth'} field="datumRodenja" type="date" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Životna dob' : 'Age'} field="zivotnaDob" type="number" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('spol')} field="spol"
+                                opts={[{ value: 'M', label: t('muski') }, { value: 'Z', label: t('zenski') }]} />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('datumRoenja1')} field="datumRodenja" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('zivotnaDob')} field="zivotnaDob" type="number" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Mjesto rođenja' : 'Birth place'} field="mjestoRodenja" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Općina rođenja' : 'Birth municipality'} field="opcinaRodenja" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('mjestoRoenja')} field="mjestoRodenja" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('opcinaRoenja')} field="opcinaRodenja" />
                         </div>
                     </ModalSection>
 
@@ -333,58 +333,58 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                 opts={workplaces.map(w => ({ value: w.id, label: w.naziv }))} />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('orgUnit')} field="orgJedinicaId"
                                 opts={orgUnits.map(o => ({ value: o.id, label: o.naziv }))} />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Ev. broj' : 'Emp. number'} field="evidencijskiBroj" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Lokacija' : 'Location'} field="lokacija" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('evBroj')} field="evidencijskiBroj" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('lokacija')} field="lokacija" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Datum zaposlenja' : 'Employment date'} field="datumZaposlenja" type="date" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Datum odlaska' : 'Departure date'} field="datumOdlaska" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('datumZaposlenja')} field="datumZaposlenja" type="date" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('datumOdlaska')} field="datumOdlaska" type="date" />
                             {editMode ? (
-                                <StazPicker label={lang !== 'en' ? 'Staz do dolaska' : 'Prior experience'} value={formData.stazDoDolaska} onChange={v => set('stazDoDolaska', v)} />
+                                <StazPicker label={t('stazDoDolaska')} value={formData.stazDoDolaska} onChange={v => set('stazDoDolaska', v)} />
                             ) : (
                                 <div className="form-group" style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang !== 'en' ? 'Staz do dolaska' : 'Prior experience'}</div>
+                                    <div style={labelStyle}>{t('stazDoDolaska')}</div>
                                     <div style={valueStyle}>{formData.stazDoDolaska || '—'}</div>
                                 </div>
                             )}
                             {editMode ? (
                                 <div className="form-group" style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang !== 'en' ? 'Ukupni staz' : 'Total experience'}</div>
+                                    <div style={labelStyle}>{t('ukupniStaz')}</div>
                                     <div className="form-input" style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-input)', color: formData.ukupniStaz ? 'var(--text)' : 'var(--text-muted)', cursor: 'not-allowed' }}>{formData.ukupniStaz || '—'}</div>
                                 </div>
                             ) : (
                                 <div className="form-group" style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang !== 'en' ? 'Ukupni staz' : 'Total experience'}</div>
+                                    <div style={labelStyle}>{t('ukupniStaz')}</div>
                                     <div style={valueStyle}>{formData.ukupniStaz || '—'}</div>
                                 </div>
                             )}
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Koeficijent' : 'Coefficient'} field="koef" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Vanjski suradnik' : 'External'} field="vanjskiSuradnik" type="checkbox" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('koeficijent')} field="koef" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('vanjskiSuradnik')} field="vanjskiSuradnik" type="checkbox" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Posebni uvjeti' : 'Special conditions'} field="posebniUvjeti" type="checkbox" />
                         </div>
                         {/* Radno vrijeme */}
                         {editMode ? (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px', marginTop: 12 }}>
-                                <TimePicker label={lang !== 'en' ? 'Radno vrijeme od' : 'Work from'} value={formData.radnoVrijemeOd} onChange={v => set('radnoVrijemeOd', v)} />
-                                <TimePicker label={lang !== 'en' ? 'Radno vrijeme do' : 'Work to'} value={formData.radnoVrijemeDo} onChange={v => set('radnoVrijemeDo', v)} />
+                                <TimePicker label={t('radnoVrijemeOd')} value={formData.radnoVrijemeOd} onChange={v => set('radnoVrijemeOd', v)} />
+                                <TimePicker label={t('radnoVrijemeDo')} value={formData.radnoVrijemeDo} onChange={v => set('radnoVrijemeDo', v)} />
                             </div>
                         ) : (formData.radnoVrijemeOd || formData.radnoVrijemeDo || (wp && (wp.radnoVrijemeOd || wp.radnoVrijemeDo))) ? (
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px', marginTop: 12 }}>
                                 <div className="form-group" style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang !== 'en' ? 'Radno vrijeme od' : 'Work from'}</div>
+                                    <div style={labelStyle}>{t('radnoVrijemeOd')}</div>
                                     <div style={valueStyle}>{formData.radnoVrijemeOd || wp?.radnoVrijemeOd || '—'}</div>
                                 </div>
                                 <div className="form-group" style={{ marginBottom: 12 }}>
-                                    <div style={labelStyle}>{lang !== 'en' ? 'Radno vrijeme do' : 'Work to'}</div>
+                                    <div style={labelStyle}>{t('radnoVrijemeDo')}</div>
                                     <div style={valueStyle}>{formData.radnoVrijemeDo || wp?.radnoVrijemeDo || '—'}</div>
                                 </div>
                             </div>
                         ) : null}
                         {((formData.radnoVrijemeOd && formData.radnoVrijemeDo && isNightShift(formData.radnoVrijemeOd, formData.radnoVrijemeDo)) || (wp && isNightShift(wp.radnoVrijemeOd, wp.radnoVrijemeDo))) && (
                             <div style={{ padding: '8px 12px', borderRadius: 'var(--radius-sm)', background: 'rgba(239,83,80,0.12)', border: '1px solid var(--danger)', fontSize: '0.78rem', color: 'var(--danger)', fontWeight: 600, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                                🌙 {lang !== 'en' ? 'Obavezan ljekarski pregled najmanje 1x u 2 godine (Noćni rad)' : 'Mandatory medical exam min. 1x per 2 years (Night work)'}
+                                🌙 {t('obavezanLjekarskiPregledNajmanje1x1')}
                             </div>
                         )}
                         {formData.posebniUvjeti && (
@@ -394,29 +394,29 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         )}
                         {editMode && (
                             <div style={{ marginTop: 8 }}>
-                                <div style={labelStyle}>{lang !== 'en' ? 'Dodatni poslovi' : 'Additional jobs'}</div>
+                                <div style={labelStyle}>{t('dodatniPoslovi')}</div>
                                 <textarea className="form-input" rows={2} value={formData.dodatniPoslovi || ''} onChange={e => set('dodatniPoslovi', e.target.value)}
-                                    placeholder={lang !== 'en' ? 'Opišite dodatne poslove...' : 'Describe additional jobs...'} />
+                                    placeholder={t('opisiteDodatnePoslove')} />
                             </div>
                         )}
                         {!editMode && formData.dodatniPoslovi && (
-                            <div style={{ marginTop: 4 }}><div style={labelStyle}>{lang !== 'en' ? 'Dodatni poslovi' : 'Additional jobs'}</div><div style={valueStyle}>{formData.dodatniPoslovi}</div></div>
+                            <div style={{ marginTop: 4 }}><div style={labelStyle}>{t('dodatniPoslovi')}</div><div style={valueStyle}>{formData.dodatniPoslovi}</div></div>
                         )}
                     </ModalSection>
 
-                    <ModalSection title={lang !== 'en' ? 'Kontakt & Adresa' : 'Contact & Address'}>
+                    <ModalSection title={t('kontaktAdresa')}>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0 16px' }}>
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Mobitel' : 'Mobile'} field="mobitel" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Tel. kuće' : 'Home phone'} field="telefonKuce" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Tel. firme' : 'Company phone'} field="telefonTvrtki" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('mobitel')} field="mobitel" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('telKuce')} field="telefonKuce" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('telFirme')} field="telefonTvrtki" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label="Email" field="email" type="email" />
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '2fr 80px 2fr 1fr', gap: '0 16px' }}>
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Ulica' : 'Street'} field="ulica" />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Br.' : 'No.'} field="kucniBroj" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('ulica')} field="ulica" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('br')} field="kucniBroj" />
                             <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Mjesto' : 'Place'} field="mjestoId"
                                 opts={places.map(p => ({ value: p.id, label: `${p.naziv} (${p.postBroj || ''})` }))} />
-                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={lang !== 'en' ? 'Općina' : 'Municipality'} field="opcina" />
+                            <ModalField editMode={editMode} formData={formData} set={set} lang={lang} label={t('opcina')} field="opcina" />
                         </div>
                     </ModalSection>
 
@@ -439,7 +439,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             <div style={{ display: 'flex', gap: 6 }}>
                                 <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
                                     onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?workerId=${workerId}`); }}>
-                                    + {lang !== 'en' ? 'Dodaj' : 'Add'}
+                                    + {t('dodaj')}
                                 </button>
                             </div>
                         }
@@ -448,15 +448,15 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             <div style={{ padding: 14, background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 12, border: '1px solid var(--primary)' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Oznaka' : 'Code'} *</div>
+                                        <div style={labelStyle}>{t('oznaka')} *</div>
                                         <input className="form-input" value={certFormData.oznaka || ''} onChange={e => setCertFormData(f => ({ ...f, oznaka: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Naziv uvjerenja' : 'Certificate name'} *</div>
+                                        <div style={labelStyle}>{t('nazivUvjerenja1')} *</div>
                                         <input className="form-input" value={certFormData.ime || ''} onChange={e => setCertFormData(f => ({ ...f, ime: e.target.value }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Tip' : 'Type'}</div>
+                                        <div style={labelStyle}>{t('tip')}</div>
                                         <select className="form-select" value={certFormData.tipUvjerenja || 'ZNR'} onChange={e => setCertFormData(f => ({ ...f, tipUvjerenja: e.target.value }))}>
                                             <option value="ZNR">ZNR</option>
                                             <option value="PP">PP</option>
@@ -465,11 +465,11 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         </select>
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Datum' : 'Date'}</div>
+                                        <div style={labelStyle}>{t('datum')}</div>
                                         <DateInput value={certFormData.datum || ''} onChange={v => setCertFormData(f => ({ ...f, datum: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Vrijedi do' : 'Valid until'}</div>
+                                        <div style={labelStyle}>{t('vrijediDo')}</div>
                                         <DateInput value={certFormData.vrijediDo || ''} onChange={v => setCertFormData(f => ({ ...f, vrijediDo: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
@@ -488,7 +488,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             </div>
                         )}
                         {certificates.length === 0 && !showCertForm ? (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>{lang !== 'en' ? 'Nema uvjerenja.' : 'No certificates.'}</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>{t('nemaUvjerenja')}</div>
                         ) : certificates.map(c => {
                             const isExpired = c.vrijediDo && new Date(c.vrijediDo) < new Date();
                             return (
@@ -496,18 +496,18 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                     <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', minWidth: 55 }}>{c.oznaka}</span>
                                     <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>{c.ime}</span>
                                     <span style={{ fontSize: '0.75rem', color: isExpired ? 'var(--danger)' : 'var(--text-muted)' }}>
-                                        {isExpired ? '⚠️ ' : ''}{lang !== 'en' ? 'do' : 'until'}: {formatDate(c.vrijediDo) || '—'}
+                                        {isExpired ? '⚠️ ' : ''}{t('do')}: {formatDate(c.vrijediDo) || '—'}
                                     </span>
                                     <span className={`badge ${c.sposobnost === 'Sposoban' ? 'badge-success' : 'badge-danger'}`} style={{ fontSize: '0.7rem' }}>{c.sposobnost}</span>
                                     <div style={{ display: 'flex', gap: 4 }}>
-                                        <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Brza izmjena' : 'Quick edit'}
+                                        <button className="btn btn-ghost btn-sm btn-icon" title={t('brzaIzmjena')}
                                             onClick={() => { setCertFormData({ ...c }); setCertEditId(c.id); setShowCertForm(true); }}>✏️</button>
-                                        <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Otvori puni obrazac' : 'Open full form'}
+                                        <button className="btn btn-ghost btn-sm btn-icon" title={t('otvoriPuniObrazac')}
                                             onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/edit/${c.id}`); }}>📄</button>
-                                        <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Kopiraj u novo uvjerenje' : 'Copy to new certificate'}
+                                        <button className="btn btn-ghost btn-sm btn-icon" title={t('kopirajUNovoUvjerenje')}
                                             onClick={() => { onClose(); router.push(`/dashboard/worker-certificates/create?copyFrom=${c.id}`); }}>📋</button>
                                         <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')}
-                                            onClick={async () => { const ok = await confirm(lang !== 'en' ? 'Obrisati uvjerenje?' : 'Delete certificate?'); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); refreshCerts(); } }}>🗑️</button>
+                                            onClick={async () => { const ok = await confirm(t('obrisatiUvjerenje')); if (ok) { remove(COLLECTIONS.CERTIFICATES, c.id); refreshCerts(); } }}>🗑️</button>
                                     </div>
                                 </div>
                             );
@@ -522,7 +522,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         action={
                             <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
                                 onClick={() => { setPpeFormData({ naziv: '', datumZaduzenja: todayISO(), datumRazduzenja: '', kolicina: 1 }); setPpeEditId(null); setShowPpeForm(true); }}>
-                                + {lang !== 'en' ? 'Dodaj' : 'Add'}
+                                + {t('dodaj')}
                             </button>
                         }
                     >
@@ -542,7 +542,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         <DateInput value={ppeFormData.datumRazduzenja || ''} onChange={v => setPpeFormData(f => ({ ...f, datumRazduzenja: v }))} />
                                     </div>
                                     <div className="form-group" style={{ marginBottom: 0 }}>
-                                        <div style={labelStyle}>{lang !== 'en' ? 'Kol.' : 'Qty'}</div>
+                                        <div style={labelStyle}>{t('kol')}</div>
                                         <input className="form-input" type="number" min="1" value={ppeFormData.kolicina ?? 1} onChange={e => setPpeFormData(f => ({ ...f, kolicina: parseInt(e.target.value) || 1 }))} />
                                     </div>
                                 </div>
@@ -553,16 +553,16 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             </div>
                         )}
                         {ppeAssign.length === 0 && !showPpeForm ? (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>{lang !== 'en' ? 'Nema OZO zaduženja.' : 'No PPE assignments.'}</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '8px 0' }}>{t('nemaOzoZaduzenja')}</div>
                         ) : ppeAssign.map(p => (
                             <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                 <span style={{ fontWeight: 600, fontSize: '0.85rem', flex: 1 }}>🦺 {p.naziv}</span>
                                 {p.kolicina && p.kolicina > 1 && <span style={{ fontSize: '0.72rem', padding: '1px 7px', borderRadius: 10, background: 'rgba(0,191,166,0.1)', color: 'var(--primary)', fontWeight: 700 }}>×{p.kolicina}</span>}
-                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Zaduž.' : 'Assigned'}: {formatDate(p.datumZaduzenja) || '—'}</span>
-                                {p.datumRazduzenja && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{lang !== 'en' ? 'Razduž.' : 'Returned'}: {formatDate(p.datumRazduzenja)}</span>}
+                                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('zaduz')}: {formatDate(p.datumZaduzenja) || '—'}</span>
+                                {p.datumRazduzenja && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t('razduz')}: {formatDate(p.datumRazduzenja)}</span>}
                                 <div style={{ display: 'flex', gap: 4 }}>
                                     <button className="btn btn-ghost btn-sm btn-icon" title={t('edit')} onClick={() => { setPpeFormData({ ...p }); setPpeEditId(p.id); setShowPpeForm(true); }}>✏️</button>
-                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')} onClick={async () => { const ok = await confirm(lang !== 'en' ? 'Obrisati zaduženje?' : 'Delete assignment?'); if (ok) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); refreshPpe(); } }}>🗑️</button>
+                                    <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('delete')} onClick={async () => { const ok = await confirm(t('obrisatiZaduzenje')); if (ok) { remove(COLLECTIONS.PPE_ASSIGNMENTS, p.id); refreshPpe(); } }}>🗑️</button>
                                 </div>
                             </div>
                         ))}
@@ -571,7 +571,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
 
                 {activeTab === 'pregledi' && (
                     <ModalSection
-                        title={`${lang !== 'en' ? 'Ljekarski pregledi' : 'Medical Exams'} (${medExams.length})`}
+                        title={`${t('ljekarskiPregledi1')} (${medExams.length})`}
                         action={
                             <button className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px' }}
                                 onClick={() => { onClose(); router.push(`/dashboard/medical-exams?openNew=1&workerId=${workerId}&returnTo=${encodeURIComponent('/dashboard/workers')}`); }}>
@@ -580,7 +580,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         }
                     >
                         {medExams.length === 0 ? (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '16px 0', textAlign: 'center' }}>🩺 {lang !== 'en' ? 'Nema ljekarskih pregleda.' : 'No medical exams.'}</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '16px 0', textAlign: 'center' }}>🩺 {t('nemaLjekarskihPregleda')}</div>
                         ) : [...medExams].sort((a, b) => (b.datumPregleda || '').localeCompare(a.datumPregleda || '')).map(m => {
                             const expDate = m.vrijediDo ? new Date(m.vrijediDo) : null;
                             const now = new Date();
@@ -588,7 +588,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             const diffDays = expDate ? Math.ceil((expDate - now) / 86400000) : null;
                             const isSoon = !isExp && diffDays !== null && diffDays <= 60;
                             const statusColor = isExp ? 'var(--danger)' : isSoon ? 'var(--warning)' : 'var(--success)';
-                            const statusLabel = isExp ? (lang !== 'en' ? 'Istekao' : 'Expired') : isSoon ? `${diffDays}d` : (lang !== 'en' ? 'Vrijedi' : 'Valid');
+                            const statusLabel = isExp ? (t('istekao')) : isSoon ? `${diffDays}d` : (t('vrijedi'));
                             return (
                                 <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: `1px solid ${isExp ? 'var(--danger)' : 'var(--border-light)'}`, cursor: 'pointer', transition: 'border-color 0.15s, box-shadow 0.15s' }}
                                     onClick={() => { onClose(); router.push(`/dashboard/workers?openWorker=${workerId}&section=medExams`); }}
@@ -599,7 +599,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{m.tipPregleda || (lang !== 'en' ? 'Pregled' : 'Exam')}</div>
                                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                            {m.datumPregleda ? `${lang !== 'en' ? 'Datum' : 'Date'}: ${formatDate(m.datumPregleda)}` : ''}
+                                            {m.datumPregleda ? `${t('datum')}: ${formatDate(m.datumPregleda)}` : ''}
                                             {m.vrijediDo ? ` · ${lang !== 'en' ? 'Vrijedi do' : 'Until'}: ${formatDate(m.vrijediDo)}` : ''}
                                             {m.rezultat ? ` · ${m.rezultat}` : ''}
                                         </div>
@@ -607,15 +607,15 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                     <span style={{ fontSize: '0.72rem', fontWeight: 700, padding: '2px 8px', borderRadius: 10, background: `${statusColor}22`, color: statusColor }}>
                                         {statusLabel}
                                     </span>
-                                    <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Obriši' : 'Delete'} style={{ color: 'var(--danger)' }}
-                                        onClick={async (e) => { e.stopPropagation(); if (await confirm(lang !== 'en' ? 'Obrisati pregled?' : 'Delete exam?')) { remove(COLLECTIONS.MEDICAL_EXAMS, m.id); refreshMed(); } }}>🗑️</button>
+                                    <button className="btn btn-ghost btn-sm btn-icon" title={t('obrisi')} style={{ color: 'var(--danger)' }}
+                                        onClick={async (e) => { e.stopPropagation(); if (await confirm(t('obrisatiPregled'))) { remove(COLLECTIONS.MEDICAL_EXAMS, m.id); refreshMed(); } }}>🗑️</button>
                                 </div>
                             );
                         })}
                         {medExams.length > 0 && (
                             <div style={{ marginTop: 8, textAlign: 'center' }}>
                                 <button className="btn btn-ghost btn-sm" onClick={() => { onClose(); router.push(`/dashboard/medical-exams?workerId=${workerId}`); }} style={{ fontSize: '0.78rem' }}>
-                                    {lang !== 'en' ? 'Svi pregledi →' : 'All exams →'}
+                                    {t('sviPregledi')}
                                 </button>
                             </div>
                         )}
@@ -627,7 +627,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         title={`${lang !== 'en' ? 'Dokumenti' : 'Documents'} (${(formData.dokumenti || []).length})`}
                         action={
                             <label className="btn btn-outline btn-sm" style={{ fontSize: '0.75rem', padding: '3px 10px', cursor: 'pointer' }}>
-                                + {lang !== 'en' ? 'Upload' : 'Upload'}
+                                + {t('upload')}
                                 <input type="file" style={{ display: 'none' }} accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                                     onChange={async (e) => {
                                         const file = e.target.files?.[0];
@@ -647,7 +647,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                         }
                     >
                         {(formData.dokumenti || []).length === 0 ? (
-                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '16px 0', textAlign: 'center' }}>📄 {lang !== 'en' ? 'Nema dokumenata.' : 'No documents.'}</div>
+                            <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '16px 0', textAlign: 'center' }}>📄 {t('nemaDokumenata')}</div>
                         ) : (formData.dokumenti || []).map(d => (
                             <div key={d.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', marginBottom: 6, background: 'var(--bg-input)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-light)' }}>
                                 <span style={{ fontSize: '1.2rem' }}>{d.name?.endsWith('.pdf') ? '📕' : '🖼️'}</span>
@@ -656,7 +656,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{d.source || ''}{d.date ? ` · ${formatDate(d.date)}` : ''}{d.size ? ` · ${(d.size/1024).toFixed(0)}KB` : ''}</div>
                                 </div>
                                 <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Otvori' : 'View'} onClick={() => window.open(d.url, '_blank')}>👁️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Preuzmi' : 'Download'} onClick={async () => { 
+                                <button className="btn btn-ghost btn-sm btn-icon" title={t('preuzmi')} onClick={async () => { 
                                     if (d.url) {
                                         try {
                                             const response = await fetch(d.url);
@@ -682,7 +682,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         document.body.removeChild(a);
                                     }
                                 }}>⬇️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" title={lang !== 'en' ? 'Isprintaj' : 'Print'} onClick={async () => {
+                                <button className="btn btn-ghost btn-sm btn-icon" title={t('isprintaj')} onClick={async () => {
                                     if (d.url) {
                                         try {
                                             const res = await fetch(d.url);
@@ -713,9 +713,9 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                                         }
                                     }
                                 }}>🖨️</button>
-                                <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={lang !== 'en' ? 'Obriši' : 'Delete'}
+                                <button className="btn btn-ghost btn-sm btn-icon" style={{ color: 'var(--danger)' }} title={t('obrisi')}
                                     onClick={async () => {
-                                        if (await confirm(lang !== 'en' ? 'Obrisati dokument?' : 'Delete document?')) {
+                                        if (await confirm(t('obrisatiDokument'))) {
                                             const updated = (formData.dokumenti || []).filter(x => x.id !== d.id);
                                             update(COLLECTIONS.WORKERS, workerId, { dokumenti: updated });
                                             setFormData(f => ({ ...f, dokumenti: updated }));
@@ -736,7 +736,7 @@ export default function WorkerProfileModal({ workerId, onClose, onSaved, onOpenF
                             <button className="btn btn-primary" onClick={handleSave}>💾 {t('save')}</button>
                         </>
                     ) : (
-                        <button className="btn btn-ghost" onClick={onClose}>{lang !== 'en' ? 'Zatvori' : 'Close'}</button>
+                        <button className="btn btn-ghost" onClick={onClose}>{t('zatvori')}</button>
                     )}
                 </div>
             </div>

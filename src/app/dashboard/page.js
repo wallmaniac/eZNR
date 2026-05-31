@@ -63,7 +63,7 @@ function AlertsWidget({ groups, total, lang, isMobile }) {
                 <div style={{ padding: '12px 18px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 12 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <span style={{ fontWeight: 700, fontFamily: 'var(--font-heading)', fontSize: '0.9rem', color: 'var(--danger)', flexShrink: 0 }}>
-                            🚨 {total} {lang !== 'en' ? 'stavki zahtijeva pažnju' : 'items need attention'}
+                            🚨 {total} {t('stavkiZahtijevaPaznju')}
                         </span>
                     </div>
                     <div className="scrollable-toolbar" style={{ padding: 0, width: 'auto', flexWrap: 'wrap' }}>
@@ -110,7 +110,7 @@ function AlertsWidget({ groups, total, lang, isMobile }) {
                             animation: 'fadeIn 0.15s ease',
                         }}>
                             <div style={{ fontSize: '0.75rem', fontWeight: 700, color: g.color, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                {g.icon} {g.label} — {lang !== 'en' ? 'Odaberite stavku:' : 'Select an item:'}
+                                {g.icon} {g.label} — {t('odaberiteStavku')}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 6 }}>
                                 {g.items.map((item, idx) => (
@@ -483,7 +483,7 @@ export default function DashboardPage() {
         return [
             expiredCertsRaw.length > 0 && {
                 key: 'expCert', icon: '📜', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
-                label: lang !== 'en' ? 'Istekla uvjerenja' : 'Expired certificates',
+                label: t('isteklaUvjerenja'),
                 items: expiredCertsRaw,
                 onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
                 itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
@@ -491,7 +491,7 @@ export default function DashboardPage() {
             },
             expiringCertsRaw.length > 0 && {
                 key: 'expirCert', icon: '⏰', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                label: lang !== 'en' ? 'Ističe za 30 dana' : 'Expiring in 30 days',
+                label: t('isticeZa30Dana'),
                 items: expiringCertsRaw,
                 onItemClick: c => c.wId ? router.push('/dashboard/workers?openWorker=' + c.wId + '&section=uvjerenja') : router.push('/dashboard/worker-certificates'),
                 itemLabel: c => <><strong>{c.wName || '?'}</strong> — {c.ime || c.oznaka}</>,
@@ -499,7 +499,7 @@ export default function DashboardPage() {
             },
             overdueMedRaw.length > 0 && {
                 key: 'med', icon: '🩺', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
-                label: lang !== 'en' ? 'Prekoračeni med. pregledi' : 'Overdue medical exams',
+                label: t('prekoraceniMedPregledi'),
                 items: overdueMedRaw,
                 onItemClick: m => router.push('/dashboard/medical-exams'),
                 itemLabel: m => <><strong>{m.wName || '?'}</strong>{m.tipPregleda ? ` — ${m.tipPregleda}` : ''}</>,
@@ -507,7 +507,7 @@ export default function DashboardPage() {
             },
             equipDueRaw.length > 0 && {
                 key: 'equip', icon: '⚙️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                label: lang !== 'en' ? 'Zakašnjeli pregledi opreme' : 'Overdue equipment inspections',
+                label: t('zakasnjeliPreglediOpreme'),
                 items: equipDueRaw,
                 onItemClick: e => router.push('/dashboard/equipment'),
                 itemLabel: e => <>{e.naziv}</>,
@@ -515,7 +515,7 @@ export default function DashboardPage() {
             },
             riskMeasuresDueRaw.length > 0 && {
                 key: 'riskDue', icon: '🛡️', color: 'var(--danger)', bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.18)',
-                label: lang !== 'en' ? 'Istekli rokovi mjera (Procjena)' : 'Overdue risk measures',
+                label: t('istekliRokoviMjeraProcjena'),
                 items: riskMeasuresDueRaw,
                 onItemClick: r => router.push('/dashboard/risk-assessment'),
                 itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
@@ -523,7 +523,7 @@ export default function DashboardPage() {
             },
             riskMeasuresSoonRaw.length > 0 && {
                 key: 'riskSoon', icon: '🛡️', color: 'var(--warning)', bg: 'rgba(255,152,0,0.08)', border: 'rgba(255,152,0,0.18)',
-                label: lang !== 'en' ? 'Mjere ističu za 30 dana' : 'Measures expiring in 30 days',
+                label: t('mjereIsticuZa30Dana'),
                 items: riskMeasuresSoonRaw,
                 onItemClick: r => router.push('/dashboard/risk-assessment'),
                 itemLabel: r => <><strong>{r.raName}</strong> — {r.predlozeneMjere.substring(0, 40)}{r.predlozeneMjere.length > 40 ? '...' : ''}</>,
@@ -550,10 +550,10 @@ export default function DashboardPage() {
 
     const getTabTitle = () => {
         switch (activeTab) {
-            case 'new': return lang !== 'en' ? 'Radnici zaposleni u posljednjih 30 dana' : 'Workers employed in last 30 days';
-            case 'terminations': return lang !== 'en' ? 'Prestanci radnog odnosa' : 'Terminations';
-            case 'certs': return lang !== 'en' ? 'Uvjerenja i osposobljavanja' : 'Certificates and training';
-            case 'ppe': return lang !== 'en' ? 'Osobna zaštitna sredstva' : 'Personal protective equipment';
+            case 'new': return t('radniciZaposleniUPosljednjih30');
+            case 'terminations': return t('prestanciRadnogOdnosa');
+            case 'certs': return t('uvjerenjaIOsposobljavanja');
+            case 'ppe': return t('osobnaZastitnaSredstva');
             default: return '';
         }
     };
@@ -800,7 +800,7 @@ export default function DashboardPage() {
         setDiseasesData(getAllForCompany(COLLECTIONS.DISEASES, activeCompanyId, uids));
         setNotifSettings(getNotificationSettings() || {});
         if (typeof window !== 'undefined' && window.eznrToast) {
-            window.eznrToast(lang !== 'en' ? 'Podaci osvježeni' : 'Data refreshed', 'success', 2000);
+            window.eznrToast(t('podaciOsvjezeni'), 'success', 2000);
         }
     };
 
@@ -834,11 +834,11 @@ export default function DashboardPage() {
                 position={lpMenu.pos}
                 onClose={() => setLpMenu({ open: false, pos: null, worker: null })}
                 items={lpMenu.worker ? [
-                    { icon: '👤', label: lang !== 'en' ? 'Otvori profil' : 'Open profile', onClick: () => handleWorkerAction('open', lpMenu.worker) },
-                    { icon: '📜', label: lang !== 'en' ? 'Uvjerenja' : 'Certificates', onClick: () => handleWorkerAction('certs', lpMenu.worker) },
-                    { icon: '🦺', label: lang !== 'en' ? 'OZO oprema' : 'PPE', onClick: () => handleWorkerAction('ppe', lpMenu.worker) },
-                    { icon: '🏥', label: lang !== 'en' ? 'Ljekarski' : 'Medical', onClick: () => router.push('/dashboard/medical-exams') },
-                    { icon: '🗑️', label: lang !== 'en' ? 'Obriši' : 'Delete', onClick: () => handleWorkerAction('delete', lpMenu.worker), danger: true },
+                    { icon: '👤', label: t('otvoriProfil'), onClick: () => handleWorkerAction('open', lpMenu.worker) },
+                    { icon: '📜', label: t('uvjerenja'), onClick: () => handleWorkerAction('certs', lpMenu.worker) },
+                    { icon: '🦺', label: t('ozoOprema'), onClick: () => handleWorkerAction('ppe', lpMenu.worker) },
+                    { icon: '🏥', label: t('ljekarski'), onClick: () => router.push('/dashboard/medical-exams') },
+                    { icon: '🗑️', label: t('obrisi'), onClick: () => handleWorkerAction('delete', lpMenu.worker), danger: true },
                 ] : []}
             />
 
@@ -847,16 +847,16 @@ export default function DashboardPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : `repeat(${stats.totalExpired > 0 ? 5 : 4}, 1fr)`, gap: 10, marginBottom: 24 }}>
                     <StatCard icon="👥" label={t('workers')} value={stats.activeWorkers} color="var(--primary)" onClick={() => handleStatClick('/dashboard/workers')} trend={!isMobile ? stats.recentWorkers : undefined} />
                     <StatCard icon="📜" label={t('certificatesAndTraining')} value={stats.activeCerts} color="var(--secondary)" onClick={() => handleStatClick('/dashboard/worker-certificates')} trend={!isMobile ? stats.recentCerts : undefined} />
-                    <StatCard icon="⏰" label={lang !== 'en' ? 'Ističe uskoro' : 'Expiring soon'} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} total={stats.activeCerts} />
+                    <StatCard icon="⏰" label={t('isticeUskoro')} value={stats.expiringSoon} color="#FF9800" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} total={stats.activeCerts} />
                     <StatCard icon="⚙️" label={t('workEquipment')} value={stats.activeEquip} color="#607D8B" onClick={() => handleStatClick('/dashboard/equipment')} />
                     {stats.totalExpired> 0 && (
-                        <StatCard icon="🚨" label={lang !== 'en' ? 'Isteklo' : 'Expired'} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert total={stats.activeCerts + stats.activeEquip} />
+                        <StatCard icon="🚨" label={t('isteklo')} value={stats.totalExpired} color="#D32F2F" onClick={() => handleStatClick('/dashboard/worker-certificates?sort=expiry')} isAlert total={stats.activeCerts + stats.activeEquip} />
                     )}
                 </div>
             </CollapsibleWidget>
 
             {/* ── Actionable Alerts Widget ── */}
-            <CollapsibleWidget id="alerts" title={lang !== 'en' ? 'Upozorenja' : 'Alerts'} icon="🚨" isMobile={isMobile}>
+            <CollapsibleWidget id="alerts" title={t('upozorenja')} icon="🚨" isMobile={isMobile}>
                 {(() => {
                     const total = alertsGroups.reduce((s, g) => s + g.items.length, 0);
                     if (total === 0) return null;
@@ -865,7 +865,7 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Analytics Charts */}
-            <CollapsibleWidget id="analytics" title={lang !== 'en' ? 'Analitika' : 'Analytics'} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={true}>
+            <CollapsibleWidget id="analytics" title={t('analitika')} icon="📊" isMobile={isMobile} alwaysCollapsible={true} defaultCollapsed={true}>
                 <AnalyticsWidgets
                     workers={workers}
                     certs={certs}
@@ -882,13 +882,13 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Calendar */}
-            <CollapsibleWidget id="calendar" title={lang !== 'en' ? 'Kalendar' : 'Calendar'} icon="📅" isMobile={isMobile}>
+            <CollapsibleWidget id="calendar" title={t('kalendar')} icon="📅" isMobile={isMobile}>
                 <div className="card" style={{ marginBottom: 24 }}>
                     <div className="card-body">
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', marginBottom: 16 }}>
                             <div style={{ justifySelf: 'start' }}>
-                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth} title={lang !== 'en' ? 'Prethodni mjesec' : 'Previous month'}>
-                                    ◀ {!isMobile && (lang !== 'en' ? ' Prethodni' : ' Previous')}
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={prevMonth} title={t('prethodniMjesec')}>
+                                    ◀ {!isMobile && (t('prethodni2'))}
                                 </button>
                             </div>
 
@@ -977,12 +977,12 @@ export default function DashboardPage() {
                                                     onClick={() => { setCurrentDate(new Date(year, -1, 1)); setShowMonthPicker(false); }}
                                                     className="hover-text-danger"
                                                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--text-muted)', padding: '2px 6px', borderRadius: 6, transition: 'color 0.12s' }}
-                                                    >{lang !== 'en' ? 'Poništi' : 'Clear'}</button>
+                                                    >{t('ponisti')}</button>
                                                 <button
                                                     onClick={() => { setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1)); setShowMonthPicker(false); }}
                                                     className="hover-opacity-075"
                                                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700, padding: '2px 6px', borderRadius: 6, transition: 'opacity 0.12s' }}
-                                                    >{lang !== 'en' ? 'Ovaj mjesec' : 'This month'}</button>
+                                                    >{t('ovajMjesec')}</button>
                                             </div>
                                         </div>
                                     );
@@ -990,8 +990,8 @@ export default function DashboardPage() {
                             </div>
 
                             <div style={{ justifySelf: 'end' }}>
-                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth} title={lang !== 'en' ? 'Sljedeći mjesec' : 'Next month'}>
-                                    {!isMobile && (lang !== 'en' ? 'Sljedeći ' : 'Next ')}▶
+                                <button className="btn btn-sm" style={{ background: 'transparent', color: 'var(--text-muted)' }} onClick={nextMonth} title={t('sljedeciMjesec')}>
+                                    {!isMobile && (t('sljedeci'))}▶
                                 </button>
                             </div>
                         </div>
@@ -1077,7 +1077,7 @@ export default function DashboardPage() {
                                                     {!ev.auto && (
                                                         <button
                                                             onClick={(e) => handleDeleteEvent(ev, e)}
-                                                            title={lang !== 'en' ? 'Obriši događaj' : 'Delete event'}
+                                                            title={t('obrisiDogaaj')}
                                                             style={{
                                                                 background: 'none', border: 'none', cursor: 'pointer',
                                                                 padding: '0 2px', lineHeight: 1, fontSize: '0.7rem',
@@ -1097,14 +1097,14 @@ export default function DashboardPage() {
                         </div>
 
                         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 16, fontSize: '0.8rem', flexWrap: 'wrap' }}>
-                            <Legend color="var(--info)" bg="rgba(33,150,243,0.12)" label={lang !== 'en' ? '📜 Uvjerenja' : '📜 Certificates'} />
-                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang !== 'en' ? '🔧 Servis' : '🔧 Service'} />
+                            <Legend color="var(--info)" bg="rgba(33,150,243,0.12)" label={t('uvjerenja1')} />
+                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={t('servis')} />
                             <Legend color="var(--warning)" bg="rgba(255,152,0,0.12)" label="🦺 ZS" />
-                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={lang !== 'en' ? '⚙️ Oprema' : '⚙️ Equipment'} />
-                            <Legend color="#9C27B0" bg="rgba(156,39,176,0.12)" label={lang !== 'en' ? '🛡️ Mjere rizika' : '🛡️ Risk measures'} />
-                            <Legend color="#6A1B9A" bg="#F3E5F5" label={lang !== 'en' ? '📄 Dokumenti' : '📄 Documents'} />
-                            <Legend color="var(--danger)" bg="rgba(244,67,54,0.12)" label={lang !== 'en' ? '⚠️ Isteklo' : '⚠️ Expired'} />
-                            <Legend color="var(--warning)" bg="#FFF8E1" label={lang !== 'en' ? '⏰ Uskoro' : '⏰ Soon'} />
+                            <Legend color="var(--success)" bg="rgba(76,175,80,0.12)" label={t('oprema1')} />
+                            <Legend color="#9C27B0" bg="rgba(156,39,176,0.12)" label={t('mjereRizika')} />
+                            <Legend color="#6A1B9A" bg="#F3E5F5" label={t('dokumenti')} />
+                            <Legend color="var(--danger)" bg="rgba(244,67,54,0.12)" label={t('isteklo1')} />
+                            <Legend color="var(--warning)" bg="#FFF8E1" label={t('uskoro')} />
                         </div>
                     </div>
                 </div>
@@ -1114,18 +1114,18 @@ export default function DashboardPage() {
                     <div className="modal-overlay" onClick={() => setDayDetailDate(null)}>
                         <div className="modal" style={{ maxWidth: 480 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #00695C, #00897B)' }}>
-                                <h2 style={{ color: 'white' }}>📅 {new Date(dayDetailDate + 'T12:00:00').toLocaleDateString(lang !== 'en' ? 'bs-BA' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
+                                <h2 style={{ color: 'white' }}>📅 {new Date(dayDetailDate + 'T12:00:00').toLocaleDateString(t('bsba'), { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setDayDetailDate(null)}>✕</button>
                             </div>
                             <div className="modal-body" style={{ maxHeight: 400, overflowY: 'auto' }}>
                                 <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase' }}>
-                                    {dayDetailEvents.length} {lang !== 'en' ? 'događaj(a)' : 'event(s)'}
+                                    {dayDetailEvents.length} {t('dogaaja')}
                                 </div>
                                 {dayDetailEvents.map((ev, idx) => {
                                     const tipIconMap = { cert: '📜', ppe: '🦺', equip: '⚙️', doc: '📄', service: '🔧', risk: '🛡️', fleet_inspection: '🚗', fleet_registration: '📋', fire_service: '🧯', hydrant_inspection: '🚰', evac_drill: '🏃', medical: '🏥', training: '📚' };
-                                    const tipLabelMap = { cert: lang !== 'en' ? 'Uvjerenje' : 'Certificate', ppe: 'OZO', equip: lang !== 'en' ? 'Oprema' : 'Equipment', doc: lang !== 'en' ? 'Dokument' : 'Document', service: 'Servis', risk: lang !== 'en' ? 'Mjera rizika' : 'Risk Measure', fleet_inspection: lang !== 'en' ? 'Tehnički' : 'Inspection', fleet_registration: lang !== 'en' ? 'Registracija' : 'Registration', fire_service: lang !== 'en' ? 'PP Servis' : 'FE Service', hydrant_inspection: lang !== 'en' ? 'Hidrant' : 'Hydrant', evac_drill: lang !== 'en' ? 'Evakuacija' : 'Evacuation', medical: lang !== 'en' ? 'Ljekarski' : 'Medical', training: lang !== 'en' ? 'Obuka' : 'Training' };
+                                    const tipLabelMap = { cert: t('uvjerenje'), ppe: 'OZO', equip: t('oprema'), doc: t('dokument'), service: 'Servis', risk: t('mjeraRizika'), fleet_inspection: t('tehnicki'), fleet_registration: t('registracija'), fire_service: t('ppServis'), hydrant_inspection: t('hidrant'), evac_drill: t('evakuacija'), medical: t('ljekarski'), training: t('obuka') };
                                     const tipIcon = tipIconMap[ev.tip] || '📌';
-                                    const tipLabel = tipLabelMap[ev.tip] || (lang !== 'en' ? 'Događaj' : 'Event');
+                                    const tipLabel = tipLabelMap[ev.tip] || (t('dogaaj'));
                                     const isExpired = ev.datum && new Date(ev.datum) < new Date();
                                     return (
                                         <div key={ev.id || idx} className="hover-translate-x" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 8, marginBottom: 6, background: isExpired ? 'rgba(198,40,40,0.06)' : 'rgba(0,191,166,0.04)', border: '1px solid ' + (isExpired ? 'rgba(198,40,40,0.15)' : 'var(--border-light)'), cursor: 'pointer', transition: 'all 0.15s' }}
@@ -1135,8 +1135,8 @@ export default function DashboardPage() {
                                             <div style={{ flex: 1, minWidth: 0 }}>
                                                 <div style={{ fontWeight: 600, fontSize: '0.85rem', color: 'var(--text)' }}>{ev.opis || tipLabel}</div>
                                                 <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', gap: 8, marginTop: 2 }}>
-                                                    <span style={{ background: isExpired ? 'rgba(244,67,54,0.12)' : 'rgba(33,150,243,0.12)', color: isExpired ? 'var(--danger)' : 'var(--info)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (lang !== 'en' ? 'Isteklo' : 'Expired') : tipLabel}</span>
-                                                    {ev.auto && <span style={{ background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', padding: '1px 6px', borderRadius: 4 }}>{lang !== 'en' ? 'Auto' : 'Auto'}</span>}
+                                                    <span style={{ background: isExpired ? 'rgba(244,67,54,0.12)' : 'rgba(33,150,243,0.12)', color: isExpired ? 'var(--danger)' : 'var(--info)', padding: '1px 6px', borderRadius: 4, fontWeight: 600 }}>{isExpired ? (t('isteklo')) : tipLabel}</span>
+                                                    {ev.auto && <span style={{ background: 'rgba(255,152,0,0.1)', color: 'var(--warning)', padding: '1px 6px', borderRadius: 4 }}>{t('auto')}</span>}
                                                     {ev.companyName && <span style={{ background: 'rgba(0,0,0,0.06)', padding: '1px 6px', borderRadius: 4 }}>🏢 {ev.companyName}</span>}
                                                 </div>
                                             </div>
@@ -1156,7 +1156,7 @@ export default function DashboardPage() {
                                         vehicleId: '', extinguisherId: '', hydrantId: '', evacPlanId: '', drillDuration: '', trainingName: '',
                                     });
                                     setEventFormError(''); setShowEventForm(true);
-                                }}>➕ {lang !== 'en' ? 'Novi događaj' : 'New event'}</button>
+                                }}>➕ {t('noviDogaaj')}</button>
                             </div>
                         </div>
                     </div>
@@ -1181,28 +1181,28 @@ export default function DashboardPage() {
 
                                 {/* Event type */}
                                 <div className="form-group">
-                                    <label className="form-label">{lang !== 'en' ? 'Tip događaja' : 'Event type'}</label>
+                                    <label className="form-label">{t('tipDogaaja')}</label>
                                     <select className="form-select" value={eventFormData.tip}
                                         onChange={e => setEventFormData(prev => ({ ...prev, tip: e.target.value }))}>
-                                        <option value="cert">{lang !== 'en' ? '📜 Uvjerenja / Osposobljavanje' : '📜 Certificates / Training'}</option>
-                                        <option value="service">{lang !== 'en' ? '🔧 Servis / Održavanje' : '🔧 Service / Maintenance'}</option>
-                                        <option value="ppe">{lang !== 'en' ? '🦺 Zaštitna oprema (OZO)' : '🦺 PPE'}</option>
-                                        <option value="equip">{lang !== 'en' ? '⚙️ Radna oprema / Objekti' : '⚙️ Equipment'}</option>
-                                        <option value="fleet_inspection">{lang !== 'en' ? '🚗 Tehnički pregled vozila' : '🚗 Vehicle Inspection'}</option>
-                                        <option value="fleet_registration">{lang !== 'en' ? '📋 Registracija vozila' : '📋 Vehicle Registration'}</option>
-                                        <option value="fire_service">{lang !== 'en' ? '🧯 Servis PP aparata' : '🧯 Fire Ext. Service'}</option>
-                                        <option value="hydrant_inspection">{lang !== 'en' ? '🚰 Pregled hidranta' : '🚰 Hydrant Inspection'}</option>
-                                        <option value="evac_drill">{lang !== 'en' ? '🏃 Vježba evakuacije' : '🏃 Evacuation Drill'}</option>
-                                        <option value="medical">{lang !== 'en' ? '🏥 Ljekarski pregled' : '🏥 Medical Exam'}</option>
-                                        <option value="training">{lang !== 'en' ? '📚 Obuka radnika' : '📚 Worker Training'}</option>
-                                        <option value="doc">{lang !== 'en' ? '📋 Dokumentacija' : '📋 Documentation'}</option>
-                                        <option value="other">{lang !== 'en' ? 'Ostalo' : 'Other'}</option>
+                                        <option value="cert">{t('uvjerenjaOsposobljavanje')}</option>
+                                        <option value="service">{t('servisOdrzavanje')}</option>
+                                        <option value="ppe">{t('zastitnaOpremaOzo')}</option>
+                                        <option value="equip">{t('radnaOpremaObjekti')}</option>
+                                        <option value="fleet_inspection">{t('tehnickiPregledVozila')}</option>
+                                        <option value="fleet_registration">{t('registracijaVozila')}</option>
+                                        <option value="fire_service">{t('servisPpAparata')}</option>
+                                        <option value="hydrant_inspection">{t('pregledHidranta')}</option>
+                                        <option value="evac_drill">{t('vjezbaEvakuacije')}</option>
+                                        <option value="medical">{t('ljekarskiPregled')}</option>
+                                        <option value="training">{t('obukaRadnika')}</option>
+                                        <option value="doc">{t('dokumentacija')}</option>
+                                        <option value="other">{t('ostalo')}</option>
                                     </select>
                                 </div>
 
                                 {/* Company selector */}
                                 <div className="form-group">
-                                    <label className="form-label">🏢 {lang !== 'en' ? 'Firma' : 'Company'}</label>
+                                    <label className="form-label">🏢 {t('firma')}</label>
                                     <select className="form-select" value={eventFormData.companyId}
                                         onChange={e => setEventFormData(prev => ({ ...prev, companyId: e.target.value, workerId: '' }))}>
                                         {companies.filter(c => (user?.companyIds || []).includes(c.id)).map(c => (
@@ -1214,10 +1214,10 @@ export default function DashboardPage() {
                                 {/* Machine selector for Service */}
                                 {eventFormData.tip === 'service' && (
                                     <div className="form-group">
-                                        <label className="form-label">⚙️ {lang !== 'en' ? 'Stroj / Oprema' : 'Machine / Equipment'}</label>
+                                        <label className="form-label">⚙️ {t('strojOprema')}</label>
                                         <select className="form-select" value={eventFormData.machineId}
                                             onChange={e => setEventFormData(prev => ({ ...prev, machineId: e.target.value }))}>
-                                            <option value="">{lang !== 'en' ? '— Odaberi stroj —' : '— Select machine —'}</option>
+                                            <option value="">{t('odaberiStroj')}</option>
                                             {equipment.filter(e => !eventFormData.companyId || e.companyId === eventFormData.companyId).map(eq => (
                                                 <option key={eq.id} value={eq.id}>{eq.naziv} ({eq.invBroj || eq.serijskiBroj})</option>
                                             ))}
@@ -1244,7 +1244,7 @@ export default function DashboardPage() {
                                     return (
                                         <div className="form-group">
                                             <label className="form-label">
-                                                👤 {lang !== 'en' ? 'Radnik (opcionalno)' : 'Worker (optional)'}
+                                                👤 {t('radnikOpcionalno')}
                                             </label>
                                             <div ref={workerDropRef} style={{ position: 'relative' }}>
                                                 <div style={{
@@ -1262,7 +1262,7 @@ export default function DashboardPage() {
                                                             if (!e.target.value) setEventFormData(prev => ({ ...prev, workerId: '' }));
                                                         }}
                                                         onFocus={() => setWorkerDropOpen(true)}
-                                                        placeholder={selectedWorker ? (selectedWorker.prezime + ' ' + selectedWorker.ime) : (lang !== 'en' ? 'Pretraži radnika...' : 'Search worker...')}
+                                                        placeholder={selectedWorker ? (selectedWorker.prezime + ' ' + selectedWorker.ime) : (t('pretraziRadnika1'))}
                                                         style={{ flex: 1, border: 'none', background: 'transparent', outline: 'none', padding: '10px 12px', fontSize: '0.9rem', fontFamily: 'var(--font-body)', color: 'var(--text)' }}
                                                     />
                                                     {(eventFormData.workerId || workerSearch) && (
@@ -1286,10 +1286,10 @@ export default function DashboardPage() {
                                                     }}>
                                                         <div
                                                             onClick={() => { setEventFormData(prev => ({ ...prev, workerId: '' })); setWorkerSearch(''); setWorkerDropOpen(false); }}
-                                                            style={{ padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', fontStyle: 'italic' }}>— {lang !== 'en' ? 'Bez radnika' : 'No worker'} —</div>
+                                                            style={{ padding: '9px 14px', cursor: 'pointer', fontSize: '0.88rem', color: 'var(--text-muted)', borderBottom: '1px solid var(--border-light)', fontStyle: 'italic' }}>— {t('bezRadnika')} —</div>
                                                         {filtered.length === 0 && (
                                                             <div style={{ padding: '10px 14px', color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                                                                {lang !== 'en' ? 'Nema rezultata' : 'No results'}
+                                                                {t('nemaRezultata')}
                                                             </div>
                                                         )}
                                                         {filtered.map(w => (
@@ -1316,13 +1316,13 @@ export default function DashboardPage() {
                                     <>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                                             <div className="form-group">
-                                                <label className="form-label">{lang !== 'en' ? 'Naziv uvjerenja *' : 'Certificate name *'}</label>
+                                                <label className="form-label">{t('nazivUvjerenja')}</label>
                                                 <input className="form-input" value={eventFormData.certNaziv}
                                                     onChange={e => setEventFormData(prev => ({ ...prev, certNaziv: e.target.value }))}
-                                                    placeholder={lang !== 'en' ? 'npr. Osposobljavanje ZNR' : 'e.g. OHS Training'} />
+                                                    placeholder={t('nprOsposobljavanjeZnr')} />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">{lang !== 'en' ? 'Tip uvjerenja' : 'Certificate type'}</label>
+                                                <label className="form-label">{t('tipUvjerenja')}</label>
                                                 <select className="form-select" value={eventFormData.certTip}
                                                     onChange={e => {
                                                         const ct = certTypes.find(c => c.naziv === e.target.value);
@@ -1331,36 +1331,36 @@ export default function DashboardPage() {
                                                             : eventFormData.certVrijediDo;
                                                         setEventFormData(prev => ({ ...prev, certTip: e.target.value, certNaziv: ct?.naziv || prev.certNaziv, certOznaka: ct?.oznaka || prev.certOznaka, certVrijediDo: vrijediDo }));
                                                     }}>
-                                                    <option value="">{lang !== 'en' ? '— Odaberi —' : '— Select —'}</option>
+                                                    <option value="">{t('odaberi1')}</option>
                                                     {certTypes.filter((ct, idx, arr) => arr.findIndex(x => x.naziv === ct.naziv) === idx).map(ct => <option key={ct.id} value={ct.naziv}>{ct.naziv}</option>)}
                                                 </select>
                                             </div>
                                         </div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
                                             <div className="form-group">
-                                                <label className="form-label">{lang !== 'en' ? 'Oznaka' : 'Code'}</label>
+                                                <label className="form-label">{t('oznaka')}</label>
                                                 <input className="form-input" value={eventFormData.certOznaka}
                                                     onChange={e => setEventFormData(prev => ({ ...prev, certOznaka: e.target.value }))}
                                                     placeholder="ZNR-001" />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">{lang !== 'en' ? 'Datum izdavanja' : 'Issue date'}</label>
+                                                <label className="form-label">{t('datumIzdavanja')}</label>
                                                 <DateInput value={eventFormData.certDatum}
                                                     onChange={v => setEventFormData(prev => ({ ...prev, certDatum: v }))} />
                                             </div>
                                             <div className="form-group">
-                                                <label className="form-label">{lang !== 'en' ? 'Vrijedi do' : 'Valid until'}</label>
+                                                <label className="form-label">{t('vrijediDo')}</label>
                                                 <DateInput value={eventFormData.certVrijediDo}
                                                     onChange={v => setEventFormData(prev => ({ ...prev, certVrijediDo: v }))} />
                                             </div>
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang !== 'en' ? 'Sposobnost' : 'Fitness'}</label>
+                                            <label className="form-label">{t('sposobnost')}</label>
                                             <select className="form-select" value={eventFormData.certSposobnost}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, certSposobnost: e.target.value }))}>
-                                                <option value="Sposoban">{lang !== 'en' ? 'Sposoban' : 'Fit'}</option>
-                                                <option value="Nesposoban">{lang !== 'en' ? 'Nesposoban' : 'Unfit'}</option>
-                                                <option value="Uvjetno sposoban">{lang !== 'en' ? 'Uvjetno sposoban' : 'Conditionally fit'}</option>
+                                                <option value="Sposoban">{t('sposoban')}</option>
+                                                <option value="Nesposoban">{t('nesposoban')}</option>
+                                                <option value="Uvjetno sposoban">{t('uvjetnoSposoban')}</option>
                                             </select>
                                         </div>
                                     </>
@@ -1373,23 +1373,23 @@ export default function DashboardPage() {
                                             <label className="form-label">{lang !== 'en' ? 'Naziv OZO *' : 'PPE name *'}</label>
                                             <select className="form-select" value={eventFormData.ppeNaziv}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, ppeNaziv: e.target.value }))}>
-                                                <option value="">{lang !== 'en' ? '— Odaberi —' : '— Select —'}</option>
+                                                <option value="">{t('odaberi1')}</option>
                                                 {ppeTypes.map(pt => <option key={pt.id} value={pt.naziv}>{pt.naziv}</option>)}
-                                                <option value="__custom">{lang !== 'en' ? 'Unesi ručno...' : 'Enter manually...'}</option>
+                                                <option value="__custom">{t('unesiRucno')}</option>
                                             </select>
                                             {eventFormData.ppeNaziv === '__custom' && (
                                                 <input className="form-input" style={{ marginTop: 6 }}
-                                                    placeholder={lang !== 'en' ? 'Naziv OZO...' : 'PPE name...'}
+                                                    placeholder={t('nazivOzo2')}
                                                     onChange={e => setEventFormData(prev => ({ ...prev, ppeNaziv: e.target.value }))} />
                                             )}
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</label>
+                                            <label className="form-label">{t('datumZaduzenja')}</label>
                                             <DateInput value={eventFormData.ppeDatum}
                                                 onChange={v => setEventFormData(prev => ({ ...prev, ppeDatum: v }))} />
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang !== 'en' ? 'Kol.' : 'Qty'}</label>
+                                            <label className="form-label">{t('kol')}</label>
                                             <input className="form-input" type="number" min="1" value={eventFormData.ppeKolicina}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, ppeKolicina: parseInt(e.target.value) || 1 }))} />
                                         </div>
@@ -1400,10 +1400,10 @@ export default function DashboardPage() {
                                 {/* ── Fleet Vehicle fields ── */}
                                 {(eventFormData.tip === 'fleet_inspection' || eventFormData.tip === 'fleet_registration') && (
                                     <div className="form-group">
-                                        <label className="form-label">🚗 {lang !== 'en' ? 'Vozilo *' : 'Vehicle *'}</label>
+                                        <label className="form-label">🚗 {t('vozilo')}</label>
                                         <select className="form-select" value={eventFormData.vehicleId}
                                             onChange={e => setEventFormData(prev => ({ ...prev, vehicleId: e.target.value }))}>
-                                            <option value="">{lang !== 'en' ? '— Odaberi vozilo —' : '— Select vehicle —'}</option>
+                                            <option value="">{t('odaberiVozilo')}</option>
                                             {fleetVehicles.filter(v => !eventFormData.companyId || v.companyId === eventFormData.companyId).map(v => (
                                                 <option key={v.id} value={v.id}>{v.marka} {v.model} ({v.registracija})</option>
                                             ))}
@@ -1414,10 +1414,10 @@ export default function DashboardPage() {
                                 {/* ── Fire Extinguisher Service fields ── */}
                                 {eventFormData.tip === 'fire_service' && (
                                     <div className="form-group">
-                                        <label className="form-label">🧯 {lang !== 'en' ? 'PP Aparat *' : 'Fire Extinguisher *'}</label>
+                                        <label className="form-label">🧯 {t('ppAparat')}</label>
                                         <select className="form-select" value={eventFormData.extinguisherId}
                                             onChange={e => setEventFormData(prev => ({ ...prev, extinguisherId: e.target.value }))}>
-                                            <option value="">{lang !== 'en' ? '— Odaberi aparat —' : '— Select extinguisher —'}</option>
+                                            <option value="">{t('odaberiAparat')}</option>
                                             {fireExtinguishers.map(fe => (
                                                 <option key={fe.id} value={fe.id}>{fe.serijskiBroj} — {fe.lokacija || fe.tip}</option>
                                             ))}
@@ -1428,10 +1428,10 @@ export default function DashboardPage() {
                                 {/* ── Hydrant Inspection fields ── */}
                                 {eventFormData.tip === 'hydrant_inspection' && (
                                     <div className="form-group">
-                                        <label className="form-label">🚰 {lang !== 'en' ? 'Hidrant *' : 'Hydrant *'}</label>
+                                        <label className="form-label">🚰 {t('hidrant1')}</label>
                                         <select className="form-select" value={eventFormData.hydrantId}
                                             onChange={e => setEventFormData(prev => ({ ...prev, hydrantId: e.target.value }))}>
-                                            <option value="">{lang !== 'en' ? '— Odaberi hidrant —' : '— Select hydrant —'}</option>
+                                            <option value="">{t('odaberiHidrant')}</option>
                                             {hydrants.map(h => (
                                                 <option key={h.id} value={h.id}>{h.oznaka} — {h.lokacija || (h.tip === 'unutarnji' ? 'Unutarnji' : 'Vanjski')}</option>
                                             ))}
@@ -1443,17 +1443,17 @@ export default function DashboardPage() {
                                 {eventFormData.tip === 'evac_drill' && (
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px', gap: 12 }}>
                                         <div className="form-group">
-                                            <label className="form-label">📍 {lang !== 'en' ? 'Plan evakuacije (lokacija) *' : 'Evacuation Plan (location) *'}</label>
+                                            <label className="form-label">📍 {t('planEvakuacijeLokacija')}</label>
                                             <select className="form-select" value={eventFormData.evacPlanId}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, evacPlanId: e.target.value }))}>
-                                                <option value="">{lang !== 'en' ? '— Odaberi plan —' : '— Select plan —'}</option>
+                                                <option value="">{t('odaberiPlan')}</option>
                                                 {evacuationPlans.map(p => (
                                                     <option key={p.id} value={p.id}>{p.lokacija}</option>
                                                 ))}
                                             </select>
                                         </div>
                                         <div className="form-group">
-                                            <label className="form-label">{lang !== 'en' ? 'Trajanje (min)' : 'Duration (min)'}</label>
+                                            <label className="form-label">{t('trajanjeMin')}</label>
                                             <input className="form-input" type="number" min="1" value={eventFormData.drillDuration}
                                                 onChange={e => setEventFormData(prev => ({ ...prev, drillDuration: e.target.value }))} />
                                         </div>
@@ -1463,27 +1463,27 @@ export default function DashboardPage() {
                                 {/* ── Training fields ── */}
                                 {eventFormData.tip === 'training' && (
                                     <div className="form-group">
-                                        <label className="form-label">📚 {lang !== 'en' ? 'Naziv obuke *' : 'Training name *'}</label>
+                                        <label className="form-label">📚 {t('nazivObuke')}</label>
                                         <input className="form-input" value={eventFormData.trainingName}
                                             onChange={e => setEventFormData(prev => ({ ...prev, trainingName: e.target.value }))}
-                                            placeholder={lang !== 'en' ? 'npr. Obuka ZNR, Obuka ZOP...' : 'e.g. OHS Training...'} />
+                                            placeholder={t('nprObukaZnrObukaZop')} />
                                     </div>
                                 )}
 
                                 {/* Description + count for non-cert/ppe */}
                                 <div className="form-group">
                                     <label className="form-label">
-                                        {lang !== 'en' ? 'Opis događaja' : 'Event description'}
-                                        {(eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe') ? ` (${lang !== 'en' ? 'opcionalno' : 'optional'})` : ` (${lang !== 'en' ? 'opcionalno' : 'optional'})`}
+                                        {t('opisDogaaja')}
+                                        {(eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe') ? ` (${t('opcionalno')})` : ` (${t('opcionalno')})`}
                                     </label>
                                     <input className="form-input" value={eventFormData.opis}
                                         onChange={e => setEventFormData(prev => ({ ...prev, opis: e.target.value }))}
-                                        placeholder={lang !== 'en' ? 'Opis događaja...' : 'Event description...'} />
+                                        placeholder={t('opisDogaaja1')} />
                                 </div>
 
                                 {eventFormData.tip !== 'cert' && eventFormData.tip !== 'ppe' && !['fleet_inspection','fleet_registration','fire_service','hydrant_inspection','evac_drill','training','medical'].includes(eventFormData.tip) && (
                                     <div className="form-group">
-                                        <label className="form-label">{lang !== 'en' ? 'Broj radnika' : 'Number of workers'}</label>
+                                        <label className="form-label">{t('brojRadnika')}</label>
                                         <input className="form-input" type="number" min="1" value={eventFormData.count}
                                             onChange={e => setEventFormData(prev => ({ ...prev, count: parseInt(e.target.value) || 1 }))} />
                                     </div>
@@ -1506,23 +1506,17 @@ export default function DashboardPage() {
                                 )}
                                 {eventFormData.tip === 'fire_service' && eventFormData.extinguisherId && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
-                                        ✅ {lang !== 'en'
-                                            ? 'Datum servisa PP aparata će biti automatski ažuriran, sljedeći servis zakazan za 1 godinu.'
-                                            : 'Fire extinguisher service date will be updated, next service scheduled in 1 year.'}
+                                        ✅ {t('datumServisaPpAparataCe')}
                                     </div>
                                 )}
                                 {eventFormData.tip === 'hydrant_inspection' && eventFormData.hydrantId && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
-                                        ✅ {lang !== 'en'
-                                            ? 'Datum pregleda hidranta će biti automatski ažuriran, sljedeći pregled zakazan za 6 mjeseci.'
-                                            : 'Hydrant inspection date will be updated, next inspection scheduled in 6 months.'}
+                                        ✅ {t('datumPregledaHidrantaCeBiti')}
                                     </div>
                                 )}
                                 {eventFormData.tip === 'evac_drill' && eventFormData.evacPlanId && (
                                     <div style={{ background: 'rgba(0,191,166,0.1)', border: '1px solid rgba(0,191,166,0.3)', borderRadius: 8, padding: '8px 12px', fontSize: '0.8rem', color: '#009985' }}>
-                                        ✅ {lang !== 'en'
-                                            ? 'Vježba evakuacije će biti automatski kreirana u modulu Vježbe evakuacije.'
-                                            : 'Evacuation drill record will be automatically created in the Drills module.'}
+                                        ✅ {t('vjezbaEvakuacijeCeBitiAutomatski')}
                                     </div>
                                 )}
                             </div>
@@ -1536,26 +1530,26 @@ export default function DashboardPage() {
                                         vehicleId, extinguisherId, hydrantId, evacPlanId, drillDuration, trainingName } = eventFormData;
 
                                     // Validation
-                                    if (tip === 'cert' && !certNaziv.trim() && !certTip) { setEventFormError(lang !== 'en' ? 'Naziv ili tip uvjerenja je obavezan!' : 'Certificate name or type is required!'); return; }
-                                    if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(lang !== 'en' ? 'Naziv OZO je obavezan!' : 'PPE name is required!'); return; }
-                                    if (tip === 'service' && !machineId) { setEventFormError(lang !== 'en' ? 'Stroj je obavezan!' : 'Machine is required!'); return; }
-                                    if ((tip === 'fleet_inspection' || tip === 'fleet_registration') && !vehicleId) { setEventFormError(lang !== 'en' ? 'Vozilo je obavezno!' : 'Vehicle is required!'); return; }
-                                    if (tip === 'fire_service' && !extinguisherId) { setEventFormError(lang !== 'en' ? 'PP aparat je obavezan!' : 'Fire extinguisher is required!'); return; }
-                                    if (tip === 'hydrant_inspection' && !hydrantId) { setEventFormError(lang !== 'en' ? 'Hidrant je obavezan!' : 'Hydrant is required!'); return; }
-                                    if (tip === 'evac_drill' && !evacPlanId) { setEventFormError(lang !== 'en' ? 'Plan evakuacije je obavezan!' : 'Evacuation plan is required!'); return; }
-                                    if (tip === 'training' && !trainingName.trim()) { setEventFormError(lang !== 'en' ? 'Naziv obuke je obavezan!' : 'Training name is required!'); return; }
-                                    if (!['cert','ppe','service','fleet_inspection','fleet_registration','fire_service','hydrant_inspection','evac_drill','training','medical'].includes(tip) && !opis.trim()) { setEventFormError(lang !== 'en' ? 'Opis je obavezan!' : 'Description is required!'); return; }
+                                    if (tip === 'cert' && !certNaziv.trim() && !certTip) { setEventFormError(t('nazivIliTipUvjerenjaJe')); return; }
+                                    if (tip === 'ppe' && (!ppeNaziv || ppeNaziv === '__custom')) { setEventFormError(t('nazivOzoJeObavezan')); return; }
+                                    if (tip === 'service' && !machineId) { setEventFormError(t('strojJeObavezan')); return; }
+                                    if ((tip === 'fleet_inspection' || tip === 'fleet_registration') && !vehicleId) { setEventFormError(t('voziloJeObavezno')); return; }
+                                    if (tip === 'fire_service' && !extinguisherId) { setEventFormError(t('ppAparatJeObavezan')); return; }
+                                    if (tip === 'hydrant_inspection' && !hydrantId) { setEventFormError(t('hidrantJeObavezan')); return; }
+                                    if (tip === 'evac_drill' && !evacPlanId) { setEventFormError(t('planEvakuacijeJeObavezan')); return; }
+                                    if (tip === 'training' && !trainingName.trim()) { setEventFormError(t('nazivObukeJeObavezan')); return; }
+                                    if (!['cert','ppe','service','fleet_inspection','fleet_registration','fire_service','hydrant_inspection','evac_drill','training','medical'].includes(tip) && !opis.trim()) { setEventFormError(t('opisJeObavezan')); return; }
 
                                     // Auto-generate description
                                     let autoOpis = opis;
                                     if (tip === 'cert' && !opis) autoOpis = (certNaziv || certTip || 'Uvjerenje') + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
                                     if (tip === 'ppe' && !opis) autoOpis = ppeNaziv + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
-                                    if (tip === 'service' && !opis) { const m = equipment.find(e => e.id === machineId); autoOpis = `${lang !== 'en' ? 'Servis' : 'Service'}: ${m?.naziv || ''}`; }
-                                    if ((tip === 'fleet_inspection' || tip === 'fleet_registration') && !opis) { const v = fleetVehicles.find(v => v.id === vehicleId); autoOpis = `${tip === 'fleet_inspection' ? (lang !== 'en' ? 'Tehnički pregled' : 'Inspection') : (lang !== 'en' ? 'Registracija' : 'Registration')}: ${v?.marka || ''} ${v?.model || ''} (${v?.registracija || ''})`; }
-                                    if (tip === 'fire_service' && !opis) { const fe = fireExtinguishers.find(f => f.id === extinguisherId); autoOpis = `${lang !== 'en' ? 'Servis PP aparata' : 'Fire Ext. Service'}: ${fe?.serijskiBroj || ''}`; }
-                                    if (tip === 'hydrant_inspection' && !opis) { const h = hydrants.find(h => h.id === hydrantId); autoOpis = `${lang !== 'en' ? 'Pregled hidranta' : 'Hydrant Inspection'}: ${h?.oznaka || ''}`; }
-                                    if (tip === 'evac_drill' && !opis) { const p = evacuationPlans.find(p => p.id === evacPlanId); autoOpis = `${lang !== 'en' ? 'Vježba evakuacije' : 'Evacuation Drill'}: ${p?.lokacija || ''}`; }
-                                    if (tip === 'medical' && !opis) autoOpis = (lang !== 'en' ? 'Ljekarski pregled' : 'Medical Exam') + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
+                                    if (tip === 'service' && !opis) { const m = equipment.find(e => e.id === machineId); autoOpis = `${t('servis1')}: ${m?.naziv || ''}`; }
+                                    if ((tip === 'fleet_inspection' || tip === 'fleet_registration') && !opis) { const v = fleetVehicles.find(v => v.id === vehicleId); autoOpis = `${tip === 'fleet_inspection' ? (t('tehnickiPregled')) : (t('registracija'))}: ${v?.marka || ''} ${v?.model || ''} (${v?.registracija || ''})`; }
+                                    if (tip === 'fire_service' && !opis) { const fe = fireExtinguishers.find(f => f.id === extinguisherId); autoOpis = `${t('servisPpAparata1')}: ${fe?.serijskiBroj || ''}`; }
+                                    if (tip === 'hydrant_inspection' && !opis) { const h = hydrants.find(h => h.id === hydrantId); autoOpis = `${t('pregledHidranta1')}: ${h?.oznaka || ''}`; }
+                                    if (tip === 'evac_drill' && !opis) { const p = evacuationPlans.find(p => p.id === evacPlanId); autoOpis = `${t('vjezbaEvakuacije1')}: ${p?.lokacija || ''}`; }
+                                    if (tip === 'medical' && !opis) autoOpis = (t('ljekarskiPregled1')) + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
                                     if (tip === 'training' && !opis) autoOpis = trainingName + (workerId ? ` — ${workers.find(w => w.id === workerId)?.ime} ${workers.find(w => w.id === workerId)?.prezime}` : '');
 
                                     // ── Connected record updates ──
@@ -1711,12 +1705,12 @@ export default function DashboardPage() {
                     <div className="modal-overlay" onClick={() => setDeleteEventTarget(null)} style={{ zIndex: 100000 }}>
                         <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
                             <div className="modal-header" style={{ background: 'linear-gradient(135deg, #C62828, #B71C1C)' }}>
-                                <h2 style={{ color: 'white' }}>🗑️ {lang !== 'en' ? 'Obriši događaj' : 'Delete event'}</h2>
+                                <h2 style={{ color: 'white' }}>🗑️ {t('obrisiDogaaj')}</h2>
                                 <button className="btn btn-ghost btn-icon" style={{ color: 'white' }} onClick={() => setDeleteEventTarget(null)}>✕</button>
                             </div>
                             <div className="modal-body">
                                 <p style={{ marginBottom: 12, color: 'var(--text)' }}>
-                                    {lang !== 'en' ? 'Sigurno želiš obrisati ovaj događaj s kalendara?' : 'Are you sure you want to delete this event from the calendar?'}
+                                    {t('sigurnoZelisObrisatiOvajDogaaj')}
                                 </p>
                                 <div style={{ background: 'rgba(0,0,0,0.06)', borderRadius: 8, padding: '10px 14px', border: '1px solid var(--border)' }}>
                                     <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: 4, color: 'var(--text)' }}>
@@ -1728,9 +1722,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <p style={{ marginTop: 12, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                    ⚠️ {lang !== 'en'
-                                        ? 'Ovo briše samo unos s kalendara. Uvjerenja ili zaštitna oprema radnika ostaju nepromijenjeni.'
-                                        : 'This only removes the calendar entry. Worker certificates or PPE records remain unchanged.'}
+                                    ⚠️ {t('ovoBriseSamoUnosS')}
                                 </p>
                             </div>
                             <div className="modal-footer">
@@ -1739,7 +1731,7 @@ export default function DashboardPage() {
                                 </button>
                                 <button className="btn btn-danger" onClick={confirmDeleteEvent}
                                     style={{ background: '#D32F2F', color: 'white', border: 'none' }}>
-                                    🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}
+                                    🗑️ {t('obrisi')}
                                 </button>
                             </div>
                         </div>
@@ -1749,7 +1741,7 @@ export default function DashboardPage() {
             </CollapsibleWidget>
 
             {/* Quick Tabs */}
-            <CollapsibleWidget id="workers" title={lang !== 'en' ? 'Radnici & Podaci' : 'Workers & Data'} icon="👷" isMobile={isMobile}>
+            <CollapsibleWidget id="workers" title={t('radniciPodaci')} icon="👷" isMobile={isMobile}>
                 <div className="card">
                     <div className="card-body">
                         <div style={{ display: 'flex', gap: 0, borderBottom: '3px solid var(--primary)', marginBottom: 20, overflowX: 'auto' }}>
@@ -1783,7 +1775,7 @@ export default function DashboardPage() {
                                 if (activeTab === 'certs') router.push('/dashboard/worker-certificates');
                                 else if (activeTab === 'ppe') router.push('/dashboard/worker-ppe');
                                 else router.push('/dashboard/workers');
-                            }} title={lang !== 'en' ? 'Dodaj novi unos' : 'Add new entry'}>+ {t('add')}</button>
+                            }} title={t('dodajNoviUnos')}>+ {t('add')}</button>
                         </div>
 
                         {/* Workers Table (for new/terminations tabs) */}
@@ -1824,7 +1816,7 @@ export default function DashboardPage() {
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === w.id ? actionRef : null}>
                                                         <button className="btn btn-primary btn-sm"
                                                             onClick={() => setActionMenuId(actionMenuId === w.id ? null : w.id)}
-                                                            title={lang !== 'en' ? 'Prikaži akcije za radnika' : 'Show worker actions'}>
+                                                            title={t('prikaziAkcijeZaRadnika')}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === w.id && (
@@ -1834,7 +1826,7 @@ export default function DashboardPage() {
                                                                 <button className="dropdown-item" onClick={() => handleWorkerAction('ppe', w)}>🦺 {t('personalProtective')}</button>
                                                                 <div className="dropdown-divider" />
                                                                 <button className="dropdown-item" onClick={() => handleWorkerAction('print', w)}>🖨️ {t('print')}</button>
-                                                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleWorkerAction('delete', w)}>🗑️ {lang !== 'en' ? 'Obriši' : 'Delete'}</button>
+                                                                <button className="dropdown-item" style={{ color: 'var(--danger)' }} onClick={() => handleWorkerAction('delete', w)}>🗑️ {t('obrisi')}</button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1868,7 +1860,7 @@ export default function DashboardPage() {
                                     <thead>
                                         <tr>
                                             <th>{t('actions')}</th>
-                                            <th>{lang !== 'en' ? 'Radnik' : 'Worker'}</th>
+                                            <th>{t('radnik1')}</th>
                                             <th>{t('name')}</th>
                                             <th>{t('certCode')}</th>
                                             <th>{t('certDate')}</th>
@@ -1882,15 +1874,15 @@ export default function DashboardPage() {
                                             return (
                                                 <tr key={c.id || idx}>
                                                     <td style={{ position: 'relative' }} ref={actionMenuId === `cert-${c.id}` ? actionRef : null}>
-                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)} title={lang !== 'en' ? 'Prikaži akcije za uvjerenje' : 'Show certificate actions'}>
+                                                        <button className="btn btn-primary btn-sm" onClick={() => setActionMenuId(actionMenuId === `cert-${c.id}` ? null : `cert-${c.id}`)} title={t('prikaziAkcijeZaUvjerenje')}>
                                                             {t('actions')} ▼
                                                         </button>
                                                         {actionMenuId === `cert-${c.id}` && (
                                                             <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, zIndex: 50 }}>
                                                                 <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=uvjerenja`); }}>📂 {t('open')}</button>
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang !== 'en' ? 'Profil radnika' : 'Worker profile'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {t('profilRadnika')}</button>
                                                                 <div className="dropdown-divider" />
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-certificates'); }}>📜 {lang !== 'en' ? 'Sva uvjerenja' : 'All certificates'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-certificates'); }}>📜 {t('svaUvjerenja')}</button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1898,13 +1890,13 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
+                                                            title={worker ? (t('klikniZaPregledProfilaRadnika')) : ''}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled uvjerenja radnika' : 'Click to view worker certificates') : ''}>{c.naziv || c.ime || '—'}</button>
+                                                            title={worker ? (t('klikniZaPregledUvjerenjaRadnika')) : ''}>{c.naziv || c.ime || '—'}</button>
                                                     </td>
                                                     <td><span className="badge badge-info">{c.oznaka}</span></td>
                                                     <td>{formatDate(c.datum)}</td>
@@ -1927,10 +1919,10 @@ export default function DashboardPage() {
                                     <thead>
                                         <tr>
                                             <th>{t('actions')}</th>
-                                            <th>{lang !== 'en' ? 'Radnik' : 'Worker'}</th>
+                                            <th>{t('radnik1')}</th>
                                             <th>{t('name')}</th>
-                                            <th>{lang !== 'en' ? 'Datum zaduženja' : 'Assignment date'}</th>
-                                            <th>{lang !== 'en' ? 'Količina' : 'Quantity'}</th>
+                                            <th>{t('datumZaduzenja')}</th>
+                                            <th>{t('kolicina')}</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1945,9 +1937,9 @@ export default function DashboardPage() {
                                                         {actionMenuId === `ppe-${p.id}` && (
                                                             <div className="dropdown-menu" style={{ top: 'calc(100% + 4px)', left: 0, zIndex: 50 }}>
                                                                 <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) router.push(`/dashboard/workers?openWorker=${worker.id}&section=ozo`); }}>📂 {t('open')}</button>
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {lang !== 'en' ? 'Profil radnika' : 'Worker profile'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); if (worker) setViewWorkerId(worker.id); }}>👤 {t('profilRadnika')}</button>
                                                                 <div className="dropdown-divider" />
-                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-ppe'); }}>🦺 {lang !== 'en' ? 'Sva OZO zaduženja' : 'All PPE assignments'}</button>
+                                                                <button className="dropdown-item" onClick={() => { setActionMenuId(null); router.push('/dashboard/worker-ppe'); }}>🦺 {t('svaOzoZaduzenja')}</button>
                                                             </div>
                                                         )}
                                                     </td>
@@ -1955,13 +1947,13 @@ export default function DashboardPage() {
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--text)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--text-muted)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled profila radnika' : 'Click to view worker profile') : ''}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
+                                                            title={worker ? (t('klikniZaPregledProfilaRadnika')) : ''}>{worker ? `${worker.ime} ${worker.prezime}` : '-'}</button>
                                                     </td>
                                                     <td>
                                                         <button
                                                             onClick={() => { if (worker) setViewWorkerId(worker.id); }}
                                                             style={{ background: 'none', border: 'none', cursor: worker ? 'pointer' : 'default', color: 'var(--primary)', fontWeight: 600, fontSize: 'inherit', fontFamily: 'inherit', padding: 0, textDecoration: worker ? 'underline' : 'none', textDecorationStyle: 'solid', textDecorationColor: 'var(--primary)' }}
-                                                            title={worker ? (lang !== 'en' ? 'Klikni za pregled OZO zaduženja radnika' : 'Click to view worker PPE assignments') : ''}>{p.naziv || '—'}</button>
+                                                            title={worker ? (t('klikniZaPregledOzoZaduzenja')) : ''}>{p.naziv || '—'}</button>
                                                     </td>
                                                     <td>{formatDate(p.datumZaduzenja)}</td>
                                                     <td>{p.kolicina}</td>
