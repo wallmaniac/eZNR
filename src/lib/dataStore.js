@@ -406,6 +406,38 @@ export function isDataReady() {
 }
 
 /**
+ * Returns granular loading progress across all three tiers.
+ * Components can use this to decide whether to show skeletons.
+ */
+export function getLoadingProgress() {
+    const totalCompany = COMPANY_SCOPED.length;
+    const criticalDone = _isLoaded; // critical collections are done when _isLoaded
+    const priorityDone = PRIORITY_COLLECTIONS.every(c => _deferredLoaded.has(c));
+    const deferredDone = DEFERRED_COLLECTIONS.every(c => _deferredLoaded.has(c));
+    const loadedCount = CRITICAL_COLLECTIONS.length + 
+        PRIORITY_COLLECTIONS.filter(c => _deferredLoaded.has(c)).length +
+        DEFERRED_COLLECTIONS.filter(c => _deferredLoaded.has(c)).length;
+
+    return {
+        criticalDone,
+        priorityDone,
+        deferredDone,
+        fullyLoaded: criticalDone && priorityDone && deferredDone,
+        percent: totalCompany > 0 ? Math.round((loadedCount / totalCompany) * 100) : 0,
+        loadedCount,
+        totalCount: totalCompany,
+    };
+}
+
+/**
+ * Check if a specific collection is loaded and ready.
+ */
+export function isCollectionReady(colName) {
+    if (CRITICAL_COLLECTIONS.includes(colName)) return _isLoaded;
+    return _deferredLoaded.has(colName);
+}
+
+/**
  * Subscribe to data changes.
  */
 export function onDataChange(callback) {
@@ -896,7 +928,96 @@ export function seedFleetData() { }
 
 // ============================================================================
 // FIRESTORE WRITE OPERATIONS (background, non-blocking)
+// With offline write queue — queues operations when offline, auto-flushes on reconnect
 // ============================================================================
+
+const _OFFLINE_QUEUE_KEY = 'eznr_offline_queue';
+let _isFlushing = false;
+
+function _getOfflineQueue() {
+    try {
+        return JSON.parse(localStorage.getItem(_OFFLINE_QUEUE_KEY) || '[]');
+    } catch { return []; }
+}
+
+function _saveOfflineQueue(queue) {
+    localStorage.setItem(_OFFLINE_QUEUE_KEY, JSON.stringify(queue));
+}
+
+function _enqueueOfflineOp(op) {
+    const queue = _getOfflineQueue();
+    queue.push({ ...op, queuedAt: new Date().toISOString() });
+    _saveOfflineQueue(queue);
+    console.log(`[dataStore] 📴 Queued offline ${op.type}: ${op.colName}/${op.docId}`);
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('eznr:offline-queue-changed', { detail: { count: queue.length } }));
+    }
+}
+
+/**
+ * Flush all queued offline operations to Firestore.
+ * Called automatically when the browser comes back online.
+ */
+async function _flushOfflineQueue() {
+    if (_isFlushing) return;
+    const queue = _getOfflineQueue();
+    if (queue.length === 0) return;
+
+    _isFlushing = true;
+    console.log(`[dataStore] 🔄 Flushing ${queue.length} offline operations...`);
+
+    const failed = [];
+    for (const op of queue) {
+        try {
+            if (op.type === 'write') {
+                const ref = _getDocRef(op.colName, op.docId);
+                if (ref) {
+                    await setDoc(ref, op.data, { merge: true });
+                }
+            } else if (op.type === 'delete') {
+                const ref = _getDocRef(op.colName, op.docId);
+                if (ref) {
+                    await deleteDoc(ref);
+                }
+            }
+        } catch (err) {
+            console.warn(`[dataStore] ⚠️ Failed to flush ${op.type} ${op.colName}/${op.docId}:`, err.message);
+            failed.push(op);
+        }
+    }
+
+    _saveOfflineQueue(failed);
+    _isFlushing = false;
+
+    const flushed = queue.length - failed.length;
+    if (flushed > 0) {
+        console.log(`[dataStore] ✅ Flushed ${flushed} operations. ${failed.length} failed (will retry).`);
+    }
+
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('eznr:offline-queue-changed', { detail: { count: failed.length } }));
+    }
+}
+
+/**
+ * Get the number of pending offline operations.
+ */
+export function getOfflineQueueCount() {
+    return _getOfflineQueue().length;
+}
+
+// Auto-flush when coming back online
+if (typeof window !== 'undefined') {
+    window.addEventListener('online', () => {
+        console.log('[dataStore] 🌐 Back online — flushing offline queue...');
+        setTimeout(_flushOfflineQueue, 1000); // small delay to let connection stabilize
+    });
+
+    // Try flushing on page load if we have queued items
+    if (navigator.onLine) {
+        setTimeout(_flushOfflineQueue, 3000);
+    }
+}
 
 async function _firestoreWrite(colName, item) {
     const ref = _getDocRef(colName, item.id);
@@ -905,15 +1026,27 @@ async function _firestoreWrite(colName, item) {
         if (typeof window !== 'undefined') alert(`Neuspjelo spremanje (${colName}). Niste odabrali kompaniju!`);
         return;
     }
+
+    const { id, ...dataWithoutId } = item;
+    const clean = JSON.parse(JSON.stringify(dataWithoutId));
+
+    // If offline, queue the operation
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        _enqueueOfflineOp({ type: 'write', colName, docId: item.id, data: clean });
+        return;
+    }
+
     try {
-        const { id, ...dataWithoutId } = item;
-        // Sanitize: remove undefined values (Firestore rejects them)
-        const clean = JSON.parse(JSON.stringify(dataWithoutId));
         await setDoc(ref, clean, { merge: true });
     } catch (err) {
-        console.error(`[dataStore] ❌ Write failed ${colName}/${item.id}:`, err.message);
-        if (typeof window !== 'undefined') {
-            alert(`Sistemska greška: Promjene nisu spremljene na server! (${err.message})`);
+        // If write fails (possibly just went offline), queue it
+        if (err.code === 'unavailable' || err.code === 'failed-precondition' || !navigator.onLine) {
+            _enqueueOfflineOp({ type: 'write', colName, docId: item.id, data: clean });
+        } else {
+            console.error(`[dataStore] ❌ Write failed ${colName}/${item.id}:`, err.message);
+            if (typeof window !== 'undefined') {
+                alert(`Sistemska greška: Promjene nisu spremljene na server! (${err.message})`);
+            }
         }
     }
 }
@@ -921,9 +1054,21 @@ async function _firestoreWrite(colName, item) {
 async function _firestoreDelete(colName, docId) {
     const ref = _getDocRef(colName, docId);
     if (!ref) return;
+
+    // If offline, queue the operation
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+        _enqueueOfflineOp({ type: 'delete', colName, docId });
+        return;
+    }
+
     try {
         await deleteDoc(ref);
     } catch (err) {
-        console.error(`[dataStore] ❌ Delete failed ${colName}/${docId}:`, err.message);
+        if (err.code === 'unavailable' || err.code === 'failed-precondition' || !navigator.onLine) {
+            _enqueueOfflineOp({ type: 'delete', colName, docId });
+        } else {
+            console.error(`[dataStore] ❌ Delete failed ${colName}/${docId}:`, err.message);
+        }
     }
 }
+

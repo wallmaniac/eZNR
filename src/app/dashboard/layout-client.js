@@ -12,6 +12,7 @@ import MobileBottomNav from '@/components/mobile/MobileBottomNav';
 import OfflineIndicator from '@/components/mobile/OfflineIndicator';
 import GlobalLongPress from '@/components/mobile/GlobalLongPress';
 import GlobalSwipeNav from '@/components/mobile/GlobalSwipeNav';
+import { LoadingProgressBar } from '@/components/SkeletonUI';
 
 export default function DashboardLayout({ children }) {
     const { isAuthenticated, loading, activeCompanyId, switchCompany } = useAuth();
@@ -163,6 +164,9 @@ export default function DashboardLayout({ children }) {
         <div style={{ minHeight: '100dvh', background: 'var(--bg-page)' }}>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
 
+            {/* Data loading progress bar */}
+            <LoadingProgressBar />
+
             {/* Sidebar — on mobile it renders its own backdrop internally */}
             <Sidebar
                 collapsed={isMobile ? false : sidebarCollapsed}
@@ -198,8 +202,8 @@ export default function DashboardLayout({ children }) {
                 <MobileBottomNav onMenuOpen={handleMobileToggle} />
             )}
 
-            {/* Mobile offline indicator */}
-            {isMobile && <OfflineIndicator />}
+            {/* Offline indicator (all devices) */}
+            <OfflineIndicator />
 
             {/* Global long-press on table rows (mobile only) */}
             {isMobile && <GlobalLongPress />}

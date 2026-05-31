@@ -4123,3 +4123,155 @@ button.btn-primary-glow {
     padding: 8px 10px;
   }
 }
+
+/* ============================================================================
+   SKELETON UI — Loading shimmer animations
+   ============================================================================ */
+
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, 
+    rgba(0,0,0,0.04) 25%, 
+    rgba(0,0,0,0.08) 50%, 
+    rgba(0,0,0,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+  pointer-events: none;
+  user-select: none;
+}
+
+[data-theme="dark"] .skeleton {
+  background: linear-gradient(90deg, 
+    rgba(255,255,255,0.04) 25%, 
+    rgba(255,255,255,0.08) 50%, 
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* Text line skeleton */
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-text:last-child {
+  width: 60%;
+}
+
+/* Heading skeleton */
+.skeleton-heading {
+  height: 22px;
+  width: 45%;
+  margin-bottom: 16px;
+  border-radius: 4px;
+}
+
+/* Card skeleton */
+.skeleton-card {
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  min-height: 120px;
+}
+
+/* Stat card skeleton */
+.skeleton-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  min-height: 80px;
+}
+
+.skeleton-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-stat-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton-stat-value {
+  height: 24px;
+  width: 50px;
+  border-radius: 4px;
+}
+
+.skeleton-stat-label {
+  height: 12px;
+  width: 80px;
+  border-radius: 4px;
+}
+
+/* Table row skeleton */
+.skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.skeleton-row-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-row-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skeleton-row-line {
+  height: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-row-line:first-child {
+  width: 70%;
+}
+
+.skeleton-row-line:last-child {
+  width: 40%;
+}
+
+/* Circle skeleton */
+.skeleton-circle {
+  border-radius: 50%;
+}
+
+/* ── Data loading progress bar ── */
+.loading-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary), rgba(0, 205, 181, 0.6));
+  transition: width 0.4s ease;
+  z-index: 9999;
+  border-radius: 0 2px 2px 0;
+  box-shadow: 0 0 8px rgba(0, 191, 166, 0.4);
+}
+
+.loading-progress-bar.done {
+  opacity: 0;
+  transition: width 0.3s ease, opacity 0.5s ease 0.3s;
+}
