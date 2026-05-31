@@ -343,6 +343,20 @@ body {
   }
 }
 
+/* ── Calendar grid corner cell radius matching ── */
+.cal-grid > :first-child {
+  border-top-left-radius: calc(var(--radius-lg) - 1px) !important;
+}
+.cal-grid > :nth-child(7) {
+  border-top-right-radius: calc(var(--radius-lg) - 1px) !important;
+}
+.cal-grid > :nth-last-child(7) {
+  border-bottom-left-radius: calc(var(--radius-lg) - 1px) !important;
+}
+.cal-grid > :last-child {
+  border-bottom-right-radius: calc(var(--radius-lg) - 1px) !important;
+}
+
 /* ── Tab pills (inline-style tabs) ── */
 .tab-pill-inactive {
   background: white;
