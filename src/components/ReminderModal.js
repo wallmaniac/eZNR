@@ -1,4 +1,5 @@
 'use client';
+import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getSessionsForTraining } from '@/lib/firebaseSync';
 import { sendReminderEmail } from '@/lib/emailService';
@@ -129,7 +130,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                             }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-                                {t('ucitavanjeSesija')}
+                                {_t('ucitavanjeSesija', lang)}
                             </p>
                         </div>
                     )}
@@ -154,11 +155,11 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                 </div>
                                 <div style={statBox('#f59e0b')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{incomplete.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{t('ceka')}</div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{_t('ceka', lang)}</div>
                                 </div>
                                 <div style={statBox('#6366f1')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 800 }}>{sessions.length}</div>
-                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{t('ukupno')}</div>
+                                    <div style={{ fontSize: '0.72rem', fontWeight: 600, opacity: 0.8 }}>{_t('ukupno', lang)}</div>
                                 </div>
                             </div>
 
@@ -167,7 +168,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                 <>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                                         <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                            {t('nisuIspunili')}
+                                            {_t('nisuIspunili', lang)}
                                         </div>
                                         <button 
                                             type="button"
@@ -185,8 +186,8 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                             }}
                                         >
                                             {selectedTokens.size === incomplete.length 
-                                                ? (t('odznaciSve'))
-                                                : (t('oznaciSve'))}
+                                                ? (_t('odznaciSve', lang))
+                                                : (_t('oznaciSve', lang))}
                                         </button>
                                     </div>
                                     <div style={{
@@ -247,7 +248,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                                 animation: 'spin 0.8s linear infinite', margin: '0 auto 16px',
                             }} />
                             <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 8px' }}>
-                                {t('slanjePodsjetnika')}
+                                {_t('slanjePodsjetnika', lang)}
                             </p>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0 }}>
                                 {progress.current}/{progress.total}
@@ -272,17 +273,17 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                         <div style={{ textAlign: 'center', padding: '30px 0' }}>
                             <div style={{ fontSize: '3rem', marginBottom: 12 }}>{result.failed === 0 ? '✅' : '⚠️'}</div>
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text)', margin: '0 0 12px' }}>
-                                {t('podsjetniciPoslani')}
+                                {_t('podsjetniciPoslani', lang)}
                             </h3>
                             <div style={{ display: 'flex', gap: 16, justifyContent: 'center' }}>
                                 <div style={statBox('#22c55e')}>
                                     <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>{result.sent}</div>
-                                    <div style={{ fontSize: '0.72rem' }}>{t('poslano')}</div>
+                                    <div style={{ fontSize: '0.72rem' }}>{_t('poslano', lang)}</div>
                                 </div>
                                 {result.failed > 0 && (
                                     <div style={statBox('#ef4444')}>
                                         <div style={{ fontSize: '1.3rem', fontWeight: 700 }}>{result.failed}</div>
-                                        <div style={{ fontSize: '0.72rem' }}>{t('neuspjelo')}</div>
+                                        <div style={{ fontSize: '0.72rem' }}>{_t('neuspjelo', lang)}</div>
                                     </div>
                                 )}
                             </div>
@@ -308,11 +309,11 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     {!sending && !result && (
                         <>
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                {selectedTokens.size} {t('od')} {incomplete.length} {t('odabrano')}
+                                {selectedTokens.size} {_t('od', lang)} {incomplete.length} {_t('odabrano', lang)}
                             </span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={cancelBtn}>
-                                    {t('zatvori')}
+                                    {_t('zatvori', lang)}
                                 </button>
                                 {incomplete.length > 0 && (
                                     <button onClick={handleSendReminders} disabled={selectedTokens.size === 0} style={{...sendBtn, opacity: selectedTokens.size === 0 ? 0.5 : 1, cursor: selectedTokens.size === 0 ? 'not-allowed' : 'pointer'}}>
@@ -324,7 +325,7 @@ export default function ReminderModal({ isOpen, onClose, questionnaire, isTraini
                     )}
                     {result && (
                         <button onClick={onClose} style={{ ...sendBtn, marginLeft: 'auto' }}>
-                            {t('zatvori')}
+                            {_t('zatvori', lang)}
                         </button>
                     )}
                 </div>

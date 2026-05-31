@@ -1,4 +1,5 @@
 'use client';
+import { t as _t } from '@/i18n/translations';
 import { useMemo } from 'react';
 import PrintableAnnualReport from './PrintableAnnualReport';
 
@@ -147,9 +148,9 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
     }, [certs]);
 
     const certSegments = [
-        { label: t('vazeca'), value: certStats.valid, color: 'var(--success)' },
-        { label: t('istice30d'), value: certStats.expiringSoon, color: 'var(--warning)' },
-        { label: t('istekla'), value: certStats.expired, color: 'var(--danger)' },
+        { label: _t('vazeca', lang), value: certStats.valid, color: 'var(--success)' },
+        { label: _t('istice30d', lang), value: certStats.expiringSoon, color: 'var(--warning)' },
+        { label: _t('istekla', lang), value: certStats.expired, color: 'var(--danger)' },
     ];
 
     // ── Injuries per Month (last 12 months) ─────────────────────────────────
@@ -178,11 +179,11 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
         const items = (riskItems || []).filter(ri => ri.procjenaId && activeIds.has(ri.procjenaId) && ri.rizik > 0);
 
         const buckets = [
-            { label: t('neznatan'), min: 1, max: 5, color: '#4caf50' },
-            { label: t('dopustiv'), min: 6, max: 10, color: '#ffc107' },
-            { label: t('umjeren'), min: 11, max: 15, color: '#ff9800' },
-            { label: t('znatan'), min: 16, max: 20, color: '#f44336' },
-            { label: t('nedopustiv'), min: 21, max: 25, color: '#b71c1c' },
+            { label: _t('neznatan', lang), min: 1, max: 5, color: '#4caf50' },
+            { label: _t('dopustiv', lang), min: 6, max: 10, color: '#ffc107' },
+            { label: _t('umjeren', lang), min: 11, max: 15, color: '#ff9800' },
+            { label: _t('znatan', lang), min: 16, max: 20, color: '#f44336' },
+            { label: _t('nedopustiv', lang), min: 21, max: 25, color: '#b71c1c' },
         ];
 
         return buckets.map(b => ({
@@ -224,7 +225,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             const element = document.getElementById('print-document-container');
             const opt = {
                 margin: 0,
-                filename: t('godisnjiizvjestajznrpdf'),
+                filename: _t('godisnjiizvjestajznrpdf', lang),
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
@@ -233,11 +234,11 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             await html2pdf().from(element).set(opt).save();
 
             if (window.eznrToast) {
-                window.eznrToast(t('izvjestajUspjesnoPreuzet'), 'success');
+                window.eznrToast(_t('izvjestajUspjesnoPreuzet', lang), 'success');
             }
         } catch (err) {
             console.error('PDF export failed', err);
-            if (window.eznrToast) window.eznrToast(t('greskaPriIzradiPdfa'), 'error');
+            if (window.eznrToast) window.eznrToast(_t('greskaPriIzradiPdfa', lang), 'error');
         }
     };
 
@@ -246,7 +247,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
             {/* Action Bar */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    {t('automatskaAnalitikaIzStvarnihPodataka')}
+                    {_t('automatskaAnalitikaIzStvarnihPodataka', lang)}
                 </span>
                 <button 
                     onClick={handleDownloadPDF}
@@ -257,23 +258,23 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         display: 'flex', alignItems: 'center', gap: 6
                     }}
                 >
-                    📑 {t('godisnjiIzvjestajPdf')}
+                    📑 {_t('godisnjiIzvjestajPdf', lang)}
                 </button>
             </div>
 
             <div id="analytics-dashboard-export" style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '10px 0' }}>
                 {/* PDF Header (only visible strictly during html2canvas, or just visually clean) */}
                 <h2 style={{ fontSize: '1.2rem', marginBottom: 4, display: 'none' }} className="pdf-only-header">
-                    {t('godisnjiIzvjestajZastiteNaRadu')}
+                    {_t('godisnjiIzvjestajZastiteNaRadu', lang)}
                 </h2>
 
                 {/* Mini stats row */}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <MiniStat icon="👷" label={t('aktivniRadnici')} value={activeWorkerCount} color="var(--primary)" />
-                    <MiniStat icon="⚙️" label={t('usklaenostOpreme')} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
-                    <MiniStat icon="⚠️" label={t('prosjRizik')} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
+                    <MiniStat icon="👷" label={_t('aktivniRadnici', lang)} value={activeWorkerCount} color="var(--primary)" />
+                    <MiniStat icon="⚙️" label={_t('usklaenostOpreme', lang)} value={equipCompliance} suffix="%" color={equipCompliance >= 80 ? 'var(--success)' : 'var(--danger)'} />
+                    <MiniStat icon="⚠️" label={_t('prosjRizik', lang)} value={avgRisk} color={avgRisk <= 10 ? 'var(--success)' : avgRisk <= 15 ? 'var(--warning)' : 'var(--danger)'} />
                     {medOverdue > 0 && (
-                        <MiniStat icon="🩺" label={t('prekoraceniPregledi')} value={medOverdue} color="var(--danger)" />
+                        <MiniStat icon="🩺" label={_t('prekoraceniPregledi', lang)} value={medOverdue} color="var(--danger)" />
                     )}
                 </div>
 
@@ -288,8 +289,8 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         <div className="card" style={{ padding: '20px 16px', display: 'flex', justifyContent: 'center' }}>
                             <DonutChart
                                 segments={certSegments}
-                                label={t('statusUvjerenja')}
-                                subLabel={t('ukupno1')}
+                                label={_t('statusUvjerenja', lang)}
+                                subLabel={_t('ukupno1', lang)}
                             />
                         </div>
                     )}
@@ -298,7 +299,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                     <div className="card" style={{ padding: '20px 16px' }}>
                         <BarChart
                             data={injuryMonths}
-                            title={t('povredeIBolesti12Mj')}
+                            title={_t('povredeIBolesti12Mj', lang)}
                             barColor={(d) => d.value >= 3 ? 'var(--danger)' : d.value >= 1 ? 'var(--warning)' : 'var(--border)'}
                             height={150}
                         />
@@ -309,7 +310,7 @@ export default function AnalyticsWidgets({ workers, certs, equipment, injuries, 
                         <div className="card" style={{ padding: '20px 16px' }}>
                             <BarChart
                                 data={riskDistribution}
-                                title={t('distribucijaRizika')}
+                                title={_t('distribucijaRizika', lang)}
                                 barColor={(d) => d.color}
                                 height={150}
                             />

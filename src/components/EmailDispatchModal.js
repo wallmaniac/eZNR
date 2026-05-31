@@ -1,4 +1,5 @@
 'use client';
+import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import DateInput from '@/components/DateInput';
 import { getAll, COLLECTIONS } from '@/lib/dataStore';
@@ -210,7 +211,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                 }}>
                     <div>
                         <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700, color: 'var(--text, #e2e8f0)' }}>
-                            📧 {t('posaljiUpitnik')}
+                            📧 {_t('posaljiUpitnik', lang)}
                         </h2>
                         <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)' }}>
                             {questionnaire?.naziv || ''}
@@ -231,18 +232,18 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Worker selection */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    👥 {t('odaberiteRadnike')}
+                                    👥 {_t('odaberiteRadnike', lang)}
                                 </label>
                                 <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
                                     <input
                                         type="text"
-                                        placeholder={t('pretraziRadnike')}
+                                        placeholder={_t('pretraziRadnike', lang)}
                                         value={searchQuery}
                                         onChange={e => setSearchQuery(e.target.value)}
                                         style={searchInputStyle}
                                     />
                                     <button onClick={selectAll} style={selectAllBtnStyle}>
-                                        {t('odaberiSve')}
+                                        {_t('odaberiSve', lang)}
                                     </button>
                                 </div>
                                 <div style={{
@@ -274,7 +275,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                                     {w.ime} {w.prezime}
                                                 </div>
                                                 <div style={{ fontSize: '0.78rem', color: w.email ? 'var(--text-muted, #94a3b8)' : '#ef4444' }}>
-                                                    {w.email || (t('nemaEmail'))}
+                                                    {w.email || (_t('nemaEmail', lang))}
                                                 </div>
                                             </div>
                                         </label>
@@ -285,12 +286,12 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Manual emails */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    ✉️ {t('dodatniEmailoviRucniUnos')}
+                                    ✉️ {_t('dodatniEmailoviRucniUnos', lang)}
                                 </label>
                                 <textarea
                                     value={manualEmails}
                                     onChange={e => setManualEmails(e.target.value)}
-                                    placeholder={t('unesiteEmailAdreseOdvojeneZarezom')}
+                                    placeholder={_t('unesiteEmailAdreseOdvojeneZarezom', lang)}
                                     rows={3}
                                     style={textareaStyle}
                                 />
@@ -299,7 +300,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Deadline */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    📅 {t('rokZaIspunjavanjeOpcionalno')}
+                                    📅 {_t('rokZaIspunjavanjeOpcionalno', lang)}
                                 </label>
                                 <DateInput
                                     value={deadline}
@@ -310,17 +311,17 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             {/* Reply-To email */}
                             <div style={{ marginBottom: 20 }}>
                                 <label style={labelStyle}>
-                                    ↩️ {t('vasEmailReplytoPrimaociVide')}
+                                    ↩️ {_t('vasEmailReplytoPrimaociVide', lang)}
                                 </label>
                                 <input
                                     type="email"
                                     value={replyToEmail}
                                     onChange={e => setReplyToEmail(e.target.value)}
-                                    placeholder={t('nprMarkomaricfirmaba')}
+                                    placeholder={_t('nprMarkomaricfirmaba', lang)}
                                     style={searchInputStyle}
                                 />
                                 <p style={{ margin: '4px 0 0', fontSize: '0.75rem', color: 'var(--text-muted, #94a3b8)' }}>
-                                    {t('emailCeBitiPoslanS')}
+                                    {_t('emailCeBitiPoslanS', lang)}
                                 </p>
                             </div>
                         </>
@@ -336,7 +337,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                             }} />
                             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                             <p style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text, #e2e8f0)', margin: '0 0 8px' }}>
-                                {t('slanjeUTijeku')}
+                                {_t('slanjeUTijeku', lang)}
                             </p>
                             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted, #94a3b8)', margin: 0 }}>
                                 {progress.current}/{progress.total} — {progress.email}
@@ -362,17 +363,17 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                 {result.failed === 0 ? '✅' : '⚠️'}
                             </div>
                             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text, #e2e8f0)', margin: '0 0 12px' }}>
-                                {t('slanjeZavrseno')}
+                                {_t('slanjeZavrseno', lang)}
                             </h3>
                             <div style={{ display: 'flex', gap: 20, justifyContent: 'center', marginBottom: 16 }}>
                                 <div style={statBoxStyle('#10b981')}>
                                     <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{result.sent}</div>
-                                    <div style={{ fontSize: '0.75rem' }}>{t('poslano')}</div>
+                                    <div style={{ fontSize: '0.75rem' }}>{_t('poslano', lang)}</div>
                                 </div>
                                 {result.failed > 0 && (
                                     <div style={statBoxStyle('#ef4444')}>
                                         <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{result.failed}</div>
-                                        <div style={{ fontSize: '0.75rem' }}>{t('neuspjelo')}</div>
+                                        <div style={{ fontSize: '0.75rem' }}>{_t('neuspjelo', lang)}</div>
                                     </div>
                                 )}
                             </div>
@@ -382,7 +383,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                                     borderRadius: 10, padding: 14, marginTop: 12,
                                 }}>
                                     <p style={{ fontWeight: 600, fontSize: '0.85rem', color: '#ef4444', margin: '0 0 8px' }}>
-                                        {t('greske')}
+                                        {_t('greske', lang)}
                                     </p>
                                     {result.errors.map((e, i) => (
                                         <p key={i} style={{ fontSize: '0.8rem', color: '#94a3b8', margin: '2px 0' }}>
@@ -404,11 +405,11 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                     {step === 'select' && (
                         <>
                             <span style={{ fontSize: '0.82rem', color: 'var(--text-muted, #94a3b8)' }}>
-                                {totalRecipients} {t('primatelja')}
+                                {totalRecipients} {_t('primatelja', lang)}
                             </span>
                             <div style={{ display: 'flex', gap: 10 }}>
                                 <button onClick={onClose} style={cancelBtnStyle}>
-                                    {t('odustani')}
+                                    {_t('odustani', lang)}
                                 </button>
                                 <button
                                     onClick={handleSend}
@@ -426,7 +427,7 @@ export default function EmailDispatchModal({ isOpen, onClose, questionnaire, lan
                     )}
                     {step === 'done' && (
                         <button onClick={onClose} style={{ ...sendBtnStyle, marginLeft: 'auto' }}>
-                            {t('zatvori')}
+                            {_t('zatvori', lang)}
                         </button>
                     )}
                 </div>

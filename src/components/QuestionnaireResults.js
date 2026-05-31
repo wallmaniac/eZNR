@@ -1,4 +1,5 @@
 'use client';
+import { t as _t } from '@/i18n/translations';
 import { useState, useEffect, useCallback } from 'react';
 import { getSessionsForQuestionnaire, getQuestionnaireResponse } from '@/lib/firebaseSync';
 import { fmtDateTime } from '@/lib/dateUtils';
@@ -83,7 +84,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                 <button className="btn btn-ghost" onClick={onBack}>←</button>
                 <h1 style={{ margin: 0, flex: 1 }}>
-                    📊 {t('rezultatiUpitnika')}
+                    📊 {_t('rezultatiUpitnika', lang)}
                 </h1>
                 {onReminderClick && (
                     <button 
@@ -91,7 +92,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                         onClick={onReminderClick}
                         style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', fontSize: '0.85rem' }}
                     >
-                        📩 {t('posaljiPodsjetnik')}
+                        📩 {_t('posaljiPodsjetnik', lang)}
                     </button>
                 )}
             </div>
@@ -102,7 +103,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
             {/* Stats cards */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 24 }}>
                 {[
-                    { key: 'total', label: t('ukupno'), value: stats.total, color: '#8b5cf6', icon: '📋', bg: 'rgba(139,92,246,0.1)' },
+                    { key: 'total', label: _t('ukupno', lang), value: stats.total, color: '#8b5cf6', icon: '📋', bg: 'rgba(139,92,246,0.1)' },
                     { key: 'sent', ...STATUS_CONFIG.sent, value: stats.sent, label: lang !== 'en' ? STATUS_CONFIG.sent.label : STATUS_CONFIG.sent.labelEn },
                     { key: 'opened', ...STATUS_CONFIG.opened, value: stats.opened, label: lang !== 'en' ? STATUS_CONFIG.opened.label : STATUS_CONFIG.opened.labelEn },
                     { key: 'completed', ...STATUS_CONFIG.completed, value: stats.completed, label: lang !== 'en' ? STATUS_CONFIG.completed.label : STATUS_CONFIG.completed.labelEn },
@@ -124,10 +125,10 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                 <div className="card-body">
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                         <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700 }}>
-                            {t('poslaneAnkete')}
+                            {_t('poslaneAnkete', lang)}
                         </h3>
                         <button className="btn btn-ghost btn-sm" onClick={loadSessions} style={{ fontSize: '0.8rem' }}>
-                            🔄 {t('osvjezi')}
+                            🔄 {_t('osvjezi', lang)}
                         </button>
                     </div>
 
@@ -157,20 +158,20 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                             color: 'var(--text-muted)', fontSize: '0.9rem',
                         }}>
                             <div style={{ fontSize: '2.5rem', marginBottom: 12 }}>📭</div>
-                            {t('nemaPoslanihAnketaZaOvaj')}
+                            {_t('nemaPoslanihAnketaZaOvaj', lang)}
                         </div>
                     ) : (
                         <div className="data-table-wrapper">
                             <table className="data-table">
                                 <thead>
                                     <tr>
-                                        <th>{t('primatelj')}</th>
-                                        <th>{t('email')}</th>
-                                        <th>{t('status')}</th>
-                                        <th>{t('ocjena')}</th>
-                                        <th>{t('poslano')}</th>
-                                        <th>{t('zavrseno')}</th>
-                                        <th>{t('akcije')}</th>
+                                        <th>{_t('primatelj', lang)}</th>
+                                        <th>{_t('email', lang)}</th>
+                                        <th>{_t('status', lang)}</th>
+                                        <th>{_t('ocjena', lang)}</th>
+                                        <th>{_t('poslano', lang)}</th>
+                                        <th>{_t('zavrseno', lang)}</th>
+                                        <th>{_t('akcije', lang)}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -222,7 +223,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                                                             onClick={() => viewResponse(s)}
                                                             style={{ fontSize: '0.78rem' }}
                                                         >
-                                                            👁️ {t('odgovori')}
+                                                            👁️ {_t('odgovori', lang)}
                                                         </button>
                                                     )}
                                                 </td>
@@ -258,7 +259,7 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                             borderBottom: '1px solid var(--border-light)',
                         }}>
                             <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
-                                📝 {t('odgovori')} — {selectedSession.recipientName || selectedSession.recipientEmail}
+                                📝 {_t('odgovori', lang)} — {selectedSession.recipientName || selectedSession.recipientEmail}
                             </h3>
                             <button onClick={() => { setSelectedSession(null); setResponseData(null); }} style={{
                                 background: 'none', border: 'none', fontSize: '1.2rem',
@@ -274,11 +275,11 @@ export default function QuestionnaireResults({ questionnaire, onBack, onReminder
                                 </div>
                             ) : !responseData ? (
                                 <div style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
-                                    {t('nemaOdgovora1')}
+                                    {_t('nemaOdgovora1', lang)}
                                 </div>
                             ) : (<div>
                                 <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: 16 }}>
-                                    {t('predano')}: {fmtDateTime(responseData.submittedAt) || '—'}
+                                    {_t('predano', lang)}: {fmtDateTime(responseData.submittedAt) || '—'}
                                 </div>
                                 {(() => {
                                     // Get ordered questions from session surveyJson

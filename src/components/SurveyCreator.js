@@ -1,4 +1,5 @@
 'use client';
+import { t as _t } from '@/i18n/translations';
 import { useState, useCallback, useEffect } from 'react';
 
 /* ═══════════════════════════════════════════════════════
@@ -171,10 +172,10 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
             {/* Tabs */}
             <div style={{ display: 'flex', borderBottom: '2px solid var(--border-light)', padding: '0 16px' }}>
                 <button style={tabSt('designer')} onClick={() => setActiveTab('designer')}>
-                    📝 {t('ureivac')}
+                    📝 {_t('ureivac', lang)}
                 </button>
                 <button style={tabSt('preview')} onClick={() => setActiveTab('preview')}>
-                    ▶ {t('pregled1')}
+                    ▶ {_t('pregled1', lang)}
                 </button>
                 <button style={tabSt('json')} onClick={() => setActiveTab('json')}>
                     {'{ }'} JSON
@@ -187,7 +188,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                     {/* LEFT: Toolbox */}
                     <div style={{ borderRight: '1px solid var(--border-light)', padding: 12, overflowY: 'auto', maxHeight: 600 }}>
                         <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
-                            {t('alatnaTraka')}
+                            {_t('alatnaTraka', lang)}
                         </div>
                         {QUESTION_TYPES.map(qt => (
                             <button key={qt.type} onClick={() => addQuestion(qt.type)} style={{
@@ -212,7 +213,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300, flexDirection: 'column', gap: 12, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '3rem', opacity: 0.3 }}>📝</div>
                                 <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                                    {t('klikniteNaPitanjeIzAlatne')}
+                                    {_t('klikniteNaPitanjeIzAlatne', lang)}
                                 </div>
                             </div>
                         ) : questions.map((q, idx) => (
@@ -229,7 +230,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                     <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>{getTypeLabel(q.type)}</span>
                                     {q.required && <span style={{ fontSize: '0.7rem', background: 'var(--danger)', color: '#fff', padding: '1px 6px', borderRadius: 10 }}>*</span>}
                                     {GRADEABLE_TYPES.includes(q.type) && q.correctAnswer != null && q.correctAnswer !== '' && (
-                                        <span title={t('tacanOdgovorPostavljen')}
+                                        <span title={_t('tacanOdgovorPostavljen', lang)}
                                             style={{ fontSize: '0.7rem', background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '1px 6px', borderRadius: 10, fontWeight: 700 }}>
                                             ✓
                                         </span>
@@ -242,7 +243,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                     </div>
                                 </div>
                                 <div style={{ fontWeight: 600, fontSize: '0.92rem', color: q.title ? 'var(--text)' : 'var(--text-muted)' }}>
-                                    {q.title || (t('unesiteNaslovPitanja'))}
+                                    {q.title || (_t('unesiteNaslovPitanja', lang))}
                                 </div>
                                 {q.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 4 }}>{q.description}</div>}
                                 {q.imageUrl && <img src={q.imageUrl} alt="" style={{ maxWidth: '100%', maxHeight: 80, borderRadius: 6, marginTop: 6, objectFit: 'contain', border: '1px solid var(--border-light)' }} />}
@@ -267,8 +268,8 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                 )}
                                 {q.type === 'boolean' && (
                                     <div style={{ marginTop: 8, display: 'flex', gap: 10, fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                                        <span>○ {t('da')}</span>
-                                        <span>○ {t('ne')}</span>
+                                        <span>○ {_t('da', lang)}</span>
+                                        <span>○ {_t('ne', lang)}</span>
                                     </div>
                                 )}
                             </div>
@@ -280,42 +281,42 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                         {selectedQuestion ? (
                             <>
                                 <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-                                    {t('svojstvaPitanja')}
+                                    {_t('svojstvaPitanja', lang)}
                                 </div>
 
                                 <div style={{ marginBottom: 10 }}>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
-                                        {t('naslov')}
+                                        {_t('naslov', lang)}
                                     </div>
                                     <input className="form-input" value={selectedQuestion.title}
                                         onChange={e => updateQuestion(selectedId, 'title', e.target.value)}
-                                        placeholder={t('naslovPitanja')} />
+                                        placeholder={_t('naslovPitanja', lang)} />
                                 </div>
 
                                 <div style={{ marginBottom: 10 }}>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
-                                        {t('opis')}
+                                        {_t('opis', lang)}
                                     </div>
                                     <input className="form-input" value={selectedQuestion.description}
                                         onChange={e => updateQuestion(selectedId, 'description', e.target.value)}
-                                        placeholder={t('opisOpcionalno1')} />
+                                        placeholder={_t('opisOpcionalno1', lang)} />
                                 </div>
 
                                 <div style={{ marginBottom: 10 }}>
                                     <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: '0.85rem' }}>
                                         <input type="checkbox" checked={selectedQuestion.required}
                                             onChange={e => updateQuestion(selectedId, 'required', e.target.checked)} />
-                                        {t('obavezno')}
+                                        {_t('obavezno', lang)}
                                     </label>
                                 </div>
 
                                 <div style={{ marginBottom: 10 }}>
                                     <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
-                                        🖼️ {t('slikaUrl')}
+                                        🖼️ {_t('slikaUrl', lang)}
                                     </div>
                                     <input className="form-input" value={selectedQuestion.imageUrl || ''}
                                         onChange={e => updateQuestion(selectedId, 'imageUrl', e.target.value || null)}
-                                        placeholder={t('httpsIliOstavitePrazno')}
+                                        placeholder={_t('httpsIliOstavitePrazno', lang)}
                                         style={{ fontSize: '0.82rem' }} />
                                     {selectedQuestion.imageUrl && (
                                         <img src={selectedQuestion.imageUrl} alt="" style={{
@@ -337,7 +338,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                 {selectedQuestion.type === 'rating' && (
                                     <div style={{ marginBottom: 10 }}>
                                         <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 4 }}>
-                                            {t('maxOcjena')}
+                                            {_t('maxOcjena', lang)}
                                         </div>
                                         <input className="form-input" type="number" min={2} max={10}
                                             value={selectedQuestion.ratingMax || 5}
@@ -358,7 +359,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                 {(selectedQuestion.type === 'radio' || selectedQuestion.type === 'checkbox' || selectedQuestion.type === 'dropdown') && (
                                     <div style={{ marginBottom: 10 }}>
                                         <div style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6 }}>
-                                            {t('opcije')}
+                                            {_t('opcije', lang)}
                                         </div>
                                         {(selectedQuestion.choices || []).map((choice, ci) => (
                                             <div key={ci} style={{ display: 'flex', gap: 4, marginBottom: 4, alignItems: 'center' }}>
@@ -371,7 +372,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                         ))}
                                         <button onClick={() => addChoice(selectedId)}
                                             style={{ fontSize: '0.78rem', color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: '4px 0' }}>
-                                            + {t('dodajOpciju')}
+                                            + {_t('dodajOpciju', lang)}
                                         </button>
                                     </div>
                                 )}
@@ -386,7 +387,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                         borderRadius: 8,
                                     }}>
                                         <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#10b981', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                            ✅ {t('tacanOdgovor')}
+                                            ✅ {_t('tacanOdgovor', lang)}
                                         </div>
 
                                         {/* radio / dropdown — single correct answer */}
@@ -396,7 +397,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                                 onChange={e => updateQuestion(selectedId, 'correctAnswer', e.target.value || null)}
                                                 style={{ fontSize: '0.82rem' }}
                                             >
-                                                <option value="">{t('nijePostavljenoNeOcjenjujeSe')}</option>
+                                                <option value="">{_t('nijePostavljenoNeOcjenjujeSe', lang)}</option>
                                                 {(selectedQuestion.choices || []).map((c, ci) => (
                                                     <option key={ci} value={c}>{c}</option>
                                                 ))}
@@ -407,7 +408,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                         {selectedQuestion.type === 'checkbox' && (
                                             <div>
                                                 <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                                                    {t('odaberiteSveTacneOdgovore')}
+                                                    {_t('odaberiteSveTacneOdgovore', lang)}
                                                 </div>
                                                 {(selectedQuestion.choices || []).map((c, ci) => {
                                                     const currentCorrect = Array.isArray(selectedQuestion.correctAnswer) ? selectedQuestion.correctAnswer : [];
@@ -436,27 +437,27 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                                 onChange={e => updateQuestion(selectedId, 'correctAnswer', e.target.value === '' ? null : e.target.value)}
                                                 style={{ fontSize: '0.82rem' }}
                                             >
-                                                <option value="">{t('nijePostavljeno')}</option>
+                                                <option value="">{_t('nijePostavljeno', lang)}</option>
                                                 <option value="Da">✅ Da</option>
                                                 <option value="Ne">❌ Ne</option>
                                             </select>
                                         )}
 
                                         <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: 6 }}>
-                                            {t('pitanjaBezTacnogOdgovoraNe')}
+                                            {_t('pitanjaBezTacnogOdgovoraNe', lang)}
                                         </div>
                                     </div>
                                 )}
 
                                 <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 16, borderTop: '1px solid var(--border-light)', paddingTop: 8 }}>
-                                    {t('tip')}: {getTypeLabel(selectedQuestion.type)} · ID: {selectedQuestion.id}
+                                    {_t('tip', lang)}: {getTypeLabel(selectedQuestion.type)} · ID: {selectedQuestion.id}
                                 </div>
                             </>
                         ) : (
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200, flexDirection: 'column', gap: 8, color: 'var(--text-muted)' }}>
                                 <div style={{ fontSize: '1.5rem', opacity: 0.3 }}>👈</div>
                                 <div style={{ fontSize: '0.82rem', textAlign: 'center' }}>
-                                    {t('odaberitePitanjeZaUreivanje')}
+                                    {_t('odaberitePitanjeZaUreivanje', lang)}
                                 </div>
                             </div>
                         )}
@@ -469,7 +470,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                 <div style={{ padding: 24, maxWidth: 700, margin: '0 auto' }}>
                     {questions.length === 0 ? (
                         <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
-                            {t('nemaPitanjaZaPregledDodajte')}
+                            {_t('nemaPitanjaZaPregledDodajte', lang)}
                         </div>
                     ) : questions.map((q, idx) => (
                         <div key={q.id} style={{ marginBottom: 24 }}>
@@ -482,7 +483,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                             ) : (
                                 <>
                                     <div style={{ fontWeight: 600, marginBottom: 6, fontSize: '0.92rem' }}>
-                                        {idx + 1}. {q.title || (t('bezNaslova'))}
+                                        {idx + 1}. {q.title || (_t('bezNaslova', lang))}
                                         {q.required && <span style={{ color: 'var(--danger)', marginLeft: 4 }}>*</span>}
                                     </div>
                                     {q.description && <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: 8 }}>{q.description}</div>}
@@ -504,7 +505,7 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                     ))}
                                     {q.type === 'dropdown' && (
                                         <select className="form-select" disabled>
-                                            <option>{t('odaberite')}</option>
+                                            <option>{_t('odaberite', lang)}</option>
                                             {(q.choices || []).map((c, ci) => <option key={ci}>{c}</option>)}
                                         </select>
                                     )}
@@ -518,10 +519,10 @@ export default function QuestionnaireBuilder({ json, onJsonChange, lang = 'bs' }
                                     {q.type === 'boolean' && (
                                         <div style={{ display: 'flex', gap: 16 }}>
                                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                                                <input type="radio" name={q.id} disabled /> {t('da')}
+                                                <input type="radio" name={q.id} disabled /> {_t('da', lang)}
                                             </label>
                                             <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-                                                <input type="radio" name={q.id} disabled /> {t('ne')}
+                                                <input type="radio" name={q.id} disabled /> {_t('ne', lang)}
                                             </label>
                                         </div>
                                     )}
