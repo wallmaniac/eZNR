@@ -1022,7 +1022,8 @@ export default function DashboardPage() {
                                         style={{
                                             padding: '6px 8px', minHeight: 80, minWidth: 0,
                                             background: isToday ? 'rgba(0,191,166,0.06)' : '',
-                                            border: isToday ? '1.5px solid rgba(0,191,166,0.35)' : '',
+                                            border: isToday ? '1.5px solid var(--primary)' : '',
+                                            borderRadius: isToday ? 8 : '',
                                             cursor: 'pointer',
                                             WebkitTapHighlightColor: 'transparent',
                                         }}
