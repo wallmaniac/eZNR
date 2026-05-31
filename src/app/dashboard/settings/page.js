@@ -816,6 +816,7 @@ export default function SettingsPage() {
                   }
                 }}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--primary)', fontWeight: 600, fontSize: '0.8rem' }}
+                title={lang !== 'en' ? 'Pokreće interaktivni čarobnjak koji vas vodi kroz postavljanje firme korak po korak — podaci, logo, branding, radnici, uvjerenja i više.' : 'Launches the interactive setup wizard that guides you step-by-step through company setup — data, logo, branding, workers, certificates and more.'}
               >
                 🚀 {lang !== 'en' ? 'Pokreni čarobnjak' : 'Start Setup Wizard'}
               </button>
