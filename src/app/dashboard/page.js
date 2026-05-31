@@ -1012,8 +1012,6 @@ export default function DashboardPage() {
                                         className={`cal-cell${isToday ? ' cal-today' : ''}`}
                                         style={{
                                             padding: '6px 8px', minHeight: 80, minWidth: 0,
-                                            background: isToday ? 'rgba(0,191,166,0.06)' : '',
-                                            boxShadow: isToday ? 'inset 0 0 0 2px var(--primary)' : '',
                                             cursor: 'pointer',
                                             WebkitTapHighlightColor: 'transparent',
                                         }}
