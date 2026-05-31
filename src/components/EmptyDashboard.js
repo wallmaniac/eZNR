@@ -1,13 +1,14 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDialog } from '@/hooks/useDialog';
 import {
-    getAll, getById, create, createMass, update, COLLECTIONS
+    getAll, getById, create, createMass, update, COLLECTIONS, getRawAll
 } from '@/lib/dataStore';
+import { applyUIBranding } from '@/lib/brandingService';
 import * as XLSX from 'xlsx';
 
 // -- Date parser --------------------------------------------------------------
@@ -73,6 +74,15 @@ function parseSheet(wb, sheetName) {
         });
 }
 
+const BRAND_COLORS = [
+    { name: 'Teal (Zadano)', value: '#00BFA6' },
+    { name: 'Indigo', value: '#6366F1' },
+    { name: 'Plava', value: '#2196F3' },
+    { name: 'Zelena', value: '#22C55E' },
+    { name: 'Narančasta', value: '#F59E0B' },
+    { name: 'Crvena', value: '#EF4444' }
+];
+
 export default function EmptyDashboard({ onComplete }) {
     const router = useRouter();
     const { lang } = useLanguage();
@@ -84,32 +94,39 @@ export default function EmptyDashboard({ onComplete }) {
     const [maxStep, setMaxStep] = useState(0);
     const [isMobile, setIsMobile] = useState(false);
 
-    // Form States
+    // Step 1: Company Profile Form
     const [companyData, setCompanyData] = useState({
         naziv: '', skraceniNaziv: '', oib: '', adresa: '', mjesto: '',
         postanskiBroj: '', telefon: '', email: '', direktor: '', strucnoLice: '', logo: '', country: 'BA'
     });
     const [logoError, setLogoError] = useState('');
+    const [accentColor, setAccentColor] = useState('#00BFA6');
+    const [assignedUserIds, setAssignedUserIds] = useState([]);
 
-    // Workers state
-    const [workerTab, setWorkerTab] = useState('manual'); // manual | excel
+    // Step 2: Combined Workers & Documents
+    const [onboardTab, setOnboardTab] = useState('excel'); // excel | manual
+    
+    // Manual inputs
     const [manualWorker, setManualWorker] = useState({
         ime: '', prezime: '', jmbg: '', oib: '', radnoMjesto: '', datumRodenja: ''
     });
+    const [manualDoc, setManualDoc] = useState({
+        workerId: '', docType: 'cert', naziv: '', oznaka: '', datum: '', vrijediDo: '', sposobnost: 'Sposoban'
+    });
+
+    // Loaded Lists
     const [addedWorkers, setAddedWorkers] = useState([]);
-    
-    // Excel Import States
+    const [addedDocs, setAddedDocs] = useState([]);
+    const [listTab, setListTab] = useState('workers'); // workers | docs
+
+    // Excel States
     const [excelFile, setExcelFile] = useState(null);
     const [excelPreview, setExcelPreview] = useState(null);
     const [dragOver, setDragOver] = useState(false);
-    const [importSuccessMsg, setImportSuccessMsg] = useState('');
+    const [importMsg, setImportMsg] = useState('');
+    
     const fileInputRef = useRef(null);
-
-    // Cert state
-    const [certData, setCertData] = useState({
-        workerId: '', docType: 'cert', naziv: '', oznaka: '', datum: '', vrijediDo: '', sposobnost: 'Sposoban'
-    });
-    const [addedCerts, setAddedCerts] = useState([]);
+    const logoInputRef = useRef(null);
 
     // Detect mobile
     useEffect(() => {
@@ -119,7 +136,15 @@ export default function EmptyDashboard({ onComplete }) {
         return () => window.removeEventListener('resize', check);
     }, []);
 
-    // Load initial company details
+    // Get list of officers / admins to assign
+    const potentialUsers = useMemo(() => {
+        if (typeof window === 'undefined') return [];
+        return getRawAll(COLLECTIONS.USERS).filter(
+            u => (u.role === 'officer' || u.role === 'admin' || u.role === 'companyadmin') && u.aktivan !== false
+        );
+    }, []);
+
+    // Load initial company details and assignments
     useEffect(() => {
         if (activeCompanyId) {
             const company = getById(COLLECTIONS.COMPANIES, activeCompanyId);
@@ -138,14 +163,34 @@ export default function EmptyDashboard({ onComplete }) {
                     logo: company.logo || '',
                     country: company.country || 'BA'
                 });
+                if (company.branding?.accentColor) {
+                    setAccentColor(company.branding.accentColor);
+                }
             }
-            // Load already existing workers if any (for safety, though usually 0)
-            const cw = getAll(COLLECTIONS.WORKERS);
-            setAddedWorkers(cw);
-        }
-    }, [activeCompanyId]);
 
-    // Track steps visited
+            // Load user assignments
+            const assigned = potentialUsers.filter(u => (u.companyIds || []).includes(activeCompanyId)).map(u => u.id);
+            setAssignedUserIds(assigned);
+
+            // Load existing workers & documents
+            loadDashboardLists();
+        }
+    }, [activeCompanyId, potentialUsers]);
+
+    const loadDashboardLists = () => {
+        const workers = getAll(COLLECTIONS.WORKERS);
+        const certs = getAll(COLLECTIONS.CERTIFICATES).map(c => {
+            const w = workers.find(wk => wk.id === c.workerId);
+            return { ...c, workerName: w ? `${w.ime} ${w.prezime}` : '—', docType: 'cert' };
+        });
+        const exams = getAll(COLLECTIONS.MEDICAL_EXAMS).map(e => {
+            const w = workers.find(wk => wk.id === e.workerId);
+            return { ...e, naziv: e.tipPregleda, workerName: w ? `${w.ime} ${w.prezime}` : '—', docType: 'exam' };
+        });
+        setAddedWorkers(workers);
+        setAddedDocs([...certs, ...exams]);
+    };
+
     const handleStepClick = (step) => {
         if (step <= maxStep) {
             setActiveStep(step);
@@ -157,30 +202,63 @@ export default function EmptyDashboard({ onComplete }) {
             setActiveStep(1);
             setMaxStep(Math.max(maxStep, 1));
         } else if (activeStep === 1) {
-            // Save company details
-            if (!companyData.naziv) {
+            // Save company details & branding & user assignments
+            if (!companyData.naziv.trim()) {
                 await alert(bs ? 'Naziv tvrtke je obavezan!' : 'Company name is required!');
                 return;
             }
-            if (!companyData.oib) {
-                await alert(bs ? 'OIB / ID broj je obavezan!' : 'Company ID is required!');
-                return;
-            }
+
             try {
-                update(COLLECTIONS.COMPANIES, activeCompanyId, companyData);
-                // Also trigger native custom event for reload
+                // 1. Branding Structure
+                const branding = {
+                    accentColor: accentColor,
+                    primaryColor: accentColor,
+                    sidebarColor: '#1A1D27',
+                    watermarkEnabled: true,
+                    watermarkPosition: 'center',
+                    watermarkOpacity: 5,
+                    watermarkSize: 280,
+                    logoPosition: 'left',
+                    logoSize: 40,
+                    headerEnabled: true,
+                    showCompanyInfo: true,
+                    showCompanyName: true,
+                    headerColor: '#1a1a2e'
+                };
+
+                const payload = { ...companyData, branding };
+                update(COLLECTIONS.COMPANIES, activeCompanyId, payload);
+                applyUIBranding(activeCompanyId);
+
+                // 2. User Assignments
+                potentialUsers.forEach(u => {
+                    const isAssigned = assignedUserIds.includes(u.id);
+                    const currentCompanyIds = u.companyIds || [];
+                    const hasCompany = currentCompanyIds.includes(activeCompanyId);
+
+                    let newCompanyIds = [...currentCompanyIds];
+                    if (isAssigned && !hasCompany) {
+                        newCompanyIds.push(activeCompanyId);
+                    } else if (!isAssigned && hasCompany) {
+                        newCompanyIds = currentCompanyIds.filter(id => id !== activeCompanyId);
+                    }
+
+                    if (JSON.stringify(currentCompanyIds) !== JSON.stringify(newCompanyIds)) {
+                        update(COLLECTIONS.USERS, u.id, { companyIds: newCompanyIds });
+                    }
+                });
+
+                // Trigger sync
                 window.dispatchEvent(new CustomEvent('eznr:data-synced'));
             } catch (err) {
-                console.error(err);
+                console.error('Failed to save step 1:', err);
             }
+
             setActiveStep(2);
             setMaxStep(Math.max(maxStep, 2));
         } else if (activeStep === 2) {
             setActiveStep(3);
             setMaxStep(Math.max(maxStep, 3));
-        } else if (activeStep === 3) {
-            setActiveStep(4);
-            setMaxStep(Math.max(maxStep, 4));
         }
     };
 
@@ -191,7 +269,7 @@ export default function EmptyDashboard({ onComplete }) {
     };
 
     const handleSkipStep = () => {
-        if (activeStep < 4) {
+        if (activeStep < 3) {
             setActiveStep(activeStep + 1);
             setMaxStep(Math.max(maxStep, activeStep + 1));
         }
@@ -235,6 +313,13 @@ export default function EmptyDashboard({ onComplete }) {
         reader.readAsDataURL(file);
     };
 
+    // Toggle User Checkbox
+    const toggleUserAssignment = (userId) => {
+        setAssignedUserIds(prev => 
+            prev.includes(userId) ? prev.filter(id => id !== userId) : [...prev, userId]
+        );
+    };
+
     // --- STEP 2: Add Worker Manually ---
     const handleAddWorkerManual = async () => {
         if (!manualWorker.ime || !manualWorker.prezime) {
@@ -242,7 +327,6 @@ export default function EmptyDashboard({ onComplete }) {
             return;
         }
 
-        // Find or create workplace
         let radnoMjestoId = '';
         if (manualWorker.radnoMjesto.trim()) {
             const term = manualWorker.radnoMjesto.trim().toLowerCase();
@@ -259,7 +343,7 @@ export default function EmptyDashboard({ onComplete }) {
             }
         }
 
-        const workerPayload = {
+        const payload = {
             ime: manualWorker.ime.trim(),
             prezime: manualWorker.prezime.trim(),
             jmbg: manualWorker.jmbg.trim(),
@@ -270,24 +354,76 @@ export default function EmptyDashboard({ onComplete }) {
             companyId: activeCompanyId
         };
 
-        const newWorker = create(COLLECTIONS.WORKERS, workerPayload);
-        setAddedWorkers(prev => [...prev, newWorker]);
+        const newWorker = create(COLLECTIONS.WORKERS, payload);
         
-        // Auto-select this worker in the next step to save time
-        setCertData(prev => ({ ...prev, workerId: newWorker.id }));
+        // Auto-select this worker in manual cert dropdown
+        setManualDoc(prev => ({ ...prev, workerId: newWorker.id }));
 
         setManualWorker({
             ime: '', prezime: '', jmbg: '', oib: '', radnoMjesto: '', datumRodenja: ''
         });
 
-        // Trigger sync
+        loadDashboardLists();
+        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
+    };
+
+    // --- STEP 2: Add Document Manually ---
+    const handleAddDocManual = async () => {
+        if (!manualDoc.workerId) {
+            await alert(bs ? 'Odaberite radnika!' : 'Select a worker!');
+            return;
+        }
+        if (!manualDoc.naziv) {
+            await alert(bs ? 'Naziv uvjerenja / pregleda je obavezan!' : 'Name is required!');
+            return;
+        }
+        if (!manualDoc.datum) {
+            await alert(bs ? 'Datum je obavezan!' : 'Date is required!');
+            return;
+        }
+
+        const companyId = activeCompanyId;
+
+        if (manualDoc.docType === 'cert') {
+            const payload = {
+                workerId: manualDoc.workerId,
+                companyId,
+                naziv: manualDoc.naziv.trim(),
+                ime: manualDoc.naziv.trim(),
+                oznaka: manualDoc.oznaka.trim(),
+                datum: manualDoc.datum,
+                vrijediDo: manualDoc.vrijediDo,
+                sposobnost: manualDoc.sposobnost,
+                upisao: 'Onboarding Wizard'
+            };
+            create(COLLECTIONS.CERTIFICATES, payload);
+        } else {
+            const payload = {
+                workerId: manualDoc.workerId,
+                companyId,
+                tipPregleda: manualDoc.naziv.trim(),
+                datumPregleda: manualDoc.datum,
+                vrijediDo: manualDoc.vrijediDo,
+                rezultat: manualDoc.sposobnost,
+                zdravstvenaUstanova: '',
+                doktorIme: '',
+                ogranicenja: ''
+            };
+            create(COLLECTIONS.MEDICAL_EXAMS, payload);
+        }
+
+        setManualDoc(prev => ({
+            ...prev, naziv: '', oznaka: '', datum: '', vrijediDo: '', sposobnost: 'Sposoban'
+        }));
+
+        loadDashboardLists();
         window.dispatchEvent(new CustomEvent('eznr:data-synced'));
     };
 
     // --- STEP 2: Excel Parser ---
     const processExcelFile = (file) => {
         setExcelFile(file);
-        setImportSuccessMsg('');
+        setImportMsg('');
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
@@ -398,15 +534,6 @@ export default function EmptyDashboard({ onComplete }) {
             savedWorkers = await createMass(COLLECTIONS.WORKERS, newWList);
         }
 
-        // Add saved workers to local state list
-        const updatedWorkers = getAll(COLLECTIONS.WORKERS);
-        setAddedWorkers(updatedWorkers);
-
-        // Auto select first imported worker for next step
-        if (updatedWorkers.length > 0) {
-            setCertData(prev => ({ ...prev, workerId: updatedWorkers[0].id }));
-        }
-
         // Map JMBGs and names
         savedWorkers.forEach(sw => {
             if (sw.jmbg) newWorkerMap[sw.jmbg] = sw.id;
@@ -453,7 +580,7 @@ export default function EmptyDashboard({ onComplete }) {
         });
         if (newMedExams.length > 0) await createMass(COLLECTIONS.MEDICAL_EXAMS, newMedExams);
 
-        setImportSuccessMsg(
+        setImportMsg(
             bs 
                 ? `Uspješno uvezeno: ${newWList.length} radnika, ${newCerts.length} uvjerenja, ${newMedExams.length} pregleda!` 
                 : `Successfully imported: ${newWList.length} workers, ${newCerts.length} certificates, ${newMedExams.length} medical exams!`
@@ -462,63 +589,8 @@ export default function EmptyDashboard({ onComplete }) {
         setExcelFile(null);
         setExcelPreview(null);
 
-        // Trigger sync
-        window.dispatchEvent(new CustomEvent('eznr:data-synced'));
-    };
-
-    // --- STEP 3: Add Certificate/Exam ---
-    const handleAddCert = async () => {
-        if (!certData.workerId) {
-            await alert(bs ? 'Molimo odaberite radnika!' : 'Please select a worker!');
-            return;
-        }
-        if (!certData.naziv) {
-            await alert(bs ? 'Naziv dokumenta / pregleda je obavezan!' : 'Document name is required!');
-            return;
-        }
-        if (!certData.datum) {
-            await alert(bs ? 'Datum je obavezan!' : 'Date is required!');
-            return;
-        }
-
-        const selectedWorker = getById(COLLECTIONS.WORKERS, certData.workerId);
-        const companyId = activeCompanyId;
-
-        if (certData.docType === 'cert') {
-            const payload = {
-                workerId: certData.workerId,
-                companyId,
-                naziv: certData.naziv.trim(),
-                ime: certData.naziv.trim(),
-                oznaka: certData.oznaka.trim(),
-                datum: certData.datum,
-                vrijediDo: certData.vrijediDo,
-                sposobnost: certData.sposobnost,
-                upisao: 'Onboarding Wizard'
-            };
-            const newDoc = create(COLLECTIONS.CERTIFICATES, payload);
-            setAddedCerts(prev => [...prev, { ...newDoc, workerName: `${selectedWorker.ime} ${selectedWorker.prezime}` }]);
-        } else {
-            const payload = {
-                workerId: certData.workerId,
-                companyId,
-                tipPregleda: certData.naziv.trim(),
-                datumPregleda: certData.datum,
-                vrijediDo: certData.vrijediDo,
-                rezultat: certData.sposobnost,
-                zdravstvenaUstanova: '',
-                doktorIme: '',
-                ogranicenja: ''
-            };
-            const newDoc = create(COLLECTIONS.MEDICAL_EXAMS, payload);
-            setAddedCerts(prev => [...prev, { ...newDoc, naziv: certData.naziv.trim(), workerName: `${selectedWorker.ime} ${selectedWorker.prezime}`, docType: 'exam' }]);
-        }
-
-        setCertData(prev => ({
-            ...prev, naziv: '', oznaka: '', datum: '', vrijediDo: '', sposobnost: 'Sposoban'
-        }));
-
-        // Trigger sync
+        // Reload UI lists
+        loadDashboardLists();
         window.dispatchEvent(new CustomEvent('eznr:data-synced'));
     };
 
@@ -537,29 +609,27 @@ export default function EmptyDashboard({ onComplete }) {
             {activeStep > 0 && (
                 <div style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    marginBottom: 32, position: 'relative', padding: '0 10px'
+                    marginBottom: 32, position: 'relative', padding: '0 40px'
                 }}>
                     {/* Stepper line */}
                     <div style={{
-                        position: 'absolute', top: 20, left: 24, right: 24, height: 2,
+                        position: 'absolute', top: 20, left: 54, right: 54, height: 2,
                         background: 'var(--border-light)', zIndex: 1
                     }} />
                     {/* Active Stepper line */}
                     <div style={{
-                        position: 'absolute', top: 20, left: 24,
-                        width: `${((activeStep - 1) / 3) * 100}%`, height: 2,
+                        position: 'absolute', top: 20, left: 54,
+                        width: `${((activeStep - 1) / 2) * 100}%`, height: 2,
                         background: 'var(--primary)', zIndex: 1, transition: 'width 0.3s ease'
                     }} />
 
                     {[
-                        { num: 1, label: bs ? 'Firma' : 'Company', icon: '🏢' },
-                        { num: 2, label: bs ? 'Radnici' : 'Workers', icon: '👥' },
-                        { num: 3, label: bs ? 'Dokumenti' : 'Documents', icon: '📜' },
-                        { num: 4, label: bs ? 'Završi' : 'Finish', icon: '✨' }
+                        { num: 1, label: bs ? 'Identitet i Firma' : 'Identity & Company', icon: '🏢' },
+                        { num: 2, label: bs ? 'Radnici i Uvjerenja' : 'Workers & Certs', icon: '👥' },
+                        { num: 3, label: bs ? 'Završi' : 'Finish', icon: '✨' }
                     ].map((s) => {
                         const isCompleted = activeStep > s.num;
                         const isActive = activeStep === s.num;
-                        const isFuture = activeStep < s.num;
 
                         return (
                             <div 
@@ -568,7 +638,7 @@ export default function EmptyDashboard({ onComplete }) {
                                 style={{
                                     display: 'flex', flexDirection: 'column', alignItems: 'center',
                                     zIndex: 2, cursor: s.num <= maxStep ? 'pointer' : 'not-allowed',
-                                    width: 70
+                                    width: 120
                                 }}
                             >
                                 <div style={{
@@ -619,8 +689,8 @@ export default function EmptyDashboard({ onComplete }) {
                                 lineHeight: 1.6, maxWidth: 580
                             }}>
                                 {bs
-                                    ? 'Ovaj brzi vodič pomoći će vam da postavite osnovne podatke i pustite sustav u rad u 3 jednostavna koraka. Možete unijeti sve odmah ili preskočiti bilo koji korak i završiti kasnije.'
-                                    : 'This quick guide will help you set up essential data and launch the system in 3 simple steps. You can enter everything now or skip any step and complete it later.'}
+                                    ? 'Brzo i jednostavno konfigurirajte tvrtku, postavite vizualni brending, dodijelite ovlaštene korisnike te uvezite popis radnika i uvjerenja odjednom.'
+                                    : 'Quickly configure your company, establish visual branding, assign authorized users, and import workers/certificates all at once.'}
                             </p>
 
                             <div style={{
@@ -636,180 +706,247 @@ export default function EmptyDashboard({ onComplete }) {
                         </div>
                     )}
 
-                    {/* STEP 1: Company Profile Form */}
+                    {/* STEP 1: Company Profile, Law, Branding, and Users */}
                     {activeStep === 1 && (
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
                                 <span style={{ fontSize: '1.8rem' }}>🏢</span>
                                 <div>
                                     <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-                                        {bs ? 'Korak 1: Podaci o tvrtki' : 'Step 1: Company Details'}
+                                        {bs ? 'Korak 1: Podaci, Identitet i Korisnici' : 'Step 1: Details, Branding & Users'}
                                     </h2>
                                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        {bs ? 'Unesite osnovne podatke o vašoj firmi koji će se koristiti u izvještajima.' : 'Enter basic company info which will be used in reports.'}
+                                        {bs ? 'Postavite identitet firme, odaberite državu zakonodavstva te ovlaštene korisnike.' : 'Establish company identity, select jurisdiction, and authorized users.'}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Logo Upload Section */}
-                            <div style={{
-                                display: 'flex', alignItems: 'center', gap: 20, padding: 16,
-                                background: 'var(--bg-input)', borderRadius: 'var(--radius-md)', marginBottom: 24,
-                                flexWrap: 'wrap'
-                            }}>
-                                <div style={{
-                                    width: 80, height: 80, borderRadius: 'var(--radius-sm)',
-                                    background: '#fff', border: '1px solid var(--border)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    overflow: 'hidden', flexShrink: 0
+                            {/* Section A: Područje djelovanja (BA / HR Law flag button selector) */}
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={labelStyle}>{bs ? 'Područje djelovanja (Zakonodavstvo)' : 'Area of Activity (Jurisdiction)'}</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
+                                    {[
+                                        { code: 'BA', flag: '🇧🇦', title: 'Bosna i Hercegovina', law: 'Zakon o ZNR FBiH (79/20)' },
+                                        { code: 'HR', flag: '🇭🇷', title: 'Republika Hrvatska', law: 'Zakon o ZNR (NN 71/14)' }
+                                    ].map(opt => {
+                                        const isSelected = companyData.country === opt.code;
+                                        return (
+                                            <div
+                                                key={opt.code}
+                                                onClick={() => setCompanyData(prev => ({ ...prev, country: opt.code }))}
+                                                style={{
+                                                    padding: '16px', borderRadius: 'var(--radius-md)', cursor: 'pointer',
+                                                    border: `2px solid ${isSelected ? 'var(--primary)' : 'var(--border)'}`,
+                                                    background: isSelected ? 'rgba(0,191,166,0.06)' : 'var(--bg-input)',
+                                                    display: 'flex', alignItems: 'center', gap: 14, transition: 'all 0.2s',
+                                                }}
+                                            >
+                                                <span style={{ fontSize: '2.2rem' }}>{opt.flag}</span>
+                                                <div>
+                                                    <div style={{ fontWeight: 700, fontSize: '0.9rem', color: isSelected ? 'var(--primary)' : 'var(--text)' }}>
+                                                        {isSelected ? '✓ ' : ''}{opt.title}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                                                        {opt.law}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            {/* Section B: Company Basic Info */}
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={labelStyle}>{bs ? 'Osnovni podaci tvrtke' : 'Basic Company Info'}</div>
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Naziv tvrtke *' : 'Company Name *'}</label>
+                                        <input 
+                                            className="form-input" 
+                                            value={companyData.naziv} 
+                                            onChange={e => setCompanyData(prev => ({ ...prev, naziv: e.target.value }))}
+                                            placeholder="npr. Kakao d.o.o."
+                                        />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'OIB / ID Broj (Opcionalno)' : 'Company ID (Optional)'}</label>
+                                        <input 
+                                            className="form-input" 
+                                            value={companyData.oib} 
+                                            onChange={e => setCompanyData(prev => ({ ...prev, oib: e.target.value }))}
+                                            placeholder={companyData.country === 'HR' ? '11 znamenki' : '13 znamenki'}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Adresa sjedišta' : 'Address'}</label>
+                                        <input className="form-input" value={companyData.adresa} onChange={e => setCompanyData(prev => ({ ...prev, adresa: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Grad / Mjesto' : 'City'}</label>
+                                        <input className="form-input" value={companyData.mjesto} onChange={e => setCompanyData(prev => ({ ...prev, mjesto: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Poštanski broj' : 'Postal Code'}</label>
+                                        <input className="form-input" value={companyData.postanskiBroj} onChange={e => setCompanyData(prev => ({ ...prev, postanskiBroj: e.target.value }))} />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16 }}>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Direktor / Zastupnik' : 'Director'}</label>
+                                        <input className="form-input" value={companyData.direktor} onChange={e => setCompanyData(prev => ({ ...prev, direktor: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Stručno lice za ZNR' : 'Safety Officer'}</label>
+                                        <input className="form-input" value={companyData.strucnoLice} onChange={e => setCompanyData(prev => ({ ...prev, strucnoLice: e.target.value }))} />
+                                    </div>
+                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                        <label className="form-label" style={{ fontSize: '0.78rem' }}>{bs ? 'Telefon' : 'Phone'}</label>
+                                        <input className="form-input" value={companyData.telefon} onChange={e => setCompanyData(prev => ({ ...prev, telefon: e.target.value }))} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section C: Branding & Identity (Logo upload & custom theme colors) */}
+                            <div style={{ marginBottom: 24 }}>
+                                <div style={labelStyle}>{bs ? 'Identitet i Brendiranje (Opcionalno)' : 'Identity & Branding (Optional)'}</div>
+                                <div style={{ 
+                                    display: 'flex', gap: 20, padding: 16, background: 'var(--bg-input)', 
+                                    borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', flexWrap: 'wrap' 
                                 }}>
-                                    {companyData.logo ? (
-                                        <img src={companyData.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-                                    ) : (
-                                        <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>🖼️</span>
-                                    )}
-                                </div>
-                                <div style={{ flex: 1, minWidth: 180 }}>
-                                    <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 4 }}>
-                                        {bs ? 'Logo tvrtke' : 'Company Logo'}
+                                    {/* Logo picker */}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: '1 1 300px' }}>
+                                        <div style={{
+                                            width: 72, height: 72, borderRadius: 'var(--radius-sm)',
+                                            background: '#fff', border: '1px solid var(--border)',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            overflow: 'hidden', flexShrink: 0
+                                        }}>
+                                            {companyData.logo ? (
+                                                <img src={companyData.logo} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                            ) : (
+                                                <span style={{ fontSize: '1.8rem' }}>🖼️</span>
+                                            )}
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: 6 }}>
+                                                {bs ? 'Logo tvrtke' : 'Company Logo'}
+                                            </div>
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                <button className="btn btn-outline btn-sm" onClick={() => logoInputRef.current?.click()} style={{ position: 'relative' }}>
+                                                    📁 {bs ? 'Odaberi sliku' : 'Select image'}
+                                                    <input 
+                                                        type="file" 
+                                                        ref={logoInputRef} 
+                                                        onChange={handleLogoChange} 
+                                                        accept="image/*" 
+                                                        style={{ display: 'none' }} 
+                                                    />
+                                                </button>
+                                                {companyData.logo && (
+                                                    <button className="btn btn-danger btn-sm" onClick={() => setCompanyData(prev => ({ ...prev, logo: '' }))}>
+                                                        🗑️
+                                                    </button>
+                                                )}
+                                            </div>
+                                            {logoError && <div style={{ fontSize: '0.7rem', color: 'var(--danger)', marginTop: 4 }}>⚠️ {logoError}</div>}
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 10 }}>
-                                        {bs ? 'Prikazuje se na upitnicima i PDF dokumentima. Preporučeno: prozirni PNG ispod 2MB.' : 'Appears on questionnaires and PDFs. Recommended: transparent PNG under 2MB.'}
+
+                                    {/* Color presets selector */}
+                                    <div style={{ flex: '1 1 300px' }}>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: 700, marginBottom: 8 }}>
+                                            {bs ? 'Glavna boja aplikacije i PDF-a' : 'App Theme & PDF Accent Color'}
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                                            {BRAND_COLORS.map(c => {
+                                                const isSel = accentColor === c.value;
+                                                return (
+                                                    <button
+                                                        key={c.value}
+                                                        onClick={() => setAccentColor(c.value)}
+                                                        title={c.name}
+                                                        style={{
+                                                            width: 32, height: 32, borderRadius: '50%',
+                                                            background: c.value, border: isSel ? '3px solid var(--text)' : '2px solid transparent',
+                                                            boxShadow: isSel ? '0 0 8px rgba(0,0,0,0.3)' : 'none',
+                                                            cursor: 'pointer', transition: 'all 0.1s ease',
+                                                            position: 'relative'
+                                                        }}
+                                                    >
+                                                        {isSel && <span style={{ color: '#fff', fontSize: '0.8rem', fontWeight: 700, position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>✓</span>}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: 10 }}>
-                                        <button className="btn btn-outline btn-sm" onClick={() => fileInputRef.current?.click()} style={{ position: 'relative' }}>
-                                            📁 {bs ? 'Učitaj sliku' : 'Upload Image'}
-                                            <input 
-                                                type="file" 
-                                                ref={fileInputRef} 
-                                                onChange={handleLogoChange} 
-                                                accept="image/*" 
-                                                style={{ display: 'none' }} 
-                                            />
-                                        </button>
-                                        {companyData.logo && (
-                                            <button className="btn btn-danger btn-sm" onClick={() => setCompanyData(prev => ({ ...prev, logo: '' }))}>
-                                                🗑️ {bs ? 'Ukloni' : 'Remove'}
-                                            </button>
-                                        )}
+                                </div>
+                            </div>
+
+                            {/* Section D: User Assignments */}
+                            {potentialUsers.length > 0 && (
+                                <div style={{ marginBottom: 8 }}>
+                                    <div style={labelStyle}>{bs ? 'Dodijelite korisnike s pristupom tvrtki' : 'Assign Company Access to Users'}</div>
+                                    <p style={{ margin: '0 0 10px', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                        {bs ? 'Odaberite administratore i referente koji će moći pregledavati i uređivati podatke za ovu tvrtku.' : 'Select users who are allowed to view or edit this company.'}
+                                    </p>
+                                    <div style={{ 
+                                        display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10,
+                                        background: 'var(--bg-input)', padding: 16, borderRadius: 'var(--radius-md)',
+                                        border: '1px solid var(--border)', maxHeight: 150, overflowY: 'auto'
+                                    }}>
+                                        {potentialUsers.map(u => {
+                                            const isChecked = assignedUserIds.includes(u.id);
+                                            return (
+                                                <label 
+                                                    key={u.id}
+                                                    style={{ 
+                                                        display: 'flex', alignItems: 'center', gap: 10, 
+                                                        fontSize: '0.8rem', cursor: 'pointer', padding: '6px 8px',
+                                                        borderRadius: 6, background: isChecked ? 'var(--bg-card)' : 'transparent',
+                                                        border: `1px solid ${isChecked ? 'var(--border)' : 'transparent'}`,
+                                                        transition: 'background 0.1s'
+                                                    }}
+                                                >
+                                                    <input 
+                                                        type="checkbox" 
+                                                        checked={isChecked}
+                                                        onChange={() => toggleUserAssignment(u.id)}
+                                                    />
+                                                    <div>
+                                                        <span style={{ fontWeight: 600 }}>{u.firstName} {u.lastName}</span>
+                                                        <span style={{ 
+                                                            marginLeft: 6, fontSize: '0.68rem', padding: '1px 5px', 
+                                                            borderRadius: 4, background: 'var(--border-light)', color: 'var(--text-muted)' 
+                                                        }}>
+                                                            {u.role}
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
                                     </div>
-                                    {logoError && <div style={{ fontSize: '0.72rem', color: 'var(--danger)', marginTop: 6 }}>⚠️ {logoError}</div>}
                                 </div>
-                            </div>
+                            )}
 
-                            {/* Company Fields */}
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Naziv tvrtke *' : 'Company Name *'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.naziv} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, naziv: e.target.value }))}
-                                        placeholder="npr. Kakao d.o.o."
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'OIB / ID Broj *' : 'Company ID / OIB *'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.oib} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, oib: e.target.value }))}
-                                        placeholder={companyData.country === 'HR' ? '11 znamenki' : '13 znamenki'}
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 16, marginBottom: 16 }}>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Adresa sjedišta' : 'Address'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.adresa} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, adresa: e.target.value }))}
-                                        placeholder="npr. Ulica kralja Tomislava 12"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Država zakonodavstva' : 'Jurisdiction Country'}</div>
-                                    <select 
-                                        className="form-select" 
-                                        value={companyData.country} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, country: e.target.value }))}
-                                    >
-                                        <option value="BA">🇧🇦 Bosna i Hercegovina</option>
-                                        <option value="HR">🇭🇷 Hrvatska</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 16 }}>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Grad / Mjesto' : 'City'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.mjesto} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, mjesto: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Poštanski broj' : 'Postal Code'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.postanskiBroj} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, postanskiBroj: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Telefon' : 'Phone'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.telefon} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, telefon: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, marginBottom: 8 }}>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Email' : 'Email'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.email} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, email: e.target.value }))}
-                                        type="email"
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Direktor / Zastupnik' : 'Director / Rep'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.direktor} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, direktor: e.target.value }))}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <div style={labelStyle}>{bs ? 'Stručno lice za ZNR' : 'Safety Officer'}</div>
-                                    <input 
-                                        className="form-input" 
-                                        value={companyData.strucnoLice} 
-                                        onChange={e => setCompanyData(prev => ({ ...prev, strucnoLice: e.target.value }))}
-                                    />
-                                </div>
-                            </div>
                         </div>
                     )}
 
-                    {/* STEP 2: Workers Configuration */}
+                    {/* STEP 2: Unified Workers & Certificates Onboarding */}
                     {activeStep === 2 && (
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
                                 <span style={{ fontSize: '1.8rem' }}>👥</span>
                                 <div>
                                     <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-                                        {bs ? 'Korak 2: Dodajte radnike' : 'Step 2: Add Workers'}
+                                        {bs ? 'Korak 2: Uvoz i Unos radnika te uvjerenja' : 'Step 2: Onboard Workers & Documents'}
                                     </h2>
                                     <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        {bs ? 'Unesite radnike ručno ili uvezite cijeli popis pomoću Excel predloška.' : 'Add workers manually or import a list using an Excel template.'}
+                                        {bs ? 'Učitajte cijelu bazu radnika i uvjerenja iz Excela odjednom ili ih unosite ručno.' : 'Upload workers and certificates from Excel all at once or add them manually.'}
                                     </p>
                                 </div>
                             </div>
@@ -820,76 +957,22 @@ export default function EmptyDashboard({ onComplete }) {
                                 borderBottom: '1px solid var(--border-light)', paddingBottom: 10 
                             }}>
                                 <button 
-                                    className={`btn btn-sm ${workerTab === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
-                                    onClick={() => setWorkerTab('manual')}
+                                    className={`btn btn-sm ${onboardTab === 'excel' ? 'btn-primary' : 'btn-ghost'}`}
+                                    onClick={() => setOnboardTab('excel')}
                                 >
-                                    👤 {bs ? 'Dodaj ručno' : 'Add Manually'}
+                                    📥 {bs ? 'Uvoz iz Excela' : 'Excel Import'}
                                 </button>
                                 <button 
-                                    className={`btn btn-sm ${workerTab === 'excel' ? 'btn-primary' : 'btn-ghost'}`}
-                                    onClick={() => setWorkerTab('excel')}
+                                    className={`btn btn-sm ${onboardTab === 'manual' ? 'btn-primary' : 'btn-ghost'}`}
+                                    onClick={() => setOnboardTab('manual')}
                                 >
-                                    📥 {bs ? 'Uvezi iz Excela' : 'Excel Import'}
+                                    ✍️ {bs ? 'Ručni unos' : 'Manual Entry'}
                                 </button>
                             </div>
 
-                            {/* Option A: Manual Setup */}
-                            {workerTab === 'manual' && (
-                                <div style={{ background: 'rgba(0,191,166,0.03)', padding: 16, borderRadius: 'var(--radius-md)', border: '1px dashed rgba(0,191,166,0.2)', marginBottom: 20 }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 12, marginBottom: 12 }}>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <input 
-                                                className="form-input" 
-                                                value={manualWorker.ime} 
-                                                onChange={e => setManualWorker(prev => ({ ...prev, ime: e.target.value }))}
-                                                placeholder={bs ? 'Ime radnika *' : 'First Name *'}
-                                            />
-                                        </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <input 
-                                                className="form-input" 
-                                                value={manualWorker.prezime} 
-                                                onChange={e => setManualWorker(prev => ({ ...prev, prezime: e.target.value }))}
-                                                placeholder={bs ? 'Prezime radnika *' : 'Last Name *'}
-                                            />
-                                        </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <input 
-                                                className="form-input" 
-                                                value={manualWorker.jmbg} 
-                                                onChange={e => setManualWorker(prev => ({ ...prev, jmbg: e.target.value }))}
-                                                placeholder={companyData.country === 'HR' ? 'OIB (11 znamenki)' : 'JMBG (13 znamenki)'}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr auto', gap: 12, alignItems: 'center' }}>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <input 
-                                                className="form-input" 
-                                                value={manualWorker.radnoMjesto} 
-                                                onChange={e => setManualWorker(prev => ({ ...prev, radnoMjesto: e.target.value }))}
-                                                placeholder={bs ? 'Radno mjesto (npr. Zavarivač)' : 'Workplace (e.g. Welder)'}
-                                            />
-                                        </div>
-                                        <div className="form-group" style={{ marginBottom: 0 }}>
-                                            <input 
-                                                className="form-input" 
-                                                type="date"
-                                                value={manualWorker.datumRodenja} 
-                                                onChange={e => setManualWorker(prev => ({ ...prev, datumRodenja: e.target.value }))}
-                                                title={bs ? 'Datum rođenja' : 'Birth Date'}
-                                            />
-                                        </div>
-                                        <button className="btn btn-primary" onClick={handleAddWorkerManual} style={{ whiteSpace: 'nowrap' }}>
-                                            ➕ {bs ? 'Dodaj' : 'Add'}
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Option B: Excel Import Dropzone */}
-                            {workerTab === 'excel' && (
-                                <div style={{ marginBottom: 20 }}>
+                            {/* Excel Import Option */}
+                            {onboardTab === 'excel' && (
+                                <div style={{ marginBottom: 24 }}>
                                     <div
                                         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                                         onDragLeave={() => setDragOver(false)}
@@ -898,7 +981,7 @@ export default function EmptyDashboard({ onComplete }) {
                                             border: `2px dashed ${dragOver ? 'var(--primary)' : 'var(--border)'}`,
                                             background: dragOver ? 'var(--primary-glow)' : 'var(--bg-input)',
                                             borderRadius: 'var(--radius-lg)',
-                                            padding: '32px 20px',
+                                            padding: '36px 20px',
                                             textAlign: 'center',
                                             cursor: 'pointer',
                                             transition: 'all 0.2s ease',
@@ -918,7 +1001,7 @@ export default function EmptyDashboard({ onComplete }) {
                                             {excelFile ? excelFile.name : (bs ? 'Dovucite Excel datoteku ili kliknite za odabir' : 'Drag & Drop Excel file here or click to browse')}
                                         </div>
                                         <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                                            {bs ? 'Datoteka mora pratiti eZNR uvozni predložak.' : 'File must match the eZNR import template.'}
+                                            {bs ? 'Učitajte Excel tablicu s popunjenim listovima Radnici, Uvjerenja, Ljekarski i OZO.' : 'Upload an Excel template containing Workers, Certificates, Medical and PPE sheets.'}
                                         </div>
                                     </div>
 
@@ -930,235 +1013,246 @@ export default function EmptyDashboard({ onComplete }) {
                                             marginBottom: 16
                                         }}>
                                             <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 8, color: 'var(--text)' }}>
-                                                📊 {bs ? 'Pregled datoteke spreman:' : 'File preview ready:'}
+                                                📊 {bs ? 'Pronađeni podaci za uvoz:' : 'Data found for import:'}
                                             </div>
-                                            <div style={{ display: 'flex', gap: 16, fontSize: '0.8rem', color: 'var(--text-muted)', flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 12, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
                                                 <span>👥 Radnici: <strong>{excelPreview.workers?.length || 0}</strong></span>
                                                 <span>🏢 Org. jedinice: <strong>{excelPreview.ouRows?.length || 0}</strong></span>
                                                 <span>💼 Radna mjesta: <strong>{excelPreview.wpRows?.length || 0}</strong></span>
                                                 <span>📜 Uvjerenja: <strong>{excelPreview.certs?.length || 0}</strong></span>
                                                 <span>👨‍⚕️ Ljekarski: <strong>{excelPreview.medExams?.length || 0}</strong></span>
+                                                <span>🦺 OZO zaduženja: <strong>{excelPreview.ppe?.length || 0}</strong></span>
                                             </div>
                                             <button 
                                                 className="btn btn-primary btn-sm" 
                                                 onClick={handleImportExcel} 
-                                                style={{ marginTop: 12 }}
+                                                style={{ marginTop: 14 }}
                                             >
-                                                ⚡ {bs ? 'Potvrdi i uvezi sve' : 'Confirm & Import All'}
+                                                ⚡ {bs ? 'Potvrdi i uvezi sve podatke' : 'Confirm & Import All Data'}
                                             </button>
                                         </div>
                                     )}
                                 </div>
                             )}
 
-                            {/* Feedback messages */}
-                            {importSuccessMsg && (
+                            {/* Manual Entry Option */}
+                            {onboardTab === 'manual' && (
+                                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 24 }}>
+                                    
+                                    {/* Manual Worker Form */}
+                                    <div style={{ 
+                                        background: 'var(--bg-input)', padding: 16, borderRadius: 'var(--radius-md)', 
+                                        border: '1px solid var(--border)' 
+                                    }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12, borderBottom: '1px solid var(--border-light)', paddingBottom: 6 }}>
+                                            👥 {bs ? 'Dodaj novog radnika' : 'Add New Worker'}
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                            <input 
+                                                className="form-input" 
+                                                value={manualWorker.ime} 
+                                                onChange={e => setManualWorker(prev => ({ ...prev, ime: e.target.value }))}
+                                                placeholder={bs ? 'Ime *' : 'First Name *'}
+                                            />
+                                            <input 
+                                                className="form-input" 
+                                                value={manualWorker.prezime} 
+                                                onChange={e => setManualWorker(prev => ({ ...prev, prezime: e.target.value }))}
+                                                placeholder={bs ? 'Prezime *' : 'Last Name *'}
+                                            />
+                                            <input 
+                                                className="form-input" 
+                                                value={manualWorker.jmbg} 
+                                                onChange={e => setManualWorker(prev => ({ ...prev, jmbg: e.target.value }))}
+                                                placeholder={companyData.country === 'HR' ? 'OIB (opcionalno)' : 'JMBG (opcionalno)'}
+                                            />
+                                            <input 
+                                                className="form-input" 
+                                                value={manualWorker.radnoMjesto} 
+                                                onChange={e => setManualWorker(prev => ({ ...prev, radnoMjesto: e.target.value }))}
+                                                placeholder={bs ? 'Radno mjesto (npr. Vozač)' : 'Workplace (e.g. Driver)'}
+                                            />
+                                            <div className="form-group" style={{ marginBottom: 0 }}>
+                                                <label className="form-label" style={{ fontSize: '0.72rem' }}>{bs ? 'Datum rođenja' : 'Birth Date'}</label>
+                                                <input 
+                                                    className="form-input" 
+                                                    type="date"
+                                                    value={manualWorker.datumRodenja} 
+                                                    onChange={e => setManualWorker(prev => ({ ...prev, datumRodenja: e.target.value }))}
+                                                />
+                                            </div>
+                                            <button className="btn btn-primary btn-sm" onClick={handleAddWorkerManual} style={{ marginTop: 6 }}>
+                                                ➕ {bs ? 'Dodaj radnika' : 'Add Worker'}
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Manual Doc Form */}
+                                    <div style={{ 
+                                        background: 'var(--bg-input)', padding: 16, borderRadius: 'var(--radius-md)', 
+                                        border: '1px solid var(--border)' 
+                                    }}>
+                                        <div style={{ fontWeight: 700, fontSize: '0.85rem', marginBottom: 12, borderBottom: '1px solid var(--border-light)', paddingBottom: 6 }}>
+                                            📜 {bs ? 'Dodaj uvjerenje ili pregled' : 'Add Certificate / Exam'}
+                                        </div>
+                                        {addedWorkers.length === 0 ? (
+                                            <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', textAlign: 'center', padding: '30px 10px' }}>
+                                                {bs ? 'Prvo morate unijeti barem jednog radnika.' : 'Please add at least one worker first.'}
+                                            </div>
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                                <select 
+                                                    className="form-select"
+                                                    value={manualDoc.workerId}
+                                                    onChange={e => setManualDoc(prev => ({ ...prev, workerId: e.target.value }))}
+                                                >
+                                                    <option value="">{bs ? '-- Odaberite radnika * --' : '-- Select Worker * --'}</option>
+                                                    {addedWorkers.map(w => (
+                                                        <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
+                                                    ))}
+                                                </select>
+                                                <select 
+                                                    className="form-select"
+                                                    value={manualDoc.docType}
+                                                    onChange={e => setManualDoc(prev => ({ ...prev, docType: e.target.value }))}
+                                                >
+                                                    <option value="cert">📜 {bs ? 'Uvjerenje o osposobljenosti' : 'Safety Cert'}</option>
+                                                    <option value="exam">👨‍⚕️ {bs ? 'Ljekarski pregled' : 'Medical Exam'}</option>
+                                                </select>
+                                                <input 
+                                                    className="form-input"
+                                                    value={manualDoc.naziv}
+                                                    onChange={e => setManualDoc(prev => ({ ...prev, naziv: e.target.value }))}
+                                                    placeholder={manualDoc.docType === 'cert' ? (bs ? 'Naziv uvjerenja * (npr. ZOS)' : 'Cert Name *') : (bs ? 'Tip pregleda * (npr. Prethodni)' : 'Exam Type *')}
+                                                />
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                                        <label className="form-label" style={{ fontSize: '0.72rem' }}>{bs ? 'Datum *' : 'Date *'}</label>
+                                                        <input type="date" className="form-input" value={manualDoc.datum} onChange={e => setManualDoc(prev => ({ ...prev, datum: e.target.value }))} />
+                                                    </div>
+                                                    <div className="form-group" style={{ marginBottom: 0 }}>
+                                                        <label className="form-label" style={{ fontSize: '0.72rem' }}>{bs ? 'Vrijedi do' : 'Valid until'}</label>
+                                                        <input type="date" className="form-input" value={manualDoc.vrijediDo} onChange={e => setManualDoc(prev => ({ ...prev, vrijediDo: e.target.value }))} />
+                                                    </div>
+                                                </div>
+                                                <select 
+                                                    className="form-select"
+                                                    value={manualDoc.sposobnost}
+                                                    onChange={e => setManualDoc(prev => ({ ...prev, sposobnost: e.target.value }))}
+                                                >
+                                                    <option value="Sposoban">{bs ? 'Sposoban' : 'Fit'}</option>
+                                                    <option value="Uvjetno sposoban">{bs ? 'Uvjetno sposoban' : 'Conditionally Fit'}</option>
+                                                    <option value="Nesposoban">{bs ? 'Nesposoban' : 'Unfit'}</option>
+                                                </select>
+                                                <button className="btn btn-primary btn-sm" onClick={handleAddDocManual} style={{ marginTop: 6 }}>
+                                                    ➕ {bs ? 'Dodaj dokument' : 'Add Document'}
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                </div>
+                            )}
+
+                            {/* Success Notification */}
+                            {importMsg && (
                                 <div style={{ 
                                     padding: '10px 14px', background: 'rgba(34,197,94,0.06)', 
                                     border: '1px solid rgba(34,197,94,0.2)', borderRadius: 'var(--radius-sm)',
                                     color: 'var(--success)', fontSize: '0.8rem', fontWeight: 600,
                                     marginBottom: 16
                                 }}>
-                                    ✅ {importSuccessMsg}
+                                    ✅ {importMsg}
                                 </div>
                             )}
 
-                            {/* Added Workers list */}
-                            {addedWorkers.length > 0 && (
-                                <div>
-                                    <div style={{ fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: 8 }}>
-                                        👥 {bs ? `Dodani radnici (${addedWorkers.length}):` : `Added Workers (${addedWorkers.length}):`}
+                            {/* Loaded Lists Display */}
+                            {(addedWorkers.length > 0 || addedDocs.length > 0) && (
+                                <div style={{ marginTop: 16 }}>
+                                    {/* List tabs */}
+                                    <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
+                                        <button 
+                                            onClick={() => setListTab('workers')}
+                                            style={{ 
+                                                background: 'none', border: 'none', 
+                                                color: listTab === 'workers' ? 'var(--primary)' : 'var(--text-muted)',
+                                                fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', 
+                                                letterSpacing: '0.5px', cursor: 'pointer',
+                                                borderBottom: listTab === 'workers' ? '2px solid var(--primary)' : '2px solid transparent',
+                                                paddingBottom: 4
+                                            }}
+                                        >
+                                            👥 {bs ? `Uneseni radnici (${addedWorkers.length})` : `Workers (${addedWorkers.length})`}
+                                        </button>
+                                        <button 
+                                            onClick={() => setListTab('docs')}
+                                            style={{ 
+                                                background: 'none', border: 'none', 
+                                                color: listTab === 'docs' ? 'var(--primary)' : 'var(--text-muted)',
+                                                fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', 
+                                                letterSpacing: '0.5px', cursor: 'pointer',
+                                                borderBottom: listTab === 'docs' ? '2px solid var(--primary)' : '2px solid transparent',
+                                                paddingBottom: 4
+                                            }}
+                                        >
+                                            📜 {bs ? `Uneseni dokumenti (${addedDocs.length})` : `Documents (${addedDocs.length})`}
+                                        </button>
                                     </div>
+
                                     <div style={{ 
-                                        maxHeight: 160, overflowY: 'auto', border: '1px solid var(--border-light)', 
+                                        maxHeight: 180, overflowY: 'auto', border: '1px solid var(--border-light)', 
                                         borderRadius: 'var(--radius-md)', background: 'var(--bg-input)'
                                     }}>
-                                        <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
-                                            <thead>
-                                                <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', textAlign: 'left' }}>
-                                                    <th style={{ padding: '8px 12px' }}>{bs ? 'Ime i prezime' : 'Name'}</th>
-                                                    <th style={{ padding: '8px 12px' }}>{companyData.country === 'HR' ? 'OIB' : 'JMBG'}</th>
-                                                    <th style={{ padding: '8px 12px' }}>{bs ? 'Radno mjesto' : 'Workplace'}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {addedWorkers.map((w, idx) => (
-                                                    <tr key={w.id || idx} style={{ borderBottom: idx < addedWorkers.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
-                                                        <td style={{ padding: '8px 12px', fontWeight: 600 }}>{w.ime} {w.prezime}</td>
-                                                        <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{w.jmbg || w.oib || '—'}</td>
-                                                        <td style={{ padding: '8px 12px' }}>{getById(COLLECTIONS.WORKPLACES, w.radnoMjestoId)?.naziv || '—'}</td>
+                                        {listTab === 'workers' ? (
+                                            <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                                                <thead>
+                                                    <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Ime i prezime' : 'Name'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{companyData.country === 'HR' ? 'OIB' : 'JMBG'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Radno mjesto' : 'Workplace'}</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
+                                                </thead>
+                                                <tbody>
+                                                    {addedWorkers.map((w, idx) => (
+                                                        <tr key={w.id || idx} style={{ borderBottom: idx < addedWorkers.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                                                            <td style={{ padding: '8px 12px', fontWeight: 600 }}>{w.ime} {w.prezime}</td>
+                                                            <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{w.jmbg || w.oib || '—'}</td>
+                                                            <td style={{ padding: '8px 12px' }}>{getById(COLLECTIONS.WORKPLACES, w.radnoMjestoId)?.naziv || '—'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        ) : (
+                                            <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
+                                                <thead>
+                                                    <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Radnik' : 'Worker'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Naziv dokumenta / pregleda' : 'Document Title'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Datum' : 'Date'}</th>
+                                                        <th style={{ padding: '8px 12px' }}>{bs ? 'Vrijedi do' : 'Expiry'}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {addedDocs.map((d, idx) => (
+                                                        <tr key={d.id || idx} style={{ borderBottom: idx < addedDocs.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                                                            <td style={{ padding: '8px 12px', fontWeight: 600 }}>{d.workerName}</td>
+                                                            <td style={{ padding: '8px 12px' }}>{d.docType === 'exam' ? '👨‍⚕️' : '📜'} {d.naziv || d.ime}</td>
+                                                            <td style={{ padding: '8px 12px' }}>{d.datum || d.datumPregleda || '—'}</td>
+                                                            <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{d.vrijediDo || '—'}</td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        )}
                                     </div>
                                 </div>
                             )}
+
                         </div>
                     )}
 
-                    {/* STEP 3: First Certificate Form */}
+                    {/* STEP 3: Completion Screen */}
                     {activeStep === 3 && (
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-                                <span style={{ fontSize: '1.8rem' }}>📜</span>
-                                <div>
-                                    <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700 }}>
-                                        {bs ? 'Korak 3: Dodajte prvo uvjerenje ili pregled' : 'Step 3: Add First Certificate / Exam'}
-                                    </h2>
-                                    <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                        {bs ? 'Evidentirajte uvjerenje o osposobljenosti ili ljekarski pregled za nekog od radnika.' : 'Record a safety training certificate or medical exam for one of the workers.'}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {addedWorkers.length === 0 ? (
-                                <div style={{ 
-                                    padding: '16px 20px', background: 'rgba(245,158,11,0.06)', 
-                                    border: '1px solid rgba(245,158,11,0.2)', borderRadius: 'var(--radius-md)',
-                                    textAlign: 'center', color: 'var(--warning)', fontWeight: 600, fontSize: '0.85rem'
-                                }}>
-                                    ⚠️ {bs 
-                                        ? 'Nema dodanih radnika u sustavu. Vratite se na prethodni korak i dodajte barem jednog radnika da biste mu pridružili dokument.' 
-                                        : 'No workers added. Go back to the previous step and add at least one worker to assign a document.'}
-                                </div>
-                            ) : (
-                                <div>
-                                    {/* Select worker row */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
-                                        <div className="form-group">
-                                            <div style={labelStyle}>{bs ? 'Odaberite radnika *' : 'Select Worker *'}</div>
-                                            <select 
-                                                className="form-select"
-                                                value={certData.workerId}
-                                                onChange={e => setCertData(prev => ({ ...prev, workerId: e.target.value }))}
-                                            >
-                                                <option value="">{bs ? '-- Odaberite radnika --' : '-- Select Worker --'}</option>
-                                                {addedWorkers.map(w => (
-                                                    <option key={w.id} value={w.id}>{w.ime} {w.prezime}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <div className="form-group">
-                                            <div style={labelStyle}>{bs ? 'Vrsta dokumenta' : 'Document Category'}</div>
-                                            <select 
-                                                className="form-select"
-                                                value={certData.docType}
-                                                onChange={e => setCertData(prev => ({ ...prev, docType: e.target.value }))}
-                                            >
-                                                <option value="cert">📜 {bs ? 'Uvjerenje o osposobljenosti (ZNR)' : 'Safety Training Cert'}</option>
-                                                <option value="exam">👨‍⚕️ {bs ? 'Uvjerenje o zdravstvenoj sposobnosti (Ljekarski)' : 'Medical Examination'}</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    {/* Document Details form */}
-                                    <div style={{ 
-                                        background: 'var(--bg-input)', padding: 16, 
-                                        borderRadius: 'var(--radius-md)', border: '1px solid var(--border)',
-                                        marginBottom: 20 
-                                    }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '2fr 1fr', gap: 16, marginBottom: 16 }}>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <div style={labelStyle}>{bs ? 'Naziv dokumenta / pregleda *' : 'Document / Exam Title *'}</div>
-                                                <input 
-                                                    className="form-input"
-                                                    value={certData.naziv}
-                                                    onChange={e => setCertData(prev => ({ ...prev, naziv: e.target.value }))}
-                                                    placeholder={certData.docType === 'cert' ? (bs ? 'npr. Zaštita na radu (ZOS)' : 'e.g. Safety at work (ZOS)') : (bs ? 'npr. Periodični ljekarski pregled' : 'e.g. Periodic medical exam')}
-                                                />
-                                            </div>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <div style={labelStyle}>{bs ? 'Oznaka / Broj' : 'Code / Number'}</div>
-                                                <input 
-                                                    className="form-input"
-                                                    value={certData.oznaka}
-                                                    onChange={e => setCertData(prev => ({ ...prev, oznaka: e.target.value }))}
-                                                    placeholder="npr. UV-123/26"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 16, alignItems: 'center' }}>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <div style={labelStyle}>{bs ? 'Datum izdavanja / pregleda *' : 'Issue / Exam Date *'}</div>
-                                                <input 
-                                                    type="date"
-                                                    className="form-input"
-                                                    value={certData.datum}
-                                                    onChange={e => setCertData(prev => ({ ...prev, datum: e.target.value }))}
-                                                />
-                                            </div>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <div style={labelStyle}>{bs ? 'Vrijedi do (opcionalno)' : 'Expiry Date (optional)'}</div>
-                                                <input 
-                                                    type="date"
-                                                    className="form-input"
-                                                    value={certData.vrijediDo}
-                                                    onChange={e => setCertData(prev => ({ ...prev, vrijediDo: e.target.value }))}
-                                                />
-                                            </div>
-                                            <div className="form-group" style={{ marginBottom: 0 }}>
-                                                <div style={labelStyle}>{bs ? 'Sposobnost / Ocjena' : 'Fitness Grade'}</div>
-                                                <select 
-                                                    className="form-select"
-                                                    value={certData.sposobnost}
-                                                    onChange={e => setCertData(prev => ({ ...prev, sposobnost: e.target.value }))}
-                                                >
-                                                    <option value="Sposoban">{bs ? 'Sposoban' : 'Fit'}</option>
-                                                    <option value="Uvjetno sposoban">{bs ? 'Uvjetno sposoban' : 'Conditionally Fit'}</option>
-                                                    <option value="Nesposoban">{bs ? 'Nesposoban' : 'Unfit'}</option>
-                                                </select>
-                                            </div>
-                                        </div>
-
-                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
-                                            <button className="btn btn-primary btn-sm" onClick={handleAddCert}>
-                                                ➕ {bs ? 'Spremi dokument' : 'Save Document'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Added Documents list */}
-                            {addedCerts.length > 0 && (
-                                <div>
-                                    <div style={{ fontWeight: 700, fontSize: '0.78rem', textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--text-muted)', marginBottom: 8 }}>
-                                        📜 {bs ? `Dodani dokumenti (${addedCerts.length}):` : `Added Documents (${addedCerts.length}):`}
-                                    </div>
-                                    <div style={{ 
-                                        maxHeight: 140, overflowY: 'auto', border: '1px solid var(--border-light)', 
-                                        borderRadius: 'var(--radius-md)', background: 'var(--bg-input)'
-                                    }}>
-                                        <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
-                                            <thead>
-                                                <tr style={{ background: 'var(--bg-card)', borderBottom: '1px solid var(--border-light)', textAlign: 'left' }}>
-                                                    <th style={{ padding: '8px 12px' }}>{bs ? 'Radnik' : 'Worker'}</th>
-                                                    <th style={{ padding: '8px 12px' }}>{bs ? 'Naziv dokumenta / pregleda' : 'Title'}</th>
-                                                    <th style={{ padding: '8px 12px' }}>{bs ? 'Datum' : 'Date'}</th>
-                                                    <th style={{ padding: '8px 12px' }}>{bs ? 'Vrijedi do' : 'Expiry'}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {addedCerts.map((c, idx) => (
-                                                    <tr key={c.id || idx} style={{ borderBottom: idx < addedCerts.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
-                                                        <td style={{ padding: '8px 12px', fontWeight: 600 }}>{c.workerName}</td>
-                                                        <td style={{ padding: '8px 12px' }}>{c.docType === 'exam' ? '👨‍⚕️' : '📜'} {c.naziv || c.ime}</td>
-                                                        <td style={{ padding: '8px 12px' }}>{c.datum || c.datumPregleda || '—'}</td>
-                                                        <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{c.vrijediDo || '—'}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* STEP 4: Completion Screen */}
-                    {activeStep === 4 && (
                         <div style={{ textAlign: 'center', padding: '24px 0' }}>
                             <div style={{ fontSize: '5rem', marginBottom: 16, animation: 'fadeIn 0.5s ease' }}>🎉</div>
                             <h2 style={{
@@ -1172,8 +1266,8 @@ export default function EmptyDashboard({ onComplete }) {
                                 lineHeight: 1.6, maxWidth: 520
                             }}>
                                 {bs
-                                    ? 'Vaša tvrtka je uspješno konfigurirana. Radnici i dokumenti koje ste unijeli sada su učitani na vašu nadzornu ploču za praćenje.'
-                                    : 'Your company has been successfully configured. The workers and documents you entered are now loaded into your dashboard.'}
+                                    ? 'Vaša tvrtka je spremna. Svi uneseni radnici i pripadajuća uvjerenja učitani su na vašu nadzornu ploču za praćenje.'
+                                    : 'Your company is ready. All entered workers and certificates have been loaded into your dashboard.'}
                             </p>
 
                             <button className="btn btn-primary" onClick={handleFinish} style={{ padding: '12px 32px', fontSize: '0.95rem' }}>
@@ -1185,7 +1279,7 @@ export default function EmptyDashboard({ onComplete }) {
                 </div>
 
                 {/* Footer Navigation Bar */}
-                {activeStep > 0 && activeStep < 4 && (
+                {activeStep > 0 && activeStep < 3 && (
                     <div style={{
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         padding: '16px 24px', borderTop: '1px solid var(--border-light)',
@@ -1199,7 +1293,7 @@ export default function EmptyDashboard({ onComplete }) {
                                 {bs ? 'Preskoči korak' : 'Skip Step'}
                             </button>
                             <button className="btn btn-primary" onClick={handleNext}>
-                                {activeStep === 3 ? (bs ? 'Završi' : 'Finish') : (bs ? 'Spremi i nastavi' : 'Save & Continue')} →
+                                {activeStep === 2 ? (bs ? 'Završi' : 'Finish') : (bs ? 'Spremi i nastavi' : 'Save & Continue')} →
                             </button>
                         </div>
                     </div>
@@ -1207,7 +1301,7 @@ export default function EmptyDashboard({ onComplete }) {
             </div>
 
             {/* General Skip/Exit option at the bottom */}
-            {activeStep > 0 && activeStep < 4 && (
+            {activeStep > 0 && activeStep < 3 && (
                 <div style={{ textAlign: 'center', marginTop: 16 }}>
                     <button 
                         onClick={handleSkipAll} 
